@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-06-20T07:05:24.794800+00:00`
-- Tier-1 contract rows: **1098**
-- Tier-1 matched: **1098**
+- Generated: `2026-06-29T05:10:40.608719+00:00`
+- Tier-1 contract rows: **1097**
+- Tier-1 matched: **1097**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -264,7 +264,6 @@
 | `message.lib.MessageType.name` | `message` | `MessageType` | `classic_message.MessageType.name` | `matched` |
 | `message.lib.format_contract_event` | `message` | `format_contract_event` | `classic_message.format_contract_event` | `matched` |
 | `message.lib.format_log_message` | `message` | `format_log_message` | `classic_message.format_log_message` | `matched` |
-| `message.lib.strip_emoji` | `message` | `strip_emoji` | `classic_message.strip_emoji` | `matched` |
 | `message.logging.ContractEvent@rust` | `message` | `ContractEvent` | `classic_message.Logger` | `matched` |
 | `message.logging.EVENT_STARTUP_ACCELERATION_STATUS@rust` | `message` | `EVENT_STARTUP_ACCELERATION_STATUS` | `classic_message.Logger` | `matched` |
 | `message.logging.EVENT_STARTUP_BINDING_CONTRACT_FAILED@rust` | `message` | `EVENT_STARTUP_BINDING_CONTRACT_FAILED` | `classic_message.Logger` | `matched` |

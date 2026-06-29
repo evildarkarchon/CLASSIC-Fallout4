@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-20T07:05:24.268417+00:00",
+  "generated_at_utc": "2026-06-29T05:31:26.735277+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -2644,15 +2644,6 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function settingsCacheSize(): number",
       "arity": 0
-    },
-    {
-      "export": "stripEmojiText",
-      "kind": "function",
-      "owner_module": "aux",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function stripEmojiText(text: string): string",
-      "arity": 1
     },
     {
       "export": "tryParseVersion",

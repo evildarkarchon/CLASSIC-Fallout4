@@ -231,15 +231,9 @@ def test_message_logger_construct_and_use() -> None:
     assert logger is not None
 
 
-def test_message_strip_emoji_free_function() -> None:
-    result = classic_message.strip_emoji("Hello world")
-    assert result == "Hello world"
-
-
 def test_message_format_log_message_free_function() -> None:
-    # format_log_message takes message content; return type is a string
-    text = classic_message.format_log_message("INFO", "test message")
-    assert isinstance(text, str)
+    text = classic_message.format_log_message("INFO ✅", "test message 🎉")
+    assert text == "INFO ✅\nDetails: test message 🎉"
 
 
 def test_message_format_contract_event_free_function() -> None:

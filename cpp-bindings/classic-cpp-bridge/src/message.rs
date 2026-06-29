@@ -3,7 +3,7 @@
 //! Provides simple log functions that delegate to the `log` crate macros.
 //! C++ can call these to emit log messages through Rust's logging infrastructure.
 
-use classic_message_core::logging::Logger;
+use classic_message_core::logging::{self, Logger};
 
 fn optional_correlation_id(correlation_id: &str) -> Option<&str> {
     let trimmed = correlation_id.trim();
@@ -82,11 +82,7 @@ fn log_startup_acceleration_status(
 }
 
 fn init_logging() {
-    // Default to INFO when RUST_LOG is unset so contract events are visible.
-    // Ignore error if already initialized (idempotent).
-    let mut builder =
-        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"));
-    let _ = builder.try_init();
+    logging::init();
 }
 
 #[cxx::bridge(namespace = "classic::message")]

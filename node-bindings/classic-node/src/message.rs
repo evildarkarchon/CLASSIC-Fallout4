@@ -3,7 +3,7 @@
 //! Exposes message types, targets, creation, formatting, and Logger class
 //! to JavaScript/TypeScript.
 
-use classic_message_core::{Message, MessageTarget, MessageType, format_log_message, strip_emoji};
+use classic_message_core::{Message, MessageTarget, MessageType, format_log_message};
 // ---------------------------------------------------------------------------
 // Enums
 // ---------------------------------------------------------------------------
@@ -170,22 +170,13 @@ pub fn create_message(
     core_to_js(&msg)
 }
 
-/// Format a message for display/logging, stripping emojis.
+/// Format a message for display/logging while preserving valid UTF-8.
 ///
 /// @param message - A JsMessage object.
-/// @returns A clean, emoji-free string suitable for logging.
+/// @returns A formatted string suitable for logging.
 #[napi]
 pub fn format_message(message: JsMessage) -> String {
     format_log_message(&message.content, message.details.as_deref())
-}
-
-/// Strip emojis from a string.
-///
-/// @param text - The text to strip emojis from.
-/// @returns The text with all emojis removed and whitespace trimmed.
-#[napi]
-pub fn strip_emoji_text(text: String) -> String {
-    strip_emoji(&text)
 }
 
 // ---------------------------------------------------------------------------

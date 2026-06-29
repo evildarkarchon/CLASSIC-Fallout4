@@ -89,6 +89,8 @@ pub fn to_pyerr(err: impl std::fmt::Display) -> PyErr {
 /// - Game integrity checking (Phase 5)
 #[pymodule]
 fn classic_scangame(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
+
     // Add version and debug marker
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add("__debug_registered__", true)?;

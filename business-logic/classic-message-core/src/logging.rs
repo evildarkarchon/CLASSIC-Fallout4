@@ -53,11 +53,33 @@
 //! }
 //! ```
 
-#[allow(unused_imports)]
 use crate::{Message, MessageType};
 use std::collections::BTreeMap;
 
 use crate::redaction::redact_contract_fields;
+
+const DEFAULT_LOG_FILTER: &str = "info";
+
+/// Initialize the process-wide Rust logger for CLASSIC.
+///
+/// Uses `env_logger` with `RUST_LOG` support and defaults to `info` when no
+/// filter is provided by the environment. Repeated calls are safe and leave any
+/// existing global logger in place.
+pub fn init() {
+    let mut builder = env_logger::Builder::from_env(
+        env_logger::Env::default().default_filter_or(DEFAULT_LOG_FILTER),
+    );
+    let _ = builder.try_init();
+}
+
+/// Initialize the process-wide Rust logger with an explicit filter directive.
+///
+/// Repeated calls are safe and leave any existing global logger in place.
+pub fn init_with_filter(filter: &str) {
+    let mut builder = env_logger::Builder::new();
+    builder.parse_filters(filter);
+    let _ = builder.try_init();
+}
 
 /// Canonical event id for successful startup binding contract validation.
 pub const EVENT_STARTUP_BINDING_CONTRACT_VALIDATED: &str =

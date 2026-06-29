@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-20T07:05:24.793046+00:00",
+  "generated_at_utc": "2026-06-29T05:10:40.604760+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -2055,17 +2055,6 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-message-py/classic_message.pyi",
       "signature": "def format_log_message(content: str, details: str | None) -> str:"
-    },
-    {
-      "module": "classic_message",
-      "export": "strip_emoji",
-      "export_path": "strip_emoji",
-      "kind": "function",
-      "arity": 1,
-      "owner_module": "message",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-message-py/classic_message.pyi",
-      "signature": "def strip_emoji(text: str) -> str:"
     },
     {
       "module": "classic_path",

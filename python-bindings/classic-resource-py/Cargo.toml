@@ -18,6 +18,9 @@ classic-resource-core = { path = "../../business-logic/classic-resource-core" }
 # PyO3 bindings
 pyo3 = { workspace = true }
 
+# Shared Python binding utilities
+classic-shared-py = { path = "../../foundation/classic-shared-py" }
+
 [lints.rust]
 deprecated = "deny"
 rust_2024_compatibility = "warn"

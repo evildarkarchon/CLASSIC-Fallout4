@@ -6,7 +6,8 @@
 //! - **Message Types**: Enum for categorizing messages (Info, Warning, Error, etc.)
 //! - **Message Targets**: Enum for routing messages to GUI, CLI, or log-only
 //! - **Message Struct**: Data structure for encapsulating message content and metadata
-//! - **Formatting**: Utilities for preparing messages for display/logging (emoji stripping)
+//! - **Formatting**: Utilities for preparing UTF-8 messages for display/logging
+//! - **Logger Initialization**: Opt-in, idempotent `env_logger` setup for CLASSIC logging
 //!
 //! # Architecture
 //!
@@ -62,14 +63,14 @@
 //! ## Formatting for Logs
 //!
 //! ```rust
-//! use classic_message_core::{Message, MessageType, format_log_message, strip_emoji};
+//! use classic_message_core::{Message, MessageType, format_log_message};
 //!
 //! let msg = Message::new("Success! ✅", MessageType::Success)
 //!     .with_details("All tests passed 🎉");
 //!
-//! // Strip emojis for log-safe output
+//! // Preserve valid UTF-8 while appending details for log output
 //! let log_text = format_log_message(msg.content(), msg.details());
-//! println!("{}", log_text);  // No emojis, safe for Windows console
+//! assert_eq!(log_text, "Success! ✅\nDetails: All tests passed 🎉");
 //! ```
 //!
 //! ## Log Level Mapping
@@ -92,10 +93,11 @@ mod redaction;
 
 // Re-export public API
 pub use enums::{MessageTarget, MessageType};
-pub use formatter::{format_log_message, strip_emoji};
+pub use formatter::format_log_message;
 pub use logging::{
     ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED,
-    EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event,
+    EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, init,
+    init_with_filter,
 };
 pub use message::Message;
 pub use redaction::{redact_contract_fields, redact_field_value};

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-20T07:05:36.032066+00:00",
+  "generated_at_utc": "2026-06-29T05:11:04.185452+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -2691,7 +2691,7 @@
       "crate": "classic-message-core",
       "owner_module": "message",
       "source_file": "business-logic/classic-message-core/src/lib.rs",
-      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, };",
+      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, init, init_with_filter, };",
       "source_expr": "logging::ContractEvent",
       "tier": "tier1"
     },
@@ -2719,7 +2719,7 @@
       "crate": "classic-message-core",
       "owner_module": "message",
       "source_file": "business-logic/classic-message-core/src/lib.rs",
-      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, };",
+      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, init, init_with_filter, };",
       "source_expr": "logging::EVENT_STARTUP_ACCELERATION_STATUS",
       "tier": "tier1"
     },
@@ -2738,7 +2738,7 @@
       "crate": "classic-message-core",
       "owner_module": "message",
       "source_file": "business-logic/classic-message-core/src/lib.rs",
-      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, };",
+      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, init, init_with_filter, };",
       "source_expr": "logging::EVENT_STARTUP_BINDING_CONTRACT_FAILED",
       "tier": "tier1"
     },
@@ -2757,7 +2757,7 @@
       "crate": "classic-message-core",
       "owner_module": "message",
       "source_file": "business-logic/classic-message-core/src/lib.rs",
-      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, };",
+      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, init, init_with_filter, };",
       "source_expr": "logging::EVENT_STARTUP_BINDING_CONTRACT_VALIDATED",
       "tier": "tier1"
     },
@@ -2776,7 +2776,7 @@
       "crate": "classic-message-core",
       "owner_module": "message",
       "source_file": "business-logic/classic-message-core/src/lib.rs",
-      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, };",
+      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, init, init_with_filter, };",
       "source_expr": "logging::Logger",
       "tier": "tier1"
     },
@@ -3003,7 +3003,7 @@
       "crate": "classic-message-core",
       "owner_module": "message",
       "source_file": "business-logic/classic-message-core/src/lib.rs",
-      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, };",
+      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, init, init_with_filter, };",
       "source_expr": "logging::format_contract_event",
       "tier": "tier1"
     },
@@ -3023,7 +3023,7 @@
       "crate": "classic-message-core",
       "owner_module": "message",
       "source_file": "business-logic/classic-message-core/src/lib.rs",
-      "source_decl": "pub use formatter::{format_log_message, strip_emoji};",
+      "source_decl": "pub use formatter::format_log_message;",
       "source_expr": "formatter::format_log_message",
       "tier": "tier1"
     },
@@ -3035,6 +3035,46 @@
       "owner_module": "message",
       "source_file": "business-logic/classic-message-core/src/logging.rs",
       "source_decl": "pub fn info(&self, msg: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "init",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-message-core",
+      "owner_module": "message",
+      "source_file": "business-logic/classic-message-core/src/logging.rs",
+      "source_decl": "pub fn init()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "init",
+      "kind": "reexport",
+      "crate": "classic-message-core",
+      "owner_module": "message",
+      "source_file": "business-logic/classic-message-core/src/lib.rs",
+      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, init, init_with_filter, };",
+      "source_expr": "logging::init",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "init_with_filter",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-message-core",
+      "owner_module": "message",
+      "source_file": "business-logic/classic-message-core/src/logging.rs",
+      "source_decl": "pub fn init_with_filter(filter: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "init_with_filter",
+      "kind": "reexport",
+      "crate": "classic-message-core",
+      "owner_module": "message",
+      "source_file": "business-logic/classic-message-core/src/lib.rs",
+      "source_decl": "pub use logging::{ ContractEvent, EVENT_STARTUP_ACCELERATION_STATUS, EVENT_STARTUP_BINDING_CONTRACT_FAILED, EVENT_STARTUP_BINDING_CONTRACT_VALIDATED, Logger, format_contract_event, init, init_with_filter, };",
+      "source_expr": "logging::init_with_filter",
       "tier": "tier1"
     },
     {
@@ -3244,26 +3284,6 @@
       "owner_module": "message",
       "source_file": "business-logic/classic-message-core/src/message.rs",
       "source_decl": "pub fn set_title(&mut self, title: Option<impl Into<String>>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "strip_emoji",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-message-core",
-      "owner_module": "message",
-      "source_file": "business-logic/classic-message-core/src/formatter.rs",
-      "source_decl": "pub fn strip_emoji(text: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "strip_emoji",
-      "kind": "reexport",
-      "crate": "classic-message-core",
-      "owner_module": "message",
-      "source_file": "business-logic/classic-message-core/src/lib.rs",
-      "source_decl": "pub use formatter::{format_log_message, strip_emoji};",
-      "source_expr": "formatter::strip_emoji",
       "tier": "tier1"
     },
     {

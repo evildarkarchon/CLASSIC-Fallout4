@@ -234,6 +234,8 @@ fn start_timer(name: String) -> Timer {
 ///     0.123
 #[pymodule]
 fn classic_perf(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
+
     // Add core functions
     m.add_function(wrap_pyfunction!(record_timing, m)?)?;
     m.add_function(wrap_pyfunction!(get_summary, m)?)?;

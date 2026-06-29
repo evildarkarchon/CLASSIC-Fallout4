@@ -15,6 +15,9 @@ crate-type = ["cdylib", "rlib"]
 # PyO3 bindings
 pyo3 = { workspace = true, features = ["extension-module"] }
 
+# Shared Python binding utilities
+classic-shared-py = { path = "../../foundation/classic-shared-py" }
+
 # Core performance monitoring business logic
 classic-perf-core = { path = "../../business-logic/classic-perf-core" }
 

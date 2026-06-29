@@ -1,4 +1,25 @@
 use super::*;
+use serial_test::serial;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+struct CountingLogger;
+
+static COUNTING_LOGGER: CountingLogger = CountingLogger;
+static LOGGED_MESSAGES: AtomicUsize = AtomicUsize::new(0);
+
+impl log::Log for CountingLogger {
+    fn enabled(&self, _metadata: &log::Metadata<'_>) -> bool {
+        true
+    }
+
+    fn log(&self, record: &log::Record<'_>) {
+        if self.enabled(record.metadata()) {
+            LOGGED_MESSAGES.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    fn flush(&self) {}
+}
 
 #[test]
 fn test_logger_name() {
@@ -121,4 +142,21 @@ fn test_startup_contract_helpers_compile() {
         None,
     );
     logger.log_startup_acceleration_status(5, 5, "MANDATORY", None);
+}
+
+#[test]
+#[serial]
+fn test_init_is_opt_in_idempotent_and_does_not_replace_existing_logger() {
+    let _logger = Logger::new();
+    log::set_logger(&COUNTING_LOGGER)
+        .expect("Logger::new and crate import must not install the global logger");
+    log::set_max_level(log::LevelFilter::Trace);
+
+    init();
+    init();
+    init_with_filter("trace");
+
+    let before = LOGGED_MESSAGES.load(Ordering::SeqCst);
+    log::info!(target: Logger::LOGGER_NAME, "counted by existing logger");
+    assert_eq!(LOGGED_MESSAGES.load(Ordering::SeqCst), before + 1);
 }

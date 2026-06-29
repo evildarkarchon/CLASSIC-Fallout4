@@ -380,8 +380,8 @@
         "ownerModule": "message",
         "tier": "tier1"
       },
-      "contractCount": 46,
-      "contractIdsHash": "7697bca357a98b64d6ae5f3fde5471067033738c53b41ab6bc1ed6bed4da980a",
+      "contractCount": 45,
+      "contractIdsHash": "87d81eb18abc8d419ec9307f15dc7f038ccb74add986f16e5b956e96c02ff887",
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "message-residuals-smoke"
     },

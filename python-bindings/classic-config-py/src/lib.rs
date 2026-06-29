@@ -1112,6 +1112,7 @@ fn get_application_dir() -> Option<String> {
 /// Initialize the classic_config Python module
 #[pymodule]
 fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
     auto_init_application_dir(m.py());
 
     m.add_class::<PyYamlData>()?;

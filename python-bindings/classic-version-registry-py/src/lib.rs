@@ -60,6 +60,8 @@ mod version;
 ///     >>> print(og.version)
 #[pymodule]
 fn classic_version_registry(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
+
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
     m.add("__debug_registered__", true)?;
 

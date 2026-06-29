@@ -1749,7 +1749,7 @@ The .pyi file perfectly represents the Rust API:
 **API Inventory**:
 - **Enums**: MessageType (7 variants), MessageTarget (6 variants)
 - **Classes**: Message, Logger
-- **Functions**: strip_emoji(), format_log_message()
+- **Functions**: format_log_message()
 
 ### Result: ✅ NO ISSUES - 100% ACCURATE
 
@@ -1758,7 +1758,7 @@ The .pyi file perfectly represents the Rust API:
 - Message class with all methods (constructor, static with_target, builders, getters, setters)
 - Logger class with all logging methods (info, warning, error, debug, trace, log, log_message)
 - Logger helper methods (name, is_enabled_for, is_info_enabled, is_debug_enabled, is_trace_enabled)
-- Both utility functions correctly typed
+- Utility function correctly typed
 
 ---
 

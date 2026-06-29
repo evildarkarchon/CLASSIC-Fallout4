@@ -1544,6 +1544,8 @@ fn remove_readonly(_file_path: String) -> PyResult<()> {
 /// ```
 #[pymodule]
 fn classic_path(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
+
     // Add the PathValidator class
     m.add_class::<PathValidator>()?;
 

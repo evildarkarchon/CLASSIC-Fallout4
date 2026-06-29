@@ -729,6 +729,8 @@ fn reset_cache_stats() {
 ///     Fallout4
 #[pymodule]
 fn classic_settings(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
+
     // Add functions
     m.add_function(wrap_pyfunction!(load_settings_sync, m)?)?;
     m.add_function(wrap_pyfunction!(load_settings_async, m)?)?;

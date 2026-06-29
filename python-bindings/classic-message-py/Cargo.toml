@@ -18,6 +18,9 @@ pyo3 = { workspace = true, features = ["extension-module"] }
 # Logging
 log = { workspace = true }
 
+# Shared Python binding utilities
+classic-shared-py = { path = "../../foundation/classic-shared-py" }
+
 # Core message business logic
 classic-message-core = { path = "../../business-logic/classic-message-core" }
 

@@ -1794,10 +1794,10 @@ export interface FileIoConfig {
 }
 
 /**
- * Format a message for display/logging, stripping emojis.
+ * Format a message for display/logging while preserving valid UTF-8.
  *
  * @param message - A JsMessage object.
- * @returns A clean, emoji-free string suitable for logging.
+ * @returns A formatted string suitable for logging.
  */
 export declare function formatMessage(message: JsMessage): string
 
@@ -4096,14 +4096,6 @@ export interface SettingsCacheStats {
   /** Maximum bounded cache capacity. */
   capacity: number
 }
-
-/**
- * Strip emojis from a string.
- *
- * @param text - The text to strip emojis from.
- * @returns The text with all emojis removed and whitespace trimmed.
- */
-export declare function stripEmojiText(text: string): string
 
 /** Timing statistics for a single operation. */
 export interface TimingStats {

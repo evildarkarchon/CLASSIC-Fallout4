@@ -10,7 +10,7 @@ Architecture:
 Features:
     - Type-safe message categorization (INFO, WARNING, ERROR, etc.)
     - Flexible message routing (GUI, CLI, log-only)
-    - Emoji stripping for Windows console compatibility
+    - UTF-8-preserving message formatting
     - Centralized logging with Rust integration
     - Builder pattern for message construction
 
@@ -532,29 +532,8 @@ class Logger:
 
         """
 
-def strip_emoji(text: str) -> str:
-    """Strip emojis from the given text.
-
-    This function removes all emojis and symbols within specified Unicode ranges from
-    the input text. This is particularly useful for logging to avoid encoding issues
-    on Windows console.
-
-    Args:
-        text: The input text string possibly containing emojis.
-
-    Returns:
-        A string with all emojis removed and whitespace trimmed.
-
-    Example:
-        >>> text = "Hello 👋 World 🌍!"
-        >>> clean = strip_emoji(text)
-        >>> print(clean)
-        'Hello  World !'
-
-    """
-
 def format_log_message(content: str, details: str | None) -> str:
-    """Format a message for logging by stripping emojis from content and details.
+    """Format a message for logging while preserving valid UTF-8.
 
     Args:
         content: The main message content.
@@ -566,8 +545,8 @@ def format_log_message(content: str, details: str | None) -> str:
     Example:
         >>> formatted = format_log_message("Success! ✅", "All tests passed 🎉")
         >>> print(formatted)
-        'Success!
-        Details: All tests passed'
+        'Success! ✅
+        Details: All tests passed 🎉'
 
     """
 

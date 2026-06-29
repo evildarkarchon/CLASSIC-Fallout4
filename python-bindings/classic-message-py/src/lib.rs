@@ -430,30 +430,7 @@ impl Message {
     }
 }
 
-/// Strips emojis from the given text.
-///
-/// This function removes all emojis and symbols within specified Unicode ranges from
-/// the input text. This is particularly useful for logging to avoid encoding issues
-/// on Windows console.
-///
-/// Args:
-///     text: The input text string possibly containing emojis.
-///
-/// Returns:
-///     str: A string with all emojis removed and whitespace trimmed.
-///
-/// Example:
-///     >>> import classic_message
-///     >>> text = "Hello 👋 World 🌍!"
-///     >>> clean = classic_message.strip_emoji(text)
-///     >>> print(clean)
-///     Hello  World !
-#[pyfunction]
-fn strip_emoji(text: &str) -> String {
-    core::strip_emoji(text)
-}
-
-/// Formats a message for logging by stripping emojis from content and details.
+/// Formats a message for logging while preserving valid UTF-8.
 ///
 /// Args:
 ///     content: The main message content.
@@ -466,8 +443,8 @@ fn strip_emoji(text: &str) -> String {
 ///     >>> import classic_message
 ///     >>> formatted = classic_message.format_log_message("Success! ✅", "All tests passed 🎉")
 ///     >>> print(formatted)
-///     Success!
-///     Details: All tests passed
+///     Success! ✅
+///     Details: All tests passed 🎉
 #[pyfunction]
 fn format_log_message(content: &str, details: Option<&str>) -> String {
     core::format_log_message(content, details)
@@ -529,8 +506,7 @@ fn format_contract_event(
 ///     Logger: Centralized logging facility for the CLASSIC application
 ///
 /// Core Functions:
-///     strip_emoji(text): Remove emojis from text for log safety
-///     format_log_message(content, details): Format message for logging
+///     format_log_message(content, details): Format message for logging while preserving UTF-8
 ///
 /// Example:
 ///     >>> import classic_message
@@ -551,6 +527,8 @@ fn format_contract_event(
 ///     >>> logger.log_message(msg)
 #[pymodule]
 fn classic_message(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
+
     // Add enums
     m.add_class::<MessageType>()?;
     m.add_class::<MessageTarget>()?;
@@ -562,7 +540,6 @@ fn classic_message(m: &Bound<'_, PyModule>) -> PyResult<()> {
     logging::register(m)?;
 
     // Add functions
-    m.add_function(wrap_pyfunction!(strip_emoji, m)?)?;
     m.add_function(wrap_pyfunction!(format_log_message, m)?)?;
     m.add_function(wrap_pyfunction!(format_contract_event, m)?)?;
 

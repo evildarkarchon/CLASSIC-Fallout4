@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-06-20T07:05:24.269490+00:00",
+  "generated_at_utc": "2026-06-29T05:31:26.736529+00:00",
   "summary": {
-    "tier1_contract_total": 705,
-    "tier1_matched": 705,
+    "tier1_contract_total": 704,
+    "tier1_matched": 704,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -2175,19 +2175,6 @@
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "remove_readonly",
       "node_export": "removeReadonly",
-      "status": "matched",
-      "expected_node_kind": "function",
-      "actual_node_kind": "function",
-      "expected_node_arity": null,
-      "actual_node_arity": 1
-    },
-    {
-      "id": "aux-phase4a-strip-emoji-text",
-      "tier": "tier1",
-      "owner_module": "aux",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "strip_emoji",
-      "node_export": "stripEmojiText",
       "status": "matched",
       "expected_node_kind": "function",
       "actual_node_kind": "function",

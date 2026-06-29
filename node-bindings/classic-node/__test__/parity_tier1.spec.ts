@@ -41,7 +41,6 @@ import {
   getMetricsSummary,
   createMessage,
   formatMessage,
-  stripEmojiText,
   JsMessageType,
   JsMessageTarget,
   JsFileIO,
@@ -350,7 +349,6 @@ describe("Tier-1 parity fixture suites", () => {
       expect(message.messageType).toBe("Info");
       expect(message.target).toBe("All");
       expect(formatMessage(message).includes("Tier1 message")).toBe(true);
-      expect(stripEmojiText("Done [ok]")).toBe("Done [ok]");
     });
 
     test("settings batch APIs remain stable in sync + async modes", async () => {

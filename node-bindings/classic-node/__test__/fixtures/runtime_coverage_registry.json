@@ -68,8 +68,8 @@
         "ownerModule": "aux",
         "tier": "tier1"
       },
-      "contractCount": 155,
-      "contractIdsHash": "a4062cc908448c8ed4833109729c3a87ea475e773369521831cf6e3343e4bdea",
+      "contractCount": 154,
+      "contractIdsHash": "562a3cc2e2839420af8d0ef3c3948333f60defae6a64e227293de32d9643a1c1",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "aux-tier1-parity",

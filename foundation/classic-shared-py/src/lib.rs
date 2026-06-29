@@ -21,7 +21,7 @@ use pyo3::exceptions::{
     PyFileNotFoundError, PyIOError, PyPermissionError, PyRuntimeError, PyTimeoutError, PyValueError,
 };
 use pyo3::prelude::*;
-use pyo3::types::PyModule;
+use pyo3::types::{PyAny, PyDict, PyModule};
 use std::future::Future;
 use std::path::{Path, PathBuf};
 
@@ -51,6 +51,49 @@ pub use error_convert::{ResultExt, ToPyErr};
 
 // Re-export core types for convenience
 pub use classic_shared_core::{ClassicError, ClassicResult, get_runtime};
+
+/// Make Python stdout/stderr tolerate Unicode that legacy encodings cannot render.
+///
+/// The Python bindings preserve valid UTF-8 returned by Rust. On Windows or other
+/// legacy environments, writing those strings to `sys.stdout` can still raise
+/// `UnicodeEncodeError` when the stream uses a non-UTF-8 codec with strict error
+/// handling. This best-effort import-time guard keeps the Unicode data intact in
+/// Python and only changes stream error handling to Python's standard
+/// `backslashreplace` fallback when the stream explicitly supports
+/// `reconfigure()`.
+pub fn configure_python_stdio(py: Python<'_>) {
+    let Ok(sys) = PyModule::import(py, "sys") else {
+        return;
+    };
+
+    for stream_name in ["stdout", "stderr"] {
+        if let Ok(stream) = sys.getattr(stream_name) {
+            configure_python_text_stream(&stream);
+        }
+    }
+}
+
+fn configure_python_text_stream(stream: &Bound<'_, PyAny>) {
+    let Some(errors) = stream
+        .getattr("errors")
+        .ok()
+        .and_then(|value| value.extract::<String>().ok())
+    else {
+        return;
+    };
+    if errors != "strict" {
+        return;
+    }
+
+    let Ok(reconfigure) = stream.getattr("reconfigure") else {
+        return;
+    };
+    let kwargs = PyDict::new(stream.py());
+    if kwargs.set_item("errors", "backslashreplace").is_err() {
+        return;
+    }
+    let _ = reconfigure.call((), Some(&kwargs));
+}
 
 // Implement ToPyErr for ClassicError so it can be used with map_pyerr()
 impl ToPyErr for ClassicError {
@@ -340,6 +383,8 @@ pub fn is_runtime_healthy() -> bool {
 /// Python module initialization
 #[pymodule]
 fn classic_shared(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    configure_python_stdio(m.py());
+
     // Add utility classes
     game_id::register(m)?;
     m.add_class::<PyStringProcessor>()?;

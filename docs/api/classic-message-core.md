@@ -7,7 +7,7 @@ Crate metadata:
 - Crate: `classic-message-core`
 - Description: `Core message routing and formatting for CLASSIC`
 
-This crate is CLASSIC's small shared message model and logging helper layer. It defines the message payload used across bindings, the routing enums that tell callers whether a message is for GUI, CLI, or logs, and the formatting helpers used to produce log-safe output.
+This crate is CLASSIC's small shared message model and logging helper layer. It defines the message payload used across bindings, the routing enums that tell callers whether a message is for GUI, CLI, or logs, the formatting helpers used to produce log text, and the opt-in logger initialization entry point for Rust `log` output.
 
 It also owns the structured startup-contract logging helpers now used from bridge and binding layers. That makes this crate part message DTO, part log-level adapter, and part structured-event formatter.
 
@@ -22,13 +22,13 @@ Use this crate when you need to:
 - construct a shared `Message` value with content, severity, routing target, and optional metadata
 - decide whether a message should be shown in GUI, CLI, or logs only
 - map `MessageType` into Rust `log::Level`
-- strip emoji/symbol characters from text before logging to Windows-sensitive sinks
+- initialize the shared Rust `env_logger` backend for CLASSIC log output when a process wants Rust-side stderr logging
+- preserve valid UTF-8 while formatting content and optional details for log output
 - emit structured startup or contract events through a single CLASSIC log target
 - reuse message and logging behavior across Rust, C++, Python, and Node layers
 
 Do not use this crate for:
 
-- owning a log backend or initializing global logging configuration for the whole repo
 - asynchronous message transport, queues, channels, or subscriber fan-out
 - user-facing rich formatting beyond the simple log-text helpers in `formatter.rs`
 - domain-specific error propagation; this crate does not expose a crate-specific error type
@@ -45,8 +45,8 @@ This crate has several internal modules, but most of the contributor-facing API 
 
 - `enums` - defines `MessageType` and `MessageTarget`
 - `message` - defines the `Message` struct and its builder/setter API
-- `formatter` - defines emoji stripping and log-text formatting helpers
-- `logging` - defines `Logger`, `ContractEvent`, structured-event formatting, and startup contract helpers
+- `formatter` - defines UTF-8-preserving log-text formatting helpers
+- `logging` - defines `Logger`, logger initialization, `ContractEvent`, structured-event formatting, and startup contract helpers
 - `redaction` - defines redaction helpers used by structured contract logging
 
 ## Root-level API
@@ -55,8 +55,9 @@ This crate has several internal modules, but most of the contributor-facing API 
 - `MessageType`
 - `MessageTarget`
 - `format_log_message(content, details)`
-- `strip_emoji(text)`
 - `Logger`
+- `init()`
+- `init_with_filter(filter)`
 - `ContractEvent`
 - `format_contract_event(event)`
 - `redact_field_value(field_name, value)`
@@ -67,7 +68,7 @@ This crate has several internal modules, but most of the contributor-facing API 
 
 Contributor note:
 
-- `logging` is also a public module, so callers may use either `classic_message_core::Logger` or `classic_message_core::logging::Logger`
+- `logging` is also a public module, so callers may use either `classic_message_core::Logger` or `classic_message_core::logging::Logger`, and either `classic_message_core::init()` or `classic_message_core::logging::init()`
 - `enums`, `message`, `formatter`, and `redaction` are private modules with selected root re-exports only
 
 ---
@@ -178,25 +179,17 @@ Behavior visible in source:
 - the setter methods allow in-place mutation when a caller needs to reuse a `Message`
 - `Message` derives `Serialize` and `Deserialize`, which is important for wrapper crates and boundary types
 
-## `strip_emoji(text)` and `format_log_message(content, details)`
+## `format_log_message(content, details)`
 
-These are the crate's two plain formatting helpers.
+This is the crate's plain log-text formatting helper.
 
-`strip_emoji(text)`:
-
-- removes characters in several hard-coded Unicode ranges covering common emoji and symbol blocks
-- trims leading and trailing whitespace after filtering
-- preserves surrounding non-emoji text, including doubled internal spaces left behind by removed glyphs
-
-`format_log_message(content, details)`:
-
-- runs `strip_emoji(...)` on `content`
-- runs `strip_emoji(...)` on `details` when present
-- returns either the cleaned content alone or `"{content}\nDetails: {details}"`
+- returns `content` verbatim when no details are present
+- appends details verbatim as `"\nDetails: {details}"` when present
+- preserves all valid UTF-8, including emoji and symbols, relying on the configured logging backend to render it
 
 Contributor note:
 
-- `Logger::log_message(...)` does not call `format_log_message(...)`; it logs raw `Message` text plus optional title/details formatting. Callers that need emoji-stripped output must opt into the formatter helpers explicitly.
+- `Logger::log_message(...)` does not call `format_log_message(...)`; it logs raw `Message` text plus optional title/details formatting. Callers that need the simple details-appending format should opt into `format_log_message(...)` explicitly.
 
 ## `ContractEvent`
 
@@ -250,6 +243,8 @@ Important visible behavior:
 
 Important API:
 
+- `init()`
+- `init_with_filter(filter)`
 - `Logger::new()`
 - `Logger::LOGGER_NAME`
 - `name() -> &str`
@@ -272,6 +267,10 @@ Important API:
 
 Behavior visible in source:
 
+- `init()` installs `env_logger` with `RUST_LOG` support and a default `info` filter when the environment is unset
+- `init_with_filter(filter)` installs `env_logger` with the supplied filter directive
+- both init functions are idempotent via `try_init()` and leave an existing process-wide logger in place
+- `Logger::new()` is side-effect free and does not install a global backend
 - the logger target is always `"CLASSIC"`
 - `Logger` contains no mutable state; it is effectively just a typed wrapper around that target name
 - `log_message(...)` builds log text as `"{title}: {content} - {details}"` when title and details are both present
@@ -280,7 +279,7 @@ Behavior visible in source:
 
 Contributor note:
 
-- this crate does not install a logger implementation. If no backend such as `env_logger` is initialized by the application or binding layer, log macros may be no-ops.
+- this crate owns the shared Rust logger initialization entry point, but initialization remains opt-in. If no backend is initialized by the application or binding layer, log macros may be no-ops.
 
 ## Redaction helpers
 
@@ -306,7 +305,7 @@ The source-visible message flow is straightforward:
 3. Display code checks `message.target().should_display_in_gui()`, `should_display_in_cli()`, or `should_display()`.
 4. Logging code either:
    - logs the `Message` directly through `Logger::log_message(...)`, or
-   - converts text through `format_log_message(...)` when emoji-stripped output is required, or
+   - converts text through `format_log_message(...)` when the simple details-appending format is required, or
    - builds a `ContractEvent` and emits a structured log line through `Logger::log_contract_event(...)`.
 5. Structured-event logging redacts sensitive context fields before output.
 
@@ -337,6 +336,7 @@ Contributor implications:
 
 Important direct dependencies:
 
+- `env_logger` - opt-in global logger backend for Rust `log` output
 - `log` - log level type plus log macro integration
 - `serde` - serialization derives for `Message`, `MessageType`, and `MessageTarget`
 
@@ -376,8 +376,7 @@ assert!(message.target().should_display_in_cli());
 assert!(!message.target().should_display_in_gui());
 
 let log_text = format_log_message(message.content(), message.details());
-assert!(!log_text.contains('✅'));
-assert!(!log_text.contains('🎉'));
+assert_eq!(log_text, "Startup complete ✅\nDetails: Loaded 12 plugins 🎉");
 
 let event = ContractEvent::new(
     "integration.startup",
@@ -393,6 +392,7 @@ assert!(structured.contains("event=classic.startup.binding_contract.validated"))
 assert!(structured.contains("install_path=<path-redacted>"));
 
 let logger = Logger::new();
+classic_message_core::init();
 logger.log_message(&message);
 logger.log_contract_event(&event);
 ```
@@ -401,7 +401,8 @@ logger.log_contract_event(&event);
 
 ## Contributor Notes And Known Limits
 
-- `Logger::log_message(...)` uses raw message text; emoji stripping is opt-in through `format_log_message(...)`
+- `format_log_message(...)` preserves UTF-8; removed emoji/symbol stripping was a breaking API change across Rust, Python, and Node
+- `Logger::new()` and `Message` construction do not install a log backend; call `init()` or `init_with_filter(...)` when a Rust process wants CLASSIC-owned `env_logger` output
 - `MessageTarget` still exposes legacy `GuiOnly` and `CliOnly` variants because bindings and older call paths may still depend on them
 - the crate has no public error type, validation API, or delivery abstraction beyond the `log` facade
 - structured contract-event formatting is string-based; there is no separate JSON/event object output API today

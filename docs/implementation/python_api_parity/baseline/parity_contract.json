@@ -2669,16 +2669,6 @@
       "pythonKind": "function"
     },
     {
-      "id": "message.lib.strip_emoji",
-      "tier": "tier1",
-      "ownerModule": "message",
-      "rustCrate": "classic-message-core",
-      "rustSymbol": "strip_emoji",
-      "pythonModule": "classic_message",
-      "pythonExportPath": "strip_emoji",
-      "pythonKind": "function"
-    },
-    {
       "id": "message.logging.ContractEvent@rust",
       "tier": "tier1",
       "ownerModule": "message",

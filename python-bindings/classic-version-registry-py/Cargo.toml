@@ -18,6 +18,9 @@ classic-version-registry-core = { path = "../../business-logic/classic-version-r
 # PyO3 for Python bindings
 pyo3 = { workspace = true }
 
+# Shared Python binding utilities
+classic-shared-py = { path = "../../foundation/classic-shared-py" }
+
 [lints.rust]
 deprecated = "deny"
 rust_2024_compatibility = "deny"
