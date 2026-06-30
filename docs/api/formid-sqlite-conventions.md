@@ -188,7 +188,7 @@ Source-backed caveats:
 
 The active Rust path is:
 
-1. `classic-cpp-bridge` builds an `AnalysisConfig` and resolves DB file paths.
+1. Crash Log Scan Intake in `classic-scanlog-core` builds an `AnalysisConfig` and resolves DB file paths; the C++ bridge delegates to that seam while preserving its public call shape.
 2. If `show_formid_values` is `true`, it creates a `DatabasePool` and calls `initialize(resolved_paths)`.
 3. `OrchestratorCore` receives that pool through `attach_database_pool()`.
 4. `FormIDAnalyzerCore::formid_match()` batches `(formid_suffix, plugin)` pairs and calls `get_entries_batch()`.

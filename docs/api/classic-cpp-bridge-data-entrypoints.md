@@ -114,7 +114,7 @@ It owns:
 - YAML-backed scan config construction
 - explicit FCX singleton reset through `classic::scanner::fcx_reset_global_state()`
 - `OrchestratorCore` creation and single and batch scan entry points
-- bridge-local FormID DB path resolution and remove-list loading
+- delegation to `classic-scanlog-core` Crash Log Scan Intake for remove-list loading, FormID DB path selection, and short-scan cache profile choice
 - progress callback DTOs for batch scanning
 - small scan utilities such as `detect_vr_log` and `detect_crash_pattern`
 - Papyrus monitoring through `classic_scanlog_core::papyrus::PapyrusAnalyzer`
@@ -447,24 +447,19 @@ The bridge does not expose `get_stats()`, `optimize()`, `rebalance_connections()
 
 Forwards to:
 
-- `YamlDataCore::load_from_yaml_files(...)`
-- `classic_scanlog_core::build_analysis_config_from_yaml(...)`
-
-And also uses bridge-local helpers:
-
-- `load_exclude_log_records(yaml_dir_data)`
-- `resolve_formid_db_paths(yaml_dir_root, yaml_dir_data, game)`
+- `classic_scanlog_core::CrashLogScanIntake::from_yaml_paths(...)`
+- `CrashLogScanIntake::prepare()`, which loads path-backed `YamlDataCore`, resolves simplify-log removal rules, builds `AnalysisConfig`, and selects FormID readiness
 
 Current bridge behavior that matters:
 
 - `remove_list` comes from `CLASSIC Main.yaml` key `exclude_log_records`, not from the public `classic::config` surface
-- FormID DB paths are assembled from three sources in bridge code: main DB, hardcoded FOLON DB for Fallout 4 and Fallout 4 VR, and user settings entries from `CLASSIC Settings.yaml`
+- FormID DB paths are selected by scanlog-core intake from three sources: main DB, hardcoded FOLON DB for Fallout 4 and Fallout 4 VR, and user settings entries from `CLASSIC Settings.yaml`
 - relative user DB paths are resolved relative to `yaml_dir_data`
 - paths are deduplicated before pool initialization
 
 Important boundary:
 
-- this bridge still reads `CLASSIC Settings.yaml` directly for FormID DB paths instead of using `ClassicConfig.formid_databases` through a bridge DTO
+- the public CXX call shape is preserved, but the scan-readiness decisions now live in `classic-scanlog-core`; intake still reads legacy `CLASSIC Settings.yaml` FormID settings instead of `ClassicConfig.formid_databases`
 
 ### `orchestrator_new(config) -> Result<Box<Orchestrator>>`
 
@@ -472,8 +467,8 @@ Forwards to `classic_scanlog_core::OrchestratorCore::new(...)` and optionally `a
 
 Current bridge behavior:
 
-- if `config.inner.show_formid_values` is false, no database pool is created
-- if it is true, the bridge constructs its own `DatabasePool`, applies a short-scan profile, initializes it from the resolved DB path list, and attaches it to the orchestrator
+- if intake produced `show_formid_values=false`, no database pool is created
+- if it produced `show_formid_values=true`, the bridge constructs its own `DatabasePool`, applies the intake-selected short-scan profile, initializes it from the intake-selected DB path list, and attaches it to the orchestrator
 - missing FOLON or user DB files do not necessarily fail this path because `DatabasePool::initialize()` skips nonexistent paths
 
 Source-backed short-scan profile:
@@ -689,9 +684,9 @@ Several entry points erase typed errors and return defaults instead:
 
 - exposes the main scan path, but not the full `OrchestratorCore` helper surface
 - keeps FCX bridge exposure reset-only in this phase; no C++ FCX issue DTO or getter exists yet
-- constructs DB path lists in bridge code instead of exposing a first-class config bridge for that data
+- keeps the CXX config/orchestrator call shape while scanlog-core intake selects DB path lists and simplify-log removal rules
 - drops `AnalysisResult` fields that some lower-level Rust and parity paths still use
-- adds bridge-local batch progress coordination, VR detection, crash-pattern extraction, and DB-profile tuning
+- adds bridge-local batch progress coordination, VR detection, and crash-pattern extraction, while applying the intake-selected DB cache profile
 
 ---
 
@@ -732,7 +727,7 @@ When the C++ scan path diverges from the crate docs:
 
 1. check whether the frontend used `orchestrator_new()` or `orchestrator_new_minimal()`
 2. if FormID values are missing, verify `show_formid_values` was true when the full config was built
-3. remember that the bridge resolves FormID DB paths itself, including a hardcoded FOLON DB path for Fallout 4 modes
+3. remember that scanlog-core intake resolves FormID DB paths for the bridge, including a hardcoded FOLON DB path for Fallout 4 modes
 4. if a scan aborts before work starts, check whether `fcx_reset_global_state()` failed and left an FCX reset error string in the bridge result path
 5. if batch progress looks surprising, remember result order is completion order and `input_index` is the stable correlation key
 6. use `CLASSIC_SCAN_DIAGNOSTICS` to turn on progress diagnostics and `CLASSIC_DB_COUNTER_INTERVAL` to control periodic DB counter logging
@@ -757,8 +752,8 @@ When Papyrus monitoring looks stale:
 - `src/files.rs::discover_report_files()` is bridge-local, non-recursive, and fail-soft on unreadable directories
 - `src/database.rs::db_pool_get_entry()` cannot distinguish miss, closed pool, and query failure
 - `src/database.rs::db_pool_get_entries_batch()` fixes batch size at `50` and flattens `formid:plugin` keys into tab-delimited strings
-- `src/scanner.rs` still reads `CLASSIC Settings.yaml` directly for user FormID DB paths
-- `src/scanner.rs` hardcodes `databases/FOLON FormIDs.db` for `Fallout4` and `Fallout4VR`
+- `src/scanner.rs` delegates scan-readiness sidecar reads to `classic-scanlog-core`; intake still consumes `CLASSIC Settings.yaml` for user FormID DB paths
+- scanlog-core intake hardcodes `databases/FOLON FormIDs.db` for `Fallout4` and `Fallout4VR`
 - `src/scanner.rs` exposes only FCX reset control in C++; FCX issue inspection remains out of scope for this phase
 - `src/scanner.rs::orchestrator_process_logs_batch_with_progress()` is bridge-local coordination on top of per-log crate calls, not a direct wrapper over one lower-level batch API
 - `src/scanner.rs::detect_vr_log()` is a simple substring heuristic, not a full parser

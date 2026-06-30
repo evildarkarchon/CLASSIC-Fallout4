@@ -1040,6 +1040,7 @@ dependencies = [
  "classic-config-core",
  "classic-database-core",
  "classic-file-io-core",
+ "classic-settings-core",
  "classic-shared-core",
  "classic-version-registry-core",
  "criterion 0.6.0",

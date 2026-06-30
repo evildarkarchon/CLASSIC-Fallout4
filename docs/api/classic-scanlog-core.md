@@ -20,6 +20,7 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 Use this crate when you need to:
 
 - parse Bethesda-style crash logs into named sections
+- prepare an existing Crash Log for analysis from path-backed or in-memory YAML Data
 - build an analysis pipeline from loaded YAML/config data
 - analyze plugins, FormIDs, named records, suspects, GPU hints, and crashgen settings
 - generate Python-parity-style autoscan report fragments or full reports
@@ -27,7 +28,7 @@ Use this crate when you need to:
 
 Do not use this crate for:
 
-- loading CLASSIC YAML files directly
+- general-purpose YAML editing or settings-cache operations
 - owning a shared runtime or creating a new Tokio runtime per caller
 - exposing FFI or binding-specific wrapper types
 - front-end presentation logic
@@ -37,6 +38,18 @@ Those concerns live in related crates such as [`classic-config-core`](../../busi
 ---
 
 ## Module Map
+
+### `scan_intake`
+
+Crash Log Scan Intake prepares an existing Crash Log for analysis before orchestration starts.
+
+- `CrashLogScanIntake` - path-backed or in-memory intake builder
+- `CrashLogScanOptions` - caller scan flags for FormID values, FCX mode, and simplify logs
+- `CrashLogScanIntakePaths` - root/data paths used for path-backed YAML Data and sidecar settings
+- `ScanReadyAnalysis` - scan-ready payload containing `AnalysisConfig`, FormID readiness, and cache profile choice
+- `FormIdReadiness` - whether FormID databases should initialize and which paths to use
+- `ShortScanCacheProfile`, `SHORT_SCAN_CACHE_PROFILE` - short native-scan DB cache profile selected by intake
+- `load_simplify_remove_list()`, `resolve_formid_database_paths()`, `resolve_user_formid_database_paths()` - characterization-friendly helpers for sidecar readiness rules
 
 ### `orchestrator`
 
@@ -112,6 +125,28 @@ Report composition primitives.
 
 ## Public API Surface
 
+## `CrashLogScanIntake`
+
+`CrashLogScanIntake` is the high-level seam for Crash Log Scan Intake. It turns selected game/version input, YAML Data, scan options, simplify-log removal rules, Crashgen metadata, and FormID readiness into a `ScanReadyAnalysis`.
+
+Important constructors/helpers:
+
+- `CrashLogScanIntake::from_yaml_paths(yaml_dir_root, yaml_dir_data, game, selected_game_version, options)`
+- `CrashLogScanIntake::from_yaml_data(yaml, paths, game, selected_game_version, options)`
+- `CrashLogScanIntake::prepare().await -> Result<ScanReadyAnalysis, ScanLogError>`
+- `CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs)`
+- `resolve_formid_database_paths(yaml_dir_root, yaml_dir_data, game)`
+- `load_simplify_remove_list(yaml_dir_data)`
+
+Behavior worth knowing:
+
+- Path-backed intake loads YAML Data through `classic-config-core::YamlDataCore::load_from_yaml_files()`.
+- In-memory intake accepts an already-loaded `YamlDataCore` so tests and later adapters can use the same readiness seam without unnecessary file setup.
+- Supplying paths to in-memory intake lets it resolve the same `CLASSIC Main.yaml` `exclude_log_records` and `CLASSIC Settings.yaml` FormID database sidecars as path-backed intake.
+- Missing or unreadable sidecar settings preserve existing fail-soft behavior: simplify-log removal and user FormID database lists become empty instead of new hard failures.
+- FormID database path order is main game DB, hardcoded Fallout 4/Fallout 4 VR FOLON DB, then user-configured paths, with normalized path de-duplication preserving first occurrence.
+- Intake chooses the short-scan cache profile, but `classic-database-core` still owns pool initialization, cache bounds, connection behavior, and lookup mechanics.
+
 ## `AnalysisConfig`
 
 `AnalysisConfig` is the main input model for `OrchestratorCore`.
@@ -134,6 +169,7 @@ Important constructors/helpers:
 
 Contributor notes:
 
+- Prefer `CrashLogScanIntake` when you need a complete scan-ready payload. `build_analysis_config_from_yaml()` remains the focused YAML-to-config conversion helper and compatibility seam.
 - `build_analysis_config_from_yaml()` is the canonical bridge from [`classic-config-core`](../../business-logic/classic-config-core).
 - Version Registry data is preferred when available; YAML values are used as compatibility fallback.
 - OG/VR selection is resolved before scan-time settings validation from `selected_game_version` plus Version Registry data.
@@ -349,10 +385,10 @@ Binding expectation:
 
 The main contributor-facing pipeline looks like this:
 
-1. Load YAML/config data with [`classic-config-core`](../../business-logic/classic-config-core).
-2. Convert `YamlDataCore` into `AnalysisConfig` with `build_analysis_config_from_yaml()`.
-3. Construct `OrchestratorCore::new(config)`.
-4. Optionally attach a [`classic-database-core`](../../business-logic/classic-database-core) `DatabasePool` for FormID value lookups.
+1. Prepare Crash Log Scan Intake with `CrashLogScanIntake::from_yaml_paths(...)` or `CrashLogScanIntake::from_yaml_data(...)`.
+2. Use `prepare().await` to produce `ScanReadyAnalysis`.
+3. Construct `OrchestratorCore::new(scan_ready.analysis_config)`.
+4. Optionally initialize and attach a [`classic-database-core`](../../business-logic/classic-database-core) `DatabasePool` from `scan_ready.formid_readiness` when FormID values are enabled.
 5. `process_log()` reads the file with [`classic-file-io-core`](../../business-logic/classic-file-io-core) and preprocesses lines with `reformat_crash_data_inline()`.
 6. `LogParser::parse_all_sections_arc()` builds named sections.
 7. The orchestrator extracts header metadata, resolves crashgen identity/version status, and builds report helpers.
@@ -405,6 +441,7 @@ Important exceptions to that model:
 This crate exposes async APIs but does not create its own runtime.
 
 - Async entry points include `OrchestratorCore::async_enter()`, `async_exit()`, `process_log()`, `process_log_with_progress()`, `process_logs_batch()`, `load_loadorder_async()`, `write_reports_batch()`, and `FormIDAnalyzerCore::formid_match()`.
+- `CrashLogScanIntake::prepare()` is also async for path-backed YAML loading.
 - The crate depends on `tokio` and `futures`, but the source does not construct a Tokio runtime in production code.
 - In CLASSIC, higher layers are expected to use the shared runtime model from [`classic-shared-core`](../../foundation/classic-shared-core) rather than introducing a second runtime.
 
@@ -436,6 +473,7 @@ Notes:
 ## Related Crates And Integration Points
 
 - [`classic-config-core`](../../business-logic/classic-config-core) - provides `YamlDataCore` and crashgen registry source data used by `build_analysis_config_from_yaml()`, AND (since v9.1.0 Phase 2) the typed crashgen rule model and evaluator at `classic_config_core::crashgen_rules::*` used by `SettingsValidator`
+- [`classic-settings-core`](../../business-logic/classic-settings-core) - provides `YamlOperations` used by intake for small path-backed sidecar reads such as simplify-log removal rules and legacy FormID database settings
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - resolves game-version matches and valid crashgen versions
 - [`classic-database-core`](../../business-logic/classic-database-core) - optional FormID description lookups through `DatabasePool`
 - [`classic-file-io-core`](../../business-logic/classic-file-io-core) - async file reads and writes used by the orchestrator
@@ -448,40 +486,31 @@ In practice, `classic-scanlog-core` is the downstream analysis layer that turns 
 
 ## Usage Example
 
-This example follows the intended contributor flow: load YAML with [`classic-config-core`](../../business-logic/classic-config-core), build an `AnalysisConfig`, and process a log with `OrchestratorCore`.
+This example follows the intended contributor flow: prepare scan intake, create an orchestrator, and process a log.
 
 ```rust
-use classic_config_core::YamlDataCore;
 use classic_scanlog_core::{
+    CrashLogScanIntake,
+    CrashLogScanOptions,
     OrchestratorCore,
-    build_analysis_config_from_yaml,
 };
 use std::path::PathBuf;
 
 # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-let yaml_dirs = vec![
+let intake = CrashLogScanIntake::from_yaml_paths(
     PathBuf::from("C:/CLASSIC"),
     PathBuf::from("C:/CLASSIC/CLASSIC Data"),
-];
-
-let yaml = YamlDataCore::load_from_yaml_files(
-    yaml_dirs,
-    "Fallout4".to_string(),
-    "auto".to_string(),
-)
-.await?;
-
-let config = build_analysis_config_from_yaml(
-    &yaml,
     "Fallout4",
     "auto",
-    false,          // show_formid_values
-    false,          // fcx_mode
-    false,          // simplify_logs
-    Vec::new(),     // remove_list
+    CrashLogScanOptions::new(
+        false,      // show_formid_values
+        false,      // fcx_mode
+        false,      // simplify_logs
+    ),
 );
 
-let orchestrator = OrchestratorCore::new(config)?;
+let scan_ready = intake.prepare().await?;
+let orchestrator = OrchestratorCore::new(scan_ready.analysis_config)?;
 let result = orchestrator
     .process_log("C:/CLASSIC/crash-2026-03-09.log".to_string())
     .await?;
@@ -494,13 +523,14 @@ if result.success {
 # }
 ```
 
-If you need FormID descriptions instead of raw IDs only, attach a `DatabasePool` before calling `process_log()`.
+If you need FormID descriptions instead of raw IDs only, initialize and attach a `DatabasePool` using `scan_ready.formid_readiness.database_paths()` before calling `process_log()`.
 
 ---
 
 ## Contributor Notes And Known Limits
 
 - `classic-scanlog-core` is downstream of [`classic-config-core`](../../docs/api/classic-config-core.md); update both docs if the YAML-to-analysis contract changes.
+- Crash Log collection, XSE Folder discovery, and Unsolved Logs movement stay outside `CrashLogScanIntake`.
 - `parse_segments()` and `parse_segments_parallel()` are still public but explicitly deprecated. The Python binding `parse_segments_parallel` now returns `dict[str, list[str]]` instead of `list[list[str]]`.
 - The source contains performance claims in comments and docs, but this page does not treat them as compatibility guarantees.
 - `process_logs_batch()` does not preserve input ordering.
@@ -512,6 +542,7 @@ If you need FormID descriptions instead of raw IDs only, attach a `DatabasePool`
 If you extend this crate, update this document when you change:
 
 - re-exported types in `lib.rs`
+- Crash Log Scan Intake readiness rules
 - the named-section contract in `parser`
 - `AnalysisConfig` construction rules or Version Registry precedence
 - runtime/concurrency expectations
