@@ -2,7 +2,7 @@
 name = "classic-constants-core"
 version = "9.0.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
 description = "Application constants and enumerations for CLASSIC (no PyO3)"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"

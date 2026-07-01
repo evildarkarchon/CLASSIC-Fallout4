@@ -2,7 +2,7 @@
 name = "classic-version-core"
 version = "9.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
 description = "Version detection and parsing utilities for CLASSIC (no PyO3)"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"

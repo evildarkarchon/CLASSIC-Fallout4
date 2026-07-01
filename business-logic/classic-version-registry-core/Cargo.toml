@@ -2,7 +2,7 @@
 name = "classic-version-registry-core"
 version = "9.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.96.0"
 description = "Pure Rust version registry for CLASSIC - game version detection and matching"
 authors = ["evildarkarchon"]
 license = "MIT"
