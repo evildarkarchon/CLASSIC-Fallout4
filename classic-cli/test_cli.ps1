@@ -7,9 +7,10 @@
     help/version output, crash log scanning, report generation, and error handling.
     Uses temp directory isolation per test with cleanup in finally blocks.
 
-    Scan tests create an isolated workspace with a junction to "CLASSIC Data/"
-    so the CLI can load YAML config without picking up stray crash logs from the
-    real project's "Crash Logs/" directory.
+    Scan tests create an isolated workspace with a controlled "CLASSIC Data/"
+    layout so the CLI can load YAML config without picking up stray crash logs
+    from the real project's "Crash Logs/" directory or the user's documents XSE
+    folder.
 
 .EXAMPLE
     .\test_cli.ps1
@@ -207,18 +208,49 @@ function New-TestTempDir {
 }
 
 function New-ScanWorkspace {
+    param([System.IO.FileInfo[]]$XseLogs = @())
+
     <#
     .SYNOPSIS
-        Creates an isolated workspace directory with a junction to CLASSIC Data/
-        and a stub CLASSIC Ignore.yaml.
+        Creates an isolated workspace directory with controlled CLASSIC Data/
+        Local.yaml and a stub CLASSIC Ignore.yaml.
         The scanner uses CWD to find "CLASSIC Data/" for YAML config, and also
         searches CWD's "Crash Logs/" for log files. By using a clean workspace
         as CWD, we ensure only our test logs (via --scan-path) are found.
+        CLASSIC Data subdirectories are junctioned to the repo data, while
+        Local.yaml points at a temp XSE fixture folder so --scan-path tests do
+        not depend on ambient user documents state.
         CLASSIC Ignore.yaml is normally created dynamically on first launch;
         the stub here satisfies the YAML loader's existence check.
     #>
     $ws = New-TestTempDir
-    New-Item -ItemType Junction -Path (Join-Path $ws "CLASSIC Data") -Target $ClassicDataDir | Out-Null
+    $workspaceDataDir = Join-Path $ws "CLASSIC Data"
+    New-Item -ItemType Directory -Path $workspaceDataDir -Force | Out-Null
+
+    Get-ChildItem -LiteralPath $ClassicDataDir -Force |
+    Where-Object { $_.Name -ne "CLASSIC Fallout4 Local.yaml" } |
+    ForEach-Object {
+        $targetPath = Join-Path $workspaceDataDir $_.Name
+        if ($_.PSIsContainer) {
+            New-Item -ItemType Junction -Path $targetPath -Target $_.FullName | Out-Null
+        }
+        else {
+            Copy-Item -LiteralPath $_.FullName -Destination $targetPath -Force
+        }
+    }
+
+    $xseFixtureDir = Join-Path $ws "Fixture XSE"
+    New-Item -ItemType Directory -Path $xseFixtureDir -Force | Out-Null
+    foreach ($xseLog in $XseLogs) {
+        Copy-Item -LiteralPath $xseLog.FullName -Destination $xseFixtureDir -Force
+    }
+
+    $xseYamlPath = $xseFixtureDir -replace '\\', '/'
+    @"
+Game_Info:
+  Docs_Folder_XSE: $xseYamlPath
+"@ | Set-Content -Path (Join-Path $workspaceDataDir "CLASSIC Fallout4 Local.yaml") -Encoding UTF8
+
     # Create minimal CLASSIC Ignore.yaml stub (normally generated on first launch)
     @"
 CLASSIC_Ignore_Fallout4:
@@ -342,9 +374,9 @@ if (Should-RunScenario "single-scan") {
     $workspace = $null
     $tmpDir = $null
     try {
-        $workspace = New-ScanWorkspace
-        $tmpDir = New-TestTempDir
         $firstLog = $TestLogs[0]
+        $workspace = New-ScanWorkspace -XseLogs @($firstLog)
+        $tmpDir = New-TestTempDir
         Copy-Item $firstLog.FullName -Destination $tmpDir
 
         $r = Run-Cli -Arguments @("--scan-path", $tmpDir, "--game-version", "auto") -WorkingDirectory $workspace
@@ -356,11 +388,12 @@ if (Should-RunScenario "single-scan") {
             Test-Pass "single-scan-exit-code"
         }
 
-        if ($r.Output -match "Found 1 crash log") {
+        $expectedCount = 2
+        if ($r.Output -match "Found $expectedCount crash logs") {
             Test-Pass "single-scan-found-count"
         }
         else {
-            Test-Fail "single-scan-found-count" "Output does not contain 'Found 1 crash log'"
+            Test-Fail "single-scan-found-count" "Output does not contain 'Found $expectedCount crash logs'"
         }
 
         $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue
@@ -387,7 +420,7 @@ if (Should-RunScenario "multi-scan") {
     $workspace = $null
     $tmpDir = $null
     try {
-        $workspace = New-ScanWorkspace
+        $workspace = New-ScanWorkspace -XseLogs @($TestLogs[0])
         $tmpDir = New-TestTempDir
         foreach ($log in $TestLogs) {
             Copy-Item $log.FullName -Destination $tmpDir
@@ -402,20 +435,21 @@ if (Should-RunScenario "multi-scan") {
             Test-Pass "multi-scan-exit-code"
         }
 
-        $expectedCount = $TestLogs.Count
-        if ($r.Output -match "Found $expectedCount crash logs") {
+        $expectedFoundCount = $TestLogs.Count + 1
+        if ($r.Output -match "Found $expectedFoundCount crash logs") {
             Test-Pass "multi-scan-found-count"
         }
         else {
-            Test-Fail "multi-scan-found-count" "Output does not contain 'Found $expectedCount crash logs'"
+            Test-Fail "multi-scan-found-count" "Output does not contain 'Found $expectedFoundCount crash logs'"
         }
 
         $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue
-        if ($autoscans.Count -eq $expectedCount) {
+        $expectedCustomReports = $TestLogs.Count
+        if ($autoscans.Count -eq $expectedCustomReports) {
             Test-Pass "multi-scan-reports-generated"
         }
         else {
-            Test-Fail "multi-scan-reports-generated" "Expected $expectedCount AUTOSCAN.md files, found $($autoscans.Count)"
+            Test-Fail "multi-scan-reports-generated" "Expected $expectedCustomReports AUTOSCAN.md files, found $($autoscans.Count)"
         }
     }
     catch {

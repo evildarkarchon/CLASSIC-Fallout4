@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T00:02:45Z",
+  "generated_at_utc": "2026-07-01T02:27:53Z",
   "schema_version": 1,
   "entries": [
     {
@@ -1584,6 +1584,43 @@
           },
           {
             "name": "xse_folder",
+            "type": "&str"
+          },
+          {
+            "name": "custom_folder",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Box<CxxLogCollector>"
+      }
+    },
+    {
+      "id": "e3994ba433157302",
+      "rustSymbol": "log_collector_new_for_scan",
+      "kind": "function",
+      "bridgeModule": "files",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "base_folder",
+            "type": "&str"
+          },
+          {
+            "name": "yaml_dir_data",
+            "type": "&str"
+          },
+          {
+            "name": "game",
+            "type": "&str"
+          },
+          {
+            "name": "selected_game_version",
+            "type": "&str"
+          },
+          {
+            "name": "configured_docs_root",
             "type": "&str"
           },
           {

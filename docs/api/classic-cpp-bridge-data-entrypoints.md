@@ -307,6 +307,16 @@ Current bridge choice:
 - empty `xse_folder` and `custom_folder` become `None`
 - the first parameter is the `base_folder`; the Rust crate will create `Crash Logs` under that base folder
 
+### `log_collector_new_for_scan(base_folder, yaml_dir_data, game, selected_game_version, configured_docs_root, custom_folder)`
+
+Forwards to `classic_file_io_core::log_collection::LogCollector::new_for_scan(...)`.
+
+Current bridge behavior:
+
+- XSE Folder resolution stays in Rust via the file-IO/XSE core crates
+- empty `configured_docs_root` and `custom_folder` become `None`
+- custom scan folders are additive to the normal XSE crash-log import; they do not suppress XSE collection
+
 ### `log_collector_collect_all` and `log_collector_collect_crash_logs`
 
 Forwards to `LogCollector::collect_all()` and `collect_crash_logs()`.

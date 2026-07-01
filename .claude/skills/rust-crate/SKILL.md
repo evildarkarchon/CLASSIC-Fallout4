@@ -37,7 +37,7 @@ mkdir -p ClassicLib-rs/business-logic/classic-<name>-core/src
 name = "classic-<name>-core"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.96.0"
 description = "Core <name> functionality for CLASSIC"
 
 [lib]
@@ -111,7 +111,7 @@ mkdir -p ClassicLib-rs/python-bindings/classic-<name>-py/src
 name = "classic-<name>-py"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.96.0"
 description = "Python bindings for classic-<name>-core"
 
 [lib]

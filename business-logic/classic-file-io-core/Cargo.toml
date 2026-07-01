@@ -13,6 +13,7 @@ crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 [dependencies]
 # CLASSIC shared utilities
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
+classic-xse-core = { path = "../classic-xse-core" }
 
 # File I/O
 encoding_rs = { workspace = true }

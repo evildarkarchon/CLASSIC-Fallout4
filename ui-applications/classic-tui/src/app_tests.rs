@@ -156,46 +156,6 @@ fn poll_results_refreshes_when_snapshot_changes() {
 }
 
 #[test]
-fn resolve_xse_folder_uses_docs_root_for_fo4() {
-    let mut app = App::new_for_testing();
-    app.config.paths.docs_root = Some(PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4"));
-    app.config.game_version = "auto".to_string();
-
-    let folder = super::resolve_xse_folder_for_scan(
-        "CLASSIC Data",
-        "Fallout4",
-        &app.config.game_version,
-        app.config.paths.docs_root.as_deref(),
-    )
-    .expect("expected xse folder");
-    assert_eq!(
-        folder,
-        PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4\F4SE")
-    );
-}
-
-#[test]
-fn resolve_xse_folder_uses_docs_root_for_fo4_vr() {
-    let mut app = App::new_for_testing();
-    app.config.paths.docs_root = Some(PathBuf::from(
-        r"C:\Users\Test\Documents\My Games\Fallout4VR",
-    ));
-    app.config.game_version = "VR".to_string();
-
-    let folder = super::resolve_xse_folder_for_scan(
-        "CLASSIC Data",
-        "Fallout4",
-        &app.config.game_version,
-        app.config.paths.docs_root.as_deref(),
-    )
-    .expect("expected xse folder");
-    assert_eq!(
-        folder,
-        PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE")
-    );
-}
-
-#[test]
 fn update_result_ok_update_available_stores_status_and_formats_message() {
     use classic_update_core::{AppNotificationDisplay, Classification, NotificationStatus};
 

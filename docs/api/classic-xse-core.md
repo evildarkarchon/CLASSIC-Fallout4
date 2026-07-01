@@ -181,7 +181,7 @@ Behavior worth knowing:
 - `Fallout4VR` with `selected_game_version = "auto"` resolves as the VR registry entry
 - Version Registry XSE metadata is the source of truth for the derived folder name; Fallout 4 VR currently derives the shared `F4SE` folder
 - explicit `Docs_Folder_XSE` always wins over derived values
-- adapters that need custom-folder isolation should skip XSE Folder resolution instead of asking this module for an ambient folder
+- standard crash scans should keep custom folders additive to XSE Folder collection; use `classic_file_io_core::LogCollector::new_for_scan(...)` when the caller has full scan configuration
 
 ## Re-exported version helpers
 

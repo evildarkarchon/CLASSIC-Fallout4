@@ -5,7 +5,6 @@
 #include "workers/scanworker.h"
 
 #include "classic_cxx_bridge/files.h"
-#include "classic_cxx_bridge/xse.h"
 #include "rust/cxx.h"
 
 #include <QCoreApplication>
@@ -129,13 +128,9 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
             // portable app, so the application directory is expected to be writable and we do
             // not use a separate per-user/AppData fallback here.
             const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
-            QString xseFolder;
-            if (customFolder.isEmpty()) {
-                xseFolder = classic::toQString(classic::xse::resolve_xse_folder_for_scan(
-                    classic::toRustString(yamlData), classic::toRustString(game), classic::toRustString(gameVersion), ""));
-            }
-            auto collector = classic::files::log_collector_new(
-                classic::toRustString(baseDir), classic::toRustString(xseFolder), classic::toRustString(customFolder));
+            auto collector = classic::files::log_collector_new_for_scan(
+                classic::toRustString(baseDir), classic::toRustString(yamlData), classic::toRustString(game),
+                classic::toRustString(gameVersion), "", classic::toRustString(customFolder));
             auto rustPaths = classic::files::log_collector_collect_all(*collector);
 
             logPathsList.reserve(static_cast<int>(rustPaths.size()));

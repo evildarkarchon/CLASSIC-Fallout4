@@ -22,7 +22,6 @@ classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
 classic-path-core = { path = "../../business-logic/classic-path-core" }
 classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
 classic-update-core = { path = "../../business-logic/classic-update-core" }
-classic-xse-core = { path = "../../business-logic/classic-xse-core" }
 
 tokio = { workspace = true }
 tokio-util = { workspace = true }

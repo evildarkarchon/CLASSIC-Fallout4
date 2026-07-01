@@ -75,6 +75,46 @@ fn test_log_collector_empty_dir() {
 }
 
 #[test]
+fn test_log_collector_new_for_scan_preserves_xse_with_custom_folder() {
+    let dir = tempfile::tempdir().unwrap();
+    let base = dir.path().join("app");
+    let data = dir.path().join("CLASSIC Data");
+    let xse = dir.path().join("docs").join("F4SE");
+    let custom = dir.path().join("custom");
+    std::fs::create_dir_all(&base).unwrap();
+    std::fs::create_dir_all(&data).unwrap();
+    std::fs::create_dir_all(&xse).unwrap();
+    std::fs::create_dir_all(&custom).unwrap();
+
+    let xse_path_for_yaml = xse.to_string_lossy().replace('\\', "/");
+    std::fs::write(
+        data.join("CLASSIC Fallout4 Local.yaml"),
+        format!("Game_Info:\n  Docs_Folder_XSE: {xse_path_for_yaml}\n"),
+    )
+    .unwrap();
+    std::fs::write(xse.join("crash-2024-01-01-13-00-00.log"), "xse").unwrap();
+    std::fs::write(custom.join("crash-2024-01-01-14-00-00.log"), "custom").unwrap();
+
+    let collector = log_collector_new_for_scan(
+        base.to_str().unwrap(),
+        data.to_str().unwrap(),
+        "Fallout4",
+        "auto",
+        "",
+        custom.to_str().unwrap(),
+    );
+
+    let logs = log_collector_collect_all(&collector).unwrap();
+
+    assert_eq!(logs.len(), 2);
+    assert!(
+        base.join("Crash Logs")
+            .join("crash-2024-01-01-13-00-00.log")
+            .exists()
+    );
+}
+
+#[test]
 fn test_game_files_manager_new() {
     let dir = tempfile::tempdir().unwrap();
     let _mgr = game_files_manager_new(

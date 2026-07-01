@@ -462,8 +462,8 @@ void ScanSettingsWiringTests::scan_controller_uses_exe_dir_and_xse_resolver_for_
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("classic::xse::resolve_xse_folder_for_scan")),
-             "ScanController should delegate XSE Folder resolution to classic::xse");
+    QVERIFY2(sourceText.contains(QStringLiteral("classic::files::log_collector_new_for_scan")),
+             "ScanController should delegate scan-time XSE Folder resolution to Rust file-IO core");
     QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(gameVersion)")),
              "ScanController should forward gameVersion to XSE Folder resolution");
     QVERIFY2(sourceText.contains(QStringLiteral("QCoreApplication::applicationDirPath()")),

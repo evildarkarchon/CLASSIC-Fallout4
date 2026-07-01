@@ -8,7 +8,6 @@ use classic_path_core::validate_custom_scan_path;
 use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
-use classic_xse_core::resolve_xse_folder_for_scan;
 use ratatui::Terminal;
 use ratatui::backend::Backend;
 use ratatui::layout::Rect;
@@ -569,24 +568,19 @@ impl App {
 
         let tx = self.async_tx.clone();
         let custom_folder = self.config.paths.scan_custom.clone();
-        let has_custom_folder = custom_folder
-            .as_ref()
-            .is_some_and(|path| !path.as_os_str().is_empty());
-        let xse_folder = if has_custom_folder {
-            None
-        } else {
-            resolve_xse_folder_for_scan(
-                "CLASSIC Data",
-                "Fallout4",
-                &self.config.game_version,
-                self.config.paths.docs_root.as_deref(),
-            )
-        };
         let selected_game_version = self.config.game_version.clone();
+        let configured_docs_root = self.config.paths.docs_root.clone();
         let base_folder = std::env::current_dir().unwrap_or_default();
 
         get_runtime().spawn(async move {
-            let collector = LogCollector::new(base_folder, xse_folder, custom_folder);
+            let collector = LogCollector::new_for_scan(
+                base_folder,
+                PathBuf::from("CLASSIC Data"),
+                "Fallout4",
+                &selected_game_version,
+                configured_docs_root.as_deref(),
+                custom_folder,
+            );
             let log_paths = match collector.collect_all().await {
                 Ok(paths) => paths,
                 Err(error) => {

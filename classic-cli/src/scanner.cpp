@@ -17,7 +17,6 @@
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/runtime.h"
 #include "classic_cxx_bridge/scanner.h"
-#include "classic_cxx_bridge/xse.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -94,15 +93,6 @@ static std::string startup_correlation_id() {
     return correlation_id;
 }
 
-static std::string resolve_xse_folder_for_scan(const CliArgs& args, const DataDirs& dirs) {
-    if (!args.scan_path.empty()) {
-        return "";
-    }
-
-    auto xse_path = classic::xse::resolve_xse_folder_for_scan(dirs.data, args.game, args.game_version, "");
-    return std::string(xse_path.data(), xse_path.size());
-}
-
 // ── Scan pipeline (inner) ──────────────────────────────────────────
 // Factored out so rust::Box<T> objects can be constructed in-place
 // rather than pre-declared (rust::Box is non-nullable, no nullptr init).
@@ -144,9 +134,9 @@ static int scan_with_config(const CliArgs& args, const DataDirs& dirs,
         std::error_code ec;
         std::string base_dir = fs::current_path(ec).string();
         std::string custom_dir = args.scan_path;
-        std::string xse_dir = resolve_xse_folder_for_scan(args, dirs);
 
-        auto collector = classic::files::log_collector_new(base_dir, xse_dir, custom_dir);
+        auto collector = classic::files::log_collector_new_for_scan(base_dir, dirs.data, args.game, args.game_version, "",
+                                                                    custom_dir);
         log_paths = classic::files::log_collector_collect_all(*collector);
 
         if (log_paths.empty()) {
