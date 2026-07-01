@@ -13,7 +13,9 @@ crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 [dependencies]
 # Shared utilities
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
+classic-settings-core = { path = "../classic-settings-core" }
 classic-version-core = { path = "../classic-version-core" }
+classic-version-registry-core = { path = "../classic-version-registry-core" }
 classic-path-core = { path = "../classic-path-core" }
 
 # Error handling

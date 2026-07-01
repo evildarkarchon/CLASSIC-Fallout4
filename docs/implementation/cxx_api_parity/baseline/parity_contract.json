@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-22T10:26:15Z",
+  "generated_at_utc": "2026-07-01T00:02:45Z",
   "schema_version": 1,
   "entries": [
     {
@@ -6832,6 +6832,35 @@
           }
         ],
         "returnType": "bool"
+      }
+    },
+    {
+      "id": "d6aeb07b6b9d96e1",
+      "rustSymbol": "resolve_xse_folder_for_scan",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/xse.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "yaml_dir_data",
+            "type": "&str"
+          },
+          {
+            "name": "game",
+            "type": "&str"
+          },
+          {
+            "name": "selected_game_version",
+            "type": "&str"
+          },
+          {
+            "name": "configured_docs_root",
+            "type": "&str"
+          }
+        ],
+        "returnType": "String"
       }
     },
     {

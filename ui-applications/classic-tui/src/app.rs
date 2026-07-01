@@ -1,20 +1,19 @@
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use classic_config_core::{ClassicConfig, YamlSource, resolve_registry_version_info};
+use classic_config_core::ClassicConfig;
 use classic_file_io_core::BackupType;
 use classic_file_io_core::LogCollector;
-use classic_path_core::{DocsPathFinder, validate_custom_scan_path};
+use classic_path_core::validate_custom_scan_path;
 use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
-use classic_version_registry_core::Fallout4Version;
+use classic_xse_core::resolve_xse_folder_for_scan;
 use ratatui::Terminal;
 use ratatui::backend::Backend;
 use ratatui::layout::Rect;
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
-use yaml_rust2::YamlLoader;
 
 mod backup_workflow;
 mod results_workflow;
@@ -570,7 +569,19 @@ impl App {
 
         let tx = self.async_tx.clone();
         let custom_folder = self.config.paths.scan_custom.clone();
-        let xse_folder = resolve_xse_folder_for_scan(&self.config);
+        let has_custom_folder = custom_folder
+            .as_ref()
+            .is_some_and(|path| !path.as_os_str().is_empty());
+        let xse_folder = if has_custom_folder {
+            None
+        } else {
+            resolve_xse_folder_for_scan(
+                "CLASSIC Data",
+                "Fallout4",
+                &self.config.game_version,
+                self.config.paths.docs_root.as_deref(),
+            )
+        };
         let selected_game_version = self.config.game_version.clone();
         let base_folder = std::env::current_dir().unwrap_or_default();
 
@@ -816,51 +827,6 @@ impl App {
             }
             self.status_clear_at = Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
         }
-    }
-}
-
-fn resolve_xse_folder_for_scan(config: &ClassicConfig) -> Option<PathBuf> {
-    if let Some(xse_from_local) = xse_folder_from_local_yaml() {
-        return Some(xse_from_local);
-    }
-
-    if let Some(docs_root) = &config.paths.docs_root
-        && !docs_root.as_os_str().is_empty()
-    {
-        return Some(docs_root.join("F4SE"));
-    }
-
-    let relative_docs = resolve_selected_docs_relative_path(config);
-    // Opt in to Fallout 4's Steam/Proton documents lookup on Linux.
-    // The canonical 377160 literal lives in classic_version_registry_core.
-    let finder = DocsPathFinder::new(&relative_docs)
-        .with_steam_app_id(Fallout4Version::Original.steam_app_id());
-    finder
-        .find_docs_path(None)
-        .ok()
-        .map(|path| path.join("F4SE"))
-}
-
-fn resolve_selected_docs_relative_path(config: &ClassicConfig) -> String {
-    resolve_registry_version_info("Fallout4", &config.game_version)
-        .map(|info| format!(r"My Games\{}", info.docs_name))
-        .unwrap_or_else(|| r"My Games\Fallout4".to_string())
-}
-
-fn xse_folder_from_local_yaml() -> Option<PathBuf> {
-    let local_yaml_path = YamlSource::GameLocal.path("Fallout4");
-    let content = std::fs::read_to_string(local_yaml_path).ok()?;
-    parse_xse_folder_from_local_yaml(&content)
-}
-
-fn parse_xse_folder_from_local_yaml(content: &str) -> Option<PathBuf> {
-    let docs = YamlLoader::load_from_str(content).ok()?;
-    let doc = docs.first()?;
-    let xse = doc["Game_Info"]["Docs_Folder_XSE"].as_str()?;
-    if xse.trim().is_empty() {
-        None
-    } else {
-        Some(PathBuf::from(xse))
     }
 }
 

@@ -17,7 +17,7 @@
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/runtime.h"
 #include "classic_cxx_bridge/scanner.h"
-#include "classic_cxx_bridge/settings.h"
+#include "classic_cxx_bridge/xse.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -95,19 +95,12 @@ static std::string startup_correlation_id() {
 }
 
 static std::string resolve_xse_folder_for_scan(const CliArgs& args, const DataDirs& dirs) {
-    // Mirror Python: read Docs_Folder_XSE from CLASSIC <Game> Local.yaml.
-    fs::path local_yaml = fs::path(dirs.data) / ("CLASSIC " + args.game + " Local.yaml");
-
-    try {
-        auto yaml = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*yaml, local_yaml.string());
-
-        std::string key_path = "Game_Info.Docs_Folder_XSE";
-        auto xse_path = classic::settings::yaml_ops_get_string(*yaml, key_path, "");
-        return std::string(xse_path.data(), xse_path.size());
-    } catch (const rust::Error&) {
+    if (!args.scan_path.empty()) {
         return "";
     }
+
+    auto xse_path = classic::xse::resolve_xse_folder_for_scan(dirs.data, args.game, args.game_version, "");
+    return std::string(xse_path.data(), xse_path.size());
 }
 
 // ── Scan pipeline (inner) ──────────────────────────────────────────

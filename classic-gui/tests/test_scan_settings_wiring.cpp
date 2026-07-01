@@ -26,8 +26,8 @@ private slots:
     void mainwindow_uses_exe_relative_crash_logs_dir();
     void mainwindow_resets_stale_game_exe_path_outside_selected_root();
     void controllers_emit_global_scan_started_signal_on_scan_start();
-    void scan_controller_uses_exe_dir_and_docs_fallback_for_log_collection();
-    void scan_controller_treats_blank_xse_paths_as_missing();
+    void scan_controller_uses_exe_dir_and_xse_resolver_for_log_collection();
+    void scan_controller_delegates_xse_folder_resolution_to_core();
     void settings_dialog_wires_game_folder_path_controls();
     void settings_dialog_resets_stale_game_exe_path_when_game_folder_changes();
     void settings_dialog_adds_multiple_formid_databases();
@@ -454,7 +454,7 @@ void ScanSettingsWiringTests::controllers_emit_global_scan_started_signal_on_sca
              "GameFilesController should emit SignalHub::scanStarted() when a game-files scan begins");
 }
 
-void ScanSettingsWiringTests::scan_controller_uses_exe_dir_and_docs_fallback_for_log_collection()
+void ScanSettingsWiringTests::scan_controller_uses_exe_dir_and_xse_resolver_for_log_collection()
 {
     const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
     QFile file(sourcePath);
@@ -462,10 +462,10 @@ void ScanSettingsWiringTests::scan_controller_uses_exe_dir_and_docs_fallback_for
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("Game_Info.Root_Folder_Docs")),
-             "ScanController should fall back to Root_Folder_Docs when Docs_Folder_XSE is unavailable");
-    QVERIFY2(sourceText.contains(QStringLiteral("filePath(QStringLiteral(\"F4SE\"))")),
-             "ScanController should derive the F4SE folder from the docs root when needed");
+    QVERIFY2(sourceText.contains(QStringLiteral("classic::xse::resolve_xse_folder_for_scan")),
+             "ScanController should delegate XSE Folder resolution to classic::xse");
+    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(gameVersion)")),
+             "ScanController should forward gameVersion to XSE Folder resolution");
     QVERIFY2(sourceText.contains(QStringLiteral("QCoreApplication::applicationDirPath()")),
              "ScanController should collect crash logs relative to the GUI executable directory");
     QVERIFY2(!sourceText.contains(QStringLiteral("QDir::currentPath()")),
@@ -474,7 +474,7 @@ void ScanSettingsWiringTests::scan_controller_uses_exe_dir_and_docs_fallback_for
              "ScanController should continue forwarding the custom scan folder separately");
 }
 
-void ScanSettingsWiringTests::scan_controller_treats_blank_xse_paths_as_missing()
+void ScanSettingsWiringTests::scan_controller_delegates_xse_folder_resolution_to_core()
 {
     const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
     QFile file(sourcePath);
@@ -482,11 +482,12 @@ void ScanSettingsWiringTests::scan_controller_treats_blank_xse_paths_as_missing(
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("const QString trimmed = classic::toQString(value).trimmed();")),
-             "ScanController should trim YAML directory values before deciding whether they are present");
-    QVERIFY2(sourceText.contains(QStringLiteral("return trimmed.isEmpty() ? QString() : QDir::cleanPath(trimmed);")),
-             "ScanController should keep blank Docs_Folder_XSE values empty instead of normalizing them to the current "
-             "directory");
+    QVERIFY2(!sourceText.contains(QStringLiteral("Game_Info.Docs_Folder_XSE")),
+             "ScanController should not parse Docs_Folder_XSE itself");
+    QVERIFY2(!sourceText.contains(QStringLiteral("Game_Info.Root_Folder_Docs")),
+             "ScanController should not parse Root_Folder_Docs itself");
+    QVERIFY2(!sourceText.contains(QStringLiteral("classic::settings::yaml_ops")),
+             "ScanController should not load Local.yaml through settings helpers");
 }
 
 void ScanSettingsWiringTests::settings_dialog_wires_game_folder_path_controls()

@@ -161,7 +161,13 @@ fn resolve_xse_folder_uses_docs_root_for_fo4() {
     app.config.paths.docs_root = Some(PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4"));
     app.config.game_version = "auto".to_string();
 
-    let folder = super::resolve_xse_folder_for_scan(&app.config).expect("expected xse folder");
+    let folder = super::resolve_xse_folder_for_scan(
+        "CLASSIC Data",
+        "Fallout4",
+        &app.config.game_version,
+        app.config.paths.docs_root.as_deref(),
+    )
+    .expect("expected xse folder");
     assert_eq!(
         folder,
         PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4\F4SE")
@@ -176,40 +182,16 @@ fn resolve_xse_folder_uses_docs_root_for_fo4_vr() {
     ));
     app.config.game_version = "VR".to_string();
 
-    let folder = super::resolve_xse_folder_for_scan(&app.config).expect("expected xse folder");
+    let folder = super::resolve_xse_folder_for_scan(
+        "CLASSIC Data",
+        "Fallout4",
+        &app.config.game_version,
+        app.config.paths.docs_root.as_deref(),
+    )
+    .expect("expected xse folder");
     assert_eq!(
         folder,
         PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE")
-    );
-}
-
-#[test]
-fn parse_xse_folder_from_local_yaml_reads_game_info() {
-    let yaml = r#"
-Game_Info:
-  Docs_Folder_XSE: C:\Users\Test\Documents\My Games\Fallout4\F4SE
-"#;
-    let parsed = super::parse_xse_folder_from_local_yaml(yaml);
-    assert_eq!(
-        parsed,
-        Some(PathBuf::from(
-            r"C:\Users\Test\Documents\My Games\Fallout4\F4SE"
-        ))
-    );
-}
-
-#[test]
-fn parse_xse_folder_from_local_yaml_reads_registry_backed_vr_path() {
-    let yaml = r#"
-Game_Info:
-  Docs_Folder_XSE: C:\Users\Test\Documents\My Games\Fallout4VR\F4SE
-"#;
-    let parsed = super::parse_xse_folder_from_local_yaml(yaml);
-    assert_eq!(
-        parsed,
-        Some(PathBuf::from(
-            r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE"
-        ))
     );
 }
 

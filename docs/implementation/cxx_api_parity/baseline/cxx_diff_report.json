@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 348,
-    "current_total": 348,
-    "matched": 348,
+    "contract_total": 349,
+    "current_total": 349,
+    "matched": 349,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2747,6 +2747,14 @@
     {
       "id": "866ec46b5dbb24ca",
       "rustSymbol": "is_xse_installed_check",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d6aeb07b6b9d96e1",
+      "rustSymbol": "resolve_xse_folder_for_scan",
       "kind": "function",
       "bridgeModule": "xse",
       "status": "matched",

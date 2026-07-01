@@ -7,9 +7,9 @@ Crate metadata:
 - Crate: `classic-xse-core`
 - Description: `Script Extender (XSE) utilities for CLASSIC (no PyO3)`
 
-This crate is the small Rust-side XSE detection layer for CLASSIC. It identifies which script extender a game uses, checks whether the expected loader exists in a game directory, and tries to derive an XSE version from sibling DLL filenames.
+This crate is the Rust-side XSE module for CLASSIC. It identifies which script extender a game uses, resolves the XSE Folder used for Crash Log collection, checks whether the expected loader exists in a game directory, and tries to derive an XSE version from sibling DLL filenames.
 
-It is a synchronous business-logic crate. It does not own a Tokio runtime, registry-driven game-path discovery flow, or binding surface.
+It is a synchronous business-logic crate. It does not own a Tokio runtime, game-install discovery flow, or binding surface.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
@@ -24,12 +24,13 @@ Use this crate when you need to:
 - check whether an expected XSE loader executable exists in a known game directory
 - derive an XSE version from versioned DLL filenames next to the loader
 - package installation status and optional detected version into one `XseInfo` value
+- resolve the XSE Folder from Local.yaml, an optional configured docs root, or Version Registry-backed documents discovery
 - reuse common version helpers re-exported from [`classic-version-core`](../../business-logic/classic-version-core)
 
 Do not use this crate for:
 
 - finding the game installation path in the first place
-- registry or YAML-driven compatibility decisions
+- registry or YAML-driven compatibility decisions outside XSE Folder resolution
 - Address Library validation
 - crashgen or broader setup scanning orchestration
 - binding-specific wrapper DTOs
@@ -49,6 +50,7 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 - `detect_xse_version()` - version detection from a loader path plus sibling DLL filenames
 - `is_xse_installed()` - loader existence check for a game directory
 - `get_xse_info()` - combined installation + optional version probe
+- `resolve_xse_folder_for_scan()` - fail-soft XSE Folder resolution for Crash Log collection
 - `XseError`, `XseResult<T>` - crate-specific error model
 
 ## Root-level re-exports
@@ -57,7 +59,9 @@ This crate currently exposes a single public file, `src/lib.rs`. There are no pu
 
 Contributor note:
 
-- `classic-path-core` is a direct dependency, but in current source it is only visible in the public error surface through `XseError::PathError`
+- `classic-path-core` supports documents-folder discovery and is still visible in the public error surface through `XseError::PathError`
+- `classic-settings-core` is used internally for Local.yaml parsing
+- `classic-version-registry-core` is the source of truth for docs folder names, Steam app IDs, and XSE acronyms used by XSE Folder derivation
 
 ---
 
@@ -159,6 +163,26 @@ Behavior visible in source:
 
 That last point matters for callers: `get_xse_info()` is fail-soft for version detection.
 
+## `resolve_xse_folder_for_scan()`
+
+`resolve_xse_folder_for_scan(yaml_dir_data, game, selected_game_version, configured_docs_root) -> Option<PathBuf>` is the XSE Folder resolver used before Crash Log collection.
+
+Resolution order:
+
+1. Load `<yaml_dir_data>/CLASSIC <game> Local.yaml` if it exists.
+2. Return `Game_Info.Docs_Folder_XSE` when present and non-blank.
+3. Derive `<Root_Folder_Docs>/<xse acronym>` from `Game_Info.Root_Folder_Docs` when present and non-blank.
+4. Derive `<configured_docs_root>/<xse acronym>` when the caller supplies a non-empty configured docs root.
+5. Use Version Registry metadata plus `DocsPathFinder` to discover the docs root, then append the Version Registry XSE acronym.
+
+Behavior worth knowing:
+
+- the function is fail-soft and returns `None` for missing/unreadable Local.yaml, blank values, unknown game/version, or documents discovery failure
+- `Fallout4VR` with `selected_game_version = "auto"` resolves as the VR registry entry
+- Version Registry XSE metadata is the source of truth for the derived folder name; Fallout 4 VR currently derives the shared `F4SE` folder
+- explicit `Docs_Folder_XSE` always wins over derived values
+- adapters that need custom-folder isolation should skip XSE Folder resolution instead of asking this module for an ambient folder
+
 ## Re-exported version helpers
 
 The crate re-exports three helpers from [`classic-version-core`](../../business-logic/classic-version-core):
@@ -175,11 +199,12 @@ These are useful when a caller wants to compare a detected XSE version with vers
 
 The current crate-level flow is intentionally narrow:
 
-1. The caller decides which `XseType` to use, either explicitly or through `XseType::from_game_id()`.
-2. The caller already has a game root path or a loader path.
-3. Installation detection checks only for the expected loader filename in that directory.
-4. Version detection scans sibling DLL filenames in the loader's parent directory.
-5. Optional caller-side comparison can then use the re-exported `parse_version()` / `compare_versions()` helpers.
+1. For Crash Log collection, the caller asks `resolve_xse_folder_for_scan()` for the XSE Folder and treats `None` as "no XSE Folder".
+2. For setup checks, the caller decides which `XseType` to use, either explicitly or through `XseType::from_game_id()`.
+3. The caller already has a game root path or a loader path.
+4. Installation detection checks only for the expected loader filename in that directory.
+5. Version detection scans sibling DLL filenames in the loader's parent directory.
+6. Optional caller-side comparison can then use the re-exported `parse_version()` / `compare_versions()` helpers.
 
 What this crate does not do today:
 
@@ -210,7 +235,7 @@ What contributors should know:
 - `FromStr for XseType` returns `InvalidType` for unknown names
 - `detect_xse_version()` returns `NotFound` when the loader path is absent and `VersionDetectionFailed` when no parseable matching DLL is found
 - `IoError` exists through `#[from] std::io::Error`, but the current `detect_xse_version()` implementation swallows `read_dir()` failure by using `if let Ok(entries) = ...`; not every directory-read problem becomes an error today
-- `PathError` is part of the public API, but the current crate source does not visibly call any `classic-path-core` function that would produce it
+- `PathError` is part of the public API; XSE Folder discovery uses `DocsPathFinder` but returns `None` rather than exposing path-discovery errors
 - `IncompatibleVersion` is public API surface, but current `src/lib.rs` does not construct it anywhere
 
 That means the public error enum is slightly broader than the behavior currently exercised by the main functions.
@@ -223,7 +248,7 @@ That means the public error enum is slightly broader than the behavior currently
 - current filename assumptions are Windows-flavored: loader names end in `.exe` and versioned companion files end in `.dll`
 - existence checks use `Path::exists()` and `Path::is_file()` directly; the crate does not canonicalize paths or normalize case
 - version detection assumes the versioned DLL lives in the same directory as the loader executable
-- there is no path-discovery, registry, or documents-folder logic in this crate
+- XSE Folder resolution uses Version Registry metadata and `DocsPathFinder`; game-install path discovery remains outside this crate
 
 Contributor note:
 
@@ -244,7 +269,7 @@ Important direct dependencies:
 
 Related CLASSIC crates and consumers:
 
-- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - exposes `detect_xse_version()` and `is_xse_installed()` to C++ callers in [`cpp-bindings/classic-cpp-bridge/src/game.rs`](../../cpp-bindings/classic-cpp-bridge/src/game.rs)
+- [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - exposes XSE helpers, including XSE Folder resolution, to C++ callers in [`cpp-bindings/classic-cpp-bridge/src/xse.rs`](../../cpp-bindings/classic-cpp-bridge/src/xse.rs)
 - [`classic-node`](../../node-bindings/classic-node) - wraps the same core APIs for JavaScript in [`node-bindings/classic-node/src/xse.rs`](../../node-bindings/classic-node/src/xse.rs)
 - [`classic-xse-py`](../../python-bindings/classic-xse-py) - wraps the same core APIs for Python in [`python-bindings/classic-xse-py/src/lib.rs`](../../python-bindings/classic-xse-py/src/lib.rs)
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - adjacent higher-level scan/setup crate; current source does not directly call `classic-xse-core`, but both participate in setup-time XSE-related workflows

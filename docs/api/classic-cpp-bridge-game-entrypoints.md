@@ -280,6 +280,23 @@ Current behavior:
 - the check means only that the expected loader file exists
 - this entry point does not inspect DLLs, version strings, registry compatibility, or Address Library state
 
+### `resolve_xse_folder_for_scan(yaml_dir_data, game, selected_game_version, configured_docs_root) -> String`
+
+Forwards to `classic_xse_core::resolve_xse_folder_for_scan()`.
+
+Current behavior:
+
+- reads `<yaml_dir_data>/CLASSIC <game> Local.yaml` through the Rust XSE module
+- uses `Game_Info.Docs_Folder_XSE` first when present and non-blank
+- otherwise derives from `Game_Info.Root_Folder_Docs`, `configured_docs_root`, or Version Registry-backed documents discovery
+- appends the Version Registry XSE acronym for derived paths
+- returns `""` when the Rust module returns `None`
+
+Bridge narrowing:
+
+- `configured_docs_root = ""` is treated as `None`
+- the C++ side gets no reason for missing or unreadable Local.yaml, unknown game/version, or documents discovery failure
+
 ## Path helpers
 
 ### `find_game_path(game_exe, xse_loader, game_name, is_vr, cached_path, xse_log_path) -> String`

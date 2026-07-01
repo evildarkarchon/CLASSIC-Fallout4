@@ -13,6 +13,20 @@ OpenSpec workflow skills (for example `openspec-apply-change`, `openspec-archive
 
 If your environment does not support project skills, read the reference file next to the skill entrypoint before doing repo-specific build, test, parity, or architecture work.
 
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs are tracked in GitHub Issues for this repo; external PRs are not a triage request surface. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Triage uses the canonical label vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Domain documentation uses a single-context layout: root `CONTEXT.md` and root `docs/adr/`. See `docs/agents/domain.md`.
+
 ## Project Overview
 
 CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a repo-root Cargo workspace with native frontends and thin binding layers:

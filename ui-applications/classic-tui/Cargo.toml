@@ -22,7 +22,7 @@ classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
 classic-path-core = { path = "../../business-logic/classic-path-core" }
 classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
 classic-update-core = { path = "../../business-logic/classic-update-core" }
-classic-version-registry-core = { path = "../../business-logic/classic-version-registry-core" }
+classic-xse-core = { path = "../../business-logic/classic-xse-core" }
 
 tokio = { workspace = true }
 tokio-util = { workspace = true }
@@ -33,7 +33,6 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 directories = { workspace = true }
 pulldown-cmark = { workspace = true }
-yaml-rust2 = { workspace = true }
 
 open = "5"
 arboard = "3"

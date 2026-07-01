@@ -5,7 +5,7 @@
 #include "workers/scanworker.h"
 
 #include "classic_cxx_bridge/files.h"
-#include "classic_cxx_bridge/settings.h"
+#include "classic_cxx_bridge/xse.h"
 #include "rust/cxx.h"
 
 #include <QCoreApplication>
@@ -15,38 +15,6 @@
 #include <QThread>
 
 namespace {
-
-QString cleanDirectoryPath(const rust::String& value)
-{
-    const QString trimmed = classic::toQString(value).trimmed();
-    return trimmed.isEmpty() ? QString() : QDir::cleanPath(trimmed);
-}
-
-QString resolveXseFolderFromLocalYaml(const QString& yamlData, const QString& game)
-{
-    const QString localYamlPath = QDir(yamlData).filePath(QStringLiteral("CLASSIC %1 Local.yaml").arg(game));
-
-    try {
-        auto ops = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*ops, classic::toRustString(localYamlPath));
-
-        const QString xsePath =
-            cleanDirectoryPath(classic::settings::yaml_ops_get_string(*ops, "Game_Info.Docs_Folder_XSE", ""));
-        if (!xsePath.isEmpty()) {
-            return xsePath;
-        }
-
-        const QString docsRoot =
-            cleanDirectoryPath(classic::settings::yaml_ops_get_string(*ops, "Game_Info.Root_Folder_Docs", ""));
-        if (!docsRoot.isEmpty()) {
-            return QDir(docsRoot).filePath(QStringLiteral("F4SE"));
-        }
-
-        return {};
-    } catch (const rust::Error&) {
-        return {};
-    }
-}
 
 bool isCrashLogPath(const QString& path)
 {
@@ -161,7 +129,11 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
             // portable app, so the application directory is expected to be writable and we do
             // not use a separate per-user/AppData fallback here.
             const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
-            auto xseFolder = resolveXseFolderFromLocalYaml(yamlData, game);
+            QString xseFolder;
+            if (customFolder.isEmpty()) {
+                xseFolder = classic::toQString(classic::xse::resolve_xse_folder_for_scan(
+                    classic::toRustString(yamlData), classic::toRustString(game), classic::toRustString(gameVersion), ""));
+            }
             auto collector = classic::files::log_collector_new(
                 classic::toRustString(baseDir), classic::toRustString(xseFolder), classic::toRustString(customFolder));
             auto rustPaths = classic::files::log_collector_collect_all(*collector);
