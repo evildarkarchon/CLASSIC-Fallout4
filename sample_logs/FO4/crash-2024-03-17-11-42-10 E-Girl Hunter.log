@@ -343,7 +343,7 @@ STACK:
 	[RSP+7B00] 0x10000            (size_t)
 	[RSP+7B80] 0x10000000         (size_t)
 	[RSP+7C00] 0x0                (size_t)
-	[RSP+7C80] 0xD86A8FF6D0       (char*) "C:\Users\gordo.DESKTOP-J848KTJ\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
+	[RSP+7C80] 0xD86A8FF6D0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
 	[RSP+7D00] 0x0                (size_t)
 	[RSP+7D80] 0x0                (size_t)
 	[RSP+7E00] 0x10000            (size_t)
@@ -355,20 +355,20 @@ STACK:
 	[RSP+8100] 0x0                (size_t)
 	[RSP+8180] 0x0                (size_t)
 	[RSP+8200] 0xC5F9BBAD1510     (size_t)
-	[RSP+8280] 0xD86A8FF6D0       (char*) "C:\Users\gordo.DESKTOP-J848KTJ\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
-	[RSP+8300] 0xD86A8FF6D0       (char*) "C:\Users\gordo.DESKTOP-J848KTJ\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
+	[RSP+8280] 0xD86A8FF6D0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
+	[RSP+8300] 0xD86A8FF6D0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
 	[RSP+8380] 0x1FC156E50C0      (BSFile*)
 	[RSP+8400] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+8480] 0x7FFBC9AF453F     (void* -> KERNELBASE.dll+002453F)
 	[RSP+8500] 0x0                (size_t)
 	[RSP+8580] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+8600] 0x0                (size_t)
-	[RSP+8680] 0xD86A8FF6D0       (char*) "C:\Users\gordo.DESKTOP-J848KTJ\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
+	[RSP+8680] 0xD86A8FF6D0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
 	[RSP+8700] 0x1                (size_t)
 	[RSP+8780] 0x7FF7F3A7525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+8800] 0x1FC156E50C0      (BSFile*)
 	[RSP+8880] 0x0                (size_t)
-	[RSP+8900] 0xD86A8FF6D0       (char*) "C:\Users\gordo.DESKTOP-J848KTJ\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
+	[RSP+8900] 0xD86A8FF6D0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
 	[RSP+8980] 0x1FC156E50C0      (BSFile*)
 	[RSP+8A00] 0xFFFFFFFFFFFFFF00 (size_t)
 	[RSP+8A80] 0x0                (size_t)
@@ -376,16 +376,16 @@ STACK:
 	[RSP+8B80] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+8C00] 0x1FA00000001      (void*)
 	[RSP+8C80] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+8D00] 0xD86A8FF6D0       (char*) "C:\Users\gordo.DESKTOP-J848KTJ\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
+	[RSP+8D00] 0xD86A8FF6D0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
 	[RSP+8D80] 0x7FF7F3A74D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+8E00] 0x1                (size_t)
 	[RSP+8E80] 0x1FC156E50C0      (BSFile*)
-	[RSP+8F00] 0x1FC156E512C      (char*) "C:\Users\gordo.DESKTOP-J848KTJ\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
+	[RSP+8F00] 0x1FC156E512C      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
 	[RSP+8F80] 0x7FFB133AC1EC     (void* -> Buffout4.dll+004C1EC)
 	[RSP+9000] 0x1                (size_t)
 	[RSP+9080] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+9100] 0xFFFFFFFF         (size_t)
-	[RSP+9180] 0xD86A8FF6D0       (char*) "C:\Users\gordo.DESKTOP-J848KTJ\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
+	[RSP+9180] 0xD86A8FF6D0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2.fos.tmp"
 	[RSP+9200] 0x1                (size_t)
 	[RSP+9280] 0x7FF7F2BFA38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+9300] 0x1FA97603100      (char*) "Quicksave0_81325AC5S517565656E204C756379_Commonwealth_001531_20240317114210_57_2"

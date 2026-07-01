@@ -865,7 +865,7 @@ STACK:
 	[RSP+D900] 0x0                (size_t)
 	[RSP+D980] 0x7FF7FC53DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+DA00] 0x22495B7C200      (char*) "
-ull save path: C:\Users\Bennett\Documents\My Games\Fallout4\Saves\\Exitsave0_28649596S4A6F686E2046616C6C6F7574_DmndPlayerHouse01_010500_20240601233415_27_2.f4seectly) loaded correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_28649596S4A6F686E2046616C6C6F7574_DmndPlayerHouse01_010500_20240601233415_27_2.f4seectly) loaded correctly"
 	[RSP+DA80] 0x0                (size_t)
 	[RSP+DB00] 0x3                (size_t)
 	[RSP+DB80] 0xC68FDABE         (size_t)

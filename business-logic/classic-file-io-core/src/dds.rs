@@ -83,7 +83,7 @@ impl DDSHeader {
 
     /// Check if dimensions are valid for BC compression (multiple of 4)
     pub fn has_valid_bc_dimensions(&self) -> bool {
-        self.width % 4 == 0 && self.height % 4 == 0
+        self.width.is_multiple_of(4) && self.height.is_multiple_of(4)
     }
 
     /// Check if dimensions are within reasonable bounds
@@ -279,7 +279,7 @@ impl DDSAnalyzer {
     pub fn validate_dimensions(width: u32, height: u32) -> Vec<DDSIssue> {
         let mut issues = Vec::new();
 
-        if width % 2 != 0 || height % 2 != 0 {
+        if !width.is_multiple_of(2) || !height.is_multiple_of(2) {
             issues.push(DDSIssue {
                 message: format!("Non-even dimensions: {}x{}", width, height),
             });

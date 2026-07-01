@@ -455,12 +455,12 @@ impl App {
 
     pub fn tick(&mut self) {
         self.tick_count = self.tick_count.wrapping_add(1);
-        if let Some(clear_at) = self.status_clear_at {
-            if Instant::now() >= clear_at {
-                self.scan_status = "Ready".to_string();
-                self.scan_progress = 0.0;
-                self.status_clear_at = None;
-            }
+        if let Some(clear_at) = self.status_clear_at
+            && Instant::now() >= clear_at
+        {
+            self.scan_status = "Ready".to_string();
+            self.scan_progress = 0.0;
+            self.status_clear_at = None;
         }
 
         if matches!(self.active_tab, TabIndex::Results) {

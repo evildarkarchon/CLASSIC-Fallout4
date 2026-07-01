@@ -652,7 +652,7 @@ N"
 	[RSP+D900] 0x0                (size_t)
 	[RSP+D980] 0x7FF6A560DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+DA00] 0x19B0C13A1E0      (char*) "
-ull save path: C:\Users\Test\Documents\My Games\Fallout4\Saves\\Exitsave0_9FAD0E6FS4A6F686E205769636B_Commonwealth_000156_20231103001045_5_2.f4setlyctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_9FAD0E6FS4A6F686E205769636B_Commonwealth_000156_20231103001045_5_2.f4setlyctly"
 	[RSP+DB00] 0x3                (size_t)
 	[RSP+DC00] 0x0                (size_t)
 	[RSP+DC80] 0x7FF6A560DAD4     (void* -> Fallout4.exe+36CDAD4)
@@ -691,11 +691,11 @@ ull save path: C:\Users\Test\Documents\My Games\Fallout4\Saves\\Exitsave0_9FAD0E
 	[RSP+F580] 0x7FFECA9DF551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+F600] 0x7FFECAA11A70     (char*) "%s
 "
-	[RSP+F680] 0x7FFECAA4B770     (char*) "full save path: C:\Users\Test\Documents\My Games\Fallout4\Saves\\Exitsave0_9FAD0E6FS4A6F686E205769636B_Commonwealth_000156_20231103001045_5_2.f4se"
+	[RSP+F680] 0x7FFECAA4B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_9FAD0E6FS4A6F686E205769636B_Commonwealth_000156_20231103001045_5_2.f4se"
 	[RSP+F780] 0x0                (size_t)
 	[RSP+F880] 0x7FFED5776C58     (void* -> SprintSpeedController.dll+0006C58)
 	[RSP+F980] 0x7FFECA9844EA     (void* -> f4se_1_10_163.dll+00044EA)
-	[RSP+FA00] 0x19BD8BF6720      (char*) "C:\Users\Test\Documents\My Games\Fallout4\Saves\\Exitsave0_9FAD0E6FS4A6F686E205769636B_Commonwealth_000156_20231103001045_5_2.f4se"
+	[RSP+FA00] 0x19BD8BF6720      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_9FAD0E6FS4A6F686E205769636B_Commonwealth_000156_20231103001045_5_2.f4se"
 	[RSP+FB00] 0x4C               (size_t)
 	[RSP+FC00] 0x31689A7948B      (size_t)
 	[RSP+FC80] 0x19C18392D40      (char*) "Exitsave0_9FAD0E6FS4A6F686E205769636B_Commonwealth_000156_20231103001045_5_2"

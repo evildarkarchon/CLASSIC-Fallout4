@@ -303,7 +303,7 @@ STACK:
 	[RSP+3B00] 0x0                (size_t)
 	[RSP+3B80] 0x7FF77A00DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+3C00] 0x1572A6D8E10      (char*) "
-ull save path: C:\Users\user\Documents\My Games\Fallout4\Saves\\Exitsave0_654A833CS43697269_Commonwealth_010225_20240309054520_30_2.f4sectlyorrectly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_654A833CS43697269_Commonwealth_010225_20240309054520_30_2.f4sectlyorrectly"
 	[RSP+3C80] 0x0                (size_t)
 	[RSP+3D00] 0x3                (size_t)
 	[RSP+3D80] 0xB73ADABE         (size_t)
@@ -362,14 +362,14 @@ ull save path: C:\Users\user\Documents\My Games\Fallout4\Saves\\Exitsave0_654A83
 	[RSP+5780] 0x7FFDB738F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+5800] 0x7FFDB73C1A70     (char*) "%s
 "
-	[RSP+5880] 0x7FFDB73FB770     (char*) "full save path: C:\Users\user\Documents\My Games\Fallout4\Saves\\Exitsave0_654A833CS43697269_Commonwealth_010225_20240309054520_30_2.f4se"
+	[RSP+5880] 0x7FFDB73FB770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_654A833CS43697269_Commonwealth_010225_20240309054520_30_2.f4se"
 	[RSP+5900] 0x7FFDB73FE7D0     (void* -> f4se_1_10_163.dll+00CE7D0)
-	[RSP+5980] 0x1572A6D8E11      (char*) "ull save path: C:\Users\user\Documents\My Games\Fallout4\Saves\\Exitsave0_654A833CS43697269_Commonwealth_010225_20240309054520_30_2.f4sectlyorrectly"
+	[RSP+5980] 0x1572A6D8E11      (char*) "ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_654A833CS43697269_Commonwealth_010225_20240309054520_30_2.f4sectlyorrectly"
 	[RSP+5A00] 0x0                (size_t)
 	[RSP+5A80] 0x359562F268       (void*)
 	[RSP+5B00] 0x0                (size_t)
 	[RSP+5B80] 0x7FFDB73344EA     (void* -> f4se_1_10_163.dll+00044EA)
-	[RSP+5C00] 0x157C46AD000      (char*) "C:\Users\user\Documents\My Games\Fallout4\Saves\\Exitsave0_654A833CS43697269_Commonwealth_010225_20240309054520_30_2.f4se"
+	[RSP+5C00] 0x157C46AD000      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_654A833CS43697269_Commonwealth_010225_20240309054520_30_2.f4se"
 	[RSP+5C80] 0x43               (size_t)
 	[RSP+5D00] 0x0                (size_t)
 	[RSP+5D80] 0xFFFFFFFF         (size_t)

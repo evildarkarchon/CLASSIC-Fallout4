@@ -5,6 +5,7 @@
 //! and optional Unsolved Logs relocation.
 
 use crate::error::{Result, ScanLogError};
+use crate::report::autoscan_report_path;
 use crate::{
     AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, FcxModeHandler,
     FcxResetError, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, ScanReadyAnalysis,
@@ -76,13 +77,8 @@ impl CrashLogScanRun {
                     cancellation,
                 },
                 |event| {
-                    if matches!(
-                        event.kind,
-                        BatchScanEventKind::Queued
-                            | BatchScanEventKind::Started
-                            | BatchScanEventKind::Phase
-                    ) {
-                        on_event(CrashLogScanRunEvent::from_batch_event(event));
+                    if let Some(event) = CrashLogScanRunEvent::from_batch_event(event) {
+                        on_event(event);
                     }
                 },
             )
@@ -92,7 +88,7 @@ impl CrashLogScanRun {
         let mut completed = 0usize;
         for indexed in indexed_results {
             completed += 1;
-            let outcome = finalize_log_outcome(indexed, &mode).await;
+            let outcome = finalize_log_outcome(indexed, &mode, &orchestrator).await;
             on_event(outcome.terminal_event(completed, total));
             outcomes.push(outcome);
         }
@@ -284,22 +280,23 @@ pub struct CrashLogScanRunEvent {
 }
 
 impl CrashLogScanRunEvent {
-    fn from_batch_event(event: BatchScanEvent) -> Self {
-        Self {
+    fn from_batch_event(event: BatchScanEvent) -> Option<Self> {
+        let kind = match event.kind {
+            BatchScanEventKind::Queued => CrashLogScanRunEventKind::Queued,
+            BatchScanEventKind::Started => CrashLogScanRunEventKind::Started,
+            BatchScanEventKind::Phase => CrashLogScanRunEventKind::Phase,
+            BatchScanEventKind::Completed | BatchScanEventKind::Failed => return None,
+        };
+
+        Some(Self {
             input_index: event.input_index,
             crash_log: PathBuf::from(event.log_path),
-            kind: match event.kind {
-                BatchScanEventKind::Queued => CrashLogScanRunEventKind::Queued,
-                BatchScanEventKind::Started => CrashLogScanRunEventKind::Started,
-                BatchScanEventKind::Phase => CrashLogScanRunEventKind::Phase,
-                BatchScanEventKind::Completed => CrashLogScanRunEventKind::Completed,
-                BatchScanEventKind::Failed => CrashLogScanRunEventKind::Failed,
-            },
+            kind,
             phase: event.phase,
             completed: event.completed,
             total: event.total,
             success: event.success,
-        }
+        })
     }
 }
 
@@ -321,6 +318,7 @@ pub enum CrashLogScanRunEventKind {
 async fn finalize_log_outcome(
     indexed: IndexedAnalysisResult,
     mode: &CrashLogScanRunMode,
+    orchestrator: &OrchestratorCore,
 ) -> CrashLogScanRunLogOutcome {
     let input_index = indexed.input_index;
     let result = indexed.result;
@@ -330,7 +328,10 @@ async fn finalize_log_outcome(
     let mut autoscan_report = None;
 
     if result.success && !result.report_lines.is_empty() {
-        match write_autoscan_report(&crash_log, &result.report_lines).await {
+        match orchestrator
+            .write_autoscan_report(&crash_log, &result.report_lines)
+            .await
+        {
             Ok(path) => autoscan_report = Some(path),
             Err(write_error) => {
                 outcome = CrashLogScanOutcome::Failed;
@@ -391,28 +392,6 @@ fn unsolved_logs_directory(mode: &CrashLogScanRunMode) -> Option<&Path> {
     }
 }
 
-fn autoscan_report_path(log_path: &Path) -> PathBuf {
-    let stem = log_path
-        .file_stem()
-        .and_then(|stem| stem.to_str())
-        .unwrap_or("unknown");
-    log_path.with_file_name(format!("{stem}-AUTOSCAN.md"))
-}
-
-async fn write_autoscan_report(log_path: &Path, report_lines: &[String]) -> Result<PathBuf> {
-    let autoscan_path = autoscan_report_path(log_path);
-    tokio::fs::write(&autoscan_path, report_lines.concat())
-        .await
-        .map_err(|error| {
-            ScanLogError::ReportError(format!(
-                "Failed to write Autoscan Report {}: {}",
-                autoscan_path.display(),
-                error
-            ))
-        })?;
-    Ok(autoscan_path)
-}
-
 async fn move_unsolved_artifacts(log_path: &Path, destination_dir: &Path) -> Result<bool> {
     let autoscan_path = autoscan_report_path(log_path);
     let moved_log = move_file_if_exists(log_path, destination_dir).await?;
@@ -439,6 +418,7 @@ async fn move_file_if_exists(source: &Path, destination_dir: &Path) -> Result<bo
     if source == destination {
         return Ok(false);
     }
+    let destination = next_available_destination(destination).await?;
 
     match tokio::fs::rename(source, &destination).await {
         Ok(()) => Ok(true),
@@ -447,6 +427,45 @@ async fn move_file_if_exists(source: &Path, destination_dir: &Path) -> Result<bo
             tokio::fs::remove_file(source).await?;
             Ok(true)
         }
+    }
+}
+
+async fn next_available_destination(destination: PathBuf) -> Result<PathBuf> {
+    if !path_exists(&destination).await? {
+        return Ok(destination);
+    }
+
+    let parent = destination.parent().unwrap_or_else(|| Path::new(""));
+    let stem = destination
+        .file_stem()
+        .map(|stem| stem.to_string_lossy())
+        .unwrap_or_else(|| "artifact".into());
+    let extension = destination
+        .extension()
+        .map(|extension| extension.to_string_lossy());
+
+    for suffix in 1.. {
+        let candidate_name = match extension.as_ref() {
+            Some(extension) if !extension.is_empty() => format!("{stem}-{suffix}.{extension}"),
+            _ => format!("{stem}-{suffix}"),
+        };
+        let candidate = parent.join(candidate_name);
+        if !path_exists(&candidate).await? {
+            return Ok(candidate);
+        }
+    }
+
+    Err(ScanLogError::Internal(format!(
+        "Could not find available Unsolved Logs destination for {}",
+        destination.display()
+    )))
+}
+
+async fn path_exists(path: &Path) -> Result<bool> {
+    match tokio::fs::metadata(path).await {
+        Ok(_) => Ok(true),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        Err(error) => Err(ScanLogError::IoError(error)),
     }
 }
 

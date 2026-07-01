@@ -340,7 +340,7 @@ STACK:
 	[RSP+4F00] 0x66A9D861         (size_t) [1722407009]
 	[RSP+4F80] 0x64ACC377         (size_t) [1689043831]
 	[RSP+5000] 0x66A31338         (size_t) [1721963320]
-	[RSP+5080] 0x7FFBA758B770     (char*) "full save path: C:\Users\xterm\Documents\My Games\Fallout4\__MO_Saves\\Save15_AF90A2A9_4176657279_FOLINTSouthwarkUBoat_000735_20240731064227_10_2.f4se"
+	[RSP+5080] 0x7FFBA758B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Save15_AF90A2A9_4176657279_FOLINTSouthwarkUBoat_000735_20240731064227_10_2.f4se"
 	[RSP+5100] 0xFFFFFFFFFFFFFFFE (size_t) [uint:0184467440737095516140int:0-2]
 	[RSP+5180] 0x0                (size_t) [0]
 	[RSP+5200] 0x0                (size_t) [0]

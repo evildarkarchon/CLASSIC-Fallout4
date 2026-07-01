@@ -1288,7 +1288,7 @@ STACK:
 	[RSP+20C0] 0x0                (size_t)
 	[RSP+20C8] 0x7FF62858DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+20D0] 0x1B5C23BC650      (char*) "
-ull save path: C:\Users\steve\Documents\My Games\Fallout4\__MO_Saves\\Quicksave0_6A954EACS53746F726D79_Commonwealth_030628_20240828163731_76_2.f4serectly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Quicksave0_6A954EACS53746F726D79_Commonwealth_030628_20240828163731_76_2.f4serectly"
 	[RSP+20D8] 0x0                (size_t)
 	[RSP+20E0] 0x3                (size_t)
 	[RSP+20E8] 0xA85BDABE         (size_t)

@@ -36,10 +36,10 @@ fn build_config(enabled: bool, bundled_yaml_dir: Option<&str>) -> core::UpdateCh
     } else {
         core::UpdateCheckConfig::disabled()
     };
-    if let Some(dir) = bundled_yaml_dir {
-        if !dir.is_empty() {
-            cfg = cfg.with_bundled_yaml_dir(PathBuf::from(dir));
-        }
+    if let Some(dir) = bundled_yaml_dir
+        && !dir.is_empty()
+    {
+        cfg = cfg.with_bundled_yaml_dir(PathBuf::from(dir));
     }
     cfg
 }

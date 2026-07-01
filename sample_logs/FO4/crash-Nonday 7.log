@@ -255,7 +255,7 @@ STACK:
 	[RSP+508 ] 0x7FFD01396D5A     (void* -> usvfs_x64.dll+00C6D5A)
 	[RSP+510 ] 0x0                (size_t)
 	[RSP+518 ] 0x7FFD153A3310     (void* -> ntdll.dll+0053310)
-	[RSP+520 ] 0x1A799D5C72C      (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
+	[RSP+520 ] 0x1A799D5C72C      (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
 	[RSP+528 ] 0x40000000         (size_t)
 	[RSP+530 ] 0x7FFD12D197DF     (void* -> KERNELBASE.dll+00297DF)
 	[RSP+538 ] 0x7FFD01396DE9     (void* -> usvfs_x64.dll+00C6DE9)
@@ -284,7 +284,7 @@ STACK:
 	[RSP+5F0 ] 0x0                (size_t)
 	[RSP+5F8 ] 0x7FFD153EEE20     (void* -> ntdll.dll+009EE20)
 	[RSP+600 ] 0x7FFD153EEE20     (void* -> ntdll.dll+009EE20)
-	[RSP+608 ] 0x257BF7F450       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
+	[RSP+608 ] 0x257BF7F450       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
 	[RSP+610 ] 0x1A799D5C6C0      (BSFile*)
 	[RSP+618 ] 0x7FFD000200A1     (void*)
 	[RSP+620 ] 0xFFFFFFFFFFFFFFFF (size_t)
@@ -292,7 +292,7 @@ STACK:
 	[RSP+630 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+638 ] 0x1A799D5C6C0      (BSFile*)
 	[RSP+640 ] 0x0                (size_t)
-	[RSP+648 ] 0x257BF7F450       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
+	[RSP+648 ] 0x257BF7F450       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
 	[RSP+650 ] 0x0                (size_t)
 	[RSP+658 ] 0x0                (size_t)
 	[RSP+660 ] 0x246              (size_t)
@@ -300,7 +300,7 @@ STACK:
 	[RSP+670 ] 0x0                (size_t)
 	[RSP+678 ] 0x1A6CA5FFB10      (void*)
 	[RSP+680 ] 0x1A799D5C6C0      (BSFile*)
-	[RSP+688 ] 0x257BF7F450       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
+	[RSP+688 ] 0x257BF7F450       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
 	[RSP+690 ] 0x0                (size_t)
 	[RSP+698 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6A0 ] 0x0                (size_t)
@@ -310,12 +310,12 @@ STACK:
 	[RSP+6C0 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6C8 ] 0xFFFFFFFF00000000 (size_t)
 	[RSP+6D0 ] 0x0                (size_t)
-	[RSP+6D8 ] 0x257BF7F450       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
+	[RSP+6D8 ] 0x257BF7F450       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
 	[RSP+6E0 ] 0x1                (size_t)
 	[RSP+6E8 ] 0x7FF759E9525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+6F0 ] 0x1A799D5C6C0      (BSFile*)
 	[RSP+6F8 ] 0x0                (size_t)
-	[RSP+700 ] 0x257BF7F450       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
+	[RSP+700 ] 0x257BF7F450       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
 	[RSP+708 ] 0x2853449FBD380000 (size_t)
 	[RSP+710 ] 0x200              (size_t)
 	[RSP+718 ] 0x0                (size_t)
@@ -323,16 +323,16 @@ STACK:
 	[RSP+728 ] 0xFFFFFFFF00000000 (size_t)
 	[RSP+730 ] 0x1A700000001      (void*)
 	[RSP+738 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+740 ] 0x257BF7F450       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
+	[RSP+740 ] 0x257BF7F450       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
 	[RSP+748 ] 0x7FF759E94D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+750 ] 0x1                (size_t)
 	[RSP+758 ] 0x1A799D5C6C0      (BSFile*)
-	[RSP+760 ] 0x1A799D5C72C      (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
+	[RSP+760 ] 0x1A799D5C72C      (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
 	[RSP+768 ] 0x1A6CA587420      (void*)
 	[RSP+770 ] 0x1                (size_t)
 	[RSP+778 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+780 ] 0xFFFFFFFF         (size_t)
-	[RSP+788 ] 0x257BF7F450       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
+	[RSP+788 ] 0x257BF7F450       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2.fos.tmp"
 	[RSP+790 ] 0x1                (size_t)
 	[RSP+798 ] 0x7FF75901A38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+7A0 ] 0x1A7A13FF928      (char*) "Save8_2C133F32S_SanctuaryHillsWorld_000006_20230321055956_1_2"

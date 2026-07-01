@@ -197,13 +197,13 @@ impl SettingsValidator {
         for (key, value) in crashgen.iter() {
             let setting_name = key.clone();
 
-            if let Ok(false) = value.parse::<bool>() {
-                if !self.entry.ignore_keys.contains(&setting_name) {
-                    lines.push(format!(
+            if let Ok(false) = value.parse::<bool>()
+                && !self.entry.ignore_keys.contains(&setting_name)
+            {
+                lines.push(format!(
                         "* NOTICE : {} is disabled in your {} settings, is this intentional? * \n\n-----\n",
                         setting_name, self.crashgen_name
                     ));
-                }
             }
         }
 

@@ -12,7 +12,7 @@ use classic_scanlog_core::{
 use log::info;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::Duration;
 
 use super::dto::{
@@ -36,6 +36,10 @@ pub(crate) struct Orchestrator {
     db_counter_interval: u64,
 }
 
+pub(crate) struct ScanCancellationToken {
+    cancelled: Arc<AtomicBool>,
+}
+
 const SHORT_SCAN_CACHE_CAPACITY: usize = SHORT_SCAN_CACHE_PROFILE.cache_capacity;
 const SHORT_SCAN_CLEANUP_THRESHOLD: u64 = SHORT_SCAN_CACHE_PROFILE.cleanup_threshold;
 const SHORT_SCAN_CLEANUP_INTERVAL_SECS: u64 = SHORT_SCAN_CACHE_PROFILE.cleanup_interval_secs;
@@ -56,6 +60,20 @@ fn resolve_db_counter_interval() -> u64 {
     parse_db_counter_interval(std::env::var("CLASSIC_DB_COUNTER_INTERVAL").ok().as_deref())
 }
 
+pub(crate) fn scan_cancellation_token_new() -> Box<ScanCancellationToken> {
+    Box::new(ScanCancellationToken {
+        cancelled: Arc::new(AtomicBool::new(false)),
+    })
+}
+
+pub(crate) fn scan_cancellation_token_cancel(token: &ScanCancellationToken) {
+    token.cancelled.store(true, Ordering::Relaxed);
+}
+
+pub(crate) fn scan_cancellation_token_reset(token: &ScanCancellationToken) {
+    token.cancelled.store(false, Ordering::Relaxed);
+}
+
 fn apply_short_scan_db_profile(
     pool: &DatabasePool,
     profile: classic_scanlog_core::ShortScanCacheProfile,
@@ -67,7 +85,7 @@ fn maybe_log_db_perf_counters(orch: &Orchestrator, scanned_path: &str) {
     let completed = orch.completed_logs.fetch_add(1, Ordering::Relaxed) + 1;
     let interval = orch.db_counter_interval;
 
-    if completed % interval != 0 {
+    if !completed.is_multiple_of(interval) {
         return;
     }
 
@@ -352,6 +370,7 @@ pub(crate) fn scan_run_execute(
     max_concurrent: u32,
     log_paths: &[String],
     callback: &ffi::ScanBatchProgressCallback,
+    cancellation_token: &ScanCancellationToken,
 ) -> Result<Vec<ffi::ScanRunLogResult>, String> {
     let options = CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs);
     let prepared = block_on_result(
@@ -391,7 +410,7 @@ pub(crate) fn scan_run_execute(
         logs: log_paths.iter().map(PathBuf::from).collect(),
         mode,
         max_concurrent: max_parallel,
-        cancellation: None,
+        cancellation: Some(Arc::clone(&cancellation_token.cancelled)),
         preserve_order: false,
     };
 

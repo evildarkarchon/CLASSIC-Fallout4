@@ -181,14 +181,12 @@ impl ConfigDuplicateDetector {
         }
 
         // Check 2: File metadata (size and mtime)
-        if let (Ok(meta1), Ok(meta2)) = (file1.metadata(), file2.metadata()) {
-            if meta1.len() == meta2.len() {
-                if let (Ok(mtime1), Ok(mtime2)) = (meta1.modified(), meta2.modified()) {
-                    if mtime1 == mtime2 {
-                        return Ok(true);
-                    }
-                }
-            }
+        if let (Ok(meta1), Ok(meta2)) = (file1.metadata(), file2.metadata())
+            && meta1.len() == meta2.len()
+            && let (Ok(mtime1), Ok(mtime2)) = (meta1.modified(), meta2.modified())
+            && mtime1 == mtime2
+        {
+            return Ok(true);
         }
 
         // Check 3: Text similarity (≥90%)
@@ -315,10 +313,9 @@ fn compare_ini_files(file1: &Path, file2: &Path) -> Result<bool> {
         if let (Some(map1), Some(map2)) = (
             config1.get_map_ref().get(section),
             config2.get_map_ref().get(section),
-        ) {
-            if map1 != map2 {
-                return Ok(false);
-            }
+        ) && map1 != map2
+        {
+            return Ok(false);
         }
     }
 

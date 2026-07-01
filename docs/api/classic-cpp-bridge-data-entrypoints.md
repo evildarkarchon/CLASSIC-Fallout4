@@ -587,6 +587,7 @@ Current bridge behavior:
 - Rust writes Autoscan Reports before returning per-log results; C++ callers no longer receive `report_lines` from this entry point
 - setup failures return a CXX `Result` error; per-log analysis, Autoscan Report write, and Unsolved Logs failures are represented in `ScanRunLogResult`
 - progress uses the existing `ScanBatchProgressCallback` and `BatchProgressEvent` DTO shape
+- cooperative cancellation uses a Rust-owned `ScanCancellationToken`; callers create/reset the token, pass it to `scan_run_execute(...)`, and call `scan_cancellation_token_cancel(...)` to stop queued logs before they start
 
 Bridge DTO shape for `ScanRunLogResult`:
 

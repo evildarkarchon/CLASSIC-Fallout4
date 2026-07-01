@@ -3367,7 +3367,7 @@ STACK:
 		Flags: 0x00500548 kInitialized | kBorderRegion | kMustUpdate
 		FormID: 0xFF00E496
 		FormType: ActorCharacter (62)
-	[RSP+5DF8] 0x7FFD9BB815EB     (void* -> ActorValueExtension.dll+00615EB	add rsp, 0x80 |  C:\Users\Noah\Desktop\Modding\[Lab]\{Lab Tools}\actor-value-extension-project\src\Hooks.h:441 ??$thunk@$00@GetBaseActorValueHook@AVG@@SAMPEAVActorValueOwner@RE@@W4ActorValue@3@@Z)
+	[RSP+5DF8] 0x7FFD9BB815EB     (void* -> ActorValueExtension.dll+00615EB	add rsp, 0x80 |  C:\Users\<USER>\Desktop\Modding\[Lab]\{Lab Tools}\actor-value-extension-project\src\Hooks.h:441 ??$thunk@$00@GetBaseActorValueHook@AVG@@SAMPEAVActorValueOwner@RE@@W4ActorValue@3@@Z)
 	[RSP+5E00] 0x0                (size_t) [0]
 	[RSP+5E08] 0x8C51FF900        (void*)
 	[RSP+5E10] 0x4                (size_t) [4]
@@ -3547,7 +3547,7 @@ STACK:
 	[RSP+60A0] 0x42480000         (size_t) [1112014848]
 	[RSP+60A8] 0x0                (size_t) [0]
 	[RSP+60B0] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
-	[RSP+60B8] 0x7FFD9BB81031     (void* -> ActorValueExtension.dll+0061031	add rsp, 0x80 |  C:\Users\Noah\Desktop\Modding\[Lab]\{Lab Tools}\actor-value-extension-project\src\Hooks.h:196 ??$thunk@$00@GetActorValueHook@AVG@@SAMPEAVActorValueOwner@RE@@W4ActorValue@3@@Z)
+	[RSP+60B8] 0x7FFD9BB81031     (void* -> ActorValueExtension.dll+0061031	add rsp, 0x80 |  C:\Users\<USER>\Desktop\Modding\[Lab]\{Lab Tools}\actor-value-extension-project\src\Hooks.h:196 ??$thunk@$00@GetActorValueHook@AVG@@SAMPEAVActorValueOwner@RE@@W4ActorValue@3@@Z)
 	[RSP+60C0] 0x7FF6665C2644     (void* -> SkyrimSE.exe+3092644	add [rax], al)
 	[RSP+60C8] 0x1                (size_t) [1]
 	[RSP+60D0] 0x1468A2C8100      (Character*)
@@ -3602,7 +3602,7 @@ STACK:
 		FormID: 0xFF00E496
 		FormType: ActorCharacter (62)
 	[RSP+6178] 0x4                (size_t) [4]
-	[RSP+6180] 0x7FFD8EFD4BB0     (void* -> ComprehensiveAttackSpeedPatch.dll+0014BB0	mov [rsp+0x20], rbx |  C:\Users\Noah\Desktop\Modding\[Lab]\{Lab Tools}\ComprehensiveAttackSpeedPatch\src\Main.cpp:721 ??$thunk@$00@GetActorValueHook@@SAMPEAVActorValueOwner@RE@@W4ActorValue@2@@Z)
+	[RSP+6180] 0x7FFD8EFD4BB0     (void* -> ComprehensiveAttackSpeedPatch.dll+0014BB0	mov [rsp+0x20], rbx |  C:\Users\<USER>\Desktop\Modding\[Lab]\{Lab Tools}\ComprehensiveAttackSpeedPatch\src\Main.cpp:721 ??$thunk@$00@GetActorValueHook@@SAMPEAVActorValueOwner@RE@@W4ActorValue@2@@Z)
 	[RSP+6188] 0x1                (size_t) [1]
 	[RSP+6190] 0x7FF6665C2640     (void* -> SkyrimSE.exe+3092640	add [rax], al)
 	[RSP+6198] 0x7FF6665C2648     (void* -> SkyrimSE.exe+3092648	add [rax], al)

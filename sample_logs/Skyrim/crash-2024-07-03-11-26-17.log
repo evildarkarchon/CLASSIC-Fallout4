@@ -642,7 +642,7 @@ STACK:
 	[RSP+1100] 0xFFFFFFFFFFFFE901 (size_t) [uint: 18446744073709545729 int: -5887]
 	[RSP+1108] 0x38C5CB543903     (size_t) [62422171007235]
 	[RSP+1110] 0xB                (size_t) [11]
-	[RSP+1118] 0x7FF859360E00     (void* -> NGIO-NG.dll+0050E00	lea r11, [rsp+0xA0] |  C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:737 ?RunOne@GidFileWorldGenerateTask@GrassControl@@QEAA_NXZ)
+	[RSP+1118] 0x7FF859360E00     (void* -> NGIO-NG.dll+0050E00	lea r11, [rsp+0xA0] |  C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:737 ?RunOne@GidFileWorldGenerateTask@GrassControl@@QEAA_NXZ)
 	[RSP+1120] 0xA76FF720BC10     (size_t) [184099329326096]
 	[RSP+1128] 0x2                (size_t) [2]
 	[RSP+1130] 0xB                (size_t) [11]

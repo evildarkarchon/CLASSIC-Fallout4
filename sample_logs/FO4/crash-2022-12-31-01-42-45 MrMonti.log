@@ -286,7 +286,7 @@ STACK:
 	[RSP+5F0 ] 0x5F33385F34343234 (size_t)
 	[RSP+5F8 ] 0x7FFEB27A0032     (void* -> ntdll.dll+0090032)
 	[RSP+600 ] 0x7FFEB27AD290     (void* -> ntdll.dll+009D290)
-	[RSP+608 ] 0x9A6954F5B0       (char*) "C:\Users\mcout\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
+	[RSP+608 ] 0x9A6954F5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
 	[RSP+610 ] 0x2300972F3C0      (BSFile*)
 	[RSP+618 ] 0x7FFE800200A1     (void*)
 	[RSP+620 ] 0xFFFFFFFFFFFFFFFF (size_t)
@@ -294,7 +294,7 @@ STACK:
 	[RSP+630 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+638 ] 0x0                (size_t)
 	[RSP+640 ] 0x0                (size_t)
-	[RSP+648 ] 0x9A6954F5B0       (char*) "C:\Users\mcout\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
+	[RSP+648 ] 0x9A6954F5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
 	[RSP+650 ] 0x0                (size_t)
 	[RSP+658 ] 0x0                (size_t)
 	[RSP+660 ] 0x246              (size_t)
@@ -302,7 +302,7 @@ STACK:
 	[RSP+670 ] 0x0                (size_t)
 	[RSP+678 ] 0x2301369C150      (void*)
 	[RSP+680 ] 0x2300972F3C0      (BSFile*)
-	[RSP+688 ] 0x9A6954F5B0       (char*) "C:\Users\mcout\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
+	[RSP+688 ] 0x9A6954F5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
 	[RSP+690 ] 0x0                (size_t)
 	[RSP+698 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6A0 ] 0x0                (size_t)
@@ -317,7 +317,7 @@ STACK:
 	[RSP+6E8 ] 0x7FF7D6D4525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+6F0 ] 0x2300972F3C0      (BSFile*)
 	[RSP+6F8 ] 0x0                (size_t)
-	[RSP+700 ] 0x9A6954F5B0       (char*) "C:\Users\mcout\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
+	[RSP+700 ] 0x9A6954F5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
 	[RSP+708 ] 0xD984B59CDAD80000 (size_t)
 	[RSP+710 ] 0x200              (size_t)
 	[RSP+718 ] 0x0                (size_t)
@@ -325,16 +325,16 @@ STACK:
 	[RSP+728 ] 0x0                (size_t)
 	[RSP+730 ] 0x23100000001      (void*)
 	[RSP+738 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+740 ] 0x9A6954F5B0       (char*) "C:\Users\mcout\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
+	[RSP+740 ] 0x9A6954F5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
 	[RSP+748 ] 0x7FF7D6D44D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+750 ] 0x1                (size_t)
 	[RSP+758 ] 0x2300972F3C0      (BSFile*)
-	[RSP+760 ] 0x2300972F42C      (char*) "C:\Users\mcout\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
+	[RSP+760 ] 0x2300972F42C      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
 	[RSP+768 ] 0x7FFE4633A24C     (void* -> Buffout4.dll+004A24C)
 	[RSP+770 ] 0x1                (size_t)
 	[RSP+778 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+780 ] 0xFFFFFFFF         (size_t)
-	[RSP+788 ] 0x9A6954F5B0       (char*) "C:\Users\mcout\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
+	[RSP+788 ] 0x9A6954F5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2.fos.tmp"
 	[RSP+790 ] 0x1                (size_t)
 	[RSP+798 ] 0x7FF7D5ECA38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+7A0 ] 0x2300A3C6AC0      (char*) "Autosave3_771C771D_4E6F7261_DLC06VaultWorkshop_031052_20221231014244_83_2"

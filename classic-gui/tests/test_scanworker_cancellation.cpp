@@ -37,7 +37,7 @@ void ScanWorkerCancellationTests::requestCancel_alone_emits_no_signals()
 
     worker.requestCancel();
 
-    // requestCancel() only sets the flag; signals are emitted by doScan().
+    // requestCancel() only records cancellation; signals are emitted by doScan().
     QCOMPARE(errorSpy.count(), 0);
     QCOMPARE(finishedSpy.count(), 0);
 }

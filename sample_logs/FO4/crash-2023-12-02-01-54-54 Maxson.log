@@ -1126,7 +1126,7 @@ STACK:
 	[RSP+11F0] 0x0                (size_t)
 	[RSP+11F8] 0x7FF65931DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+1200] 0x2BDF3098B40      (char*) "
-ull save path: C:\Users\HomePC\Documents\My Games\Fallout4\Saves\ry7NlHs7a\\Save13_55416901_43415241_Commonwealth_000859_20231130084911_24_2.f4seorrectlylyorrectly02) loaded correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ry7NlHs7a\\Save13_55416901_43415241_Commonwealth_000859_20231130084911_24_2.f4seorrectlylyorrectly02) loaded correctly"
 	[RSP+1208] 0x0                (size_t)
 	[RSP+1210] 0x3                (size_t)
 	[RSP+1218] 0x9F71DABE         (size_t)

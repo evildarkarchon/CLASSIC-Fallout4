@@ -347,7 +347,7 @@ STACK:
 	[RSP+5A00] 0x800000005        (size_t)
 	[RSP+5A80] 0x7FF7B0C3DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+5B00] 0x12EC4C9A190      (char*) "
-ull save path: C:\Users\Yous3f\Documents\My Games\Fallout4\Saves\ByJ7bwKn2\\Autosave2_359B4A45_426F6F62696573_DLC06VaultWorkshop_031332_20231021080330_83_2.f4se correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ByJ7bwKn2\\Autosave2_359B4A45_426F6F62696573_DLC06VaultWorkshop_031332_20231021080330_83_2.f4se correctly"
 	[RSP+5B80] 0x12F5CB98580      (void*)
 	[RSP+5C00] 0x3                (size_t)
 	[RSP+5C80] 0x80DDEDABE        (size_t)

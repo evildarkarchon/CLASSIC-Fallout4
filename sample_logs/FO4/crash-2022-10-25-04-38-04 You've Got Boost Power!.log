@@ -273,7 +273,7 @@ STACK:
 	[RSP+520 ] 0x800000007        (size_t)
 	[RSP+528 ] 0x7FF659B9DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+530 ] 0x245E911C140      (char*) "
-ull save path: C:\Users\Kipcreate\Documents\My Games\Fallout4\Saves\\Save2_B6B441F6_4E61746520486F77617264_Commonwealth_000021_20220918175450_1_2.f4seorrectly02) loaded correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save2_B6B441F6_4E61746520486F77617264_Commonwealth_000021_20220918175450_1_2.f4seorrectly02) loaded correctly"
 	[RSP+538 ] 0x245A3AB6680      (void*)
 	[RSP+540 ] 0x3                (size_t)
 	[RSP+548 ] 0x82BF9DABE        (size_t)
@@ -332,7 +332,7 @@ ull save path: C:\Users\Kipcreate\Documents\My Games\Fallout4\Saves\\Save2_B6B44
 	[RSP+6E8 ] 0x7FFA2BF7F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+6F0 ] 0x7FFA2BFB1A70     (char*) "%s
 "
-	[RSP+6F8 ] 0x7FFA2BFEB770     (char*) "full save path: C:\Users\Kipcreate\Documents\My Games\Fallout4\Saves\\Save2_B6B441F6_4E61746520486F77617264_Commonwealth_000021_20220918175450_1_2.f4se"
+	[RSP+6F8 ] 0x7FFA2BFEB770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save2_B6B441F6_4E61746520486F77617264_Commonwealth_000021_20220918175450_1_2.f4se"
 	[RSP+700 ] 0xFFFFFFFFFFFFFFFE (size_t)
 	[RSP+708 ] 0x7FFA21502B05     (void* -> HUDPlusPlus.dll+0012B05)
 	[RSP+710 ] 0x0                (size_t)

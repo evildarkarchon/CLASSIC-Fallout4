@@ -54,7 +54,8 @@ Completion-order results enter the active GUI path here in [`classic-gui/src/wor
 auto results = classic::scanner::scan_run_execute(
     ...,
     rust::Slice<const rust::String>(rustPaths.data(), rustPaths.size()),
-    progress_callback
+    progress_callback,
+    *m_cancellationToken
 );
 
 for (const auto& result : results) {

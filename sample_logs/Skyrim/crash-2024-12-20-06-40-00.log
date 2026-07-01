@@ -21,10 +21,10 @@ PROBABLE CALL STACK:
 	[ 1] 0x7FF73A5BB17C                   SkyrimSE.exe+019B17C -> 13288+0xCC	cmp [0x00007FF73C516320], r12
 	[ 2] 0x7FF73A5BE04F                   SkyrimSE.exe+019E04F -> 13317+0x3BF	mov rcx, [rdi+0x148]
 	[ 3] 0x7FF73AB6C243                   SkyrimSE.exe+074C243 -> 40744+0x173	cmp byte ptr [rbp+0x50], 0x00
-	[ 4] 0x7FFC774F2E0E                    NGIO-NG.dll+0052E0E	lea rax, [rsp+0x50] |  C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:727 GrassControl::GidFileCellGenerateTask::cess const volatile (mangled: ?Process@GidFileCellGenerateTask@GrassControl@@AEAA_NXZ)
-	[ 5] 0x7FFC774F0E74                    NGIO-NG.dll+0050E74	test al, al |  C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:590 ?RunOne@GidFileWorldGenerateTask@GrassControl@@QEAA_NXZ
-	[ 6] 0x7FFC774EDBA4                    NGIO-NG.dll+004DBA4	test al, al |  C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:261 void * const volatile (mangled: ?Update@GidFileGenerationTask@GrassControl@@SAXXZ) C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:261 void * const volatile (mangled: ?Update@GidFileGenerationTask@GrassControl@@SAXXZ)
-	[ 7] 0x7FFC77504AB6                    NGIO-NG.dll+0064AB6	movaps xmm1, xmm6 |  C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\include\GrassControl\GidFileCache.h:146 GrassControl::GidFileGenerationTask::Hooks::MainUpdate_Nullsub::thunk (mangled: ?thunk@MainUpdate_Nullsub@Hooks@GidFileGenerationTask@GrassControl@@SAXPEAVMain@RE@@M@Z) C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\include\GrassControl\GidFileCache.h:164 GrassControl::GidFileGenerationTask::Hooks::MainUpdate_Nullsub::thunk (mangled: ?thunk@MainUpdate_Nullsub@Hooks@GidFileGenerationTask@GrassControl@@SAXPEAVMain@RE@@M@Z)
+	[ 4] 0x7FFC774F2E0E                    NGIO-NG.dll+0052E0E	lea rax, [rsp+0x50] |  C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:727 GrassControl::GidFileCellGenerateTask::cess const volatile (mangled: ?Process@GidFileCellGenerateTask@GrassControl@@AEAA_NXZ)
+	[ 5] 0x7FFC774F0E74                    NGIO-NG.dll+0050E74	test al, al |  C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:590 ?RunOne@GidFileWorldGenerateTask@GrassControl@@QEAA_NXZ
+	[ 6] 0x7FFC774EDBA4                    NGIO-NG.dll+004DBA4	test al, al |  C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:261 void * const volatile (mangled: ?Update@GidFileGenerationTask@GrassControl@@SAXXZ) C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:261 void * const volatile (mangled: ?Update@GidFileGenerationTask@GrassControl@@SAXXZ)
+	[ 7] 0x7FFC77504AB6                    NGIO-NG.dll+0064AB6	movaps xmm1, xmm6 |  C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\include\GrassControl\GidFileCache.h:146 GrassControl::GidFileGenerationTask::Hooks::MainUpdate_Nullsub::thunk (mangled: ?thunk@MainUpdate_Nullsub@Hooks@GidFileGenerationTask@GrassControl@@SAXPEAVMain@RE@@M@Z) C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\include\GrassControl\GidFileCache.h:164 GrassControl::GidFileGenerationTask::Hooks::MainUpdate_Nullsub::thunk (mangled: ?thunk@MainUpdate_Nullsub@Hooks@GidFileGenerationTask@GrassControl@@SAXPEAVMain@RE@@M@Z)
 	[ 8] 0x7FFC91C5B7B3 BetterThirdPersonSelection.dll+007B7B3
 	[ 9] 0x7FF73AA5EAD5                   SkyrimSE.exe+063EAD5 -> 36544+0x165	test bl, bl
 	[10] 0x7FF73B95BB8E                   SkyrimSE.exe+153BB8E -> 109636+0x106	mov ebx, eax
@@ -249,7 +249,7 @@ STACK:
 	[RSP+3D0 ] 0x0                (size_t) [0]
 	[RSP+3D8 ] 0x7FF73AB6C0D0     (void* -> SkyrimSE.exe+074C0D0	mov rax, rsp)
 	[RSP+3E0 ] 0x8309BEF330       (void*)
-	[RSP+3E8 ] 0x7FFC774F2E0E     (void* -> NGIO-NG.dll+0052E0E	lea rax, [rsp+0x50] |  C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:727 GrassControl::GidFileCellGenerateTask::cess const volatile (mangled: ?Process@GidFileCellGenerateTask@GrassControl@@AEAA_NXZ))
+	[RSP+3E8 ] 0x7FFC774F2E0E     (void* -> NGIO-NG.dll+0052E0E	lea rax, [rsp+0x50] |  C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:727 GrassControl::GidFileCellGenerateTask::cess const volatile (mangled: ?Process@GidFileCellGenerateTask@GrassControl@@AEAA_NXZ))
 	[RSP+3F0 ] 0x8309BEF5D0       (void*)
 	[RSP+3F8 ] 0x26AC6F71B00      (void*)
 	[RSP+400 ] 0x26AC6F71DA0      (void*)
@@ -264,7 +264,7 @@ STACK:
 		FormType: LeveledItem (53)
 	[RSP+430 ] 0x0                (size_t) [0]
 	[RSP+438 ] 0x0                (size_t) [0]
-	[RSP+440 ] 0x7FFC775A7A60     (char*) "C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp"
+	[RSP+440 ] 0x7FFC775A7A60     (char*) "C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp"
 	[RSP+448 ] 0x2CA              (size_t) [714]
 	[RSP+450 ] 0x7FFC775A80D0     (char*) "bool __cdecl GrassControl::GidFileCellGenerateTask::Process(void)"
 	[RSP+458 ] 0xF                (size_t) [15]
@@ -272,7 +272,7 @@ STACK:
 	[RSP+468 ] 0x0                (size_t) [0]
 	[RSP+470 ] 0x0                (size_t) [0]
 	[RSP+478 ] 0xF                (size_t) [15]
-	[RSP+480 ] 0x7FFC775A7A60     (char*) "C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp"
+	[RSP+480 ] 0x7FFC775A7A60     (char*) "C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp"
 	[RSP+488 ] 0x2CA              (size_t) [714]
 	[RSP+490 ] 0x7FFC775A80D0     (char*) "bool __cdecl GrassControl::GidFileCellGenerateTask::Process(void)"
 	[RSP+498 ] 0xF                (size_t) [15]
@@ -519,7 +519,7 @@ STACK:
 	[RSP+930 ] 0x2644A893390      (void*)
 	[RSP+938 ] 0x7                (size_t) [7]
 	[RSP+940 ] 0x8309BEF7F9       (void*)
-	[RSP+948 ] 0x7FFC774F0E74     (void* -> NGIO-NG.dll+0050E74	test al, al |  C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:590 ?RunOne@GidFileWorldGenerateTask@GrassControl@@QEAA_NXZ)
+	[RSP+948 ] 0x7FFC774F0E74     (void* -> NGIO-NG.dll+0050E74	test al, al |  C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:590 ?RunOne@GidFileWorldGenerateTask@GrassControl@@QEAA_NXZ)
 	[RSP+950 ] 0x21EEB401ACE4     (size_t) [37309105941732]
 	[RSP+958 ] 0x1                (size_t) [1]
 	[RSP+960 ] 0x152A             (size_t) [5418]
@@ -545,7 +545,7 @@ STACK:
 	[RSP+A00 ] 0x0                (size_t) [0]
 	[RSP+A08 ] 0x0                (size_t) [0]
 	[RSP+A10 ] 0x0                (size_t) [0]
-	[RSP+A18 ] 0x7FFC774EDBA4     (void* -> NGIO-NG.dll+004DBA4	test al, al |  C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:261 void * const volatile (mangled: ?Update@GidFileGenerationTask@GrassControl@@SAXXZ) C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:261 void * const volatile (mangled: ?Update@GidFileGenerationTask@GrassControl@@SAXXZ))
+	[RSP+A18 ] 0x7FFC774EDBA4     (void* -> NGIO-NG.dll+004DBA4	test al, al |  C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:261 void * const volatile (mangled: ?Update@GidFileGenerationTask@GrassControl@@SAXXZ) C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:261 void * const volatile (mangled: ?Update@GidFileGenerationTask@GrassControl@@SAXXZ))
 	[RSP+A20 ] 0x7FFC6E1518D0     (CInputHandler*)
 	[RSP+A28 ] 0x2644ADC59A0      (void*)
 	[RSP+A30 ] 0x0                (size_t) [0]
@@ -561,7 +561,7 @@ STACK:
 	[RSP+A80 ] 0x2629D822020      (void*)
 	[RSP+A88 ] 0x7FFDA92F8CB9     (void* -> USER32.dll+0008CB9	jmp 0x00007FFDA92F8C71)
 	[RSP+A90 ] 0x1615C6           (size_t) [1447366]
-	[RSP+A98 ] 0x7FFC77504AB6     (void* -> NGIO-NG.dll+0064AB6	movaps xmm1, xmm6 |  C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\include\GrassControl\GidFileCache.h:146 GrassControl::GidFileGenerationTask::Hooks::MainUpdate_Nullsub::thunk (mangled: ?thunk@MainUpdate_Nullsub@Hooks@GidFileGenerationTask@GrassControl@@SAXPEAVMain@RE@@M@Z) C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\include\GrassControl\GidFileCache.h:164 GrassControl::GidFileGenerationTask::Hooks::MainUpdate_Nullsub::thunk (mangled: ?thunk@MainUpdate_Nullsub@Hooks@GidFileGenerationTask@GrassControl@@SAXPEAVMain@RE@@M@Z))
+	[RSP+A98 ] 0x7FFC77504AB6     (void* -> NGIO-NG.dll+0064AB6	movaps xmm1, xmm6 |  C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\include\GrassControl\GidFileCache.h:146 GrassControl::GidFileGenerationTask::Hooks::MainUpdate_Nullsub::thunk (mangled: ?thunk@MainUpdate_Nullsub@Hooks@GidFileGenerationTask@GrassControl@@SAXPEAVMain@RE@@M@Z) C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\include\GrassControl\GidFileCache.h:164 GrassControl::GidFileGenerationTask::Hooks::MainUpdate_Nullsub::thunk (mangled: ?thunk@MainUpdate_Nullsub@Hooks@GidFileGenerationTask@GrassControl@@SAXPEAVMain@RE@@M@Z))
 	[RSP+AA0 ] 0x262A7DCA700      (Main*)
 	[RSP+AA8 ] 0x7FFC6E09085A     (void* -> gameoverlayrenderer64.dll+009085A	test al, al)
 	[RSP+AB0 ] 0x1                (size_t) [1]

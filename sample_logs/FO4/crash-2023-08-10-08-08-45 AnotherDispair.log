@@ -257,14 +257,14 @@ STACK:
 	[RSP+488 ] 0x7FFA1BDFF16C     (void* -> F4z Ro D'oh.dll+000F16C)
 	[RSP+490 ] 0x7FFA1C431A70     (char*) "%s
 "
-	[RSP+498 ] 0x7FFA1C46B770     (char*) "full save path: C:\Users\diobr\Documents\My Games\Fallout4\Saves\\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.f4se"
+	[RSP+498 ] 0x7FFA1C46B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.f4se"
 	[RSP+4A0 ] 0xFFFFFFFFFFFFFFFE (size_t)
 	[RSP+4A8 ] 0x0                (size_t)
 	[RSP+4B0 ] 0x0                (size_t)
 	[RSP+4B8 ] 0xB051EFDD68       (void*)
 	[RSP+4C0 ] 0x0                (size_t)
 	[RSP+4C8 ] 0x7FFA0F0298CA     (void* -> ScreenArcherMenu.dll+00598CA)
-	[RSP+4D0 ] 0x27324F62750      (char*) "C:\Users\diobr\Documents\My Games\Fallout4\Saves\\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.f4se"
+	[RSP+4D0 ] 0x27324F62750      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.f4se"
 	[RSP+4D8 ] 0x3D               (size_t)
 	[RSP+4E0 ] 0x0                (size_t)
 	[RSP+4E8 ] 0xFFFFFFFF         (size_t)
@@ -359,7 +359,7 @@ STACK:
 	[RSP+7B0 ] 0x10000            (size_t)
 	[RSP+7B8 ] 0x8000000          (size_t)
 	[RSP+7C0 ] 0x0                (size_t)
-	[RSP+7C8 ] 0xB051EFE240       (char*) "C:\Users\diobr\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
+	[RSP+7C8 ] 0xB051EFE240       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
 	[RSP+7D0 ] 0x273B3835F20      (void*)
 	[RSP+7D8 ] 0x273B3E1E400      (char*) "  g"
 	[RSP+7E0 ] 0x10000            (size_t)
@@ -371,20 +371,20 @@ STACK:
 	[RSP+810 ] 0x0                (size_t)
 	[RSP+818 ] 0x0                (size_t)
 	[RSP+820 ] 0x32B706538788     (size_t)
-	[RSP+828 ] 0xB051EFE240       (char*) "C:\Users\diobr\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
-	[RSP+830 ] 0xB051EFE240       (char*) "C:\Users\diobr\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
+	[RSP+828 ] 0xB051EFE240       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
+	[RSP+830 ] 0xB051EFE240       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
 	[RSP+838 ] 0x273597AA240      (BSFile*)
 	[RSP+840 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+848 ] 0x7FFA69AE3B4F     (void* -> KERNELBASE.dll+0023B4F)
 	[RSP+850 ] 0x0                (size_t)
 	[RSP+858 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+860 ] 0x0                (size_t)
-	[RSP+868 ] 0xB051EFE240       (char*) "C:\Users\diobr\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
+	[RSP+868 ] 0xB051EFE240       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
 	[RSP+870 ] 0x1                (size_t)
 	[RSP+878 ] 0x7FF6FF31525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+880 ] 0x273597AA240      (BSFile*)
 	[RSP+888 ] 0x0                (size_t)
-	[RSP+890 ] 0xB051EFE240       (char*) "C:\Users\diobr\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
+	[RSP+890 ] 0xB051EFE240       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
 	[RSP+898 ] 0x273597AA240      (BSFile*)
 	[RSP+8A0 ] 0xFFFFFFFFFFFFFF00 (size_t)
 	[RSP+8A8 ] 0x0                (size_t)
@@ -392,16 +392,16 @@ STACK:
 	[RSP+8B8 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+8C0 ] 0x27300000001      (void*)
 	[RSP+8C8 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+8D0 ] 0xB051EFE240       (char*) "C:\Users\diobr\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
+	[RSP+8D0 ] 0xB051EFE240       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
 	[RSP+8D8 ] 0x7FF6FF314D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+8E0 ] 0x1                (size_t)
 	[RSP+8E8 ] 0x273597AA240      (BSFile*)
-	[RSP+8F0 ] 0x273597AA2AC      (char*) "C:\Users\diobr\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
+	[RSP+8F0 ] 0x273597AA2AC      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
 	[RSP+8F8 ] 0x7FFA0B7BC1EC     (void* -> Buffout4.dll+004C1EC)
 	[RSP+900 ] 0x1                (size_t)
 	[RSP+908 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+910 ] 0xFFFFFFFF         (size_t)
-	[RSP+918 ] 0xB051EFE240       (char*) "C:\Users\diobr\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
+	[RSP+918 ] 0xB051EFE240       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2.fos.tmp"
 	[RSP+920 ] 0x1                (size_t)
 	[RSP+928 ] 0x7FF6FE49A38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+930 ] 0x27359892480      (char*) "Save1_3FAB9245__SanctuaryHillsWorld_000002_20230810080844_1_2"

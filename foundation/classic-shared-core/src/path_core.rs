@@ -80,12 +80,12 @@ impl PathHandler {
     /// This function checks for a cached result first to improve efficiency.
     pub fn normalize_path(&self, path: &str) -> ClassicResult<String> {
         // Check cache first - use get_mut() to update in-place
-        if let Some(mut entry) = self.path_cache.get_mut(path) {
-            if entry.timestamp.elapsed() < self.cache_ttl {
-                entry.hit_count += 1;
-                self.cache_hits.fetch_add(1, Ordering::Relaxed);
-                return Ok(entry.value.to_string_lossy().to_string());
-            }
+        if let Some(mut entry) = self.path_cache.get_mut(path)
+            && entry.timestamp.elapsed() < self.cache_ttl
+        {
+            entry.hit_count += 1;
+            self.cache_hits.fetch_add(1, Ordering::Relaxed);
+            return Ok(entry.value.to_string_lossy().to_string());
         }
 
         // Cache miss

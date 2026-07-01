@@ -697,7 +697,7 @@ STACK:
 	[RSP+12F0] 0x2330DBE1110      (void*)
 	[RSP+12F8] 0x7FF62D68D008     (void* -> SkyrimSE.exe+315D008	)
 	[RSP+1300] 0xFFFFFFF1         (size_t) [4294967281]
-	[RSP+1308] 0x7FF9E9F91B67     (void* -> NGIO-NG.dll+0051B67	lea r11, [rsp+0xB0] |  C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:742 ?RunOne@GidFileWorldGenerateTask@GrassControl@@QEAA_NXZ)
+	[RSP+1308] 0x7FF9E9F91B67     (void* -> NGIO-NG.dll+0051B67	lea r11, [rsp+0xB0] |  C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:742 ?RunOne@GidFileWorldGenerateTask@GrassControl@@QEAA_NXZ)
 	[RSP+1310] 0x7FF900000001     (size_t) [140707423584257]
 	[RSP+1318] 0x1                (size_t) [1]
 	[RSP+1320] 0xFFFFFFFFFFFFFFF1 (size_t) [uint: 18446744073709551601 int: -15]

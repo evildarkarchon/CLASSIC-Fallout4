@@ -963,9 +963,11 @@ void ScanSettingsWiringTests::scan_worker_skips_unsolved_relocation_for_targeted
 
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
     const QRegularExpression scanRunCallRegex(QStringLiteral(
-        R"(scan_run_execute\((?:.|\n)*?moveUnsolvedLogs,\s*targetedMode(?:.|\n)*?\))"));
+        R"(scan_run_execute\((?:.|\n)*?moveUnsolvedLogs,\s*targetedMode(?:.|\n)*?progress_callback,\s*\*m_cancellationToken\s*\))"));
     QVERIFY2(scanRunCallRegex.match(sourceText).hasMatch(),
-             "ScanWorker should pass targetedMode to Rust so Targeted Crash Log Scan Runs skip Unsolved Logs movement");
+             "ScanWorker should pass targetedMode and the cancellation token to Rust");
+    QVERIFY2(sourceText.contains(QStringLiteral("scan_cancellation_token_cancel(*m_cancellationToken)")),
+             "ScanWorker::requestCancel should propagate cancellation to the Rust scan-run token");
     QVERIFY2(!sourceText.contains(QStringLiteral("move_unsolved_artifacts")),
              "ScanWorker should not own Unsolved Logs movement after scan_run migration");
 }

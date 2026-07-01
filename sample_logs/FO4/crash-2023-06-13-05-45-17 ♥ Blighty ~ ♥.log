@@ -443,9 +443,9 @@ STACK:
 	[RSP+838 ] 0x7FFA656FF551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+840 ] 0x7FFA65731A70     (char*) "%s
 "
-	[RSP+848 ] 0x7FFA6576B770     (char*) "full save path: C:\Users\TJ\Documents\My Games\Fallout4\__MO_Saves\\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.f4se"
+	[RSP+848 ] 0x7FFA6576B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.f4se"
 	[RSP+850 ] 0xFFFFFFFFFFFFFFFE (size_t)
-	[RSP+858 ] 0x2B7FA4998D1      (char*) "ull save path: C:\Users\TJ\Documents\My Games\Fallout4\__MO_Saves\\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.f4se3713_20_2.f4sely"
+	[RSP+858 ] 0x2B7FA4998D1      (char*) "ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.f4se3713_20_2.f4sely"
 	[RSP+860 ] 0x0                (size_t)
 	[RSP+868 ] 0x7FFA6065456E     (void* -> RustyFaceFix.dll+000456E)
 	[RSP+870 ] 0x0                (size_t)
@@ -539,7 +539,7 @@ STACK:
 	[RSP+B30 ] 0x325F             (size_t)
 	[RSP+B38 ] 0x7FFAB4F8D230     (void* -> ntdll.dll+009D230)
 	[RSP+B40 ] 0x7FFAB4F8D230     (void* -> ntdll.dll+009D230)
-	[RSP+B48 ] 0xC13250F9F0       (char*) "C:\Users\TJ\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
+	[RSP+B48 ] 0xC13250F9F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
 	[RSP+B50 ] 0x2B865C81600      (BSFile*)
 	[RSP+B58 ] 0x7FFA800200A1     (void*)
 	[RSP+B60 ] 0xFFFFFFFFFFFFFFFF (size_t)
@@ -547,7 +547,7 @@ STACK:
 	[RSP+B70 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+B78 ] 0x0                (size_t)
 	[RSP+B80 ] 0x0                (size_t)
-	[RSP+B88 ] 0xC13250F9F0       (char*) "C:\Users\TJ\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
+	[RSP+B88 ] 0xC13250F9F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
 	[RSP+B90 ] 0x0                (size_t)
 	[RSP+B98 ] 0x0                (size_t)
 	[RSP+BA0 ] 0x246              (size_t)
@@ -555,7 +555,7 @@ STACK:
 	[RSP+BB0 ] 0x0                (size_t)
 	[RSP+BB8 ] 0x2B7FA438590      (void*)
 	[RSP+BC0 ] 0x2B865C81600      (BSFile*)
-	[RSP+BC8 ] 0xC13250F9F0       (char*) "C:\Users\TJ\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
+	[RSP+BC8 ] 0xC13250F9F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
 	[RSP+BD0 ] 0x0                (size_t)
 	[RSP+BD8 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+BE0 ] 0x0                (size_t)
@@ -570,7 +570,7 @@ STACK:
 	[RSP+C28 ] 0x7FF763BB525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+C30 ] 0x2B865C81600      (BSFile*)
 	[RSP+C38 ] 0x0                (size_t)
-	[RSP+C40 ] 0xC13250F9F0       (char*) "C:\Users\TJ\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
+	[RSP+C40 ] 0xC13250F9F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
 	[RSP+C48 ] 0x7ADE973DD3FD0000 (size_t)
 	[RSP+C50 ] 0x200              (size_t)
 	[RSP+C58 ] 0x0                (size_t)
@@ -578,16 +578,16 @@ STACK:
 	[RSP+C68 ] 0x0                (size_t)
 	[RSP+C70 ] 0x2B800000001      (void*)
 	[RSP+C78 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+C80 ] 0xC13250F9F0       (char*) "C:\Users\TJ\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
+	[RSP+C80 ] 0xC13250F9F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
 	[RSP+C88 ] 0x7FF763BB4D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+C90 ] 0x1                (size_t)
 	[RSP+C98 ] 0x2B865C81600      (BSFile*)
-	[RSP+CA0 ] 0x2B865C8166C      (char*) "C:\Users\TJ\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
+	[RSP+CA0 ] 0x2B865C8166C      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
 	[RSP+CA8 ] 0x7FFA5D7BA24C     (void* -> Buffout4.dll+004A24C)
 	[RSP+CB0 ] 0x1                (size_t)
 	[RSP+CB8 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+CC0 ] 0xFFFFFFFF         (size_t)
-	[RSP+CC8 ] 0xC13250F9F0       (char*) "C:\Users\TJ\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
+	[RSP+CC8 ] 0xC13250F9F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2.fos.tmp"
 	[RSP+CD0 ] 0x1                (size_t)
 	[RSP+CD8 ] 0x7FF762D3A38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+CE0 ] 0x2B886792480      (char*) "Save103_F3A8CF70S54616E7961_DiamondCity_000847_20230613054517_20_2"

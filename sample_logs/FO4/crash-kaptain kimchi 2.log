@@ -1220,7 +1220,7 @@ STACK:
 	[RSP+1740] 0x0                (size_t)
 	[RSP+1748] 0x7FF6182CDAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+1750] 0x1D18398D100      (char*) "
-ull save path: C:\Users\Seo Jin\Documents\My Games\Fallout4\Saves\KSUEKAHf9\\Autosave3_F4DB7B9B_4D69646173_ConcordMuseum01_000158_20220802020136_3_2.f4seyly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\KSUEKAHf9\\Autosave3_F4DB7B9B_4D69646173_ConcordMuseum01_000158_20220802020136_3_2.f4seyly"
 	[RSP+1758] 0x0                (size_t)
 	[RSP+1760] 0x3                (size_t)
 	[RSP+1768] 0x132DDABE         (size_t)

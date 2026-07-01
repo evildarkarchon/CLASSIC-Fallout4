@@ -284,7 +284,7 @@ STACK:
 	[RSP+5F0 ] 0x0                (size_t)
 	[RSP+5F8 ] 0x7FFDB2FE3D50     (void* -> ntdll.dll+00A3D50)
 	[RSP+600 ] 0x7FFDB2FE3D50     (void* -> ntdll.dll+00A3D50)
-	[RSP+608 ] 0x8B3B2FF310       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
+	[RSP+608 ] 0x8B3B2FF310       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
 	[RSP+610 ] 0x27A4DD13440      (BSFile*)
 	[RSP+618 ] 0x7FFD800200A1     (void*)
 	[RSP+620 ] 0xFFFFFFFFFFFFFFFF (size_t)
@@ -292,7 +292,7 @@ STACK:
 	[RSP+630 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+638 ] 0x0                (size_t)
 	[RSP+640 ] 0x0                (size_t)
-	[RSP+648 ] 0x8B3B2FF310       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
+	[RSP+648 ] 0x8B3B2FF310       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
 	[RSP+650 ] 0x0                (size_t)
 	[RSP+658 ] 0x0                (size_t)
 	[RSP+660 ] 0x246              (size_t)
@@ -300,7 +300,7 @@ STACK:
 	[RSP+670 ] 0x0                (size_t)
 	[RSP+678 ] 0x27A64C82A80      (void*)
 	[RSP+680 ] 0x27A4DD13440      (BSFile*)
-	[RSP+688 ] 0x8B3B2FF310       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
+	[RSP+688 ] 0x8B3B2FF310       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
 	[RSP+690 ] 0x0                (size_t)
 	[RSP+698 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6A0 ] 0x0                (size_t)
@@ -315,7 +315,7 @@ STACK:
 	[RSP+6E8 ] 0x7FF6A709525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+6F0 ] 0x27A4DD13440      (BSFile*)
 	[RSP+6F8 ] 0x0                (size_t)
-	[RSP+700 ] 0x8B3B2FF310       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
+	[RSP+700 ] 0x8B3B2FF310       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
 	[RSP+708 ] 0xB4600836733B0000 (size_t)
 	[RSP+710 ] 0x200              (size_t)
 	[RSP+718 ] 0x0                (size_t)
@@ -323,16 +323,16 @@ STACK:
 	[RSP+728 ] 0x7FF600000000     (size_t)
 	[RSP+730 ] 0x27A00000001      (void*)
 	[RSP+738 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+740 ] 0x8B3B2FF310       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
+	[RSP+740 ] 0x8B3B2FF310       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
 	[RSP+748 ] 0x7FF6A7094D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+750 ] 0x1                (size_t)
 	[RSP+758 ] 0x27A4DD13440      (BSFile*)
-	[RSP+760 ] 0x27A4DD134AC      (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
+	[RSP+760 ] 0x27A4DD134AC      (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
 	[RSP+768 ] 0x27A64C27250      (void*)
 	[RSP+770 ] 0x1                (size_t)
 	[RSP+778 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+780 ] 0xFFFFFFFF         (size_t)
-	[RSP+788 ] 0x8B3B2FF310       (char*) "C:\Users\Nonda\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
+	[RSP+788 ] 0x8B3B2FF310       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2.fos.tmp"
 	[RSP+790 ] 0x1                (size_t)
 	[RSP+798 ] 0x7FF6A621A38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+7A0 ] 0x27A53545928      (char*) "Save8_5CCE025AS4E617465_Commonwealth_000032_20221211063252_2_2"

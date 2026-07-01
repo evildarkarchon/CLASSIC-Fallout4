@@ -691,7 +691,7 @@ STACK:
 	[RSP+AF0 ] 0x216200000FDB     (size_t)
 	[RSP+AF8 ] 0x7FF7179ADAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+B00 ] 0x1F5736532D0      (char*) "
-ull save path: C:\Users\DH studios\Documents\My Games\Fallout4\Saves\\Save38_621AB801_436F6E726164_DLC03Acadia_010256_20221103192034_21_2.f4se.f4see20_2.f4se"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save38_621AB801_436F6E726164_DLC03Acadia_010256_20221103192034_21_2.f4se.f4see20_2.f4se"
 	[RSP+B08 ] 0x1F5D3A38B80      (void*)
 	[RSP+B10 ] 0x3                (size_t)
 	[RSP+B18 ] 0x400063CBDABE     (size_t)
@@ -750,14 +750,14 @@ ull save path: C:\Users\DH studios\Documents\My Games\Fallout4\Saves\\Save38_621
 	[RSP+CB8 ] 0x7FF863C9F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+CC0 ] 0x7FF863CD1A70     (char*) "%s
 "
-	[RSP+CC8 ] 0x7FF863D0B770     (char*) "full save path: C:\Users\DH studios\Documents\My Games\Fallout4\Saves\\Save38_621AB801_436F6E726164_DLC03Acadia_010256_20221103192034_21_2.f4se"
+	[RSP+CC8 ] 0x7FF863D0B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save38_621AB801_436F6E726164_DLC03Acadia_010256_20221103192034_21_2.f4se"
 	[RSP+CD0 ] 0x7FF863D0E7D0     (void* -> f4se_1_10_163.dll+00CE7D0)
-	[RSP+CD8 ] 0x1F5736532D1      (char*) "ull save path: C:\Users\DH studios\Documents\My Games\Fallout4\Saves\\Save38_621AB801_436F6E726164_DLC03Acadia_010256_20221103192034_21_2.f4se.f4see20_2.f4se"
+	[RSP+CD8 ] 0x1F5736532D1      (char*) "ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save38_621AB801_436F6E726164_DLC03Acadia_010256_20221103192034_21_2.f4se.f4see20_2.f4se"
 	[RSP+CE0 ] 0x0                (size_t)
 	[RSP+CE8 ] 0x6888DFF5D8       (void*)
 	[RSP+CF0 ] 0x0                (size_t)
 	[RSP+CF8 ] 0x7FF863C444EA     (void* -> f4se_1_10_163.dll+00044EA)
-	[RSP+D00 ] 0x1F5953CCFB0      (char*) "C:\Users\DH studios\Documents\My Games\Fallout4\Saves\\Save38_621AB801_436F6E726164_DLC03Acadia_010256_20221103192034_21_2.f4se"
+	[RSP+D00 ] 0x1F5953CCFB0      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save38_621AB801_436F6E726164_DLC03Acadia_010256_20221103192034_21_2.f4se"
 	[RSP+D08 ] 0x43               (size_t)
 	[RSP+D10 ] 0x0                (size_t)
 	[RSP+D18 ] 0xFFFFFFFF         (size_t)

@@ -1133,7 +1133,7 @@ STACK:
 	[RSP+1F60] 0x0                (size_t) [0]
 	[RSP+1F68] 0x7FF6AD7DDAD4     (void* -> Fallout4.exe+36CDAD4	fisubr st0, word ptr [rbp+0x2CD8EFBE] |  aDiveBombChance_36CDAD4)
 	[RSP+1F70] 0x23FF6663920      (char*) "
-ull save path: C:\Users\nicho\OneDrive\Documents\My Games\Fallout4\Saves\\Quicksave0_122C7BA5M526967686E61_GreenetechGenetics01_010417_20230731194517_68_2.f4se"
+ull save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\\Quicksave0_122C7BA5M526967686E61_GreenetechGenetics01_010417_20230731194517_68_2.f4se"
 	[RSP+1F78] 0x0                (size_t) [0]
 	[RSP+1F80] 0x0                (size_t) [0]
 	[RSP+1F88] 0x70               (size_t) [112]

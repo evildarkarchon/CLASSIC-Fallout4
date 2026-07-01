@@ -397,7 +397,7 @@ STACK:
 	[RSP+790 ] 0x9CC600004E51     (size_t)
 	[RSP+798 ] 0x7FF6C8C5DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+7A0 ] 0x15CC7F30230      (char*) "
-ull save path: C:\Users\airle\Documents\My Games\Fallout4\Saves\\Save10_4E5E5298_75696F_Commonwealth_000044_20221111054615_1_2.f4seshFix 00000001) loaded correctlylyrectlyed correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save10_4E5E5298_75696F_Commonwealth_000044_20221111054615_1_2.f4seshFix 00000001) loaded correctlylyrectlyed correctly"
 	[RSP+7A8 ] 0x15D1C3880A0      (void*)
 	[RSP+7B0 ] 0x3                (size_t)
 	[RSP+7B8 ] 0x100003C3DDABE    (size_t)

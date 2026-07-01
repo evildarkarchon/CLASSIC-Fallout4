@@ -259,7 +259,7 @@ STACK:
 	[RSP+520 ] 0x800000007        (size_t)
 	[RSP+528 ] 0x7FF74BDFDAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+530 ] 0x153A25C6F30      (char*) "
-ull save path: C:\Users\left4\OneDrive\Documents\My Games\Fallout4\Saves\\Quicksave0_00000000S417072696C_00DCDLC04MotelRoom1G_001820_20230113210145_10_2.f4secorrectly"
+ull save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\\Quicksave0_00000000S417072696C_00DCDLC04MotelRoom1G_001820_20230113210145_10_2.f4secorrectly"
 	[RSP+538 ] 0x1545BF28180      (void*)
 	[RSP+540 ] 0x3                (size_t)
 	[RSP+548 ] 0x84F24DABE        (size_t)

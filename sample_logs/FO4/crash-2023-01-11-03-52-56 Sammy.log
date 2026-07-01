@@ -321,11 +321,11 @@ STACK:
 	[RSP+460 ] 0xB32B0B6FA9D5     (size_t)
 	[RSP+468 ] 0x7FFA973F13AE     (void* -> f4se_1_10_163.dll+00713AE)
 	[RSP+470 ] 0x1CAA5AE7330      (char*) "
-ull save path: C:\Users\Mine\Documents\My Games\Fallout4\Saves\\rose1.f4sel (00000001 XDI 00000012) loaded correctly000001) loaded correctlyctlyrectlyded correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\rose1.f4sel (00000001 XDI 00000012) loaded correctly000001) loaded correctlyctlyrectlyded correctly"
 	[RSP+478 ] 0x0                (size_t)
 	[RSP+480 ] 0xB32B0B6FA9B5     (size_t)
 	[RSP+488 ] 0x7FFA973F13AE     (void* -> f4se_1_10_163.dll+00713AE)
-	[RSP+490 ] 0x1CAA5AE4300      (char*) "full save path: C:\Users\Mine\Documents\My Games\Fallout4\Saves\\rose1.f4se
+	[RSP+490 ] 0x1CAA5AE4300      (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\rose1.f4se
  (00000001 XDI 00000012) loaded correctly
 00001) loaded correctly
 tly
@@ -361,13 +361,13 @@ ed correctly
 	[RSP+568 ] 0x1CB97BA7EC0      (char*) "rose1"
 	[RSP+570 ] 0x4C               (size_t)
 	[RSP+578 ] 0x7FFA973E8E82     (void* -> f4se_1_10_163.dll+0068E82)
-	[RSP+580 ] 0x1CB64049480      (char*) "C:\Users\Mine\Documents\My Games\Fallout4\Saves\\rose1.f4se"
+	[RSP+580 ] 0x1CB64049480      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\rose1.f4se"
 	[RSP+588 ] 0x74CFDEF228       (void*)
 	[RSP+590 ] 0x1                (size_t)
 	[RSP+598 ] 0x1CB97BA7EC0      (char*) "rose1"
 	[RSP+5A0 ] 0x1CB97BA7EC0      (char*) "rose1"
 	[RSP+5A8 ] 0x2                (size_t)
-	[RSP+5B0 ] 0x1CB64049480      (char*) "C:\Users\Mine\Documents\My Games\Fallout4\Saves\\rose1.f4se"
+	[RSP+5B0 ] 0x1CB64049480      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\rose1.f4se"
 	[RSP+5B8 ] 0x7FFA97382BDC     (void* -> f4se_1_10_163.dll+0002BDC)
 	[RSP+5C0 ] 0x7FFA9741C2F0     (char*) "%s
 "

@@ -46,7 +46,7 @@ REGISTERS:
 	R11 0x0                (size_t) [0]
 	R12 0xFFFFFFFF         (size_t) [4294967295]
 	R13 0x0                (size_t) [0]
-	R14 0x7FFF0F60C80C     (char*) "C:\Users\eldri\CLionProjects\BuffsWorkOnNPCs\src\BuffsWorkOnNPCs.cpp"
+	R14 0x7FFF0F60C80C     (char*) "C:\Users\<USER>\CLionProjects\BuffsWorkOnNPCs\src\BuffsWorkOnNPCs.cpp"
 	R15 0xD4A28FF7A8       (void*)
 
 STACK:
@@ -753,7 +753,7 @@ STACK:
 	[RSP+5C0] 0x301              (size_t) [769]
 	[RSP+5C8] 0x3C11EF8E952      (size_t) [4127983200594]
 	[RSP+5D0] 0x10               (size_t) [16]
-	[RSP+5D8] 0x7FFF0E2C0CD0     (void* -> NGIO-NG.dll+0050CD0	lea r11, [rsp+0xA0] |  C:\Users\attit\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:737 ?RunOne@GidFileWorldGenerateTask@GrassControl@@QEAA_NXZ)
+	[RSP+5D8] 0x7FFF0E2C0CD0     (void* -> NGIO-NG.dll+0050CD0	lea r11, [rsp+0xA0] |  C:\Users\<USER>\Documents\GitHub\No-Grass-In-Objects-NG\src\GidFileCache.cpp:737 ?RunOne@GidFileWorldGenerateTask@GrassControl@@QEAA_NXZ)
 	[RSP+5E0] 0x75A31A149B36     (size_t) [129343377677110]
 	[RSP+5E8] 0x1                (size_t) [1]
 	[RSP+5F0] 0x10               (size_t) [16]

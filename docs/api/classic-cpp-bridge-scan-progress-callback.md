@@ -64,6 +64,7 @@ The main consumers are `orchestrator_process_logs_batch_with_progress(...)` and 
 - maps `CrashLogScanRunEvent` values into the same `BatchProgressEvent` DTO
 - emits terminal `Completed` or `Failed` events after Rust has finalized per-log Crash Log Scan Run work such as Autoscan Report writing and Unsolved Logs movement
 - returns `Vec<ScanRunLogResult>` in completion order after callback emission finishes
+- observes the caller-provided `ScanCancellationToken` so C++ frontends can cancel queued logs without owning scan-run internals
 
 One active frontend consumer is [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp), which forwards callback updates into Qt signals and uses [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp) to keep visible progress monotonic. That consumer path is documented in [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md).
 

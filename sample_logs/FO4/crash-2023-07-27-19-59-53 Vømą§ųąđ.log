@@ -286,7 +286,7 @@ STACK:
 	[RSP+520 ] 0x800000007        (size_t)
 	[RSP+528 ] 0x7FF68AFCDAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+530 ] 0x2394F3C6430      (char*) "
-ull save path: C:\Users\******\OneDrive\Documents\My Games\Fallout4\Saves\\Quicksave0_DACBEF3A_57616E6461_DLC03FarHarbor_010223_20230727094921_211_2.f4sey"
+ull save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\\Quicksave0_DACBEF3A_57616E6461_DLC03FarHarbor_010223_20230727094921_211_2.f4sey"
 	[RSP+538 ] 0x23BE5F49380      (void*)
 	[RSP+540 ] 0x3                (size_t)
 	[RSP+548 ] 0x8781DDABE        (size_t)

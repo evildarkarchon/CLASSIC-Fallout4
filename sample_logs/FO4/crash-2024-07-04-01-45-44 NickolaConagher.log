@@ -296,11 +296,11 @@ STACK:
 	[RSP+5600] 0x893CBCF1BF1B     (size_t)
 	[RSP+5680] 0x7FFD963113AE     (void* -> f4se_1_10_163.dll+00713AE)
 	[RSP+5700] 0x1B8800010E0      (char*) "
-ull save path: C:\Users\hondo\Documents\My Games\Fallout4\Saves\\Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2.f4se correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2.f4se correctly"
 	[RSP+5780] 0x0                (size_t)
 	[RSP+5800] 0x893CBCF1BF7B     (size_t)
 	[RSP+5880] 0x7FFD963113AE     (void* -> f4se_1_10_163.dll+00713AE)
-	[RSP+5900] 0x1B880009160      (char*) "full save path: C:\Users\hondo\Documents\My Games\Fallout4\Saves\\Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2.f4se
+	[RSP+5900] 0x1B880009160      (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2.f4se
 correctly
 "
 	[RSP+5980] 0x8E               (size_t)
@@ -332,13 +332,13 @@ correctly
 	[RSP+6680] 0x1B95F30F880      (char*) "Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2"
 	[RSP+6700] 0x8E               (size_t)
 	[RSP+6780] 0x7FFD96308E82     (void* -> f4se_1_10_163.dll+0068E82)
-	[RSP+6800] 0x1B9499B48F0      (char*) "C:\Users\hondo\Documents\My Games\Fallout4\Saves\\Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2.f4se"
+	[RSP+6800] 0x1B9499B48F0      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2.f4se"
 	[RSP+6880] 0x5770AFF238       (void*)
 	[RSP+6900] 0x1                (size_t)
 	[RSP+6980] 0x1B95F30F880      (char*) "Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2"
 	[RSP+6A00] 0x1B95F30F880      (char*) "Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2"
 	[RSP+6A80] 0x2                (size_t)
-	[RSP+6B00] 0x1B9499B48F0      (char*) "C:\Users\hondo\Documents\My Games\Fallout4\Saves\\Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2.f4se"
+	[RSP+6B00] 0x1B9499B48F0      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2.f4se"
 	[RSP+6B80] 0x7FFD962A2BDC     (void* -> f4se_1_10_163.dll+0002BDC)
 	[RSP+6C00] 0x7FFD9633C2F0     (char*) "%s
 "
@@ -348,7 +348,7 @@ correctly
 	[RSP+6E00] 0x2                (size_t)
 	[RSP+6E80] 0x7FFD96302570     (void* -> f4se_1_10_163.dll+0062570)
 	[RSP+6F00] 0x7FFD9633BE50     (char*) "full save path: %s"
-	[RSP+6F80] 0x1B9499B48F0      (char*) "C:\Users\hondo\Documents\My Games\Fallout4\Saves\\Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2.f4se"
+	[RSP+6F80] 0x1B9499B48F0      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave2_4B54A8FE_416D626572_Commonwealth_010707_20240703041844_118_2.f4se"
 	[RSP+7000] 0xFFFFFFFFFFFFFFFE (size_t)
 	[RSP+7080] 0x1                (size_t)
 	[RSP+7100] 0x1B94997B300      (void*)

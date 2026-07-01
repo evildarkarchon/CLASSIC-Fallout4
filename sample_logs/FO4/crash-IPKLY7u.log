@@ -532,7 +532,7 @@ STACK:
 	[RSP+9780] 0x800000007        (size_t)
 	[RSP+9800] 0x7FF6C908DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+9880] 0x1C38AFBE140      (char*) "
-ull save path: C:\Users\Canny\Documents\My Games\Fallout4\Saves\\Exitsave0_5AB17E86_56696F6C6574_StPaulsWorld_000508_20240804171018_34_2.f4selyorrectly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_5AB17E86_56696F6C6574_StPaulsWorld_000508_20240804171018_34_2.f4selyorrectly"
 	[RSP+9900] 0x1C481315B00      (void*)
 	[RSP+9980] 0x3                (size_t)
 	[RSP+9A00] 0x8EC0EDABE        (size_t)

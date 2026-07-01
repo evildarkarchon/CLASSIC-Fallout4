@@ -347,19 +347,19 @@ impl LogCollector {
         }
 
         // Collect from custom folder if configured
-        if let Some(custom_folder) = &self.custom_folder {
-            if custom_folder.exists() && custom_folder.is_dir() {
-                let pattern = custom_folder.join(CRASH_LOG_PATTERN);
-                let pattern_str = pattern.to_string_lossy();
+        if let Some(custom_folder) = &self.custom_folder
+            && custom_folder.exists()
+            && custom_folder.is_dir()
+        {
+            let pattern = custom_folder.join(CRASH_LOG_PATTERN);
+            let pattern_str = pattern.to_string_lossy();
 
-                for entry in glob::glob(&pattern_str)
-                    .map_err(|e| FileIOError::Io(format!("Invalid glob pattern: {}", e)))?
-                {
-                    let path = entry.map_err(|e| {
-                        FileIOError::Io(format!("Failed to read glob entry: {}", e))
-                    })?;
-                    crash_files.push(path);
-                }
+            for entry in glob::glob(&pattern_str)
+                .map_err(|e| FileIOError::Io(format!("Invalid glob pattern: {}", e)))?
+            {
+                let path = entry
+                    .map_err(|e| FileIOError::Io(format!("Failed to read glob entry: {}", e)))?;
+                crash_files.push(path);
             }
         }
 

@@ -1137,7 +1137,7 @@ STACK:
 	[RSP+1F60] 0x0                (size_t)
 	[RSP+1F68] 0x7FF6F2D9DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+1F70] 0x22341B39570      (char*) "
-ull save path: C:\Users\******\Documents\My Games\Fallout4\Saves\\Exitsave0_B3A47E25S4368617365_CambridgePD01_000646_20230808203101_16_2.f4seaded correctlyed correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_B3A47E25S4368617365_CambridgePD01_000646_20230808203101_16_2.f4seaded correctlyed correctly"
 	[RSP+1F78] 0x0                (size_t)
 	[RSP+1F80] 0x3                (size_t)
 	[RSP+1F88] 0x5938DABE         (size_t)
@@ -1196,7 +1196,7 @@ ull save path: C:\Users\******\Documents\My Games\Fallout4\Saves\\Exitsave0_B3A4
 	[RSP+2128] 0x7FF95936F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+2130] 0x7FF9593A1A70     (char*) "%s
 "
-	[RSP+2138] 0x7FF9593DB770     (char*) "full save path: C:\Users\******\Documents\My Games\Fallout4\Saves\\Exitsave0_B3A47E25S4368617365_CambridgePD01_000646_20230808203101_16_2.f4se"
+	[RSP+2138] 0x7FF9593DB770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_B3A47E25S4368617365_CambridgePD01_000646_20230808203101_16_2.f4se"
 	[RSP+2140] 0xFFFFFFFFFFFFFFFE (size_t)
 	[RSP+2148] 0x0                (size_t)
 	[RSP+2150] 0x0                (size_t)

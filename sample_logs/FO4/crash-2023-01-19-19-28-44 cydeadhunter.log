@@ -238,14 +238,14 @@ STACK:
 	[RSP+488 ] 0x7FF8E42EF551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+490 ] 0x7FF8E4321A70     (char*) "%s
 "
-	[RSP+498 ] 0x7FF8E435B770     (char*) "full save path: C:\Users\admin\Documents\My Games\Fallout4\Saves\\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.f4se"
+	[RSP+498 ] 0x7FF8E435B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.f4se"
 	[RSP+4A0 ] 0xFFFFFFFFFFFFFFFE (size_t)
 	[RSP+4A8 ] 0x0                (size_t)
 	[RSP+4B0 ] 0x0                (size_t)
 	[RSP+4B8 ] 0x2B148FF188       (void*)
 	[RSP+4C0 ] 0x0                (size_t)
 	[RSP+4C8 ] 0x7FF8E42944EA     (void* -> f4se_1_10_163.dll+00044EA)
-	[RSP+4D0 ] 0x14B16D30CB0      (char*) "C:\Users\admin\Documents\My Games\Fallout4\Saves\\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.f4se"
+	[RSP+4D0 ] 0x14B16D30CB0      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.f4se"
 	[RSP+4D8 ] 0x4D               (size_t)
 	[RSP+4E0 ] 0x0                (size_t)
 	[RSP+4E8 ] 0x210              (size_t)
@@ -305,7 +305,7 @@ STACK:
 	[RSP+698 ] 0x30               (size_t)
 	[RSP+6A0 ] 0x0                (size_t)
 	[RSP+6A8 ] 0x2B148FF300       (void*)
-	[RSP+6B0 ] 0x149A6F7B14C      (char*) "C:\Users\admin\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
+	[RSP+6B0 ] 0x149A6F7B14C      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
 	[RSP+6B8 ] 0x40000000         (size_t)
 	[RSP+6C0 ] 0x7FF940D7E1D0     (void* -> KERNELBASE.dll+034E1D0)
 	[RSP+6C8 ] 0x7FF94351F50D     (void* -> ntdll.dll+002F50D)
@@ -353,19 +353,19 @@ STACK:
 	[RSP+818 ] 0x0                (size_t)
 	[RSP+820 ] 0x49631D4B5B14     (size_t)
 	[RSP+828 ] 0x149A6F7B0E0      (BSFile*)
-	[RSP+830 ] 0x2B148FF660       (char*) "C:\Users\admin\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
+	[RSP+830 ] 0x2B148FF660       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
 	[RSP+838 ] 0x149A6F7B0E0      (BSFile*)
 	[RSP+840 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+848 ] 0x7FF940A597FF     (void* -> KERNELBASE.dll+00297FF)
 	[RSP+850 ] 0x0                (size_t)
 	[RSP+858 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+860 ] 0x0                (size_t)
-	[RSP+868 ] 0x2B148FF660       (char*) "C:\Users\admin\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
+	[RSP+868 ] 0x2B148FF660       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
 	[RSP+870 ] 0x1                (size_t)
 	[RSP+878 ] 0x7FF74FBF525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+880 ] 0x149A6F7B0E0      (BSFile*)
 	[RSP+888 ] 0x0                (size_t)
-	[RSP+890 ] 0x2B148FF660       (char*) "C:\Users\admin\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
+	[RSP+890 ] 0x2B148FF660       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
 	[RSP+898 ] 0x149A6F7B0E0      (BSFile*)
 	[RSP+8A0 ] 0xFFFFFFFFFFFFFF00 (size_t)
 	[RSP+8A8 ] 0x0                (size_t)
@@ -373,16 +373,16 @@ STACK:
 	[RSP+8B8 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+8C0 ] 0x14900000001      (size_t)
 	[RSP+8C8 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+8D0 ] 0x2B148FF660       (char*) "C:\Users\admin\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
+	[RSP+8D0 ] 0x2B148FF660       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
 	[RSP+8D8 ] 0x7FF74FBF4D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+8E0 ] 0x1                (size_t)
 	[RSP+8E8 ] 0x149A6F7B0E0      (BSFile*)
-	[RSP+8F0 ] 0x149A6F7B14C      (char*) "C:\Users\admin\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
+	[RSP+8F0 ] 0x149A6F7B14C      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
 	[RSP+8F8 ] 0x149CB197750      (void*)
 	[RSP+900 ] 0x1                (size_t)
 	[RSP+908 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+910 ] 0xFFFFFFFF         (size_t)
-	[RSP+918 ] 0x2B148FF660       (char*) "C:\Users\admin\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
+	[RSP+918 ] 0x2B148FF660       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2.fos.tmp"
 	[RSP+920 ] 0x1                (size_t)
 	[RSP+928 ] 0x7FF74ED7A38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+930 ] 0x149AD824D20      (char*) "Autosave1_FBB7BCB3S49736163_CorvegaAssemblyPlant01_001258_20230119192844_14_2"

@@ -687,7 +687,7 @@ STACK:
 	[RSP+EF80] 0x800000060        (size_t)
 	[RSP+F080] 0x7FF6B93CDAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+F100] 0x1A3D1081090      (char*) "
-ull save path: C:\Users\nates\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_F7F22208_4A6F4C796E6E_Commonwealth_000845_20240509043443_12_2.f4seorrectly"
+ull save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_F7F22208_4A6F4C796E6E_Commonwealth_000845_20240509043443_12_2.f4seorrectly"
 	[RSP+F200] 0x0                (size_t)
 	[RSP+F300] 0x800000007        (size_t)
 	[RSP+F380] 0x7FF6B93CDAD4     (void* -> Fallout4.exe+36CDAD4)

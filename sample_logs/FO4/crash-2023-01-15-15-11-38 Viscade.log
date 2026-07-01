@@ -954,7 +954,7 @@ STACK:
 	[RSP+D60 ] 0x0                (size_t)
 	[RSP+D68 ] 0x7FF67BE7DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+D70 ] 0x2D60BDB9180      (char*) "
-ull save path: C:\Users\A\Documents\My Games\Fallout4\Saves\\Autosave2_6A9E5361S4E6F7261_Commonwealth_010710_20230115131531_32_2.f4seectlyectlylyrectlyed correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave2_6A9E5361S4E6F7261_Commonwealth_010710_20230115131531_32_2.f4seectlyectlylyrectlyed correctly"
 	[RSP+D78 ] 0x0                (size_t)
 	[RSP+D80 ] 0x3                (size_t)
 	[RSP+D88 ] 0x595FDABE         (size_t)
@@ -1013,7 +1013,7 @@ ull save path: C:\Users\A\Documents\My Games\Fallout4\Saves\\Autosave2_6A9E5361S
 	[RSP+F28 ] 0x7FFC595DF551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+F30 ] 0x7FFC59611A70     (char*) "%s
 "
-	[RSP+F38 ] 0x7FFC5964B770     (char*) "full save path: C:\Users\A\Documents\My Games\Fallout4\Saves\\Autosave2_6A9E5361S4E6F7261_Commonwealth_010710_20230115131531_32_2.f4se"
+	[RSP+F38 ] 0x7FFC5964B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave2_6A9E5361S4E6F7261_Commonwealth_010710_20230115131531_32_2.f4se"
 	[RSP+F40 ] 0xFFFFFFFFFFFFFFFE (size_t)
 	[RSP+F48 ] 0x7FFC58DD2B05     (void* -> HUDPlusPlus.dll+0012B05)
 	[RSP+F50 ] 0x0                (size_t)

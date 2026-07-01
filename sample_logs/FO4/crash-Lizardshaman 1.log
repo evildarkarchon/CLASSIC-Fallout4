@@ -224,7 +224,7 @@ STACK:
 	[RSP+2C0] 0x800000007        (size_t)
 	[RSP+2C8] 0x7FF7568CDAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+2D0] 0x1C288ACD450      (char*) "
-ull save path: C:\Users\graft\Documents\My Games\Fallout4\Saves\Jt0uUhVUk\\Quicksave0_55DEFDAA_4A2E442E20526F6F6B6965_BostonPublicLibrary02_001557_20220514034800_30_2.f4se"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Jt0uUhVUk\\Quicksave0_55DEFDAA_4A2E442E20526F6F6B6965_BostonPublicLibrary02_001557_20220514034800_30_2.f4se"
 	[RSP+2D8] 0x1C336E1B200      (void*)
 	[RSP+2E0] 0x3                (size_t)
 	[RSP+2E8] 0x8F932DABE        (size_t)
@@ -283,14 +283,14 @@ ull save path: C:\Users\graft\Documents\My Games\Fallout4\Saves\Jt0uUhVUk\\Quick
 	[RSP+488] 0x7FF8F930F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+490] 0x7FF8F9341A70     (char*) "%s
 "
-	[RSP+498] 0x7FF8F937B770     (char*) "full save path: C:\Users\graft\Documents\My Games\Fallout4\Saves\Jt0uUhVUk\\Quicksave0_55DEFDAA_4A2E442E20526F6F6B6965_BostonPublicLibrary02_001557_20220514034800_30_2.f4se"
+	[RSP+498] 0x7FF8F937B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Jt0uUhVUk\\Quicksave0_55DEFDAA_4A2E442E20526F6F6B6965_BostonPublicLibrary02_001557_20220514034800_30_2.f4se"
 	[RSP+4A0] 0xFFFFFFFFFFFFFFFE (size_t)
-	[RSP+4A8] 0x1C288ACD451      (char*) "ull save path: C:\Users\graft\Documents\My Games\Fallout4\Saves\Jt0uUhVUk\\Quicksave0_55DEFDAA_4A2E442E20526F6F6B6965_BostonPublicLibrary02_001557_20220514034800_30_2.f4se"
+	[RSP+4A8] 0x1C288ACD451      (char*) "ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Jt0uUhVUk\\Quicksave0_55DEFDAA_4A2E442E20526F6F6B6965_BostonPublicLibrary02_001557_20220514034800_30_2.f4se"
 	[RSP+4B0] 0x0                (size_t)
 	[RSP+4B8] 0x7A082AF608       (void*)
 	[RSP+4C0] 0x0                (size_t)
 	[RSP+4C8] 0x7FF8F92B44EA     (void* -> f4se_1_10_163.dll+00044EA)
-	[RSP+4D0] 0x1C326CFF0B0      (char*) "C:\Users\graft\Documents\My Games\Fallout4\Saves\Jt0uUhVUk\\Quicksave0_55DEFDAA_4A2E442E20526F6F6B6965_BostonPublicLibrary02_001557_20220514034800_30_2.f4se"
+	[RSP+4D0] 0x1C326CFF0B0      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Jt0uUhVUk\\Quicksave0_55DEFDAA_4A2E442E20526F6F6B6965_BostonPublicLibrary02_001557_20220514034800_30_2.f4se"
 	[RSP+4D8] 0x5B               (size_t)
 	[RSP+4E0] 0x0                (size_t)
 	[RSP+4E8] 0xFFFFFFFF         (size_t)

@@ -424,7 +424,7 @@ STACK:
 	[RSP+898 ] 0x12BA900009334    (size_t)
 	[RSP+8A0 ] 0x7FF674D1DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+8A8 ] 0x2FC932693F0      (char*) "
-ull save path: C:\Users\dakot\OneDrive\Documents\My Games\Fallout4\Saves\\Save95_7EB5677E_44656C696C6168_Commonwealth_000806_20230818034452_14_2.f4sef4see4se24734_13_2.f4se"
+ull save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\\Save95_7EB5677E_44656C696C6168_Commonwealth_000806_20230818034452_14_2.f4sef4see4se24734_13_2.f4se"
 	[RSP+8B0 ] 0x2FC8D210CC0      (void*)
 	[RSP+8B8 ] 0x3                (size_t)
 	[RSP+8C0 ] 0x20000E8D4DABE    (size_t)
@@ -483,14 +483,14 @@ ull save path: C:\Users\dakot\OneDrive\Documents\My Games\Fallout4\Saves\\Save95
 	[RSP+A60 ] 0x7FFDE8D2F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+A68 ] 0x7FFDE8D61A70     (char*) "%s
 "
-	[RSP+A70 ] 0x7FFDE8D9B770     (char*) "full save path: C:\Users\dakot\OneDrive\Documents\My Games\Fallout4\Saves\\Save95_7EB5677E_44656C696C6168_Commonwealth_000806_20230818034452_14_2.f4se"
+	[RSP+A70 ] 0x7FFDE8D9B770     (char*) "full save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\\Save95_7EB5677E_44656C696C6168_Commonwealth_000806_20230818034452_14_2.f4se"
 	[RSP+A78 ] 0xFFFFFFFFFFFFFFFE (size_t)
 	[RSP+A80 ] 0x0                (size_t)
 	[RSP+A88 ] 0x0                (size_t)
 	[RSP+A90 ] 0xFDA966EF28       (void*)
 	[RSP+A98 ] 0x0                (size_t)
 	[RSP+AA0 ] 0x7FFDE8CD44EA     (void* -> f4se_1_10_163.dll+00044EA)
-	[RSP+AA8 ] 0x2FE5A3379E0      (char*) "C:\Users\dakot\OneDrive\Documents\My Games\Fallout4\Saves\\Save95_7EB5677E_44656C696C6168_Commonwealth_000806_20230818034452_14_2.f4se"
+	[RSP+AA8 ] 0x2FE5A3379E0      (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\\Save95_7EB5677E_44656C696C6168_Commonwealth_000806_20230818034452_14_2.f4se"
 	[RSP+AB0 ] 0x2FD59EDA080      (void*)
 	[RSP+AB8 ] 0x452CBAB88D8F     (size_t)
 	[RSP+AC0 ] 0x2FD59EDA080      (void*)

@@ -46,7 +46,7 @@ REGISTERS:
 	R11 0x0                (size_t) [0]
 	R12 0xFFFFFFFF         (size_t) [4294967295]
 	R13 0x0                (size_t) [0]
-	R14 0x7FFF0F84C80C     (char*) "C:\Users\eldri\CLionProjects\BuffsWorkOnNPCs\src\BuffsWorkOnNPCs.cpp"
+	R14 0x7FFF0F84C80C     (char*) "C:\Users\<USER>\CLionProjects\BuffsWorkOnNPCs\src\BuffsWorkOnNPCs.cpp"
 	R15 0xD325BF158        (void*)
 
 STACK:

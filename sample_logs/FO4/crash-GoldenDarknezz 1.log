@@ -476,7 +476,7 @@ STACK:
     [RSP+9A80] 0x7FF8D023329E     (void* -> usvfs_x64.dll+00B329E    mov rax, rbx)
     [RSP+9B00] 0x7FF900000000     (void*)
     [RSP+9B80] 0xEA6BFEF2E9       (void*)
-    [RSP+9C00] 0xEA6BFEF5B0       (char*) "C:\Users\Administrator\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
+    [RSP+9C00] 0xEA6BFEF5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
     [RSP+9C80] 0x7FF91434E26F     (void* -> ntdll.dll+003E26F    add rsp, 0x170)
     [RSP+9D00] 0x1D01104942E5     (size_t) [31890405409509]
     [RSP+9D80] 0x7FF911FA387D     (void* -> KERNELBASE.dll+003387D    nop [rax+rax*1], eax)
@@ -507,7 +507,7 @@ STACK:
     [RSP+AA00] 0x325F365F         (size_t) [845100639]
     [RSP+AA80] 0x7FF9143AD1B0     (void* -> ntdll.dll+009D1B0    jmp 0x00007FF900020008)
     [RSP+AB00] 0x7FF9143AD1B0     (void* -> ntdll.dll+009D1B0    jmp 0x00007FF900020008)
-    [RSP+AB80] 0xEA6BFEF5B0       (char*) "C:\Users\Administrator\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
+    [RSP+AB80] 0xEA6BFEF5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
     [RSP+AC00] 0x2689EBB4470      (BSFile*)
     [RSP+AC80] 0x7FF9000200A1     (void*)
     [RSP+AD00] 0xFFFFFFFFFFFFFFFF (size_t) [uint:0184467440737095516150int:0-1]
@@ -515,7 +515,7 @@ STACK:
     [RSP+AE00] 0xFFFFFFFFFFFFFFFF (size_t) [uint:0184467440737095516150int:0-1]
     [RSP+AE80] 0x0                (size_t) [0]
     [RSP+AF00] 0x0                (size_t) [0]
-    [RSP+AF80] 0xEA6BFEF5B0       (char*) "C:\Users\Administrator\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
+    [RSP+AF80] 0xEA6BFEF5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
     [RSP+B000] 0x0                (size_t) [0]
     [RSP+B080] 0x0                (size_t) [0]
     [RSP+B100] 0x246              (size_t) [582]
@@ -523,7 +523,7 @@ STACK:
     [RSP+B200] 0x0                (size_t) [0]
     [RSP+B280] 0x265C7E7A880      (void*)
     [RSP+B300] 0x2689EBB4470      (BSFile*)
-    [RSP+B380] 0xEA6BFEF5B0       (char*) "C:\Users\Administrator\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
+    [RSP+B380] 0xEA6BFEF5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
     [RSP+B400] 0x0                (size_t) [0]
     [RSP+B480] 0xFFFFFFFFFFFFFFFF (size_t) [uint:0184467440737095516150int:0-1]
     [RSP+B500] 0x0                (size_t) [0]
@@ -538,7 +538,7 @@ STACK:
     [RSP+B980] 0x7FF7661B525E     (void* -> Fallout4.exe+1B5525E    mov rbp, [rsp+0x60])
     [RSP+BA00] 0x2689EBB4470      (BSFile*)
     [RSP+BA80] 0x0                (size_t) [0]
-    [RSP+BB00] 0xEA6BFEF5B0       (char*) "C:\Users\Administrator\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
+    [RSP+BB00] 0xEA6BFEF5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
     [RSP+BB80] 0x1DEB7BB7B0B50000 (size_t) [2155952875500797952]
     [RSP+BC00] 0x200              (size_t) [512]
     [RSP+BC80] 0x0                (size_t) [0]
@@ -546,16 +546,16 @@ STACK:
     [RSP+BD80] 0x0                (size_t) [0]
     [RSP+BE00] 0x1                (size_t) [1]
     [RSP+BE80] 0xFFFFFFFFFFFFFFFF (size_t) [uint:0184467440737095516150int:0-1]
-    [RSP+BF00] 0xEA6BFEF5B0       (char*) "C:\Users\Administrator\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
+    [RSP+BF00] 0xEA6BFEF5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
     [RSP+BF80] 0x7FF7661B4D45     (void* -> Fallout4.exe+1B54D45    test ebp, ebp)
     [RSP+C000] 0x1                (size_t) [1]
     [RSP+C080] 0x2689EBB4470      (BSFile*)
-    [RSP+C100] 0x2689EBB44DC      (char*) "C:\Users\Administrator\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
+    [RSP+C100] 0x2689EBB44DC      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
     [RSP+C180] 0x4                (size_t) [4]
     [RSP+C200] 0x1                (size_t) [1]
     [RSP+C280] 0xFFFFFFFFFFFFFFFF (size_t) [uint:0184467440737095516150int:0-1]
     [RSP+C300] 0xFFFFFFFF         (size_t) [4294967295]
-    [RSP+C380] 0xEA6BFEF5B0       (char*) "C:\Users\Administrator\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
+    [RSP+C380] 0xEA6BFEF5B0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2.fos.tmp"
     [RSP+C400] 0x1                (size_t) [1]
     [RSP+C480] 0x7FF76533A38C     (void* -> Fallout4.exe+0CDA38C    mov rdi, rax)
     [RSP+C500] 0x2689EB545F0      (char*) "Quicksave0_AE6D4E52S5368616E61_LondonWorld_000301_20240731095807_6_2"

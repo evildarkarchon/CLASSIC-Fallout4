@@ -264,7 +264,7 @@ STACK:
 	[RSP+380] 0x0                (size_t) [0]
 	[RSP+388] 0x7FF77FAB77F8     (void* -> Fallout4.exe+2C677F8	fisubr st0, word ptr [rbp-0x52211042] |  FUN_14229e738_2C677F8)
 	[RSP+390] 0x17DB44561F0      (char*) "
-ull save path: C:\Users\Avynex\Documents\My Games\Fallout4\__MO_Saves\\Save9_2F6762AAM417679_Commonwealth_001601_20241030015000_45_2.f4se"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Save9_2F6762AAM417679_Commonwealth_001601_20241030015000_45_2.f4se"
 	[RSP+398] 0x0                (size_t) [0]
 	[RSP+3A0] 0x3                (size_t) [3]
 	[RSP+3A8] 0x4811F55E         (size_t) [1209136478]
@@ -325,7 +325,7 @@ ull save path: C:\Users\Avynex\Documents\My Games\Fallout4\__MO_Saves\\Save9_2F6
 "
 	[RSP+558] 0x7FF83BBA41D2     (void* -> ScreenArcherMenu.dll+00F41D2	add rsp, 0x60)
 	[RSP+560] 0x7FF84816F720     (void* -> f4se_1_10_984.dll+00CF720	add [rax], cl)
-	[RSP+568] 0x17DB44561F1      (char*) "ull save path: C:\Users\Avynex\Documents\My Games\Fallout4\__MO_Saves\\Save9_2F6762AAM417679_Commonwealth_001601_20241030015000_45_2.f4se"
+	[RSP+568] 0x17DB44561F1      (char*) "ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Save9_2F6762AAM417679_Commonwealth_001601_20241030015000_45_2.f4se"
 	[RSP+570] 0x0                (size_t) [0]
 	[RSP+578] 0x2B2F9DF698       (void*)
 	[RSP+580] 0x0                (size_t) [0]

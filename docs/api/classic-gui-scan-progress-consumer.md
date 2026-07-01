@@ -62,6 +62,7 @@ Current worker responsibilities:
 
 - pass selected Crash Logs and scan settings to `scan_run_execute(...)`
 - adapt bridge callback events into Qt signals
+- reset and pass the Rust-owned scan cancellation token, then cancel that token from `requestCancel()`
 - map completion-order `ScanRunLogResult` values back to original log rows with `result.input_index`
 - emit Qt signals from Rust-owned Crash Log Scan Run outcomes
 

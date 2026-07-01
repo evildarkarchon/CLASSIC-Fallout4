@@ -90,10 +90,10 @@ fn parse_vdf_content(content: &str, game_steam_id: u32) -> DocsPathResult<PathBu
         let trimmed = line.trim();
 
         // Look for "path" value in library entry
-        if trimmed.starts_with("\"path\"") {
-            if let Some(path) = extract_vdf_value(trimmed) {
-                current_library_path = Some(path);
-            }
+        if trimmed.starts_with("\"path\"")
+            && let Some(path) = extract_vdf_value(trimmed)
+        {
+            current_library_path = Some(path);
         }
 
         // Detect "apps" section start
@@ -110,10 +110,11 @@ fn parse_vdf_content(content: &str, game_steam_id: u32) -> DocsPathResult<PathBu
         }
 
         // Look for game ID in apps section
-        if in_apps_section && trimmed.starts_with(&format!("\"{}\"", game_id_str)) {
-            if let Some(path) = current_library_path {
-                return Ok(PathBuf::from(path));
-            }
+        if in_apps_section
+            && trimmed.starts_with(&format!("\"{}\"", game_id_str))
+            && let Some(path) = current_library_path
+        {
+            return Ok(PathBuf::from(path));
         }
     }
 

@@ -103,6 +103,84 @@ fn standard_scan_run_moves_failed_log_to_unsolved_logs() {
 }
 
 #[test]
+fn standard_scan_run_preserves_existing_unsolved_log() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let log_path = write_fixture_log(&temp, "crash-overwrite-fail.log");
+    let autoscan_path = temp.path().join("crash-overwrite-fail-AUTOSCAN.md");
+    std::fs::create_dir(&autoscan_path).expect("directory should block report write");
+    let unsolved_dir = temp.path().join("CLASSIC Backup").join("Unsolved Logs");
+    std::fs::create_dir_all(&unsolved_dir).expect("unsolved directory should be created");
+    let unsolved_log_path = unsolved_dir.join("crash-overwrite-fail.log");
+    std::fs::write(&unsolved_log_path, "stale unsolved log")
+        .expect("stale unsolved log should be written");
+    let run = CrashLogScanRun::new(make_ready_analysis());
+
+    let result = get_runtime()
+        .block_on(run.run(
+            standard_request(log_path.clone(), unsolved_dir.clone()),
+            |_| {},
+        ))
+        .expect("scan run should return per-log failure");
+
+    assert_eq!(result.succeeded, 0);
+    assert_eq!(result.failed, 1);
+    assert_eq!(result.logs[0].outcome, CrashLogScanOutcome::Failed);
+    assert!(result.logs[0].moved_to_unsolved_logs);
+    assert!(!log_path.exists());
+    assert_eq!(
+        std::fs::read_to_string(&unsolved_log_path).expect("stale log should be readable"),
+        "stale unsolved log"
+    );
+    assert_eq!(
+        std::fs::read_to_string(unsolved_dir.join("crash-overwrite-fail-1.log"))
+            .expect("moved log should be readable"),
+        FIXTURE_LOG_SMALL
+    );
+}
+
+#[test]
+fn move_unsolved_artifacts_preserves_existing_log_and_report_destinations() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let log_path = temp.path().join("crash-overwrite-artifacts.log");
+    let report_path = temp.path().join("crash-overwrite-artifacts-AUTOSCAN.md");
+    let unsolved_dir = temp.path().join("CLASSIC Backup").join("Unsolved Logs");
+    std::fs::create_dir_all(&unsolved_dir).expect("unsolved directory should be created");
+    let unsolved_log_path = unsolved_dir.join("crash-overwrite-artifacts.log");
+    let unsolved_report_path = unsolved_dir.join("crash-overwrite-artifacts-AUTOSCAN.md");
+    std::fs::write(&log_path, "new log contents").expect("source log should be written");
+    std::fs::write(&report_path, "new report contents").expect("source report should be written");
+    std::fs::write(&unsolved_log_path, "stale log contents").expect("stale log should be written");
+    std::fs::write(&unsolved_report_path, "stale report contents")
+        .expect("stale report should be written");
+
+    let moved = get_runtime()
+        .block_on(move_unsolved_artifacts(&log_path, &unsolved_dir))
+        .expect("artifacts should move to unique destinations");
+
+    assert!(moved);
+    assert!(!log_path.exists());
+    assert!(!report_path.exists());
+    assert_eq!(
+        std::fs::read_to_string(&unsolved_log_path).expect("stale log should be readable"),
+        "stale log contents"
+    );
+    assert_eq!(
+        std::fs::read_to_string(&unsolved_report_path).expect("stale report should be readable"),
+        "stale report contents"
+    );
+    assert_eq!(
+        std::fs::read_to_string(unsolved_dir.join("crash-overwrite-artifacts-1.log"))
+            .expect("moved log should be readable"),
+        "new log contents"
+    );
+    assert_eq!(
+        std::fs::read_to_string(unsolved_dir.join("crash-overwrite-artifacts-AUTOSCAN-1.md"))
+            .expect("moved report should be readable"),
+        "new report contents"
+    );
+}
+
+#[test]
 fn targeted_scan_run_does_not_move_failed_log_to_unsolved_logs() {
     let temp = tempdir().expect("tempdir should succeed");
     let log_path = write_fixture_log(&temp, "crash-targeted-fail.log");

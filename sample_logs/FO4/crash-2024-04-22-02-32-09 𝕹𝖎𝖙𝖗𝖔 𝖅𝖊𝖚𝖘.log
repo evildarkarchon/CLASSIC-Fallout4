@@ -80,7 +80,7 @@ STACK:
 	[RSP+100] 0xAA8D60F220       (void*)
 	[RSP+200] 0x2                (size_t)
 	[RSP+300] 0x245000149A0      (void*)
-	[RSP+380] 0x245000145D0      (char*) "Program Files (x86)\dotnet\;C:\Program Files\dotnet\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\nodejs\;C:\ProgramData\chocolatey\bin;;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\Intel\Intel(R) Memory and Storage Tool\;C:\Users\golde\AppData\Local\Microsoft\WindowsApps;C:\Users\golde\AppData\Roaming\npm;"
+	[RSP+380] 0x245000145D0      (char*) "Program Files (x86)\dotnet\;C:\Program Files\dotnet\;C:\Program Files (x86)\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\nodejs\;C:\ProgramData\chocolatey\bin;;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\Program Files\Intel\Intel(R) Memory and Storage Tool\;C:\Users\<USER>\AppData\Local\Microsoft\WindowsApps;C:\Users\<USER>\AppData\Roaming\npm;"
 	[RSP+480] 0x1                (size_t)
 	[RSP+500] 0x7FF6BD64F372     (void* -> Fallout4.exe+1B0F372)
 	[RSP+600] 0x246656BA720      (void*)

@@ -13,10 +13,11 @@ mod progress;
 mod util;
 
 pub(crate) use orchestrator::{
-    FullScanConfig, Orchestrator, build_full_scan_config, fcx_reset_global_state,
-    get_fcx_config_issues, orchestrator_new, orchestrator_new_minimal, orchestrator_process_log,
-    orchestrator_process_logs_batch, orchestrator_process_logs_batch_with_progress,
-    scan_run_execute,
+    FullScanConfig, Orchestrator, ScanCancellationToken, build_full_scan_config,
+    fcx_reset_global_state, get_fcx_config_issues, orchestrator_new, orchestrator_new_minimal,
+    orchestrator_process_log, orchestrator_process_logs_batch,
+    orchestrator_process_logs_batch_with_progress, scan_cancellation_token_cancel,
+    scan_cancellation_token_new, scan_cancellation_token_reset, scan_run_execute,
 };
 pub(crate) use papyrus::{
     CxxPapyrusAnalyzer, papyrus_analyze_full, papyrus_analyzer_new, papyrus_check_updates,
@@ -141,6 +142,7 @@ mod ffi {
     extern "Rust" {
         type FullScanConfig;
         type Orchestrator;
+        type ScanCancellationToken;
 
         // Config construction
         fn build_full_scan_config(
@@ -165,6 +167,9 @@ mod ffi {
         /// Return a snapshot of all FCX configuration issues from the global handler (CXXS-03).
         /// Empty Vec when no scan has run, after a reset, or when no issues were detected.
         fn get_fcx_config_issues() -> Vec<FcxIssueDto>;
+        fn scan_cancellation_token_new() -> Box<ScanCancellationToken>;
+        fn scan_cancellation_token_cancel(token: &ScanCancellationToken);
+        fn scan_cancellation_token_reset(token: &ScanCancellationToken);
         fn orchestrator_process_log(orch: &Orchestrator, log_path: &str) -> Result<ScanResult>;
         fn orchestrator_process_logs_batch(
             orch: &Orchestrator,
@@ -190,6 +195,7 @@ mod ffi {
             max_concurrent: u32,
             log_paths: &[String],
             callback: &ScanBatchProgressCallback,
+            cancellation_token: &ScanCancellationToken,
         ) -> Result<Vec<ScanRunLogResult>>;
 
         // Utilities

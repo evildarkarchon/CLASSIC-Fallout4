@@ -47,6 +47,7 @@ private:
 
 ScanWorker::ScanWorker(QObject* parent)
     : QObject(parent)
+    , m_cancellationToken(classic::scanner::scan_cancellation_token_new())
 {
 }
 
@@ -54,6 +55,7 @@ void ScanWorker::requestCancel()
 {
     qDebug() << "ScanWorker: cancellation requested";
     m_cancelled.store(true);
+    classic::scanner::scan_cancellation_token_cancel(*m_cancellationToken);
 }
 
 void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, const QString& yamlData,
@@ -61,6 +63,7 @@ void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, co
                         bool simplifyLogs, bool moveUnsolvedLogs, int maxConcurrentScans, bool targetedMode)
 {
     m_cancelled.store(false);
+    classic::scanner::scan_cancellation_token_reset(*m_cancellationToken);
 
     int total = logPaths.size();
     qDebug() << "ScanWorker: starting scan," << total << "logs," << (targetedMode ? "targeted" : "standard") << "mode";
@@ -87,7 +90,7 @@ void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, co
             classic::toRustString(yamlRoot), classic::toRustString(yamlData), classic::toRustString(game),
             classic::toRustString(gameVersion), showFormIdValues, fcxMode, simplifyLogs, moveUnsolvedLogs,
             targetedMode, maxConcurrent, rust::Slice<const rust::String>(rustPaths.data(), rustPaths.size()),
-            progress_callback);
+            progress_callback, *m_cancellationToken);
 
         for (const auto& result : results) {
             const int index = static_cast<int>(qMin(result.input_index, static_cast<uint32_t>(total - 1)));

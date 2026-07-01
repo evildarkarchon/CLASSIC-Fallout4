@@ -255,7 +255,7 @@ STACK:
 	[RSP+4E0 ] 0xEA5982724CB7     (size_t)
 	[RSP+4E8 ] 0x7FFEB8E713AE     (void* -> f4se_1_10_163.dll+00713AE)
 	[RSP+4F0 ] 0x172B179CA30      (char*) "
-ull save path: C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.f4se2) loaded correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.f4se2) loaded correctly"
 	[RSP+4F8 ] 0x0                (size_t)
 	[RSP+500 ] 0xEA5982724C97     (size_t)
 	[RSP+508 ] 0x7FFEB8E713AE     (void* -> f4se_1_10_163.dll+00713AE)
@@ -289,13 +289,13 @@ ull save path: C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_8
 	[RSP+5E8 ] 0x50BF53FA01       (void*)
 	[RSP+5F0 ] 0x99               (size_t)
 	[RSP+5F8 ] 0x7FFEB8E68E82     (void* -> f4se_1_10_163.dll+0068E82)
-	[RSP+600 ] 0x175C421D460      (char*) "C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.f4se"
+	[RSP+600 ] 0x175C421D460      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.f4se"
 	[RSP+608 ] 0x50BF53F2C8       (void*)
 	[RSP+610 ] 0x1                (size_t)
 	[RSP+618 ] 0x50BF53FA01       (void*)
 	[RSP+620 ] 0x50BF53FA01       (void*)
 	[RSP+628 ] 0x7FFEB8377936     (void* -> po3_SpellPerkItemDistributorF4.dll+0047936)
-	[RSP+630 ] 0x175C421D460      (char*) "C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.f4se"
+	[RSP+630 ] 0x175C421D460      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.f4se"
 	[RSP+638 ] 0x7FFEB8E02BDC     (void* -> f4se_1_10_163.dll+0002BDC)
 	[RSP+640 ] 0x7FFEB8E9C2F0     (char*) "%s
 "
@@ -393,7 +393,7 @@ ull save path: C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_8
 	[RSP+920 ] 0x3230353531313832 (size_t)
 	[RSP+928 ] 0x325F34315F       (size_t)
 	[RSP+930 ] 0x7FFF272ED230     (void* -> ntdll.dll+009D230)
-	[RSP+938 ] 0x50BF53F800       (char*) "C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
+	[RSP+938 ] 0x50BF53F800       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
 	[RSP+940 ] 0x17543FF4B80      (BSFile*)
 	[RSP+948 ] 0x7FFF000200A1     (void*)
 	[RSP+950 ] 0xFFFFFFFFFFFFFFFF (size_t)
@@ -401,7 +401,7 @@ ull save path: C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_8
 	[RSP+960 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+968 ] 0x0                (size_t)
 	[RSP+970 ] 0x0                (size_t)
-	[RSP+978 ] 0x50BF53F800       (char*) "C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
+	[RSP+978 ] 0x50BF53F800       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
 	[RSP+980 ] 0x0                (size_t)
 	[RSP+988 ] 0x0                (size_t)
 	[RSP+990 ] 0x246              (size_t)
@@ -409,7 +409,7 @@ ull save path: C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_8
 	[RSP+9A0 ] 0x0                (size_t)
 	[RSP+9A8 ] 0x172B1712FA0      (void*)
 	[RSP+9B0 ] 0x17543FF4B80      (BSFile*)
-	[RSP+9B8 ] 0x50BF53F800       (char*) "C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
+	[RSP+9B8 ] 0x50BF53F800       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
 	[RSP+9C0 ] 0x0                (size_t)
 	[RSP+9C8 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+9D0 ] 0x0                (size_t)
@@ -424,7 +424,7 @@ ull save path: C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_8
 	[RSP+A18 ] 0x7FF6ECD7525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+A20 ] 0x17543FF4B80      (BSFile*)
 	[RSP+A28 ] 0x0                (size_t)
-	[RSP+A30 ] 0x50BF53F800       (char*) "C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
+	[RSP+A30 ] 0x50BF53F800       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
 	[RSP+A38 ] 0xB0DCE34AD0390000 (size_t)
 	[RSP+A40 ] 0x200              (size_t)
 	[RSP+A48 ] 0x0                (size_t)
@@ -432,16 +432,16 @@ ull save path: C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Autosave2_8
 	[RSP+A58 ] 0x0                (size_t)
 	[RSP+A60 ] 0x17500000001      (void*)
 	[RSP+A68 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+A70 ] 0x50BF53F800       (char*) "C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
+	[RSP+A70 ] 0x50BF53F800       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
 	[RSP+A78 ] 0x7FF6ECD74D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+A80 ] 0x1                (size_t)
 	[RSP+A88 ] 0x17543FF4B80      (BSFile*)
-	[RSP+A90 ] 0x17543FF4BEC      (char*) "C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
+	[RSP+A90 ] 0x17543FF4BEC      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
 	[RSP+A98 ] 0x7FFEB89EA24C     (void* -> Buffout4.dll+004A24C)
 	[RSP+AA0 ] 0x1                (size_t)
 	[RSP+AA8 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+AB0 ] 0xFFFFFFFF         (size_t)
-	[RSP+AB8 ] 0x50BF53F800       (char*) "C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
+	[RSP+AB8 ] 0x50BF53F800       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2.fos.tmp"
 	[RSP+AC0 ] 0x1                (size_t)
 	[RSP+AC8 ] 0x7FF6EBEFA38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+AD0 ] 0x173A896C680      (char*) "Autosave2_846A8B6D_57616C6B6572_FraternalPost11501_000909_20230528115502_14_2"

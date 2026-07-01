@@ -95,10 +95,10 @@ fn choose_settings_write_path_with_access(
         }
     }
 
-    if let Some(app_target) = app_dir.map(|dir| dir.join(DEFAULT_CONFIG_FILENAME)) {
-        if can_create_new(&app_target) {
-            return Ok(Some(app_target));
-        }
+    if let Some(app_target) = app_dir.map(|dir| dir.join(DEFAULT_CONFIG_FILENAME))
+        && can_create_new(&app_target)
+    {
+        return Ok(Some(app_target));
     }
 
     Ok(None)
@@ -762,25 +762,25 @@ impl ClassicConfig {
             );
         }
 
-        if let Some(ref ini_folder) = self.paths.ini_folder {
-            if !ini_folder.exists() {
-                anyhow::bail!("INI folder does not exist: {}", ini_folder.display());
-            }
+        if let Some(ref ini_folder) = self.paths.ini_folder
+            && !ini_folder.exists()
+        {
+            anyhow::bail!("INI folder does not exist: {}", ini_folder.display());
         }
 
-        if let Some(ref scan_custom) = self.paths.scan_custom {
-            if !scan_custom.exists() {
-                anyhow::bail!(
-                    "Custom scan folder does not exist: {}",
-                    scan_custom.display()
-                );
-            }
+        if let Some(ref scan_custom) = self.paths.scan_custom
+            && !scan_custom.exists()
+        {
+            anyhow::bail!(
+                "Custom scan folder does not exist: {}",
+                scan_custom.display()
+            );
         }
 
-        if let Some(ref mods_folder) = self.paths.mods_folder {
-            if !mods_folder.exists() {
-                anyhow::bail!("Mods folder does not exist: {}", mods_folder.display());
-            }
+        if let Some(ref mods_folder) = self.paths.mods_folder
+            && !mods_folder.exists()
+        {
+            anyhow::bail!("Mods folder does not exist: {}", mods_folder.display());
         }
 
         Ok(())

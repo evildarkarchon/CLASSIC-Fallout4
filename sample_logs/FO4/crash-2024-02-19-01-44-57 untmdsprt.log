@@ -312,15 +312,15 @@ STACK:
 	[RSP+6400] 0x325F31315F373534 (size_t)
 	[RSP+6480] 0x7FFA5282F500     (void* -> ntdll.dll+009F500)
 	[RSP+6500] 0x7FFA5282F540     (void* -> ntdll.dll+009F540)
-	[RSP+6580] 0xE75736F220       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
+	[RSP+6580] 0xE75736F220       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
 	[RSP+6600] 0x26B004789C0      (BSFile*)
 	[RSP+6680] 0x7FFA400200A1     (void*)
 	[RSP+6700] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6780] 0x8000000          (size_t)
 	[RSP+6800] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+6880] 0xE75736F220       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
+	[RSP+6880] 0xE75736F220       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
 	[RSP+6900] 0x0                (size_t)
-	[RSP+6980] 0xE75736F220       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
+	[RSP+6980] 0xE75736F220       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
 	[RSP+6A00] 0x0                (size_t)
 	[RSP+6A80] 0x0                (size_t)
 	[RSP+6B00] 0x246              (size_t)
@@ -328,7 +328,7 @@ STACK:
 	[RSP+6C00] 0x0                (size_t)
 	[RSP+6C80] 0x2698F926CD0      (void*)
 	[RSP+6D00] 0x26B004789C0      (BSFile*)
-	[RSP+6D80] 0xE75736F220       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
+	[RSP+6D80] 0xE75736F220       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
 	[RSP+6E00] 0x0                (size_t)
 	[RSP+6E80] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6F00] 0x0                (size_t)
@@ -338,12 +338,12 @@ STACK:
 	[RSP+7100] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+7180] 0xFFFFFFFF00000000 (size_t)
 	[RSP+7200] 0x0                (size_t)
-	[RSP+7280] 0xE75736F220       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
+	[RSP+7280] 0xE75736F220       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
 	[RSP+7300] 0x1                (size_t)
 	[RSP+7380] 0x7FF72E8D525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+7400] 0x26B004789C0      (BSFile*)
 	[RSP+7480] 0x0                (size_t)
-	[RSP+7500] 0xE75736F220       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
+	[RSP+7500] 0xE75736F220       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
 	[RSP+7580] 0x2D4F8A8EC7D80000 (size_t)
 	[RSP+7600] 0x200              (size_t)
 	[RSP+7680] 0x0                (size_t)
@@ -351,16 +351,16 @@ STACK:
 	[RSP+7780] 0xFFFFFFFF00000000 (size_t)
 	[RSP+7800] 0x26A00000001      (void*)
 	[RSP+7880] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+7900] 0xE75736F220       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
+	[RSP+7900] 0xE75736F220       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
 	[RSP+7980] 0x7FF72E8D4D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+7A00] 0x1                (size_t)
 	[RSP+7A80] 0x26B004789C0      (BSFile*)
-	[RSP+7B00] 0x26B00478A2C      (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
+	[RSP+7B00] 0x26B00478A2C      (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
 	[RSP+7B80] 0x7FF98C59C1EC     (void* -> Buffout4.dll+004C1EC)
 	[RSP+7C00] 0x1                (size_t)
 	[RSP+7C80] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+7D00] 0xFFFFFFFF         (size_t)
-	[RSP+7D80] 0xE75736F220       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
+	[RSP+7D80] 0xE75736F220       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2.fos.tmp"
 	[RSP+7E00] 0x1                (size_t)
 	[RSP+7E80] 0x7FF72DA5A38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+7F00] 0x26CFEF0F240      (char*) "Autosave2_08FD3295_456C696A6168_GorskiCabin01_000719_20240219014457_11_2"

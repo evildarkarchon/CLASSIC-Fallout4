@@ -462,7 +462,7 @@ STACK:
 	[RSP+970 ] 0x32               (size_t)
 	[RSP+978 ] 0x7FFBF06ED230     (void* -> ntdll.dll+009D230)
 	[RSP+980 ] 0x7FFBF06ED230     (void* -> ntdll.dll+009D230)
-	[RSP+988 ] 0x1000FF430        (char*) "C:\Users\ADMIN\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
+	[RSP+988 ] 0x1000FF430        (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
 	[RSP+990 ] 0x1FEF0D6C1B0      (BSFile*)
 	[RSP+998 ] 0x7FFBC0010F60     (void*)
 	[RSP+9A0 ] 0xFFFFFFFFFFFFFFFF (size_t)
@@ -470,7 +470,7 @@ STACK:
 	[RSP+9B0 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+9B8 ] 0x0                (size_t)
 	[RSP+9C0 ] 0x0                (size_t)
-	[RSP+9C8 ] 0x1000FF430        (char*) "C:\Users\ADMIN\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
+	[RSP+9C8 ] 0x1000FF430        (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
 	[RSP+9D0 ] 0x0                (size_t)
 	[RSP+9D8 ] 0x0                (size_t)
 	[RSP+9E0 ] 0x246              (size_t)
@@ -478,7 +478,7 @@ STACK:
 	[RSP+9F0 ] 0x0                (size_t)
 	[RSP+9F8 ] 0x1FE0C7E3840      (void*)
 	[RSP+A00 ] 0x1FEF0D6C1B0      (BSFile*)
-	[RSP+A08 ] 0x1000FF430        (char*) "C:\Users\ADMIN\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
+	[RSP+A08 ] 0x1000FF430        (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
 	[RSP+A10 ] 0x0                (size_t)
 	[RSP+A18 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+A20 ] 0x0                (size_t)
@@ -493,7 +493,7 @@ STACK:
 	[RSP+A68 ] 0x7FF750C2525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+A70 ] 0x1FEF0D6C1B0      (BSFile*)
 	[RSP+A78 ] 0x0                (size_t)
-	[RSP+A80 ] 0x1000FF430        (char*) "C:\Users\ADMIN\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
+	[RSP+A80 ] 0x1000FF430        (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
 	[RSP+A88 ] 0x1F37AB520790000  (size_t)
 	[RSP+A90 ] 0x200              (size_t)
 	[RSP+A98 ] 0x0                (size_t)
@@ -501,16 +501,16 @@ STACK:
 	[RSP+AA8 ] 0x7FF700000000     (size_t)
 	[RSP+AB0 ] 0x1FE00000001      (void*)
 	[RSP+AB8 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+AC0 ] 0x1000FF430        (char*) "C:\Users\ADMIN\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
+	[RSP+AC0 ] 0x1000FF430        (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
 	[RSP+AC8 ] 0x7FF750C24D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+AD0 ] 0x1                (size_t)
 	[RSP+AD8 ] 0x1FEF0D6C1B0      (BSFile*)
-	[RSP+AE0 ] 0x1FEF0D6C21C      (char*) "C:\Users\ADMIN\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
+	[RSP+AE0 ] 0x1FEF0D6C21C      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
 	[RSP+AE8 ] 0x1FE0C762FE0      (void*)
 	[RSP+AF0 ] 0x1                (size_t)
 	[RSP+AF8 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+B00 ] 0xFFFFFFFF         (size_t)
-	[RSP+B08 ] 0x1000FF430        (char*) "C:\Users\ADMIN\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
+	[RSP+B08 ] 0x1000FF430        (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.fos.tmp"
 	[RSP+B10 ] 0x1                (size_t)
 	[RSP+B18 ] 0x7FF74FDAA38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+B20 ] 0x1FEF0848118      (char*) "Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2"

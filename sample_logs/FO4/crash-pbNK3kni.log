@@ -380,7 +380,7 @@ STACK:
 	[RSP+5780] 0x0                (size_t)
 	[RSP+5800] 0x7FF7CFA6DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+5880] 0x17E8000C120      (char*) "
-ull save path: C:\Users\Wbez\Documents\My Games\Fallout4\Saves\\Quicksave0_33CE2A01_48616D696C746F6E_Commonwealth_020143_20240921151710_37_2.f4seeectly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Quicksave0_33CE2A01_48616D696C746F6E_Commonwealth_020143_20240921151710_37_2.f4seeectly"
 	[RSP+5900] 0x0                (size_t)
 	[RSP+5980] 0x3                (size_t)
 	[RSP+5A00] 0xADC5DA6E         (size_t)
@@ -439,14 +439,14 @@ ull save path: C:\Users\Wbez\Documents\My Games\Fallout4\Saves\\Quicksave0_33CE2
 	[RSP+7400] 0x7FF9ADC3F501     (void* -> f4se_1_10_163.dll+005F501)
 	[RSP+7480] 0x7FF9ADC71A70     (char*) "%s
 "
-	[RSP+7500] 0x7FF9ADCAB770     (char*) "full save path: C:\Users\Wbez\Documents\My Games\Fallout4\Saves\\Quicksave0_33CE2A01_48616D696C746F6E_Commonwealth_020143_20240921151710_37_2.f4se"
+	[RSP+7500] 0x7FF9ADCAB770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Quicksave0_33CE2A01_48616D696C746F6E_Commonwealth_020143_20240921151710_37_2.f4se"
 	[RSP+7580] 0xFFFFFFFFFFFFFFFE (size_t)
 	[RSP+7600] 0x0                (size_t)
 	[RSP+7680] 0x0                (size_t)
 	[RSP+7700] 0x2D635AF0D8       (void*)
 	[RSP+7780] 0x0                (size_t)
 	[RSP+7800] 0x7FF9ADBE44EA     (void* -> f4se_1_10_163.dll+00044EA)
-	[RSP+7880] 0x18074509AB0      (char*) "C:\Users\Wbez\Documents\My Games\Fallout4\Saves\\Quicksave0_33CE2A01_48616D696C746F6E_Commonwealth_020143_20240921151710_37_2.f4se"
+	[RSP+7880] 0x18074509AB0      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Quicksave0_33CE2A01_48616D696C746F6E_Commonwealth_020143_20240921151710_37_2.f4se"
 	[RSP+7900] 0x17E91352940      (void*)
 	[RSP+7980] 0x2D635AF118       (void*)
 	[RSP+7A00] 0x17E91352940      (void*)

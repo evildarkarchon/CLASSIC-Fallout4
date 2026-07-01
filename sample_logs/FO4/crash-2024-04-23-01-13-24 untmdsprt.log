@@ -254,7 +254,7 @@ STACK:
 	[RSP+520] 0x325F325F3432     (size_t)
 	[RSP+528] 0x7FF8B9A4F530     (void* -> ntdll.dll+009F530)
 	[RSP+530] 0x7FF8B9A4F530     (void* -> ntdll.dll+009F530)
-	[RSP+538] 0x12AEBAF820       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
+	[RSP+538] 0x12AEBAF820       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
 	[RSP+540] 0x1EF3C6F95F0      (BSFile*)
 	[RSP+548] 0x7FF8800200A1     (void*)
 	[RSP+550] 0xFFFFFFFFFFFFFFFF (size_t)
@@ -262,7 +262,7 @@ STACK:
 	[RSP+560] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+568] 0x1EF3C6F95F0      (BSFile*)
 	[RSP+570] 0x0                (size_t)
-	[RSP+578] 0x12AEBAF820       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
+	[RSP+578] 0x12AEBAF820       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
 	[RSP+580] 0x0                (size_t)
 	[RSP+588] 0x0                (size_t)
 	[RSP+590] 0x246              (size_t)
@@ -270,7 +270,7 @@ STACK:
 	[RSP+5A0] 0x0                (size_t)
 	[RSP+5A8] 0x1EE67B46A70      (void*)
 	[RSP+5B0] 0x1EF3C6F95F0      (BSFile*)
-	[RSP+5B8] 0x12AEBAF820       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
+	[RSP+5B8] 0x12AEBAF820       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
 	[RSP+5C0] 0x0                (size_t)
 	[RSP+5C8] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+5D0] 0x0                (size_t)
@@ -280,12 +280,12 @@ STACK:
 	[RSP+5F0] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+5F8] 0xFFFFFFFF00000000 (size_t)
 	[RSP+600] 0x0                (size_t)
-	[RSP+608] 0x12AEBAF820       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
+	[RSP+608] 0x12AEBAF820       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
 	[RSP+610] 0x1                (size_t)
 	[RSP+618] 0x7FF611F3525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+620] 0x1EF3C6F95F0      (BSFile*)
 	[RSP+628] 0x0                (size_t)
-	[RSP+630] 0x12AEBAF820       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
+	[RSP+630] 0x12AEBAF820       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
 	[RSP+638] 0xAC6485EA13530000 (size_t)
 	[RSP+640] 0x200              (size_t)
 	[RSP+648] 0x0                (size_t)
@@ -293,16 +293,16 @@ STACK:
 	[RSP+658] 0xFFFFFFFF00000000 (size_t)
 	[RSP+660] 0x1EF00000001      (void*)
 	[RSP+668] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+670] 0x12AEBAF820       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
+	[RSP+670] 0x12AEBAF820       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
 	[RSP+678] 0x7FF611F34D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+680] 0x1                (size_t)
 	[RSP+688] 0x1EF3C6F95F0      (BSFile*)
-	[RSP+690] 0x1EF3C6F965C      (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
+	[RSP+690] 0x1EF3C6F965C      (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
 	[RSP+698] 0x1EE67B17800      (void*)
 	[RSP+6A0] 0x1                (size_t)
 	[RSP+6A8] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6B0] 0xFFFFFFFF         (size_t)
-	[RSP+6B8] 0x12AEBAF820       (char*) "C:\Users\untmd\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
+	[RSP+6B8] 0x12AEBAF820       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2.fos.tmp"
 	[RSP+6C0] 0x1                (size_t)
 	[RSP+6C8] 0x7FF6110BA38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+6D0] 0x1EF2C37ED20      (char*) "Autosave2_314068DB_456C696A6168_Commonwealth_000041_20240423011324_2_2"

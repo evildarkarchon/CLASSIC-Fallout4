@@ -187,6 +187,7 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
 
     ProgressDisplay progress(total_logs, args.game);
     CliBatchProgressCallback progress_callback(progress);
+    auto cancellation_token = classic::scanner::scan_cancellation_token_new();
 
     std::atomic_bool render_running{true};
     std::thread render_thread([&progress, &render_running] {
@@ -208,7 +209,8 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
             return classic::scanner::scan_run_execute(
                 dirs.root, dirs.data, args.game, args.game_version, args.show_fid_values, args.fcx_mode,
                 args.simplify_logs, false, targeted_mode, concurrency,
-                rust::Slice<const rust::String>(log_paths.data(), log_paths.size()), progress_callback);
+                rust::Slice<const rust::String>(log_paths.data(), log_paths.size()), progress_callback,
+                *cancellation_token);
         } catch (...) {
             stop_renderer();
             progress.finish();

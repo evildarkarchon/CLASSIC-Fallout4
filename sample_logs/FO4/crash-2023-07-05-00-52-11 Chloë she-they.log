@@ -305,7 +305,7 @@ STACK:
 	[RSP+470 ] 0x0                (size_t)
 	[RSP+478 ] 0x7FF6E75ADAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+480 ] 0x25E5CFC4170      (char*) "
-ull save path: C:\Users\Gamer\Documents\My Games\Fallout4\Saves\\Autosave1_73AC3834_43686C6F65_0RedRocketInt_000314_20230704222458_4_2.f4seycompatible during load"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave1_73AC3834_43686C6F65_0RedRocketInt_000314_20230704222458_4_2.f4seycompatible during load"
 	[RSP+488 ] 0x0                (size_t)
 	[RSP+490 ] 0x3                (size_t)
 	[RSP+498 ] 0xF261DABE         (size_t)

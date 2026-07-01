@@ -7,12 +7,45 @@
 //! - Efficient string building strategies
 
 // Error types not needed in pure Rust - using standard Result
+use crate::error::{Result, ScanLogError};
 use crate::version::CrashgenVersionStatus;
+use classic_file_io_core::FileIOCore;
 use dashmap::DashMap;
 use parking_lot::RwLock;
 use rayon::prelude::*;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock};
 use string_cache::DefaultAtom;
+
+/// Build the Autoscan Report path for a Crash Log path.
+pub(crate) fn autoscan_report_path(log_path: &Path) -> PathBuf {
+    let stem = log_path
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .unwrap_or("unknown");
+    log_path.with_file_name(format!("{stem}-AUTOSCAN.md"))
+}
+
+/// Write an Autoscan Report using the shared file I/O contract.
+pub(crate) async fn write_autoscan_report(
+    file_io: &FileIOCore,
+    log_path: &Path,
+    report_lines: &[String],
+) -> Result<PathBuf> {
+    let autoscan_path = autoscan_report_path(log_path);
+    let content = report_lines.join("");
+    file_io
+        .write_file(&autoscan_path, &content)
+        .await
+        .map_err(|error| {
+            ScanLogError::ReportError(format!(
+                "Failed to write report {}: {}",
+                autoscan_path.display(),
+                error
+            ))
+        })?;
+    Ok(autoscan_path)
+}
 
 /// Global string pool for interning frequently used strings
 static STRING_POOL: LazyLock<StringPool> = LazyLock::new(StringPool::new);

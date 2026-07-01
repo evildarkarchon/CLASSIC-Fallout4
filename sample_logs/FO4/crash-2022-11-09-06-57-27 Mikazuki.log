@@ -153,7 +153,7 @@ STACK:
 	[RSP+248 ] 0x800000007        (size_t)
 	[RSP+250 ] 0x7FF7F941DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+258 ] 0x1E5E9DD2170      (char*) "
-ull save path: C:\Users\PC\Documents\My Games\Fallout4\__MO_Saves\\Autosave3_F6180F2BS5368696765746F7261_Commonwealth_002147_20221109065241_35_2.f4seectlyly correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Autosave3_F6180F2BS5368696765746F7261_Commonwealth_002147_20221109065241_35_2.f4seectlyly correctly"
 	[RSP+260 ] 0x1E69EEA7100      (void*)
 	[RSP+268 ] 0x3                (size_t)
 	[RSP+270 ] 0x855C2DABE        (size_t)

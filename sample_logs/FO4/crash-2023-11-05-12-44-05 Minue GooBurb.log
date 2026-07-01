@@ -285,7 +285,7 @@ STACK:
 	[RSP+5200] 0x800000007        (size_t) [34359738375]
 	[RSP+5280] 0x7FF78AC8DAD4     (void* -> Fallout4.exe+36CDAD4	fisubr st0, word ptr [rbp+0x2CD8EFBE] |  aDiveBombChance_36CDAD4)
 	[RSP+5300] 0x23C55AA7C20      (char*) "
-ull save path: C:\Users\18633\Documents\My Games\Fallout4\Saves\\Exitsave0_EF9D3478__SanctuaryHillsWorld_000012_20231105120128_1_2.f4seectly correctly02) loaded correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_EF9D3478__SanctuaryHillsWorld_000012_20231105120128_1_2.f4seectly correctly02) loaded correctly"
 	[RSP+5380] 0x23CAF758B80      (void*)
 	[RSP+5400] 0x3                (size_t) [3]
 	[RSP+5480] 0x89E54DABE        (size_t) [37016099518]
@@ -344,14 +344,14 @@ ull save path: C:\Users\18633\Documents\My Games\Fallout4\Saves\\Exitsave0_EF9D3
 	[RSP+6E80] 0x7FF89CEDF16C     (void* -> F4z Ro D'oh.dll+000F16C	add rsp, 0x78)
 	[RSP+6F00] 0x7FF89E561A70     (char*) "%s
 "
-	[RSP+6F80] 0x7FF89E59B770     (char*) "full save path: C:\Users\18633\Documents\My Games\Fallout4\Saves\\Exitsave0_EF9D3478__SanctuaryHillsWorld_000012_20231105120128_1_2.f4se"
+	[RSP+6F80] 0x7FF89E59B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_EF9D3478__SanctuaryHillsWorld_000012_20231105120128_1_2.f4se"
 	[RSP+7000] 0xFFFFFFFFFFFFFFFE (size_t) [uint:0184467440737095516140int:0-2]
-	[RSP+7080] 0x23C55AA7C21      (char*) "ull save path: C:\Users\18633\Documents\My Games\Fallout4\Saves\\Exitsave0_EF9D3478__SanctuaryHillsWorld_000012_20231105120128_1_2.f4seectly correctly02) loaded correctly"
+	[RSP+7080] 0x23C55AA7C21      (char*) "ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_EF9D3478__SanctuaryHillsWorld_000012_20231105120128_1_2.f4seectly correctly02) loaded correctly"
 	[RSP+7100] 0x0                (size_t) [0]
 	[RSP+7180] 0xE090CDF088       (void*)
 	[RSP+7200] 0x0                (size_t) [0]
 	[RSP+7280] 0x7FF89E4D44EA     (void* -> f4se_1_10_163.dll+00044EA	add rsp, 0x28)
-	[RSP+7300] 0x23CC3463FB0      (char*) "C:\Users\18633\Documents\My Games\Fallout4\Saves\\Exitsave0_EF9D3478__SanctuaryHillsWorld_000012_20231105120128_1_2.f4se"
+	[RSP+7300] 0x23CC3463FB0      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_EF9D3478__SanctuaryHillsWorld_000012_20231105120128_1_2.f4se"
 	[RSP+7380] 0xBB78AFEFECE3     (size_t) [206127022206179]
 	[RSP+7400] 0x41               (size_t) [65]
 	[RSP+7480] 0x0                (size_t) [0]

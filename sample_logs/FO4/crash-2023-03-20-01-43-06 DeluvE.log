@@ -352,9 +352,9 @@ STACK:
 	[RSP+808 ] 0x0                (size_t)
 	[RSP+810 ] 0x9AEFDD85153B     (size_t)
 	[RSP+818 ] 0x7FF672C95F7E     (void* -> Fallout4.exe+1B55F7E)
-	[RSP+820 ] 0x77351FF6F0       (char*) "C:\Users\James\Documents\My Games\Fallout4\Saves\Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2.fos.tmp"
+	[RSP+820 ] 0x77351FF6F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2.fos.tmp"
 	[RSP+828 ] 0x1C1E5535600      (BSFile*)
-	[RSP+830 ] 0x77351FF6F0       (char*) "C:\Users\James\Documents\My Games\Fallout4\Saves\Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2.fos.tmp"
+	[RSP+830 ] 0x77351FF6F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2.fos.tmp"
 	[RSP+838 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+840 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+848 ] 0x7FFBA54A6575     (void* -> KERNELBASE.dll+0036575)
@@ -366,7 +366,7 @@ STACK:
 	[RSP+878 ] 0x7FF672C9525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+880 ] 0x1C1E5535600      (BSFile*)
 	[RSP+888 ] 0x0                (size_t)
-	[RSP+890 ] 0x77351FF6F0       (char*) "C:\Users\James\Documents\My Games\Fallout4\Saves\Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2.fos.tmp"
+	[RSP+890 ] 0x77351FF6F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2.fos.tmp"
 	[RSP+898 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+8A0 ] 0xFFFFFFFFFFFFFF00 (size_t)
 	[RSP+8A8 ] 0x0                (size_t)
@@ -374,16 +374,16 @@ STACK:
 	[RSP+8B8 ] 0x7FF676D28088     (void* -> Fallout4.exe+5BE8088)
 	[RSP+8C0 ] 0x1C100000001      (void*)
 	[RSP+8C8 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+8D0 ] 0x77351FF6F0       (char*) "C:\Users\James\Documents\My Games\Fallout4\Saves\Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2.fos.tmp"
+	[RSP+8D0 ] 0x77351FF6F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2.fos.tmp"
 	[RSP+8D8 ] 0x7FF672C94D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+8E0 ] 0x1                (size_t)
 	[RSP+8E8 ] 0x1C1E5535600      (BSFile*)
-	[RSP+8F0 ] 0x1C1E553566C      (char*) "C:\Users\James\Documents\My Games\Fallout4\Saves\Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2.fos.tmp"
+	[RSP+8F0 ] 0x1C1E553566C      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2.fos.tmp"
 	[RSP+8F8 ] 0x7FFB65DEA24C     (void* -> Buffout4.dll+004A24C)
 	[RSP+900 ] 0x1                (size_t)
 	[RSP+908 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+910 ] 0xFFFFFFFF         (size_t)
-	[RSP+918 ] 0x77351FF6F0       (char*) "C:\Users\James\Documents\My Games\Fallout4\Saves\Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2.fos.tmp"
+	[RSP+918 ] 0x77351FF6F0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2.fos.tmp"
 	[RSP+920 ] 0x1                (size_t)
 	[RSP+928 ] 0x7FF671E1A38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+930 ] 0x1C23F75EAC0      (char*) "Autosave3_C6C94815S416C69737361_Commonwealth_000516_20230320014306_15_2"

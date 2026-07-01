@@ -478,7 +478,7 @@ STACK:
 	[RSP+798 ] 0x7FFE50C6F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+7A0 ] 0x7FFE50CA1A70     (char*) "%s
 "
-	[RSP+7A8 ] 0x7FFE50CDB770     (char*) "full save path: C:\Users\******\Documents\My Games\Fallout4\Saves\\Exitsave0_16433CC6_416C6C69736F6E_00House_020350_20230625185033_34_2.f4se"
+	[RSP+7A8 ] 0x7FFE50CDB770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_16433CC6_416C6C69736F6E_00House_020350_20230625185033_34_2.f4se"
 	[RSP+7B0 ] 0x44               (size_t)
 	[RSP+7B8 ] 0xFFFFFFFF         (size_t)
 	[RSP+7C0 ] 0xB                (size_t)

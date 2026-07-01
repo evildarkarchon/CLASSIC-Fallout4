@@ -433,7 +433,7 @@ STACK:
 	[RSP+8A80] 0x0                (size_t)
 	[RSP+8B00] 0x2E00000000       (size_t)
 	[RSP+8B80] 0x0                (size_t)
-	[RSP+8C00] 0x155164963CC      (char*) "C:\Users\Okami\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
+	[RSP+8C00] 0x155164963CC      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
 	[RSP+8C80] 0x2                (size_t)
 	[RSP+8D00] 0x0                (size_t)
 	[RSP+8D80] 0x0                (size_t)
@@ -475,9 +475,9 @@ STACK:
 	[RSP+9F80] 0x0                (size_t)
 	[RSP+A000] 0x784019F03DE3     (size_t)
 	[RSP+A080] 0x7FF702125F7E     (void* -> Fallout4.exe+1B55F7E)
-	[RSP+A100] 0x2E895AF7C0       (char*) "C:\Users\Okami\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
+	[RSP+A100] 0x2E895AF7C0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
 	[RSP+A180] 0x15516496360      (BSFile*)
-	[RSP+A200] 0x2E895AF7C0       (char*) "C:\Users\Okami\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
+	[RSP+A200] 0x2E895AF7C0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
 	[RSP+A280] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+A300] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+A380] 0x7FF97B1F1075     (void* -> KERNELBASE.dll+0031075)
@@ -489,7 +489,7 @@ STACK:
 	[RSP+A680] 0x7FF70212525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+A700] 0x15516496360      (BSFile*)
 	[RSP+A780] 0x0                (size_t)
-	[RSP+A800] 0x2E895AF7C0       (char*) "C:\Users\Okami\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
+	[RSP+A800] 0x2E895AF7C0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
 	[RSP+A880] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+A900] 0xFFFFFFFFFFFFFF00 (size_t)
 	[RSP+A980] 0x0                (size_t)
@@ -497,16 +497,16 @@ STACK:
 	[RSP+AA80] 0x7FF7020DF0B4     (void* -> Fallout4.exe+1B0F0B4)
 	[RSP+AB00] 0x15500000001      (void*)
 	[RSP+AB80] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+AC00] 0x2E895AF7C0       (char*) "C:\Users\Okami\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
+	[RSP+AC00] 0x2E895AF7C0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
 	[RSP+AC80] 0x7FF702124D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+AD00] 0x1                (size_t)
 	[RSP+AD80] 0x15516496360      (BSFile*)
-	[RSP+AE00] 0x155164963CC      (char*) "C:\Users\Okami\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
+	[RSP+AE00] 0x155164963CC      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
 	[RSP+AE80] 0x15455FF39C0      (void*)
 	[RSP+AF00] 0x1                (size_t)
 	[RSP+AF80] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+B000] 0xFFFFFFFF         (size_t)
-	[RSP+B080] 0x2E895AF7C0       (char*) "C:\Users\Okami\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
+	[RSP+B080] 0x2E895AF7C0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\CNug5Lwl\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.fos.tmp"
 	[RSP+B100] 0x1                (size_t)
 	[RSP+B180] 0x7FF7012AA38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+B200] 0x15514C4A230      (char*) "Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2"

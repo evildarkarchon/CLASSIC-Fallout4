@@ -104,7 +104,7 @@ STACK:
 		Form ID: 0x0008531F
 		Form Type: 56
 	[RSP+88  ] 0x6A00000000       (size_t)
-	[RSP+90  ] 0x1BB9683E144      (char*) " save path: C:\Users\Jason\OneDrive\Documents\My Games\Fallout4\Saves\\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.f4se correctly"
+	[RSP+90  ] 0x1BB9683E144      (char*) " save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.f4se correctly"
 	[RSP+98  ] 0x0                (size_t)
 	[RSP+A0  ] 0x1BB80000000      (void*)
 	[RSP+A8  ] 0x0                (size_t)
@@ -188,9 +188,9 @@ STACK:
 	[RSP+2F8 ] 0x7FFB25A2F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+300 ] 0x7FFB25A61A70     (char*) "%s
 "
-	[RSP+308 ] 0x7FFB25A9B770     (char*) "full save path: C:\Users\Jason\OneDrive\Documents\My Games\Fallout4\Saves\\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.f4se"
+	[RSP+308 ] 0x7FFB25A9B770     (char*) "full save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.f4se"
 	[RSP+310 ] 0xFFFFFFFFFFFFFFFE (size_t)
-	[RSP+318 ] 0x1BB9683E141      (char*) "ull save path: C:\Users\Jason\OneDrive\Documents\My Games\Fallout4\Saves\\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.f4se correctly"
+	[RSP+318 ] 0x1BB9683E141      (char*) "ull save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.f4se correctly"
 	[RSP+320 ] 0x0                (size_t)
 	[RSP+328 ] 0x6A1E4FEE28       (void*)
 	[RSP+330 ] 0x0                (size_t)
@@ -301,9 +301,9 @@ STACK:
 	[RSP+678 ] 0x0                (size_t)
 	[RSP+680 ] 0x950A07BB9FD9     (size_t)
 	[RSP+688 ] 0x7FF74B055F7E     (void* -> Fallout4.exe+1B55F7E)
-	[RSP+690 ] 0x6A1E4FF300       (char*) "C:\Users\Jason\OneDrive\Documents\My Games\Fallout4\Saves\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.fos.tmp"
+	[RSP+690 ] 0x6A1E4FF300       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.fos.tmp"
 	[RSP+698 ] 0x1BB87C4BC80      (BSFile*)
-	[RSP+6A0 ] 0x6A1E4FF300       (char*) "C:\Users\Jason\OneDrive\Documents\My Games\Fallout4\Saves\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.fos.tmp"
+	[RSP+6A0 ] 0x6A1E4FF300       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.fos.tmp"
 	[RSP+6A8 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6B0 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6B8 ] 0x7FFB84906785     (void* -> KERNELBASE.dll+0036785)
@@ -315,7 +315,7 @@ STACK:
 	[RSP+6E8 ] 0x7FF74B05525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+6F0 ] 0x1BB87C4BC80      (BSFile*)
 	[RSP+6F8 ] 0x0                (size_t)
-	[RSP+700 ] 0x6A1E4FF300       (char*) "C:\Users\Jason\OneDrive\Documents\My Games\Fallout4\Saves\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.fos.tmp"
+	[RSP+700 ] 0x6A1E4FF300       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.fos.tmp"
 	[RSP+708 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+710 ] 0xFFFFFFFFFFFFFF00 (size_t)
 	[RSP+718 ] 0x0                (size_t)
@@ -323,16 +323,16 @@ STACK:
 	[RSP+728 ] 0x0                (size_t)
 	[RSP+730 ] 0x1BC00000001      (void*)
 	[RSP+738 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+740 ] 0x6A1E4FF300       (char*) "C:\Users\Jason\OneDrive\Documents\My Games\Fallout4\Saves\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.fos.tmp"
+	[RSP+740 ] 0x6A1E4FF300       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.fos.tmp"
 	[RSP+748 ] 0x7FF74B054D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+750 ] 0x1                (size_t)
 	[RSP+758 ] 0x1BB87C4BC80      (BSFile*)
-	[RSP+760 ] 0x1BB87C4BCEC      (char*) "C:\Users\Jason\OneDrive\Documents\My Games\Fallout4\Saves\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.fos.tmp"
+	[RSP+760 ] 0x1BB87C4BCEC      (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.fos.tmp"
 	[RSP+768 ] 0x7FFAEE97A24C     (void* -> Buffout4.dll+004A24C)
 	[RSP+770 ] 0x1                (size_t)
 	[RSP+778 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+780 ] 0xFFFFFFFF         (size_t)
-	[RSP+788 ] 0x6A1E4FF300       (char*) "C:\Users\Jason\OneDrive\Documents\My Games\Fallout4\Saves\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.fos.tmp"
+	[RSP+788 ] 0x6A1E4FF300       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2.fos.tmp"
 	[RSP+790 ] 0x1                (size_t)
 	[RSP+798 ] 0x7FF74A1DA38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+7A0 ] 0x1BC15AA4CC0      (char*) "Quicksave0_F1060EA2_446961626C6F6D656C_Commonwealth_000146_20230610143223_4_2"

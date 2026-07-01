@@ -1159,7 +1159,7 @@ STACK:
 	[RSP+2010] 0xA53C6D00736F     (size_t)
 	[RSP+2018] 0x7FFD160813AE     (void* -> f4se_1_10_163.dll+00713AE)
 	[RSP+2020] 0x2256EE39200      (char*) "
-ull save path: C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Save53_846A8B6D_57616C6B6572_CorvegaAssemblyPlant01_000744_20230527193056_12_2.f4se) loaded correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Save53_846A8B6D_57616C6B6572_CorvegaAssemblyPlant01_000744_20230527193056_12_2.f4se) loaded correctly"
 	[RSP+2028] 0x0                (size_t)
 	[RSP+2030] 0xA53C6D12E4CE     (size_t)
 	[RSP+2038] 0x7FFD160813AE     (void* -> f4se_1_10_163.dll+00713AE)
@@ -1193,13 +1193,13 @@ ull save path: C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Save53_846A
 	[RSP+2118] 0x225ED1C5D00      (char*) "Save53_846A8B6D_57616C6B6572_CorvegaAssemblyPlant01_000744_20230527193056_12_2"
 	[RSP+2120] 0x9A               (size_t)
 	[RSP+2128] 0x7FFD16078E82     (void* -> f4se_1_10_163.dll+0068E82)
-	[RSP+2130] 0x225BB777DD0      (char*) "C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Save53_846A8B6D_57616C6B6572_CorvegaAssemblyPlant01_000744_20230527193056_12_2.f4se"
+	[RSP+2130] 0x225BB777DD0      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Save53_846A8B6D_57616C6B6572_CorvegaAssemblyPlant01_000744_20230527193056_12_2.f4se"
 	[RSP+2138] 0x8E7A3BEF88       (void*)
 	[RSP+2140] 0x1                (size_t)
 	[RSP+2148] 0x225ED1C5D00      (char*) "Save53_846A8B6D_57616C6B6572_CorvegaAssemblyPlant01_000744_20230527193056_12_2"
 	[RSP+2150] 0x225ED1C5D00      (char*) "Save53_846A8B6D_57616C6B6572_CorvegaAssemblyPlant01_000744_20230527193056_12_2"
 	[RSP+2158] 0x7FFD13487936     (void* -> po3_SpellPerkItemDistributorF4.dll+0047936)
-	[RSP+2160] 0x225BB777DD0      (char*) "C:\Users\Jeff\Documents\My Games\Fallout4\__MO_Saves\\Save53_846A8B6D_57616C6B6572_CorvegaAssemblyPlant01_000744_20230527193056_12_2.f4se"
+	[RSP+2160] 0x225BB777DD0      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Save53_846A8B6D_57616C6B6572_CorvegaAssemblyPlant01_000744_20230527193056_12_2.f4se"
 	[RSP+2168] 0x7FFD16012BDC     (void* -> f4se_1_10_163.dll+0002BDC)
 	[RSP+2170] 0x7FFD160AC2F0     (char*) "%s
 "

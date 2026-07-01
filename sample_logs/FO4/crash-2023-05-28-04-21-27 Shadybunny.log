@@ -458,7 +458,7 @@ STACK:
 	[RSP+B50 ] 0x0                (size_t)
 	[RSP+B58 ] 0x7FF66353DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+B60 ] 0x17AE42A9D50      (char*) "
-ull save path: C:\Users\19175\Documents\My Games\Fallout4\Saves\ByDuAoNEn\\Exitsave0_C6B5BB00_4E617465_Commonwealth_052127_20230527041346_65_2.f4serectlyorrectlyorrectly correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ByDuAoNEn\\Exitsave0_C6B5BB00_4E617465_Commonwealth_052127_20230527041346_65_2.f4serectlyorrectlyorrectly correctly"
 	[RSP+B68 ] 0x0                (size_t)
 	[RSP+B70 ] 0x3                (size_t)
 	[RSP+B78 ] 0xB960DABE         (size_t)
@@ -517,7 +517,7 @@ ull save path: C:\Users\19175\Documents\My Games\Fallout4\Saves\ByDuAoNEn\\Exits
 	[RSP+D18 ] 0x7FFCB95EF551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+D20 ] 0x7FFCB9621A70     (char*) "%s
 "
-	[RSP+D28 ] 0x7FFCB965B770     (char*) "full save path: C:\Users\19175\Documents\My Games\Fallout4\Saves\ByDuAoNEn\\Exitsave0_C6B5BB00_4E617465_Commonwealth_052127_20230527041346_65_2.f4se"
+	[RSP+D28 ] 0x7FFCB965B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\ByDuAoNEn\\Exitsave0_C6B5BB00_4E617465_Commonwealth_052127_20230527041346_65_2.f4se"
 	[RSP+D30 ] 0x7FFC9CA414A5     (void* -> SAF.dll+01714A5)
 	[RSP+D38 ] 0x0                (size_t)
 	[RSP+D40 ] 0x0                (size_t)

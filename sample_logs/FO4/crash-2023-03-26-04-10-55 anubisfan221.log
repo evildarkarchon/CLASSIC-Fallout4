@@ -204,7 +204,7 @@ STACK:
 	[RSP+300 ] 0x0                (size_t)
 	[RSP+308 ] 0x7FF7628DDAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+310 ] 0x14E36C31DC0      (char*) "
-ull save path: C:\Users\range\Documents\My Games\Fallout4\Saves\\Autosave1_159A5598M49726973_AACF_000821_20230325172140_16_2.f4sed correctly correctlyring query"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave1_159A5598M49726973_AACF_000821_20230325172140_16_2.f4sed correctly correctlyring query"
 	[RSP+318 ] 0x0                (size_t)
 	[RSP+320 ] 0x3                (size_t)
 	[RSP+328 ] 0x5077DABE         (size_t)
@@ -264,9 +264,9 @@ ull save path: C:\Users\range\Documents\My Games\Fallout4\Saves\\Autosave1_159A5
 	[RSP+4C8 ] 0x7FFC5075F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+4D0 ] 0x7FFC50791A70     (char*) "%s
 "
-	[RSP+4D8 ] 0x7FFC507CB770     (char*) "full save path: C:\Users\range\Documents\My Games\Fallout4\Saves\\Autosave1_159A5598M49726973_AACF_000821_20230325172140_16_2.f4se"
+	[RSP+4D8 ] 0x7FFC507CB770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave1_159A5598M49726973_AACF_000821_20230325172140_16_2.f4se"
 	[RSP+4E0 ] 0xFFFFFFFFFFFFFFFE (size_t)
-	[RSP+4E8 ] 0x14E36C31DC1      (char*) "ull save path: C:\Users\range\Documents\My Games\Fallout4\Saves\\Autosave1_159A5598M49726973_AACF_000821_20230325172140_16_2.f4sed correctly correctlyring query"
+	[RSP+4E8 ] 0x14E36C31DC1      (char*) "ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave1_159A5598M49726973_AACF_000821_20230325172140_16_2.f4sed correctly correctlyring query"
 	[RSP+4F0 ] 0x0                (size_t)
 	[RSP+4F8 ] 0x3396EFF128       (void*)
 	[RSP+500 ] 0x0                (size_t)

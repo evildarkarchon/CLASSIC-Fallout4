@@ -21,7 +21,7 @@ use crate::mod_detector::{
 use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
 use crate::record_scanner::RecordScanner;
-use crate::report::{ReportFragment, ReportGenerator};
+use crate::report::{ReportFragment, ReportGenerator, write_autoscan_report};
 use crate::segment_key;
 use crate::settings_validator::SettingsValidator;
 use crate::suspect_scanner::SuspectScanner;
@@ -42,7 +42,7 @@ use classic_version_registry_core::{
 use indexmap::IndexMap;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, LazyLock};
 
@@ -1680,15 +1680,15 @@ impl OrchestratorCore {
                 // Replace all spaces inside the load order [brackets] with 0s.
                 // This maintains consistency between different versions of Buffout 4.
                 // Example: "[ 1]" -> "[01]", "[  A]" -> "[00A]"
-                if let Some((indent, rest)) = line.split_once('[') {
-                    if let Some((fid, name)) = rest.split_once(']') {
-                        // Only modify if spaces exist inside brackets
-                        if fid.contains(' ') {
-                            let modified_line =
-                                format!("{}[{}]{}", indent, fid.replace(' ', "0"), name);
-                            processed_lines.push_front(modified_line);
-                            continue;
-                        }
+                if let Some((indent, rest)) = line.split_once('[')
+                    && let Some((fid, name)) = rest.split_once(']')
+                {
+                    // Only modify if spaces exist inside brackets
+                    if fid.contains(' ') {
+                        let modified_line =
+                            format!("{}[{}]{}", indent, fid.replace(' ', "0"), name);
+                        processed_lines.push_front(modified_line);
+                        continue;
                     }
                 }
                 // If format is unexpected, keep original line
@@ -2430,28 +2430,7 @@ impl OrchestratorCore {
             .into_iter()
             .map(|(log_path, report_lines, _scan_failed)| {
                 let file_io = self.file_io.clone();
-                async move {
-                    // Generate autoscan filename: crash.log -> crash-AUTOSCAN.md
-                    let stem = log_path
-                        .file_stem()
-                        .and_then(|s| s.to_str())
-                        .unwrap_or("unknown");
-                    let autoscan_name = format!("{}-AUTOSCAN.md", stem);
-                    let autoscan_path = log_path.with_file_name(autoscan_name);
-
-                    // Join report lines
-                    let content = report_lines.join("");
-
-                    // Write using FileIOCore
-                    match file_io.write_file(&autoscan_path, &content).await {
-                        Ok(_) => Ok(autoscan_path),
-                        Err(e) => Err(crate::error::ScanLogError::ReportError(format!(
-                            "Failed to write report {}: {}",
-                            autoscan_path.display(),
-                            e
-                        ))),
-                    }
-                }
+                async move { write_autoscan_report(&file_io, &log_path, &report_lines).await }
             })
             .collect();
 
@@ -2471,6 +2450,14 @@ impl OrchestratorCore {
         }
 
         Ok(written_paths)
+    }
+
+    pub(crate) async fn write_autoscan_report(
+        &self,
+        log_path: &Path,
+        report_lines: &[String],
+    ) -> Result<PathBuf> {
+        write_autoscan_report(&self.file_io, log_path, report_lines).await
     }
 
     // ============================================================================

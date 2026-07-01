@@ -863,7 +863,7 @@ STACK:
 	[RSP+D900] 0x0                (size_t)
 	[RSP+D980] 0x7FF6A0E9DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+DA00] 0x1F33E129150      (char*) "
-ull save path: C:\Users\xenoh\Documents\My Games\Fallout4\Saves\\Autosave2_8F48F8F3M68756E746572_Commonwealth_000051_20240116005202_3_2.f4se correctlyctlyly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave2_8F48F8F3M68756E746572_Commonwealth_000051_20240116005202_3_2.f4se correctlyctlyly"
 	[RSP+DA80] 0x0                (size_t)
 	[RSP+DB00] 0x3                (size_t)
 	[RSP+DB80] 0xCE88DABE         (size_t)

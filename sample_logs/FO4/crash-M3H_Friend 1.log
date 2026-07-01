@@ -277,7 +277,7 @@ STACK:
 	[RSP+5200] 0x800000007        (size_t)
 	[RSP+5280] 0x7FF73C18DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+5300] 0x1D7F8049C60      (char*) "
-ull save path: C:\Users\Owner\Documents\My Games\Fallout4\Saves\\Save46_85427468_4461766520526F6472696775657A_Commonwealth_020649_20240310222032_66_2.f4secorrectlyrrectly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save46_85427468_4461766520526F6472696775657A_Commonwealth_020649_20240310222032_66_2.f4secorrectlyrrectly"
 	[RSP+5380] 0x1D844733500      (void*)
 	[RSP+5400] 0x3                (size_t)
 	[RSP+5480] 0x896C2DABE        (size_t)

@@ -835,7 +835,7 @@ STACK:
 	[RSP+D68 ] 0x204C200190C      (void*)
 	[RSP+D70 ] 0x7FFC06391A70     (char*) "%s
 "
-	[RSP+D78 ] 0x7FFC063CB770     (char*) "full save path: C:\Users\WIN10\Documents\My Games\Fallout4\Saves\\Exitsave0_FDBDEF1E_4E6F7261_Commonwealth_041716_20230207044840_149_2.f4se"
+	[RSP+D78 ] 0x7FFC063CB770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_FDBDEF1E_4E6F7261_Commonwealth_041716_20230207044840_149_2.f4se"
 	[RSP+D80 ] 0x31               (size_t)
 	[RSP+D88 ] 0xFFFFFFFFFFFFFFFE (size_t)
 	[RSP+D90 ] 0x1                (size_t)

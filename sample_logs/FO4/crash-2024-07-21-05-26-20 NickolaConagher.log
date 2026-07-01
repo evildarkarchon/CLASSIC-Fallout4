@@ -412,7 +412,7 @@ STACK:
 	[RSP+9D00] 0x0                (size_t)
 	[RSP+9D80] 0x7FF6E850DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+9E00] 0x27CF5F929A0      (char*) "
-ull save path: C:\Users\hondo\Documents\My Games\Fallout4\Saves\\Autosave1_4B54A8FE_416D626572_RailroadHQ01_031930_20240721044544_134_2.f4se correctlyrectly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave1_4B54A8FE_416D626572_RailroadHQ01_031930_20240721044544_134_2.f4se correctlyrectly"
 	[RSP+9E80] 0x0                (size_t)
 	[RSP+9F00] 0x3                (size_t)
 	[RSP+9F80] 0xEA4CDABE         (size_t)

@@ -1146,7 +1146,7 @@ STACK:
 	[RSP+1F60] 0x0                (size_t)
 	[RSP+1F68] 0x7FF7DBCDDAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+1F70] 0x1EADB8F3170      (char*) "
-ull save path: C:\Users\******\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Save72_445A81CES41757274686572_Commonwealth_001623_20230806054403_18_2.f4seed correctly"
+ull save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Save72_445A81CES41757274686572_Commonwealth_001623_20230806054403_18_2.f4seed correctly"
 	[RSP+1F78] 0x0                (size_t)
 	[RSP+1F80] 0x3                (size_t)
 	[RSP+1F88] 0x55EADABE         (size_t)
@@ -1205,9 +1205,9 @@ ull save path: C:\Users\******\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\
 	[RSP+2128] 0x7FF8F5A8F16C     (void* -> F4z Ro D'oh.dll+000F16C)
 	[RSP+2130] 0x7FF955EC1A70     (char*) "%s
 "
-	[RSP+2138] 0x7FF955EFB770     (char*) "full save path: C:\Users\******\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Save72_445A81CES41757274686572_Commonwealth_001623_20230806054403_18_2.f4se"
+	[RSP+2138] 0x7FF955EFB770     (char*) "full save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Save72_445A81CES41757274686572_Commonwealth_001623_20230806054403_18_2.f4se"
 	[RSP+2140] 0xFFFFFFFFFFFFFFFE (size_t)
-	[RSP+2148] 0x1EADB8F3171      (char*) "ull save path: C:\Users\******\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Save72_445A81CES41757274686572_Commonwealth_001623_20230806054403_18_2.f4seed correctly"
+	[RSP+2148] 0x1EADB8F3171      (char*) "ull save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Save72_445A81CES41757274686572_Commonwealth_001623_20230806054403_18_2.f4seed correctly"
 	[RSP+2150] 0x0                (size_t)
 	[RSP+2158] 0x7FF965DC6C58     (void* -> SprintSpeedController.dll+0006C58)
 	[RSP+2160] 0x0                (size_t)

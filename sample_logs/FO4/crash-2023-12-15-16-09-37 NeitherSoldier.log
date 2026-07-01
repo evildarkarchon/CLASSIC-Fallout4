@@ -849,7 +849,7 @@ STACK:
 	[RSP+E900] 0x0                (size_t)
 	[RSP+E980] 0x7FF6ADB1DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+EA00] 0x225A5C45360      (char*) "
-ull save path: C:\Users\Jyhde\Documents\My Games\Fallout4\__MO_Saves\\Exitsave0_8B1DF373_426F62_Commonwealth_000235_20231215153123_19_2.f4serrectlyaded correctlyctlyed correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Exitsave0_8B1DF373_426F62_Commonwealth_000235_20231215153123_19_2.f4serrectlyaded correctlyctlyed correctly"
 	[RSP+EA80] 0x0                (size_t)
 	[RSP+EB00] 0x3                (size_t)
 	[RSP+EB80] 0x8709DABE         (size_t)

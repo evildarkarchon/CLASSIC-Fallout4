@@ -289,7 +289,7 @@ STACK:
 	[RSP+470 ] 0x0                (size_t)
 	[RSP+478 ] 0x7FF6C1B6DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+480 ] 0x2998BEEBEC0      (char*) "
-ull save path: C:\Users\******\Documents\My Games\Fallout4\Saves\\Save881_B281F660S5073696C6F63696E_Commonwealth_080836_20230705142533_48_2.f4seorrectlyy"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save881_B281F660S5073696C6F63696E_Commonwealth_080836_20230705142533_48_2.f4seorrectlyy"
 	[RSP+488 ] 0x0                (size_t)
 	[RSP+490 ] 0x3                (size_t)
 	[RSP+498 ] 0xF25BDABE         (size_t)
@@ -348,7 +348,7 @@ ull save path: C:\Users\******\Documents\My Games\Fallout4\Saves\\Save881_B281F6
 	[RSP+638 ] 0x7FF9F259F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+640 ] 0x7FF9F25D1A70     (char*) "%s
 "
-	[RSP+648 ] 0x7FF9F260B770     (char*) "full save path: C:\Users\******\Documents\My Games\Fallout4\Saves\\Save881_B281F660S5073696C6F63696E_Commonwealth_080836_20230705142533_48_2.f4se"
+	[RSP+648 ] 0x7FF9F260B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save881_B281F660S5073696C6F63696E_Commonwealth_080836_20230705142533_48_2.f4se"
 	[RSP+650 ] 0x49               (size_t)
 	[RSP+658 ] 0xFFFFFFFF         (size_t)
 	[RSP+660 ] 0x11               (size_t)

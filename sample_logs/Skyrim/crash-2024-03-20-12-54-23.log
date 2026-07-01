@@ -67,7 +67,7 @@ STACK:
 	[RSP+A8 ] 0x0                (size_t) [0]
 	[RSP+B0 ] 0x36               (size_t) [54]
 	[RSP+B8 ] 0x1D1156820B0      (spdlog::logger*)
-	[RSP+C0 ] 0x7FF96D8F8098     (char*) "C:\Users\jerem\Documents\Cpp\AddItemMenuAE\src\translation.cpp"
+	[RSP+C0 ] 0x7FF96D8F8098     (char*) "C:\Users\<USER>\Documents\Cpp\AddItemMenuAE\src\translation.cpp"
 	[RSP+C8 ] 0x1D100000073      (void*)
 	[RSP+D0 ] 0x7FF96D8F81A0     (char*) "parse"
 	[RSP+D8 ] 0xF                (size_t) [15]

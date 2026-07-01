@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 352,
-    "current_total": 352,
-    "matched": 352,
+    "contract_total": 356,
+    "current_total": 356,
+    "matched": 356,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -1793,6 +1793,30 @@
       "reason": "-"
     },
     {
+      "id": "7172ab4eb19073ab",
+      "rustSymbol": "scan_cancellation_token_cancel",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fa6ec5be88d0ba46",
+      "rustSymbol": "scan_cancellation_token_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "12ba4e240dddca06",
+      "rustSymbol": "scan_cancellation_token_reset",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "f79d7790f9ba9d64",
       "rustSymbol": "scan_run_execute",
       "kind": "function",
@@ -1827,6 +1851,14 @@
     {
       "id": "3e9306eed73901be",
       "rustSymbol": "ScanBatchProgressCallback",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b4632cb1192f6ccd",
+      "rustSymbol": "ScanCancellationToken",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "status": "matched",

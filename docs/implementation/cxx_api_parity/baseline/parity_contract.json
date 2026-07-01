@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T04:57:24Z",
+  "generated_at_utc": "2026-07-01T07:35:07Z",
   "schema_version": 1,
   "entries": [
     {
@@ -4364,6 +4364,52 @@
       }
     },
     {
+      "id": "7172ab4eb19073ab",
+      "rustSymbol": "scan_cancellation_token_cancel",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "token",
+            "type": "&ScanCancellationToken"
+          }
+        ],
+        "returnType": null
+      }
+    },
+    {
+      "id": "fa6ec5be88d0ba46",
+      "rustSymbol": "scan_cancellation_token_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [],
+        "returnType": "Box<ScanCancellationToken>"
+      }
+    },
+    {
+      "id": "12ba4e240dddca06",
+      "rustSymbol": "scan_cancellation_token_reset",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "token",
+            "type": "&ScanCancellationToken"
+          }
+        ],
+        "returnType": null
+      }
+    },
+    {
       "id": "f79d7790f9ba9d64",
       "rustSymbol": "scan_run_execute",
       "kind": "function",
@@ -4419,6 +4465,10 @@
           {
             "name": "callback",
             "type": "&ScanBatchProgressCallback"
+          },
+          {
+            "name": "cancellation_token",
+            "type": "&ScanCancellationToken"
           }
         ],
         "returnType": "Result<Vec<ScanRunLogResult>>"
@@ -4455,6 +4505,14 @@
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "C++"
+    },
+    {
+      "id": "b4632cb1192f6ccd",
+      "rustSymbol": "ScanCancellationToken",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust"
     },
     {
       "id": "57828838fe57bed3",

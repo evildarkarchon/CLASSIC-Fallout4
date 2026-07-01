@@ -231,14 +231,14 @@ STACK:
 	[RSP+3480] 0x7FFA55FFF551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+3500] 0x7FFA56031A70     (char*) "%s
 "
-	[RSP+3580] 0x7FFA5606B770     (char*) "full save path: C:\Users\Steve\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.f4se"
+	[RSP+3580] 0x7FFA5606B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.f4se"
 	[RSP+3600] 0xFFFFFFFFFFFFFFFE (size_t)
-	[RSP+3680] 0x2E3FE96BBE1      (char*) "ull save path: C:\Users\Steve\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.f4se4sectlyorrectly"
+	[RSP+3680] 0x2E3FE96BBE1      (char*) "ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.f4se4sectlyorrectly"
 	[RSP+3700] 0x0                (size_t)
 	[RSP+3780] 0xEDCE5DD948       (void*)
 	[RSP+3800] 0x0                (size_t)
 	[RSP+3880] 0x7FFA55FA44EA     (void* -> f4se_1_10_163.dll+00044EA)
-	[RSP+3900] 0x2E554EDCB80      (char*) "C:\Users\Steve\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.f4se"
+	[RSP+3900] 0x2E554EDCB80      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.f4se"
 	[RSP+3980] 0x2E4041A2CF0      (void*)
 	[RSP+3A00] 0xD01EAD838100     (size_t)
 	[RSP+3A80] 0x2E4041A2CF0      (void*)
@@ -302,7 +302,7 @@ STACK:
 	[RSP+5780] 0x0                (size_t)
 	[RSP+5800] 0xED00000000       (size_t)
 	[RSP+5880] 0x0                (size_t)
-	[RSP+5900] 0x2E3C3DE380C      (char*) "C:\Users\Steve\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
+	[RSP+5900] 0x2E3C3DE380C      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
 	[RSP+5980] 0x2                (size_t)
 	[RSP+5A00] 0x256B0000         (size_t)
 	[RSP+5A80] 0x2E3A8B127D0      (void*)
@@ -344,9 +344,9 @@ STACK:
 	[RSP+6C80] 0x0                (size_t)
 	[RSP+6D00] 0x4AA86764FAEB     (size_t)
 	[RSP+6D80] 0x7FF78EE15F7E     (void* -> Fallout4.exe+1B55F7E)
-	[RSP+6E00] 0xEDCE5DDE20       (char*) "C:\Users\Steve\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
+	[RSP+6E00] 0xEDCE5DDE20       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
 	[RSP+6E80] 0x2E3C3DE37A0      (BSFile*)
-	[RSP+6F00] 0xEDCE5DDE20       (char*) "C:\Users\Steve\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
+	[RSP+6F00] 0xEDCE5DDE20       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
 	[RSP+6F80] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+7000] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+7080] 0x7FFA99B36785     (void* -> KERNELBASE.dll+0036785)
@@ -358,7 +358,7 @@ STACK:
 	[RSP+7380] 0x7FF78EE1525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+7400] 0x2E3C3DE37A0      (BSFile*)
 	[RSP+7480] 0x0                (size_t)
-	[RSP+7500] 0xEDCE5DDE20       (char*) "C:\Users\Steve\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
+	[RSP+7500] 0xEDCE5DDE20       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
 	[RSP+7580] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+7600] 0xFFFFFFFFFFFFFF00 (size_t)
 	[RSP+7680] 0x0                (size_t)
@@ -366,16 +366,16 @@ STACK:
 	[RSP+7780] 0x7FF78EDCF0B4     (void* -> Fallout4.exe+1B0F0B4)
 	[RSP+7800] 0x2E300000001      (size_t)
 	[RSP+7880] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+7900] 0xEDCE5DDE20       (char*) "C:\Users\Steve\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
+	[RSP+7900] 0xEDCE5DDE20       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
 	[RSP+7980] 0x7FF78EE14D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+7A00] 0x1                (size_t)
 	[RSP+7A80] 0x2E3C3DE37A0      (BSFile*)
-	[RSP+7B00] 0x2E3C3DE380C      (char*) "C:\Users\Steve\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
+	[RSP+7B00] 0x2E3C3DE380C      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
 	[RSP+7B80] 0x2E3FE8B3190      (void*)
 	[RSP+7C00] 0x1                (size_t)
 	[RSP+7C80] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+7D00] 0xFFFFFFFF         (size_t)
-	[RSP+7D80] 0xEDCE5DDE20       (char*) "C:\Users\Steve\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
+	[RSP+7D80] 0xEDCE5DDE20       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\bmGJ5BrU1\Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2.fos.tmp"
 	[RSP+7E00] 0x1                (size_t)
 	[RSP+7E80] 0x7FF78DF9A38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+7F00] 0x2E3C3832000      (char*) "Save1_B63BB42EM43686C6F65_SS2C2HijackVault81Entry_012311_20231005035647_31_2"

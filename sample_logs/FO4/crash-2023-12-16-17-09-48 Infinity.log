@@ -296,7 +296,7 @@ STACK:
 	[RSP+6200] 0x10000            (size_t)
 	[RSP+6280] 0x8000000          (size_t)
 	[RSP+6300] 0x0                (size_t)
-	[RSP+6380] 0x9AE04FF840       (char*) "C:\Users\fludi\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
+	[RSP+6380] 0x9AE04FF840       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
 	[RSP+6400] 0x0                (size_t)
 	[RSP+6480] 0x0                (size_t)
 	[RSP+6500] 0x10000            (size_t)
@@ -308,20 +308,20 @@ STACK:
 	[RSP+6800] 0x0                (size_t)
 	[RSP+6880] 0x0                (size_t)
 	[RSP+6900] 0x6EF77F58F8D5     (size_t)
-	[RSP+6980] 0x9AE04FF840       (char*) "C:\Users\fludi\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
-	[RSP+6A00] 0x9AE04FF840       (char*) "C:\Users\fludi\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
+	[RSP+6980] 0x9AE04FF840       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
+	[RSP+6A00] 0x9AE04FF840       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
 	[RSP+6A80] 0x27C0EF95280      (BSFile*)
 	[RSP+6B00] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6B80] 0x7FFD1BDF40AF     (void* -> KERNELBASE.dll+00240AF)
 	[RSP+6C00] 0x0                (size_t)
 	[RSP+6C80] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6D00] 0x0                (size_t)
-	[RSP+6D80] 0x9AE04FF840       (char*) "C:\Users\fludi\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
+	[RSP+6D80] 0x9AE04FF840       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
 	[RSP+6E00] 0x1                (size_t)
 	[RSP+6E80] 0x7FF73DBB525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+6F00] 0x27C0EF95280      (BSFile*)
 	[RSP+6F80] 0x0                (size_t)
-	[RSP+7000] 0x9AE04FF840       (char*) "C:\Users\fludi\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
+	[RSP+7000] 0x9AE04FF840       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
 	[RSP+7080] 0x27C0EF95280      (BSFile*)
 	[RSP+7100] 0xFFFFFFFFFFFFFF00 (size_t)
 	[RSP+7180] 0x0                (size_t)
@@ -329,16 +329,16 @@ STACK:
 	[RSP+7280] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+7300] 0x27B00000001      (void*)
 	[RSP+7380] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+7400] 0x9AE04FF840       (char*) "C:\Users\fludi\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
+	[RSP+7400] 0x9AE04FF840       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
 	[RSP+7480] 0x7FF73DBB4D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+7500] 0x1                (size_t)
 	[RSP+7580] 0x27C0EF95280      (BSFile*)
-	[RSP+7600] 0x27C0EF952EC      (char*) "C:\Users\fludi\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
+	[RSP+7600] 0x27C0EF952EC      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
 	[RSP+7680] 0x7FFC0E02C1EC     (void* -> Buffout4.dll+004C1EC)
 	[RSP+7700] 0x1                (size_t)
 	[RSP+7780] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+7800] 0xFFFFFFFF         (size_t)
-	[RSP+7880] 0x9AE04FF840       (char*) "C:\Users\fludi\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
+	[RSP+7880] 0x9AE04FF840       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2.fos.tmp"
 	[RSP+7900] 0x1                (size_t)
 	[RSP+7980] 0x7FF73CD3A38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+7A00] 0x27C0EFE0900      (char*) "Quicksave0_26656FA0_496E66696E697479_Commonwealth_002104_20231216170948_119_2"

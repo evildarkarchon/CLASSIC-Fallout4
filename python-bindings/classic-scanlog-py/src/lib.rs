@@ -178,10 +178,10 @@ pub fn to_pyerr(err: impl std::fmt::Display) -> PyErr {
 }
 
 fn auto_init_application_dir(py: Python<'_>) {
-    if classic_registry_core::get_application_dir().is_none() {
-        if let Some(app_dir) = classic_shared::resolve_python_entry_dir(py) {
-            classic_registry_core::set_application_dir(app_dir);
-        }
+    if classic_registry_core::get_application_dir().is_none()
+        && let Some(app_dir) = classic_shared::resolve_python_entry_dir(py)
+    {
+        classic_registry_core::set_application_dir(app_dir);
     }
 }
 

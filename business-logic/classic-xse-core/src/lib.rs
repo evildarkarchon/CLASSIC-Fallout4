@@ -403,18 +403,19 @@ pub fn detect_xse_version(loader_path: &Path, xse_type: XseType) -> XseResult<Ve
         if let Ok(entries) = std::fs::read_dir(parent) {
             for entry in entries.flatten() {
                 let path = entry.path();
-                if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
-                    if filename.starts_with(dll_prefix) && filename.ends_with(".dll") {
-                        // Extract version from filename
-                        if let Some(version_str) = filename
-                            .strip_prefix(dll_prefix)
-                            .and_then(|s| s.strip_suffix(".dll"))
-                        {
-                            // Replace underscores with dots for version parsing
-                            let version_dotted = version_str.replace('_', ".");
-                            if let Ok(version) = parse_version(&version_dotted) {
-                                return Ok(version);
-                            }
+                if let Some(filename) = path.file_name().and_then(|n| n.to_str())
+                    && filename.starts_with(dll_prefix)
+                    && filename.ends_with(".dll")
+                {
+                    // Extract version from filename
+                    if let Some(version_str) = filename
+                        .strip_prefix(dll_prefix)
+                        .and_then(|s| s.strip_suffix(".dll"))
+                    {
+                        // Replace underscores with dots for version parsing
+                        let version_dotted = version_str.replace('_', ".");
+                        if let Ok(version) = parse_version(&version_dotted) {
+                            return Ok(version);
                         }
                     }
                 }
@@ -483,10 +484,10 @@ pub fn get_xse_info(game_path: &Path, xse_type: XseType) -> XseInfo {
 
     info.installed = info.check_installed();
 
-    if info.installed {
-        if let Ok(version) = detect_xse_version(&info.loader_path(), xse_type) {
-            info.version = Some(version);
-        }
+    if info.installed
+        && let Ok(version) = detect_xse_version(&info.loader_path(), xse_type)
+    {
+        info.version = Some(version);
     }
 
     info

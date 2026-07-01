@@ -393,8 +393,8 @@ STACK:
 	[RSP+580] 0x1D990A80550      (BSScript::Internal::CodeTasklet*)
 		Stack Trace: 
 [<nullptr0alias>0(473)0on0<nullptr0quest>0(05B3D0A0)].ObjectReference.IsInLocation() - "e:\github\f4se\scripts\build_src\ObjectReference.psc" Line 988
-[<nullptr0alias>0(473)0on0<nullptr0quest>0(175B3050)].DLC06:DLC06MQ01Script.CheckForMQStart() - "C:\Users\Jonx0r\AppData\Local\Temp\PapyrusTemp\DLC06\DLC06MQ01Script.psc" Line 262
-[<nullptr0alias>0(473)0on0<nullptr0quest>0(175B3050)].DLC06:DLC06MQ01Script.::remote_Actor_OnLocationChange() - "C:\Users\Jonx0r\AppData\Local\Temp\PapyrusTemp\DLC06\DLC06MQ01Script.psc" Line 275
+[<nullptr0alias>0(473)0on0<nullptr0quest>0(175B3050)].DLC06:DLC06MQ01Script.CheckForMQStart() - "C:\Users\<USER>\AppData\Local\Temp\PapyrusTemp\DLC06\DLC06MQ01Script.psc" Line 262
+[<nullptr0alias>0(473)0on0<nullptr0quest>0(175B3050)].DLC06:DLC06MQ01Script.::remote_Actor_OnLocationChange() - "C:\Users\<USER>\AppData\Local\Temp\PapyrusTemp\DLC06\DLC06MQ01Script.psc" Line 275
 
 	[RSP+588] 0x7FF7599F243F     (void* -> Fallout4.exe+277243F	mov ecx, [rbp-0x78])
 	[RSP+598] 0x6B879FF760       (void*)

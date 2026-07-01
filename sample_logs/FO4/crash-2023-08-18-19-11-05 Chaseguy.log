@@ -1127,7 +1127,7 @@ STACK:
 	[RSP+1F60] 0x0                (size_t) [0]
 	[RSP+1F68] 0x7FF6E354DAD4     (void* -> Fallout4.exe+36CDAD4	fisubr st0, word ptr [rbp+0x2CD8EFBE] |  aDiveBombChance_36CDAD4)
 	[RSP+1F70] 0x1E365D8E270      (char*) "
-ull save path: C:\Users\chase\Documents\My Games\Fallout4\Saves\\Exitsave0_25DAADE7_4368617365_Commonwealth_000016_20230816004817_1_2.f4selyaded correctlyed correctly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_25DAADE7_4368617365_Commonwealth_000016_20230816004817_1_2.f4selyaded correctlyed correctly"
 	[RSP+1F78] 0x0                (size_t) [0]
 	[RSP+1F80] 0x3                (size_t) [3]
 	[RSP+1F88] 0x63C7DABE         (size_t) [1674042046]
@@ -1186,7 +1186,7 @@ ull save path: C:\Users\chase\Documents\My Games\Fallout4\Saves\\Exitsave0_25DAA
 	[RSP+2128] 0x7FFE63C5F551     (void* -> f4se_1_10_163.dll+005F551	mov rbx, [rsp+0x40])
 	[RSP+2130] 0x7FFE63C91A70     (char*) "%s
 "
-	[RSP+2138] 0x7FFE63CCB770     (char*) "full save path: C:\Users\chase\Documents\My Games\Fallout4\Saves\\Exitsave0_25DAADE7_4368617365_Commonwealth_000016_20230816004817_1_2.f4se"
+	[RSP+2138] 0x7FFE63CCB770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_25DAADE7_4368617365_Commonwealth_000016_20230816004817_1_2.f4se"
 	[RSP+2140] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
 	[RSP+2148] 0x0                (size_t) [0]
 	[RSP+2150] 0x0                (size_t) [0]

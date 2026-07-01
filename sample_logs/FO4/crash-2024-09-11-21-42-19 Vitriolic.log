@@ -359,7 +359,7 @@ STACK:
 	[RSP+4400] 0x0                (size_t) [0]
 	[RSP+4480] 0x7FF6FD50DAD4     (void* -> Fallout4.exe+36CDAD4	fisubr st0, word ptr [rbp+0x2CD8EFBE])
 	[RSP+4500] 0x1D2BA6C23A0      (char*) "
-ull save path: C:\Users\jgsal\Documents\My Games\Fallout4\__MO_Saves\\Save118_9847D447S4E617465_Commonwealth_001017_20240911214216_16_2.f4secorrectlyly) loaded correctly1) loaded correctlyorrectly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Save118_9847D447S4E617465_Commonwealth_001017_20240911214216_16_2.f4secorrectlyly) loaded correctly1) loaded correctlyorrectly"
 	[RSP+4580] 0x0                (size_t) [0]
 	[RSP+4600] 0x3                (size_t) [3]
 	[RSP+4680] 0x6DAEDABE         (size_t) [1840175806]

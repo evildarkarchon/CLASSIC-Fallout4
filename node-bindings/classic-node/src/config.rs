@@ -31,10 +31,10 @@ static INIT_APP_DIR: Once = Once::new();
 /// working directory rather than the interpreter install path (node/bun).
 fn ensure_app_dir_initialized() {
     INIT_APP_DIR.call_once(|| {
-        if classic_registry_core::get_application_dir().is_none() {
-            if let Ok(cwd) = std::env::current_dir() {
-                classic_registry_core::set_application_dir(cwd);
-            }
+        if classic_registry_core::get_application_dir().is_none()
+            && let Ok(cwd) = std::env::current_dir()
+        {
+            classic_registry_core::set_application_dir(cwd);
         }
     });
 }

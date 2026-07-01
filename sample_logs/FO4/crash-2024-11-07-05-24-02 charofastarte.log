@@ -158,7 +158,7 @@ STACK:
 	[RSP+248 ] 0x800000007        (size_t)
 	[RSP+250 ] 0x7FF70F8CDAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+258 ] 0x1ED904635A0      (char*) "
-ull save path: C:\Users\Teddy\Documents\My Games\Fallout4\Saves\\Exitsave0_9CD523DCS4E617468616E_Vault111Cryo_000116_20241106052927_1_2.f4serectlyly"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_9CD523DCS4E617468616E_Vault111Cryo_000116_20241106052927_1_2.f4serectlyly"
 	[RSP+260 ] 0x1EE39059700      (void*)
 	[RSP+268 ] 0x3                (size_t)
 	[RSP+270 ] 0x8C2E1DABE        (size_t)
@@ -217,14 +217,14 @@ ull save path: C:\Users\Teddy\Documents\My Games\Fallout4\Saves\\Exitsave0_9CD52
 	[RSP+410 ] 0x7FF9C2DFF551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+418 ] 0x7FF9C2E31A70     (char*) "%s
 "
-	[RSP+420 ] 0x7FF9C2E6B770     (char*) "full save path: C:\Users\Teddy\Documents\My Games\Fallout4\Saves\\Exitsave0_9CD523DCS4E617468616E_Vault111Cryo_000116_20241106052927_1_2.f4se"
+	[RSP+420 ] 0x7FF9C2E6B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_9CD523DCS4E617468616E_Vault111Cryo_000116_20241106052927_1_2.f4se"
 	[RSP+428 ] 0xFFFFFFFFFFFFFFFE (size_t)
-	[RSP+430 ] 0x1ED904635A1      (char*) "ull save path: C:\Users\Teddy\Documents\My Games\Fallout4\Saves\\Exitsave0_9CD523DCS4E617468616E_Vault111Cryo_000116_20241106052927_1_2.f4serectlyly"
+	[RSP+430 ] 0x1ED904635A1      (char*) "ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_9CD523DCS4E617468616E_Vault111Cryo_000116_20241106052927_1_2.f4serectlyly"
 	[RSP+438 ] 0x0                (size_t)
 	[RSP+440 ] 0xB2615AEF58       (void*)
 	[RSP+448 ] 0x0                (size_t)
 	[RSP+450 ] 0x7FF9C2DA44EA     (void* -> f4se_1_10_163.dll+00044EA)
-	[RSP+458 ] 0x1EE2634B1B0      (char*) "C:\Users\Teddy\Documents\My Games\Fallout4\Saves\\Exitsave0_9CD523DCS4E617468616E_Vault111Cryo_000116_20241106052927_1_2.f4se"
+	[RSP+458 ] 0x1EE2634B1B0      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_9CD523DCS4E617468616E_Vault111Cryo_000116_20241106052927_1_2.f4se"
 	[RSP+460 ] 0x1EE3926E080      (void*)
 	[RSP+468 ] 0xB2615AEF98       (void*)
 	[RSP+470 ] 0x1EE3926E080      (void*)

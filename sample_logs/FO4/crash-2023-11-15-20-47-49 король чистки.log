@@ -335,11 +335,11 @@ STACK:
 	[RSP+7B80] 0x0                (size_t)
 	[RSP+7C00] 0xFFFFFFFF         (size_t)
 	[RSP+7C80] 0x1154D680470      (char*) "
-ull save path: C:\Users\DekuI\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Autosave1_A90E30BD_4E696B6F6C6169_Commonwealth_002114_20231115203429_23_2.f4seey"
+ull save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Autosave1_A90E30BD_4E696B6F6C6169_Commonwealth_002114_20231115203429_23_2.f4seey"
 	[RSP+7D00] 0x1                (size_t)
 	[RSP+7D80] 0x3                (size_t)
 	[RSP+7E00] 0x1154D680470      (char*) "
-ull save path: C:\Users\DekuI\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Autosave1_A90E30BD_4E696B6F6C6169_Commonwealth_002114_20231115203429_23_2.f4seey"
+ull save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Autosave1_A90E30BD_4E696B6F6C6169_Commonwealth_002114_20231115203429_23_2.f4seey"
 	[RSP+7E80] 0x113BE7F1C0       (void*)
 	[RSP+7F00] 0x3                (size_t)
 	[RSP+7F80] 0x7FFF9362DABE     (void* -> f4se_1_10_163.dll+007DABE)
@@ -398,14 +398,14 @@ ull save path: C:\Users\DekuI\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\A
 	[RSP+9980] 0x7FFF9360F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+9A00] 0x7FFF93641A70     (char*) "%s
 "
-	[RSP+9A80] 0x7FFF9367B770     (char*) "full save path: C:\Users\DekuI\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Autosave1_A90E30BD_4E696B6F6C6169_Commonwealth_002114_20231115203429_23_2.f4se"
+	[RSP+9A80] 0x7FFF9367B770     (char*) "full save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Autosave1_A90E30BD_4E696B6F6C6169_Commonwealth_002114_20231115203429_23_2.f4se"
 	[RSP+9B00] 0xFFFFFFFFFFFFFFFE (size_t)
-	[RSP+9B80] 0x1154D680471      (char*) "ull save path: C:\Users\DekuI\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Autosave1_A90E30BD_4E696B6F6C6169_Commonwealth_002114_20231115203429_23_2.f4seey"
+	[RSP+9B80] 0x1154D680471      (char*) "ull save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Autosave1_A90E30BD_4E696B6F6C6169_Commonwealth_002114_20231115203429_23_2.f4seey"
 	[RSP+9C00] 0x0                (size_t)
 	[RSP+9C80] 0x113BE7F328       (void*)
 	[RSP+9D00] 0x0                (size_t)
 	[RSP+9D80] 0x7FFF935B44EA     (void* -> f4se_1_10_163.dll+00044EA)
-	[RSP+9E00] 0x11778A27120      (char*) "C:\Users\DekuI\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Autosave1_A90E30BD_4E696B6F6C6169_Commonwealth_002114_20231115203429_23_2.f4se"
+	[RSP+9E00] 0x11778A27120      (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Autosave1_A90E30BD_4E696B6F6C6169_Commonwealth_002114_20231115203429_23_2.f4se"
 	[RSP+9E80] 0x1155BC72920      (void*)
 	[RSP+9F00] 0x113BE7F368       (void*)
 	[RSP+9F80] 0x1155BC72920      (void*)

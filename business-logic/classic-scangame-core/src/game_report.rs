@@ -258,15 +258,15 @@ impl<'a> ScanReportBuilder<'a> {
         let issue_messages = self.validators.get_issue_messages(xse_acronym, "unpacked");
 
         for (issue_type, items) in issue_lists {
-            if !items.is_empty() {
-                if let Some(messages) = issue_messages.get(issue_type) {
-                    for msg in messages {
-                        output.push_str(msg);
-                    }
-                    // Sort items for deterministic output
-                    for item in items {
-                        output.push_str(item);
-                    }
+            if !items.is_empty()
+                && let Some(messages) = issue_messages.get(issue_type)
+            {
+                for msg in messages {
+                    output.push_str(msg);
+                }
+                // Sort items for deterministic output
+                for item in items {
+                    output.push_str(item);
                 }
             }
         }
@@ -294,14 +294,14 @@ impl<'a> ScanReportBuilder<'a> {
         let issue_messages = self.validators.get_issue_messages(xse_acronym, "archived");
 
         for (issue_type, items) in issue_lists {
-            if !items.is_empty() {
-                if let Some(messages) = issue_messages.get(issue_type) {
-                    for msg in messages {
-                        output.push_str(msg);
-                    }
-                    for item in items {
-                        output.push_str(item);
-                    }
+            if !items.is_empty()
+                && let Some(messages) = issue_messages.get(issue_type)
+            {
+                for msg in messages {
+                    output.push_str(msg);
+                }
+                for item in items {
+                    output.push_str(item);
                 }
             }
         }

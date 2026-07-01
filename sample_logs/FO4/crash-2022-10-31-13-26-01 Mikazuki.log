@@ -354,7 +354,7 @@ STACK:
 	[RSP+510 ] 0x0                (size_t)
 	[RSP+518 ] 0x7FF7388EDAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+520 ] 0x2C52EA75330      (char*) "
-ull save path: C:\Users\PC\Documents\My Games\Fallout4\Saves\\Exitsave0_16F5CF94SM4D697261_Commonwealth_002253_20221029101737_36_2.f4se) loaded correctlycompatible during loady"
+ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_16F5CF94SM4D697261_Commonwealth_002253_20221029101737_36_2.f4se) loaded correctlycompatible during loady"
 	[RSP+528 ] 0x0                (size_t)
 	[RSP+530 ] 0x3                (size_t)
 	[RSP+538 ] 0x8093DABE         (size_t)
@@ -413,7 +413,7 @@ ull save path: C:\Users\PC\Documents\My Games\Fallout4\Saves\\Exitsave0_16F5CF94
 	[RSP+6D8 ] 0x7FF9695FB1BD     (void* -> SSW.dll+000B1BD)
 	[RSP+6E0 ] 0x7FF980951A70     (char*) "%s
 "
-	[RSP+6E8 ] 0x7FF98098B770     (char*) "full save path: C:\Users\PC\Documents\My Games\Fallout4\Saves\\Exitsave0_16F5CF94SM4D697261_Commonwealth_002253_20221029101737_36_2.f4se"
+	[RSP+6E8 ] 0x7FF98098B770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_16F5CF94SM4D697261_Commonwealth_002253_20221029101737_36_2.f4se"
 	[RSP+6F0 ] 0xFFFFFFFFFFFFFFFE (size_t)
 	[RSP+6F8 ] 0xFFFFFFFFFFFFFFFE (size_t)
 	[RSP+700 ] 0x0                (size_t)

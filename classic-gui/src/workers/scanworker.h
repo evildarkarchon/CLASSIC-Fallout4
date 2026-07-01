@@ -4,6 +4,9 @@
 #include <QString>
 #include <QStringList>
 
+#include "classic_cxx_bridge/scanner.h"
+#include "rust/cxx.h"
+
 #include <atomic>
 
 class ScanWorker : public QObject {
@@ -27,4 +30,5 @@ signals:
 
 private:
     std::atomic<bool> m_cancelled{false};
+    rust::Box<classic::scanner::ScanCancellationToken> m_cancellationToken;
 };

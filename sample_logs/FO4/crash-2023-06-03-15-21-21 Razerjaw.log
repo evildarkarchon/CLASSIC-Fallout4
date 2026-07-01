@@ -423,7 +423,7 @@ STACK:
 	[RSP+788 ] 0x7FF94E215C11     (void* -> ShieldFramework.dll+0015C11)
 	[RSP+790 ] 0x7FF955AC1A70     (char*) "%s
 "
-	[RSP+798 ] 0x7FF955AFB770     (char*) "full save path: C:\Users\******\OneDrive\Documents\My Games\Fallout4\Saves\\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.f4se"
+	[RSP+798 ] 0x7FF955AFB770     (char*) "full save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.f4se"
 	[RSP+7A0 ] 0xFFFFFFFFFFFFFFFE (size_t)
 	[RSP+7A8 ] 0x0                (size_t)
 	[RSP+7B0 ] 0x0                (size_t)
@@ -490,7 +490,7 @@ STACK:
 	[RSP+998 ] 0x7FF961A96D5A     (void* -> usvfs_x64.dll+00C6D5A)
 	[RSP+9A0 ] 0x0                (size_t)
 	[RSP+9A8 ] 0x7FF9AA0839F0     (void* -> ntdll.dll+00539F0)
-	[RSP+9B0 ] 0x2DF29ABCDAC      (char*) "C:\Users\******\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
+	[RSP+9B0 ] 0x2DF29ABCDAC      (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
 	[RSP+9B8 ] 0x40000000         (size_t)
 	[RSP+9C0 ] 0x7FF9A7AC97FF     (void* -> KERNELBASE.dll+00297FF)
 	[RSP+9C8 ] 0x7FF961A96DE9     (void* -> usvfs_x64.dll+00C6DE9)
@@ -519,15 +519,15 @@ STACK:
 	[RSP+A80 ] 0x325F             (size_t)
 	[RSP+A88 ] 0x7FF9AA0CEFD0     (void* -> ntdll.dll+009EFD0)
 	[RSP+A90 ] 0x7FF9AA0CEFD0     (void* -> ntdll.dll+009EFD0)
-	[RSP+A98 ] 0xE36959E340       (char*) "C:\Users\******\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
+	[RSP+A98 ] 0xE36959E340       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
 	[RSP+AA0 ] 0x2DF29ABCD40      (BSFile*)
 	[RSP+AA8 ] 0x7FF9800200A1     (void*)
 	[RSP+AB0 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+AB8 ] 0x8000000          (size_t)
 	[RSP+AC0 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+AC8 ] 0xE36959E340       (char*) "C:\Users\******\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
+	[RSP+AC8 ] 0xE36959E340       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
 	[RSP+AD0 ] 0x0                (size_t)
-	[RSP+AD8 ] 0xE36959E340       (char*) "C:\Users\******\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
+	[RSP+AD8 ] 0xE36959E340       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
 	[RSP+AE0 ] 0x2DF8C3CB4D0      (void*)
 	[RSP+AE8 ] 0x2DF1BC14800      (void*)
 	[RSP+AF0 ] 0x246              (size_t)
@@ -535,7 +535,7 @@ STACK:
 	[RSP+B00 ] 0x0                (size_t)
 	[RSP+B08 ] 0x2DE603CB540      (void*)
 	[RSP+B10 ] 0x2DF29ABCD40      (BSFile*)
-	[RSP+B18 ] 0xE36959E340       (char*) "C:\Users\******\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
+	[RSP+B18 ] 0xE36959E340       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
 	[RSP+B20 ] 0x0                (size_t)
 	[RSP+B28 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+B30 ] 0x0                (size_t)
@@ -545,12 +545,12 @@ STACK:
 	[RSP+B50 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+B58 ] 0xFFFFFFFF00000000 (size_t)
 	[RSP+B60 ] 0x0                (size_t)
-	[RSP+B68 ] 0xE36959E340       (char*) "C:\Users\******\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
+	[RSP+B68 ] 0xE36959E340       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
 	[RSP+B70 ] 0x1                (size_t)
 	[RSP+B78 ] 0x7FF7D48C525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+B80 ] 0x2DF29ABCD40      (BSFile*)
 	[RSP+B88 ] 0x0                (size_t)
-	[RSP+B90 ] 0xE36959E340       (char*) "C:\Users\******\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
+	[RSP+B90 ] 0xE36959E340       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
 	[RSP+B98 ] 0x40F54D515B0B0000 (size_t)
 	[RSP+BA0 ] 0x200              (size_t)
 	[RSP+BA8 ] 0x0                (size_t)
@@ -558,16 +558,16 @@ STACK:
 	[RSP+BB8 ] 0xFFFFFFFF00000000 (size_t)
 	[RSP+BC0 ] 0x2DF00000001      (void*)
 	[RSP+BC8 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+BD0 ] 0xE36959E340       (char*) "C:\Users\******\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
+	[RSP+BD0 ] 0xE36959E340       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
 	[RSP+BD8 ] 0x7FF7D48C4D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+BE0 ] 0x1                (size_t)
 	[RSP+BE8 ] 0x2DF29ABCD40      (BSFile*)
-	[RSP+BF0 ] 0x2DF29ABCDAC      (char*) "C:\Users\******\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
+	[RSP+BF0 ] 0x2DF29ABCDAC      (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
 	[RSP+BF8 ] 0x7FF94E2CA24C     (void* -> Buffout4.dll+004A24C)
 	[RSP+C00 ] 0x1                (size_t)
 	[RSP+C08 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+C10 ] 0xFFFFFFFF         (size_t)
-	[RSP+C18 ] 0xE36959E340       (char*) "C:\Users\******\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
+	[RSP+C18 ] 0xE36959E340       (char*) "C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\Saves\Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2.fos.tmp"
 	[RSP+C20 ] 0x1                (size_t)
 	[RSP+C28 ] 0x7FF7D3A4A38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+C30 ] 0x2DF4F9FCCC0      (char*) "Save1_A64D67CD_426173746574_Vault111Cryo_000009_20230603152121_1_2"

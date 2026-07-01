@@ -366,7 +366,7 @@ STACK:
 	[RSP+6B80] 0x7FFE21F6329E     (void* -> usvfs_x64.dll+00B329E	mov rax, rbx)
 	[RSP+6C00] 0x7FFE00000000     (size_t) [140728898420736]
 	[RSP+6C80] 0x61070FF219       (void*)
-	[RSP+6D00] 0x61070FF4E0       (char*) "C:\Users\B 2\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
+	[RSP+6D00] 0x61070FF4E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
 	[RSP+6D80] 0x7FFE54C0E26F     (void* -> ntdll.dll+003E26F	add rsp, 0x170)
 	[RSP+6E00] 0xDEA9A62119D1     (size_t) [244820218026449]
 	[RSP+6E80] 0x7FFE52592B6D     (void* -> KERNELBASE.dll+0032B6D	nop [rax+rax*1], eax)
@@ -397,7 +397,7 @@ STACK:
 	[RSP+7B00] 0x100000032        (size_t) [4294967346]
 	[RSP+7B80] 0x7FFE54C6D730     (void* -> ntdll.dll+009D730	jmp 0x00007FFE40020008)
 	[RSP+7C00] 0x7FFE54C6D730     (void* -> ntdll.dll+009D730	jmp 0x00007FFE40020008)
-	[RSP+7C80] 0x61070FF4E0       (char*) "C:\Users\B 2\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
+	[RSP+7C80] 0x61070FF4E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
 	[RSP+7D00] 0x1F7D4D45D00      (BSFile*)
 	[RSP+7D80] 0x7FFE400200A1     (void*)
 	[RSP+7E00] 0xFFFFFFFFFFFFFFFF (size_t) [uint:0184467440737095516150int:0-1]
@@ -405,7 +405,7 @@ STACK:
 	[RSP+7F00] 0xFFFFFFFFFFFFFFFF (size_t) [uint:0184467440737095516150int:0-1]
 	[RSP+7F80] 0x0                (size_t) [0]
 	[RSP+8000] 0x0                (size_t) [0]
-	[RSP+8080] 0x61070FF4E0       (char*) "C:\Users\B 2\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
+	[RSP+8080] 0x61070FF4E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
 	[RSP+8100] 0x0                (size_t) [0]
 	[RSP+8180] 0x0                (size_t) [0]
 	[RSP+8200] 0x246              (size_t) [582]
@@ -413,7 +413,7 @@ STACK:
 	[RSP+8300] 0x0                (size_t) [0]
 	[RSP+8380] 0x1F6C4CC3890      (void*)
 	[RSP+8400] 0x1F7D4D45D00      (BSFile*)
-	[RSP+8480] 0x61070FF4E0       (char*) "C:\Users\B 2\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
+	[RSP+8480] 0x61070FF4E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
 	[RSP+8500] 0x0                (size_t) [0]
 	[RSP+8580] 0xFFFFFFFFFFFFFFFF (size_t) [uint:0184467440737095516150int:0-1]
 	[RSP+8600] 0x0                (size_t) [0]
@@ -428,7 +428,7 @@ STACK:
 	[RSP+8A80] 0x7FF7BF6C525E     (void* -> Fallout4.exe+1B5525E	mov rbp, [rsp+0x60])
 	[RSP+8B00] 0x1F7D4D45D00      (BSFile*)
 	[RSP+8B80] 0x0                (size_t) [0]
-	[RSP+8C00] 0x61070FF4E0       (char*) "C:\Users\B 2\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
+	[RSP+8C00] 0x61070FF4E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
 	[RSP+8C80] 0xDEC8A12EE8510000 (size_t) [uint:0160532580946003230720int:0-2393485979109228544]
 	[RSP+8D00] 0x200              (size_t) [512]
 	[RSP+8D80] 0x0                (size_t) [0]
@@ -436,16 +436,16 @@ STACK:
 	[RSP+8E80] 0x0                (size_t) [0]
 	[RSP+8F00] 0x1F700000001      (void*)
 	[RSP+8F80] 0xFFFFFFFFFFFFFFFF (size_t) [uint:0184467440737095516150int:0-1]
-	[RSP+9000] 0x61070FF4E0       (char*) "C:\Users\B 2\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
+	[RSP+9000] 0x61070FF4E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
 	[RSP+9080] 0x7FF7BF6C4D45     (void* -> Fallout4.exe+1B54D45	test ebp, ebp)
 	[RSP+9100] 0x1                (size_t) [1]
 	[RSP+9180] 0x1F7D4D45D00      (BSFile*)
-	[RSP+9200] 0x1F7D4D45D6C      (char*) "C:\Users\B 2\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
+	[RSP+9200] 0x1F7D4D45D6C      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
 	[RSP+9280] 0x7FFDE68CE56C     (void* -> Buffout4.dll+010E56C	mov rbx, rax |  E:\Documents\source\repos\vcpkg\buildtrees\tbb\src\v2021.8.0-b8941aa9b2.clean\src\tbbmalloc\frontend.cpp:2934 scalable_malloc E:\Documents\source\repos\vcpkg\buildtrees\tbb\src\v2021.8.0-b8941aa9b2.clean\src\tbbmalloc\frontend.cpp:2995 scalable_malloc)
 	[RSP+9300] 0x1                (size_t) [1]
 	[RSP+9380] 0xFFFFFFFFFFFFFFFF (size_t) [uint:0184467440737095516150int:0-1]
 	[RSP+9400] 0xFFFFFFFF         (size_t) [4294967295]
-	[RSP+9480] 0x61070FF4E0       (char*) "C:\Users\B 2\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
+	[RSP+9480] 0x61070FF4E0       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2.fos.tmp"
 	[RSP+9500] 0x1                (size_t) [1]
 	[RSP+9580] 0x7FF7BE84A38C     (void* -> Fallout4.exe+0CDA38C	mov rdi, rax)
 	[RSP+9600] 0x1F7D5AA6FC0      (char*) "Autosave1_B3EF9B80__SanctuaryHillsWorld_000001_20240910050801_1_2"

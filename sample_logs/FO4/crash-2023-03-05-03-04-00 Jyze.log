@@ -204,14 +204,14 @@ STACK:
 	[RSP+2F8 ] 0x7FFC83B7F16C     (void* -> F4z Ro D'oh.dll+000F16C)
 	[RSP+300 ] 0x7FFC6E0C1A70     (char*) "%s
 "
-	[RSP+308 ] 0x7FFC6E0FB770     (char*) "full save path: C:\Users\Veed Dave\Documents\My Games\Fallout4\Saves\\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.f4se"
+	[RSP+308 ] 0x7FFC6E0FB770     (char*) "full save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.f4se"
 	[RSP+310 ] 0xFFFFFFFFFFFFFFFE (size_t)
-	[RSP+318 ] 0x1B20FEB7F81      (char*) "ull save path: C:\Users\Veed Dave\Documents\My Games\Fallout4\Saves\\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.f4seaded correctlyy"
+	[RSP+318 ] 0x1B20FEB7F81      (char*) "ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.f4seaded correctlyy"
 	[RSP+320 ] 0x0                (size_t)
 	[RSP+328 ] 0x163BF6E028       (void*)
 	[RSP+330 ] 0x0                (size_t)
 	[RSP+338 ] 0x7FFC6E0344EA     (void* -> f4se_1_10_163.dll+00044EA)
-	[RSP+340 ] 0x1B2AC1F35A0      (char*) "C:\Users\Veed Dave\Documents\My Games\Fallout4\Saves\\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.f4se"
+	[RSP+340 ] 0x1B2AC1F35A0      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.f4se"
 	[RSP+348 ] 0x41               (size_t)
 	[RSP+350 ] 0x0                (size_t)
 	[RSP+358 ] 0xFFFFFFFF         (size_t)
@@ -317,9 +317,9 @@ STACK:
 	[RSP+678 ] 0x0                (size_t)
 	[RSP+680 ] 0x8F314A70BC2F     (size_t)
 	[RSP+688 ] 0x7FF6AFA35F7E     (void* -> Fallout4.exe+1B55F7E)
-	[RSP+690 ] 0x163BF6E500       (char*) "C:\Users\Veed Dave\Documents\My Games\Fallout4\Saves\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.fos.tmp"
+	[RSP+690 ] 0x163BF6E500       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.fos.tmp"
 	[RSP+698 ] 0x1B2AFC1BC80      (BSFile*)
-	[RSP+6A0 ] 0x163BF6E500       (char*) "C:\Users\Veed Dave\Documents\My Games\Fallout4\Saves\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.fos.tmp"
+	[RSP+6A0 ] 0x163BF6E500       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.fos.tmp"
 	[RSP+6A8 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6B0 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+6B8 ] 0x7FFCB5C26575     (void* -> KERNELBASE.dll+0036575)
@@ -331,7 +331,7 @@ STACK:
 	[RSP+6E8 ] 0x7FF6AFA3525E     (void* -> Fallout4.exe+1B5525E)
 	[RSP+6F0 ] 0x1B2AFC1BC80      (BSFile*)
 	[RSP+6F8 ] 0x0                (size_t)
-	[RSP+700 ] 0x163BF6E500       (char*) "C:\Users\Veed Dave\Documents\My Games\Fallout4\Saves\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.fos.tmp"
+	[RSP+700 ] 0x163BF6E500       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.fos.tmp"
 	[RSP+708 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+710 ] 0xFFFFFFFFFFFFFF00 (size_t)
 	[RSP+718 ] 0x0                (size_t)
@@ -339,16 +339,16 @@ STACK:
 	[RSP+728 ] 0x1B3A9D47900      (void*)
 	[RSP+730 ] 0x1B300000001      (void*)
 	[RSP+738 ] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+740 ] 0x163BF6E500       (char*) "C:\Users\Veed Dave\Documents\My Games\Fallout4\Saves\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.fos.tmp"
+	[RSP+740 ] 0x163BF6E500       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.fos.tmp"
 	[RSP+748 ] 0x7FF6AFA34D45     (void* -> Fallout4.exe+1B54D45)
 	[RSP+750 ] 0x1                (size_t)
 	[RSP+758 ] 0x1B2AFC1BC80      (BSFile*)
-	[RSP+760 ] 0x1B2AFC1BCEC      (char*) "C:\Users\Veed Dave\Documents\My Games\Fallout4\Saves\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.fos.tmp"
+	[RSP+760 ] 0x1B2AFC1BCEC      (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.fos.tmp"
 	[RSP+768 ] 0x7FFC5FC8A24C     (void* -> Buffout4.dll+004A24C)
 	[RSP+770 ] 0x1                (size_t)
 	[RSP+778 ] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+780 ] 0xFFFFFFFF         (size_t)
-	[RSP+788 ] 0x163BF6E500       (char*) "C:\Users\Veed Dave\Documents\My Games\Fallout4\Saves\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.fos.tmp"
+	[RSP+788 ] 0x163BF6E500       (char*) "C:\Users\<USER>\Documents\My Games\Fallout4\Saves\Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2.fos.tmp"
 	[RSP+790 ] 0x1                (size_t)
 	[RSP+798 ] 0x7FF6AEBBA38C     (void* -> Fallout4.exe+0CDA38C)
 	[RSP+7A0 ] 0x1B2AF9C91C0      (char*) "Save542_EFEE18E9_56656564_Commonwealth_002333_20230305030400_32_2"
