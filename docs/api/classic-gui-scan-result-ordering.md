@@ -51,12 +51,11 @@ Qt does not re-sort the returned batch vector into input order before processing
 Completion-order results enter the active GUI path here in [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp):
 
 ```cpp
-auto results = classic::scanner::scan_run_execute(
-    ...,
-    rust::Slice<const rust::String>(rustPaths.data(), rustPaths.size()),
-    progress_callback,
-    *m_cancellationToken
-);
+classic::scanner::ScanRunRequestDto request{};
+request.targeted_mode = targetedMode;
+request.log_paths = std::move(rustPaths);
+auto results = classic::scanner::scan_run_execute(request, progress_callback,
+                                                  *m_cancellationToken);
 
 for (const auto& result : results) {
     const int index = static_cast<int>(qMin(result.input_index, static_cast<uint32_t>(total - 1)));

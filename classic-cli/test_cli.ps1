@@ -461,7 +461,7 @@ if (Should-RunScenario "multi-scan") {
     }
 }
 
-# ── Test 5: --max-concurrent 1 (single-threaded) ─────────────────
+# ── Test 5: --max-concurrent 1 (single concurrent scan) ───────────
 
 if (Should-RunScenario "max-concurrent") {
     Write-Host "Test 5: --max-concurrent 1" -ForegroundColor Cyan
@@ -475,14 +475,11 @@ if (Should-RunScenario "max-concurrent") {
 
         $r = Run-Cli -Arguments @("--scan-path", $tmpDir, "--game-version", "auto", "--max-concurrent", "1") -WorkingDirectory $workspace
 
-        if ($r.Output -match "1 worker thread[^s]") {
-            Test-Pass "max-concurrent-singular"
-        }
-        elseif ($r.Output -match "1 worker thread\s*$") {
+        if ($r.Output -match "\b1 concurrent scan\b") {
             Test-Pass "max-concurrent-singular"
         }
         else {
-            Test-Fail "max-concurrent-singular" "Output does not contain '1 worker thread' (singular)"
+            Test-Fail "max-concurrent-singular" "Output does not contain '1 concurrent scan' (singular)"
         }
 
         $autoscans = Get-ChildItem -Path $tmpDir -Filter "*-AUTOSCAN.md" -ErrorAction SilentlyContinue

@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 
 namespace {
 std::string resolve_log_path(const rust::String& result_log_path_rust, const QString& fallback)
@@ -86,11 +87,20 @@ void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, co
 
         const uint32_t maxConcurrent = maxConcurrentScans > 0 ? static_cast<uint32_t>(maxConcurrentScans) : 0U;
         BatchProgressCallback progress_callback(*this, total);
-        auto results = classic::scanner::scan_run_execute(
-            classic::toRustString(yamlRoot), classic::toRustString(yamlData), classic::toRustString(game),
-            classic::toRustString(gameVersion), showFormIdValues, fcxMode, simplifyLogs, moveUnsolvedLogs,
-            targetedMode, maxConcurrent, rust::Slice<const rust::String>(rustPaths.data(), rustPaths.size()),
-            progress_callback, *m_cancellationToken);
+        classic::scanner::ScanRunRequestDto request{};
+        request.yaml_dir_root = classic::toRustString(yamlRoot);
+        request.yaml_dir_data = classic::toRustString(yamlData);
+        request.game = classic::toRustString(game);
+        request.game_version = classic::toRustString(gameVersion);
+        request.show_formid_values = showFormIdValues;
+        request.fcx_mode = fcxMode;
+        request.simplify_logs = simplifyLogs;
+        request.move_unsolved_logs = moveUnsolvedLogs;
+        request.targeted_mode = targetedMode;
+        request.max_concurrent = maxConcurrent;
+        request.log_paths = std::move(rustPaths);
+        auto results = classic::scanner::scan_run_execute(request, progress_callback,
+                                                          *m_cancellationToken);
 
         for (const auto& result : results) {
             const int index = static_cast<int>(qMin(result.input_index, static_cast<uint32_t>(total - 1)));

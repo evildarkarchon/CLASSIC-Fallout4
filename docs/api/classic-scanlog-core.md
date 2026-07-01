@@ -269,7 +269,7 @@ Behavior worth knowing:
 - Autoscan Report write failure is a per-log failure in `CrashLogScanRunLogOutcome`, not a run-level setup error.
 - `cancellation` is a cooperative shared atomic checked before queued Crash Logs start; binding adapters should pass their frontend cancellation token rather than polling locally only.
 - Progress events reuse `ScanProgressPhase` and carry stable input indices so adapters can correlate completion-order results to their selected Crash Log list.
-- Binding adapters expose this seam as `classic::scanner::scan_run_execute(...)` for C++, `scanRunExecute(...)` for Node, and `classic_scanlog.scan_run_execute(...)` for Python. Adapter scan flows should not duplicate Autoscan Report writing or Unsolved Logs movement around those calls.
+- Binding adapters expose this seam as `classic::scanner::scan_run_execute(request, callback, cancellation_token)` for C++, `scanRunExecute(...)` for Node, and `classic_scanlog.scan_run_execute(...)` for Python. Adapter scan flows should not duplicate Autoscan Report writing or Unsolved Logs movement around those calls.
 
 ## `LogParser`
 

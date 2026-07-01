@@ -171,15 +171,15 @@ Resolution order:
 
 1. Load `<yaml_dir_data>/CLASSIC <game> Local.yaml` if it exists.
 2. Return `Game_Info.Docs_Folder_XSE` when present and non-blank.
-3. Derive `<Root_Folder_Docs>/<xse acronym>` from `Game_Info.Root_Folder_Docs` when present and non-blank.
-4. Derive `<configured_docs_root>/<xse acronym>` when the caller supplies a non-empty configured docs root.
-5. Use Version Registry metadata plus `DocsPathFinder` to discover the docs root, then append the Version Registry XSE acronym.
+3. Derive `<Root_Folder_Docs>/<XSE docs folder>` from `Game_Info.Root_Folder_Docs` when present and non-blank.
+4. Derive `<configured_docs_root>/<XSE docs folder>` when the caller supplies a non-empty configured docs root.
+5. Use Version Registry metadata plus `DocsPathFinder` to discover the docs root, then append the XSE docs folder.
 
 Behavior worth knowing:
 
 - the function is fail-soft and returns `None` for missing/unreadable Local.yaml, blank values, unknown game/version, or documents discovery failure
 - `Fallout4VR` with `selected_game_version = "auto"` resolves as the VR registry entry
-- Version Registry XSE metadata is the source of truth for the derived folder name; Fallout 4 VR currently derives the shared `F4SE` folder
+- Version Registry XSE metadata selects the XSE family, but the derived documents subfolder uses the on-disk XSE docs folder name; Fallout 4 VR uses the shared `F4SE` folder even though its XSE acronym is `F4SEVR`
 - explicit `Docs_Folder_XSE` always wins over derived values
 - standard crash scans should keep custom folders additive to XSE Folder collection; use `classic_file_io_core::LogCollector::new_for_scan(...)` when the caller has full scan configuration
 

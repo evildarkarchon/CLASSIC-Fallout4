@@ -60,7 +60,7 @@ Q_EMIT m_worker.progressDetailed(percent, status, completed, total);
 
 Current worker responsibilities:
 
-- pass selected Crash Logs and scan settings to `scan_run_execute(...)`
+- pass selected Crash Logs and scan settings to `scan_run_execute(...)` through `ScanRunRequestDto`
 - adapt bridge callback events into Qt signals
 - reset and pass the Rust-owned scan cancellation token, then cancel that token from `requestCancel()`
 - map completion-order `ScanRunLogResult` values back to original log rows with `result.input_index`

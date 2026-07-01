@@ -58,9 +58,10 @@ The main consumers are `orchestrator_process_logs_batch_with_progress(...)` and 
 - emits bridge-level terminal `Completed` or `Failed` events
 - returns `Vec<BatchScanResult>` in completion order after callback emission finishes
 
-`scan_run_execute(...)`:
+`scan_run_execute(request, callback, cancellation_token)`:
 
 - calls `classic_scanlog_core::CrashLogScanRun::run(...)`
+- reads selected logs and scan settings from the bridge `ScanRunRequestDto`
 - maps `CrashLogScanRunEvent` values into the same `BatchProgressEvent` DTO
 - emits terminal `Completed` or `Failed` events after Rust has finalized per-log Crash Log Scan Run work such as Autoscan Report writing and Unsolved Logs movement
 - returns `Vec<ScanRunLogResult>` in completion order after callback emission finishes

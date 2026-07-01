@@ -962,10 +962,14 @@ void ScanSettingsWiringTests::scan_worker_skips_unsolved_relocation_for_targeted
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("request.move_unsolved_logs = moveUnsolvedLogs")),
+             "ScanWorker should pass the unsolved relocation setting to Rust");
+    QVERIFY2(sourceText.contains(QStringLiteral("request.targeted_mode = targetedMode")),
+             "ScanWorker should pass targetedMode to Rust");
     const QRegularExpression scanRunCallRegex(QStringLiteral(
-        R"(scan_run_execute\((?:.|\n)*?moveUnsolvedLogs,\s*targetedMode(?:.|\n)*?progress_callback,\s*\*m_cancellationToken\s*\))"));
+        R"(scan_run_execute\(\s*request,\s*progress_callback,\s*\*m_cancellationToken\s*\))"));
     QVERIFY2(scanRunCallRegex.match(sourceText).hasMatch(),
-             "ScanWorker should pass targetedMode and the cancellation token to Rust");
+             "ScanWorker should pass the scan request and cancellation token to Rust");
     QVERIFY2(sourceText.contains(QStringLiteral("scan_cancellation_token_cancel(*m_cancellationToken)")),
              "ScanWorker::requestCancel should propagate cancellation to the Rust scan-run token");
     QVERIFY2(!sourceText.contains(QStringLiteral("move_unsolved_artifacts")),

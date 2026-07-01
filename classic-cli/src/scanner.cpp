@@ -23,6 +23,7 @@
 #include <fmt/core.h>
 #include <string>
 #include <thread>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -206,11 +207,20 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
 
     auto results = [&] {
         try {
-            return classic::scanner::scan_run_execute(
-                dirs.root, dirs.data, args.game, args.game_version, args.show_fid_values, args.fcx_mode,
-                args.simplify_logs, false, targeted_mode, concurrency,
-                rust::Slice<const rust::String>(log_paths.data(), log_paths.size()), progress_callback,
-                *cancellation_token);
+            classic::scanner::ScanRunRequestDto request{};
+            request.yaml_dir_root = rust::String(dirs.root);
+            request.yaml_dir_data = rust::String(dirs.data);
+            request.game = rust::String(args.game);
+            request.game_version = rust::String(args.game_version);
+            request.show_formid_values = args.show_fid_values;
+            request.fcx_mode = args.fcx_mode;
+            request.simplify_logs = args.simplify_logs;
+            request.move_unsolved_logs = false;
+            request.targeted_mode = targeted_mode;
+            request.max_concurrent = concurrency;
+            request.log_paths = std::move(log_paths);
+            return classic::scanner::scan_run_execute(request, progress_callback,
+                                                      *cancellation_token);
         } catch (...) {
             stop_renderer();
             progress.finish();

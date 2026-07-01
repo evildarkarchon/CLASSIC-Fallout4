@@ -289,7 +289,7 @@ Current behavior:
 - reads `<yaml_dir_data>/CLASSIC <game> Local.yaml` through the Rust XSE module
 - uses `Game_Info.Docs_Folder_XSE` first when present and non-blank
 - otherwise derives from `Game_Info.Root_Folder_Docs`, `configured_docs_root`, or Version Registry-backed documents discovery
-- appends the Version Registry XSE acronym for derived paths
+- appends the Rust XSE resolver's documents folder name for derived paths; Fallout 4 VR uses the shared `F4SE` subfolder even though its XSE acronym is `F4SEVR`
 - returns `""` when the Rust module returns `None`
 
 Bridge narrowing:

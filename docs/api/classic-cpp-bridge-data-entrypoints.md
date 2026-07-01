@@ -574,20 +574,34 @@ FCX reset failure mapping:
 - `FcxResetError::Unnecessary` remains non-fatal
 - a real reset failure aborts the scan session before callback activity begins and returns a single failed `BatchScanResult` with the reset error text
 
-### `scan_run_execute(...) -> Result<Vec<ScanRunLogResult>>`
+### `scan_run_execute(request, callback, cancellation_token) -> Result<Vec<ScanRunLogResult>>`
 
 Forwards to the Rust `classic_scanlog_core::CrashLogScanRun` module after building Crash Log Scan Intake from the same YAML path and scan-option inputs as `build_full_scan_config(...)`.
+
+C++ callers populate `ScanRunRequestDto` and pass it by reference. Request fields:
+
+- `yaml_dir_root`
+- `yaml_dir_data`
+- `game`
+- `game_version`
+- `show_formid_values`
+- `fcx_mode`
+- `simplify_logs`
+- `move_unsolved_logs`
+- `targeted_mode`
+- `max_concurrent`
+- `log_paths`
 
 Current bridge behavior:
 
 - accepts selected Crash Log paths from C++ callers; it does not collect logs
-- `max_concurrent == 0` becomes the core adaptive concurrency default
-- `targeted_mode = true` creates a Targeted Crash Log Scan Run, which never moves failed Crash Logs or Autoscan Reports to Unsolved Logs
-- `targeted_mode = false` creates a Standard Crash Log Scan Run; when `move_unsolved_logs` is true, failed Crash Logs and sibling Autoscan Reports move to `{yaml_dir_root}/CLASSIC Backup/Unsolved Logs`
+- `request.max_concurrent == 0` becomes the core adaptive concurrency default
+- `request.targeted_mode = true` creates a Targeted Crash Log Scan Run, which never moves failed Crash Logs or Autoscan Reports to Unsolved Logs
+- `request.targeted_mode = false` creates a Standard Crash Log Scan Run; when `request.move_unsolved_logs` is true, failed Crash Logs and sibling Autoscan Reports move to `{request.yaml_dir_root}/CLASSIC Backup/Unsolved Logs`
 - Rust writes Autoscan Reports before returning per-log results; C++ callers no longer receive `report_lines` from this entry point
 - setup failures return a CXX `Result` error; per-log analysis, Autoscan Report write, and Unsolved Logs failures are represented in `ScanRunLogResult`
 - progress uses the existing `ScanBatchProgressCallback` and `BatchProgressEvent` DTO shape
-- cooperative cancellation uses a Rust-owned `ScanCancellationToken`; callers create/reset the token, pass it to `scan_run_execute(...)`, and call `scan_cancellation_token_cancel(...)` to stop queued logs before they start
+- cooperative cancellation uses a Rust-owned `ScanCancellationToken`; callers create/reset the token, pass it alongside the request to `scan_run_execute(...)`, and call `scan_cancellation_token_cancel(...)` to stop queued logs before they start
 
 Bridge DTO shape for `ScanRunLogResult`:
 

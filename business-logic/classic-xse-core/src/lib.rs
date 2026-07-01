@@ -579,10 +579,18 @@ fn xse_folder_from_docs_root(
 ) -> Option<PathBuf> {
     let folder = version_info
         .and_then(|info| info.xse.as_ref())
-        .map(|xse| xse.acronym.trim())
+        .map(|xse| xse_docs_folder_name(&xse.acronym))
         .filter(|acronym| !acronym.is_empty())?;
 
     Some(docs_root.join(folder))
+}
+
+fn xse_docs_folder_name(acronym: &str) -> &str {
+    match acronym.trim() {
+        // F4SEVR keeps the F4SEVR identity/loader, but writes crash logs under F4SE.
+        "F4SEVR" => "F4SE",
+        folder => folder,
+    }
 }
 
 fn discover_xse_folder(version_info: Option<&'static VersionInfo>) -> Option<PathBuf> {

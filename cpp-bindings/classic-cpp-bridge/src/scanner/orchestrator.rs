@@ -358,39 +358,33 @@ pub(crate) fn orchestrator_process_logs_batch_with_progress(
 }
 
 pub(crate) fn scan_run_execute(
-    yaml_dir_root: &str,
-    yaml_dir_data: &str,
-    game: &str,
-    game_version: &str,
-    show_formid_values: bool,
-    fcx_mode: bool,
-    simplify_logs: bool,
-    move_unsolved_logs: bool,
-    targeted_mode: bool,
-    max_concurrent: u32,
-    log_paths: &[String],
+    request: &ffi::ScanRunRequestDto,
     callback: &ffi::ScanBatchProgressCallback,
     cancellation_token: &ScanCancellationToken,
 ) -> Result<Vec<ffi::ScanRunLogResult>, String> {
-    let options = CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs);
+    let options = CrashLogScanOptions::new(
+        request.show_formid_values,
+        request.fcx_mode,
+        request.simplify_logs,
+    );
     let prepared = block_on_result(
         CrashLogScanIntake::from_yaml_paths(
-            yaml_dir_root,
-            yaml_dir_data,
-            game,
-            game_version,
+            request.yaml_dir_root.as_str(),
+            request.yaml_dir_data.as_str(),
+            request.game.as_str(),
+            request.game_version.as_str(),
             options,
         )
         .prepare(),
     )?;
 
-    let mode = if targeted_mode {
+    let mode = if request.targeted_mode {
         CrashLogScanRunMode::Targeted
     } else {
         CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
-            unsolved_logs: if move_unsolved_logs {
+            unsolved_logs: if request.move_unsolved_logs {
                 UnsolvedLogsPolicy::MoveTo {
-                    directory: PathBuf::from(yaml_dir_root)
+                    directory: PathBuf::from(request.yaml_dir_root.as_str())
                         .join("CLASSIC Backup")
                         .join("Unsolved Logs"),
                 }
@@ -400,21 +394,25 @@ pub(crate) fn scan_run_execute(
         })
     };
 
-    let max_parallel = if max_concurrent == 0 {
+    let max_parallel = if request.max_concurrent == 0 {
         None
     } else {
-        Some(max_concurrent as usize)
+        Some(request.max_concurrent as usize)
     };
     let run = CrashLogScanRun::new(prepared);
-    let request = CrashLogScanRunRequest {
-        logs: log_paths.iter().map(PathBuf::from).collect(),
+    let run_request = CrashLogScanRunRequest {
+        logs: request
+            .log_paths
+            .iter()
+            .map(|path| PathBuf::from(path.as_str()))
+            .collect(),
         mode,
         max_concurrent: max_parallel,
         cancellation: Some(Arc::clone(&cancellation_token.cancelled)),
         preserve_order: false,
     };
 
-    let result = block_on_result(run.run(request, |event| {
+    let result = block_on_result(run.run(run_request, |event| {
         let log_path = event.crash_log.to_string_lossy();
         callback.on_batch_progress(&make_progress_event(
             match event.kind {

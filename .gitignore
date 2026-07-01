@@ -40,6 +40,7 @@ _internal/
 CLASSIC Backup/
 CLASSIC GFS Report.md
 CLASSIC Ignore.yaml
+!python-bindings/tests/fixtures/CLASSIC Ignore.yaml
 CLASSIC Settings.yaml
 Fallout4 FID*.txt
 FormID_List*

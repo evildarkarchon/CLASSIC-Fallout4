@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T07:35:07Z",
+  "generated_at_utc": "2026-07-01T08:38:07Z",
   "schema_version": 1,
   "entries": [
     {
@@ -4419,48 +4419,8 @@
       "signature": {
         "args": [
           {
-            "name": "yaml_dir_root",
-            "type": "&str"
-          },
-          {
-            "name": "yaml_dir_data",
-            "type": "&str"
-          },
-          {
-            "name": "game",
-            "type": "&str"
-          },
-          {
-            "name": "game_version",
-            "type": "&str"
-          },
-          {
-            "name": "show_formid_values",
-            "type": "bool"
-          },
-          {
-            "name": "fcx_mode",
-            "type": "bool"
-          },
-          {
-            "name": "simplify_logs",
-            "type": "bool"
-          },
-          {
-            "name": "move_unsolved_logs",
-            "type": "bool"
-          },
-          {
-            "name": "targeted_mode",
-            "type": "bool"
-          },
-          {
-            "name": "max_concurrent",
-            "type": "u32"
-          },
-          {
-            "name": "log_paths",
-            "type": "&[String]"
+            "name": "request",
+            "type": "&ScanRunRequestDto"
           },
           {
             "name": "callback",
@@ -4775,6 +4735,60 @@
         {
           "name": "suspect_count",
           "type": "u32"
+        }
+      ]
+    },
+    {
+      "id": "87e07059e225ead6",
+      "rustSymbol": "ScanRunRequestDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "yaml_dir_root",
+          "type": "String"
+        },
+        {
+          "name": "yaml_dir_data",
+          "type": "String"
+        },
+        {
+          "name": "game",
+          "type": "String"
+        },
+        {
+          "name": "game_version",
+          "type": "String"
+        },
+        {
+          "name": "show_formid_values",
+          "type": "bool"
+        },
+        {
+          "name": "fcx_mode",
+          "type": "bool"
+        },
+        {
+          "name": "simplify_logs",
+          "type": "bool"
+        },
+        {
+          "name": "move_unsolved_logs",
+          "type": "bool"
+        },
+        {
+          "name": "targeted_mode",
+          "type": "bool"
+        },
+        {
+          "name": "max_concurrent",
+          "type": "u32"
+        },
+        {
+          "name": "log_paths",
+          "type": "Vec<String>"
         }
       ]
     },

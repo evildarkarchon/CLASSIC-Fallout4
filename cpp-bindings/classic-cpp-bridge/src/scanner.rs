@@ -96,6 +96,21 @@ mod ffi {
         suspect_count: u32,
     }
 
+    /// Structured input to `scan_run_execute`.
+    struct ScanRunRequestDto {
+        yaml_dir_root: String,
+        yaml_dir_data: String,
+        game: String,
+        game_version: String,
+        show_formid_values: bool,
+        fcx_mode: bool,
+        simplify_logs: bool,
+        move_unsolved_logs: bool,
+        targeted_mode: bool,
+        max_concurrent: u32,
+        log_paths: Vec<String>,
+    }
+
     /// Papyrus log statistics transferred across the FFI boundary.
     struct PapyrusStatsDto {
         dumps: u32,
@@ -183,17 +198,7 @@ mod ffi {
             callback: &ScanBatchProgressCallback,
         ) -> Vec<BatchScanResult>;
         fn scan_run_execute(
-            yaml_dir_root: &str,
-            yaml_dir_data: &str,
-            game: &str,
-            game_version: &str,
-            show_formid_values: bool,
-            fcx_mode: bool,
-            simplify_logs: bool,
-            move_unsolved_logs: bool,
-            targeted_mode: bool,
-            max_concurrent: u32,
-            log_paths: &[String],
+            request: &ScanRunRequestDto,
             callback: &ScanBatchProgressCallback,
             cancellation_token: &ScanCancellationToken,
         ) -> Result<Vec<ScanRunLogResult>>;

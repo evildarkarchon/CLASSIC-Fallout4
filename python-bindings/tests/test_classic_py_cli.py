@@ -185,6 +185,8 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
         game_version: str,
         paths: list[str],
     ) -> list[types.SimpleNamespace]:
+        assert yaml_dir_root == str(REPO_ROOT)
+        assert yaml_dir_data == str(REPO_ROOT / "CLASSIC Data")
         return [
             types.SimpleNamespace(
                 log_path=path,
@@ -242,6 +244,7 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
     fake_file.FileHasher = type("FileHasher", (), {"hash_file": staticmethod(lambda path: "a" * 64)})
     fake_scanlog = types.ModuleType("classic_scanlog")
     fake_scanlog.__version__ = "test"
+    fixture_root = REPO_ROOT / "python-bindings" / "tests" / "fixtures"
 
     def fake_scan_run_execute(
         yaml_dir_root: str,
@@ -250,6 +253,8 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
         game_version: str,
         paths: list[str],
     ) -> list[types.SimpleNamespace]:
+        assert yaml_dir_root == str(fixture_root)
+        assert yaml_dir_data == str(fixture_root / "CLASSIC Data")
         assert paths == [str(scan_fixture)]
         assert "Addictol v1.3.1" in scan_fixture.read_text(encoding="utf-8")
         report_path = tmp_path / "addictol-AUTOSCAN.md"
@@ -297,6 +302,63 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
             "outdatedWarningPresent": False,
         }
     ]
+
+
+def test_smoke_scanlog_contract_rejects_outdated_warning(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """The Addictol smoke scenario fails if fixture evidence reports an outdated warning."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+    from classic_py_cli.scenarios import Scenario
+
+    scan_fixture = REPO_ROOT / "python-bindings" / "tests" / "fixtures" / "scanlogs" / "addictol-newer-than-floor.log"
+    report_path = tmp_path / "addictol-AUTOSCAN.md"
+    report_path.write_text("*** WARNING: YOUR Addictol IS OUTDATED! PLEASE UPDATE TO A VALID VERSION!***\n", encoding="utf-8")
+    fake_scanlog = types.ModuleType("classic_scanlog")
+
+    def fake_scan_run_execute(
+        yaml_dir_root: str,
+        yaml_dir_data: str,
+        game: str,
+        game_version: str,
+        paths: list[str],
+    ) -> list[types.SimpleNamespace]:
+        return [
+            types.SimpleNamespace(
+                log_path=str(scan_fixture),
+                success=True,
+                error=None,
+                autoscan_report_path=str(report_path),
+            )
+        ]
+
+    fake_scanlog.scan_run_execute = fake_scan_run_execute
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake_scanlog)
+    scenario = Scenario(
+        "scanlog-addictol-newer-than-floor",
+        "Scan an Addictol crash log newer than the configured floor and prove it remains valid.",
+        "classic_scanlog",
+        ["scan_run_execute", "ScanRunLogResult.autoscan_report_path"],
+        ["scan", "logs", "--path", "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
+        ["python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
+        0,
+        ["contract-test"],
+        ["missing-runtime-coverage", "true-binding-compliance-gap"],
+    )
+    monkeypatch.setattr(
+        "classic_py_cli.commands.scenarios_for_profile",
+        lambda profile: [scenario] if profile == "contract-test" else [],
+    )
+
+    code = main(["--json", "--output", str(tmp_path), "compliance", "run", "--profile", "contract-test"])
+    payload = json.loads(capsys.readouterr().out)
+    scanlog_result = payload["data"]["report"]["scenarioResults"][0]
+
+    assert code == 1
+    assert scanlog_result["status"] == "failed"
+    assert scanlog_result["exitCode"] == 0
+    assert scanlog_result["contractFailure"] == "Addictol scanlog scenario produced an outdated-version warning"
+    assert "validVersionLine" not in scanlog_result["data"]["reportEvidence"][0]
 
 
 def test_compliance_run_fails_when_scenario_expectation_missed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
