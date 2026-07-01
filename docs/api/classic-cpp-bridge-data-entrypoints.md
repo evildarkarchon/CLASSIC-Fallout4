@@ -114,6 +114,7 @@ It owns:
 - YAML-backed scan config construction
 - explicit FCX singleton reset through `classic::scanner::fcx_reset_global_state()`
 - `OrchestratorCore` creation and single and batch scan entry points
+- full Crash Log Scan Run execution through `scan_run_execute(...)`
 - delegation to `classic-scanlog-core` Crash Log Scan Intake for remove-list loading, FormID DB path selection, and short-scan cache profile choice
 - progress callback DTOs for batch scanning
 - small scan utilities such as `detect_vr_log` and `detect_crash_pattern`
@@ -573,6 +574,36 @@ FCX reset failure mapping:
 - `FcxResetError::Unnecessary` remains non-fatal
 - a real reset failure aborts the scan session before callback activity begins and returns a single failed `BatchScanResult` with the reset error text
 
+### `scan_run_execute(...) -> Result<Vec<ScanRunLogResult>>`
+
+Forwards to the Rust `classic_scanlog_core::CrashLogScanRun` module after building Crash Log Scan Intake from the same YAML path and scan-option inputs as `build_full_scan_config(...)`.
+
+Current bridge behavior:
+
+- accepts selected Crash Log paths from C++ callers; it does not collect logs
+- `max_concurrent == 0` becomes the core adaptive concurrency default
+- `targeted_mode = true` creates a Targeted Crash Log Scan Run, which never moves failed Crash Logs or Autoscan Reports to Unsolved Logs
+- `targeted_mode = false` creates a Standard Crash Log Scan Run; when `move_unsolved_logs` is true, failed Crash Logs and sibling Autoscan Reports move to `{yaml_dir_root}/CLASSIC Backup/Unsolved Logs`
+- Rust writes Autoscan Reports before returning per-log results; C++ callers no longer receive `report_lines` from this entry point
+- setup failures return a CXX `Result` error; per-log analysis, Autoscan Report write, and Unsolved Logs failures are represented in `ScanRunLogResult`
+- progress uses the existing `ScanBatchProgressCallback` and `BatchProgressEvent` DTO shape
+
+Bridge DTO shape for `ScanRunLogResult`:
+
+- `input_index`
+- `log_path`
+- `autoscan_report_path` (empty when no report was written)
+- `success`
+- `cancelled`
+- `moved_to_unsolved_logs`
+- `error_message`
+- `processing_time_ms`
+- `formid_count`, `plugin_count`, `suspect_count`
+
+Contributor note:
+
+- this is the preferred C++ CLI/GUI seam for a full Crash Log Scan Run; the older `orchestrator_*` functions remain lower-level analysis bridge entry points.
+
 ## Small scan utilities
 
 ### `detect_vr_log(content) -> bool`
@@ -644,7 +675,7 @@ Longer-lived Rust objects stay behind boxed bridge wrappers:
 When the bridge cannot or does not want to expose a richer Rust type, it flattens:
 
 - paired key and value vectors for config maps
-- `ScanResult`, `BatchScanResult`, and `PapyrusStatsDto`
+- `ScanResult`, `BatchScanResult`, `ScanRunLogResult`, and `PapyrusStatsDto`
 - tab-delimited batch DB lookup strings instead of a structured map DTO
 
 ## 3. Preformatted text summaries
@@ -697,6 +728,7 @@ Several entry points erase typed errors and return defaults instead:
 - keeps the CXX config/orchestrator call shape while scanlog-core intake selects DB path lists and simplify-log removal rules
 - drops `AnalysisResult` fields that some lower-level Rust and parity paths still use
 - adds bridge-local batch progress coordination, VR detection, and crash-pattern extraction, while applying the intake-selected DB cache profile
+- exposes `scan_run_execute(...)` for full Crash Log Scan Run behavior while keeping report writing and Unsolved Logs policy in Rust
 
 ---
 
@@ -735,12 +767,13 @@ When FormID lookup looks empty:
 
 When the C++ scan path diverges from the crate docs:
 
-1. check whether the frontend used `orchestrator_new()` or `orchestrator_new_minimal()`
+1. check whether the frontend used `scan_run_execute(...)`, `orchestrator_new()`, or `orchestrator_new_minimal()`
 2. if FormID values are missing, verify `show_formid_values` was true when the full config was built
 3. remember that scanlog-core intake resolves FormID DB paths for the bridge, including a hardcoded FOLON DB path for Fallout 4 modes
 4. if a scan aborts before work starts, check whether `fcx_reset_global_state()` failed and left an FCX reset error string in the bridge result path
 5. if batch progress looks surprising, remember result order is completion order and `input_index` is the stable correlation key
-6. use `CLASSIC_SCAN_DIAGNOSTICS` to turn on progress diagnostics and `CLASSIC_DB_COUNTER_INTERVAL` to control periodic DB counter logging
+6. for native scan-run consumers, remember Rust writes Autoscan Reports and owns Standard versus Targeted Unsolved Logs movement
+7. use `CLASSIC_SCAN_DIAGNOSTICS` to turn on progress diagnostics and `CLASSIC_DB_COUNTER_INTERVAL` to control periodic DB counter logging
 
 ## Papyrus flow
 
@@ -766,6 +799,7 @@ When Papyrus monitoring looks stale:
 - scanlog-core intake hardcodes `databases/FOLON FormIDs.db` for `Fallout4` and `Fallout4VR`
 - `src/scanner.rs` exposes only FCX reset control in C++; FCX issue inspection remains out of scope for this phase
 - `src/scanner.rs::orchestrator_process_logs_batch_with_progress()` is bridge-local coordination on top of per-log crate calls, not a direct wrapper over one lower-level batch API
+- `src/scanner.rs::scan_run_execute()` is the full Crash Log Scan Run seam; callers should not duplicate Autoscan Report writing or Unsolved Logs movement around it
 - `src/scanner.rs::detect_vr_log()` is a simple substring heuristic, not a full parser
 - `src/scanner.rs::papyrus_check_updates()` intentionally hides update errors from C++ callers
 

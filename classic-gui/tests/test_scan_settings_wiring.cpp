@@ -62,16 +62,16 @@ void ScanSettingsWiringTests::scan_worker_forwards_runtime_flags_to_rust_config(
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("build_full_scan_config(")),
-             "ScanWorker should call build_full_scan_config()");
+    QVERIFY2(sourceText.contains(QStringLiteral("scan_run_execute(")),
+             "ScanWorker should call the Rust Crash Log Scan Run seam");
     QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(gameVersion)")),
-             "ScanWorker should forward gameVersion to build_full_scan_config()");
+             "ScanWorker should forward gameVersion to scan_run_execute()");
     QVERIFY2(sourceText.contains(QStringLiteral("showFormIdValues")),
-             "ScanWorker should forward showFormIdValues to build_full_scan_config()");
+             "ScanWorker should forward showFormIdValues to scan_run_execute()");
     QVERIFY2(sourceText.contains(QStringLiteral("fcxMode")),
-             "ScanWorker should forward fcxMode to build_full_scan_config()");
+             "ScanWorker should forward fcxMode to scan_run_execute()");
     QVERIFY2(sourceText.contains(QStringLiteral("simplifyLogs")),
-             "ScanWorker should forward simplifyLogs to build_full_scan_config()");
+             "ScanWorker should forward simplifyLogs to scan_run_execute()");
 }
 
 void ScanSettingsWiringTests::scan_controller_forwards_flags_to_worker()
@@ -145,8 +145,8 @@ void ScanSettingsWiringTests::scan_worker_uses_progress_enabled_batch_api()
              "ScanWorker should define a CXX batch progress callback adapter");
     QVERIFY2(sourceText.contains(QStringLiteral("BatchProgressEvent")),
              "ScanWorker should consume the richer batch progress event payload");
-    QVERIFY2(sourceText.contains(QStringLiteral("orchestrator_process_logs_batch_with_progress")),
-             "ScanWorker should use the CXX batch API that reports progress");
+    QVERIFY2(sourceText.contains(QStringLiteral("scan_run_execute")),
+             "ScanWorker should use the CXX Crash Log Scan Run API that reports progress");
 }
 
 void ScanSettingsWiringTests::scan_worker_forwards_batch_counts_in_progress_updates()
@@ -173,9 +173,11 @@ void ScanSettingsWiringTests::scan_worker_defaults_to_batch_for_multi_log_scans(
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("scan_run_execute")),
+             "ScanWorker should delegate both single-log and multi-log runs to Rust");
     const QRegularExpression batchGateRegex(QStringLiteral(R"(if\s*\(\s*total\s*>\s*1\s*\))"));
-    QVERIFY2(batchGateRegex.match(sourceText).hasMatch(),
-             "ScanWorker should default to batch mode whenever there is more than one log");
+    QVERIFY2(!batchGateRegex.match(sourceText).hasMatch(),
+             "ScanWorker should not preserve a separate C++ batch-mode branch");
 }
 
 void ScanSettingsWiringTests::mainwindow_wires_live_crash_scan_progress_updates()
@@ -960,8 +962,12 @@ void ScanSettingsWiringTests::scan_worker_skips_unsolved_relocation_for_targeted
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("moveUnsolvedLogs && !targetedMode")),
-             "ScanWorker should skip unsolved-log relocation when running a targeted scan");
+    const QRegularExpression scanRunCallRegex(QStringLiteral(
+        R"(scan_run_execute\((?:.|\n)*?moveUnsolvedLogs,\s*targetedMode(?:.|\n)*?\))"));
+    QVERIFY2(scanRunCallRegex.match(sourceText).hasMatch(),
+             "ScanWorker should pass targetedMode to Rust so Targeted Crash Log Scan Runs skip Unsolved Logs movement");
+    QVERIFY2(!sourceText.contains(QStringLiteral("move_unsolved_artifacts")),
+             "ScanWorker should not own Unsolved Logs movement after scan_run migration");
 }
 
 void ScanSettingsWiringTests::scan_worker_counts_per_log_failures_without_scan_level_error()
@@ -972,10 +978,10 @@ void ScanSettingsWiringTests::scan_worker_counts_per_log_failures_without_scan_l
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
-    const QRegularExpression perLogCatchRegex(QStringLiteral(
-        R"(catch\s*\(\s*const\s+rust::Error&\s*\)\s*\{(?:.|\n)*?\+\+errorCount;(?:.|\n)*?emit\s+logScanned\(i,\s*false)"));
-    QVERIFY2(perLogCatchRegex.match(sourceText).hasMatch(),
-             "ScanWorker should treat orchestrator_process_log failures as per-log failures");
+    const QRegularExpression resultLoopRegex(QStringLiteral(
+        R"(for\s*\(\s*const\s+auto&\s+result\s*:\s*results\s*\)(?:.|\n)*?if\s*\(\s*result\.success\s*\)(?:.|\n)*?\+\+successCount;(?:.|\n)*?else(?:.|\n)*?\+\+errorCount;(?:.|\n)*?emit\s+logScanned\(index,\s*result\.success)"));
+    QVERIFY2(resultLoopRegex.match(sourceText).hasMatch(),
+             "ScanWorker should treat Rust scan_run per-log outcomes as per-log success/failure signals");
 
     const qsizetype outerCatchStart = sourceText.indexOf(QStringLiteral("} catch (const rust::Error& e) {"));
     QVERIFY2(outerCatchStart > 0, "ScanWorker should have an outer rust::Error handler for setup failures");

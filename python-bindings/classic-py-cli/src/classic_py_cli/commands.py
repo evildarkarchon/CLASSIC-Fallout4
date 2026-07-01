@@ -406,7 +406,7 @@ def resource_detect(args: _PathArg, context: CommandContext) -> CommandResult:
 
 
 def _scan_result_success(result: object) -> bool:
-    """Return the per-log success flag from a scanlog AnalysisResult-like object."""
+    """Return the per-log success flag from a scanlog result-like object."""
 
     value = getattr(result, "success", False)
     if callable(value):
@@ -426,7 +426,13 @@ def _scan_failure_summary(result: object) -> dict[str, str]:
 
 
 def _scan_report_text(result: object) -> str:
-    """Return report text from an AnalysisResult-like object."""
+    """Return report text from a scanlog result-like object."""
+
+    autoscan_report_path = getattr(result, "autoscan_report_path", None)
+    if autoscan_report_path:
+        report_path = Path(str(autoscan_report_path))
+        if report_path.is_file():
+            return report_path.read_text(encoding="utf-8")
 
     get_report_text = getattr(result, "get_report_text", None)
     if callable(get_report_text):
@@ -460,13 +466,17 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     try:
         module = require_binding("classic_scanlog")
         paths = [str(path) for path in scan_path.glob("*.log")] if scan_path.is_dir() else [str(scan_path)]
-        config = module.AnalysisConfig("Fallout4", "auto")
-        processor = module.Orchestrator(config)
-        result = processor.process_logs_batch(paths)
+        result = module.scan_run_execute(
+            str(context.repo_root),
+            str(context.repo_root / "CLASSIC Data"),
+            "Fallout4",
+            "auto",
+            paths,
+        )
     except ImportError as exc:
         return failure("scan logs", str(exc), int(ExitCode.BINDING_IMPORT))
     except AttributeError:
-        return failure("scan logs", "classic_scanlog does not expose Orchestrator.process_logs_batch", int(ExitCode.BINDING_IMPORT))
+        return failure("scan logs", "classic_scanlog does not expose scan_run_execute", int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("scan logs", "classic_scanlog", exc)
     results = list(result)

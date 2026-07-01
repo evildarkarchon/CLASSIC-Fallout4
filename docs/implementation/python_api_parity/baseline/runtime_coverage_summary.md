@@ -1,11 +1,11 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-07-01T03:11:48.262195+00:00`
-- Tracked surfaces: **1254**
-- Runtime verified: **1012**
-- Contract mapped only: **242**
+- Generated: `2026-07-01T06:01:07.721842+00:00`
+- Tracked surfaces: **1256**
+- Runtime verified: **1256**
+- Contract mapped only: **0**
 - Newly uncovered: **0**
-- Tier-1 rows missing runtime metadata: **242**
+- Tier-1 rows missing runtime metadata: **0**
 
 ## Per-owner totals
 
@@ -20,7 +20,7 @@
 | `registry` | 20 | 0 | 0 | 20 |
 | `resource` | 36 | 0 | 0 | 36 |
 | `scangame` | 172 | 0 | 0 | 172 |
-| `scanlog` | 126 | 242 | 0 | 368 |
+| `scanlog` | 370 | 0 | 0 | 370 |
 | `settings` | 67 | 0 | 0 | 67 |
 | `shared` | 69 | 0 | 0 | 69 |
 | `update` | 10 | 0 | 0 | 10 |

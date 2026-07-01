@@ -2,8 +2,10 @@ use crate::runtime_support::{block_on, block_on_result};
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
     AnalysisConfig, BatchScanEventKind, BatchScanOptions, CrashLogScanIntake, CrashLogScanOptions,
+    CrashLogScanRun, CrashLogScanRunEventKind, CrashLogScanRunMode, CrashLogScanRunRequest,
     FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER, OrchestratorCore, SHORT_SCAN_CACHE_PROFILE,
-    ScanReadyAnalysis, load_simplify_remove_list as core_load_simplify_remove_list,
+    ScanReadyAnalysis, StandardCrashLogScanRunOptions, UnsolvedLogsPolicy,
+    load_simplify_remove_list as core_load_simplify_remove_list,
     resolve_formid_database_paths as core_resolve_formid_database_paths,
     resolve_user_formid_database_paths as core_resolve_user_formid_database_paths,
 };
@@ -15,7 +17,7 @@ use std::time::Duration;
 
 use super::dto::{
     analysis_result_to_batch_dto, analysis_result_to_dto, batch_progress_reset_failure_result,
-    batch_reset_failure_result, fcx_issue_to_dto,
+    batch_reset_failure_result, fcx_issue_to_dto, scan_run_log_outcome_to_dto,
 };
 use super::ffi;
 use super::progress::{
@@ -335,6 +337,88 @@ pub(crate) fn orchestrator_process_logs_batch_with_progress(
             })
             .collect()
     })
+}
+
+pub(crate) fn scan_run_execute(
+    yaml_dir_root: &str,
+    yaml_dir_data: &str,
+    game: &str,
+    game_version: &str,
+    show_formid_values: bool,
+    fcx_mode: bool,
+    simplify_logs: bool,
+    move_unsolved_logs: bool,
+    targeted_mode: bool,
+    max_concurrent: u32,
+    log_paths: &[String],
+    callback: &ffi::ScanBatchProgressCallback,
+) -> Result<Vec<ffi::ScanRunLogResult>, String> {
+    let options = CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs);
+    let prepared = block_on_result(
+        CrashLogScanIntake::from_yaml_paths(
+            yaml_dir_root,
+            yaml_dir_data,
+            game,
+            game_version,
+            options,
+        )
+        .prepare(),
+    )?;
+
+    let mode = if targeted_mode {
+        CrashLogScanRunMode::Targeted
+    } else {
+        CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
+            unsolved_logs: if move_unsolved_logs {
+                UnsolvedLogsPolicy::MoveTo {
+                    directory: PathBuf::from(yaml_dir_root)
+                        .join("CLASSIC Backup")
+                        .join("Unsolved Logs"),
+                }
+            } else {
+                UnsolvedLogsPolicy::LeaveInPlace
+            },
+        })
+    };
+
+    let max_parallel = if max_concurrent == 0 {
+        None
+    } else {
+        Some(max_concurrent as usize)
+    };
+    let run = CrashLogScanRun::new(prepared);
+    let request = CrashLogScanRunRequest {
+        logs: log_paths.iter().map(PathBuf::from).collect(),
+        mode,
+        max_concurrent: max_parallel,
+        cancellation: None,
+        preserve_order: false,
+    };
+
+    let result = block_on_result(run.run(request, |event| {
+        let log_path = event.crash_log.to_string_lossy();
+        callback.on_batch_progress(&make_progress_event(
+            match event.kind {
+                CrashLogScanRunEventKind::Queued => ffi::BatchProgressEventKind::Queued,
+                CrashLogScanRunEventKind::Started => ffi::BatchProgressEventKind::Started,
+                CrashLogScanRunEventKind::Phase => ffi::BatchProgressEventKind::Phase,
+                CrashLogScanRunEventKind::Completed => ffi::BatchProgressEventKind::Completed,
+                CrashLogScanRunEventKind::Failed => ffi::BatchProgressEventKind::Failed,
+            },
+            map_progress_phase(event.phase),
+            event.completed as u32,
+            event.total as u32,
+            event.input_index as u32,
+            log_path.as_ref(),
+            event.success,
+        ));
+    }))?;
+
+    Ok(result
+        .logs
+        .into_iter()
+        .map(scan_run_log_outcome_to_dto)
+        .collect())
 }
 
 // ── FormID database path resolution ─────────────────────────────────

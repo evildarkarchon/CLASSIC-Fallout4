@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 350,
-    "current_total": 350,
-    "matched": 350,
+    "contract_total": 352,
+    "current_total": 352,
+    "matched": 352,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -1793,6 +1793,14 @@
       "reason": "-"
     },
     {
+      "id": "f79d7790f9ba9d64",
+      "rustSymbol": "scan_run_execute",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "19f1b50474db40e6",
       "rustSymbol": "CxxPapyrusAnalyzer",
       "kind": "opaque",
@@ -1859,6 +1867,14 @@
     {
       "id": "1100118d4f482241",
       "rustSymbol": "ScanResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b88124b36f1347e2",
+      "rustSymbol": "ScanRunLogResult",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

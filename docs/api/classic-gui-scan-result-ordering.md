@@ -32,14 +32,14 @@ For the bridge-side batch callback contract, see [`classic-cpp-bridge-scan-progr
 
 ## Current Ordering Boundary
 
-The active ordering boundary for Qt contributors is still the bridge batch API.
+The active ordering boundary for Qt contributors is the Rust-owned Crash Log Scan Run bridge call.
 
-`ScanWorker::doScan(...)` calls `classic::scanner::orchestrator_process_logs_batch_with_progress(...)` only when `total > 1` in [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp).
+`ScanWorker::doScan(...)` calls `classic::scanner::scan_run_execute(...)` for the selected Crash Logs in [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp).
 
 That matters because the documented bridge behavior today is:
 
 - callback events can interleave across logs
-- returned `BatchScanResult` items are in completion order, not original input order
+- returned `ScanRunLogResult` items are in completion order, not original input order
 - `input_index` is the stable correlation key back to the original request list
 
 Qt does not re-sort the returned batch vector into input order before processing it. Instead, it consumes the completion-order vector and uses `result.input_index` whenever it needs to recover the original log row.
@@ -51,10 +51,9 @@ Qt does not re-sort the returned batch vector into input order before processing
 Completion-order results enter the active GUI path here in [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp):
 
 ```cpp
-auto results = classic::scanner::orchestrator_process_logs_batch_with_progress(
-    *orch,
+auto results = classic::scanner::scan_run_execute(
+    ...,
     rust::Slice<const rust::String>(rustPaths.data(), rustPaths.size()),
-    maxConcurrent,
     progress_callback
 );
 
@@ -62,14 +61,14 @@ for (const auto& result : results) {
     const int index = static_cast<int>(qMin(result.input_index, static_cast<uint32_t>(total - 1)));
     const QString fallbackPath = logPaths[index];
     ...
-    emit logScanned(index, scanSuccess, resolvedPath);
+    emit logScanned(index, result.success, resolvedPath);
 }
 ```
 
 Current source-backed behavior:
 
 - the loop runs in returned vector order, which is completion order
-- report writing and optional unsolved-log moves therefore also happen in completion order
+- Autoscan Report writing and optional Unsolved Logs movement have already happened in Rust before each returned result
 - `logScanned(index, success, path)` is emitted in completion order too
 - the emitted `index` is derived from `result.input_index`, not from the loop position
 
@@ -123,12 +122,10 @@ Current ordering behavior:
 
 ## Result notifications
 
-Returned batch results are handled later, after the bridge call returns its full `Vec<BatchScanResult>`.
+Returned scan-run results are handled later, after the bridge call returns its full `Vec<ScanRunLogResult>`.
 
 Current responsibilities:
 
-- write AUTOSCAN reports
-- optionally move unsolved artifacts
 - update success and error counters
 - emit `logScanned(...)`
 - emit final `finished(...)` and explicit `100%` progress updates
@@ -203,9 +200,9 @@ Tests:
 For multi-log crash scans today:
 
 1. `ScanController` gathers a `QStringList` of crash-log paths and starts `ScanWorker`
-2. `ScanWorker` submits that list to the bridge batch API
+2. `ScanWorker` submits that list to `scan_run_execute(...)`
 3. live progress events reach Qt in callback arrival order and are aggregated by `BatchProgressModel` using `event.input_index`
-4. returned batch results come back in completion order
+4. returned scan-run results come back in completion order after Rust-owned Autoscan Report writing and Unsolved Logs decisions
 5. `ScanWorker` uses `result.input_index` to recover the original `QStringList` row for each completed result
 6. `MainWindow` receives live progress counts from `progressDetailed(...)` and later completion notifications from `logScanned(...)`
 7. `ResultsController` refreshes reports only after the scan-completed signal, then sorts report files by modification time
@@ -233,9 +230,9 @@ It currently verifies that:
 
 - `ScanWorker` uses `BatchProgressCallback`
 - `ScanWorker` consumes `BatchProgressEvent`
-- `ScanWorker` calls `orchestrator_process_logs_batch_with_progress(...)`
+- `ScanWorker` calls `scan_run_execute(...)`
 - `ScanWorker` forwards `event.completed` and `event.total` through `progressDetailed(...)`
-- multi-log scans default to the batch path
+- single-log and multi-log scans both cross the same Rust Crash Log Scan Run seam
 
 [`classic-gui/tests/test_mainwindow_geometry.cpp`](../../classic-gui/tests/test_mainwindow_geometry.cpp) locks in the status-bar side of the live progress contract.
 
@@ -261,6 +258,7 @@ There is currently no dedicated Qt test that proves all of these together at run
 - `result.input_index` is used to map each completion back to the original `QStringList`
 - `logScanned(index, ...)` preserves original-row identity even when completions are out of order
 - report file side effects occur in completion order while the Results tab later shows newest-first filesystem order
+  - report file side effects are now Rust-owned before results return; the Qt ordering concern is notification order, not file-write order
 
 There is also no dedicated `ResultsController` test asserting report-list ordering as a contributor-facing scan-order contract. The controller sorts by file modification time, but the existing tests focus on discovery and refresh behavior rather than a stable semantic ordering promise.
 
@@ -274,9 +272,10 @@ So today the strongest source-backed statement is:
 
 ## Source-Backed Limits And Caveats
 
-- The bridge callback and returned batch vector are batch-mode behavior only; single-log scans in `ScanWorker` use `orchestrator_process_log(...)` and worker-local progress updates instead.
+- The bridge callback and returned result vector come from `scan_run_execute(...)` for both single-log and multi-log scans.
 - `ScanWorker` clamps `result.input_index` with `qMin(result.input_index, total - 1)` before indexing `logPaths`; this is a defensive bound, not a statement that out-of-range indices are expected.
 - `ScanWorker` uses `result.log_path` when present and falls back to the original `QStringList` entry when it is empty.
+- `ScanWorker` does not write Autoscan Reports or move Unsolved Logs; it observes the `ScanRunLogResult` produced after Rust-owned side effects.
 - `BatchProgressModel` uses `event.input_index` only to track per-log progress state; it does not expose or preserve a user-visible input order.
 - `MainWindow` progress text reflects callback arrival order for status messages and structured completed counts for scan totals; those are separate concepts.
 - `MainWindow::onCrashLogScanned(...)` increments the completed counter again as per-result notifications arrive, so contributors should not treat that counter as a one-source-of-truth mirror of bridge terminal events.

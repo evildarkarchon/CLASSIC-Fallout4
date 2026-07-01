@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T03:12:53.792766+00:00",
+  "generated_at_utc": "2026-07-01T06:01:20.625489+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -7893,6 +7893,158 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CrashLogScanOutcome",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub enum CrashLogScanOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanOutcome",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunOptions, UnsolvedLogsPolicy, };",
+      "source_expr": "scan_run::CrashLogScanOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRun",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunOptions, UnsolvedLogsPolicy, };",
+      "source_expr": "scan_run::CrashLogScanRun",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRun",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanRun",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunEvent",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunOptions, UnsolvedLogsPolicy, };",
+      "source_expr": "scan_run::CrashLogScanRunEvent",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunEvent",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanRunEvent",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunEventKind",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub enum CrashLogScanRunEventKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunEventKind",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunOptions, UnsolvedLogsPolicy, };",
+      "source_expr": "scan_run::CrashLogScanRunEventKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunLogOutcome",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunOptions, UnsolvedLogsPolicy, };",
+      "source_expr": "scan_run::CrashLogScanRunLogOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunLogOutcome",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanRunLogOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunMode",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub enum CrashLogScanRunMode",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunMode",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunOptions, UnsolvedLogsPolicy, };",
+      "source_expr": "scan_run::CrashLogScanRunMode",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunRequest",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunOptions, UnsolvedLogsPolicy, };",
+      "source_expr": "scan_run::CrashLogScanRunRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunRequest",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanRunRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunOptions, UnsolvedLogsPolicy, };",
+      "source_expr": "scan_run::CrashLogScanRunResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanRunResult",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CrashgenEntry",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -8564,6 +8716,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "StandardCrashLogScanRunOptions",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunOptions, UnsolvedLogsPolicy, };",
+      "source_expr": "scan_run::StandardCrashLogScanRunOptions",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "StandardCrashLogScanRunOptions",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct StandardCrashLogScanRunOptions",
+      "tier": "tier1"
+    },
+    {
       "symbol": "StreamingIteratorParser",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -8637,6 +8808,25 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/suspect_scanner.rs",
       "source_decl": "pub struct SuspectScanner",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UnsolvedLogsPolicy",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub enum UnsolvedLogsPolicy",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UnsolvedLogsPolicy",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunOptions, UnsolvedLogsPolicy, };",
+      "source_expr": "scan_run::UnsolvedLogsPolicy",
       "tier": "tier1"
     },
     {
@@ -10102,6 +10292,16 @@
     {
       "symbol": "new",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub fn new(ready: ScanReadyAnalysis)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
       "arity": 2,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
@@ -10399,6 +10599,15 @@
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use record_scanner::{ RecordScanner, contains_record, scan_records_batch, try_scan_records_batch, };",
       "source_expr": "record_scanner::scan_records_batch",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "scan_run",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod scan_run;",
       "tier": "tier1"
     },
     {

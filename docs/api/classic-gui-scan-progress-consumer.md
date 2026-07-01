@@ -34,12 +34,7 @@ For the bridge-side contract itself, see [`classic-cpp-bridge-scan-progress-call
 
 The callback enters the GUI in the local adapter class `BatchProgressCallback` inside [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp).
 
-`ScanWorker::doScan(...)` uses the callback-enabled bridge entry point only for multi-log scans:
-
-- if `total > 1`, it calls `classic::scanner::orchestrator_process_logs_batch_with_progress(...)`
-- if `total <= 1`, it uses the single-log `orchestrator_process_log(...)` path and emits its own coarse progress updates instead
-
-That means the bridge callback contract is a current GUI concern only for the batch path.
+`ScanWorker::doScan(...)` uses the callback-enabled `classic::scanner::scan_run_execute(...)` bridge entry point for both single-log and multi-log Crash Log Scan Runs. The bridge callback contract is therefore the current GUI progress path for all selected Crash Logs.
 
 The callback adapter is intentionally small:
 
@@ -65,17 +60,15 @@ Q_EMIT m_worker.progressDetailed(percent, status, completed, total);
 
 Current worker responsibilities:
 
-- build the Rust scan config with `build_full_scan_config(...)`
-- create the Rust orchestrator with `orchestrator_new(...)`
-- choose batch mode when more than one log is present
+- pass selected Crash Logs and scan settings to `scan_run_execute(...)`
 - adapt bridge callback events into Qt signals
-- map completion-order `BatchScanResult` values back to original log rows with `result.input_index`
-- write AUTOSCAN reports and optionally move unsolved artifacts after each result
+- map completion-order `ScanRunLogResult` values back to original log rows with `result.input_index`
+- emit Qt signals from Rust-owned Crash Log Scan Run outcomes
 
 Important boundary:
 
 - callback events drive live progress updates
-- `logScanned(...)`, `finished(...)`, and report-file side effects happen later, while iterating the returned batch results
+- `logScanned(...)` and `finished(...)` happen later, while iterating returned scan-run results; Autoscan Report writing and Unsolved Logs movement have already happened in Rust
 
 ## 2. `BatchProgressModel` turns event stream state into visible percent
 
@@ -216,9 +209,9 @@ It currently asserts that:
 It currently asserts that:
 
 - `ScanWorker` defines `BatchProgressCallback` and consumes `BatchProgressEvent`
-- `ScanWorker` calls `orchestrator_process_logs_batch_with_progress(...)`
+- `ScanWorker` calls `scan_run_execute(...)`
 - `ScanWorker` forwards `event.completed` and `event.total` into `progressDetailed(percent, status, completed, total)`
-- `ScanWorker` defaults to the batch path whenever `total > 1`
+- `ScanWorker` delegates both single-log and multi-log runs to Rust
 - `ScanController` forwards scan settings into `ScanWorker::doScan(...)`
 - `MainWindow` connects `ScanController::scanProgress` to `MainWindow::onCrashScanProgress(...)`
 - `MainWindow::onCrashScanProgress(...)` receives structured `completed` and `total` counts
@@ -238,7 +231,7 @@ It currently asserts that:
 
 ## Source-Backed Limits And Caveats
 
-- The bridge callback path is only used for multi-log scans in `ScanWorker`; single-log scans still use `orchestrator_process_log(...)` and worker-local coarse progress.
+- The bridge callback path is used for both single-log and multi-log scans in `ScanWorker` through `scan_run_execute(...)`.
 - `ScanController` and `MainWindow` do not consume raw `BatchProgressEvent`; they only see Qt signals emitted by `ScanWorker`.
 - The GUI uses `event.log_path` as the live status string, so visible status order follows callback arrival order rather than original input order.
 - The GUI uses `event.input_index` only inside `BatchProgressModel` and later for `BatchScanResult` correlation; `MainWindow` never sees that key directly.
@@ -247,6 +240,7 @@ It currently asserts that:
 - The Qt side does not currently expose `event.success`, raw phase names, or raw event-kind names to the user interface.
 - `BatchProgressModel` treats `Completed` and `Failed` identically for percentage contribution, so percent tracks work completion, not success rate.
 - `ScanWorker` emits an explicit final `100%` / `Complete` update after iterating all batch results, even though the callback path may already have reached `100%`.
+- `ScanWorker` no longer writes Autoscan Reports or moves Unsolved Logs; those side effects are owned by Rust `CrashLogScanRun` before each `ScanRunLogResult` reaches Qt.
 
 These are current consumer behavior notes, not a future UI design.
 

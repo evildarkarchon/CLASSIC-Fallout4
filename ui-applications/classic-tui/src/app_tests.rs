@@ -1,5 +1,6 @@
-use super::{App, AsyncMessage, TabIndex};
+use super::{App, AsyncMessage, TabIndex, format_scan_run_progress};
 use crate::widgets::path_input::PathValidationState;
+use classic_scanlog_core::{CrashLogScanRunEvent, CrashLogScanRunEventKind, ScanProgressPhase};
 use std::path::PathBuf;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
@@ -38,6 +39,24 @@ fn scan_complete_with_errors_updates_status_message() {
     assert_eq!(app.scan_status, "Scanned 3 logs (1 errors)");
     assert_eq!(app.scan_progress, 100.0);
     assert!(app.status_clear_at.is_some());
+}
+
+#[test]
+fn scan_run_progress_formatter_uses_completion_count_and_filename() {
+    let event = CrashLogScanRunEvent {
+        input_index: 1,
+        crash_log: PathBuf::from("Crash Logs/crash-02.log"),
+        kind: CrashLogScanRunEventKind::Completed,
+        phase: ScanProgressPhase::Finalize,
+        completed: 2,
+        total: 4,
+        success: true,
+    };
+
+    let (percent, status) = format_scan_run_progress(&event);
+
+    assert_eq!(percent, 50.0);
+    assert_eq!(status, "50% - Scanned crash-02.log");
 }
 
 #[test]

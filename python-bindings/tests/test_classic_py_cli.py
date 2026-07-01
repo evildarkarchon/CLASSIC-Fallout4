@@ -177,23 +177,25 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
 
     fake = types.ModuleType("classic_scanlog")
     fake.__version__ = "test"
-    fake.AnalysisConfig = lambda game, game_version: (game, game_version)
 
-    class FakeOrchestrator:
-        def __init__(self, config: object) -> None:
-            self.config = config
+    def fake_scan_run_execute(
+        yaml_dir_root: str,
+        yaml_dir_data: str,
+        game: str,
+        game_version: str,
+        paths: list[str],
+    ) -> list[types.SimpleNamespace]:
+        return [
+            types.SimpleNamespace(
+                log_path=path,
+                success=Path(path).name != "bad.log",
+                error="malformed log" if Path(path).name == "bad.log" else None,
+                autoscan_report_path=None,
+            )
+            for path in paths
+        ]
 
-        def process_logs_batch(self, paths: list[str]) -> list[types.SimpleNamespace]:
-            return [
-                types.SimpleNamespace(
-                    log_path=path,
-                    success=Path(path).name != "bad.log",
-                    error="malformed log" if Path(path).name == "bad.log" else None,
-                )
-                for path in paths
-            ]
-
-    fake.Orchestrator = FakeOrchestrator
+    fake.scan_run_execute = fake_scan_run_execute
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
 
     code = main(["--json", "scan", "logs", "--path", str(scan_dir)])
@@ -240,25 +242,28 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
     fake_file.FileHasher = type("FileHasher", (), {"hash_file": staticmethod(lambda path: "a" * 64)})
     fake_scanlog = types.ModuleType("classic_scanlog")
     fake_scanlog.__version__ = "test"
-    fake_scanlog.AnalysisConfig = lambda game, game_version: (game, game_version)
 
-    class FakeOrchestrator:
-        def __init__(self, config: object) -> None:
-            self.config = config
+    def fake_scan_run_execute(
+        yaml_dir_root: str,
+        yaml_dir_data: str,
+        game: str,
+        game_version: str,
+        paths: list[str],
+    ) -> list[types.SimpleNamespace]:
+        assert paths == [str(scan_fixture)]
+        assert "Addictol v1.3.1" in scan_fixture.read_text(encoding="utf-8")
+        report_path = tmp_path / "addictol-AUTOSCAN.md"
+        report_path.write_text("*You have a valid version of Addictol!*\n", encoding="utf-8")
+        return [
+            types.SimpleNamespace(
+                log_path=str(scan_fixture),
+                success=True,
+                error=None,
+                autoscan_report_path=str(report_path),
+            )
+        ]
 
-        def process_logs_batch(self, paths: list[str]) -> list[types.SimpleNamespace]:
-            assert paths == [str(scan_fixture)]
-            assert "Addictol v1.3.1" in scan_fixture.read_text(encoding="utf-8")
-            return [
-                types.SimpleNamespace(
-                    log_path=str(scan_fixture),
-                    success=True,
-                    error=None,
-                    report_lines=["*You have a valid version of Addictol!*\n"],
-                )
-            ]
-
-    fake_scanlog.Orchestrator = FakeOrchestrator
+    fake_scanlog.scan_run_execute = fake_scan_run_execute
     for name, module in {
         "classic_version": fake_version,
         "classic_config": fake_config,

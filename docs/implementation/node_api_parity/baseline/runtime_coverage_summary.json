@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T03:13:40.261882+00:00",
+  "generated_at_utc": "2026-07-01T05:59:29.009202+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,23 +7,15 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 729,
-    "runtime_verified_total": 643,
-    "contract_mapped_total": 86,
+    "tracked_surface_total": 730,
+    "runtime_verified_total": 730,
+    "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 703,
-    "tier1_missing_runtime_total": 86,
-    "registry_mismatch_total": 1
+    "tier1_missing_runtime_total": 0,
+    "registry_mismatch_total": 0
   },
-  "registryMismatches": [
-    {
-      "coverageId": "node-tier1-scanlog",
-      "expectedCount": 87,
-      "actualCount": 86,
-      "expectedHash": "013a26b15ad0129ba07a37ea64149bb2fc634823e6f60fad5cf97819bbf74921",
-      "actualHash": "5c1b39eafd4ce02b0972c9ddcfd68a0ed9f68fe346acdea9fe7310833dd5bd77"
-    }
-  ],
+  "registryMismatches": [],
   "perOwnerModule": {
     "aux": {
       "runtime_verified": 168,
@@ -62,9 +54,8 @@
       "total": 70
     },
     "scanlog": {
-      "contract_mapped": 86,
-      "total": 94,
-      "runtime_verified": 8
+      "runtime_verified": 95,
+      "total": 95
     },
     "settings": {
       "runtime_verified": 47,
@@ -103,9 +94,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "AnalysisConfig",
-      "bindingIdentifier": "createAnalysisConfig"
+      "bindingIdentifier": "createAnalysisConfig",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-process-log",
@@ -114,9 +115,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "OrchestratorCore",
-      "bindingIdentifier": "processLog"
+      "bindingIdentifier": "processLog",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-process-batch",
@@ -125,9 +136,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "OrchestratorCore",
-      "bindingIdentifier": "processLogsBatch"
+      "bindingIdentifier": "processLogsBatch",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-parse-segments",
@@ -136,9 +157,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "LogParser",
-      "bindingIdentifier": "parseLogSegments"
+      "bindingIdentifier": "parseLogSegments",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-extract-formids",
@@ -147,9 +178,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "LogParser",
-      "bindingIdentifier": "extractFormIds"
+      "bindingIdentifier": "extractFormIds",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-extract-plugins",
@@ -158,9 +199,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "LogParser",
-      "bindingIdentifier": "extractPluginList"
+      "bindingIdentifier": "extractPluginList",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-detect-vr",
@@ -169,9 +220,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "detect_vr_log",
-      "bindingIdentifier": "detectVrLog"
+      "bindingIdentifier": "detectVrLog",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-detect-gpu",
@@ -180,9 +241,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "GpuInfo",
-      "bindingIdentifier": "detectGpuInfo"
+      "bindingIdentifier": "detectGpuInfo",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-parse-crashgen-version",
@@ -191,9 +262,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "CrashgenVersion",
-      "bindingIdentifier": "parseCrashgenVersion"
+      "bindingIdentifier": "parseCrashgenVersion",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-crashgen-version-status",
@@ -202,9 +283,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "check_crashgen_version_status",
-      "bindingIdentifier": "checkCrashgenVersionStatus"
+      "bindingIdentifier": "checkCrashgenVersionStatus",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-papyrus-analysis",
@@ -213,9 +304,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "PapyrusStats",
-      "bindingIdentifier": "analyzePapyrusLog"
+      "bindingIdentifier": "analyzePapyrusLog",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-analysis-config-from-yaml-content",
@@ -224,9 +325,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "build_analysis_config_from_yaml",
-      "bindingIdentifier": "createAnalysisConfigFromYamlContent"
+      "bindingIdentifier": "createAnalysisConfigFromYamlContent",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-process-log-with-yaml-content",
@@ -235,9 +346,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "OrchestratorCore",
-      "bindingIdentifier": "processLogWithYamlContent"
+      "bindingIdentifier": "processLogWithYamlContent",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-process-batch-with-yaml-content",
@@ -246,9 +367,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "OrchestratorCore",
-      "bindingIdentifier": "processLogsBatchWithYamlContent"
+      "bindingIdentifier": "processLogsBatchWithYamlContent",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-detect-crash-pattern",
@@ -257,9 +388,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "PatternMatcher",
-      "bindingIdentifier": "detectCrashPattern"
+      "bindingIdentifier": "detectCrashPattern",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog-crashgen-version-status-enum",
@@ -268,9 +409,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "CrashgenVersionStatus",
-      "bindingIdentifier": "JsCrashgenVersionStatus"
+      "bindingIdentifier": "JsCrashgenVersionStatus",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:config-yamldata-class",
@@ -4637,9 +4788,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "AnalysisResult@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.settings_validator.ConfigIssue@rust",
@@ -4648,9 +4809,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "ConfigIssue@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.crashgen_registry.CrashgenEntry@rust",
@@ -4659,9 +4830,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "CrashgenEntry@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.crashgen_registry.CrashgenRegistry@rust",
@@ -4670,9 +4851,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "CrashgenRegistry@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.fcx_handler.FcxModeHandler@rust",
@@ -4681,9 +4872,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "FcxModeHandler@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.fcx_handler.FcxResetError@rust",
@@ -4692,9 +4893,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "FcxResetError@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.FormIDAnalyzer@rust",
@@ -4703,9 +4914,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "FormIDAnalyzer@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.FormIDAnalyzerCore@rust",
@@ -4714,9 +4935,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "FormIDAnalyzerCore@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.gpu_detector.GpuDetector@rust",
@@ -4725,9 +4956,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "GpuDetector@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.gpu_detector.GpuVendor@rust",
@@ -4736,9 +4977,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "GpuVendor@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.papyrus.PapyrusAnalyzer@rust",
@@ -4747,9 +4998,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "PapyrusAnalyzer@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.papyrus.PapyrusError@rust",
@@ -4758,9 +5019,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "PapyrusError@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.plugin_analyzer.PluginAnalyzer@rust",
@@ -4769,9 +5040,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "PluginAnalyzer@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.record_scanner.RecordScanner@rust",
@@ -4780,9 +5061,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "RecordScanner@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.report.ReportComposer@rust",
@@ -4791,9 +5082,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "ReportComposer@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.report.ReportFragment@rust",
@@ -4802,9 +5103,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "ReportFragment@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.report.ReportGenerator@rust",
@@ -4813,9 +5124,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "ReportGenerator@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.RustFormIDAnalyzer@rust",
@@ -4824,9 +5145,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "RustFormIDAnalyzer@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.error.ScanLogError@rust",
@@ -4835,9 +5166,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "ScanLogError@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.orchestrator.ScanProgressPhase@rust",
@@ -4846,9 +5187,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "ScanProgressPhase@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.settings_validator.SettingsValidator@rust",
@@ -4857,9 +5208,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "SettingsValidator@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.parser.StreamingIteratorParser@rust",
@@ -4868,9 +5229,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "StreamingIteratorParser@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.parser.StreamingLogParser@rust",
@@ -4879,9 +5250,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "StreamingLogParser@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.parser.StringPool@rust",
@@ -4890,9 +5271,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "StringPool@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.suspect_scanner.SuspectScanner@rust",
@@ -4901,9 +5292,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "SuspectScanner@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.plugin_analyzer.contains_plugin@rust",
@@ -4912,9 +5313,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "contains_plugin@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.record_scanner.contains_record@rust",
@@ -4923,9 +5334,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "contains_record@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.crashgen_registry.crashgen_registry@rust",
@@ -4934,9 +5355,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "crashgen_registry@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.version.crashgen_version_gen@rust",
@@ -4945,9 +5376,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "crashgen_version_gen@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.mod_detector.detect_mods_batch@rust",
@@ -4956,9 +5397,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "detect_mods_batch@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.mod_detector.detect_mods_double@rust",
@@ -4967,9 +5418,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "detect_mods_double@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.mod_detector.detect_mods_important@rust",
@@ -4978,9 +5439,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "detect_mods_important@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.mod_detector.detect_mods_single@rust",
@@ -4989,9 +5460,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "detect_mods_single@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.plugin_analyzer.detect_plugins_batch@rust",
@@ -5000,9 +5481,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "detect_plugins_batch@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.error.error@rust",
@@ -5011,9 +5502,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "error@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.formid.extract_formids_batch@rust",
@@ -5022,9 +5523,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "extract_formids_batch@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.fcx_handler.fcx_handler@rust",
@@ -5033,9 +5544,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "fcx_handler@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.formid.formid@rust",
@@ -5044,9 +5565,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "formid@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.formid_analyzer@rust",
@@ -5055,9 +5586,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "formid_analyzer@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.gpu_detector.gpu_detector@rust",
@@ -5066,9 +5607,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "gpu_detector@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.formid.is_valid_formid@rust",
@@ -5077,9 +5628,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "is_valid_formid@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.mod_detector.mod_detector@rust",
@@ -5088,9 +5649,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "mod_detector@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.orchestrator.orchestrator@rust",
@@ -5099,9 +5670,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "orchestrator@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.papyrus.papyrus@rust",
@@ -5110,9 +5691,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "papyrus@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.parser.parser@rust",
@@ -5121,9 +5712,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "parser@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.patterns.patterns@rust",
@@ -5132,9 +5733,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "patterns@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.plugin_analyzer.plugin_analyzer@rust",
@@ -5143,9 +5754,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "plugin_analyzer@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.record_scanner.record_scanner@rust",
@@ -5154,9 +5775,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "record_scanner@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.report.report@rust",
@@ -5165,9 +5796,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "report@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.orchestrator.resolve_batch_concurrency@rust",
@@ -5176,9 +5817,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "resolve_batch_concurrency@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.record_scanner.scan_records_batch@rust",
@@ -5187,9 +5838,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "scan_records_batch@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.segment_key.segment_key@rust",
@@ -5198,9 +5859,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "segment_key@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.settings_validator.settings_validator@rust",
@@ -5209,9 +5880,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "settings_validator@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.suspect_scanner.suspect_scanner@rust",
@@ -5220,9 +5901,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "suspect_scanner@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.validate_formids_batch@rust",
@@ -5231,9 +5922,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "validate_formids_batch@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.version.version@rust",
@@ -5242,9 +5943,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "version@rust",
-      "bindingIdentifier": null
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.patterns.CRASH_LOG_PATTERN",
@@ -5253,9 +5964,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "CRASH_LOG_PATTERN",
-      "bindingIdentifier": "CRASH_LOG_PATTERN"
+      "bindingIdentifier": "CRASH_LOG_PATTERN",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.orchestrator.JsAnalysisBuildOptions",
@@ -5264,9 +5985,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "build_analysis_config_from_yaml",
-      "bindingIdentifier": "JsAnalysisBuildOptions"
+      "bindingIdentifier": "JsAnalysisBuildOptions",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.orchestrator.JsAnalysisResult",
@@ -5275,9 +6006,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "AnalysisResult",
-      "bindingIdentifier": "JsAnalysisResult"
+      "bindingIdentifier": "JsAnalysisResult",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.gpu_detector.JsGpuInfo",
@@ -5286,9 +6027,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "GpuInfo",
-      "bindingIdentifier": "JsGpuInfo"
+      "bindingIdentifier": "JsGpuInfo",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.parser.JsLogErrorEntry",
@@ -5297,9 +6048,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "LogErrorEntry",
-      "bindingIdentifier": "JsLogErrorEntry"
+      "bindingIdentifier": "JsLogErrorEntry",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.parser.JsLogSegments",
@@ -5308,9 +6069,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "LogParser",
-      "bindingIdentifier": "JsLogSegments"
+      "bindingIdentifier": "JsLogSegments",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.papyrus.JsPapyrusStats",
@@ -5319,9 +6090,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "PapyrusStats",
-      "bindingIdentifier": "JsPapyrusStats"
+      "bindingIdentifier": "JsPapyrusStats",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.settings_validator.checkXsePlugins",
@@ -5330,9 +6111,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "XseChecker",
-      "bindingIdentifier": "checkXsePlugins"
+      "bindingIdentifier": "checkXsePlugins",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.parser.parseXseLog",
@@ -5341,9 +6132,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "parse_xse_log",
-      "bindingIdentifier": "parseXseLog"
+      "bindingIdentifier": "parseXseLog",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:config.ConfigError@rust",
@@ -11816,9 +12617,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "LogCollector",
-      "bindingIdentifier": "JsLogCollector"
+      "bindingIdentifier": "JsLogCollector",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.JsLogProcessor",
@@ -11827,9 +12638,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "LogProcessor",
-      "bindingIdentifier": "JsLogProcessor"
+      "bindingIdentifier": "JsLogProcessor",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.JsLogger",
@@ -11838,9 +12659,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "Logger",
-      "bindingIdentifier": "JsLogger"
+      "bindingIdentifier": "JsLogger",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:scanlog.createLogger",
@@ -11849,9 +12680,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "Logger",
-      "bindingIdentifier": "createLogger"
+      "bindingIdentifier": "createLogger",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:aux.getApplicationDir",
@@ -11896,9 +12737,19 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "status": "matched",
-      "classification": "contract_mapped",
+      "classification": "runtime_verified",
       "rustSymbol": "LogProcessor",
-      "bindingIdentifier": "processGameLogs"
+      "bindingIdentifier": "processGameLogs",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scanlog-tier1-parity",
+      "fixtureRefs": [
+        "scanlogConfigCases",
+        "scanlogYamlOptionsCases",
+        "scanlogErrorCase"
+      ],
+      "notes": null
     },
     {
       "trackedId": "contract:aux.resetFcxGlobalState",
@@ -12351,14 +13202,14 @@
       "notes": "Covers the canonical hash cache stats DTO plus clear/reset helpers through direct hash cache lifecycle assertions."
     },
     {
-      "trackedId": "binding:processLogsBatch",
+      "trackedId": "binding:JsScanRunLogResult",
       "trackedType": "registry_only",
       "ownerModule": "scanlog",
       "tier": "tier2",
       "gapType": "registry_only",
       "classification": "runtime_verified",
       "rustSymbol": null,
-      "bindingIdentifier": "processLogsBatch",
+      "bindingIdentifier": "JsScanRunLogResult",
       "coverageId": "node-tier2-scanlog-cli-runtime",
       "verificationMode": "cli_workflow",
       "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
@@ -12372,17 +13223,17 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scanlog/fileio helpers in runtime coverage."
+      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scan-run execution and Rust-owned Autoscan Report writing in runtime coverage."
     },
     {
-      "trackedId": "binding:writeAutoscanReport",
+      "trackedId": "binding:JsScanRunOptions",
       "trackedType": "registry_only",
       "ownerModule": "scanlog",
       "tier": "tier2",
       "gapType": "registry_only",
       "classification": "runtime_verified",
       "rustSymbol": null,
-      "bindingIdentifier": "writeAutoscanReport",
+      "bindingIdentifier": "JsScanRunOptions",
       "coverageId": "node-tier2-scanlog-cli-runtime",
       "verificationMode": "cli_workflow",
       "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
@@ -12396,7 +13247,31 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scanlog/fileio helpers in runtime coverage."
+      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scan-run execution and Rust-owned Autoscan Report writing in runtime coverage."
+    },
+    {
+      "trackedId": "binding:scanRunExecute",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "scanRunExecute",
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "verificationMode": "cli_workflow",
+      "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scan-run execution and Rust-owned Autoscan Report writing in runtime coverage."
     },
     {
       "trackedId": "binding:JsFcxConfigIssue",

@@ -73,8 +73,6 @@ add_executable(classic-cli
     src/cli_args.cpp
     src/scanner.cpp
     src/progress.cpp
-    src/thread_pool.cpp
-    src/report_writer.cpp
     src/yaml_update.cpp
     src/app_update.cpp
 )

@@ -21,6 +21,7 @@ Use this crate when you need to:
 
 - parse Bethesda-style crash logs into named sections
 - prepare an existing Crash Log for analysis from path-backed or in-memory YAML Data
+- execute a Crash Log Scan Run for selected Crash Logs after intake
 - build an analysis pipeline from loaded YAML/config data
 - analyze plugins, FormIDs, named records, suspects, GPU hints, and crashgen settings
 - generate Python-parity-style autoscan report fragments or full reports
@@ -62,6 +63,18 @@ Top-level scan pipeline and the main integration surface.
 - `ScanProgressPhase` - coarse phase callbacks for progress reporting
 - `build_analysis_config_from_yaml()` - canonical bridge from [`classic-config-core`](../../business-logic/classic-config-core)
 - `resolve_batch_concurrency()` - public helper for the same batch-concurrency policy used by `process_logs_batch()`
+
+### `scan_run`
+
+Crash Log Scan Run owns the post-intake transaction for selected existing Crash Logs.
+
+- `CrashLogScanRun` - deep module that executes selected Crash Logs after Crash Log Scan Intake
+- `CrashLogScanRunRequest` - selected Crash Logs, run mode, concurrency, optional cancellation, and ordering preference
+- `CrashLogScanRunMode`, `StandardCrashLogScanRunOptions`, `UnsolvedLogsPolicy` - Standard versus Targeted Crash Log Scan Run behavior
+- `CrashLogScanRunResult`, `CrashLogScanRunLogOutcome`, `CrashLogScanOutcome` - per-run and per-log observable outcomes
+- `CrashLogScanRunEvent`, `CrashLogScanRunEventKind` - progress events emitted through the module interface
+
+The module keeps `OrchestratorCore` as internal analysis implementation, writes Autoscan Reports itself, and applies Unsolved Logs rules in Rust.
 
 ### `parser`
 
@@ -212,6 +225,7 @@ Behavior worth knowing:
 - `process_logs_batch_with_events()` is the richer core batch primitive used by bindings that need stable input indices, optional input-order result restoration, cancellation checks before each log starts, and queued/started/phase/terminal events.
 - `resolve_batch_concurrency()` returns `1` for empty batches, clamps explicit overrides to a minimum of `1`, and otherwise uses the crate's adaptive CPU-aware default.
 - `write_reports_batch()` logs write failures and returns only successfully written paths.
+- New adapter code that needs the full Crash Log Scan Run transaction should prefer `CrashLogScanRun` over manually sequencing `OrchestratorCore`, report writing, and Unsolved Logs movement.
 - `check_crashgen_version_for_detected_game()` filters registry-backed crashgen floors by the detected or configured crashgen product before comparing versions.
 - `mods_solu` detection is no longer routed through the legacy single-map matcher; it evaluates grouped `any` / `all` criteria, suppresses matches through optional exceptions, and renders report titles/bodies from the structured `name` / `description` fields.
 - `is_feature_complete()` currently means plugin analyzer and suspect scanner are present; a database pool is optional.
@@ -233,6 +247,28 @@ Important constructors/mutators:
 - `AnalysisResult::failure(log_path, error)`
 - `mark_incomplete()`
 - `mark_failed()`
+
+## `CrashLogScanRun`
+
+`CrashLogScanRun` is the high-level seam for a full Crash Log Scan Run after intake. It accepts a `ScanReadyAnalysis`, selected Crash Logs, a Standard or Targeted mode, optional concurrency and cancellation settings, and a progress callback.
+
+Important types:
+
+- `CrashLogScanRun::new(scan_ready)`
+- `CrashLogScanRun::run(request, on_event).await -> Result<CrashLogScanRunResult, ScanLogError>`
+- `CrashLogScanRunRequest { logs, mode, max_concurrent, cancellation, preserve_order }`
+- `CrashLogScanRunMode::Standard(...)` and `CrashLogScanRunMode::Targeted`
+- `UnsolvedLogsPolicy::LeaveInPlace` and `UnsolvedLogsPolicy::MoveTo { directory }`
+
+Behavior worth knowing:
+
+- Adapters own Crash Log selection; `CrashLogScanRun` owns execution after selection.
+- `Standard` runs may move failed Crash Logs and sibling Autoscan Reports to Unsolved Logs when `MoveTo` is supplied.
+- `Targeted` runs never move Crash Logs or Autoscan Reports to Unsolved Logs.
+- Autoscan Report paths are derived as sibling `{stem}-AUTOSCAN.md` paths and written by this module when analysis succeeds and report lines are present.
+- Autoscan Report write failure is a per-log failure in `CrashLogScanRunLogOutcome`, not a run-level setup error.
+- Progress events reuse `ScanProgressPhase` and carry stable input indices so adapters can correlate completion-order results to their selected Crash Log list.
+- Binding adapters expose this seam as `classic::scanner::scan_run_execute(...)` for C++, `scanRunExecute(...)` for Node, and `classic_scanlog.scan_run_execute(...)` for Python. Adapter scan flows should not duplicate Autoscan Report writing or Unsolved Logs movement around those calls.
 
 ## `LogParser`
 
@@ -380,12 +416,11 @@ The main contributor-facing pipeline looks like this:
 
 1. Prepare Crash Log Scan Intake with `CrashLogScanIntake::from_yaml_paths(...)` or `CrashLogScanIntake::from_yaml_data(...)`.
 2. Use `prepare().await` to produce `ScanReadyAnalysis`.
-3. Construct `OrchestratorCore::new(scan_ready.analysis_config)`.
-4. Optionally initialize and attach a [`classic-database-core`](../../business-logic/classic-database-core) `DatabasePool` from `scan_ready.formid_readiness` when FormID values are enabled.
-5. `process_log()` reads the file with [`classic-file-io-core`](../../business-logic/classic-file-io-core) and preprocesses lines with `reformat_crash_data_inline()`.
-6. `LogParser::parse_all_sections_arc()` builds named sections.
-7. The orchestrator extracts header metadata, resolves crashgen identity/version status, and builds report helpers.
-8. Analysis passes run over the prepared data:
+3. For a full Crash Log Scan Run, construct `CrashLogScanRun::new(scan_ready)` and call `run(...)` with selected Crash Logs.
+4. Inside the module, `OrchestratorCore` reads each file with [`classic-file-io-core`](../../business-logic/classic-file-io-core) and preprocesses lines with `reformat_crash_data_inline()`.
+5. `LogParser::parse_all_sections_arc()` builds named sections.
+6. The orchestrator extracts header metadata, resolves crashgen identity/version status, and builds report helpers.
+7. Analysis passes run over the prepared data:
    - plugin extraction and plugin suspect matching
    - suspect/error scanning
    - crashgen settings validation
@@ -393,8 +428,8 @@ The main contributor-facing pipeline looks like this:
    - FormID extraction and optional DB value lookup
    - named-record scanning
    - FCX message inclusion
-9. `ReportComposer` combines fragments and produces `report_lines`.
-10. Callers can write report files with `write_reports_batch()` or handle `report_lines` directly.
+8. `ReportComposer` combines fragments and produces `report_lines`.
+9. `CrashLogScanRun` writes Autoscan Reports, accounts per-log outcomes, and applies Standard versus Targeted Unsolved Logs rules.
 
 One subtle integration rule from the source: the effective crashgen name used for settings and report text can switch to `Addictol` when the header or XSE modules indicate it, even if the base `AnalysisConfig` was built for another crashgen.
 
@@ -479,13 +514,17 @@ In practice, `classic-scanlog-core` is the downstream analysis layer that turns 
 
 ## Usage Example
 
-This example follows the intended contributor flow: prepare scan intake, create an orchestrator, and process a log.
+This example follows the intended contributor flow for a full Crash Log Scan Run: prepare scan intake, construct the run module, and execute selected Crash Logs.
 
 ```rust
 use classic_scanlog_core::{
+    CrashLogScanRun,
+    CrashLogScanRunMode,
+    CrashLogScanRunRequest,
     CrashLogScanIntake,
     CrashLogScanOptions,
-    OrchestratorCore,
+    StandardCrashLogScanRunOptions,
+    UnsolvedLogsPolicy,
 };
 use std::path::PathBuf;
 
@@ -503,27 +542,35 @@ let intake = CrashLogScanIntake::from_yaml_paths(
 );
 
 let scan_ready = intake.prepare().await?;
-let orchestrator = OrchestratorCore::new(scan_ready.analysis_config)?;
-let result = orchestrator
-    .process_log("C:/CLASSIC/crash-2026-03-09.log".to_string())
-    .await?;
+let run = CrashLogScanRun::new(scan_ready);
+let result = run.run(
+    CrashLogScanRunRequest {
+        logs: vec![PathBuf::from("C:/CLASSIC/crash-2026-03-09.log")],
+        mode: CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
+            unsolved_logs: UnsolvedLogsPolicy::LeaveInPlace,
+        }),
+        max_concurrent: None,
+        cancellation: None,
+        preserve_order: true,
+    },
+    |_| {},
+).await?;
 
-if result.success {
-    println!("Processed {} in {} ms", result.log_path, result.processing_time_ms);
-    println!("Report lines: {}", result.report_lines.len());
+if let Some(log) = result.logs.first() {
+    println!("Processed {} in {} ms", log.crash_log.display(), log.processing_time_ms);
 }
 # Ok(())
 # }
 ```
 
-If you need FormID descriptions instead of raw IDs only, initialize and attach a `DatabasePool` using `scan_ready.formid_readiness.database_paths()` before calling `process_log()`.
+If you need lower-level analysis-only behavior, `OrchestratorCore` remains public. New adapter code that wants Autoscan Report writing and Unsolved Logs behavior should prefer `CrashLogScanRun`.
 
 ---
 
 ## Contributor Notes And Known Limits
 
 - `classic-scanlog-core` is downstream of [`classic-config-core`](../../docs/api/classic-config-core.md); update both docs if the YAML-to-analysis contract changes.
-- Crash Log collection, XSE Folder discovery, and Unsolved Logs movement stay outside `CrashLogScanIntake`.
+- Crash Log collection and XSE Folder discovery stay outside `CrashLogScanIntake`; Unsolved Logs movement belongs to `CrashLogScanRun` for full run execution.
 - `parse_segments()` and `parse_segments_parallel()` are still public but explicitly deprecated. The Python binding `parse_segments_parallel` now returns `dict[str, list[str]]` instead of `list[list[str]]`.
 - The source contains performance claims in comments and docs, but this page does not treat them as compatibility guarantees.
 - `process_logs_batch()` does not preserve input ordering.

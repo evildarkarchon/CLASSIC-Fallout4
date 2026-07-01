@@ -52,6 +52,18 @@ TEST_CASE("ProgressDisplay tracking", "[progress]") {
     }
 }
 
+TEST_CASE("ProgressDisplay tracks logical scan entries", "[progress]") {
+    ProgressDisplay progress(2, "Fallout4");
+
+    progress.report_started("0", "crash-01.log");
+    progress.report_started("1", "crash-02.log");
+    progress.report_finished("0");
+    progress.report_error("1");
+
+    REQUIRE(progress.completed() == 2);
+    REQUIRE(progress.errors() == 1);
+}
+
 TEST_CASE("ProgressDisplay thread safety", "[progress]") {
     constexpr uint32_t total = 100;
     ProgressDisplay progress(total, "Skyrim");

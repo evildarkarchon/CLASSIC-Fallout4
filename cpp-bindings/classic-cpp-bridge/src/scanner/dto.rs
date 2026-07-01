@@ -1,4 +1,7 @@
-use classic_scanlog_core::{AnalysisResult, ConfigIssue as CoreFcxConfigIssue};
+use classic_scanlog_core::{
+    AnalysisResult, ConfigIssue as CoreFcxConfigIssue, CrashLogScanOutcome,
+    CrashLogScanRunLogOutcome,
+};
 
 use super::ffi;
 
@@ -84,6 +87,29 @@ pub(super) fn analysis_result_to_batch_dto(
         formid_count: r.formid_count as u32,
         plugin_count: r.plugin_count as u32,
         suspect_count: r.suspect_count as u32,
+    }
+}
+
+pub(super) fn scan_run_log_outcome_to_dto(
+    outcome: CrashLogScanRunLogOutcome,
+) -> ffi::ScanRunLogResult {
+    let success = outcome.outcome == CrashLogScanOutcome::Succeeded;
+    let cancelled = outcome.outcome == CrashLogScanOutcome::CancelledBeforeStart;
+    ffi::ScanRunLogResult {
+        input_index: outcome.input_index as u32,
+        log_path: outcome.crash_log.to_string_lossy().to_string(),
+        autoscan_report_path: outcome
+            .autoscan_report
+            .map(|path| path.to_string_lossy().to_string())
+            .unwrap_or_default(),
+        success,
+        cancelled,
+        moved_to_unsolved_logs: outcome.moved_to_unsolved_logs,
+        error_message: outcome.error.unwrap_or_default(),
+        processing_time_ms: outcome.processing_time_ms,
+        formid_count: outcome.formid_count as u32,
+        plugin_count: outcome.plugin_count as u32,
+        suspect_count: outcome.suspect_count as u32,
     }
 }
 

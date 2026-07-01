@@ -1,7 +1,5 @@
 #include "scanner.h"
 #include "progress.h"
-#include "report_writer.h"
-#include "thread_pool.h"
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -18,14 +16,13 @@
 #include "classic_cxx_bridge/runtime.h"
 #include "classic_cxx_bridge/scanner.h"
 
+#include <atomic>
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
 #include <fmt/core.h>
-#include <mutex>
 #include <string>
 #include <thread>
-#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -78,6 +75,10 @@ static std::string filename_from_path(const std::string& path) {
     return (pos != std::string::npos) ? path.substr(pos + 1) : path;
 }
 
+static std::string rust_string_to_std(const rust::String& value) {
+    return std::string(value.data(), value.size());
+}
+
 static std::string startup_correlation_id() {
     char* env_value = nullptr;
     size_t env_len = 0;
@@ -93,23 +94,46 @@ static std::string startup_correlation_id() {
     return correlation_id;
 }
 
+class CliBatchProgressCallback final : public classic::scanner::ScanBatchProgressCallback {
+public:
+    explicit CliBatchProgressCallback(ProgressDisplay& progress)
+        : progress_(progress) {}
+
+    void on_batch_progress(const classic::scanner::BatchProgressEvent& event) const override {
+        const std::string key = std::to_string(event.input_index);
+        const std::string log_name = filename_from_path(rust_string_to_std(event.log_path));
+
+        switch (event.event_kind) {
+        case classic::scanner::BatchProgressEventKind::Started:
+            progress_.report_started(key, log_name);
+            break;
+        case classic::scanner::BatchProgressEventKind::Completed:
+            progress_.report_finished(key);
+            break;
+        case classic::scanner::BatchProgressEventKind::Failed:
+            progress_.report_error(key);
+            break;
+        case classic::scanner::BatchProgressEventKind::Queued:
+        case classic::scanner::BatchProgressEventKind::Phase:
+            break;
+        }
+    }
+
+private:
+    ProgressDisplay& progress_;
+};
+
 // ── Scan pipeline (inner) ──────────────────────────────────────────
 // Factored out so rust::Box<T> objects can be constructed in-place
 // rather than pre-declared (rust::Box is non-nullable, no nullptr init).
 
-static int scan_with_config(const CliArgs& args, const DataDirs& dirs,
-                            std::chrono::steady_clock::time_point total_start) {
-    // Build scan config from YAML
-    auto config = classic::scanner::build_full_scan_config(dirs.root, dirs.data, args.game, args.game_version,
-                                                           args.show_fid_values, args.fcx_mode, args.simplify_logs);
-
-    // Create orchestrator
-    auto orch = classic::scanner::orchestrator_new(*config);
-
+static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
+                             std::chrono::steady_clock::time_point total_start) {
     // Discover crash logs -- targeted mode or standard discovery
     rust::Vec<rust::String> log_paths;
+    const bool targeted_mode = !args.input_paths.empty();
 
-    if (!args.input_paths.empty()) {
+    if (targeted_mode) {
         // Targeted mode: resolve explicit user-supplied paths
         rust::Vec<rust::String> rust_inputs;
         rust_inputs.reserve(args.input_paths.size());
@@ -157,82 +181,58 @@ static int scan_with_config(const CliArgs& args, const DataDirs& dirs,
     auto total_logs = static_cast<uint32_t>(log_paths.size());
     fmt::print("Found {} crash log{}\n\n", total_logs, total_logs == 1 ? "" : "s");
 
-    // Scan all logs with thread pool + progress display
+    // Scan all logs through the Rust Crash Log Scan Run seam.
     auto concurrency = effective_concurrency(args.max_concurrent, std::thread::hardware_concurrency());
-    fmt::print("Scanning with {} worker thread{}\n\n", concurrency, concurrency == 1 ? "" : "s");
+    fmt::print("Scanning with {} concurrent scan{}\n\n", concurrency, concurrency == 1 ? "" : "s");
 
     ProgressDisplay progress(total_logs, args.game);
-    ThreadPool pool(concurrency);
+    CliBatchProgressCallback progress_callback(progress);
 
-    // Collect results thread-safely
-    std::mutex results_mutex;
-    std::vector<LogScanResult> results;
-    results.reserve(total_logs);
+    std::atomic_bool render_running{true};
+    std::thread render_thread([&progress, &render_running] {
+        while (render_running.load(std::memory_order_relaxed)) {
+            progress.render();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    });
 
-    // Submit scan tasks
-    for (const auto& rpath : log_paths) {
-        std::string path_str(rpath.data(), rpath.size());
+    auto stop_renderer = [&] {
+        render_running.store(false, std::memory_order_relaxed);
+        if (render_thread.joinable()) {
+            render_thread.join();
+        }
+    };
 
-        pool.submit([&orch, &progress, &results, &results_mutex, path = std::move(path_str)]() {
-            auto tid = std::this_thread::get_id();
-            auto log_name = filename_from_path(path);
-            progress.report_started(tid, log_name);
+    auto results = [&] {
+        try {
+            return classic::scanner::scan_run_execute(
+                dirs.root, dirs.data, args.game, args.game_version, args.show_fid_values, args.fcx_mode,
+                args.simplify_logs, false, targeted_mode, concurrency,
+                rust::Slice<const rust::String>(log_paths.data(), log_paths.size()), progress_callback);
+        } catch (...) {
+            stop_renderer();
+            progress.finish();
+            throw;
+        }
+    }();
 
-            LogScanResult result;
-            result.log_path = path;
-
-            try {
-                auto sr = classic::scanner::orchestrator_process_log(*orch, path);
-                result.success = sr.success;
-                result.processing_time_ms = sr.processing_time_ms;
-                result.error_message = std::string(sr.error_message.data(), sr.error_message.size());
-
-                // Convert rust::Vec<rust::String> to std::vector<std::string>
-                result.report_lines.reserve(sr.report_lines.size());
-                for (const auto& line : sr.report_lines) {
-                    result.report_lines.emplace_back(line.data(), line.size());
-                }
-
-                if (result.success) {
-                    progress.report_finished(tid);
-                } else {
-                    progress.report_error(tid);
-                }
-            } catch (const rust::Error& e) {
-                result.success = false;
-                result.error_message = e.what();
-                progress.report_error(tid);
-            }
-
-            {
-                std::lock_guard lock(results_mutex);
-                results.push_back(std::move(result));
-            }
-        });
-    }
-
-    // Poll progress display while workers are active
-    while (progress.completed() < total_logs) {
-        progress.render();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-    // Final render to show 100%
+    stop_renderer();
     progress.render();
-
-    pool.wait_all();
     progress.finish();
 
-    // Write AUTOSCAN.md reports
     uint32_t reports_written = 0;
-    uint32_t report_failures = 0;
+    uint32_t error_count = 0;
+    uint32_t moved_to_unsolved_logs = 0;
 
     for (const auto& result : results) {
-        if (result.success && !result.report_lines.empty()) {
-            if (write_report(result.log_path, result.report_lines)) {
-                ++reports_written;
-            } else {
-                ++report_failures;
-            }
+        if (result.success && !result.autoscan_report_path.empty()) {
+            ++reports_written;
+        }
+        if (!result.success) {
+            ++error_count;
+        }
+        if (result.moved_to_unsolved_logs) {
+            ++moved_to_unsolved_logs;
         }
     }
 
@@ -270,7 +270,6 @@ static int scan_with_config(const CliArgs& args, const DataDirs& dirs,
     auto total_end = std::chrono::steady_clock::now();
     double duration = std::chrono::duration<double>(total_end - total_start).count();
     double speed = (duration > 0.0) ? (total_logs / duration) : 0.0;
-    auto error_count = progress.errors();
 
     fmt::print("\nScan Complete\n");
     fmt::print("  Scanned:  {} log{}\n", total_logs, total_logs == 1 ? "" : "s");
@@ -278,8 +277,8 @@ static int scan_with_config(const CliArgs& args, const DataDirs& dirs,
         fmt::print("  Errors:   {} log{}\n", error_count, error_count == 1 ? "" : "s");
     }
     fmt::print("  Reports:  {} written\n", reports_written);
-    if (report_failures > 0) {
-        fmt::print("  Failed:   {} report{}\n", report_failures, report_failures == 1 ? "" : "s");
+    if (moved_to_unsolved_logs > 0) {
+        fmt::print("  Unsolved: {} moved\n", moved_to_unsolved_logs);
     }
     fmt::print("  Duration: {:.2f}s\n", duration);
     fmt::print("  Speed:    {:.1f} logs/sec\n", speed);
@@ -319,7 +318,7 @@ int run_scan(const CliArgs& args) {
     // Run the scan pipeline (all rust::Box<T> objects live inside this scope)
     int exit_code;
     try {
-        exit_code = scan_with_config(args, dirs, total_start);
+        exit_code = run_scan_pipeline(args, dirs, total_start);
     } catch (const rust::Error& e) {
         fmt::print(stderr, "Fatal: {}\n", std::string(e.what()));
         exit_code = 2;

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T02:28:06Z",
+  "generated_at_utc": "2026-07-01T04:57:43Z",
   "entries": [
     {
       "id": "b0d609f9ed78e468",
@@ -4363,6 +4363,67 @@
       }
     },
     {
+      "id": "f79d7790f9ba9d64",
+      "rustSymbol": "scan_run_execute",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "yaml_dir_root",
+            "type": "&str"
+          },
+          {
+            "name": "yaml_dir_data",
+            "type": "&str"
+          },
+          {
+            "name": "game",
+            "type": "&str"
+          },
+          {
+            "name": "game_version",
+            "type": "&str"
+          },
+          {
+            "name": "show_formid_values",
+            "type": "bool"
+          },
+          {
+            "name": "fcx_mode",
+            "type": "bool"
+          },
+          {
+            "name": "simplify_logs",
+            "type": "bool"
+          },
+          {
+            "name": "move_unsolved_logs",
+            "type": "bool"
+          },
+          {
+            "name": "targeted_mode",
+            "type": "bool"
+          },
+          {
+            "name": "max_concurrent",
+            "type": "u32"
+          },
+          {
+            "name": "log_paths",
+            "type": "&[String]"
+          },
+          {
+            "name": "callback",
+            "type": "&ScanBatchProgressCallback"
+          }
+        ],
+        "returnType": "Result<Vec<ScanRunLogResult>>"
+      }
+    },
+    {
       "id": "19f1b50474db40e6",
       "rustSymbol": "CxxPapyrusAnalyzer",
       "kind": "opaque",
@@ -4581,6 +4642,60 @@
         {
           "name": "report_lines",
           "type": "Vec<String>"
+        },
+        {
+          "name": "error_message",
+          "type": "String"
+        },
+        {
+          "name": "processing_time_ms",
+          "type": "u64"
+        },
+        {
+          "name": "formid_count",
+          "type": "u32"
+        },
+        {
+          "name": "plugin_count",
+          "type": "u32"
+        },
+        {
+          "name": "suspect_count",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "id": "b88124b36f1347e2",
+      "rustSymbol": "ScanRunLogResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "input_index",
+          "type": "u32"
+        },
+        {
+          "name": "log_path",
+          "type": "String"
+        },
+        {
+          "name": "autoscan_report_path",
+          "type": "String"
+        },
+        {
+          "name": "success",
+          "type": "bool"
+        },
+        {
+          "name": "cancelled",
+          "type": "bool"
+        },
+        {
+          "name": "moved_to_unsolved_logs",
+          "type": "bool"
         },
         {
           "name": "error_message",

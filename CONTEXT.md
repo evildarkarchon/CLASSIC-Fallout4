@@ -44,6 +44,18 @@ _Avoid_: failed scans, bad logs
 The preparation of an existing Crash Log for analysis. It resolves the selected game/version, YAML Data, Crashgen metadata, scan options, and FormID readiness into a scan-ready setup; it does not collect Crash Logs or move Unsolved Logs.
 _Avoid_: config loading, scan setup
 
+**Crash Log Scan Run**:
+The execution of analysis for one or more existing Crash Logs after intake. It produces Autoscan Reports, records per-log scan outcomes, and may move Unsolved Logs according to scan settings and scan mode.
+_Avoid_: scan transaction, analysis job
+
+**Standard Crash Log Scan Run**:
+A Crash Log Scan Run over the normal scan set where failed Crash Logs and their Autoscan Reports may be moved to Unsolved Logs when that setting is enabled.
+_Avoid_: batch scan, normal scan
+
+**Targeted Crash Log Scan Run**:
+A Crash Log Scan Run over Crash Logs explicitly selected by the user for that run. Targeted runs do not move failed Crash Logs or Autoscan Reports to Unsolved Logs.
+_Avoid_: manual scan, selected-file scan
+
 **Version Registry**:
 The source of truth for supported game versions and their game-specific metadata, including XSE metadata used when deriving the XSE Folder.
 _Avoid_: hardcoded version table, version YAML

@@ -11,8 +11,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 87,
-      "contractIdsHash": "013a26b15ad0129ba07a37ea64149bb2fc634823e6f60fad5cf97819bbf74921",
+      "contractCount": 86,
+      "contractIdsHash": "5c1b39eafd4ce02b0972c9ddcfd68a0ed9f68fe346acdea9fe7310833dd5bd77",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "scanlog-tier1-parity",
@@ -160,8 +160,9 @@
       "tier": "tier2",
       "bindingIdentifiers": [
         "JsLogCollector",
-        "processLogsBatch",
-        "writeAutoscanReport"
+        "JsScanRunLogResult",
+        "JsScanRunOptions",
+        "scanRunExecute"
       ],
       "verificationMode": "cli_workflow",
       "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
@@ -172,7 +173,7 @@
         "GAME_YAML",
         "IGNORE_YAML"
       ],
-      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scanlog/fileio helpers in runtime coverage."
+      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scan-run execution and Rust-owned Autoscan Report writing in runtime coverage."
     },
     {
       "coverageId": "node-tier2-scanlog-fcx-runtime",

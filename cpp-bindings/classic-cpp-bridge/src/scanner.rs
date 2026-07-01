@@ -16,6 +16,7 @@ pub(crate) use orchestrator::{
     FullScanConfig, Orchestrator, build_full_scan_config, fcx_reset_global_state,
     get_fcx_config_issues, orchestrator_new, orchestrator_new_minimal, orchestrator_process_log,
     orchestrator_process_logs_batch, orchestrator_process_logs_batch_with_progress,
+    scan_run_execute,
 };
 pub(crate) use papyrus::{
     CxxPapyrusAnalyzer, papyrus_analyze_full, papyrus_analyzer_new, papyrus_check_updates,
@@ -72,6 +73,21 @@ mod ffi {
         log_path: String,
         success: bool,
         report_lines: Vec<String>,
+        error_message: String,
+        processing_time_ms: u64,
+        formid_count: u32,
+        plugin_count: u32,
+        suspect_count: u32,
+    }
+
+    /// Per-log result from a full Crash Log Scan Run.
+    struct ScanRunLogResult {
+        input_index: u32,
+        log_path: String,
+        autoscan_report_path: String,
+        success: bool,
+        cancelled: bool,
+        moved_to_unsolved_logs: bool,
         error_message: String,
         processing_time_ms: u64,
         formid_count: u32,
@@ -161,6 +177,20 @@ mod ffi {
             max_concurrent: u32,
             callback: &ScanBatchProgressCallback,
         ) -> Vec<BatchScanResult>;
+        fn scan_run_execute(
+            yaml_dir_root: &str,
+            yaml_dir_data: &str,
+            game: &str,
+            game_version: &str,
+            show_formid_values: bool,
+            fcx_mode: bool,
+            simplify_logs: bool,
+            move_unsolved_logs: bool,
+            targeted_mode: bool,
+            max_concurrent: u32,
+            log_paths: &[String],
+            callback: &ScanBatchProgressCallback,
+        ) -> Result<Vec<ScanRunLogResult>>;
 
         // Utilities
         fn detect_vr_log(content: &str) -> bool;

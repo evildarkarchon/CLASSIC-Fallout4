@@ -1,11 +1,17 @@
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use classic_config_core::ClassicConfig;
 use classic_file_io_core::BackupType;
 use classic_file_io_core::LogCollector;
 use classic_path_core::validate_custom_scan_path;
-use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
+use classic_scanlog_core::{
+    CrashLogScanIntake, CrashLogScanOptions, CrashLogScanRun, CrashLogScanRunEvent,
+    CrashLogScanRunEventKind, CrashLogScanRunMode, CrashLogScanRunRequest,
+    StandardCrashLogScanRunOptions, UnsolvedLogsPolicy,
+};
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
 use ratatui::Terminal;
@@ -53,6 +59,27 @@ fn write_clipboard_default(text: &str) -> Result<(), String> {
 
 fn write_clipboard_noop(_text: &str) -> Result<(), String> {
     Ok(())
+}
+
+fn format_scan_run_progress(event: &CrashLogScanRunEvent) -> (f64, String) {
+    let percent = if event.total == 0 {
+        0.0
+    } else {
+        (event.completed as f64 / event.total as f64) * 100.0
+    };
+    let filename = event
+        .crash_log
+        .file_name()
+        .map(|name| name.to_string_lossy().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+    let action = match event.kind {
+        CrashLogScanRunEventKind::Queued => "Queued",
+        CrashLogScanRunEventKind::Started | CrashLogScanRunEventKind::Phase => "Scanning",
+        CrashLogScanRunEventKind::Completed => "Scanned",
+        CrashLogScanRunEventKind::Failed => "Failed",
+    };
+
+    (percent, format!("{percent:.0}% - {action} {filename}"))
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -570,12 +597,18 @@ impl App {
         let custom_folder = self.config.paths.scan_custom.clone();
         let selected_game_version = self.config.game_version.clone();
         let configured_docs_root = self.config.paths.docs_root.clone();
-        let base_folder = std::env::current_dir().unwrap_or_default();
+        let show_formid_values = self.config.show_formid_values;
+        let fcx_mode = self.config.fcx_mode;
+        let simplify_logs = self.config.simplify_logs;
+        let move_unsolved_logs = self.config.move_unsolved_logs;
+        let yaml_dir_root = std::env::current_dir().unwrap_or_default();
+        let yaml_dir_data = yaml_dir_root.join("CLASSIC Data");
+        let base_folder = yaml_dir_root.clone();
 
         get_runtime().spawn(async move {
             let collector = LogCollector::new_for_scan(
                 base_folder,
-                PathBuf::from("CLASSIC Data"),
+                yaml_dir_data.clone(),
                 "Fallout4",
                 &selected_game_version,
                 configured_docs_root.as_deref(),
@@ -601,15 +634,20 @@ impl App {
                 return;
             }
 
-            let mut processed = 0usize;
-            let mut errors = 0usize;
             let total = log_paths.len();
 
-            let orchestrator = match OrchestratorCore::new(AnalysisConfig::new(
-                "Fallout4".to_string(),
+            let options = CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs);
+            let ready = match CrashLogScanIntake::from_yaml_paths(
+                yaml_dir_root.clone(),
+                yaml_dir_data.clone(),
+                "Fallout4",
                 selected_game_version,
-            )) {
-                Ok(orchestrator) => orchestrator,
+                options,
+            )
+            .prepare()
+            .await
+            {
+                Ok(ready) => ready,
                 Err(error) => {
                     let _ = tx.send(AsyncMessage::ScanError(format!(
                         "Failed to initialize scanner: {error}"
@@ -618,45 +656,61 @@ impl App {
                 }
             };
 
-            for (index, path) in log_paths.iter().enumerate() {
-                if cancel_token.is_cancelled() {
-                    let _ = tx.send(AsyncMessage::ScanComplete {
-                        processed,
-                        total,
-                        errors,
-                        cancelled: true,
-                    });
+            let cancellation = Arc::new(AtomicBool::new(cancel_token.is_cancelled()));
+            let cancellation_watcher = {
+                let cancellation = Arc::clone(&cancellation);
+                let cancel_token = cancel_token.clone();
+                tokio::spawn(async move {
+                    cancel_token.cancelled().await;
+                    cancellation.store(true, Ordering::Relaxed);
+                })
+            };
+
+            let mode = CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
+                unsolved_logs: if move_unsolved_logs {
+                    UnsolvedLogsPolicy::MoveTo {
+                        directory: yaml_dir_root.join("CLASSIC Backup").join("Unsolved Logs"),
+                    }
+                } else {
+                    UnsolvedLogsPolicy::LeaveInPlace
+                },
+            });
+            let request = CrashLogScanRunRequest {
+                logs: log_paths,
+                mode,
+                max_concurrent: None,
+                cancellation: Some(cancellation),
+                preserve_order: false,
+            };
+            let run = CrashLogScanRun::new(ready);
+            let result = run
+                .run(request, |event| {
+                    let (percent, status) = format_scan_run_progress(&event);
+                    let _ = tx.send(AsyncMessage::ScanProgress { percent, status });
+                })
+                .await;
+
+            cancellation_watcher.abort();
+
+            let result = match result {
+                Ok(result) => result,
+                Err(error) => {
+                    let _ = tx.send(AsyncMessage::ScanError(format!(
+                        "Failed to scan logs: {error}"
+                    )));
                     return;
                 }
+            };
 
-                let percent = ((index + 1) as f64 / total as f64) * 100.0;
-                let filename = path
-                    .file_name()
-                    .map(|name| name.to_string_lossy().to_string())
-                    .unwrap_or_else(|| "unknown".to_string());
-
-                let _ = tx.send(AsyncMessage::ScanProgress {
-                    percent,
-                    status: format!("{percent:.0}% - Scanning {filename}"),
-                });
-
-                match orchestrator
-                    .process_log(path.to_string_lossy().to_string())
-                    .await
-                {
-                    Ok(_) => processed += 1,
-                    Err(_) => {
-                        processed += 1;
-                        errors += 1;
-                    }
-                }
-            }
+            let processed = result.succeeded + result.failed;
+            let errors = result.failed;
+            let cancelled = result.cancelled > 0;
 
             let _ = tx.send(AsyncMessage::ScanComplete {
                 processed,
                 total,
                 errors,
-                cancelled: false,
+                cancelled,
             });
         });
     }

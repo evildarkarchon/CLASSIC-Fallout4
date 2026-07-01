@@ -38,6 +38,7 @@ pub mod plugin_analyzer;
 pub mod record_scanner;
 pub mod report;
 pub mod scan_intake;
+pub mod scan_run;
 pub mod segment_key;
 pub mod settings_validator;
 pub mod suspect_scanner;
@@ -72,6 +73,11 @@ pub use scan_intake::{
     CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness,
     SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list,
     resolve_formid_database_paths, resolve_user_formid_database_paths,
+};
+pub use scan_run::{
+    CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind,
+    CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, CrashLogScanRunResult,
+    StandardCrashLogScanRunOptions, UnsolvedLogsPolicy,
 };
 pub use settings_validator::SettingsValidator;
 pub use suspect_scanner::SuspectScanner;

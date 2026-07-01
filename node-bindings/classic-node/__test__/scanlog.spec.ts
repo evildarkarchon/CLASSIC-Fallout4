@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
+import { existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import {
@@ -12,6 +12,7 @@ import {
   processLogsBatch,
   processLogWithYamlContent,
   processLogsBatchWithYamlContent,
+  scanRunExecute,
   setApplicationDir,
   parseLogSegments,
   extractFormIds,
@@ -155,6 +156,17 @@ const writeFcxAppFixture = (name: string, withIssue: boolean): string => {
   );
 
   return appDir;
+};
+
+const writeScanRunDataRoot = (name: string): string => {
+  const root = mkdtempSync(join(tmpdir(), `${name}-`));
+  const dataDir = join(root, "CLASSIC Data");
+  const databaseDir = join(dataDir, "databases");
+  mkdirSync(databaseDir, { recursive: true });
+  writeFileSync(join(databaseDir, "CLASSIC Main.yaml"), MAIN_YAML, "utf8");
+  writeFileSync(join(databaseDir, "CLASSIC Fallout4.yaml"), GAME_YAML, "utf8");
+  writeFileSync(join(root, "CLASSIC Ignore.yaml"), IGNORE_YAML, "utf8");
+  return root;
 };
 
 // ============================================================================
@@ -354,6 +366,61 @@ describe("YAML-backed analysis entry points", () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].success).toBe(false);
+  });
+});
+
+describe("scanRunExecute", () => {
+  test("returns per-log failures without exposing report lines", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-failure");
+
+    try {
+      const results = await scanRunExecute([MISSING_LOG_PATH], {
+        yamlDirRoot: root,
+        yamlDirData: join(root, "CLASSIC Data"),
+        game: "Fallout4",
+        gameVersion: "auto",
+        maxConcurrent: 1,
+      });
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({
+        inputIndex: 0,
+        logPath: MISSING_LOG_PATH,
+        success: false,
+        cancelled: false,
+        movedToUnsolvedLogs: false,
+      });
+      expect(results[0].error).toBeDefined();
+      expect("reportLines" in results[0]).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("writes Autoscan Reports in Rust for successful scan runs", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-success");
+    const logDir = join(root, "incoming");
+    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
+
+    try {
+      mkdirSync(logDir, { recursive: true });
+      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
+
+      const results = await scanRunExecute([logPath], {
+        yamlDirRoot: root,
+        yamlDirData: join(root, "CLASSIC Data"),
+        game: "Fallout4",
+        gameVersion: "auto",
+        maxConcurrent: 1,
+      });
+
+      expect(results).toHaveLength(1);
+      expect(results[0].success).toBe(true);
+      expect(results[0].autoscanReportPath).toContain("-AUTOSCAN.md");
+      expect(existsSync(results[0].autoscanReportPath!)).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });
 

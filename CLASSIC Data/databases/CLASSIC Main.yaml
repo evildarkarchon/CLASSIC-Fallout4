@@ -631,7 +631,7 @@ Version_Registry:
         format: csv
         nexus_url: https://www.nexusmods.com/fallout4/mods/64879?tab=files
       xse:
-        acronym: F4SE
+        acronym: F4SEVR
         full_name: Fallout 4 Script Extender VR (F4SEVR)
         compatible_version: "0.6.20"
         loader: f4sevr_loader.exe

@@ -3243,6 +3243,58 @@ export interface JsRuleTarget {
   valueType: string
 }
 
+/** JavaScript-compatible full scan-run per-log result. */
+export interface JsScanRunLogResult {
+  /** Stable index from the input log path list. */
+  inputIndex: number
+  /** Crash Log path selected for this entry. */
+  logPath: string
+  /** Autoscan Report path when one was written successfully. */
+  autoscanReportPath?: string
+  /** Whether analysis and run-owned side effects succeeded. */
+  success: boolean
+  /** Whether this entry was cancelled before analysis started. */
+  cancelled: boolean
+  /** Whether the Crash Log or Autoscan Report moved to Unsolved Logs. */
+  movedToUnsolvedLogs: boolean
+  /** Error message for failed or cancelled outcomes. */
+  error?: string
+  /** Processing time in milliseconds. */
+  processingTimeMs: number
+  /** Number of FormIDs found. */
+  formidCount: number
+  /** Number of plugins detected. */
+  pluginCount: number
+  /** Number of suspect patterns matched. */
+  suspectCount: number
+}
+
+/** Options for a full Crash Log Scan Run. */
+export interface JsScanRunOptions {
+  /** Root directory that contains CLASSIC Data and CLASSIC Ignore.yaml. */
+  yamlDirRoot: string
+  /** CLASSIC Data directory. */
+  yamlDirData: string
+  /** Game identifier, e.g. Fallout4. */
+  game: string
+  /** Selected game-version mode. */
+  gameVersion: string
+  /** Whether to include FormID value lookups in reports. */
+  showFormidValues?: boolean
+  /** Whether FCX mode is enabled. */
+  fcxMode?: boolean
+  /** Whether to simplify logs by removing configured strings. */
+  simplifyLogs?: boolean
+  /** Whether failed Standard runs move logs and reports to Unsolved Logs. */
+  moveUnsolvedLogs?: boolean
+  /** Whether this is a Targeted Crash Log Scan Run. */
+  targetedMode?: boolean
+  /** Optional maximum number of concurrent scans. Zero and undefined use core defaults. */
+  maxConcurrent?: number
+  /** Whether results should preserve input order instead of completion order. */
+  preserveOrder?: boolean
+}
+
 export interface JsSuspectErrorRule {
   id: string
   name: string
@@ -4058,6 +4110,16 @@ export declare function scanAllBa2Archives(rootPath: string): Array<JsBa2ScanRes
  * @param gameName - Game name (e.g., "Fallout4").
  */
 export declare function scanModInis(gameRoot: string, gameName: string): JsModIniScanResult
+
+/**
+ * Execute a full Crash Log Scan Run for selected logs.
+ *
+ * This is the adapter-facing scan-run seam: Rust writes Autoscan Reports and
+ * owns Standard versus Targeted Unsolved Logs behavior before returning each
+ * per-log outcome. Use the lower-level process* functions only when callers
+ * explicitly need analysis results with report lines.
+ */
+export declare function scanRunExecute(logPaths: Array<string>, options: JsScanRunOptions): Promise<Array<JsScanRunLogResult>>
 
 /**
  * Convenience function to scan for unpacked files.

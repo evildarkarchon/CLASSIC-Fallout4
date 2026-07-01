@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T03:12:53.813333+00:00",
+  "generated_at_utc": "2026-07-01T06:01:20.650541+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -6612,6 +6612,28 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "ScanRunLogResult",
+      "export_path": "ScanRunLogResult",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunLogResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "to_dict",
+      "export_path": "ScanRunLogResult.to_dict",
+      "parent_class": "ScanRunLogResult",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def to_dict(self) -> dict[str, Any]:"
+    },
+    {
+      "module": "classic_scanlog",
       "export": "SettingsValidator",
       "export_path": "SettingsValidator",
       "kind": "class",
@@ -6938,6 +6960,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def scan_records_batch( texts: list[list[str]], record_list: list[str], ignore_records: list[str] ) -> list[list[str]]:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "scan_run_execute",
+      "export_path": "scan_run_execute",
+      "kind": "function",
+      "arity": 13,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def scan_run_execute( yaml_dir_root: str, yaml_dir_data: str, game: str, game_version: str, log_paths: list[str], show_formid_values: bool = False, fcx_mode: bool = False, simplify_logs: bool = False, move_unsolved_logs: bool = False, targeted_mode: bool = False, max_concurrent: int | None = None, preserve_order: bool = False, cancellation_token: CancellationToken | None = None, ) -> list[ScanRunLogResult]:"
     },
     {
       "module": "classic_scanlog",

@@ -976,6 +976,50 @@ class AnalysisResult:
 
         """
 
+class ScanRunLogResult:
+    """Per-log result from a full Crash Log Scan Run.
+
+    Rust writes Autoscan Reports and owns Standard versus Targeted Unsolved Logs
+    behavior before returning this outcome.
+    """
+
+    input_index: int
+    log_path: str
+    autoscan_report_path: str | None
+    success: bool
+    cancelled: bool
+    moved_to_unsolved_logs: bool
+    error: str | None
+    processing_time_ms: int
+    formid_count: int
+    plugin_count: int
+    suspect_count: int
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to a dictionary."""
+
+def scan_run_execute(
+    yaml_dir_root: str,
+    yaml_dir_data: str,
+    game: str,
+    game_version: str,
+    log_paths: list[str],
+    show_formid_values: bool = False,
+    fcx_mode: bool = False,
+    simplify_logs: bool = False,
+    move_unsolved_logs: bool = False,
+    targeted_mode: bool = False,
+    max_concurrent: int | None = None,
+    preserve_order: bool = False,
+    cancellation_token: CancellationToken | None = None,
+) -> list[ScanRunLogResult]:
+    """Execute a full Crash Log Scan Run for selected logs.
+
+    Rust writes Autoscan Reports and applies Standard versus Targeted Unsolved
+    Logs behavior. Use ``Orchestrator`` only for lower-level analysis results
+    with report lines.
+    """
+
 # =============================================================================
 # Report Generation
 # =============================================================================
