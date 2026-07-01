@@ -32,8 +32,9 @@ dist/
 _internal/
 
 # CLASSIC Runtime-Created Files
-*.log
 !Crash Logs/*.log
+!sample_logs/*.log
+*.log
 *.db
 *Local.yaml
 CLASSIC Backup/
@@ -358,3 +359,4 @@ opencode.json
 .kilocode/package-lock.json
 .pi-lens/
 /qt.conf
+!sample_logs/**

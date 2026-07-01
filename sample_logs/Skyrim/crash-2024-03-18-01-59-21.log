@@ -1,0 +1,2010 @@
+Skyrim SSE v1.6.640
+CrashLoggerSSE v1-11-1-0 Nov 18 2023 13:56:33
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF788710EBF SkyrimSE.exe+0170EBF	cmp [rdi], eax
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 11 Pro v10.0.22631
+	CPU: AuthenticAMD AMD Ryzen 7 7800X3D 8-Core Processor           
+	GPU #1: Nvidia AD104 [GeForce RTX 4070]
+	GPU #2: AMD Raphael
+	GPU #3: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 38.22 GB/63.15 GB
+	GPU MEMORY: 9.56/10.62 GB
+
+PROBABLE CALL STACK:
+	[ 0] 0x7FF788710EBF SkyrimSE.exe+0170EBF -> 13663+0x1F	cmp [rdi], eax
+	[ 1] 0x7FF78924D687 SkyrimSE.exe+0CAD687 -> 70950+0x17	mov rax, [rbx+0x160]
+	[ 2] 0x7FF78899043A SkyrimSE.exe+03F043A -> 26917+0x6A	mov r12, rax
+	[ 3] 0x7FF7889917EB SkyrimSE.exe+03F17EB -> 26926+0xFB	nop
+	[ 4] 0x7FF788992EEE SkyrimSE.exe+03F2EEE -> 26988+0x28E	inc ebx
+	[ 5] 0x7FF788993C08 SkyrimSE.exe+03F3C08 -> 26999+0x18	mov eax, 0xFFFFFFFF
+	[ 6] 0x7FF78920C628 SkyrimSE.exe+0C6C628 -> 69378+0xD8	mov ecx, [rbx+0x0C]
+	[ 7] 0x7FF78920CBF1 SkyrimSE.exe+0C6CBF1 -> 69380+0x361	mov r15d, eax
+	[ 8] 0x7FF78920C4E5 SkyrimSE.exe+0C6C4E5 -> 69377+0x95	jmp 0x00007FF78920C4B0
+	[ 9] 0x7FF788C19902 SkyrimSE.exe+0679902 -> 39096+0x52	mov rcx, rbx
+	[10] 0x7FF78920C628 SkyrimSE.exe+0C6C628 -> 69378+0xD8	mov ecx, [rbx+0x0C]
+	[11] 0x7FF78920CBF1 SkyrimSE.exe+0C6CBF1 -> 69380+0x361	mov r15d, eax
+	[12] 0x7FF78920AF7A SkyrimSE.exe+0C6AF7A -> 69344+0x8A	movzx eax, byte ptr [rbx+0xA74]
+	[13] 0x7FF7891E5E4D SkyrimSE.exe+0C45E4D -> 68445+0x3D	mov rcx, [0x00007FF78B5A6898]
+	[14] 0x7FF8E758257D KERNEL32.DLL+001257D
+	[15] 0x7FF8E86EAA58    ntdll.dll+005AA58
+
+REGISTERS:
+	RAX 0xC184             (size_t) [49540]
+	RCX 0x168              (size_t) [360]
+	RDX 0x0                (size_t) [0]
+	RBX 0x0                (size_t) [0]
+	RSP 0x69691FF760       (void*)
+	RBP 0xC184             (size_t) [49540]
+	RSI 0x0                (size_t) [0]
+	RDI 0x168              (size_t) [360]
+	R8  0x16               (size_t) [22]
+	R9  0x17485DE7880      (BSTriShape*)
+		Name: "YW_013_FemaleHead"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "FOD"
+		ExtraData[1] Name: "FMD"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Hamal"
+		Checking User Data: -----
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking Parent: 2
+			Name: "BSFaceGenNiNodeSkinned"
+			RTTIName: "BSFaceGenNiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Hamal"
+			Checking User Data: -----
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking Parent: 9
+				Name: "skeleton_female.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Hamal"
+				Checking User Data: -----
+					Object Reference: 
+					File: "Buxom Tweaks.esp"
+					Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+					Flags: 0x00440009 kDestructible | kInitialized
+					Name: "Hamal"
+					EditorID: "Hamal"
+					FormID: 0x0001E765
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					File: "Buxom Tweaks.esp"
+					Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+					Flags: 0x00440009 kDestructible | kInitialized
+					Name: "Hamal"
+					EditorID: "Hamal"
+					FormID: 0x0001E765
+					FormType: NPC (43)
+				Checking Parent: 0
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 0
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 2
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "YW_013_FemaleHead"
+	R10 0x0                (size_t) [0]
+	R11 0x0                (size_t) [0]
+	R12 0x0                (size_t) [0]
+	R13 0x7FF78B632601     (void* -> SkyrimSE.exe+3092601	add [rax], al)
+	R14 0x17485D3FA50      (void*)
+	R15 0x172375D5050      (BSFaceGenMorphDataHead*)
+
+STACK:
+	[RSP+0  ] 0x173B8964F10      (void*)
+	[RSP+8  ] 0x7FF78924D855     (void* -> SkyrimSE.exe+0CAD855	test sil, sil)
+	[RSP+10 ] 0x66               (size_t) [102]
+	[RSP+18 ] 0x7FF789366C31     (void* -> SkyrimSE.exe+0DC6C31	mov rbx, [rsp+0x40])
+	[RSP+20 ] 0x0                (size_t) [0]
+	[RSP+28 ] 0x7FF78924D687     (void* -> SkyrimSE.exe+0CAD687	mov rax, [rbx+0x160])
+	[RSP+30 ] 0x1730000000C      (void*)
+	[RSP+38 ] 0x66               (size_t) [102]
+	[RSP+40 ] 0x0                (size_t) [0]
+	[RSP+48 ] 0x17485DE7880      (BSTriShape*)
+		Name: "YW_013_FemaleHead"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "FOD"
+		ExtraData[1] Name: "FMD"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Hamal"
+		Checking User Data: -----
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking Parent: 2
+			Name: "BSFaceGenNiNodeSkinned"
+			RTTIName: "BSFaceGenNiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Hamal"
+			Checking User Data: -----
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking Parent: 9
+				Name: "skeleton_female.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Hamal"
+				Checking User Data: -----
+					Object Reference: 
+					File: "Buxom Tweaks.esp"
+					Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+					Flags: 0x00440009 kDestructible | kInitialized
+					Name: "Hamal"
+					EditorID: "Hamal"
+					FormID: 0x0001E765
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					File: "Buxom Tweaks.esp"
+					Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+					Flags: 0x00440009 kDestructible | kInitialized
+					Name: "Hamal"
+					EditorID: "Hamal"
+					FormID: 0x0001E765
+					FormType: NPC (43)
+				Checking Parent: 0
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 0
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 2
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "YW_013_FemaleHead"
+	[RSP+50 ] 0x172375D5050      (BSFaceGenMorphDataHead*)
+	[RSP+58 ] 0x7FF78899043A     (void* -> SkyrimSE.exe+03F043A	mov r12, rax)
+	[RSP+60 ] 0x176268B05D0      (void*)
+	[RSP+68 ] 0x7FF7891DE93F     (void* -> SkyrimSE.exe+0C3E93F	cmp [rdi], eax)
+	[RSP+70 ] 0x0                (size_t) [0]
+	[RSP+78 ] 0x7FF78923AF78     (void* -> SkyrimSE.exe+0C9AF78	nop)
+	[RSP+80 ] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+88 ] 0x0                (size_t) [0]
+	[RSP+90 ] 0x0                (size_t) [0]
+	[RSP+98 ] 0x7FF78923AF78     (void* -> SkyrimSE.exe+0C9AF78	nop)
+	[RSP+A0 ] 0x17485DE7880      (BSTriShape*)
+		Name: "YW_013_FemaleHead"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "FOD"
+		ExtraData[1] Name: "FMD"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Hamal"
+		Checking User Data: -----
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking Parent: 2
+			Name: "BSFaceGenNiNodeSkinned"
+			RTTIName: "BSFaceGenNiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Hamal"
+			Checking User Data: -----
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking Parent: 9
+				Name: "skeleton_female.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Hamal"
+				Checking User Data: -----
+					Object Reference: 
+					File: "Buxom Tweaks.esp"
+					Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+					Flags: 0x00440009 kDestructible | kInitialized
+					Name: "Hamal"
+					EditorID: "Hamal"
+					FormID: 0x0001E765
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					File: "Buxom Tweaks.esp"
+					Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+					Flags: 0x00440009 kDestructible | kInitialized
+					Name: "Hamal"
+					EditorID: "Hamal"
+					FormID: 0x0001E765
+					FormType: NPC (43)
+				Checking Parent: 0
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 0
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 2
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "YW_013_FemaleHead"
+	[RSP+A8 ] 0x1744BF559D8      (void*)
+	[RSP+B0 ] 0x0                (size_t) [0]
+	[RSP+B8 ] 0x0                (size_t) [0]
+	[RSP+C0 ] 0x172375D5050      (BSFaceGenMorphDataHead*)
+	[RSP+C8 ] 0x0                (size_t) [0]
+	[RSP+D0 ] 0x7FF78B632601     (void* -> SkyrimSE.exe+3092601	add [rax], al)
+	[RSP+D8 ] 0x0                (size_t) [0]
+	[RSP+E0 ] 0x4                (size_t) [4]
+	[RSP+E8 ] 0x17485DE7880      (BSTriShape*)
+		Name: "YW_013_FemaleHead"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "FOD"
+		ExtraData[1] Name: "FMD"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Hamal"
+		Checking User Data: -----
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking Parent: 2
+			Name: "BSFaceGenNiNodeSkinned"
+			RTTIName: "BSFaceGenNiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Hamal"
+			Checking User Data: -----
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking Parent: 9
+				Name: "skeleton_female.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Hamal"
+				Checking User Data: -----
+					Object Reference: 
+					File: "Buxom Tweaks.esp"
+					Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+					Flags: 0x00440009 kDestructible | kInitialized
+					Name: "Hamal"
+					EditorID: "Hamal"
+					FormID: 0x0001E765
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					File: "Buxom Tweaks.esp"
+					Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+					Flags: 0x00440009 kDestructible | kInitialized
+					Name: "Hamal"
+					EditorID: "Hamal"
+					FormID: 0x0001E765
+					FormType: NPC (43)
+				Checking Parent: 0
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 0
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 2
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "YW_013_FemaleHead"
+	[RSP+F0 ] 0x0                (size_t) [0]
+	[RSP+F8 ] 0x7FF7889917EB     (void* -> SkyrimSE.exe+03F17EB	nop)
+	[RSP+100] 0x172375D5050      (BSFaceGenMorphDataHead*)
+	[RSP+108] 0x0                (size_t) [0]
+	[RSP+110] 0x7FF78B64D418     (void* -> SkyrimSE.exe+30AD418	add [rax], al)
+	[RSP+118] 0x1741FBBCB80      (BSFaceGenNiNode*)
+		Name: "BSFaceGenNiNodeSkinned"
+		RTTIName: "BSFaceGenNiNode"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Hamal"
+		Checking User Data: -----
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking Parent: 9
+			Name: "skeleton_female.nif"
+			RTTIName: "BSFadeNode"
+			ExtraData[0] Name: "BSBoneLOD"
+			ExtraData[1] Name: "BOM"
+			ExtraData[2] Name: "BBX"
+			ExtraData[3] Name: "BSX"
+			ExtraData[4] Name: "SkeletonID"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Hamal"
+			Checking User Data: -----
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking Parent: 0
+				RTTIName: "NiNode"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Checking Parent: 0
+					RTTIName: "BSMultiBoundNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 2
+						Name: "ObjectLODRoot"
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 3
+							Name: "shadow scene node"
+							RTTIName: "ShadowSceneNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 1
+								Name: "WorldRoot Node"
+								RTTIName: "SceneGraph"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "BSFaceGenNiNodeSkinned"
+	[RSP+120] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+128] 0x0                (size_t) [0]
+	[RSP+130] 0x0                (size_t) [0]
+	[RSP+138] 0xFFFE             (size_t) [65534]
+	[RSP+140] 0x10               (size_t) [16]
+	[RSP+148] 0x7FF788992EEE     (void* -> SkyrimSE.exe+03F2EEE	inc ebx)
+	[RSP+150] 0x4                (size_t) [4]
+	[RSP+158] 0x17485DE7880      (BSTriShape*)
+		Name: "YW_013_FemaleHead"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "FOD"
+		ExtraData[1] Name: "FMD"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Hamal"
+		Checking User Data: -----
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking Parent: 2
+			Name: "BSFaceGenNiNodeSkinned"
+			RTTIName: "BSFaceGenNiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Hamal"
+			Checking User Data: -----
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking Parent: 9
+				Name: "skeleton_female.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Hamal"
+				Checking User Data: -----
+					Object Reference: 
+					File: "Buxom Tweaks.esp"
+					Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+					Flags: 0x00440009 kDestructible | kInitialized
+					Name: "Hamal"
+					EditorID: "Hamal"
+					FormID: 0x0001E765
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					File: "Buxom Tweaks.esp"
+					Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+					Flags: 0x00440009 kDestructible | kInitialized
+					Name: "Hamal"
+					EditorID: "Hamal"
+					FormID: 0x0001E765
+					FormType: NPC (43)
+				Checking Parent: 0
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 0
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 2
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "YW_013_FemaleHead"
+	[RSP+160] 0x1741FBBCB80      (BSFaceGenNiNode*)
+		Name: "BSFaceGenNiNodeSkinned"
+		RTTIName: "BSFaceGenNiNode"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Hamal"
+		Checking User Data: -----
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking Parent: 9
+			Name: "skeleton_female.nif"
+			RTTIName: "BSFadeNode"
+			ExtraData[0] Name: "BSBoneLOD"
+			ExtraData[1] Name: "BOM"
+			ExtraData[2] Name: "BBX"
+			ExtraData[3] Name: "BSX"
+			ExtraData[4] Name: "SkeletonID"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Hamal"
+			Checking User Data: -----
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking Parent: 0
+				RTTIName: "NiNode"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Checking Parent: 0
+					RTTIName: "BSMultiBoundNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 2
+						Name: "ObjectLODRoot"
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 3
+							Name: "shadow scene node"
+							RTTIName: "ShadowSceneNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 1
+								Name: "WorldRoot Node"
+								RTTIName: "SceneGraph"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "BSFaceGenNiNodeSkinned"
+	[RSP+168] 0x1741FBBCB80      (BSFaceGenNiNode*)
+		Name: "BSFaceGenNiNodeSkinned"
+		RTTIName: "BSFaceGenNiNode"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Hamal"
+		Checking User Data: -----
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking Parent: 9
+			Name: "skeleton_female.nif"
+			RTTIName: "BSFadeNode"
+			ExtraData[0] Name: "BSBoneLOD"
+			ExtraData[1] Name: "BOM"
+			ExtraData[2] Name: "BBX"
+			ExtraData[3] Name: "BSX"
+			ExtraData[4] Name: "SkeletonID"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Hamal"
+			Checking User Data: -----
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking Parent: 0
+				RTTIName: "NiNode"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Checking Parent: 0
+					RTTIName: "BSMultiBoundNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 2
+						Name: "ObjectLODRoot"
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 3
+							Name: "shadow scene node"
+							RTTIName: "ShadowSceneNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 1
+								Name: "WorldRoot Node"
+								RTTIName: "SceneGraph"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "BSFaceGenNiNodeSkinned"
+	[RSP+170] 0x3A9B1AAB         (size_t) [983243435]
+	[RSP+178] 0x0                (size_t) [0]
+	[RSP+180] 0x10               (size_t) [16]
+	[RSP+188] 0x5                (size_t) [5]
+	[RSP+190] 0x17485DE7880      (BSTriShape*)
+		Name: "YW_013_FemaleHead"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "FOD"
+		ExtraData[1] Name: "FMD"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Hamal"
+		Checking User Data: -----
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking Parent: 2
+			Name: "BSFaceGenNiNodeSkinned"
+			RTTIName: "BSFaceGenNiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Hamal"
+			Checking User Data: -----
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking Parent: 9
+				Name: "skeleton_female.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Hamal"
+				Checking User Data: -----
+					Object Reference: 
+					File: "Buxom Tweaks.esp"
+					Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+					Flags: 0x00440009 kDestructible | kInitialized
+					Name: "Hamal"
+					EditorID: "Hamal"
+					FormID: 0x0001E765
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					File: "Buxom Tweaks.esp"
+					Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+					Flags: 0x00440009 kDestructible | kInitialized
+					Name: "Hamal"
+					EditorID: "Hamal"
+					FormID: 0x0001E765
+					FormType: NPC (43)
+				Checking Parent: 0
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 0
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 2
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "YW_013_FemaleHead"
+	[RSP+198] 0x0                (size_t) [0]
+	[RSP+1A0] 0x0                (size_t) [0]
+	[RSP+1A8] 0x0                (size_t) [0]
+	[RSP+1B0] 0x172375D5050      (BSFaceGenMorphDataHead*)
+	[RSP+1B8] 0x100000000        (size_t) [4294967296]
+	[RSP+1C0] 0x0                (size_t) [0]
+	[RSP+1C8] 0x0                (size_t) [0]
+	[RSP+1D0] 0x0                (size_t) [0]
+	[RSP+1D8] 0x0                (size_t) [0]
+	[RSP+1E0] 0x0                (size_t) [0]
+	[RSP+1E8] 0x0                (size_t) [0]
+	[RSP+1F0] 0x0                (size_t) [0]
+	[RSP+1F8] 0x0                (size_t) [0]
+	[RSP+200] 0x0                (size_t) [0]
+	[RSP+208] 0x7FF78B632644     (void* -> SkyrimSE.exe+3092644	add [rax], al)
+	[RSP+210] 0x7FF78B632640     (void* -> SkyrimSE.exe+3092640	add [rax], al)
+	[RSP+218] 0x170178BC2C0      (void*)
+	[RSP+220] 0x0                (size_t) [0]
+	[RSP+228] 0x1741FBBCB80      (BSFaceGenNiNode*)
+		Name: "BSFaceGenNiNodeSkinned"
+		RTTIName: "BSFaceGenNiNode"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Hamal"
+		Checking User Data: -----
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "Buxom Tweaks.esp"
+			Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+			Flags: 0x00440009 kDestructible | kInitialized
+			Name: "Hamal"
+			EditorID: "Hamal"
+			FormID: 0x0001E765
+			FormType: NPC (43)
+		Checking Parent: 9
+			Name: "skeleton_female.nif"
+			RTTIName: "BSFadeNode"
+			ExtraData[0] Name: "BSBoneLOD"
+			ExtraData[1] Name: "BOM"
+			ExtraData[2] Name: "BBX"
+			ExtraData[3] Name: "BSX"
+			ExtraData[4] Name: "SkeletonID"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Hamal"
+			Checking User Data: -----
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "Buxom Tweaks.esp"
+				Modified by: Skyrim.esm -> YurianaWench.esp -> Buxom Tweaks.esp
+				Flags: 0x00440009 kDestructible | kInitialized
+				Name: "Hamal"
+				EditorID: "Hamal"
+				FormID: 0x0001E765
+				FormType: NPC (43)
+			Checking Parent: 0
+				RTTIName: "NiNode"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Checking Parent: 0
+					RTTIName: "BSMultiBoundNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 2
+						Name: "ObjectLODRoot"
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 3
+							Name: "shadow scene node"
+							RTTIName: "ShadowSceneNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 1
+								Name: "WorldRoot Node"
+								RTTIName: "SceneGraph"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "BSFaceGenNiNodeSkinned"
+	[RSP+230] 0xFFFFFFFF         (size_t) [4294967295]
+	[RSP+238] 0x7FF78B632648     (void* -> SkyrimSE.exe+3092648	add [rax], al)
+	[RSP+240] 0x0                (size_t) [0]
+	[RSP+248] 0x7FF788993C08     (void* -> SkyrimSE.exe+03F3C08	mov eax, 0xFFFFFFFF)
+	[RSP+250] 0x0                (size_t) [0]
+	[RSP+258] 0x1                (size_t) [1]
+	[RSP+260] 0x0                (size_t) [0]
+	[RSP+268] 0x0                (size_t) [0]
+	[RSP+270] 0x7FF78B6326E0     (void* -> SkyrimSE.exe+30926E0	rol dl, 0x8B)
+	[RSP+278] 0x7FF78920C628     (void* -> SkyrimSE.exe+0C6C628	mov ecx, [rbx+0x0C])
+	[RSP+280] 0x0                (size_t) [0]
+	[RSP+288] 0x7FF78923C0EA     (void* -> SkyrimSE.exe+0C9C0EA	test al, al)
+	[RSP+290] 0xBF7FFA5F         (size_t) [3212835423]
+	[RSP+298] 0xBB03E8F6         (size_t) [3137595638]
+	[RSP+2A0] 0x7FF78B632644     (void* -> SkyrimSE.exe+3092644	add [rax], al)
+	[RSP+2A8] 0x7FF78B632690     (BSJobs::JobThread*)
+	[RSP+2B0] 0x7FF78B632690     (BSJobs::JobThread*)
+	[RSP+2B8] 0x170178BC2C0      (void*)
+	[RSP+2C0] 0x7FF78B649400     (void* -> SkyrimSE.exe+30A9400	mov bl, 0x16)
+	[RSP+2C8] 0x7FF78920CBF1     (void* -> SkyrimSE.exe+0C6CBF1	mov r15d, eax)
+	[RSP+2D0] 0x0                (size_t) [0]
+	[RSP+2D8] 0x0                (size_t) [0]
+	[RSP+2E0] 0x170178BC2C0      (void*)
+	[RSP+2E8] 0x3C471947000016B3 (size_t) [4343468158355510963]
+	[RSP+2F0] 0x170178BC2C0      (void*)
+	[RSP+2F8] 0x0                (size_t) [0]
+	[RSP+300] 0x17065318568      (void*)
+	[RSP+308] 0x170178BC2D8      (void*)
+	[RSP+310] 0x170178BC2C0      (void*)
+	[RSP+318] 0x0                (size_t) [0]
+	[RSP+320] 0x0                (size_t) [0]
+	[RSP+328] 0x7FF78920C408     (void* -> SkyrimSE.exe+0C6C408	jmp 0x00007FF78920C41F)
+	[RSP+330] 0x0                (size_t) [0]
+	[RSP+338] 0x0                (size_t) [0]
+	[RSP+340] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+348] 0x2                (size_t) [2]
+	[RSP+350] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+358] 0x7FF78B632644     (void* -> SkyrimSE.exe+3092644	add [rax], al)
+	[RSP+360] 0x1                (size_t) [1]
+	[RSP+368] 0x7FF78B632640     (void* -> SkyrimSE.exe+3092640	add [rax], al)
+	[RSP+370] 0x7FF78B632648     (void* -> SkyrimSE.exe+3092648	add [rax], al)
+	[RSP+378] 0x7FF78B632690     (BSJobs::JobThread*)
+	[RSP+380] 0x0                (size_t) [0]
+	[RSP+388] 0x0                (size_t) [0]
+	[RSP+390] 0x170178BC2C0      (void*)
+	[RSP+398] 0x7FF78920C4E5     (void* -> SkyrimSE.exe+0C6C4E5	jmp 0x00007FF78920C4B0)
+	[RSP+3A0] 0x7FF78B632601     (void* -> SkyrimSE.exe+3092601	add [rax], al)
+	[RSP+3A8] 0x170178BC2C0      (void*)
+	[RSP+3B0] 0x7FF700000000     (size_t) [140698833649664]
+	[RSP+3B8] 0x7FF78B632648     (void* -> SkyrimSE.exe+3092648	add [rax], al)
+	[RSP+3C0] 0x170179A07A0      (void*)
+	[RSP+3C8] 0x7FF788C19902     (void* -> SkyrimSE.exe+0679902	mov rcx, rbx)
+	[RSP+3D0] 0x170178BC8E0      (void*)
+	[RSP+3D8] 0x0                (size_t) [0]
+	[RSP+3E0] 0x17400000002      (void*)
+	[RSP+3E8] 0x0                (size_t) [0]
+	[RSP+3F0] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+3F8] 0x0                (size_t) [0]
+	[RSP+400] 0x7FF78B632700     (void* -> SkyrimSE.exe+3092700	loopne 0x00007FF78B6326CA)
+	[RSP+408] 0x7FF78920C628     (void* -> SkyrimSE.exe+0C6C628	mov ecx, [rbx+0x0C])
+	[RSP+410] 0x17500000002      (void*)
+	[RSP+418] 0x0                (size_t) [0]
+	[RSP+420] 0x200000000000     (size_t) [35184372088832]
+	[RSP+428] 0x7FF8E5CC7F9D     (void* -> KERNELBASE.dll+0067F9D	nop [rax+rax*1], eax)
+	[RSP+430] 0x0                (size_t) [0]
+	[RSP+438] 0x7FF78B632690     (BSJobs::JobThread*)
+	[RSP+440] 0x7FF78B6326B0     (void* -> SkyrimSE.exe+30926B0	add [rax], al)
+	[RSP+448] 0x170178BC8E0      (void*)
+	[RSP+450] 0x7FF78B649400     (void* -> SkyrimSE.exe+30A9400	mov bl, 0x16)
+	[RSP+458] 0x7FF78920CBF1     (void* -> SkyrimSE.exe+0C6CBF1	mov r15d, eax)
+	[RSP+460] 0x1                (size_t) [1]
+	[RSP+468] 0x1                (size_t) [1]
+	[RSP+470] 0x0                (size_t) [0]
+	[RSP+478] 0x7FFFEFBB5D19     (void* -> EngineFixes.dll+0015D19	cmp dword ptr [0x00007FFFEFC75DE8], 0xFFFFFFFF)
+	[RSP+480] 0x170178BC8E0      (void*)
+	[RSP+488] 0x1                (size_t) [1]
+	[RSP+490] 0x3FA79E026DD2     (size_t) [69989143047634]
+	[RSP+498] 0x7FF78A4F6F80     (void* -> SkyrimSE.exe+1F56F80	add [rax], al)
+	[RSP+4A0] 0x170178BCD40      (void*)
+	[RSP+4A8] 0x400000013        (size_t) [17179869203]
+	[RSP+4B0] 0x7FF700000000     (size_t) [140698833649664]
+	[RSP+4B8] 0x170178BCD40      (void*)
+	[RSP+4C0] 0x48               (size_t) [72]
+	[RSP+4C8] 0x7FF700000001     (size_t) [140698833649665]
+	[RSP+4D0] 0x0                (size_t) [0]
+	[RSP+4D8] 0x0                (size_t) [0]
+	[RSP+4E0] 0x0                (size_t) [0]
+	[RSP+4E8] 0x0                (size_t) [0]
+	[RSP+4F0] 0x0                (size_t) [0]
+	[RSP+4F8] 0x0                (size_t) [0]
+	[RSP+500] 0x0                (size_t) [0]
+	[RSP+508] 0x0                (size_t) [0]
+	[RSP+510] 0x0                (size_t) [0]
+	[RSP+518] 0x0                (size_t) [0]
+	[RSP+520] 0x7FF78B632690     (BSJobs::JobThread*)
+	[RSP+528] 0x7FF78920AF7A     (void* -> SkyrimSE.exe+0C6AF7A	movzx eax, byte ptr [rbx+0xA74])
+	[RSP+530] 0x7FF78B632601     (void* -> SkyrimSE.exe+3092601	add [rax], al)
+	[RSP+538] 0x0                (size_t) [0]
+	[RSP+540] 0x1                (size_t) [1]
+	[RSP+548] 0x3FC              (size_t) [1020]
+	[RSP+550] 0x7FF78B632690     (BSJobs::JobThread*)
+	[RSP+558] 0x7FF7891E5E4D     (void* -> SkyrimSE.exe+0C45E4D	mov rcx, [0x00007FF78B5A6898])
+	[RSP+560] 0x7FF78B5A68F0     (void* -> SkyrimSE.exe+30068F0	add [rax], al)
+	[RSP+568] 0x7FF78B632690     (BSJobs::JobThread*)
+	[RSP+570] 0x0                (size_t) [0]
+	[RSP+578] 0x0                (size_t) [0]
+	[RSP+580] 0x7FF78B632690     (BSJobs::JobThread*)
+	[RSP+588] 0x0                (size_t) [0]
+	[RSP+590] 0x0                (size_t) [0]
+	[RSP+598] 0x7FF8E758257D     (void* -> KERNEL32.DLL+001257D	mov ecx, eax)
+	[RSP+5A0] 0x0                (size_t) [0]
+	[RSP+5A8] 0x0                (size_t) [0]
+	[RSP+5B0] 0x0                (size_t) [0]
+	[RSP+5B8] 0x0                (size_t) [0]
+	[RSP+5C0] 0x0                (size_t) [0]
+	[RSP+5C8] 0x7FF8E86EAA58     (void* -> ntdll.dll+005AA58	jmp 0x00007FF8E86EAA79)
+	[RSP+5D0] 0x0                (size_t) [0]
+	[RSP+5D8] 0x0                (size_t) [0]
+	[RSP+5E0] 0x0                (size_t) [0]
+	[RSP+5E8] 0x0                (size_t) [0]
+	[RSP+5F0] 0x0                (size_t) [0]
+	[RSP+5F8] 0x0                (size_t) [0]
+	[RSP+600] 0xC3A560B400000000 (size_t) [uint: 14097780534763585536 int: -4348963538945966080]
+	[RSP+608] 0x0                (size_t) [0]
+	[RSP+610] 0x4F0FFFFFB30      (size_t) [5433133628208]
+	[RSP+618] 0x7FF8E5DBCD30     (void* -> KERNELBASE.dll+015CD30	mov [rsp+0x10], rbx)
+	[RSP+620] 0x69691FE240       (void*)
+	[RSP+628] 0x7FF8267EAD84000  (size_t) [576322660159995904]
+	[RSP+630] 0x7FF8267EAD84     (size_t) [140703774453124]
+	[RSP+638] 0x69691FE240       (void*)
+	[RSP+640] 0x0                (size_t) [0]
+	[RSP+648] 0x0                (size_t) [0]
+	[RSP+650] 0x0                (size_t) [0]
+	[RSP+658] 0x0                (size_t) [0]
+	[RSP+660] 0x0                (size_t) [0]
+	[RSP+668] 0x0                (size_t) [0]
+	[RSP+670] 0x0                (size_t) [0]
+	[RSP+678] 0x0                (size_t) [0]
+	[RSP+680] 0x0                (size_t) [0]
+	[RSP+688] 0x0                (size_t) [0]
+	[RSP+690] 0x0                (size_t) [0]
+	[RSP+698] 0x0                (size_t) [0]
+	[RSP+6A0] 0x0                (size_t) [0]
+	[RSP+6A8] 0x0                (size_t) [0]
+	[RSP+6B0] 0x0                (size_t) [0]
+	[RSP+6B8] 0x0                (size_t) [0]
+	[RSP+6C0] 0x0                (size_t) [0]
+	[RSP+6C8] 0x0                (size_t) [0]
+	[RSP+6D0] 0x0                (size_t) [0]
+	[RSP+6D8] 0x0                (size_t) [0]
+	[RSP+6E0] 0x0                (size_t) [0]
+	[RSP+6E8] 0x0                (size_t) [0]
+	[RSP+6F0] 0x0                (size_t) [0]
+	[RSP+6F8] 0x0                (size_t) [0]
+	[RSP+700] 0x0                (size_t) [0]
+	[RSP+708] 0x0                (size_t) [0]
+	[RSP+710] 0x0                (size_t) [0]
+	[RSP+718] 0x0                (size_t) [0]
+	[RSP+720] 0x0                (size_t) [0]
+	[RSP+728] 0x0                (size_t) [0]
+	[RSP+730] 0x0                (size_t) [0]
+	[RSP+738] 0x0                (size_t) [0]
+	[RSP+740] 0x0                (size_t) [0]
+	[RSP+748] 0x0                (size_t) [0]
+	[RSP+750] 0x0                (size_t) [0]
+	[RSP+758] 0x0                (size_t) [0]
+	[RSP+760] 0x0                (size_t) [0]
+	[RSP+768] 0x0                (size_t) [0]
+	[RSP+770] 0x0                (size_t) [0]
+	[RSP+778] 0x0                (size_t) [0]
+	[RSP+780] 0x0                (size_t) [0]
+	[RSP+788] 0x0                (size_t) [0]
+	[RSP+790] 0x0                (size_t) [0]
+	[RSP+798] 0x0                (size_t) [0]
+	[RSP+7A0] 0x0                (size_t) [0]
+	[RSP+7A8] 0x0                (size_t) [0]
+	[RSP+7B0] 0x0                (size_t) [0]
+	[RSP+7B8] 0x0                (size_t) [0]
+	[RSP+7C0] 0x0                (size_t) [0]
+	[RSP+7C8] 0x0                (size_t) [0]
+	[RSP+7D0] 0x0                (size_t) [0]
+	[RSP+7D8] 0x0                (size_t) [0]
+	[RSP+7E0] 0x0                (size_t) [0]
+	[RSP+7E8] 0x0                (size_t) [0]
+	[RSP+7F0] 0x0                (size_t) [0]
+	[RSP+7F8] 0x0                (size_t) [0]
+	[RSP+800] 0x0                (size_t) [0]
+	[RSP+808] 0x0                (size_t) [0]
+	[RSP+810] 0x0                (size_t) [0]
+	[RSP+818] 0x0                (size_t) [0]
+	[RSP+820] 0x0                (size_t) [0]
+	[RSP+828] 0x0                (size_t) [0]
+	[RSP+830] 0x0                (size_t) [0]
+	[RSP+838] 0x0                (size_t) [0]
+	[RSP+840] 0x0                (size_t) [0]
+	[RSP+848] 0x0                (size_t) [0]
+	[RSP+850] 0x0                (size_t) [0]
+	[RSP+858] 0x0                (size_t) [0]
+	[RSP+860] 0x0                (size_t) [0]
+	[RSP+868] 0x0                (size_t) [0]
+	[RSP+870] 0x0                (size_t) [0]
+	[RSP+878] 0x0                (size_t) [0]
+	[RSP+880] 0x0                (size_t) [0]
+	[RSP+888] 0x0                (size_t) [0]
+	[RSP+890] 0x0                (size_t) [0]
+	[RSP+898] 0x0                (size_t) [0]
+
+MODULES:
+	XINPUT1_3.dll                                    0x000000400000
+	steam_api64.dll                                  0x000050160000
+	X3DAudio1_7.dll                                  0x0000501E0000
+	d3d11.dll                                        0x000180000000
+	NSI.dll                                          0x017020320000
+	tbb.dll                                          0x01702ED30000
+	tbbmalloc.dll                                    0x01704ADA0000
+	ContainerItemDistributor.dll                     0x0170534C0000
+	PassiveWeaponEnchantmentRecharging.dll           0x01706A8F0000
+	ShadowBoost.dll                                  0x017075D90000
+	SkyrimSE.exe                                     0x7FF7885A0000
+	usvfs_x64.dll                                    0x7FF807DF0000
+	fiss.dll                                         0x7FF808A20000
+	sl.reflex.dll                                    0x7FF808F30000
+	SkyrimUncapper.dll                               0x7FF80A990000
+	xinput1_4.dll                                    0x7FF82AD60000
+	D3DSCache.dll                                    0x7FF8432A0000
+	D3D12Core.dll                                    0x7FF843450000
+	ResampleDmo.DLL                                  0x7FF848E50000
+	DSOUND.DLL                                       0x7FF848F10000
+	d3d12.dll                                        0x7FF8494A0000
+	msdmo.dll                                        0x7FF8498C0000
+	tier0_s64.dll                                    0x7FF8755C0000
+	MSVCP140_ATOMIC_WAIT.dll                         0x7FF8761F0000
+	d3dx11_43.dll                                    0x7FF8766F0000
+	vstdlib_s64.dll                                  0x7FF876EB0000
+	ReShade64-UIBind-By-seri14.addon64               0x7FF87C100000
+	ReShade64-AdjustDepth-By-seri14.addon64          0x7FF87C270000
+	nvspcap64.dll                                    0x7FF891160000
+	DINPUT8.dll                                      0x7FF8A47E0000
+	BarterLimitFix.dll                               0x7FF8A4DE0000
+	EVLaS.dll                                        0x7FF8B12E0000
+	UIAutomationCore.DLL                             0x7FF8B1610000
+	vmm-x64.dll                                      0x7FF8B2F40000
+	diskCacheEnabler.dll                             0x7FF8B36E0000
+	d3dx9_42.dll                                     0x7FF8B3700000
+	threadpoolwinrt.dll                              0x7FF8B4DC0000
+	MessageBus.dll                                   0x7FF8B5D50000
+	NvTelemetryAPI64.dll                             0x7FF8B6490000
+	NvTelemetryBridge64.dll                          0x7FF8B88B0000
+	COMCTL32.dll                                     0x7FF8BD130000
+	OLEACC.dll                                       0x7FF8BD3A0000
+	MSIMG32.dll                                      0x7FF8BEFB0000
+	WININET.dll                                      0x7FF8BF160000
+	textinputframework.dll                           0x7FF8C0110000
+	inputhost.dll                                    0x7FF8C0260000
+	nvwgf2umx.dll                                    0x7FF8C0600000
+	Windows.UI.dll                                   0x7FF8C81B0000
+	ondemandconnroutehelper.dll                      0x7FF8C9120000
+	nvgpucomp64.dll                                  0x7FF8C9B50000
+	nvldumdx.dll                                     0x7FF8CC120000
+	directxdatabasehelper.dll                        0x7FF8CE140000
+	ncryptsslp.dll                                   0x7FF8CE190000
+	XINPUT9_1_0.dll                                  0x7FF8CE240000
+	SPINF.dll                                        0x7FF8D1250000
+	AUDIOSES.DLL                                     0x7FF8D12B0000
+	webio.dll                                        0x7FF8D2730000
+	gdiplus.dll                                      0x7FF8D4AA0000
+	iertutil.dll                                     0x7FF8D5070000
+	srvcli.dll                                       0x7FF8D5360000
+	avrt.dll                                         0x7FF8D55A0000
+	MSVCP140.dll                                     0x7FF8D5690000
+	VCRUNTIME140.dll                                 0x7FF8D5720000
+	VCRUNTIME140_1.dll                               0x7FF8D5790000
+	winmmbase.dll                                    0x7FF8D57A0000
+	urlmon.dll                                       0x7FF8D7C20000
+	MMDevApi.dll                                     0x7FF8D90B0000
+	dbgcore.DLL                                      0x7FF8D9340000
+	SMP-NPC crash fix.dll                            0x7FF8D93C0000
+	NvMessageBus.dll                                 0x7FF8D95E0000
+	MpOav.dll                                        0x7FF8D9AA0000
+	amsi.dll                                         0x7FF8D9B30000
+	nvapi64.dll                                      0x7FF8D9B50000
+	WINMM.dll                                        0x7FF8DA220000
+	wbemsvc.dll                                      0x7FF8DB5E0000
+	fastprox.dll                                     0x7FF8DB600000
+	wbemcomn.dll                                     0x7FF8DC700000
+	wbemprox.dll                                     0x7FF8DC780000
+	CoreUIComponents.dll                             0x7FF8DCBD0000
+	twinapi.appcore.dll                              0x7FF8DCF40000
+	dbghelp.dll                                      0x7FF8DD4C0000
+	drvstore.dll                                     0x7FF8DE130000
+	cryptnet.dll                                     0x7FF8DE360000
+	VERSION.dll                                      0x7FF8DE3A0000
+	DEVRTL.dll                                       0x7FF8DE730000
+	fwpuclnt.dll                                     0x7FF8DF230000
+	dhcpcsvc.DLL                                     0x7FF8DFC10000
+	dhcpcsvc6.DLL                                    0x7FF8DFC30000
+	WINHTTP.DLL                                      0x7FF8DFE40000
+	rasadhlp.dll                                     0x7FF8DFFE0000
+	D3DCOMPILER_47.dll                               0x7FF8E0450000
+	WindowsCodecs.dll                                0x7FF8E0840000
+	d3d11.dll                                        0x7FF8E0CA0000
+	dcomp.dll                                        0x7FF8E18F0000
+	CoreMessaging.dll                                0x7FF8E20E0000
+	UxTheme.dll                                      0x7FF8E2D70000
+	dxgi.dll                                         0x7FF8E2EA0000
+	dwmapi.dll                                       0x7FF8E2FB0000
+	WINNSI.DLL                                       0x7FF8E2FE0000
+	dxcore.dll                                       0x7FF8E3020000
+	resourcepolicyclient.dll                         0x7FF8E32E0000
+	wintypes.dll                                     0x7FF8E37B0000
+	windows.storage.dll                              0x7FF8E38F0000
+	HID.DLL                                          0x7FF8E41F0000
+	netutils.dll                                     0x7FF8E4410000
+	IPHLPAPI.DLL                                     0x7FF8E4500000
+	DNSAPI.dll                                       0x7FF8E4530000
+	UMPDC.dll                                        0x7FF8E4800000
+	POWRPROF.dll                                     0x7FF8E4820000
+	Secur32.dll                                      0x7FF8E4890000
+	schannel.DLL                                     0x7FF8E4910000
+	rsaenh.dll                                       0x7FF8E4A20000
+	kernel.appcore.dll                               0x7FF8E4A60000
+	ntmarta.dll                                      0x7FF8E4AE0000
+	SSPICLI.DLL                                      0x7FF8E4D20000
+	MSWSOCK.dll                                      0x7FF8E4F30000
+	gpapi.dll                                        0x7FF8E4FA0000
+	USERENV.dll                                      0x7FF8E4FD0000
+	wldp.dll                                         0x7FF8E51B0000
+	CRYPTBASE.DLL                                    0x7FF8E5260000
+	CRYPTSP.dll                                      0x7FF8E5280000
+	msasn1.dll                                       0x7FF8E52D0000
+	NTASN1.dll                                       0x7FF8E5350000
+	ncrypt.dll                                       0x7FF8E5390000
+	CFGMGR32.dll                                     0x7FF8E5690000
+	devobj.dll                                       0x7FF8E56E0000
+	DPAPI.DLL                                        0x7FF8E5730000
+	profapi.dll                                      0x7FF8E5900000
+	ucrtbase.dll                                     0x7FF8E59D0000
+	CRYPT32.dll                                      0x7FF8E5AF0000
+	KERNELBASE.dll                                   0x7FF8E5C60000
+	gdi32full.dll                                    0x7FF8E6010000
+	bcryptPrimitives.dll                             0x7FF8E6130000
+	bcrypt.dll                                       0x7FF8E61B0000
+	msvcp_win.dll                                    0x7FF8E61E0000
+	win32u.dll                                       0x7FF8E6280000
+	WINTRUST.DLL                                     0x7FF8E62B0000
+	GDI32.dll                                        0x7FF8E63E0000
+	COMDLG32.dll                                     0x7FF8E6410000
+	SHELL32.dll                                      0x7FF8E6730000
+	SETUPAPI.dll                                     0x7FF8E6F90000
+	shcore.dll                                       0x7FF8E7410000
+	KERNEL32.DLL                                     0x7FF8E7570000
+	ole32.dll                                        0x7FF8E7640000
+	WS2_32.dll                                       0x7FF8E7840000
+	combase.dll                                      0x7FF8E78C0000
+	sechost.dll                                      0x7FF8E7C60000
+	RPCRT4.dll                                       0x7FF8E7D10000
+	imagehlp.dll                                     0x7FF8E7E50000
+	USER32.dll                                       0x7FF8E7F10000
+	PSAPI.DLL                                        0x7FF8E80C0000
+	OLEAUT32.dll                                     0x7FF8E8150000
+	clbcatq.dll                                      0x7FF8E8230000
+	SHLWAPI.dll                                      0x7FF8E82E0000
+	MSCTF.dll                                        0x7FF8E8340000
+	ADVAPI32.dll                                     0x7FF8E84A0000
+	IMM32.dll                                        0x7FF8E8560000
+	msvcrt.dll                                       0x7FF8E85A0000
+	ntdll.dll                                        0x7FF8E8690000
+	d3d11on12.dll                                    0x7FFFA05A0000
+	nvofapi64.dll                                    0x7FFFA0630000
+	dxilconv.dll                                     0x7FFFA06E0000
+	d3dcompiler_46e.dll                              0x7FFFA08F0000
+	nvcuda.dll                                       0x7FFFA1210000
+	vulkan-1.dll                                     0x7FFFA15A0000
+	nvngx_dlssg.dll                                  0x7FFFA1710000
+	sl.dlss_g.dll                                    0x7FFFA2D10000
+	sl.common.dll                                    0x7FFFA2DA0000
+	YesImSure.dll                                    0x7FFFA2E60000
+	WhoseQuestIsItAnyway.dll                         0x7FFFA2EF0000
+	WhichKey-NG.dll                                  0x7FFFA2F70000
+	Weightless.dll                                   0x7FFFA3100000
+	UnlimitedFastTravel.dll                          0x7FFFA3220000
+	TrueHUD.dll                                      0x7FFFA3290000
+	TrueDirectionalMovement.dll                      0x7FFFA3350000
+	TheNewGentleman.dll                              0x7FFFA3420000
+	SureOfStealing.dll                               0x7FFFA34F0000
+	SSEDisplayTweaks.dll                             0x7FFFA3560000
+	SoundRecordDistributor.dll                       0x7FFFA3600000
+	SoftShadows.dll                                  0x7FFFA36E0000
+	sl.interposer.dll                                0x7FFFA3790000
+	PDPerfPlugin.dll                                 0x7FFFA3810000
+	nvngx_dlss.dll                                   0x7FFFA3A10000
+	SkyrimUpscaler.dll                               0x7FFFA6D70000
+	SkyPatcher.dll                                   0x7FFFA7730000
+	SkillOfSneaking.dll                              0x7FFFA78E0000
+	skee64.dll                                       0x7FFFA7950000
+	SexLabUtil.dll                                   0x7FFFA7C20000
+	ScrambledBugs.dll                                0x7FFFA7CF0000
+	ScaleformTranslationPP.dll                       0x7FFFA7D90000
+	RemoveAllItemsFix.dll                            0x7FFFA7E00000
+	RecursionFPSFix.dll                              0x7FFFA7E90000
+	ReadingIsBad.dll                                 0x7FFFA7F70000
+	QuickLootEE.dll                                  0x7FFFA8010000
+	po3_UseOrTake.dll                                0x7FFFA80F0000
+	po3_Tweaks.dll                                   0x7FFFA81A0000
+	po3_SpellPerkItemDistributor.dll                 0x7FFFA82A0000
+	po3_SimpleOffenceSuppression.dll                 0x7FFFA8420000
+	po3_SimpleActivateSKSE.dll                       0x7FFFA84C0000
+	po3_SaveUnbaker.dll                              0x7FFFA8570000
+	po3_ReadOrTakeBooks.dll                          0x7FFFA8610000
+	po3_PapyrusExtender.dll                          0x7FFFA86B0000
+	po3_MoonMod.dll                                  0x7FFFA8920000
+	po3_MagicSneakAttacks.dll                        0x7FFFA89D0000
+	po3_KeywordItemDistributor.dll                   0x7FFFA8AB0000
+	po3_EnhancedInvisibility.dll                     0x7FFFA8C50000
+	po3_ENBLightForEffectShaders.dll                 0x7FFFA8D00000
+	po3_DualCastingFix.dll                           0x7FFFA8DC0000
+	po3_CraftingRecipeDistributor.dll                0x7FFFA8E60000
+	po3_ConsolePlusPlus.dll                          0x7FFFA8F10000
+	po3_BaseObjectSwapper.dll                        0x7FFFA8FC0000
+	po3_AnimObjectSwapper.dll                        0x7FFFA90E0000
+	PlayerPayCrimeGoldTweak.dll                      0x7FFFA9190000
+	PerkEntryPointExtender.dll                       0x7FFFA9280000
+	PayloadInterpreter.dll                           0x7FFFA9400000
+	PapyrusUtil.dll                                  0x7FFFA94D0000
+	PapyrusTweaks.dll                                0x7FFFA9640000
+	PapyrusIniManipulator.dll                        0x7FFFA9740000
+	PAPER.dll                                        0x7FFFA9830000
+	PairedAnimationImprovements.dll                  0x7FFFA98B0000
+	OSLAroused.dll                                   0x7FFFA9920000
+	OpenAnimationReplacer.dll                        0x7FFFA99C0000
+	OpenAnimationReplacer-IEDConditionExtensions.dll 0x7FFFA9C50000
+	OBody.dll                                        0x7FFFA9D70000
+	NotificationFilter.dll                           0x7FFFA9E20000
+	NoOppositeGenderAnims.dll                        0x7FFFA9E90000
+	NoEnchantmentRestrictionRemake.dll               0x7FFFA9F80000
+	NativeEditorIDFix.dll                            0x7FFFAA030000
+	MuSkeletonEditor.dll                             0x7FFFAA090000
+	MumsTheWord.dll                                  0x7FFFAA170000
+	MuJointFix.dll                                   0x7FFFAA1F0000
+	MoreInformativeConsole.dll                       0x7FFFAA290000
+	MenuMaid2.dll                                    0x7FFFAA370000
+	MCMHelper.dll                                    0x7FFFAA480000
+	loki_DynamicAnimationCasting.dll                 0x7FFFAA560000
+	mfgfix.dll                                       0x7FFFAE8D0000
+	MaxsuCombatEscape.dll                            0x7FFFAE940000
+	MapMarkerFramework.dll                           0x7FFFAE9A0000
+	LocationalEncounterZones.dll                     0x7FFFAEA40000
+	kxWhereAreYou.dll                                0x7FFFAEB20000
+	KillCapsLockNG.dll                               0x7FFFAEBD0000
+	JContainers64.dll                                0x7FFFAEC60000
+	IWantWidgetsNative.dll                           0x7FFFAEF40000
+	ItemPropertyManipulator.dll                      0x7FFFAF060000
+	InventoryInjector.dll                            0x7FFFAF1B0000
+	ImWalkinHere.dll                                 0x7FFFAF250000
+	IdrinthBuffsWorkOnNPCs.dll                       0x7FFFAF320000
+	htfq_se.dll                                      0x7FFFAF3C0000
+	HelpExtender.dll                                 0x7FFFAF420000
+	hdtSMP64.dll                                     0x7FFFAF4C0000
+	HDLocalMap.dll                                   0x7FFFAFCF0000
+	Fuz Ro D'oh.dll                                  0x7FFFAFD50000
+	FormListManipulator.dll                          0x7FFFAFDC0000
+	FixNotesForSkyUI.dll                             0x7FFFC6FB0000
+	FaceGenFixes.dll                                 0x7FFFC7010000
+	EquipSpellsAsShouts.dll                          0x7FFFC7080000
+	ENBHelperSE.dll                                  0x7FFFC7190000
+	CrashLogger.dll                                  0x7FFFC7230000
+	BetterThirdPersonSelection.dll                   0x7FFFC74D0000
+	dxgi.dll                                         0x7FFFC76E0000
+	WINHTTP.dll                                      0x7FFFC7BD0000
+	CommunityShaders.dll                             0x7FFFC9830000
+	DynDOLOD.DLL                                     0x7FFFCA8F0000
+	DeviousDevices.dll                               0x7FFFCADA0000
+	DescriptionFramework.dll                         0x7FFFCAE70000
+	nvcuda64.dll                                     0x7FFFCC550000
+	ComprehensiveAttackRatePatch.dll                 0x7FFFD54D0000
+	steamclient64.dll                                0x7FFFD6CE0000
+	ConsoleUtilSSE.dll                               0x7FFFD8440000
+	d3dcompiler_47_64.dll                            0x7FFFD85A0000
+	CraftingCategories.dll                           0x7FFFD89B0000
+	CombatMusicFixNG.dll                             0x7FFFD8A90000
+	EnemiesRespectEncounterZones.dll                 0x7FFFD8C80000
+	CCExtender.dll                                   0x7FFFD8D00000
+	cbp.dll                                          0x7FFFD8F40000
+	XAudio2_7.dll                                    0x7FFFD9060000
+	_nvngx.dll                                       0x7FFFD90F0000
+	encounter_zones_unlocked.dll                     0x7FFFD9370000
+	CaptureWarmer.dll                                0x7FFFD93D0000
+	BackportedESLSupport.dll                         0x7FFFD9470000
+	NvCamera64.dll                                   0x7FFFDF7A0000
+	gameoverlayrenderer64.dll                        0x7FFFE04E0000
+	skse64_1_6_640.dll                               0x7FFFE1130000
+	DynamicCollisionAdjustment.dll                   0x7FFFE2650000
+	BugFixesSSE.dll                                  0x7FFFE6DF0000
+	Arcane-Disenchanter-NG.dll                       0x7FFFE6E80000
+	AnimationMotionRevolution.dll                    0x7FFFE6F80000
+	D3DCOMPILER_43.dll                               0x7FFFE7330000
+	ENBHelperPlus.dll                                0x7FFFEB800000
+	AnimationQueueFix.dll                            0x7FFFEB860000
+	AHZmoreHUDPlugin.dll                             0x7FFFEB8D0000
+	AHZmoreHUDInventory.dll                          0x7FFFEB960000
+	CONCRT140.dll                                    0x7FFFED3E0000
+	bink2w64.dll                                     0x7FFFEF6D0000
+	AddItemMenuSE.dll                                0x7FFFEF770000
+	ActorValueExtension.dll                          0x7FFFEF870000
+	ActorLimitFix.dll                                0x7FFFEFB00000
+	EngineFixes.dll                                  0x7FFFEFBA0000
+	PrivateProfileRedirector.dll                     0x7FFFF4AC0000
+
+SKSE PLUGINS:
+	ActorLimitFix.dll
+	ActorValueExtension.dll v1.9.5.4
+	AddItemMenuSE.dll
+	AHZmoreHUDInventory.dll v2.1.3
+	AHZmoreHUDPlugin.dll v5.2.2
+	AnimationMotionRevolution.dll
+	AnimationQueueFix.dll v1.0.1
+	Arcane-Disenchanter-NG.dll v1.1
+	BackportedESLSupport.dll
+	BarterLimitFix.dll
+	BetterThirdPersonSelection.dll v1
+	BugFixesSSE.dll
+	CaptureWarmer.dll v1.1
+	cbp.dll
+	CCExtender.dll v1.11.0.1
+	CombatMusicFixNG.dll v1.1
+	CommunityShaders.dll v0.7.4
+	ComprehensiveAttackRatePatch.dll v1.1.2.7
+	ConsoleUtilSSE.dll v1.5.1
+	ContainerItemDistributor.dll v1.1.4
+	CraftingCategories.dll v1.1
+	CrashLogger.dll v1.11.1
+	DescriptionFramework.dll v1.3
+	DeviousDevices.dll v0.0.0.1
+	diskCacheEnabler.dll
+	DynamicCollisionAdjustment.dll v1.1
+	DynDOLOD.DLL v3.0.14
+	ENBHelperPlus.dll v1
+	ENBHelperSE.dll v2.2
+	encounter_zones_unlocked.dll
+	EnemiesRespectEncounterZones.dll v1.4.2
+	EngineFixes.dll v6.1.1
+	EquipSpellsAsShouts.dll
+	EVLaS.dll v1.3.1
+	FaceGenFixes.dll v1.0.3
+	fiss.dll
+	FixNotesForSkyUI.dll v1.2.6
+	FormListManipulator.dll v1.7
+	Fuz Ro D'oh.dll v2.2.6.927
+	HDLocalMap.dll v1.0.2
+	hdtSMP64.dll
+	HelpExtender.dll v1.2.1.1
+	htfq_se.dll v2
+	IdrinthBuffsWorkOnNPCs.dll v1
+	ImWalkinHere.dll v1.7
+	InventoryInjector.dll v1.0.2
+	ItemPropertyManipulator.dll v0.5.1
+	IWantWidgetsNative.dll
+	JContainers64.dll v4.2.3
+	KillCapsLockNG.dll v1
+	kxWhereAreYou.dll
+	LocationalEncounterZones.dll v1.0.2
+	loki_DynamicAnimationCasting.dll v3.2.3
+	MapMarkerFramework.dll v2.2
+	MaxsuCombatEscape.dll v1
+	MCMHelper.dll v1.4
+	MenuMaid2.dll v2.2.2
+	mfgfix.dll v1.6.1
+	MoreInformativeConsole.dll v1.1
+	MuJointFix.dll v2.0.17
+	MumsTheWord.dll v2.1
+	MuSkeletonEditor.dll v0.6
+	NativeEditorIDFix.dll v1.2
+	NoEnchantmentRestrictionRemake.dll v3.0.1
+	NoOppositeGenderAnims.dll v1.1
+	NotificationFilter.dll v1.2.1
+	OBody.dll v1
+	OpenAnimationReplacer-IEDConditionExtensions.dll v1.0.2
+	OpenAnimationReplacer.dll v2.0.2
+	OSLAroused.dll v2.5
+	PairedAnimationImprovements.dll v1.0.1
+	PAPER.dll v2.2.4
+	PapyrusIniManipulator.dll v1.9.6
+	PapyrusTweaks.dll v4.1
+	PapyrusUtil.dll
+	PassiveWeaponEnchantmentRecharging.dll v1
+	PayloadInterpreter.dll v1
+	PerkEntryPointExtender.dll v1
+	PlayerPayCrimeGoldTweak.dll v1.0.6
+	po3_AnimObjectSwapper.dll v1.1.0.1
+	po3_BaseObjectSwapper.dll v2.6.1.1
+	po3_ConsolePlusPlus.dll v1.4.0.1
+	po3_CraftingRecipeDistributor.dll v2.1.0.1
+	po3_DualCastingFix.dll v1.0.0.1
+	po3_ENBLightForEffectShaders.dll v2.1.0.1
+	po3_EnhancedInvisibility.dll v1.3.0.1
+	po3_KeywordItemDistributor.dll v3.3.0.1
+	po3_MagicSneakAttacks.dll v1.3.0.1
+	po3_MoonMod.dll v2.0.2.1
+	po3_PapyrusExtender.dll v5.6.1.1
+	po3_ReadOrTakeBooks.dll v1.3.0.1
+	po3_SaveUnbaker.dll v1.0.3.1
+	po3_SimpleActivateSKSE.dll v1.4.1.1
+	po3_SimpleOffenceSuppression.dll v2.2.1.1
+	po3_SpellPerkItemDistributor.dll v6.8.5.1
+	po3_Tweaks.dll v1.8.2.1
+	po3_UseOrTake.dll v1.2.0.1
+	PrivateProfileRedirector.dll
+	QuickLootEE.dll v1.1
+	ReadingIsBad.dll v1.0.12
+	RecursionFPSFix.dll v1.1
+	RemoveAllItemsFix.dll v1.1
+	ScaleformTranslationPP.dll v1.6
+	ScrambledBugs.dll
+	SexLabUtil.dll
+	ShadowBoost.dll
+	skee64.dll
+	SkillOfSneaking.dll v1.1
+	SkyPatcher.dll v1.0.0.1
+	SkyrimUncapper.dll
+	SkyrimUpscaler.dll v1
+	SMP-NPC crash fix.dll
+	SoftShadows.dll v2
+	SoundRecordDistributor.dll v1.5
+	SSEDisplayTweaks.dll v0.5.16
+	SureOfStealing.dll v1.1.3
+	TheNewGentleman.dll v2.2.2
+	TrueDirectionalMovement.dll v2.2.5
+	TrueHUD.dll v1.1.8
+	UnlimitedFastTravel.dll v1.5.3
+	Weightless.dll v1
+	WhichKey-NG.dll v1.1
+	WhoseQuestIsItAnyway.dll v1.5
+	YesImSure.dll v1.7
+
+PLUGINS:
+	Light: 251	Regular: 162	Total: 413
+	[ 0]     Skyrim.esm
+	[ 1]     Update.esm
+	[ 2]     Dawnguard.esm
+	[ 3]     HearthFires.esm
+	[ 4]     Dragonborn.esm
+	[ 5]     ccasvsse001-almsivi.esm
+	[ 6]     ccBGSSSE001-Fish.esm
+	[ 7]     cctwbsse001-puzzledungeon.esm
+	[ 8]     ccbgssse016-umbra.esm
+	[ 9]     ccbgssse031-advcyrus.esm
+	[ A]     ccbgssse067-daedinv.esm
+	[ B]     ccBGSSSE025-AdvDSGS.esm
+	[ C]     cceejsse005-cave.esm
+	[ D]     ccafdsse001-dwesanctuary.esm
+	[ E]     Unofficial Skyrim Special Edition Patch.esp
+	[ F]     Unofficial Skyrim Modders Patch.esp
+	[10]     Immersive Wenches.esp
+	[11]     YurianaWench.esp
+	[12]     Audio Overhaul Skyrim.esp
+	[13]     Landscape Fixes For Grass Mods.esp
+	[14]     Lux Via.esp
+	[15]     SexLab.esm
+	[16]     SexLabAroused.esm
+	[17]     Devious Devices - Assets.esm
+	[18]     Devious Devices - Integration.esm
+	[19]     Devious Devices - Expansion.esm
+	[1A]     Devious Devices - Contraptions.esm
+	[1B]     SGEyebrows.esp
+	[1C]     IcyFixes.esm
+	[1D]     Skyrim Extended Cut - Saints and Seducers.esp
+	[1E]     Better Vampire NPCs.esp
+	[1F]     Water for ENB.esm
+	[20]     BBLuxurySuite.esm
+	[21]     Triple Triad Skyrim.esp
+	[22]     myrwatchhomefixer.esp
+	[23]     ApachiiHair.esm
+	[24]     Heels Sound.esm
+	[25]     ZaZAnimationPack.esm
+	[26]     AyleidCitadel.esp
+	[27]     wraithguardvaultfixer.esp
+	[28]     FISS.esp
+	[29]     paradise_halls.esm
+	[2A]     DynDOLOD.esm
+	[2B]     Immersive Sounds - Compendium.esp
+	[2C]     Obsidian Weathers.esp
+	[2D]     SMIM-SE-Merged-All.esp
+	[2E]     TrueStormsSE.esp
+	[2F]     DLCIntegration.esp
+	[30]     Weapons Armor Clothing & Clutter Fixes.esp
+	[31]     Relationship Dialogue Overhaul.esp
+	[32]     Castle Volkihar Rebuilt.esp
+	[33]     paradise_halls_SLExtension.esp
+	[34]     Book Covers Skyrim.esp
+	[35]     CollegeOfWinterholdImmersive.esp
+	[36]     OCW_Obscure's_CollegeofWinterhold.esp
+	[37]     MysticismMagic.esp
+	[38]     HappyLittleTrees.esp
+	[39]     Bandit War.esp
+	[3A]     SeranaDialogAddon.esp
+	[3B]     WACCF_Armor and Clothing Extension.esp
+	[3C]     HearthfireMultiKid.esp
+	[3D]     Embers XD.esp
+	[3E]     FilthyHeritage.esp
+	[3F]     Wheres Your Smelter.esp
+	[40]     CFTO.esp
+	[41]     Lit Road Signs.esp
+	[42]     Mists of Tamriel.esp
+	[43]     Lonewolf's Manor.esp
+	[44]     PAH_HomeSweetHome.esp
+	[45]     PAH_AndYouGetASlave.esp
+	[46]     SkystoneCastle.esp
+	[47]     KnightsRest.esp
+	[48]     Stormwatch.esp
+	[49]     ShadeHall.esp
+	[4A]     AyleidSanctuary.esp
+	[4B]     Summermyst - Enchantments of Skyrim.esp
+	[4C]     Adamant.esp
+	[4D]     The Amazing World of Bikini Armors REMASTERED.esp
+	[4E]     SkyfallEstateRevampedMain.esp
+	[4F]     MorthalHome.esp
+	[50]     Monolith.esp
+	[51]     ThaneFailSafe.esp
+	[52]     paradise_halls_fellglow_slave_camp.esp
+	[53]     WhiterunSafehold.esp
+	[54]     DiaryOfMine.esp
+	[55]     pahe_lakeview_manor_cell.esp
+	[56]     My Home Is Your Home.esp
+	[57]     Apocalypse - Magic of Skyrim.esp
+	[58]     Emfy Cleric Robes.esp
+	[59]     nwsFollowerFramework.esp
+	[5A]     UIExtensions.esp
+	[5B]     ArenaHarderSpawns.esp
+	[5C]     Crimson Blood Armor.esp
+	[5D]     AHZmoreHUD.esp
+	[5E]     Take All Loose Gold and Arrows.esp
+	[5F]     Mining For Mages Redux.esp
+	[60]     FixVampireLord - Revert Form.esp
+	[61]     Dress Up Lovers.esp
+	[62]     AllEnchantmentsUnlocked.esp
+	[63]     AdamantSmithing.esp
+	[64]     Teach Followers Spells.esp
+	[65]     ShowRaceMenuAlternative.esp
+	[66]     Resurrect.esp
+	[67]     NPC Death Alerts.esp
+	[68]     DGPlayerIsVampire.esp
+	[69]     XPMSE.esp
+	[6A]     WildHuntress.esp
+	[6B]     Stella Mithril Armor.esp
+	[6C]     Faction Crossbows.esp
+	[6D]     Tembtra Thief Armor.esp
+	[6E]     Spartan Bard Outfit.esp
+	[6F]     Sotteta Necromancer Outfit.esp
+	[70]     Sotteta Huntress Armor.esp
+	[71]     Merta Black Rose Armor.esp
+	[72]     Merta Assassin Armor.esp
+	[73]     HQEyes-2k.esp
+	[74]     Gwelda Witch.esp
+	[75]     Gwelda Vampire.esp
+	[76]     Gwelda Dawnguard Armor.esp
+	[77]     DX Witcher Armor.esp
+	[78]     DX Witch Hunter Armor.esp
+	[79]     DX Morenn Outfit.esp
+	[7A]     DX Druid Armor.esp
+	[7B]     DX Daughter of the Sea.esp
+	[7C]     DX Christmas Bunny Outfit.esp
+	[7D]     Demon Armor.esp
+	[7E]     Daedric Reaper Armor.esp
+	[7F]     Celes Tarot Outfit Cloth UNP.esp
+	[80]     Celes Rogue Armor UNP.esp
+	[81]     Celes Nightingale Armor.esp
+	[82]     Celes Mercy.esp
+	[83]     Cassandra Frost Witch.esp
+	[84]     Cassandra Apocrypha UNP.esp
+	[85]     AncientDraugr.esp
+	[86]     Daily-Wear.esp
+	[87]     Fashions of the Banditry.esp
+	[88]     KS Hairdo's.esp
+	[89]     BDE_Armor.esp
+	[8A]     Ritual - Unofficial Mysticism Addon.esp
+	[8B]     DoMHSH.esp
+	[8C]     Pahe_Dwarven_Devious_suits.esp
+	[8D]     ENB Light.esp
+	[8E]     Cathedral - 3D Pine Grass.esp
+	[8F]     NPCProtectionTweaks.esp
+	[90]     Better Vampires.esp
+	[91]     Better Vampire Lords.esp
+	[92]     Alternate Start - Live Another Life.esp
+	[93]     BBLS-ASLAL.esp
+	[94]     Pahe_AltStartLAL.esp
+	[95]     Water for ENB (Shades of Skyrim).esp
+	[96]     Lux.esp
+	[97]     Summermyst - WACCF Patch.esp
+	[98]     UD_Serana.esp
+	[99]     Buxom Tweaks.esp
+	[9A]     BBLS_SKSE64_Patch.esp
+	[9B]     BBLuxurySuiteENM.esp
+	[9C]     AOS-ISC Patcher.esp
+	[9D]     NPC Improvements.esp
+	[9E]     Heels Sound Patch.esp
+	[9F]     Enhanced Books.esp
+	[A0]     Synthesis.esp
+	[A1]     DynDOLOD.esp
+	[FE:  0] ccbgssse002-exoticarrows.esl
+	[FE:  1] ccbgssse003-zombies.esl
+	[FE:  2] ccbgssse004-ruinsedge.esl
+	[FE:  3] ccbgssse005-goldbrand.esl
+	[FE:  4] ccbgssse006-stendarshammer.esl
+	[FE:  5] ccbgssse007-chrysamere.esl
+	[FE:  6] ccbgssse010-petdwarvenarmoredmudcrab.esl
+	[FE:  7] ccbgssse011-hrsarmrelvn.esl
+	[FE:  8] ccbgssse012-hrsarmrstl.esl
+	[FE:  9] ccbgssse014-spellpack01.esl
+	[FE:  A] ccbgssse019-staffofsheogorath.esl
+	[FE:  B] ccbgssse020-graycowl.esl
+	[FE:  C] ccbgssse021-lordsmail.esl
+	[FE:  D] ccmtysse001-knightsofthenine.esl
+	[FE:  E] ccQDRSSE001-SurvivalMode.esl
+	[FE:  F] ccqdrsse002-firewood.esl
+	[FE: 10] ccbgssse018-shadowrend.esl
+	[FE: 11] ccbgssse035-petnhound.esl
+	[FE: 12] ccfsvsse001-backpacks.esl
+	[FE: 13] cceejsse002-tower.esl
+	[FE: 14] ccedhsse001-norjewel.esl
+	[FE: 15] ccvsvsse002-pets.esl
+	[FE: 16] ccBGSSSE037-Curios.esl
+	[FE: 17] ccbgssse034-mntuni.esl
+	[FE: 18] ccbgssse045-hasedoki.esl
+	[FE: 19] ccbgssse008-wraithguard.esl
+	[FE: 1A] ccbgssse036-petbwolf.esl
+	[FE: 1B] ccffbsse001-imperialdragon.esl
+	[FE: 1C] ccmtysse002-ve.esl
+	[FE: 1D] ccbgssse043-crosselv.esl
+	[FE: 1E] ccvsvsse001-winter.esl
+	[FE: 1F] cceejsse003-hollow.esl
+	[FE: 20] ccbgssse038-bowofshadows.esl
+	[FE: 21] ccbgssse040-advobgobs.esl
+	[FE: 22] ccbgssse050-ba_daedric.esl
+	[FE: 23] ccbgssse052-ba_iron.esl
+	[FE: 24] ccbgssse054-ba_orcish.esl
+	[FE: 25] ccbgssse058-ba_steel.esl
+	[FE: 26] ccbgssse059-ba_dragonplate.esl
+	[FE: 27] ccbgssse061-ba_dwarven.esl
+	[FE: 28] ccpewsse002-armsofchaos.esl
+	[FE: 29] ccbgssse041-netchleather.esl
+	[FE: 2A] ccedhsse002-splkntset.esl
+	[FE: 2B] ccbgssse064-ba_elven.esl
+	[FE: 2C] ccbgssse063-ba_ebony.esl
+	[FE: 2D] ccbgssse062-ba_dwarvenmail.esl
+	[FE: 2E] ccbgssse060-ba_dragonscale.esl
+	[FE: 2F] ccbgssse056-ba_silver.esl
+	[FE: 30] ccbgssse055-ba_orcishscaled.esl
+	[FE: 31] ccbgssse053-ba_leather.esl
+	[FE: 32] ccbgssse051-ba_daedricmail.esl
+	[FE: 33] ccbgssse057-ba_stalhrim.esl
+	[FE: 34] ccbgssse066-staves.esl
+	[FE: 35] ccbgssse068-bloodfall.esl
+	[FE: 36] ccbgssse069-contest.esl
+	[FE: 37] ccvsvsse003-necroarts.esl
+	[FE: 38] ccvsvsse004-beafarmer.esl
+	[FE: 39] ccffbsse002-crossbowpack.esl
+	[FE: 3A] ccbgssse013-dawnfang.esl
+	[FE: 3B] ccrmssse001-necrohouse.esl
+	[FE: 3C] ccedhsse003-redguard.esl
+	[FE: 3D] cceejsse004-hall.esl
+	[FE: 3E] cckrtsse001_altar.esl
+	[FE: 3F] cccbhsse001-gaunt.esl
+	[FE: 40] Cleaned Skyrim SE Textures.esp
+	[FE: 41] ATU 2x.esp
+	[FE: 42] ATU 2x0.esp
+	[FE: 43] ATU 2x1.esp
+	[FE: 44] ATU 2x2.esp
+	[FE: 45] ATU 2x3.esp
+	[FE: 46] ATU 2x4.esp
+	[FE: 47] Unofficial Silver Armor Patch.esl
+	[FE: 48] Unofficial Shadowrend Patch.esl
+	[FE: 49] Unofficial Shadowfoot Sanctum Patch.esl
+	[FE: 4A] Unofficial Saturalia Holiday Pack Patch.esl
+	[FE: 4B] Unofficial Ruin's Edge Patch.esl
+	[FE: 4C] Unofficial Redguard Elite Armaments Patch.esl
+	[FE: 4D] Unofficial Plague of the Dead Patch.esl
+	[FE: 4E] Unofficial Pets of Skyrim Patch.esl
+	[FE: 4F] Unofficial Orcish Scaled Armor Patch.esl
+	[FE: 50] Unofficial Orcish Plate Armor Patch.esl
+	[FE: 51] Unofficial Nordic Jewelry Patch.esl
+	[FE: 52] Unofficial Nix-Hound Patch.esl
+	[FE: 53] Unofficial Netch Leather Armors Patch.esl
+	[FE: 54] Unofficial Necromantic Grimoire Patch.esl
+	[FE: 55] Unofficial Farming Patch.esl
+	[FE: 56] Unofficial Forgotten Seasons Patch.esl
+	[FE: 57] Unofficial Civil War Champions Patch.esl
+	[FE: 58] Unofficial Dead Man's Dread Patch.esl
+	[FE: 59] Unofficial Myrwatch Patch.esl
+	[FE: 5A] Unofficial Sunder & Wraithguard Patch.esl
+	[FE: 5B] Unofficial Vigil Enforcer Armor Set Patch.esl
+	[FE: 5C] Unofficial Bloodchill Manor Patch.esl
+	[FE: 5D] Unofficial Spell Knight Armor Patch.esl
+	[FE: 5E] Unofficial Arms of Chaos Patch.esl
+	[FE: 5F] Unofficial Hendraheim Patch.esl
+	[FE: 60] Unofficial Umbra Patch.esl
+	[FE: 61] Unofficial Lord's Mail Patch.esl
+	[FE: 62] Unofficial Iron Armor Patch.esl
+	[FE: 63] Unofficial Headmans Cleaver Patch.esl
+	[FE: 64] Unofficial Gray Cowl Returns Patch.esl
+	[FE: 65] Unofficial Goldbrand Patch.esl
+	[FE: 66] Unofficial Goblins Patch.esl
+	[FE: 67] Unofficial Ghosts of the Tribunal Patch.esl
+	[FE: 68] Unofficial Gallows Hall Patch.esl
+	[FE: 69] Unofficial Expanded Crossbow Pack Patch.esl
+	[FE: 6A] Unofficial Elven Hunter Armor Patch.esl
+	[FE: 6B] Unofficial Elite Crossbows Patch.esl
+	[FE: 6C] Unofficial Ebony Plate Armor Patch.esl
+	[FE: 6D] Unofficial Dwarven Plate Armor Patch.esl
+	[FE: 6E] Unofficial Dwarven Mail Armor Patch.esl
+	[FE: 6F] Unofficial Dwarven Home Patch.esl
+	[FE: 70] Unofficial Dwarven Armored Mudcrab Patch.esl
+	[FE: 71] Unofficial Dragonscale Armor Patch.esl
+	[FE: 72] Unofficial Dragon Plate Armor Patch.esl
+	[FE: 73] Unofficial Divine Crusader Patch.esl
+	[FE: 74] Unofficial Dawnfang and Duskfang Patch.esl
+	[FE: 75] Unofficial Daedric Plate Armor Patch.esl
+	[FE: 76] Unofficial Daedric Mail Armor Patch.esl
+	[FE: 77] Unofficial Chrysamere Patch.esl
+	[FE: 78] Unofficial Bow of Shadows Patch.esl
+	[FE: 79] Unofficial Bone Wolf Patch.esl
+	[FE: 7A] Unofficial Bittercup Patch.esl
+	[FE: 7B] Unofficial Arcane Archer Pack Patch.esl
+	[FE: 7C] Unofficial Arcane Accessories Patch.esl
+	[FE: 7D] Unofficial Staff of Sheogorath Patch.esl
+	[FE: 7E] Unofficial Stalhrim Fur Armor Patch.esl
+	[FE: 7F] Unofficial Steel Soldier Armor Patch.esl
+	[FE: 80] Unofficial Stendarr's Hammer Patch.esl
+	[FE: 81] Unofficial The Cause Patch.esl
+	[FE: 82] Unofficial The Contest Patch.esl
+	[FE: 83] Unofficial Wild Horses Patch.esl
+	[FE: 84] Landscape and Water Fixes.esp
+	[FE: 85] Navigator-NavFixes.esl
+	[FE: 86] Lux - Resources.esp
+	[FE: 87] ScriptFixesCompilation.esp
+	[FE: 88] Crafting Recipes.esp
+	[FE: 89] UHDAP Merged2.esl
+	[FE: 8A] UHDAP Merged1.esl
+	[FE: 8B] UHDAP Merged0.esl
+	[FE: 8C] UHDAP Merged.esl
+	[FE: 8D] Expressive Facegen Morphs.esl
+	[FE: 8E] TrueHUD.esl
+	[FE: 8F] AHZmoreHUDInventory.esl
+	[FE: 90] Lux Orbis - Master plugin.esm
+	[FE: 91] Praedys_Soulcairn.esm
+	[FE: 92] Triple Triad Tamriel.esp
+	[FE: 93] Triple Triad Assets0.esl
+	[FE: 94] Triple Triad Assets.esl
+	[FE: 95] TheNewGentleman.esp
+	[FE: 96] OCF.esp
+	[FE: 97] Tamrielic Distribution.esp
+	[FE: 98] IceShaderDisabled.esl
+	[FE: 99] IceLODFull.esl
+	[FE: 9A] High Poly Head.esm
+	[FE: 9B] DynamicCollisionAdjustment.esl
+	[FE: 9C] Invulnerable Horses.esp
+	[FE: 9D] iWant Widgets.esl
+	[FE: 9E] kcf.esm
+	[FE: 9F] BlockAnimationStuckFix.esl
+	[FE: A0] Lux - Master plugin.esm
+	[FE: A1] FOLIP.esp
+	[FE: A2] Smooth Weapon.esm
+	[FE: A3] Unofficial Staves Patch.esl
+	[FE: A4] Cathedral - 3D Mountain Flowers.esp
+	[FE: A5] Pahe_Dragonborn_fixes.esl
+	[FE: A6] paradise_halls_farengars_study.esl
+	[FE: A7] UHDAP Merged3.esl
+	[FE: A8] FNIS.esp
+	[FE: A9] Particle Patch for ENB.esp
+	[FE: AA] SkyUI_SE.esp
+	[FE: AB] AOS_ISC_Integration.esp
+	[FE: AC] [immyneedscake] RyanReos Elf Paladin.esp
+	[FE: AD] RDO Updated.esp
+	[FE: AE] UltimateCollege.esp
+	[FE: AF] Landscape and Water Fixes - Patch - LFfGM.esp
+	[FE: B0] Bandit War - Expanded Enemy Coverage.esp
+	[FE: B1] Favor Quests Seperated.esp
+	[FE: B2] Kachunk - Crossbow Distribution.esp
+	[FE: B3] Tamrielic Distribution - Dead Man's Dread.esp
+	[FE: B4] CrossbowIntegration.esp
+	[FE: B5] Tamrielic Distribution - Vigil Enforcer Armor.esp
+	[FE: B6] Tamrielic Distribution - Crossbow Collection.esp
+	[FE: B7] Honorhall Fixes and Expansion.esp
+	[FE: B8] BookOfPerkPoints.esp
+	[FE: B9] Regional Sounds Expansion.esp
+	[FE: BA] Reverb Interior Sounds Expansion.esp
+	[FE: BB] AcousticTemplateFixes.esp
+	[FE: BC] Misc Dialogue Edits.esp
+	[FE: BD] Narrative Gameplay Consistent Dialogue Tweaks.esp
+	[FE: BE] ECSS - Staff of Sheogorath Patch.esp
+	[FE: BF] BetterQuestObjectives.esp
+	[FE: C0] PaarthurnaxQuestExpansion.esp
+	[FE: C1] ECSS - Shadowrend Patch.esp
+	[FE: C2] PyP_Legendary.esp
+	[FE: C3] Grass Patch - Saints and Seducers.esp
+	[FE: C4] Grass Patch - Goldenhills Plantation.esp
+	[FE: C5] FilthyHeritage - DOM Addon.esp
+	[FE: C6] UltimateCollege_WACCF_Patch.esp
+	[FE: C7] OCW_WACCF_FEPatch.esp
+	[FE: C8] CS_Visions.esp
+	[FE: C9] CS_Visions_N1.esp
+	[FE: CA] Additional Spell Merchants.esp
+	[FE: CB] CFTO-Lanterns.esp
+	[FE: CC] Abyss.esp
+	[FE: CD] Grass Patch - Hendraheim.esp
+	[FE: CE] CFTO-CoveredCarriages.esp
+	[FE: CF] Shadows Of Sunlight - In Small Exterior World Spaces.esp
+	[FE: D0] CoMAP - Shrines and Altars.esp
+	[FE: D1] Landscape_and_Water_Fixes _CC_Farming_patch.esp
+	[FE: D2] OCW_BCS_FEPatch.esp
+	[FE: D3] UltimateCollege_CCWildHorses_Patch.esp
+	[FE: D4] Landscape and Water Fixes - Patch - Alternative Armors - Elven Hunter.esp
+	[FE: D5] Grass Patch - Myrwatch.esp
+	[FE: D6] Grass Patch - Fishing.esp
+	[FE: D7] BBLS - Generic Tree Patch.esp
+	[FE: D8] Landscape and Water Fixes - Patch - Hendraheim.esp
+	[FE: D9] CoMAP - KhajiitCaravans.esp
+	[FE: DA] CoMAP - Jorrvaskr Marker.esp
+	[FE: DB] UltimateCollege_WACCFACE_Patch.esp
+	[FE: DC] OCW_ACE_FEPatch.esp
+	[FE: DD] UltimateCollege_Mysticism_Patch.esp
+	[FE: DE] UltimateCollege_CCArcaneArcher_Patch.esp
+	[FE: DF] UltimateCollege_AudioOv_Patch.esp
+	[FE: E0] WACCF_Armor and Clothing Extension_SPID.esp
+	[FE: E1] Weapon Speed - IPM.esp
+	[FE: E2] I4WeaponIconsOverhaul.esp
+	[FE: E3] iWant Widgets.esp
+	[FE: E4] kxWhereAreYou.esp
+	[FE: E5] MenuMaid2.esp
+	[FE: E6] MoonsAndStars.esp
+	[FE: E7] MuJointFixToggleSLandOstim.esp
+	[FE: E8] MyrwatchVaultFix - USCCCP Patch.esp
+	[FE: E9] OBody.esp
+	[FE: EA] OSLAroused.esp
+	[FE: EB] PassiveWeaponEnchantmentRecharging.esp
+	[FE: EC] ReadingIsBad.esp
+	[FE: ED] Silver Hand Aren't Bandits.esp
+	[FE: EE] SimonrimI4Addon.esp
+	[FE: EF] Sonders_Keyword_Distribution.esp
+	[FE: F0] UnlimitedFastTravelMCM.esp
+	[FE: F1] BetterThirdPersonSelection.esp
+	[FE: F2] BHUNP3BBB.esp
+	[FE: F3] BM_Brows_HPH.esp
+	[FE: F4] BM_Brows_Vanilla.esp
+	[FE: F5] Exnem Amazon Outfit.esp
+	[FE: F6] Fantasia Outfit.esp
+	[FE: F7] H2Horse.esp
+	[FE: F8] AdoptionAndMovingFix.esp
+	[FE: F9] HearthfireMultiKid_LastName.esp
+	[FE: FA] HeelsFix.esp

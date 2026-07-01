@@ -1,0 +1,1405 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.26.2
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FFA891C9ECC Buffout4.dll+0049ECC
+
+	[Compatibility]
+		F4EE: false
+	[Fixes]
+		ActorIsHostileToActor: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		GreyMovies: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+	[Patches]
+		Achievements: true
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: true
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: -1
+		MemoryManager: true
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 11 Home v10.0.22621
+	CPU: AuthenticAMD AMD Ryzen 9 3950X 16-Core Processor            
+	GPU #1: Nvidia TU104 [GeForce RTX 2080 SUPER]
+	GPU #2: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 15.03 GB/31.91 GB
+
+PROBABLE CALL STACK:
+	[ 0] 0x7FFA891C9ECC Buffout4.dll+0049ECC
+	[ 1] 0x7FFA891CA2E9 Buffout4.dll+004A2E9
+	[ 2] 0x7FF61E8CC745 Fallout4.exe+16DC745 -> 69109+0x35
+	[ 3] 0x7FF61E92BDA0 Fallout4.exe+173BDA0 -> 1015898+0xC0
+	[ 4] 0x7FF61E8E9A14 Fallout4.exe+16F9A14 -> 1128385+0x14
+	[ 5] 0x7FF61E8EA27A Fallout4.exe+16FA27A -> 766461+0x6A
+	[ 6] 0x7FF61E8EBA23 Fallout4.exe+16FBA23 -> 650323+0x33
+	[ 7] 0x7FF61DF14519 Fallout4.exe+0D24519 -> 1326066+0x99
+	[ 8] 0x7FF61DEADB19 Fallout4.exe+0CBDB19 -> 386466+0x9
+	[ 9] 0x7FF61ED40F26 Fallout4.exe+1B50F26 -> 329005+0xC6
+	[10] 0x7FF61ED41432 Fallout4.exe+1B51432 -> 194800+0x202
+	[11] 0x7FF61ED43F67 Fallout4.exe+1B53F67 -> 1492866+0x67
+	[12] 0x7FF61ED0CFED Fallout4.exe+1B1CFED -> 1079791+0x3D
+	[13] 0x7FFA975226AD KERNEL32.DLL+00126AD
+	[14] 0x7FFA9810A9F8    ntdll.dll+005A9F8
+
+REGISTERS:
+	RAX 0x1                (size_t)
+	RCX 0x0                (size_t)
+	RDX 0x1DD232F1040      (void*)
+	RBX 0x1                (size_t)
+	RSP 0x9F6208FA20       (void*)
+	RBP 0x124              (size_t)
+	RSI 0x1DD232F0000      (void*)
+	RDI 0x0                (size_t)
+	R8  0x2001             (size_t)
+	R9  0x1DD232F1030      (void*)
+	R10 0x546C6148         (size_t)
+	R11 0xFFFFFFFFF3AC0DD2 (size_t)
+	R12 0x2710             (size_t)
+	R13 0x7FF622DD8080     (void* -> Fallout4.exe+5BE8080)
+	R14 0x7FF622C63D70     (`anonymous namespace'::DDQueueCollection*)
+	R15 0x0                (size_t)
+
+STACK:
+	[RSP+0  ] 0x9F6208FA50       (void*)
+	[RSP+8  ] 0x7FF61FE530D0     (char*) "Et"
+	[RSP+10 ] 0x1DC8A062C80      (hclBSWorld*)
+	[RSP+18 ] 0x1DC4E24FFA0      (void*)
+	[RSP+20 ] 0x7FFA893E2510     (void* -> Buffout4.dll+0262510)
+	[RSP+28 ] 0x7FFA891CA2E9     (void* -> Buffout4.dll+004A2E9)
+	[RSP+30 ] 0x1DD232F1040      (void*)
+	[RSP+38 ] 0x36C0             (size_t)
+	[RSP+40 ] 0x1DC8A062D20      (void*)
+	[RSP+48 ] 0x7FF61EF5FC80     (void* -> Fallout4.exe+1D6FC80)
+	[RSP+50 ] 0x7FF620A1A4D0     (hkContainerHeapAllocator::Allocator*)
+	[RSP+58 ] 0x7FF61E8CC745     (void* -> Fallout4.exe+16DC745)
+	[RSP+60 ] 0x1DDEDAF6EA0      (void*)
+	[RSP+68 ] 0x3690             (size_t)
+	[RSP+70 ] 0x1DD8C2FA350      (void*)
+	[RSP+78 ] 0x7FF61D2144E3     (void* -> Fallout4.exe+00244E3)
+	[RSP+80 ] 0x1DD0D9494E0      (hkbBehaviorGraph::GlobalTransitionData*)
+	[RSP+88 ] 0x7FF61E92BDA0     (void* -> Fallout4.exe+173BDA0)
+	[RSP+90 ] 0x1DDEDAF6EA0      (void*)
+	[RSP+98 ] 0x7FF61D2144E3     (void* -> Fallout4.exe+00244E3)
+	[RSP+A0 ] 0x7FF622C93400     (CleanupQueue<`anonymous namespace'::MovieResourceQueuePolicy,A0x488c7b61::MovieResourceCleanupPolicy,DoNothingProcessPolicy,A0x488c7b61::QueuePostCleanupPolicy>*)
+	[RSP+A8 ] 0x7FF61DF21718     (void* -> Fallout4.exe+0D31718)
+	[RSP+B0 ] 0x2BD5C65562       (size_t)
+	[RSP+B8 ] 0x7FF622C63D70     (`anonymous namespace'::DDQueueCollection*)
+	[RSP+C0 ] 0x1DD0D9494E0      (hkbBehaviorGraph::GlobalTransitionData*)
+	[RSP+C8 ] 0x7FF61E8E9A14     (void* -> Fallout4.exe+16F9A14)
+	[RSP+D0 ] 0x1                (size_t)
+	[RSP+D8 ] 0x0                (size_t)
+	[RSP+E0 ] 0x1DBDE992368      (void*)
+	[RSP+E8 ] 0x7FF61DF1CDE6     (void* -> Fallout4.exe+0D2CDE6)
+	[RSP+F0 ] 0x1DBAF23EB30      (char*) "s"
+	[RSP+F8 ] 0x7FF61E8EA27A     (void* -> Fallout4.exe+16FA27A)
+	[RSP+100] 0x1                (size_t)
+	[RSP+108] 0x1DBDE992368      (void*)
+	[RSP+110] 0x1DBAF23EB30      (char*) "s"
+	[RSP+118] 0x1DBAF23EB30      (char*) "s"
+	[RSP+120] 0x2                (size_t)
+	[RSP+128] 0x7FF61E8EBA23     (void* -> Fallout4.exe+16FBA23)
+	[RSP+130] 0x1DD0D9494E0      (hkbBehaviorGraph::GlobalTransitionData*)
+	[RSP+138] 0x2                (size_t)
+	[RSP+140] 0x0                (size_t)
+	[RSP+148] 0x1DBDE992368      (void*)
+	[RSP+150] 0x1DBDE98CD01      (char*) "
+"
+	[RSP+158] 0x7FF61DF14519     (void* -> Fallout4.exe+0D24519)
+	[RSP+160] 0x1DBDE992358      (void*)
+	[RSP+168] 0x0                (size_t)
+	[RSP+170] 0x1DBDE992338      (void*)
+	[RSP+178] 0x1DBDE992368      (void*)
+	[RSP+180] 0x0                (size_t)
+	[RSP+188] 0x0                (size_t)
+	[RSP+190] 0x7FF622DD8084     (void* -> Fallout4.exe+5BE8084)
+	[RSP+198] 0x1                (size_t)
+	[RSP+1A0] 0x7FF622DD8088     (void* -> Fallout4.exe+5BE8088)
+	[RSP+1A8] 0x7FF61DEADB19     (void* -> Fallout4.exe+0CBDB19)
+	[RSP+1B0] 0x7FF622DD9610     (void* -> Fallout4.exe+5BE9610)
+	[RSP+1B8] 0x0                (size_t)
+	[RSP+1C0] 0x0                (size_t)
+	[RSP+1C8] 0x1DBDE98CD40      (void*)
+	[RSP+1D0] 0x1DBDE98CE20      (void*)
+	[RSP+1D8] 0x7FF61ED40F26     (void* -> Fallout4.exe+1B50F26)
+	[RSP+1E0] 0x0                (size_t)
+	[RSP+1E8] 0x0                (size_t)
+	[RSP+1F0] 0x7FF600000000     (size_t)
+	[RSP+1F8] 0x1DBDE98CFE0      (void*)
+	[RSP+200] 0x0                (size_t)
+	[RSP+208] 0x0                (size_t)
+	[RSP+210] 0x7FF622DF06C0     (void* -> Fallout4.exe+5C006C0)
+	[RSP+218] 0x0                (size_t)
+	[RSP+220] 0x7FF622DD95C0     (BSJobs::JobThread*)
+	[RSP+228] 0x7FF61ED41432     (void* -> Fallout4.exe+1B51432)
+	[RSP+230] 0x0                (size_t)
+	[RSP+238] 0x7FF622DD95C0     (BSJobs::JobThread*)
+	[RSP+240] 0x0                (size_t)
+	[RSP+248] 0x9F6208FCC0       (void*)
+	[RSP+250] 0x0                (size_t)
+	[RSP+258] 0x0                (size_t)
+	[RSP+260] 0x0                (size_t)
+	[RSP+268] 0x7FF61ED43F67     (void* -> Fallout4.exe+1B53F67)
+	[RSP+270] 0x7FF622DD95C0     (BSJobs::JobThread*)
+	[RSP+278] 0x0                (size_t)
+	[RSP+280] 0x0                (size_t)
+	[RSP+288] 0x0                (size_t)
+	[RSP+290] 0x7FF622DD95C0     (BSJobs::JobThread*)
+	[RSP+298] 0x7FF61ED0CFED     (void* -> Fallout4.exe+1B1CFED)
+	[RSP+2A0] 0x4CB8             (size_t)
+	[RSP+2A8] 0x9F6208FCE0       (void*)
+	[RSP+2B0] 0x1DBDE96BC90      (void*)
+	[RSP+2B8] 0x0                (size_t)
+	[RSP+2C0] 0x7FF622DD95C0     (BSJobs::JobThread*)
+	[RSP+2C8] 0x0                (size_t)
+	[RSP+2D0] 0x0                (size_t)
+	[RSP+2D8] 0x7FFA975226AD     (void* -> KERNEL32.DLL+00126AD)
+	[RSP+2E0] 0x0                (size_t)
+	[RSP+2E8] 0x0                (size_t)
+	[RSP+2F0] 0x0                (size_t)
+	[RSP+2F8] 0x0                (size_t)
+	[RSP+300] 0x0                (size_t)
+	[RSP+308] 0x7FFA9810A9F8     (void* -> ntdll.dll+005A9F8)
+	[RSP+310] 0x0                (size_t)
+	[RSP+318] 0x0                (size_t)
+	[RSP+320] 0x0                (size_t)
+	[RSP+328] 0x0                (size_t)
+	[RSP+330] 0x0                (size_t)
+	[RSP+338] 0x0                (size_t)
+	[RSP+340] 0x4F82917F00000000 (size_t)
+	[RSP+348] 0x0                (size_t)
+	[RSP+350] 0x4F0FFFFFB30      (size_t)
+	[RSP+358] 0x7FFA958DB5F0     (void* -> KERNELBASE.dll+015B5F0)
+	[RSP+360] 0x9F6208EB40       (void*)
+	[RSP+368] 0xFFF5B41E491E     (size_t)
+	[RSP+370] 0x7FFADA0F248F     (size_t)
+	[RSP+378] 0x9F6208EB40       (void*)
+	[RSP+380] 0x0                (size_t)
+	[RSP+388] 0x0                (size_t)
+	[RSP+390] 0x0                (size_t)
+	[RSP+398] 0x0                (size_t)
+	[RSP+3A0] 0x0                (size_t)
+	[RSP+3A8] 0x0                (size_t)
+	[RSP+3B0] 0x0                (size_t)
+	[RSP+3B8] 0x0                (size_t)
+	[RSP+3C0] 0x0                (size_t)
+	[RSP+3C8] 0x0                (size_t)
+	[RSP+3D0] 0x0                (size_t)
+	[RSP+3D8] 0x0                (size_t)
+	[RSP+3E0] 0x0                (size_t)
+	[RSP+3E8] 0x0                (size_t)
+	[RSP+3F0] 0x0                (size_t)
+	[RSP+3F8] 0x0                (size_t)
+	[RSP+400] 0x0                (size_t)
+	[RSP+408] 0x0                (size_t)
+	[RSP+410] 0x0                (size_t)
+	[RSP+418] 0x0                (size_t)
+	[RSP+420] 0x0                (size_t)
+	[RSP+428] 0x0                (size_t)
+	[RSP+430] 0x0                (size_t)
+	[RSP+438] 0x0                (size_t)
+	[RSP+440] 0x0                (size_t)
+	[RSP+448] 0x0                (size_t)
+	[RSP+450] 0x0                (size_t)
+	[RSP+458] 0x0                (size_t)
+	[RSP+460] 0x0                (size_t)
+	[RSP+468] 0x0                (size_t)
+	[RSP+470] 0x0                (size_t)
+	[RSP+478] 0x0                (size_t)
+	[RSP+480] 0x0                (size_t)
+	[RSP+488] 0x0                (size_t)
+	[RSP+490] 0x0                (size_t)
+	[RSP+498] 0x0                (size_t)
+	[RSP+4A0] 0x0                (size_t)
+	[RSP+4A8] 0x0                (size_t)
+	[RSP+4B0] 0x0                (size_t)
+	[RSP+4B8] 0x0                (size_t)
+	[RSP+4C0] 0x0                (size_t)
+	[RSP+4C8] 0x0                (size_t)
+	[RSP+4D0] 0x0                (size_t)
+	[RSP+4D8] 0x0                (size_t)
+	[RSP+4E0] 0x0                (size_t)
+	[RSP+4E8] 0x0                (size_t)
+	[RSP+4F0] 0x0                (size_t)
+	[RSP+4F8] 0x0                (size_t)
+	[RSP+500] 0x0                (size_t)
+	[RSP+508] 0x0                (size_t)
+	[RSP+510] 0x0                (size_t)
+	[RSP+518] 0x0                (size_t)
+	[RSP+520] 0x0                (size_t)
+	[RSP+528] 0x0                (size_t)
+	[RSP+530] 0x0                (size_t)
+	[RSP+538] 0x0                (size_t)
+	[RSP+540] 0x0                (size_t)
+	[RSP+548] 0x0                (size_t)
+	[RSP+550] 0x0                (size_t)
+	[RSP+558] 0x0                (size_t)
+	[RSP+560] 0x0                (size_t)
+	[RSP+568] 0x0                (size_t)
+	[RSP+570] 0x0                (size_t)
+	[RSP+578] 0x0                (size_t)
+	[RSP+580] 0x0                (size_t)
+	[RSP+588] 0x0                (size_t)
+	[RSP+590] 0x0                (size_t)
+	[RSP+598] 0x0                (size_t)
+	[RSP+5A0] 0x0                (size_t)
+	[RSP+5A8] 0x0                (size_t)
+	[RSP+5B0] 0x0                (size_t)
+	[RSP+5B8] 0x0                (size_t)
+	[RSP+5C0] 0x0                (size_t)
+	[RSP+5C8] 0x0                (size_t)
+	[RSP+5D0] 0x0                (size_t)
+	[RSP+5D8] 0x0                (size_t)
+
+MODULES:
+
+F4SE PLUGINS:
+	AutoBeam.dll v1
+	BakaFramework.dll v1.8
+	BetterConsole.dll
+	BodyPartsUI.dll v1
+	Buffout4.dll v1.26.2
+	BulletCountedReload.dll
+	cbp.dll
+	CombinedCombatXP.dll
+	crafting_highlight_fix.dll
+	encounter_zone_recalculation.dll
+	f4ee.dll
+	f4pm.dll
+	F4z Ro D'oh.dll v1.0.6.814
+	faster_workshop.dll
+	FloatingDamage.dll
+	HHS.dll
+	HighFPSPhysicsFix.dll
+	HUDPlusPlus.dll
+	LL_fourPlay_1_10_163.dll
+	LooksmenuPlayerRotation.dll
+	mcm.dll
+	MeleeAndThrow.dll v1
+	MODExplorer.dll
+	NativeSync.dll v1
+	place.dll
+	po3_SpellPerkItemDistributorF4.dll v2
+	PowerGridTools.dll
+	SeamlessInspect.dll v1
+	ShadowBoostFO4.dll
+	ShieldFramework.dll v1
+	SideAimAni.dll v1.6
+	SUP_F4SE.dll
+	UneducatedReload.dll v1
+	UneducatedShooter.dll v1
+	WeaponDebrisCrashFix.dll
+	WmkActiveEffects.dll
+	wsfw_identifier.dll
+	XDI.dll
+
+PLUGINS:
+	[00]     Fallout4.esm
+	[01]     DLCRobot.esm
+	[02]     DLCworkshop01.esm
+	[03]     DLCCoast.esm
+	[04]     DLCworkshop02.esm
+	[05]     DLCworkshop03.esm
+	[06]     DLCNukaWorld.esm
+	[07]     cczsef04001-bhouse.esm
+	[08]     cctosfo4001-neosky.esm
+	[09]     Unofficial Fallout 4 Patch.esp
+	[0A]     ArmorKeywords.esm
+	[0B]     HUDFramework.esm
+	[0C]     WorkshopFramework.esm
+	[0D]     AAF.esm
+	[0E]     CompanionIvy.esm
+	[0F]     SS2.esm
+	[10]     SS2_XPAC_Chapter2.esm
+	[11]     TortureDevices.esm
+	[12]     Devious Devices.esm
+	[13]     HighHeelSounds.esm
+	[14]     Homemaker.esm
+	[15]     INVB_OverlayFramework.esp
+	[16]     MaleBodies.esm
+	[17]     Overlays.esm
+	[18]     Servitron.esm
+	[19]     SettlementKeywords.esm
+	[1A]     ShieldFramework.esm
+	[1B]     TacticalReload.esm
+	[1C]     TrueStormsFO4.esm
+	[1D]     EBVault88 Tunnels v 8.1.esp
+	[1E]     WorkshopRearranged.esp
+	[1F]     Phase4DLC.esp
+	[20]     PiperCaitCurieDialogueOverhaul.esp
+	[21]     Boston Breeder.esp
+	[22]     Armorsmith Extended.esp
+	[23]     RED.esp
+	[24]     VisibleCompanionAffinity.esp
+	[25]     MutilatedDeadBodies.esp
+	[26]     problemsofsurvivor.esp
+	[27]     BetterOpenSeason.esp
+	[28]     BuildWithPurpose.esp
+	[29]     CombatZoneRestored.esp
+	[2A]     Eli_Armour_Compendium.esp
+	[2B]     INVB_WastelandDairy.esp
+	[2C]     Flashy_PersonalEssentials.esp
+	[2D]     SS2Extended.esp
+	[2E]     NightstrikerCreatureMod.esp
+	[2F]     Flashy_CrimeAndPunishment_GunForHire_Addon.esp
+	[30]     MMSquads.esp
+	[31]     Flashy_Infestations.esp
+	[32]     The Will of Atom.esp
+	[33]     MWRam7.esp
+	[34]     Boston Devious Helper.esp
+	[35]     CombinedArmsNV.esp
+	[36]     CombinedArmsEXPack.esp
+	[37]     1CAS_ServiceRifle.esp
+	[38]     Ak5C.esp
+	[39]     RealHandcuffs.esp
+	[3A]     Beggar_Whore.esp
+	[3B]     MakeYourOwnSynths.esp
+	[3C]     MK18.esp
+	[3D]     MWAN94.esp
+	[3E]     AER15.esp
+	[3F]     Tactical ACR.esp
+	[40]     Wana_SA58.esp
+	[41]     Winters_WaltherQ5.esp
+	[42]     BetterSettlers.esp
+	[43]     CWCreateABot.esp
+	[44]     FP_FamilyPlanningEnhanced.esp
+	[45]     INVB_WastelandOffspring.esp
+	[46]     MWM19.esp
+	[47]     GenderRatios.esp
+	[48]     FN502.esp
+	[49]     Hospitality.esp
+	[4A]     RU556.esp
+	[4B]     STREETSWEEPER.esp
+	[4C]     G3A3.esp
+	[4D]     SigMCX.esp
+	[4E]     AK400.esp
+	[4F]     AkaWaterWorld.esp
+	[50]     FnScar.esp
+	[51]     HHFootsteps.esp
+	[52]     MP7.esp
+	[53]     The Eyes Of Beauty.esp
+	[54]     BetterLivingThroughCumistry.esp
+	[55]     Winters_FJX-Imperium.esp
+	[56]     HKUSP9mm.esp
+	[57]     BH_Colt M1911.esp
+	[58]     SideAim.esp
+	[59]     3dscopes.esp
+	[5A]     AAC_HoneyBadger.esp
+	[5B]     AAF_AutonomyEnhanced.esp
+	[5C]     AAF_BadEnd_Animations.esp
+	[5D]     AAF_CreaturePack01.esp
+	[5E]     AAF_CreaturePack02DLC.esp
+	[5F]     CombatStripLite.esp
+	[60]     FP_SexualHarassment.esp
+	[61]     AFVPurgatory.esp
+	[62]     GetDirty.esp
+	[63]     AAF_Four-Play_Animations_Crazy6987.esp
+	[64]     AAF_GrayAnimations.esp
+	[65]     AAF_Spectators.esp
+	[66]     AAF_Violate.esp
+	[67]     Vadermania[AAF_anims].esp
+	[68]     AAFExtendedStats.esp
+	[69]     AAlpha12.esp
+	[6A]     UZK50gi.esp
+	[6B]     noveskeRecce.esp
+	[6C]     AKeVolk.esp
+	[6D]     American180nv.esp
+	[6E]     APC9.esp
+	[6F]     ASH127.esp
+	[70]     Atomic Lust.esp
+	[71]     MutilatedDeadBodies-Workshop.esp
+	[72]     Smoke-able Cigars.esp
+	[73]     BraveAnims.esp
+	[74]     BRN-180.esp
+	[75]     Vault81Etiquette.esp
+	[76]     Remington700.esp
+	[77]     Censor_Comments.esp
+	[78]     Clothes Pack 5 by DonEb14n.esp
+	[79]     Commonwealth Captives.esp
+	[7A]     CompanionStatus.esp
+	[7B]     Crackle.esp
+	[7C]     Crazy_Animation_Rugs.esp
+	[7D]     Crazy_Animations_Gun.esp
+	[7E]     HK XM8.esp
+	[7F]     CROSS_GoreCrits.esp
+	[80]     Crossbow.esp
+	[81]     MoreVaultRooms.esp
+	[82]     CRX.esp
+	[83]     Custom Moans.esp
+	[84]     DangerousNights.esp
+	[85]     dcc-bp-lol.esp
+	[86]     SPR300.esp
+	[87]     Synth Overhaul.esp
+	[88]     Escape from Boston - M200 Intervention.esp
+	[89]     ehtyeci_MPX.esp
+	[8A]     rxl_bp70_animations.esp
+	[8B]     Escape from Boston - Springfield M14.esp
+	[8C]     Escape from Boston - SRSA2.esp
+	[8D]     ESPExplorerFO4.esp
+	[8E]     Factor.esp
+	[8F]     GIAT_FAMAS.esp
+	[90]     Farelle_Animations.esp
+	[91]     MWVictor.esp
+	[92]     FO4_AnimationsByLeito.esp
+	[93]     FPAttributes.esp
+	[94]     FPAttributesHUD.esp
+	[95]     FPEDogAddon.esp
+	[96]     FPESuperMutantAddon.esp
+	[97]     TacticalTablet.esp
+	[98]     LooksMenu Customization Compendium.esp
+	[99]     Glock19x.esp
+	[9A]     HK416 A5.esp
+	[9B]     HK_MP5.esp
+	[9C]     HK_UMP.esp
+	[9D]     Howa Type-20.esp
+	[9E]     HRP_Mk23.esp
+	[9F]     HsProduktVhs2.esp
+	[A0]     ImiGalil.esp
+	[A1]     ImiUzi.esp
+	[A2]     InstituteReformation.esp
+	[A3]     Winters_ISO-Hemlock.esp
+	[A4]     Just Business.esp
+	[A5]     Kilo-141.esp
+	[A6]     L96A1.esp
+	[A7]     le666piercings.esp
+	[A8]     LenA_RadMorphing.esp
+	[A9]     THPoses.esp
+	[AA]     LewdTalks.esp
+	[AB]     M1A.esp
+	[AC]     M203.esp
+	[AD]     M2Agency.esp
+	[AE]     Mac10.esp
+	[AF]     Mike32.esp
+	[B0]     Mossberg500.esp
+	[B1]     Mutated Lust.esp
+	[B2]     MWIILimax.esp
+	[B3]     MWIIstango25.esp
+	[B4]     NZ41.esp
+	[B5]     PBW-LaserRCW.esp
+	[B6]     Prisoner Shackles.esp
+	[B7]     QBZ191.esp
+	[B8]     ReconPack.esp
+	[B9]     RemingtonM11.esp
+	[BA]     Rogg DD Items Manager.esp
+	[BB]     Rogg No-Strip Items Manager.esp
+	[BC]     RPD.esp
+	[BD]     Rufgt's Animations.esp
+	[BE]     RussianAssaultPack.esp
+	[BF]     SavageCabbage_Animations.esp
+	[C0]     Scopes.esp
+	[C1]     SettlementMenuManager.esp
+	[C2]     SettleObjExpandPack.esp
+	[C3]     SexEd.esp
+	[C4]     Snappable Clutter and Display.esp
+	[C5]     SR2.esp
+	[C6]     SSEX.esp
+	[C7]     Straw_UrbanLifeReloaded.esp
+	[C8]     WestTekTacticalOptics.esp
+	[C9]     TatsAfterRape.esp
+	[CA]     TCS sportswear.esp
+	[CB]     UAP Moans.esp
+	[CC]     VAFS Redux.esp
+	[CD]     Vargo52.esp
+	[CE]     Vioxsis_Strap-Ons.esp
+	[CF]     VtawWardrobe7.esp
+	[D0]     VtawWardrobe8.esp
+	[D1]     WhippedAndBranded.esp
+	[D2]     Winters_Taq-56.esp
+	[D3]     ZaZOut4.esp
+	[D4]     M9A3.esp
+	[D5]     Escape from Boston - G36.esp
+	[D6]     Escape from Boston - MSBS Grot B.esp
+	[D7]     Zenit.esp
+	[D8]     [ETH]ShieldIntegrationProject.esp
+	[D9]     SS2UI.esp
+	[DA]     Glock17-18.esp
+	[DB]     Groza.esp
+	[DC]     EndorsCustomCombatArmor.esp
+	[DD]     Stm_DiamondCityExpansion.esp
+	[DE]     Orphans.esp
+	[DF]     Raider Children.esp
+	[E0]     EnhancedLightsandFX.esp
+	[E1]     CompanionIvy_quest.esp
+	[E2]     CompanionIvy_Mags.esp
+	[E3]     CompanionIvy_Nuka.esp
+	[E4]     Patch Ivy-XDI.esp
+	[E5]     Companion_Ivy_RealSex_Mod.esp
+	[E6]     SameSexFemale.esp
+	[FE:000] ccfsvfo4001-modularmilitarybackpack.esl
+	[FE:001] ccfsvfo4002-midcenturymodern.esl
+	[FE:002] cceejfo4001-decorationpack.esl
+	[FE:003] ccbgsfo4045-advarccab.esl
+	[FE:004] ccfsvfo4003-slocum.esl
+	[FE:005] cceejfo4002-nuka.esl
+	[FE:006] ccqdrfo4001_powerarmorai.esl
+	[FE:007] ccrzrfo4002-disintegrate.esl
+	[FE:008] ccjvdfo4001-holiday.esl
+	[FE:009] ccbgsfo4040-vrworkshop01.esl
+	[FE:00A] ccfsvfo4005-vrdesertisland.esl
+	[FE:00B] ccfsvfo4006-vrwasteland.esl
+	[FE:00C] ccfsvfo4004-vrworkshopgnrplaza.esl
+	[FE:00D] BakaFramework.esm
+	[FE:00E] XDI.esm
+	[FE:00F] AAFThemes.esl
+	[FE:010] ammoUI_by_tooun.esl
+	[FE:011] Bememoth Separated Cart.esl
+	[FE:012] CleanInstitute.esl
+	[FE:013] BobbleAndMagsOutsideLoc2.esl
+	[FE:014] BrainDanceCP77.esl
+	[FE:015] Chun-Li.esl
+	[FE:016] EroticArt.esl
+	[FE:017] ClassicMysteriousStranger.esl
+	[FE:018] CROSS_CosmeticFramework.esm
+	[FE:019] CROSS_VertibirdFlightsuit.esl
+	[FE:01A] CROSS_Wasteland_Ronin.esl
+	[FE:01B] Cyber Arms.esl
+	[FE:01C] DanseHelmet.esl
+	[FE:01D] DesertOperator.esl
+	[FE:01E] Dogs can grab player.esl
+	[FE:01F] GrafsGlue.esl
+	[FE:020] HeatOutfits-LionelRossi.esl
+	[FE:021] HellraiserFO4-LR.esl
+	[FE:022] HiPolyFacesCompanionPlugin.esl
+	[FE:023] hologramtable.esl
+	[FE:024] IceStormsStilettoHighHeelBoots.esl
+	[FE:025] Inspectweapons.esl
+	[FE:026] KCI.esl
+	[FE:027] KillTips_by_tooun.esl
+	[FE:028] Ladder.esl
+	[FE:029] LARGE_Immersive_Molotovs_Flamer_Ruddy88ExtendedESL.esl
+	[FE:02A] laserproject2k.esl
+	[FE:02B] M84FlashBang.esl
+	[FE:02C] Mongrel Outfit.esl
+	[FE:02D] NaiShackRetextures.esl
+	[FE:02E] neutral_wildlife.esl
+	[FE:02F] NewWalls.esl
+	[FE:030] NukaWorldOpenSeasonExtend.esl
+	[FE:031] Petal_Gasmask.esl
+	[FE:032] PMOutfitPack.esl
+	[FE:033] Quick_Modification_Weapon_by_tooun.esl
+	[FE:034] Rusty Face Fix.esl
+	[FE:035] SettlersAsHairdressers.esl
+	[FE:036] SexyMaidFO4-LR.esl
+	[FE:037] Slave&ModelPinup.esl
+	[FE:038] sniperwave.esl
+	[FE:039] SS2WorkshopHUDOverride.esl
+	[FE:03A] StingWingPuppeteer.esl
+	[FE:03B] UneducatedReload.esm
+	[FE:03C] Vault-Tec111swimsuits.esl
+	[FE:03D] Wana_BlowtorchReplacer.esl
+	[FE:03E] WashOutThatCum.esl
+	[FE:03F] RecruitJulietteHart.esl
+	[FE:040] DixieCompanion.esl
+	[FE:041] RecruitCassie.esl
+	[FE:042] RecruitCora.esl
+	[FE:043] RecruitDixie.esl
+	[FE:044] RecruitEvan.esl
+	[FE:045] RecruitIsabelCruz.esl
+	[FE:046] RecruitIsabelCruz_EditableAppearancePatch.esl
+	[FE:047] RecruitJule.esl
+	[FE:048] RecruitKatelyn.esl
+	[FE:049] RecruitMiranda.esl
+	[FE:04A] RecruitSierra.esl
+	[FE:04B] RecruitTheMariner.esl
+	[FE:04C] WMIE.esl
+	[FE:04D] 00-CyberBreathingMask.esp
+	[FE:04E] 0000 - SlaveCollar.esp
+	[FE:04F] RBSynthTattooDistribution.esp
+	[FE:050] RealFemaleSynths.esp
+	[FE:051] AS_InstituteStations.esp
+	[FE:052] MetroReplacer.esp
+	[FE:053] Region Names on Save Files.esp
+	[FE:054] ScalingMolotovsDogmeatAWKCRTweakedESP.esp
+	[FE:055] XDI ServiceCost.esp
+	[FE:056] AUR_SanctuaryRepaired.esp
+	[FE:057] AUR_RebuildCastle.esp
+	[FE:058] AUR_RebuildGreentopNursery.esp
+	[FE:059] AUR_RebuildTaffington.esp
+	[FE:05A] AUR_RebuildCroupManor.esp
+	[FE:05B] AUR_RebuildTenpinesBluff.esp
+	[FE:05C] INVB_WastelandStory.esp
+	[FE:05D] Unused Map Markers - Cut Content Restored.esp
+	[FE:05E] M2_Flamethrower_2.2.esp
+	[FE:05F] Sanctuary Roof Navmesh Edit.esp
+	[FE:060] WastelandRags.esp
+	[FE:061] Cinematic Lensflares.esp
+	[FE:062] DeadInvisibleBodiesFix_ROF.esp
+	[FE:063] CROSS_InstituteExpeditionarySuit.esp
+	[FE:064] AR10Extension.esp
+	[FE:065] CourserCrusher.esp
+	[FE:066] SantuaryFenceFix.esp
+	[FE:067] CorvalhoWidowShotgun.esp
+	[FE:068] CROSS_MojaveManhunter.esp
+	[FE:069] AUR_SanctuaryRepaired_RuinedHouses.esp
+	[FE:06A] LString_Bow.esp
+	[FE:06B] DiverseChildren.esp
+	[FE:06C] Wolverine Project X.esp
+	[FE:06D] AUR_RebuildCroupManor_OpenWindows.esp
+	[FE:06E] AtomsGloryThreads.esp
+	[FE:06F] Livewire by Shiagur.esp
+	[FE:070] M1Garand.esp
+	[FE:071] Cyberout77.esp
+	[FE:072] Maxim9.esp
+	[FE:073] ElMudoStore.esp
+	[FE:074] ChildrenofBunkerHill.esp
+	[FE:075] DX_Banshee_Recon_Armor.esp
+	[FE:076] KSHairdos.esp
+	[FE:077] WinCowbowRepeater.esp
+	[FE:078] Springfield M1903.esp
+	[FE:079] ThompsonSMGReplacer.esp
+	[FE:07A] win1897.esp
+	[FE:07B] PuddleReflectionFix.esp
+	[FE:07C] Nora's Secret.esp
+	[FE:07D] Noras Secrets Shoe Hunt_KP.esp
+	[FE:07E] M1918A2.esp
+	[FE:07F] 10mmAnims.esp
+	[FE:080] WestTek.esp
+	[FE:081] 10mmAnimsWT.esp
+	[FE:082] 155mm Howitzer M1.esp
+	[FE:083] 1CAS_ServiceRifle 1stP PA Footstep Fix.esp
+	[FE:084] WestTek_Tweaks.esp
+	[FE:085] [Ehren]_Converse_Heels_FO4.esp
+	[FE:086] [ETH] TFS EquipSounds.esp
+	[FE:087] [MGSV] Naked Fatiques.esp
+	[FE:088] AAF_Dirty_Sex.esp
+	[FE:089] AAF_Violate_DLC_Patch.esp
+	[FE:08A] AAF_Violate_Feral_Animations.esp
+	[FE:08B] AAF_Violate_Nightstriker_Patch.esp
+	[FE:08C] AAlpha12_TR.esp
+	[FE:08D] AdjustableSpeedCeilingFansReplacer.esp
+	[FE:08E] AER15_DamageModifiers.esp
+	[FE:08F] Ak5C_TacticalReloadPatch.esp
+	[FE:090] FHLeveledListIntegration.esp
+	[FE:091] AKeVolk_TacticalReloadPatch.esp
+	[FE:092] AKSounds.esp
+	[FE:093] Alex_Stripper_Pole.esp
+	[FE:094] Alex_Stripper_Pole_2.esp
+	[FE:095] Alex_Stripper_Pole_Working_Hours.esp
+	[FE:096] AllinAccessory.esp
+	[FE:097] Allow Companions Into The Institute.esp
+	[FE:098] AmmunitionPlantPatch.esp
+	[FE:099] AnimatedIngestibles.esp
+	[FE:09A] AnimatedInjestibles_RobotFix.esp
+	[FE:09B] AnimChemRedux.esp
+	[FE:09C] MK18 Armory Project.esp
+	[FE:09D] AnotherMK18Addon.esp
+	[FE:09E] ApalLeotard.esp
+	[FE:09F] APC9_LeveledListPatch.esp
+	[FE:0A0] APC9AP.esp
+	[FE:0A1] ARESAppleseed.esp
+	[FE:0A2] ArmA 3 Gatekeep Vests.esp
+	[FE:0A3] ArmorPlate.esp
+	[FE:0A4] ASA.esp
+	[FE:0A5] ASOAstinsSkinOverlays(Blk).esp
+	[FE:0A6] ASOAstinsSkinOverlays(Brands).esp
+	[FE:0A7] ASOAstinsSkinOverlays(HP).esp
+	[FE:0A8] Assaultron Grab Skills.esp
+	[FE:0A9] AtomGirlDirtySkin.esp
+	[FE:0AA] AutoMines.esp
+	[FE:0AB] AVBMGReplace.esp
+	[FE:0AC] AVBMusket.esp
+	[FE:0AD] AVBPipeGunsReplace.esp
+	[FE:0AE] AzarPonytailHairstyles.esp
+	[FE:0AF] Balisong.esp
+	[FE:0B0] BAM-BetterArmoryMod.esp
+	[FE:0B1] BetterSettlersNoLollygagging.esp
+	[FE:0B2] BetterSettlersCCAPack2.0.esp
+	[FE:0B3] Binoculars.esp
+	[FE:0B4] Binoculars_Camos.esp
+	[FE:0B5] MyCart_Biohazard.esp
+	[FE:0B6] BiohazardSuit - Forged.esp
+	[FE:0B7] Black Widow Suit.esp
+	[FE:0B8] BlackWidow.esp
+	[FE:0B9] PinUp illuminated Poster.esp
+	[FE:0BA] BlockedAttacksDealDamage.esp
+	[FE:0BB] BLTC-SC_Patch.esp
+	[FE:0BC] BobbleGirl.esp
+	[FE:0BD] BraveAnims_Fix.esp
+	[FE:0BE] BRN-180 Tactical Reload Patch.esp
+	[FE:0BF] Broken Mask.esp
+	[FE:0C0] Bryson's LaTeX FaNTaSY v2.esp
+	[FE:0C1] Bullet Impact Overhaul.esp
+	[FE:0C2] BZW_MW_Domino_Spy.esp
+	[FE:0C3] BZW_MW_Mara.esp
+	[FE:0C4] C5Kev's Animated Living Armor Outfits V3 For HHS.esp
+	[FE:0C5] C5Kev's Luda's Animated Parasite Armor For HHS.esp
+	[FE:0C6] C5Kev's School Girl Grognak For HHS.esp
+	[FE:0C7] MetroReplacer_VaultTecDLC.esp
+	[FE:0C8] MTM-VaultAnnounceWarning.esp
+	[FE:0C9] Nuka-Girl Pin-Up.esp
+	[FE:0CA] Cammy Tactical Suit.esp
+	[FE:0CB] Canted Sight for MCX.esp
+	[FE:0CC] Canted Sight for MK18.esp
+	[FE:0CD] CazadorML.esp
+	[FE:0CE] InstituteTurboplasmaRifle.esp
+	[FE:0CF] Canted Sight for R700.esp
+	[FE:0D0] Canted Sight For SREP.esp
+	[FE:0D1] Casio_W59.esp
+	[FE:0D2] ChildrenofGoodneighbor.esp
+	[FE:0D3] Catwoman.esp
+	[FE:0D4] CCMMB_CutContent.esp
+	[FE:0D5] ChainBikini.esp
+	[FE:0D6] Charming High Heels.esp
+	[FE:0D7] Child Posters.esp
+	[FE:0D8] Classic Combat Armor.esp
+	[FE:0D9] Clothes Pack 2 by DonEb14n.esp
+	[FE:0DA] Clothes Pack 3 by DonEb14n.esp
+	[FE:0DB] Clothes Pack 4 by DonEb14n.esp
+	[FE:0DC] CoAFanaticsGirl.esp
+	[FE:0DD] COCO Lingerie.esp
+	[FE:0DE] Collection of tops v2.0.esp
+	[FE:0DF] ComMoisturizer.esp
+	[FE:0E0] ComMoisturizer_GlowPatch.esp
+	[FE:0E1] Companion Infinite Ammo.esp
+	[FE:0E2] SimpleAttackReactions.esp
+	[FE:0E3] WK-StaggerMod.esp
+	[FE:0E4] Companion Thoughts Overhaul.esp
+	[FE:0E5] CompetitionSwimsuit.esp
+	[FE:0E6] Computer Console illuminated.esp
+	[FE:0E7] ConditionBoy.esp
+	[FE:0E8] Converse_Shoes_FO4.esp
+	[FE:0E9] Covid Mask.esp
+	[FE:0EA] Craftable Armor Size - Fix Material Requirements.esp
+	[FE:0EB] Craftable Armor Size.esp
+	[FE:0EC] Craftable Bad End Furniture.esp
+	[FE:0ED] Crimsomrider's Accessories.esp
+	[FE:0EE] Crimsomrider's Augmentation.esp
+	[FE:0EF] Crimsomrider's Military Pin-Up Outfit.esp
+	[FE:0F0] CROSS_BallisticMask.esp
+	[FE:0F1] CROSS_Blades.esp
+	[FE:0F2] CROSS_BrotherhoodRecon.esp
+	[FE:0F3] CROSS_CoA.esp
+	[FE:0F4] CROSS_CourserStrigidae.esp
+	[FE:0F5] CROSS_Cybernetics.esp
+	[FE:0F6] CROSS_Cybernetics_NoRobotFootStepSounds.esp
+	[FE:0F7] CROSS_eyepatch.esp
+	[FE:0F8] CROSS_Eyewear_CircularGlasses.esp
+	[FE:0F9] CROSS_FireworksCannon.esp
+	[FE:0FA] CROSS_Gear.esp
+	[FE:0FB] CROSS_GoreCrits_FarHarborPatch.esp
+	[FE:0FC] CROSS_Jetpack.esp
+	[FE:0FD] CROSS_ReducedLaserSmoke.esp
+	[FE:0FE] CROSS_Techmask.esp
+	[FE:0FF] CROSS_Uni_BosUniform.esp
+	[FE:100] CROSS_Uni_Headset.esp
+	[FE:101] CROSS_Uni_Headset_LeveledLists.esp
+	[FE:102] CROSS_Uni_Scarf.esp
+	[FE:103] SM wants to sit too.esp
+	[FE:104] CumOverlays.esp
+	[FE:105] CustomCamera.esp
+	[FE:106] SM More Weapon Level Lists.esp
+	[FE:107] Tribal Forged.esp
+	[FE:108] MikeMooresMCAM.esp
+	[FE:109] Cyber Out_MikeMoore.esp
+	[FE:10A] Cyberpunk 2077 Moxes.esp
+	[FE:10B] Cybersuit.esp
+	[FE:10C] CyberTattoo2287.esp
+	[FE:10D] dD-Action Ragdoll Force.esp
+	[FE:10E] DD_LegAnimOverride.esp
+	[FE:10F] DeadBodyCollision.esp
+	[FE:110] Deathclaw Grab Skills.esp
+	[FE:111] Deathclaw_nude.esp
+	[FE:112] DeftHands.esp
+	[FE:113] Defy.esp
+	[FE:114] DelyteC&E.esp
+	[FE:115] Desert Punk Raiders.esp
+	[FE:116] Devious Devices Face Morphs.esp
+	[FE:117] Devious Devices Slave Heels Pack.esp
+	[FE:118] Dickys Pinup Outfit.esp
+	[FE:119] Dissident's Bandana.esp
+	[FE:11A] DLC Timing.esp
+	[FE:11B] DogmeatHelmetsAndHats.esp
+	[FE:11C] dogmeatscribehat.esp
+	[FE:11D] DonEb14n Clothes pack.esp
+	[FE:11E] drm1981_PinkPrincessOutfit.esp
+	[FE:11F] DX Chem I Care Outfit.esp
+	[FE:120] DX Commonwealth Mini Dresses.esp
+	[FE:121] DX Commonwealth Shorts.esp
+	[FE:122] DX Courser X-92 Power Suit.esp
+	[FE:123] DX Vault Girl Shorts.esp
+	[FE:124] DX_Atago.esp
+	[FE:125] DX_Atom_Girl_Outfit.esp
+	[FE:126] DX_Bikini_Collection_pt1.esp
+	[FE:127] DX_Bikini_Collection_pt2.esp
+	[FE:128] DX_Bikini_Collection_pt3.esp
+	[FE:129] DX_Bikini_Collection_pt4.esp
+	[FE:12A] DX_DarkMistress.esp
+	[FE:12B] DX_FetishFashion_Part1.esp
+	[FE:12C] DX_FetishFashion_Part2.esp
+	[FE:12D] DX_Harley_Quinn_Outfit.esp
+	[FE:12E] Shino Clothes.esp
+	[FE:12F] ShinoClosplay Spider Gwen.esp
+	[FE:130] DX_Leotard_Collection.esp
+	[FE:131] DX_Pornstar_Fashion.esp
+	[FE:132] DX_Predator.esp
+	[FE:133] DX_RedRibbon.esp
+	[FE:134] DX_Rogue_Prototype.esp
+	[FE:135] DX_StarTrek_TOS_Uniform.esp
+	[FE:136] DX_StLouis.esp
+	[FE:137] EFB M200 - Close Sights Pack.esp
+	[FE:138] el_precursorsuit.esp
+	[FE:139] Eli Armor Compendium AE Patch.esp
+	[FE:13A] Eli_AlecusRogueHD.esp
+	[FE:13B] Eli_NukaStuff.esp
+	[FE:13C] Eli_Steampunk Gunslinger.esp
+	[FE:13D] Elzee Human Grab Attacks - More melee styles.esp
+	[FE:13E] Elzee Human Grab Attacks.esp
+	[FE:13F] Elzee Jolly Item Sounds.esp
+	[FE:140] Elzee Recoil Shake.esp
+	[FE:141] Elzee Stomp.esp
+	[FE:142] Enclave_Operator.esp
+	[FE:143] Enemy Footstep Overhaul.esp
+	[FE:144] ErectionFix_SilverPerv.esp
+	[FE:145] Evan_Modular Kitchen.esp
+	[FE:146] EveryonesBestFriend.esp
+	[FE:147] ExoFrame.esp
+	[FE:148] eXoMagazineShelf.esp
+	[FE:149] Explosives Expanded Leveled List.esp
+	[FE:14A] Explosives Expanded.esp
+	[FE:14B] F76PlagueDoctorMask.esp
+	[FE:14C] FAC_paintings.esp
+	[FE:14D] Factor_TacReload.esp
+	[FE:14E] Famas_Addon.esp
+	[FE:14F] Female Tactical Armor.esp
+	[FE:150] FemaleSuperMutant.esp
+	[FE:151] FemsheppingsLastOutfitPack.esp
+	[FE:152] Fennec_addons.esp
+	[FE:153] Feral Ghoul Bite Skills.esp
+	[FE:154] Fetish_Ballerina_Boots.esp
+	[FE:155] Flashy_GunForHire_KillableChildrenPatch.esp
+	[FE:156] FN502_TR.esp
+	[FE:157] FnScar_LvlListPatch.esp
+	[FE:158] FO4HHS_AAF.esp
+	[FE:159] FO4PiercingsSED7.esp
+	[FE:15A] FOLON_YouGotALicenseForThat.esp
+	[FE:15B] FP_FamilyPlanningEnhanced_DLC_Doctors_Addon.esp
+	[FE:15C] MiscHairstyle.esp
+	[FE:15D] Fractured Hartfield.esp
+	[FE:15E] Franky_Swimsuit.esp
+	[FE:15F] FrenchMaidFO4-CBBE.esp
+	[FE:160] FurbyCollar.esp
+	[FE:161] FurbyFlowerCrown.esp
+	[FE:162] FusionGirl.esp
+	[FE:163] FusionGirlLooksMenu.esp
+	[FE:164] G3A3 1stP PA Footstep Fix.esp
+	[FE:165] G3A3_AnimationUpdate.esp
+	[FE:166] G3A3LvlListPatch.esp
+	[FE:167] GenderedAutomatrons.esp
+	[FE:168] GenderedAutomatrons_Automatron_Ass.esp
+	[FE:169] GenderedAutomatrons_FarHarbor.esp
+	[FE:16A] GenderedAutomatrons_Nuka.esp
+	[FE:16B] GenderedAutomatrons_Nuka_Ass.esp
+	[FE:16C] GenderedAutomatrons_Vanilla_Ass.esp
+	[FE:16D] ModdableRobotSettlers.esp
+	[FE:16E] GenderedAutomatrons_Vanilla_UF4P.esp
+	[FE:16F] Ghouls Revamped.esp
+	[FE:170] GhoulsCombatDogs.esp
+	[FE:171] Girls Workshop.esp
+	[FE:172] GiTS Motoko Outfit.esp
+	[FE:173] GITS_suit_by_OniNigma.esp
+	[FE:174] GLaDOS Power Armor SFX.esp
+	[FE:175] Glock 19X - Pistol 1stP PA Footstep Fix.esp
+	[FE:176] GrafsSecurityFences.esp
+	[FE:177] grenadeflipoffsound.esp
+	[FE:178] Gunner_Operator.esp
+	[FE:179] GW1stPersonFix.esp
+	[FE:17A] HairVariations_Conversions.esp
+	[FE:17B] HairVariations_Elegant.esp
+	[FE:17C] HairVariations_FairyTails.esp
+	[FE:17D] HairVariations_Sophisticate.esp
+	[FE:17E] HairVariations_YoungAtHeart.esp
+	[FE:17F] HeatOutfits-FusionGirlConv.esp
+	[FE:180] HeatOutfits-FusionGirl-AKWCR Patch.esp
+	[FE:181] HighHeels.esp
+	[FE:182] HighlightConsoleReference.esp
+	[FE:183] HiPolyFaces.esp
+	[FE:184] Hit Em Where It Hurts- FH & NW.esp
+	[FE:185] HK XM8 Levelled List.esp
+	[FE:186] HK XM8 Tactical Reload Patch.esp
+	[FE:187] MK18 Armory Project 2.esp
+	[FE:188] MK18_Deluxe.esp
+	[FE:189] HK416_TacticalReloadPatch.esp
+	[FE:18A] HK_MP5 1stP PA Footstep Fix.esp
+	[FE:18B] HKUSP9mmLvlList.esp
+	[FE:18C] HN66-SiriusArmor.esp
+	[FE:18D] HN66Fo4_Nails.esp
+	[FE:18E] Home Plate Workbench - Mechanists Lair Workbench.esp
+	[FE:18F] Homemaker - Streetlights Use Passive Power.esp
+	[FE:190] HoneyBadger Expansion.esp
+	[FE:191] Hot and Horny Wastelands Posters.esp
+	[FE:192] Howa TR Patch.esp
+	[FE:193] ImiGalilLvlListPatch.esp
+	[FE:194] ImiUzi_Addon.esp
+	[FE:195] ImiUziLvlList.esp
+	[FE:196] immersiveglasses.esp
+	[FE:197] InnTankTop.esp
+	[FE:198] InstituteNoFog.esp
+	[FE:199] InstituteRifleDebulked.esp
+	[FE:19A] InstitWeapPosit.esp
+	[FE:19B] IOD_Merc_Gear.esp
+	[FE:19C] ISO-Hemlock_LL.esp
+	[FE:19D] ISO-Hemlock_TRPatch.esp
+	[FE:19E] ISOLE.esp
+	[FE:19F] Jed's Mk18 Addon.esp
+	[FE:1A0] Jump Grunt.esp
+	[FE:1A1] Jumpsuit.esp
+	[FE:1A2] K9TacticalHarness.esp
+	[FE:1A3] KaoruHornyHarness01.esp
+	[FE:1A4] KatanaMask.esp
+	[FE:1A5] KawaiiWaifuOutfits.esp
+	[FE:1A6] Kharneth_Chain_Lingerie.esp
+	[FE:1A7] Kharneth_Slave_Clothes.esp
+	[FE:1A8] rpampas.esp
+	[FE:1A9] KKYpampas.esp
+	[FE:1AA] KziitdAnimationPoses.esp
+	[FE:1AB] L96A1_Additions.esp
+	[FE:1AC] Lacy Underwear.esp
+	[FE:1AD] LadyKillerBed.esp
+	[FE:1AE] Lara's Wetsuit.esp
+	[FE:1AF] LaserGarand.esp
+	[FE:1B0] Lazmans_highheels_outfits.esp
+	[FE:1B1] LewdMarks.esp
+	[FE:1B2] Live Dismemberment - Mental.esp
+	[FE:1B3] LMBTOverlays.esp
+	[FE:1B4] lnrLMFO4AllInOne-AdditionalPubicHairOverlays.esp
+	[FE:1B5] lnrLMFO4AllInOne-PubesForeverOverlays.esp
+	[FE:1B6] LongRangeBulletHoles.esp
+	[FE:1B7] LookingStranger.esp
+	[FE:1B8] LooksMenu.esp
+	[FE:1B9] loosumRageArmor.esp
+	[FE:1BA] Louis Vuitton Platform Boots V3.esp
+	[FE:1BB] Louis Vuitton Platform Boots V4.esp
+	[FE:1BC] Louis Vuitton Platform Sandals V1.esp
+	[FE:1BD] Louis Vuitton Platform Sandals V3.esp
+	[FE:1BE] Louis Vuitton Sneakers V1.esp
+	[FE:1BF] M1A 1stP PA Footstep Fix.esp
+	[FE:1C0] M2AgencyLvlListPatch.esp
+	[FE:1C1] MAC10 1stP PA Footstep Fix.esp
+	[FE:1C2] Maxim9_TacReload.esp
+	[FE:1C3] Melee Impact Overhaul.esp
+	[FE:1C4] MGRemesh.esp
+	[FE:1C5] MichaelSilver.esp
+	[FE:1C6] m32mglfix.esp
+	[FE:1C7] Modern - Oakley Gloves.esp
+	[FE:1C8] ModularVaultSuit.esp
+	[FE:1C9] ModularVaultSuit - ColourSchemesAddon.esp
+	[FE:1CA] MoleratAndRadscorpionsTunnelingInCellsBugFix.esp
+	[FE:1CB] MonnoBikini.esp
+	[FE:1CC] MonnosTopAndBottom.esp
+	[FE:1CD] MoreRealisticMovement.esp
+	[FE:1CE] Mossberg500_OlTrusty.esp
+	[FE:1CF] Motoko Hair.esp
+	[FE:1D0] MPX_TacReload.esp
+	[FE:1D1] Muzzle Flash.esp
+	[FE:1D2] MWHitFX - Automatron Patch.esp
+	[FE:1D3] MWHitFx.esp
+	[FE:1D4] MWoW.esp
+	[FE:1D5] MYLadyKillerBed.esp
+	[FE:1D6] NanoSuit.esp
+	[FE:1D7] NanoSuit_AWKCR_AE.esp
+	[FE:1D8] Natural Grasses & Groundcovers.esp
+	[FE:1D9] Navel Piercing Collection S1.esp
+	[FE:1DA] NegativeAffinityIsPositiveAffinity.esp
+	[FE:1DB] NewerMind43 Nano Suit.esp
+	[FE:1DC] Nexus_PMC.esp
+	[FE:1DD] NezzarLingerieCollection.esp
+	[FE:1DE] NezzarUltimateCollection.esp
+	[FE:1DF] NiTeNull - Shade Girl Leather Outfits.esp
+	[FE:1E0] NK_HaydeeOutfit.esp
+	[FE:1E1] No Bloody Mess.esp
+	[FE:1E2] NoAffinityCooldown.esp
+	[FE:1E3] NookyMonster DPO Textures ESL.esp
+	[FE:1E4] noveskeRecceLL.esp
+	[FE:1E5] Nox Outfit.esp
+	[FE:1E6] Nuka_Bear_Explosives.esp
+	[FE:1E7] NZ41LL.esp
+	[FE:1E8] NZ41SA.esp
+	[FE:1E9] NZ41STS.esp
+	[FE:1EA] NZ41SA_STS.esp
+	[FE:1EB] NZ41TR.esp
+	[FE:1EC] Obi's Bunny Girl.esp
+	[FE:1ED] Obi's BunnyGirl EXTRA.esp
+	[FE:1EE] Obi's Cowboy Hat.esp
+	[FE:1EF] Obi's Kinky Collection.esp
+	[FE:1F0] Obi's Vampirella.esp
+	[FE:1F1] ObiGothGirlPack.esp
+	[FE:1F2] ObiJewelry.esp
+	[FE:1F3] ObiRandom.esp
+	[FE:1F4] ObiSportsWear.esp
+	[FE:1F5] oDo_CasketMags.esp
+	[FE:1F6] ODT - GIAT FAMAS Skin Pack Vol. 1.esp
+	[FE:1F7] OMEGA - Wrist PDA.esp
+	[FE:1F8] Order_of_Fenrir_Clothing_-_Handler.esp
+	[FE:1F9] OsareUndies.esp
+	[FE:1FA] P2Outfit.esp
+	[FE:1FB] Paintings Kinky.esp
+	[FE:1FC] ParkCoventry.esp
+	[FE:1FD] PD_VisualReload.esp
+	[FE:1FE] Penetration Framework.esp
+	[FE:1FF] PenPos.esp
+	[FE:200] PentagramMask.esp
+	[FE:201] PhotoMode.esp
+	[FE:202] Physics Sound Overhaul.esp
+	[FE:203] PinUp Poster.esp
+	[FE:204] PIP_Watch.esp
+	[FE:205] PMC Operators Pack.esp
+	[FE:206] PMC_extended.esp
+	[FE:207] Post Nuclear Girl.esp
+	[FE:208] PowerArmorLite.esp
+	[FE:209] ProblemsOfSurvivor_Voiced_1.5.2.esp
+	[FE:20A] Project Elimination - PMC Combat Suit.esp
+	[FE:20B] ProvocativePerks.esp
+	[FE:20C] QBZ191_TR_patch.esp
+	[FE:20D] QBZ191_YLArms_Pack.esp
+	[FE:20E] Radscorpion Stab Skill.esp
+	[FE:20F] Radstag Grab Skill.esp
+	[FE:210] RaiderPerksFromKillingLeaders.esp
+	[FE:211] RB_FwahGlasses.esp
+	[FE:212] RealHandcuffs_AWKCR_Compatibility.esp
+	[FE:213] RealHandcuffs_DD_Servitron_Compatibility.esp
+	[FE:214] RealHandcuffs_JB_Compatibility.esp
+	[FE:215] Realistic_conversations.esp
+	[FE:216] Remington700 1stP PA Footstep Fix.esp
+	[FE:217] Remington700_Addon.esp
+	[FE:218] RemingtonM11_LvlListPatch.esp
+	[FE:219] RemingtonM11_TacticalReloadPatch.esp
+	[FE:21A] RemoteExplosives.esp
+	[FE:21B] Render Tattoos.esp
+	[FE:21C] RetroInstitute.esp
+	[FE:21D] rfortaleza2.esp
+	[FE:21E] rfortaleza2_AE.esp
+	[FE:21F] RU556Armouryprojectv3.esp
+	[FE:220] RutahTattooPack_FO4.esp
+	[FE:221] sarahRageArmor.esp
+	[FE:222] saya_gasmask.esp
+	[FE:223] SBR_Ak5C_Extended.esp
+	[FE:224] SBRPatch-SeeThroughScopes_SideAim_Compatibility.esp
+	[FE:225] Servitron Vertibird Patch.esp
+	[FE:226] SexyOutfit.esp
+	[FE:227] Shadbase Paintings.esp
+	[FE:228] ShadeArmorIV.esp
+	[FE:229] ShellRain.esp
+	[FE:22A] Sheva's Tribal Outfit.esp
+	[FE:22B] Shino Bikini Pack.esp
+	[FE:22C] Shino MSG.esp
+	[FE:22D] Shino Vault Pack.esp
+	[FE:22E] Shino_Artist's Attire_Outfit.esp
+	[FE:22F] Shino_Sailor_Moon.esp
+	[FE:230] SigMCX_MaterialPack.esp
+	[FE:231] SIGMCXArmoryProject.esp
+	[FE:232] SimpleFinishersRE.esp
+	[FE:233] SimSettlements2ChildSupport.esp
+	[FE:234] SlaveTattoos.esp
+	[FE:235] SM More Weapon Anims - All Dlc.esp
+	[FE:236] smart_mannequins.esp
+	[FE:237] SMBehemoth Loincloth.esp
+	[FE:238] SnapdragonAnimations.esp
+	[FE:239] Socks Fashion.esp
+	[FE:23A] Sporty Underwear.esp
+	[FE:23B] SpouseRing.esp
+	[FE:23C] SPR300_LvlList.esp
+	[FE:23D] SS2 Better Outfits.esp
+	[FE:23E] SS2_DLCSettlerPatch.esp
+	[FE:23F] SS2_RobotMod.esp
+	[FE:240] SS2_RobotMod_CWBotsPatch.esp
+	[FE:241] SS2Extended_OutfitInjectionPatch.esp
+	[FE:242] Stimpaks help you breathe.esp
+	[FE:243] Svbtats.esp
+	[FE:244] TAC.esp
+	[FE:245] Tactical ACR_TacticalReloadPatch.esp
+	[FE:246] Tactical_Army_Knife.esp
+	[FE:247] TacticalHuman.esp
+	[FE:248] tao_catsuit.esp
+	[FE:249] tao_catsuit_awkcr.esp
+	[FE:24A] tao_expanded.esp
+	[FE:24B] tao_expanded_heels_sound.esp
+	[FE:24C] TCDOverlays.esp
+	[FE:24D] TCDOverlaysSET.esp
+	[FE:24E] TechWear.esp
+	[FE:24F] TERA_Police.esp
+	[FE:250] TERAChristmasOutfits.esp
+	[FE:251] TERANurseUniform.esp
+	[FE:252] TERAPirate.esp
+	[FE:253] TERAPunk.esp
+	[FE:254] TERARogue.esp
+	[FE:255] The Most Specialist.esp
+	[FE:256] TheKite_CaitSet.esp
+	[FE:257] TheKite_Caitset_ReplacerAddon.esp
+	[FE:258] TheKite_CharredVaultSuit.esp
+	[FE:259] TheKite_HCD_SynthUniform.esp
+	[FE:25A] TheKite_MilitiaWoman.esp
+	[FE:25B] TheKite_Railroad_Handmaiden.esp
+	[FE:25C] TheKite_ScoopDigger.esp
+	[FE:25D] TNR Shoulder Lamp.esp
+	[FE:25E] Tone_OverQueen.esp
+	[FE:25F] ToughGirlAttire.esp
+	[FE:260] Toxic Raider Armour.esp
+	[FE:261] TrueStormsFO4-FarHarbor.esp
+	[FE:262] TrueStormsFO4-NukaWorld-FH-Compat.esp
+	[FE:263] TrueStorms_AN76_Compat.esp
+	[FE:264] TrueStormsFO4 - Region Names Patch.esp
+	[FE:265] TrueStormsFO4-EarlierSunsets.esp
+	[FE:266] TrueStormsFO4-EarlierSunsetsFH.esp
+	[FE:267] TTMerch.esp
+	[FE:268] TwoToneGitsRetexture.esp
+	[FE:269] UmbrellaMuzzle.esp
+	[FE:26A] Unique Mythic Deathclaws.esp
+	[FE:26B] UnknownZombie_bandanaFitsK9Harness.esp
+	[FE:26C] UZK50Gi-TR.esp
+	[FE:26D] UZK50GiLL.esp
+	[FE:26E] Vagazzle!.esp
+	[FE:26F] Valentine NOIR.esp
+	[FE:270] ValentineCases.esp
+	[FE:271] Vargo52TR.esp
+	[FE:272] Vault-Tec Jumpsuits Redux - Standalone Expansion.esp
+	[FE:273] Vault-Tec Workshop Overhaul.esp
+	[FE:274] Vault-tec brighter lights.esp
+	[FE:275] VaultPlus.esp
+	[FE:276] VaultPlus_MVR.esp
+	[FE:277] VeryNaughtyPaintings.esp
+	[FE:278] Vhs2 ATTCH EXTENDED.esp
+	[FE:279] VltElevatorDLC.esp
+	[FE:27A] vneck.esp
+	[FE:27B] Vtaw2022XmasF.esp
+	[FE:27C] VtawBunny.esp
+	[FE:27D] VtawCammy.esp
+	[FE:27E] VtawFiend.esp
+	[FE:27F] VtawHalfLifeAlyx.esp
+	[FE:280] VtawJumpsuit.esp
+	[FE:281] VtawKitanaN.esp
+	[FE:282] VtawLady.esp
+	[FE:283] VtawMiranda.esp
+	[FE:284] VtawMoon.esp
+	[FE:285] VtawSaraBellum.esp
+	[FE:286] VtawSonya.esp
+	[FE:287] VtawUtilityPack1.esp
+	[FE:288] VtawWardrobe1.esp
+	[FE:289] VtawWardrobe2.esp
+	[FE:28A] VtawWardrobe4.esp
+	[FE:28B] VtawWardrobe5.esp
+	[FE:28C] VtawWardrobe5BeltsFix.esp
+	[FE:28D] VtawWardrobe6.esp
+	[FE:28E] WaltherQ5_LevelList_Inject.esp
+	[FE:28F] WanaSA58ArmoryProject.esp
+	[FE:290] Wasteland Ronin Helmet.esp
+	[FE:291] Wasteland Workshop - Unique Mythic Deathclaws Patch.esp
+	[FE:292] wasterArmor.esp
+	[FE:293] Waxwing.esp
+	[FE:294] WeaponWallRacks.esp
+	[FE:295] Wearable Trophies.esp
+	[FE:296] WidowShotgun_LLInjector.esp
+	[FE:297] wikicap.esp
+	[FE:298] winryTop.esp
+	[FE:299] Winters_FJX-Imperium_LL.esp
+	[FE:29A] Winters_FJX-Imperium_TR_1.3.esp
+	[FE:29B] Winters_ISO-Hemlock_Expanded.esp
+	[FE:29C] Winters_Taq-56_LL.esp
+	[FE:29D] Winters_Taq-56_TR.esp
+	[FE:29E] WmkActiveEffects.esp
+	[FE:29F] ws_pubes.esp
+	[FE:2A0] WSA_WoodenSupportAdditions.esp
+	[FE:2A1] Yaoguai grab skill.esp
+	[FE:2A2] YogHarleyBat.esp
+	[FE:2A3] Zaz Particle Effects.esp
+	[FE:2A4] Zipsuit.esp
+	[FE:2A5] zWGirlClothSimply.esp
+	[FE:2A6] TS BoS Uniform Overhaul.esp
+	[FE:2A7] Zipsuit Transparent FG.esp
+	[FE:2A8] CROSS_2077.esp
+	[FE:2A9] MK18-01.esp
+	[FE:2AA] MK18-02.esp
+	[FE:2AB] M9A3_LvlLists.esp
+	[FE:2AC] m9a3_03.esp
+	[FE:2AD] EFB - MSBS Grot-B TR Patch.esp
+	[FE:2AE] Escape from Boston - G36_TacticalReloadPatch.esp
+	[FE:2AF] Zenit_TacticalReloadPatch.esp
+	[FE:2B0] BTSUDataGloves.esp
+	[FE:2B1] GerberDingDongHammer.esp
+	[FE:2B2] PRIMA_Unix5000.esp
+	[FE:2B3] AUR_SanctuaryRepaired_Workshop.esp
+	[FE:2B4] CROSS_SynthGore.esp
+	[FE:2B5] NewShacksBGD00.esp
+	[FE:2B6] Vault-Tec Armor.esp
+	[FE:2B7] Vault-Tec Mask.esp
+	[FE:2B8] Vault-Tec Swimsuit.esp
+	[FE:2B9] Vault-Tec Armor Extension.esp
+	[FE:2BA] BH_Colt M1911_LvlList.esp
+	[FE:2BB] BH_Colt M1911_TR Patch.esp
+	[FE:2BC] AnotherOneCasingEdits.esp
+	[FE:2BD] NoRandomGunShellEjectDirection.esp
+	[FE:2BE] SIGMCXArmoryProject2.esp
+	[FE:2BF] Helios Outfit.esp
+	[FE:2C0] Stagger.esp
+	[FE:2C1] VAFS Redux DLC Patch.esp
+	[FE:2C2] NukaRadBans.esp
+	[FE:2C3] VaultTec Chest Armor.esp
+	[FE:2C4] Eli_Vault-Tec Outfits.esp
+	[FE:2C5] Vault Tec Misc Armors.esp
+	[FE:2C6] [ETH] SIPLS.esp
+	[FE:2C7] C5Kev's Vault-Tec Phase II For HHS.esp
+	[FE:2C8] TheKite_VTS.esp
+	[FE:2C9] Dodge.esp
+	[FE:2CA] SimpleDeathReactions.esp
+	[FE:2CB] RecruitHaylen.esp
+	[FE:2CC] RecruitHaylen_EditableAppearancePatch.esp
+	[FE:2CD] F4lloutNV - Killcam.esp
+	[FE:2CE] AtomCatsSettlersPlusWorkshop.esp
+	[FE:2CF] ChCl.esp
+	[FE:2D0] K198Recruit.esp
+	[FE:2D1] RecruitAmeliaAndOldManStockton.esp
+	[FE:2D2] RecruitAmnesiac.esp
+	[FE:2D3] RecruitAmnesiac_EditableAppearancePatch.esp
+	[FE:2D4] RecruitArlen.esp
+	[FE:2D5] RecruitDarla.esp
+	[FE:2D6] RecruitDarla_EditableAppearancePatch.esp
+	[FE:2D7] RecruitKat.esp
+	[FE:2D8] RecruitMac.esp
+	[FE:2D9] RecruitPhyllis.esp
+	[FE:2DA] RecruitRaiders.esp
+	[FE:2DB] RecruitRESettlers.esp
+	[FE:2DC] RecruitShellyTiller.esp
+	[FE:2DD] RecruitSmallBerthaAndTony.esp
+	[FE:2DE] RecruitTimothy.esp
+	[FE:2DF] RecruitTraderRylee.esp
+	[FE:2E0] RecruitVirgil.esp
+	[FE:2E1] RecruitWoundedDog.esp
+	[FE:2E2] RRPW.esp
+	[FE:2E3] Vault81Recruitment.esp
+	[FE:2E4] RecruitMagnolia.esp
+	[FE:2E5] Groza_FTSPacth.esp
+	[FE:2E6] Groza_TR.esp
+	[FE:2E7] Type_81_Rifle - TR Patch.esp
+	[FE:2E8] Type_81_Rifle - Update.esp
+	[FE:2E9] Type_81_Rifle.esp
+	[FE:2EA] Type_81_Rifle_SA.esp
+	[FE:2EB] BrutalDeath.esp
+	[FE:2EC] TacticalTablet_LMCC.esp
+	[FE:2ED] TacticalReloadVanilla.esp
+	[FE:2EE] TacticalReloadDLC.esp
+	[FE:2EF] AAC_HoneyBadger_TacticalReloadPatch.esp
+	[FE:2F0] AK400_TacticalReloadPatch.esp
+	[FE:2F1] American180nv_TacticalReloadPatch.esp
+	[FE:2F2] APC9_TacticalReloadPatch.esp
+	[FE:2F3] CombinedArmsNV_TacticalReloadPatch.esp
+	[FE:2F4] FnScar_TacticalReload.esp
+	[FE:2F5] GIAT_FAMAS_TacticalReloadPatch.esp
+	[FE:2F6] Glock19x_TacticalReloadPatch.esp
+	[FE:2F7] HitmanNukaworldAK_TacticalReloadPatch.esp
+	[FE:2F8] HK_MP5_TacticalReloadPatch.esp
+	[FE:2F9] HK_UMP_TacticalReloadPatch.esp
+	[FE:2FA] HKUSP9mmTacReload.esp
+	[FE:2FB] HRP_Mk23_TacticalReloadPatch.esp
+	[FE:2FC] HsProduktVhs2_TacticalReloadPatch.esp
+	[FE:2FD] ImiGalil_TacticalReloadPatch.esp
+	[FE:2FE] ImiUzi_TacticalReloadPatch.esp
+	[FE:2FF] L96A1_TacReload.esp
+	[FE:300] M1918A2_TR.esp
+	[FE:301] M1A_TacticalReloadPatch.esp
+	[FE:302] M1Garand_TacticalReloadPatch.esp
+	[FE:303] Mac10_TacReload.esp
+	[FE:304] MK18_TacticalReloadPatch.esp
+	[FE:305] MP7_TacticalReloadPatch.esp
+	[FE:306] ReconPack_TacticalReloadPatch.esp
+	[FE:307] Remington700_TR.esp
+	[FE:308] RU556_TacReload.esp
+	[FE:309] SigMCX_TacticalReload.esp
+	[FE:30A] SPR300_TacticalReload.esp
+	[FE:30B] SREP_TacReloadPatch.esp
+	[FE:30C] SRSA2_TacReload.esp
+	[FE:30D] EFB - Springfield M14 TR Patch.esp
+	[FE:30E] ThompsonSMGReplacer_TacticalReloadPatch.esp
+	[FE:30F] Wana SA58 TR.esp
+	[FE:310] fortaleza2.esp
+	[FE:311] Fortaleza2-armor.esp
+	[FE:312] Fortaleza2-armor-CS.esp
+	[FE:313] Fortaleza2-armor-basic_colors.esp
+	[FE:314] fortaleza2-outfit.esp
+	[FE:315] fortaleza2-outfit-CS.esp
+	[FE:316] fortaleza2-outfit-basic_colors.esp
+	[FE:317] fortaleza2-mechanist.esp
+	[FE:318] fortaleza2-trauma.esp
+	[FE:319] fortaleza2-outfit-gunnerarmy.esp
+	[FE:31A] fortaleza2-armor-gunnerarmy.esp
+	[FE:31B] fortaleza2-outfit-bos.esp
+	[FE:31C] fortaleza2-armor-bos.esp
+	[FE:31D] fortaleza2-outfit-institute.esp
+	[FE:31E] fortaleza2-armor-institute.esp
+	[FE:31F] fortaleza2-outfit-minutemen.esp
+	[FE:320] fortaleza2-armor-minutemen.esp
+	[FE:321] fortaleza2-outfit-nukacola.esp
+	[FE:322] fortaleza2-armor-nukacola.esp
+	[FE:323] fortaleza2-outfit-raider.esp
+	[FE:324] fortaleza2-armor-raider.esp
+	[FE:325] fortaleza2-outfit-railroad.esp
+	[FE:326] fortaleza2-armor-railroad.esp
+	[FE:327] fortaleza2-outfit-vaulttec.esp
+	[FE:328] fortaleza2-armor-vaulttec.esp
+	[FE:329] 1CAS_ServiceRifle_SREP_AR10_TR_SA.esp
+	[FE:32A] AAC_HoneyBadger_SA.esp
+	[FE:32B] FnScar_SA_TR.esp
+	[FE:32C] G3A3_SA_TR.esp
+	[FE:32D] HK_MP5_SA_AP.esp
+	[FE:32E] MK18_SA_AP_TR_CantedSightsAddon.esp
+	[FE:32F] MWAN94_SA_TR.esp
+	[FE:330] SigMCX_SA_TR_ADD.esp
+	[FE:331] RU556_AP_TR_SA.esp
+	[FE:332] Remington700_SA_TR.esp
+	[FE:333] EndorsCustomCombatArmor_SynthOverhaul.esp
+	[FE:334] EndorsCustomCombatArmor_AE.esp
+	[FE:335] EndorsCustomCombatArmor_VaultSuitDLC_AE.esp
+	[FE:336] EndorsCustomCombatArmor_CAS_CCA_Cost.esp
+	[FE:337] EndorsCustomCombatArmor_CADog.esp
+	[FE:338] EndorsCustomCombatArmor_CFA.esp
+	[FE:339] HAAS Core Replacer AE Edition.esp
+	[FE:33A] HAAS Automatron Replacer AE Edition.esp
+	[FE:33B] HAAS Far Harbor Replacer AE Edition.esp
+	[FE:33C] HAAS Nuka World Replacer AE Edition.esp
+	[FE:33D] HACS Feathered Dress AE.esp
+	[FE:33E] WorkshopFramework_ScriptOverride.esp
+	[FE:33F] Stm_DiamondCityExpansion_x_LowerVolume.esp
+	[FE:340] DC_ExpansionBrothel.esp
+	[FE:341] XDIServiceCost - DCBrothel.esp
+	[FE:342] HN66Fo4_EasyGirl_BS.esp
+	[FE:343] HN66Fo4_TRS.esp
+	[FE:344] ImmersiveGlassesPatches.esp
+	[FE:345] Killable Children.esp
+	[FE:346] RealFemaleSynths-KillableChildren_Patch.esp
+	[FE:347] KC-DC.esp
+	[FE:348] Keep Radiants In Commonwealth.esp
+	[FE:349] Enough About the Settlements Preston.esp
+	[FE:34A] SS2_GunForHire_Patch.esp
+	[FE:34B] Flashy_PIE_patch.esp
+	[FE:34C] PA-Quick Animations.esp
+	[FE:34D] NoPerkNuka.esp
+	[FE:34E] Idiot Slut.esp
+	[FE:34F] SettlersPatch.esp
+	[FE:350] Wasteland Heroines Replacer All in One_2.0.esp
+	[FE:351] WWIIWeaponReplacers.esp
+	[FE:352] CombinedArmsWeaponDisabler.esp
+	[FE:353] AmmoCompatibilityPatch.esp
+	[FE:354] 50 Cal Penetrator Demonstration.esp
+	[FE:355] CombinedArmsEXP Real Time Cover Penetration.esp
+	[FE:356] AUR_RebuildCastle_Previs.esp
+	[FE:357] AUR_SanctuaryRepaired_Previs.esp
+	[FE:358] AUR_RebuildTenpinesBluff_Previs.esp
+	[FE:359] AUR_RebuildGreentopNursery_Previs.esp
+	[FE:35A] AUR_RebuildTaffington_Previs.esp
+	[FE:35B] AUR_RebuildCroupManor_Previs.esp

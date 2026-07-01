@@ -1,0 +1,835 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.26.2
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF795061AD9 Fallout4.exe+0191AD9
+
+	[Compatibility]
+		F4EE: true
+	[Fixes]
+		ActorIsHostileToActor: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		GreyMovies: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+	[Patches]
+		Achievements: false
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: true
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: -1
+		MemoryManager: true
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 10 Pro v10.0.19041
+	CPU: GenuineIntel Intel(R) Core(TM) i5-10600KF CPU @ 4.10GHz
+	GPU #1: Nvidia GP104 [GeForce GTX 1070]
+	GPU #2: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 13.22 GB/15.91 GB
+
+PROBABLE CALL STACK:
+	[ 0] 0x7FF795061AD9 Fallout4.exe+0191AD9 -> 106846+0xE9
+	[ 1] 0x7FF7976DB363 Fallout4.exe+280B363 -> 1548054+0xD3
+	[ 2] 0x7FF7976DA80E Fallout4.exe+280A80E -> 887475+0x2E
+	[ 3] 0x7FFCFA029005 Buffout4.dll+0099005
+	[ 4] 0x7FF79771E0BF Fallout4.exe+284E0BF -> 1138818+0x16F
+	[ 5] 0x7FF79771F565 Fallout4.exe+284F565 -> 718911+0x215
+	[ 6] 0x7FF7977275EF Fallout4.exe+28575EF -> 984743+0x16F
+	[ 7] 0x7FF795C0CCBF Fallout4.exe+0D3CCBF -> 408683+0xDF
+	[ 8] 0x7FF795C08906 Fallout4.exe+0D38906 -> 1075087+0x206
+	[ 9] 0x7FF795C09551 Fallout4.exe+0D39551 -> 633524+0x6F1
+	[10] 0x7FF795C06E10 Fallout4.exe+0D36E10 -> 1125396+0xC0
+	[11] 0x7FF795C05950 Fallout4.exe+0D35950 -> 668528+0x20
+	[12] 0x7FF797807157 Fallout4.exe+2937157 -> 1104651+0x143
+	[13] 0x7FFD60AF7034 KERNEL32.DLL+0017034
+	[14] 0x7FFD613A2651    ntdll.dll+0052651
+
+REGISTERS:
+	RAX 0x2162AC8588C      (void*)
+	RCX 0x216FD4B0180      (void*)
+	RDX 0x3F7A192A         (size_t)
+	RBX 0x216EC052B90      (void*)
+	RSP 0x581E6FF450       (void*)
+	RBP 0x1                (size_t)
+	RSI 0x0                (size_t)
+	RDI 0x7FF79A9830E0     (void* -> Fallout4.exe+5AB30E0)
+	R8  0x21738732F20      (BSMultiBoundAABB*)
+	R9  0x2162AC85B84      (void*)
+	R10 0x216F06F6080      (BSMultiStreamInstanceTriShape*)
+		Name: "Forest001.001_Untitled.011"
+	R11 0xCA4B08CA         (size_t)
+	R12 0x7FF79B5F3810     (void* -> Fallout4.exe+6723810)
+	R13 0x7FF79B5F3530     (void* -> Fallout4.exe+6723530)
+	R14 0x2161EC9F6D8      (void*)
+	R15 0x2155CED5300      (TESObjectCELL*)
+		File: "PRP.esp"
+		Flags: 0x0004000B
+		Form ID: 0x0600319B
+		Form Type: 63
+		Full Name: ""
+
+STACK:
+	[RSP+0  ] 0x216EC052B90      (void*)
+	[RSP+8  ] 0x7FF79A9830E0     (void* -> Fallout4.exe+5AB30E0)
+	[RSP+10 ] 0x7FF79B5F38A8     (void* -> Fallout4.exe+67238A8)
+	[RSP+18 ] 0x0                (size_t)
+	[RSP+20 ] 0x7FF795279200     (void* -> Fallout4.exe+03A9200)
+	[RSP+28 ] 0x215739C3D80      (void*)
+	[RSP+30 ] 0x215739C3D80      (void*)
+	[RSP+38 ] 0x7FF7976DB363     (void* -> Fallout4.exe+280B363)
+	[RSP+40 ] 0x215739C37A0      (char*) "8n"
+	[RSP+48 ] 0x7FF77B7B60A6     (size_t)
+	[RSP+50 ] 0x6006E38          (size_t)
+	[RSP+58 ] 0x0                (size_t)
+	[RSP+60 ] 0x216DBB496C0      (void*)
+	[RSP+68 ] 0x3FFF             (size_t)
+	[RSP+70 ] 0x216DBB4B030      (void*)
+	[RSP+78 ] 0x7FF7976DA80E     (void* -> Fallout4.exe+280A80E)
+	[RSP+80 ] 0x2169EB59351      (size_t)
+	[RSP+88 ] 0x216DBB4B030      (void*)
+	[RSP+90 ] 0x0                (size_t)
+	[RSP+98 ] 0x21573F6F3CC      (void*)
+	[RSP+A0 ] 0x216DBB496C0      (void*)
+	[RSP+A8 ] 0x7FFCFA029005     (void* -> Buffout4.dll+0099005)
+	[RSP+B0 ] 0x216DBB4B030      (void*)
+	[RSP+B8 ] 0x216DBB496C0      (void*)
+	[RSP+C0 ] 0x216DBB4B030      (void*)
+	[RSP+C8 ] 0x216DBB4B030      (void*)
+	[RSP+D0 ] 0x21500000000      (void*)
+	[RSP+D8 ] 0x21573F6F3CC      (void*)
+	[RSP+E0 ] 0x215FD7A9940      (void*)
+	[RSP+E8 ] 0x7FFCFA1BD048     (void* -> Buffout4.dll+022D048)
+	[RSP+F0 ] 0x7FFCFA1BD098     (void* -> Buffout4.dll+022D098)
+	[RSP+F8 ] 0xE33E97012723     (size_t)
+	[RSP+100] 0x7FF79B5F3530     (void* -> Fallout4.exe+6723530)
+	[RSP+108] 0x0                (size_t)
+	[RSP+110] 0x7FF79B5F33C0     (void* -> Fallout4.exe+67233C0)
+	[RSP+118] 0x7FF79B5F33A8     (void* -> Fallout4.exe+67233A8)
+	[RSP+120] 0x18               (size_t)
+	[RSP+128] 0x7FF79771E0BF     (void* -> Fallout4.exe+284E0BF)
+	[RSP+130] 0x2157378E780      (ShadowSceneNode*)
+		Name: "shadow scene node"
+	[RSP+138] 0x7FF79B5F3810     (void* -> Fallout4.exe+6723810)
+	[RSP+140] 0x215737A3100      (BSPortalGraphEntry*)
+	[RSP+148] 0x2157378E780      (ShadowSceneNode*)
+		Name: "shadow scene node"
+	[RSP+150] 0x581E6FF620       (void*)
+	[RSP+158] 0x2159EDBBAC0      (NiCamera*)
+		Name: "WorldRoot Camera"
+	[RSP+160] 0xFFFFFFFF         (size_t)
+	[RSP+168] 0x2157378E780      (ShadowSceneNode*)
+		Name: "shadow scene node"
+	[RSP+170] 0x3F69B6FB00000018 (size_t)
+	[RSP+178] 0xC7129F18BE2BAD9A (size_t)
+	[RSP+180] 0x215737A3100      (BSPortalGraphEntry*)
+	[RSP+188] 0xC89A703C3E2BAD9A (size_t)
+	[RSP+190] 0x215658F4470      (void*)
+	[RSP+198] 0xC72D4B00BDFB8233 (size_t)
+	[RSP+1A0] 0x3ED6059EBF665EB6 (size_t)
+	[RSP+1A8] 0xC62BFAADBDFEC9FB (size_t)
+	[RSP+1B0] 0x7FF79B5F33A8     (void* -> Fallout4.exe+67233A8)
+	[RSP+1B8] 0x0                (size_t)
+	[RSP+1C0] 0x215737A3168      (void*)
+	[RSP+1C8] 0x215737A3100      (BSPortalGraphEntry*)
+	[RSP+1D0] 0x0                (size_t)
+	[RSP+1D8] 0x0                (size_t)
+	[RSP+1E0] 0x21681EB1600      (void*)
+	[RSP+1E8] 0x7FF79771F565     (void* -> Fallout4.exe+284F565)
+	[RSP+1F0] 0x215737C7B00      (BSGeometryListCullingProcess*)
+	[RSP+1F8] 0x7FF79B5F33C0     (void* -> Fallout4.exe+67233C0)
+	[RSP+200] 0x7FF79B5F3530     (void* -> Fallout4.exe+6723530)
+	[RSP+208] 0x1                (size_t)
+	[RSP+210] 0x7FF79B5F33A8     (void* -> Fallout4.exe+67233A8)
+	[RSP+218] 0x7FF7976AAA01     (void* -> Fallout4.exe+27DAA01)
+	[RSP+220] 0x7FF740000000     (size_t)
+	[RSP+228] 0x215FD7A8280      (void*)
+	[RSP+230] 0x42BE0000         (size_t)
+	[RSP+238] 0x215658F4470      (void*)
+	[RSP+240] 0x0                (size_t)
+	[RSP+248] 0x0                (size_t)
+	[RSP+250] 0x2                (size_t)
+	[RSP+258] 0x7FF7977275EF     (void* -> Fallout4.exe+28575EF)
+	[RSP+260] 0x0                (size_t)
+	[RSP+268] 0x0                (size_t)
+	[RSP+270] 0x0                (size_t)
+	[RSP+278] 0x0                (size_t)
+	[RSP+280] 0x581E6FF6E0       (void*)
+	[RSP+288] 0x7FF700000000     (size_t)
+	[RSP+290] 0x3F4E5D31BF105D59 (size_t)
+	[RSP+298] 0xBE37AF0F         (size_t)
+	[RSP+2A0] 0x3F69B6FBBEBE7CA8 (size_t)
+	[RSP+2A8] 0xBE2BAD9A         (size_t)
+	[RSP+2B0] 0xC72DAEE1C605482F (size_t)
+	[RSP+2B8] 0x445386D7         (size_t)
+	[RSP+2C0] 0xC72DA613C6055BAA (size_t)
+	[RSP+2C8] 0x44528B0D         (size_t)
+	[RSP+2D0] 0x215737C7D80      (Main*)
+	[RSP+2D8] 0x7FF795C0CCBF     (void* -> Fallout4.exe+0D3CCBF)
+	[RSP+2E0] 0x2                (size_t)
+	[RSP+2E8] 0x0                (size_t)
+	[RSP+2F0] 0x0                (size_t)
+	[RSP+2F8] 0x215737C7D80      (Main*)
+	[RSP+300] 0x0                (size_t)
+	[RSP+308] 0x7FF795C08906     (void* -> Fallout4.exe+0D38906)
+	[RSP+310] 0x215737C7D80      (Main*)
+	[RSP+318] 0x0                (size_t)
+	[RSP+320] 0x1                (size_t)
+	[RSP+328] 0x0                (size_t)
+	[RSP+330] 0x2155E798F00      (Actor*)
+		Object Reference: 
+			File: ""
+			Flags: 0x00000008
+			Form ID: 0xFF0095D8
+			Form Type: 45
+		File: "DLCNukaWorld.esm"
+		Flags: 0x0040000B
+		Form ID: 0x060536CE
+		Form Type: 65
+	[RSP+338] 0x7FF794F63A1B     (void* -> Fallout4.exe+0093A1B)
+	[RSP+340] 0x0                (size_t)
+	[RSP+348] 0x581E6FF8B8       (void*)
+	[RSP+350] 0x2157378E780      (ShadowSceneNode*)
+		Name: "shadow scene node"
+	[RSP+358] 0x7FF794FCE71F     (void* -> Fallout4.exe+00FE71F)
+	[RSP+360] 0x216083F74D0      (void*)
+	[RSP+368] 0x7FF7953507E3     (void* -> Fallout4.exe+04807E3)
+	[RSP+370] 0x581E6FF819       (void*)
+	[RSP+378] 0x0                (size_t)
+	[RSP+380] 0x9C0              (size_t)
+	[RSP+388] 0x0                (size_t)
+	[RSP+390] 0x581E6FF860       (void*)
+	[RSP+398] 0x7FF795C11B0A     (void* -> Fallout4.exe+0D41B0A)
+	[RSP+3A0] 0x215658F3AB0      (void*)
+	[RSP+3A8] 0x2155DC45530      (void*)
+	[RSP+3B0] 0x215737C7D88      (void*)
+	[RSP+3B8] 0x581E6FF8B8       (void*)
+	[RSP+3C0] 0xC4F03B2045E11F34 (size_t)
+	[RSP+3C8] 0x4321F4C8         (size_t)
+	[RSP+3D0] 0x4A095440         (size_t)
+	[RSP+3D8] 0x0                (size_t)
+	[RSP+3E0] 0x2                (size_t)
+	[RSP+3E8] 0x7FF795C0AA75     (void* -> Fallout4.exe+0D3AA75)
+	[RSP+3F0] 0x2155DC45530      (void*)
+	[RSP+3F8] 0x2155DC45534      (void*)
+	[RSP+400] 0x0                (size_t)
+	[RSP+408] 0x2155E798800      (Actor*)
+		Object Reference: 
+			File: ""
+			Flags: 0x00000008
+			Form ID: 0xFF009595
+			Form Type: 45
+		File: "DLCNukaWorld.esm"
+		Flags: 0x0040000B
+		Form ID: 0x060536DA
+		Form Type: 65
+	[RSP+410] 0x581E6FF8B0       (void*)
+	[RSP+418] 0x215737C7D80      (Main*)
+	[RSP+420] 0x42BE0000         (size_t)
+	[RSP+428] 0x0                (size_t)
+	[RSP+430] 0x0                (size_t)
+	[RSP+438] 0x0                (size_t)
+	[RSP+440] 0x215737C7D80      (Main*)
+	[RSP+448] 0x1                (size_t)
+	[RSP+450] 0x215737C7D80      (Main*)
+	[RSP+458] 0x7FF795C09551     (void* -> Fallout4.exe+0D39551)
+	[RSP+460] 0x7FF79A936DD0     (UI*)
+	[RSP+468] 0x2844B3           (size_t)
+	[RSP+470] 0x7FF79A936DD0     (UI*)
+	[RSP+478] 0x4948             (size_t)
+	[RSP+480] 0x1                (size_t)
+	[RSP+488] 0x0                (size_t)
+	[RSP+490] 0x0                (size_t)
+	[RSP+498] 0x0                (size_t)
+	[RSP+4A0] 0x0                (size_t)
+	[RSP+4A8] 0x7FF795C06E10     (void* -> Fallout4.exe+0D36E10)
+	[RSP+4B0] 0x130842           (size_t)
+	[RSP+4B8] 0xA                (size_t)
+	[RSP+4C0] 0xA                (size_t)
+	[RSP+4C8] 0x0                (size_t)
+	[RSP+4D0] 0x0                (size_t)
+	[RSP+4D8] 0x7FF795C05950     (void* -> Fallout4.exe+0D35950)
+	[RSP+4E0] 0x215658F7A23      (void*)
+	[RSP+4E8] 0x130842           (size_t)
+	[RSP+4F0] 0x62EF2123         (size_t)
+	[RSP+4F8] 0x215658F7A23      (void*)
+	[RSP+500] 0x0                (size_t)
+	[RSP+508] 0x7FF797807157     (void* -> Fallout4.exe+2937157)
+	[RSP+510] 0x215658F7A22      (char*) """
+	[RSP+518] 0xA                (size_t)
+	[RSP+520] 0x0                (size_t)
+	[RSP+528] 0xA                (size_t)
+	[RSP+530] 0x0                (size_t)
+	[RSP+538] 0x215658F7A23      (void*)
+	[RSP+540] 0x0                (size_t)
+	[RSP+548] 0x7FFD60AF7034     (void* -> KERNEL32.DLL+0017034)
+	[RSP+550] 0x0                (size_t)
+	[RSP+558] 0x0                (size_t)
+	[RSP+560] 0x0                (size_t)
+	[RSP+568] 0x0                (size_t)
+	[RSP+570] 0x0                (size_t)
+	[RSP+578] 0x7FFD613A2651     (void* -> ntdll.dll+0052651)
+	[RSP+580] 0x0                (size_t)
+	[RSP+588] 0x0                (size_t)
+	[RSP+590] 0x0                (size_t)
+	[RSP+598] 0x0                (size_t)
+	[RSP+5A0] 0x0                (size_t)
+	[RSP+5A8] 0x0                (size_t)
+	[RSP+5B0] 0xFD70EF1300000000 (size_t)
+	[RSP+5B8] 0x0                (size_t)
+	[RSP+5C0] 0x0                (size_t)
+	[RSP+5C8] 0x7FFD5F0FFE70     (void* -> KERNELBASE.dll+010FE70)
+	[RSP+5D0] 0x581E6FE540       (void*)
+	[RSP+5D8] 0xE22C60000FFFB44F (size_t)
+	[RSP+5E0] 0x7FFDA27F1163     (size_t)
+	[RSP+5E8] 0x581E6FE540       (void*)
+	[RSP+5F0] 0x0                (size_t)
+	[RSP+5F8] 0x0                (size_t)
+	[RSP+600] 0x0                (size_t)
+	[RSP+608] 0x0                (size_t)
+	[RSP+610] 0x0                (size_t)
+	[RSP+618] 0x0                (size_t)
+	[RSP+620] 0x0                (size_t)
+	[RSP+628] 0x0                (size_t)
+	[RSP+630] 0x0                (size_t)
+	[RSP+638] 0x0                (size_t)
+	[RSP+640] 0x0                (size_t)
+	[RSP+648] 0x0                (size_t)
+	[RSP+650] 0x0                (size_t)
+	[RSP+658] 0x0                (size_t)
+	[RSP+660] 0x0                (size_t)
+	[RSP+668] 0x0                (size_t)
+	[RSP+670] 0x0                (size_t)
+	[RSP+678] 0x0                (size_t)
+	[RSP+680] 0x0                (size_t)
+	[RSP+688] 0x0                (size_t)
+	[RSP+690] 0x0                (size_t)
+	[RSP+698] 0x0                (size_t)
+	[RSP+6A0] 0x0                (size_t)
+	[RSP+6A8] 0x0                (size_t)
+	[RSP+6B0] 0x0                (size_t)
+	[RSP+6B8] 0x0                (size_t)
+	[RSP+6C0] 0x0                (size_t)
+	[RSP+6C8] 0x0                (size_t)
+	[RSP+6D0] 0x0                (size_t)
+	[RSP+6D8] 0x0                (size_t)
+	[RSP+6E0] 0x0                (size_t)
+	[RSP+6E8] 0x0                (size_t)
+	[RSP+6F0] 0x0                (size_t)
+	[RSP+6F8] 0x0                (size_t)
+	[RSP+700] 0x0                (size_t)
+	[RSP+708] 0x0                (size_t)
+	[RSP+710] 0x0                (size_t)
+	[RSP+718] 0x0                (size_t)
+	[RSP+720] 0x0                (size_t)
+	[RSP+728] 0x0                (size_t)
+	[RSP+730] 0x0                (size_t)
+	[RSP+738] 0x0                (size_t)
+	[RSP+740] 0x0                (size_t)
+	[RSP+748] 0x0                (size_t)
+	[RSP+750] 0x0                (size_t)
+	[RSP+758] 0x0                (size_t)
+	[RSP+760] 0x0                (size_t)
+	[RSP+768] 0x0                (size_t)
+	[RSP+770] 0x0                (size_t)
+	[RSP+778] 0x0                (size_t)
+	[RSP+780] 0x0                (size_t)
+	[RSP+788] 0x0                (size_t)
+	[RSP+790] 0x0                (size_t)
+	[RSP+798] 0x0                (size_t)
+	[RSP+7A0] 0x0                (size_t)
+	[RSP+7A8] 0x0                (size_t)
+	[RSP+7B0] 0x0                (size_t)
+	[RSP+7B8] 0x0                (size_t)
+	[RSP+7C0] 0x0                (size_t)
+	[RSP+7C8] 0x0                (size_t)
+	[RSP+7D0] 0x0                (size_t)
+	[RSP+7D8] 0x0                (size_t)
+	[RSP+7E0] 0x0                (size_t)
+	[RSP+7E8] 0x0                (size_t)
+	[RSP+7F0] 0x0                (size_t)
+	[RSP+7F8] 0x0                (size_t)
+	[RSP+800] 0x0                (size_t)
+	[RSP+808] 0x0                (size_t)
+	[RSP+810] 0x0                (size_t)
+	[RSP+818] 0x0                (size_t)
+	[RSP+820] 0x0                (size_t)
+	[RSP+828] 0x0                (size_t)
+	[RSP+830] 0x0                (size_t)
+	[RSP+838] 0x0                (size_t)
+	[RSP+840] 0x0                (size_t)
+	[RSP+848] 0x0                (size_t)
+	[RSP+850] 0x0                (size_t)
+	[RSP+858] 0x0                (size_t)
+	[RSP+860] 0x0                (size_t)
+	[RSP+868] 0x0                (size_t)
+	[RSP+870] 0x0                (size_t)
+	[RSP+878] 0x0                (size_t)
+	[RSP+880] 0x0                (size_t)
+	[RSP+888] 0x0                (size_t)
+	[RSP+890] 0x0                (size_t)
+	[RSP+898] 0x0                (size_t)
+	[RSP+8A0] 0x0                (size_t)
+	[RSP+8A8] 0x0                (size_t)
+	[RSP+8B0] 0x0                (size_t)
+	[RSP+8B8] 0x0                (size_t)
+	[RSP+8C0] 0x0                (size_t)
+	[RSP+8C8] 0x0                (size_t)
+	[RSP+8D0] 0x0                (size_t)
+	[RSP+8D8] 0x0                (size_t)
+	[RSP+8E0] 0x0                (size_t)
+	[RSP+8E8] 0x0                (size_t)
+	[RSP+8F0] 0x0                (size_t)
+	[RSP+8F8] 0x0                (size_t)
+	[RSP+900] 0x0                (size_t)
+	[RSP+908] 0x0                (size_t)
+	[RSP+910] 0x0                (size_t)
+	[RSP+918] 0x0                (size_t)
+	[RSP+920] 0x0                (size_t)
+	[RSP+928] 0x0                (size_t)
+	[RSP+930] 0x0                (size_t)
+	[RSP+938] 0x0                (size_t)
+	[RSP+940] 0x0                (size_t)
+	[RSP+948] 0x0                (size_t)
+	[RSP+950] 0x0                (size_t)
+	[RSP+958] 0x0                (size_t)
+	[RSP+960] 0x0                (size_t)
+	[RSP+968] 0x0                (size_t)
+	[RSP+970] 0x0                (size_t)
+	[RSP+978] 0x0                (size_t)
+	[RSP+980] 0x0                (size_t)
+	[RSP+988] 0x0                (size_t)
+	[RSP+990] 0x0                (size_t)
+	[RSP+998] 0x0                (size_t)
+	[RSP+9A0] 0x0                (size_t)
+	[RSP+9A8] 0x0                (size_t)
+	[RSP+9B0] 0x0                (size_t)
+	[RSP+9B8] 0x0                (size_t)
+	[RSP+9C0] 0x0                (size_t)
+	[RSP+9C8] 0x0                (size_t)
+	[RSP+9D0] 0x0                (size_t)
+	[RSP+9D8] 0x0                (size_t)
+	[RSP+9E0] 0x0                (size_t)
+	[RSP+9E8] 0x0                (size_t)
+	[RSP+9F0] 0x0                (size_t)
+	[RSP+9F8] 0x0                (size_t)
+	[RSP+A00] 0x0                (size_t)
+	[RSP+A08] 0x0                (size_t)
+	[RSP+A10] 0x0                (size_t)
+	[RSP+A18] 0x0                (size_t)
+	[RSP+A20] 0x0                (size_t)
+	[RSP+A28] 0x0                (size_t)
+	[RSP+A30] 0x0                (size_t)
+	[RSP+A38] 0x0                (size_t)
+	[RSP+A40] 0x0                (size_t)
+	[RSP+A48] 0x0                (size_t)
+	[RSP+A50] 0x0                (size_t)
+	[RSP+A58] 0x0                (size_t)
+	[RSP+A60] 0x0                (size_t)
+	[RSP+A68] 0x0                (size_t)
+	[RSP+A70] 0x0                (size_t)
+	[RSP+A78] 0x0                (size_t)
+	[RSP+A80] 0x0                (size_t)
+	[RSP+A88] 0x0                (size_t)
+	[RSP+A90] 0x0                (size_t)
+	[RSP+A98] 0x0                (size_t)
+	[RSP+AA0] 0x0                (size_t)
+	[RSP+AA8] 0x0                (size_t)
+	[RSP+AB0] 0x0                (size_t)
+	[RSP+AB8] 0x0                (size_t)
+	[RSP+AC0] 0x0                (size_t)
+	[RSP+AC8] 0x0                (size_t)
+	[RSP+AD0] 0x0                (size_t)
+	[RSP+AD8] 0x0                (size_t)
+	[RSP+AE0] 0x0                (size_t)
+	[RSP+AE8] 0x0                (size_t)
+	[RSP+AF0] 0x0                (size_t)
+	[RSP+AF8] 0x0                (size_t)
+	[RSP+B00] 0x0                (size_t)
+	[RSP+B08] 0x0                (size_t)
+	[RSP+B10] 0x0                (size_t)
+	[RSP+B18] 0x0                (size_t)
+	[RSP+B20] 0x0                (size_t)
+	[RSP+B28] 0x0                (size_t)
+	[RSP+B30] 0x0                (size_t)
+	[RSP+B38] 0x0                (size_t)
+	[RSP+B40] 0x0                (size_t)
+	[RSP+B48] 0x0                (size_t)
+	[RSP+B50] 0x0                (size_t)
+	[RSP+B58] 0x0                (size_t)
+	[RSP+B60] 0x0                (size_t)
+	[RSP+B68] 0x0                (size_t)
+	[RSP+B70] 0x0                (size_t)
+	[RSP+B78] 0x0                (size_t)
+	[RSP+B80] 0x0                (size_t)
+	[RSP+B88] 0x0                (size_t)
+	[RSP+B90] 0x0                (size_t)
+	[RSP+B98] 0x0                (size_t)
+	[RSP+BA0] 0x0                (size_t)
+	[RSP+BA8] 0x0                (size_t)
+
+MODULES:
+
+F4SE PLUGINS:
+	BakaFramework.dll
+	BakaScrapHeap.dll v1.3
+	BetterConsole.dll
+	Buffout4.dll v1.26.2
+	ClassicHolsteredWeapons.dll
+	crafting_highlight_fix.dll
+	encounter_zone_recalculation.dll
+	ESPExplorer.dll
+	f4ee.dll
+	HighFPSPhysicsFix.dll
+	mcm.dll
+	po3_SpellPerkItemDistributorF4.dll v2
+	PowerGridTools.dll
+	PRKF.dll
+	SideAim.dll v1.4
+	UneducatedShooter.dll v1
+	UnlimitedFastTravel.dll
+	UnlimitedSurvivalMode.dll
+	WmkActiveEffects.dll
+	wsfw_identifier.dll
+	XDI.dll
+
+PLUGINS:
+	[00]     Fallout4.esm
+	[01]     DLCRobot.esm
+	[02]     DLCworkshop01.esm
+	[03]     DLCCoast.esm
+	[04]     DLCworkshop02.esm
+	[05]     DLCworkshop03.esm
+	[06]     DLCNukaWorld.esm
+	[07]     cczsef04001-bhouse.esm
+	[08]     cctosfo4001-neosky.esm
+	[09]     cczsefo4002-smanor.esm
+	[0A]     cctosfo4002_neonflats.esm
+	[0B]     Unofficial Fallout 4 Patch.esp
+	[0C]     WorkshopFramework.esm
+	[0D]     XDI.esm
+	[0E]     ArmorKeywords.esm
+	[0F]     HUDFramework.esm
+	[10]     PPF.esm
+	[11]     ManufacturingExtended.esp
+	[12]     TacticalReload.esm
+	[13]     TheWilderness.esm
+	[14]     TheForest.esm
+	[15]     Arbitration - Resources.esm
+	[16]     ConcealedArmor.esm
+	[17]     FunctionalDisplays.esp
+	[18]     WeightlessAid.esp
+	[19]     FunctionalDisplays-AID-Weightless.esp
+	[1A]     FunctionalDisplays-Collectibles.esp
+	[1B]     FunctionalDisplays-Patch-DLC-ALL-Weightless.esp
+	[1C]     AutomatronFree.esp
+	[1D]     GR001-AutomatronRebooted.esp
+	[1E]     Samutz_VaultSnapWallLights.esp
+	[1F]     VC_BetterWorkshopLightsComplete_Shadows.esp
+	[20]     Vault-tec brighter lights.esp
+	[21]     SideAim.esp
+	[22]     RAW INPUT.esp
+	[23]     LooksMenu.esp
+	[24]     dinoshelf.esp
+	[25]     HN66Fo4_Nails.esp
+	[26]     QBZ191.esp
+	[27]     AWPWandererCoat.esp
+	[28]     WheelMenu.esp
+	[29]     APLevelUpMenuEX.esp
+	[2A]     BottomlessCanteen.esp
+	[2B]     ImmersiveAnimationFramework.esp
+	[2C]     BottomlessCanteenIAF.esp
+	[2D]     Creative Perks (Companion Perks).esp
+	[2E]     Creative Perks (everything).esp
+	[2F]     XM2010_SniperRifle_by_tooun.esp
+	[30]     XM2010_SniperRifle_STS.esp
+	[31]     XM2010_SniperRifle_STS_FOV90.esp
+	[32]     DogtoothCG M1A211 Gas Mask.esp
+	[33]     Boston Natural Surroundings.esp
+	[34]     TrueGrass.esp
+	[35]     BOREALIS Grasses.esp
+	[36]     Reverb and Ambiance Overhaul.esp
+	[37]     dD-Action Ragdoll Force.esp
+	[38]     dD-Reduced Explosion Force.esp
+	[39]     Project Reality Footsteps FO4.esp
+	[3A]     TacticalReloadDLC.esp
+	[3B]     3dscopes.esp
+	[3C]     Better Manufacturing.esp
+	[3D]     Armorsmith Extended.esp
+	[3E]     Better Manufacturing - Menu Organization.esp
+	[3F]     Better Manufacturing - Manufacturing Extended Additions.esp
+	[40]     3dscopes-framework.esp
+	[41]     TacticalTablet.esp
+	[42]     RealThrowingWeapons.esp
+	[43]     ImiGalil.esp
+	[44]     PersistentVolumeSliders.esp
+	[45]     dbwConcreteWallPower.esp
+	[46]     Karambit.esp
+	[47]     Eli_Utility Jumpsuits.esp
+	[48]     Immersive HUD.esp
+	[49]     Vaccine.esp
+	[4A]     Glock19x.esp
+	[4B]     AAC_HoneyBadger.esp
+	[4C]     Casio_W59.esp
+	[4D]     Be Exceptional.esp
+	[4E]     slevins_chemVFX-Light.esp
+	[4F]     Non-Playable Flags Patch.esp
+	[50]     Perks76.esp
+	[51]     WmkActiveEffects.esp
+	[52]     CompanionStatus.esp
+	[53]     AnimatedRadaway.esp
+	[54]     InfiniteChems.esp
+	[55]     Deeper Thoughts (Curie).esp
+	[56]     Hot Breathing.esp
+	[57]     chem redux.esp
+	[58]     AnimChemRedux.esp
+	[59]     Smoke-able Cigars.esp
+	[5A]     extendedLightsWS - No shadows.esp
+	[5B]     ESPExplorerFO4.esp
+	[5C]     KSHairdos.esp
+	[5D]     3dscopes-cccr74.esp
+	[5E]     PA-Quick Animations.esp
+	[5F]     WM Chinese Assault Rifle - Standalone.esp
+	[60]     ehtyeci_MPX.esp
+	[61]     Viper6610.esp
+	[62]     Unkillable Settlerbots.esp
+	[63]     ChainBikini.esp
+	[64]     DX Commonwealth Mini Dresses.esp
+	[65]     OutfitSwitcher.esp
+	[66]     FO4Hotkeys.esp
+	[67]     HiPolyFaces.esp
+	[68]     PhotoLight.esp
+	[69]     HN66-SiriusArmor.esp
+	[6A]     OCDecorator.esp
+	[6B]     OCDecoratorDLC.esp
+	[6C]     OCDispenser.esp
+	[6D]     Vivid Fallout - All in One - Best Choice.esp
+	[6E]     The Eyes Of Beauty.esp
+	[6F]     The Eyes of Beauty Looking Stranger.esp
+	[70]     TheEyesOfBeauty.esp
+	[71]     AnyModAnyWeapon.esp
+	[72]     NoAffinityCooldown.esp
+	[73]     NoNegativeAffinityNoFucks.esp
+	[74]     NightPerson_NoNightVision-FarHarbor.esp
+	[75]     CBBE.esp
+	[76]     Companion Infinite Ammo and Unbreakable Power Armour.esp
+	[77]     Factor.esp
+	[78]     Insignificant Object Remover.esp
+	[79]     Quicker Hands.esp
+	[7A]     GeniusGamePerk.esp
+	[7B]     AIO SS.esp
+	[7C]     UnbreakableSettlement.esp
+	[7D]     Invulnerable Turrets 1.05 - x3 DEF.esp
+	[7E]     Invulnerable Turrets 1.05w - x3 DEF.esp
+	[7F]     SuperSerum.esp
+	[80]     Strong Back - Improved -- Far Harbor.esp
+	[81]     SettlementMenuManager.esp
+	[82]     LooksMenu Customization Compendium.esp
+	[83]     TacticalTablet_LMCC.esp
+	[84]     Viper's Warpaint.esp
+	[85]     ECO.esp
+	[86]     LegendaryModification.esp
+	[87]     LegendaryModification2LM.esp
+	[88]     LegendaryModificationGroknak.esp
+	[89]     LegendaryModificationMisc.esp
+	[8A]     LegendaryModification - DLC Far Harbor.esp
+	[8B]     LegendaryModification - DLC Far Harbor (2LM).esp
+	[8C]     ChuckLegendary.esp
+	[8D]     MODGirlyAnimation.esp
+	[8E]     SCAR-L.esp
+	[8F]     NW_Clothing.esp
+	[90]     Armorsmith Deserter X.esp
+	[91]     VtawWardrobe6.esp
+	[92]     VtawWardrobe8.esp
+	[93]     Auto Loot.esp
+	[94]     CROSS_Techmask.esp
+	[95]     Campsite.esp
+	[96]     RADImmunity.esp
+	[97]     Better Manufacturing - Legendary Modification Additions.esp
+	[98]     QBZ191_Console Fov90-100_for_longScope.esp
+	[99]     subwayrunnnerdynamiclighting.esp
+	[9A]     WeightlessMods.esp
+	[9B]     WeightlessJunk.esp
+	[9C]     FunctionalDisplays-MISC-Weightless.esp
+	[9D]     GoldBars.esp
+	[9E]     AnimatedCandles.esp
+	[9F]     Eli_Armour_Compendium.esp
+	[A0]     WorkshopPlus.esp
+	[A1]     Flashy_PersonalEssentials.esp
+	[A2]     CheatTerminal.esp
+	[A3]     DX_Banshee_Recon_Armor.esp
+	[A4]     Gas Masks of the Wasteland.esp
+	[A5]     Contraption_Free.esp
+	[A6]     DLC items to manufacturing.esp
+	[A7]     Eli_FahabaShack.esp
+	[A8]     Snappy_HouseK.esp
+	[A9]     Gas Mask Climate.esp
+	[AA]     Gas Mask NPC.esp
+	[AB]     radmeter.esp
+	[AC]     Nuclear Winter.esp
+	[AD]     Campsite - Nuclear Winter.esp
+	[AE]     NW_AllDLC.esp
+	[AF]     NW_FrozenOnes.esp
+	[B0]     Free Production.esp
+	[B1]     PlatinumCurieV2.1.esp
+	[B2]     AA Subways of the Commonwealth.esp
+	[B3]     MWRam7.esp
+	[B4]     MK18.esp
+	[B5]     MK18 Armory Project.esp
+	[B6]     infinite.esp
+	[B7]     Vaker.esp
+	[B8]     AtomicAestheticsRadio.esp
+	[B9]     BH_MCX_Spear.esp
+	[BA]     BH_MCX_Spear_SA.esp
+	[BB]     RU556.esp
+	[BC]     Radio_Olivia_Overnight.esp
+	[BD]     SigMCX.esp
+	[BE]     DT_WinterGunnerOutfits.esp
+	[BF]     cVc_Trailer_Park.esp
+	[C0]     creativeclutter.esp
+	[C1]     HKUSP9mm.esp
+	[C2]     BH_Colt M1911.esp
+	[C3]     BuildTreehouse.esp
+	[C4]     SIGMCXArmoryProject.esp
+	[C5]     L96A1.esp
+	[C6]     Prefabs.esp
+	[C7]     SKKGlobalStashScrapping.esp
+	[C8]     DOOMDesertEagle.esp
+	[C9]     WeightlessSpecialAmmo.esp
+	[CA]     LegendaryMod2LMAnyModAnyWeap.esp
+	[CB]     LegendaryModification2LMConcealed.esp
+	[CC]     LegendaryModification - DLC Far Harbor (2LM Concealed).esp
+	[CD]     TacticalReloadVanilla.esp
+	[CE]     USP .45_by_tooun.esp
+	[CF]     USP .45_by_tooun_TR_patch.esp
+	[D0]     ConcealedArmor.esp
+	[D1]     GKX Auto Melee - Base + All DLC.esp
+	[D2]     WeightlessAmmoForSurvival.esp
+	[D3]     Gas Mask ArmorKeywords.esp
+	[D4]     NW_Gas Masks of the Wasteland.esp
+	[D5]     Masks for AN76.esp
+	[D6]     Winterized Gunner Outfit Pack Nuclear Winter Patch.esp
+	[D7]     BasementLiving.esp
+	[D8]     NW_BasementLiving_Patch.esp
+	[D9]     evan_modular kitchen.esp
+	[DA]     Unlimited SPECIAL.esp
+	[DB]     RU556Armouryprojectv3.esp
+	[DC]     AsharaFO4UnderArmours.esp
+	[DD]     WastelandFashionAccessories.esp
+	[DE]     WastelandFashion.esp
+	[DF]     StartMeUp.esp
+	[E0]     M8r_FIS_Tags_ECO.esp
+	[E1]     StartMeUpNukaWorldPatch.esp
+	[E2]     Infinite Chemps IAF Patch.esp
+	[FE:000] ccbgsfo4001-pipboy(black).esl
+	[FE:001] ccbgsfo4006-pipboy(chrome).esl
+	[FE:002] ccbgsfo4025-powerarmorskin(chrome).esl
+	[FE:003] ccfsvfo4002-midcenturymodern.esl
+	[FE:004] cceejfo4001-decorationpack.esl
+	[FE:005] ccbgsfo4062-pippat.esl
+	[FE:006] ccbgsfo4076-pipmystery.esl
+	[FE:007] ccbgsfo4010-pippnk.esl
+	[FE:008] ccbgsfo4063-papat.esl
+	[FE:009] ccbgsfo4089-pipsynthwave.esl
+	[FE:00A] ccbgsfo4087-piphaida.esl
+	[FE:00B] ccfrsfo4003-cr75l.esl
+	[FE:00C] ccacxfo4001-vsuit.esl
+	[FE:00D] ccbgsfo4040-vrworkshop01.esl
+	[FE:00E] ccfsvfo4005-vrdesertisland.esl
+	[FE:00F] ccfsvfo4006-vrwasteland.esl
+	[FE:010] ccfsvfo4004-vrworkshopgnrplaza.esl
+	[FE:011] BakaFramework.esm
+	[FE:012] InfAntibiotics.esl
+	[FE:013] GKX Worthwhile Caps Stashes.esl
+	[FE:014] Fireflies.esl
+	[FE:015] ClassicMeleePack.esl
+	[FE:016] Petal_Gasmask.esl
+	[FE:017] M84FlashBang.esl
+	[FE:018] LuckyLoot.esl
+	[FE:019] Quick_Change_Armor_by_tooun.esl
+	[FE:01A] Mors Auto Walk.esl
+	[FE:01B] SwimmingAnims.esl
+	[FE:01C] Straw_AirForce1.esl
+	[FE:01D] Mors Sit Anywhere.esl
+	[FE:01E] AutoEat.esl
+	[FE:01F] InoueSaintOFAllSaints.esl
+	[FE:020] MorePrefabs.esl
+	[FE:021] Straw_Jordan1.esl
+	[FE:022] Quick_Modification_Weapon_by_tooun.esl
+	[FE:023] Gas Mask Hotkeys.esl
+	[FE:024] RunningWithHandsAnim.esl
+	[FE:025] SCOURGE - Vanilla.esp
+	[FE:026] SCOURGE - Automatron.esp
+	[FE:027] SCOURGE - Far Harbor.esp
+	[FE:028] SCOURGE - Nuka World.esp
+	[FE:029] CHT-AnimalEars.esp
+	[FE:02A] StartMeUpShaunDefaultAppearance.esp
+	[FE:02B] BOREALIS.esp
+	[FE:02C] AX50_by_tooun.esp
+	[FE:02D] AX50_by_tooun_FOV90.esp
+	[FE:02E] AX50_by_tooun_TR_patch.esp
+	[FE:02F] AOD_AutoOpenDoors.esp
+	[FE:030] QBZ191_TR_patch.esp
+	[FE:031] XM2010_SniperRifle_TR_patch.esp
+	[FE:032] ImiGalil_TacticalReloadPatch.esp
+	[FE:033] ImiGalil_SA.esp
+	[FE:034] Vault13Canteen.esp
+	[FE:035] Glock19x_TacticalReloadPatch.esp
+	[FE:036] Stimpaks help you breathe.esp
+	[FE:037] M8rDisablePipboyEffects.esp
+	[FE:038] IAF - Far Harbor & Nuka World.esp
+	[FE:039] AzarPonytailHairstyles.esp
+	[FE:03A] Elzee Breathe.esp
+	[FE:03B] Adamantium Skeleton Improved - No Falling Damage.esp
+	[FE:03C] Arbitration - Button Lowered Weapons.esp
+	[FE:03D] CROSS_2077.esp
+	[FE:03E] MaterialModSlot-FallUIWorkbenchPatch.esp
+	[FE:03F] Elzee Jolly Item Sounds.esp
+	[FE:040] wastelandwoundcare.esp
+	[FE:041] MK18_Deluxe.esp
+	[FE:042] MK18_TacticalReloadPatch.esp
+	[FE:043] AAC_HoneyBadger_TacticalReloadPatch.esp
+	[FE:044] AAC_HoneyBadger_SA.esp
+	[FE:045] MK18-01.esp
+	[FE:046] BH_MCX_Spear_TR.esp
+	[FE:047] LeahTheUnknown's Perfectly Bent Screwdriver.esp
+	[FE:048] Cyberout77.esp
+	[FE:049] CMP_Cyberout.esp
+	[FE:04A] DT_WinterGunnerOutfitsCBBE.esp
+	[FE:04B] Winterized Gunner Replacer.esp
+	[FE:04C] MK18Tier3AutoRec.esp
+	[FE:04D] Elzee Have a Seat.esp
+	[FE:04E] RussianStimpack.esp
+	[FE:04F] Elzee Cough.esp
+	[FE:050] Vault13Canteen_IAF_Patch.esp
+	[FE:051] WM Chinese Assault Rilfe - Standalone_TacticalReloadPatch.esp
+	[FE:052] Viper6610_TacticalReloadPatch.esp
+	[FE:053] OMEGA - IAF Wound Care Patch.esp
+	[FE:054] PIE_IAF.esp
+	[FE:055] BH_Colt M1911_TR Patch.esp
+	[FE:056] HKUSP9mmTacReload.esp
+	[FE:057] SigMCX_TacticalReload.esp
+	[FE:058] SigMCX_SA_TR_ADD.esp
+	[FE:059] SigMCX_MaterialPack.esp
+	[FE:05A] lilia-sig.esp
+	[FE:05B] MK18-Heartbeat.esp
+	[FE:05C] RU556_SA_AP.esp
+	[FE:05D] Elzee Recoil Shake.esp
+	[FE:05E] Suit Up.esp
+	[FE:05F] PRP.esp
+	[FE:060] AlootHomePlate.esp
