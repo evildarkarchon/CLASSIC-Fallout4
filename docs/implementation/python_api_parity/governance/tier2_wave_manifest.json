@@ -133,17 +133,6 @@
       "wave": "wave1"
     },
     {
-      "gap_id": "scanlog-002",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 2,
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "rust_symbol": "CheckId",
-      "python_module": null,
-      "python_export_path": null,
-      "wave": "wave1"
-    },
-    {
       "gap_id": "scanlog-003",
       "owner_module": "scanlog",
       "ordinal_in_module": 3,
@@ -2550,50 +2539,6 @@
       "rust_symbol": null,
       "python_module": "classic_scanlog",
       "python_export_path": "SettingsValidator.scan_all_settings",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-201",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 201,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "SettingsValidator.scan_archivelimit_setting",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-202",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 202,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "SettingsValidator.scan_buffout_achievements_setting",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-203",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 203,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "SettingsValidator.scan_buffout_looksmenu_setting",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-204",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 204,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "SettingsValidator.scan_buffout_memorymanagement_settings",
       "wave": "wave1"
     },
     {

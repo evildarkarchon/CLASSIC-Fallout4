@@ -186,17 +186,31 @@ Under legacy `schema_version: "1.x"` the value was decorated (`CLASSIC v9.1.0`);
 |---|---|---|
 | `display_section` | string | display-only header; defaults to empty string |
 | `ignore_keys` | sequence of strings | defaults to empty list; used as `crashgen_ignore` fallback |
-| `checks` | sequence of strings | defaults to empty list |
+| `checks` | sequence of strings | deprecated inert compatibility metadata; defaults to empty list and does not select scan-time checks |
 | `settings_rules_version` | non-negative integer or numeric string | optional |
 | `settings_rules` | mapping | optional; parsed into `CrashgenSettingsRules`; malformed nested rules are skipped/defaulted where possible |
 
-Recognized nested settings-rules keys from current source include:
+`settings_rules` is the behavioral source of Crashgen Expectations. Recognized nested settings-rules keys from current source include:
 
+- `settings_rules.preflight[].id`
+- `settings_rules.preflight[].when`
 - `settings_rules.preflight[].action.kind`
 - `settings_rules.preflight[].action.bucket`
 - `settings_rules.preflight[].action.severity`
 - `settings_rules.preflight[].action.message`
 - `settings_rules.preflight[].action.fix`
+- `settings_rules.checks[].id`
+- `settings_rules.checks[].target.section`
+- `settings_rules.checks[].target.key`
+- `settings_rules.checks[].target.type`
+- `settings_rules.checks[].when`
+- `settings_rules.checks[].expect.equals`
+- `settings_rules.checks[].messages.fail`
+- `settings_rules.checks[].messages.fix`
+- `settings_rules.checks[].messages.pass`
+- `settings_rules.checks[].severity`
+
+Recognized predicate keys are `plugin_any`, `config_layout_is`, `crashgen_version_lt`, `all`, `any`, and `not`; omitted or malformed predicates default to always-applicable at the rule level. Supported action kinds are `notice_and_skip_remaining`, `notice`, and `issue`. Supported severities are `info`, `warning`, and `error`. Supported target types are `bool`, `int`, and `string`.
 
 `settings_rules.preflight[].action.bucket` currently accepts:
 

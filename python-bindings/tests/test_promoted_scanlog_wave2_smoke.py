@@ -122,36 +122,12 @@ def test_settings_validator_scan_all_settings_empty() -> None:
         assert isinstance(frag, list)
 
 
-def test_settings_validator_scan_buffout_achievements_empty() -> None:
-    """``scan_buffout_achievements_setting(set(), {})`` returns a list."""
+def test_settings_validator_scan_all_settings_includes_disabled_notices() -> None:
+    """``scan_all_settings`` includes universal disabled-setting notices."""
     validator = classic_scanlog.SettingsValidator("Buffout 4", {})
-    result = validator.scan_buffout_achievements_setting(set(), {})
+    result = validator.scan_all_settings({"SomeSetting": "false"}, set())
     assert isinstance(result, list)
-
-
-def test_settings_validator_scan_memorymanagement_empty() -> None:
-    """``scan_buffout_memorymanagement_settings({}, False, False, False)`` returns a list."""
-    validator = classic_scanlog.SettingsValidator("Buffout 4", {})
-    result = validator.scan_buffout_memorymanagement_settings({}, False, False, False)
-    assert isinstance(result, list)
-
-
-def test_settings_validator_scan_archivelimit_empty() -> None:
-    """``scan_archivelimit_setting({}, None)`` returns a list.
-
-    The Rust binding exposes ``crashgen_version`` as a required positional
-    parameter (``None`` selects "no version"), not a Python keyword default.
-    """
-    validator = classic_scanlog.SettingsValidator("Buffout 4", {})
-    result = validator.scan_archivelimit_setting({}, None)
-    assert isinstance(result, list)
-
-
-def test_settings_validator_scan_looksmenu_empty() -> None:
-    """``scan_buffout_looksmenu_setting({}, set())`` returns a list."""
-    validator = classic_scanlog.SettingsValidator("Buffout 4", {})
-    result = validator.scan_buffout_looksmenu_setting({}, set())
-    assert isinstance(result, list)
+    assert any("SomeSetting is disabled" in line for fragment in result for line in fragment)
 
 
 def test_settings_validator_check_disabled_settings_empty() -> None:

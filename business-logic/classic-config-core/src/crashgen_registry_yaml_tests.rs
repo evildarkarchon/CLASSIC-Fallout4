@@ -1,6 +1,7 @@
 use super::parse_crashgen_registry;
 use crate::RuleReportBucket;
 use classic_settings_core::{merge_yaml_documents, parse_yaml_content};
+use std::collections::HashSet;
 use yaml_rust2::Yaml;
 
 fn parse_yaml_document(yaml_content: &str) -> Yaml {
@@ -196,4 +197,74 @@ Crashgen_Registry:
     assert_eq!(rules.preflight.len(), 1);
     assert_eq!(rules.preflight[0].action.bucket, RuleReportBucket::Settings);
     assert!(rules.checks.is_empty());
+}
+
+#[test]
+fn shipped_fallout4_yaml_carries_required_crashgen_expectations() {
+    let yaml_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("..")
+        .join("CLASSIC Data")
+        .join("databases")
+        .join("CLASSIC Fallout4.yaml");
+    let yaml_content = std::fs::read_to_string(&yaml_path)
+        .unwrap_or_else(|error| panic!("failed to read {}: {error}", yaml_path.display()));
+    let game_data = parse_yaml_document(&yaml_content);
+
+    let registry = parse_crashgen_registry(&game_data);
+
+    let buffout = registry
+        .get("Buffout 4")
+        .expect("Buffout 4 registry entry must exist");
+    assert!(
+        !buffout.checks.is_empty(),
+        "deprecated checks metadata should still be accepted from shipped YAML"
+    );
+    let buffout_rules = buffout
+        .settings_rules
+        .as_ref()
+        .expect("Buffout 4 must carry Crashgen Expectations");
+    let rule_ids: HashSet<&str> = buffout_rules
+        .checks
+        .iter()
+        .map(|rule| rule.id.as_str())
+        .collect();
+    for required_id in [
+        "achievements_conflict",
+        "memory_manager_xcell",
+        "havok_xcell",
+        "bstexture_xcell",
+        "scaleform_xcell",
+        "smallblock_xcell",
+        "archive_limit",
+        "looksmenu_f4ee",
+    ] {
+        assert!(
+            rule_ids.contains(required_id),
+            "Buffout 4 settings_rules missing {required_id}"
+        );
+    }
+
+    let addictol = registry
+        .get("Addictol")
+        .expect("Addictol registry entry must exist");
+    let addictol_rules = addictol
+        .settings_rules
+        .as_ref()
+        .expect("Addictol must carry a Crashgen Expectations block");
+    assert!(
+        !addictol_rules.preflight.is_empty(),
+        "Addictol compatibility guidance should live in preflight expectations"
+    );
+    assert!(addictol_rules.checks.is_empty());
+
+    let default = registry
+        .get("default")
+        .expect("default registry entry must exist");
+    let default_rules = default
+        .settings_rules
+        .as_ref()
+        .expect("default must carry an explicit empty Crashgen Expectations block");
+    assert!(default_rules.preflight.is_empty());
+    assert!(default_rules.checks.is_empty());
 }

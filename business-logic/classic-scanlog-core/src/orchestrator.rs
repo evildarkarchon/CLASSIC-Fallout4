@@ -524,7 +524,6 @@ pub fn build_analysis_config_from_yaml(
 fn build_crashgen_registry(
     raw: &std::collections::HashMap<String, classic_config_core::CrashgenEntryRaw>,
 ) -> CrashgenRegistry {
-    use crate::crashgen_registry::CheckId;
     use std::collections::HashMap;
 
     let mut entries: HashMap<String, CrashgenEntry> = HashMap::new();
@@ -533,16 +532,10 @@ fn build_crashgen_registry(
     for (name, raw_entry) in raw {
         let ignore_keys: std::collections::HashSet<String> =
             raw_entry.ignore_keys.iter().cloned().collect();
-        let checks: Vec<CheckId> = raw_entry
-            .checks
-            .iter()
-            .filter_map(|s| CheckId::parse(s))
-            .collect();
 
         let entry = CrashgenEntry {
             display_section: raw_entry.display_section.clone(),
             ignore_keys,
-            checks,
             settings_rules: raw_entry.settings_rules.clone(),
         };
 

@@ -69,6 +69,7 @@ pub struct JsCrashgenSettingsRules {
 pub struct JsCrashgenRegistryEntry {
     pub display_section: String,
     pub ignore_keys: Vec<String>,
+    /// Deprecated inert metadata retained for YAML compatibility; settings_rules drives validation.
     pub checks: Vec<String>,
     pub settings_rules_version: Option<u32>,
     pub settings_rules: Option<JsCrashgenSettingsRules>,

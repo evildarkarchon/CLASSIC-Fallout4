@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-06-29T05:31:26.736529+00:00`
-- Tier-1 contract rows: **704**
-- Tier-1 matched: **704**
+- Generated: `2026-07-01T03:13:40.256838+00:00`
+- Tier-1 contract rows: **703**
+- Tier-1 matched: **703**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -273,7 +273,6 @@
 | `version-registry-phase4c-get-all-script-hashes` | `version_registry` | `get_version_registry` | `getAllScriptHashes` | `matched` |
 | `aux-phase4c-get-game-name` | `aux` | `path_core` | `getGameName` | `matched` |
 | `scanlog.orchestrator.AnalysisResult@rust` | `scanlog` | `AnalysisResult@rust` | `None` | `matched` |
-| `scanlog.settings_validator.CheckId@rust` | `scanlog` | `CheckId@rust` | `None` | `matched` |
 | `scanlog.settings_validator.ConfigIssue@rust` | `scanlog` | `ConfigIssue@rust` | `None` | `matched` |
 | `scanlog.crashgen_registry.CrashgenEntry@rust` | `scanlog` | `CrashgenEntry@rust` | `None` | `matched` |
 | `scanlog.crashgen_registry.CrashgenRegistry@rust` | `scanlog` | `CrashgenRegistry@rust` | `None` | `matched` |

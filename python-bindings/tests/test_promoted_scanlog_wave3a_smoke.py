@@ -13,7 +13,7 @@ were verified in
 ``.planning/phases/03-python-tier-collapse/03-04-CONSTRUCTOR-INVENTORY.md``.
 
 Rust-only symbols promoted as ``@rust`` proxy rows (``ScanProgressPhase``,
-``CrashgenRegistry``, ``CheckId``, ``ScanLogError``, ``PapyrusError``,
+``CrashgenRegistry``, ``ScanLogError``, ``PapyrusError``,
 ``segment_key``, etc.) do NOT have Python wrappers at runtime. Tests
 cannot construct them directly. The parity contract rows enforce that
 the rust symbols exist in the parsed ``-core`` surface, and a single
@@ -368,7 +368,6 @@ def test_rust_only_symbols_in_core_surface() -> None:
         "crashgen_registry",
         "CrashgenRegistry",
         "CrashgenEntry",
-        "CheckId",
         # segment_key sub-module (constants only)
         "segment_key",
         # error sub-module (pure Rust)

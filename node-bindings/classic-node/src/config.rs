@@ -323,7 +323,7 @@ impl YamlData {
         self.inner.crashgen_ignore.clone()
     }
 
-    /// Crash generator registry with checks and optional settings rules.
+    /// Crash generator registry with deprecated checks metadata and optional settings rules.
     #[napi(getter)]
     pub fn crashgen_registry(&self) -> HashMap<String, JsCrashgenRegistryEntry> {
         self.inner

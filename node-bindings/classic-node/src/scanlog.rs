@@ -15,7 +15,7 @@ use classic_config_core::{ClassicConfig, YamlDataCore};
 use classic_scangame_core::integrity::IntegrityConfig;
 use classic_scangame_core::{SetupCheckConfig, detect_config_issues, run_combined_checks};
 use classic_scanlog_core::OrchestratorCore;
-use classic_scanlog_core::crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};
+use classic_scanlog_core::crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 use classic_scanlog_core::orchestrator;
 use classic_scanlog_core::parser::LogParser;
 use classic_scanlog_core::segment_key;
@@ -715,11 +715,6 @@ pub(crate) fn _js_config_to_core(config: &JsAnalysisConfig) -> orchestrator::Ana
             let mapped = CrashgenEntry {
                 display_section: entry.display_section.clone(),
                 ignore_keys: entry.ignore_keys.iter().cloned().collect::<HashSet<_>>(),
-                checks: entry
-                    .checks
-                    .iter()
-                    .filter_map(|check| CheckId::parse(check))
-                    .collect(),
                 settings_rules: js_rules_to_core(entry.settings_rules.clone()),
             };
 

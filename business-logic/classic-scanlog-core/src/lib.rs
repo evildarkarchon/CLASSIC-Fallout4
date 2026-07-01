@@ -44,7 +44,7 @@ pub mod suspect_scanner;
 pub mod version;
 
 // Re-export key types for convenience
-pub use crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};
+pub use crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 pub use error::ScanLogError;
 pub use fcx_handler::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};
 pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};

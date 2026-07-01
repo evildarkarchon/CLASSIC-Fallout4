@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-06-29T05:11:04.217302+00:00`
-- Tier-1 contract rows: **1097**
-- Tier-1 matched: **1097**
+- Generated: `2026-07-01T03:12:53.817290+00:00`
+- Tier-1 contract rows: **1092**
+- Tier-1 matched: **1092**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -615,7 +615,6 @@
 | `scanlog-parse-crashgen-version` | `scanlog` | `CrashgenVersion` | `classic_scanlog.parse_crashgen_version` | `matched` |
 | `scanlog-pattern-matcher-class` | `scanlog` | `PatternMatcher` | `classic_scanlog.PatternMatcher` | `matched` |
 | `scanlog-pattern-matcher-find-first` | `scanlog` | `PatternMatcher` | `classic_scanlog.PatternMatcher.find_first` | `matched` |
-| `scanlog.crashgen_registry.CheckId@rust` | `scanlog` | `CheckId` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.crashgen_registry.CrashgenEntry@rust` | `scanlog` | `CrashgenEntry` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.crashgen_registry.CrashgenRegistry@rust` | `scanlog` | `CrashgenRegistry` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.crashgen_registry.crashgen_registry@rust` | `scanlog` | `crashgen_registry` | `classic_scanlog.CrashgenVersion` | `matched` |
@@ -826,10 +825,6 @@
 | `scanlog.settings_validator.SettingsValidator.__init__` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.__init__` | `matched` |
 | `scanlog.settings_validator.SettingsValidator.check_disabled_settings` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.check_disabled_settings` | `matched` |
 | `scanlog.settings_validator.SettingsValidator.scan_all_settings` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.scan_all_settings` | `matched` |
-| `scanlog.settings_validator.SettingsValidator.scan_archivelimit_setting` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.scan_archivelimit_setting` | `matched` |
-| `scanlog.settings_validator.SettingsValidator.scan_buffout_achievements_setting` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.scan_buffout_achievements_setting` | `matched` |
-| `scanlog.settings_validator.SettingsValidator.scan_buffout_looksmenu_setting` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.scan_buffout_looksmenu_setting` | `matched` |
-| `scanlog.settings_validator.SettingsValidator.scan_buffout_memorymanagement_settings` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.scan_buffout_memorymanagement_settings` | `matched` |
 | `scanlog.settings_validator.SettingsValidator@rust` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator` | `matched` |
 | `scanlog.settings_validator.settings_validator@rust` | `scanlog` | `settings_validator` | `classic_scanlog.SettingsValidator` | `matched` |
 | `scanlog.suspect_scanner.SuspectScanner` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner` | `matched` |

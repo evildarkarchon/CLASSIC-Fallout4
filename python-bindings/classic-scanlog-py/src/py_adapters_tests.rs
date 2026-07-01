@@ -1,5 +1,4 @@
 use super::*;
-use classic_scanlog_core::CheckId;
 use pyo3::types::PyDict;
 use std::collections::HashSet;
 
@@ -47,7 +46,7 @@ fn crashgen_registry_adapter_preserves_raw_fields_and_skips_non_dict_entries() {
 }
 
 #[test]
-fn crashgen_entry_adapter_filters_unknown_checks_and_collects_ignore_keys() {
+fn crashgen_entry_adapter_ignores_deprecated_checks_and_collects_ignore_keys() {
     Python::attach(|py| -> PyResult<()> {
         let entry = PyDict::new(py);
         entry.set_item("display_section", "[Memory]")?;
@@ -63,10 +62,6 @@ fn crashgen_entry_adapter_filters_unknown_checks_and_collects_ignore_keys() {
         assert_eq!(
             parsed.ignore_keys,
             HashSet::from(["MemoryManager".to_string(), "HavokMemorySystem".to_string(),])
-        );
-        assert_eq!(
-            parsed.checks,
-            vec![CheckId::MemoryManagement, CheckId::LooksMenu]
         );
         assert!(parsed.settings_rules.is_none());
         Ok(())

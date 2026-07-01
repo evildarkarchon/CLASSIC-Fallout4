@@ -222,12 +222,12 @@ fn build_analysis_config_uses_registry_metadata_when_yaml_game_info_is_missing()
     // Auto mode resolves to the configured registry default for Fallout4.
     assert_eq!(config.game_version, "1.11.221");
     assert_eq!(config.game_version_vr, "1.2.72");
-    assert!(
-        !config
+    assert_eq!(
+        config
             .crashgen_registry
             .lookup(&config.crashgen_name)
-            .checks
-            .is_empty()
+            .display_section,
+        "[Compatibility]"
     );
 }
 

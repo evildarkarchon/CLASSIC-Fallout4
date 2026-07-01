@@ -1582,13 +1582,9 @@ class SuspectScanner:
 # =============================================================================
 
 class SettingsValidator:
-    """Settings validation (checks crashgen configuration).
+    """Settings validation for Crashgen Expectations.
 
-    Validates:
-    - Memory management settings
-    - Achievements settings
-    - Archive limit settings
-    - LooksMenu settings
+    Evaluates YAML-backed ``settings_rules`` and appends universal disabled-setting notices.
     """
 
     def __init__(self, crashgen_name: str, crashgen_entry: dict[str, Any]) -> None:
@@ -1596,7 +1592,8 @@ class SettingsValidator:
 
         Args:
             crashgen_name: Name of crash generator (e.g., "Buffout 4")
-            crashgen_entry: Registry entry with display_section/ignore_keys/checks/settings_rules
+            crashgen_entry: Registry entry with display_section/ignore_keys/settings_rules.
+                ``checks`` is accepted as deprecated inert metadata.
 
         """
 
@@ -1607,75 +1604,13 @@ class SettingsValidator:
         crashgen_version: tuple[int, int, int] | None = None,
         config_layout: str | None = None,
     ) -> list[list[str]]:
-        """Run full settings scan, including YAML rules when present."""
-
-    def scan_buffout_achievements_setting(
-        self, xsemodules: set[str], crashgen: dict[str, str]
-    ) -> list[str]:
-        """Scan Buffout achievements setting.
-
-        Args:
-            xsemodules: Set of XSE module names
-            crashgen: Crashgen settings (all values as strings)
-
-        Returns:
-            List of report lines for achievements issues
-
-        """
-
-    def scan_buffout_memorymanagement_settings(
-        self,
-        crashgen: dict[str, str],
-        has_xcell: bool,
-        has_old_xcell: bool,
-        has_baka_scrapheap: bool,
-    ) -> list[str]:
-        """Scan Buffout memory management settings.
-
-        Args:
-            crashgen: Crashgen settings (all values as strings)
-            has_xcell: Whether xCell is present
-            has_old_xcell: Whether old xCell is present
-            has_baka_scrapheap: Whether Baka ScrapHeap is present
-
-        Returns:
-            List of report lines for memory management issues
-
-        """
-
-    def scan_archivelimit_setting(
-        self, crashgen: dict[str, str], crashgen_version: Any = None
-    ) -> list[str]:
-        """Scan archive limit setting.
-
-        Args:
-            crashgen: Crashgen settings (all values as strings)
-            crashgen_version: Optional crashgen version
-
-        Returns:
-            List of report lines for archive limit issues
-
-        """
-
-    def scan_buffout_looksmenu_setting(
-        self, crashgen: dict[str, str], xsemodules: set[str]
-    ) -> list[str]:
-        """Scan Buffout LooksMenu setting.
-
-        Args:
-            crashgen: Crashgen settings (all values as strings)
-            xsemodules: Set of XSE module names
-
-        Returns:
-            List of report lines for LooksMenu issues
-
-        """
+        """Run Crashgen Expectation evaluation and Disabled Setting Notices."""
 
     def check_disabled_settings(self, crashgen: dict[str, str]) -> list[str]:
         """Scan for disabled crash generator settings.
 
-        Checks for settings that have been explicitly disabled and
-        reports potential issues or conflicts.
+        Checks for settings that have been explicitly disabled and are not ignored
+        by the resolved Crashgen registry entry.
 
         Args:
             crashgen: Crashgen settings (all values as strings)

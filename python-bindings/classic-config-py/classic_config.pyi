@@ -196,7 +196,7 @@ class YamlData:
 
         Maps crashgen names (including ``"default"``) to entry dictionaries
         with keys ``display_section`` (str), ``ignore_keys`` (list[str]),
-        ``checks`` (list[str]), ``settings_rules_version`` (int|None), and
+        ``checks`` (deprecated inert list[str]), ``settings_rules_version`` (int|None), and
         ``settings_rules`` (dict|None).
         """
 

@@ -194,11 +194,11 @@ Fields:
 
 - `display_section: String`
 - `ignore_keys: Vec<String>`
-- `checks: Vec<String>`
+- `checks: Vec<String>` (deprecated inert compatibility metadata)
 - `settings_rules_version: Option<u32>`
 - `settings_rules: Option<CrashgenSettingsRules>`
 
-This type is intentionally still raw. Downstream crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) convert it into analysis-layer types.
+This type is intentionally still raw. Downstream crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) convert it into analysis-layer types. `settings_rules` carries Crashgen Expectations; `checks` is accepted for YAML compatibility but does not drive current scan-time behavior.
 
 ## `ConfigError`
 
@@ -387,7 +387,7 @@ If you extend the crate, update this document when you change:
 
 The crashgen rule model lives in `classic-config-core::crashgen_rules` (module `src/crashgen_rules.rs`, absorbed from the former `classic-crashgen-settings-core` crate in v9.1.0 Phase 2). `lib.rs` re-exports the full rule-model surface via `pub use crashgen_rules::*;`, so downstream callers use the flat `classic_config_core::` path.
 
-This section defines the shared Rust rule model used for crashgen settings validation and documents the core evaluator that higher layers call. It is pure business-logic code with no YAML loading, report formatting, UI, FFI, or Tokio runtime ownership — those concerns live in the config loaders, scanlog/scangame orchestrators, and binding layers.
+This section defines the shared Rust rule model used for crashgen settings validation and documents the core evaluator that higher layers call. It is pure business-logic code with no YAML loading, report formatting, UI, FFI, or Tokio runtime ownership — those concerns live in the config loaders, scanlog/scangame orchestrators, and binding layers. The model is the sole behavioral source for per-crashgen expectations; legacy `Crashgen_Registry.*.checks` metadata and scanlog `CheckId` routing are not behavioral inputs.
 
 ### Purpose and scope
 
@@ -577,7 +577,7 @@ Keep `Vr` support intact unless the downstream callers and rule schema are chang
 
 ### YAML ownership for the rule schema
 
-- `classic-config-core` (this crate) parses `Crashgen_Registry.*.settings_rules` YAML into `CrashgenSettingsRules` via `CrashgenEntryRaw`
+- `classic-config-core` (this crate) parses `Crashgen_Registry.*.settings_rules` YAML into `CrashgenSettingsRules` via `CrashgenEntryRaw`; those rules, not deprecated `checks`, drive scanlog/scangame validation
 - Node and Python binding layers convert their own transport shapes into the same core types
 - keep the rule-model module focused on typed evaluation, not schema-specific file parsing
 

@@ -1197,7 +1197,7 @@ export declare class YamlData {
   get crashgenLatestOg(): string
   /** Items to ignore during crash generation (as an array). */
   get crashgenIgnore(): Array<string>
-  /** Crash generator registry with checks and optional settings rules. */
+  /** Crash generator registry with deprecated checks metadata and optional settings rules. */
   get crashgenRegistry(): Record<string, JsCrashgenRegistryEntry>
   /** Warning message for cases where no plugins are active. */
   get warnNoplugins(): string
@@ -2596,6 +2596,7 @@ export interface JsCrashgenConfig {
 export interface JsCrashgenRegistryEntry {
   displaySection: string
   ignoreKeys: Array<string>
+  /** Deprecated inert metadata retained for YAML compatibility; settings_rules drives validation. */
   checks: Array<string>
   settingsRulesVersion?: number
   settingsRules?: JsCrashgenSettingsRules

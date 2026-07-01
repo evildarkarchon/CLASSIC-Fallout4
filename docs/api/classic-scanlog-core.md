@@ -76,9 +76,8 @@ Log segmentation, header parsing, pattern matching, and streaming helpers.
 Crashgen-specific settings validation.
 
 - `CrashgenRegistry` - normalized crashgen-name lookup table
-- `CrashgenEntry` - per-crashgen display/check/rules entry
-- `CheckId` - named built-in settings checks
-- `SettingsValidator` - applies YAML rule sets or legacy fallback checks
+- `CrashgenEntry` - per-crashgen display/ignore/rules entry
+- `SettingsValidator` - scanlog adapter over YAML-backed Crashgen Expectations and Disabled Setting Notices
 
 ### `plugin_analyzer`, `formid_analyzer`, `record_scanner`, `suspect_scanner`, `mod_detector`
 
@@ -265,40 +264,34 @@ Deprecated parser APIs still present:
 
 These are compatibility shims over `parse_all_sections_arc()` and are marked deprecated in source. The Python binding's `parse_segments_parallel` was migrated to delegate to `parse_all_sections_arc` with a dict return type matching `parse_all_sections`.
 
-## `CrashgenRegistry`, `CrashgenEntry`, and `CheckId`
+## `CrashgenRegistry` and `CrashgenEntry`
 
 These types model per-crashgen settings behavior.
 
-- `CheckId` variants: `Achievements`, `MemoryManagement`, `ArchiveLimit`, `LooksMenu`
-- `CrashgenEntry` fields: `display_section`, `ignore_keys`, `checks`, `settings_rules`
+- `CrashgenEntry` fields: `display_section`, `ignore_keys`, `settings_rules`
 - `CrashgenRegistry::new(entries, default)` normalizes keys for lookup
 - `CrashgenRegistry::lookup(name)` is case-insensitive and whitespace-normalized
 
-Unknown crashgen names fall back to the registry default entry.
+Unknown crashgen names fall back to the registry default entry. The YAML `checks` key may still be accepted by upstream loaders as deprecated inert compatibility metadata, but it is not part of `CrashgenEntry` and must not drive scan-time behavior.
 
 ## `SettingsValidator`
 
-`SettingsValidator` validates parsed crashgen settings against either YAML-defined rules or legacy built-in checks.
+`SettingsValidator` validates parsed crashgen settings against YAML-backed Crashgen Expectations and universal Disabled Setting Notices.
 
 Important methods:
 
 - `SettingsValidator::new(crashgen_name, entry)`
 - `scan_all_settings(crashgen, xse_modules, crashgen_version, config_layout)`
 - `check_disabled_settings(crashgen)`
-- `scan_buffout_achievements_setting(...)`
-- `scan_buffout_memorymanagement_settings(...)`
-- `scan_archivelimit_setting(...)`
-- `scan_buffout_looksmenu_setting(...)`
-- `scan_addictol_settings_scaffold(...)`
 
 Contributor notes:
 
-- If `CrashgenEntry.settings_rules` exists, the validator prefers those rules and only falls back to legacy checks for uncovered areas.
+- `CrashgenEntry.settings_rules` is the only per-crashgen expectation source; there is no fallback to hardcoded Achievements, memory-management, ArchiveLimit, LooksMenu, or Addictol scaffold checks.
+- If `CrashgenEntry.settings_rules` is absent, no per-crashgen expectations run; `scan_all_settings()` still appends Disabled Setting Notices for non-ignored disabled settings.
 - Rule-driven preflight outcomes can now carry a report bucket from the crashgen rule model in [`classic-config-core`](classic-config-core.md#crashgen-rule-model); `error_information` outcomes are promoted into the report's `Error Information` section while the default bucket still renders under settings-related issues.
-- `check_disabled_settings()` always runs and uses `ignore_keys` as its skip set.
+- `check_disabled_settings()` is the focused utility for Disabled Setting Notices and uses `ignore_keys` as its skip set.
 - In `classic-scanlog-core`, `config_layout` is currently a coarse valid/invalid fact for settings evaluation: `derive_scanlog_config_layout()` returns `Og` for parseable detected versions and `Unknown` otherwise.
 - OG vs VR selection is handled earlier through `AnalysisConfig` construction and Version Registry data, not by `config_layout` in this crate.
-- The current Addictol path is explicitly a scaffold notice, not a full rule implementation.
 
 ## `PluginAnalyzer`
 
@@ -472,7 +465,7 @@ Notes:
 
 ## Related Crates And Integration Points
 
-- [`classic-config-core`](../../business-logic/classic-config-core) - provides `YamlDataCore` and crashgen registry source data used by `build_analysis_config_from_yaml()`, AND (since v9.1.0 Phase 2) the typed crashgen rule model and evaluator at `classic_config_core::crashgen_rules::*` used by `SettingsValidator`
+- [`classic-config-core`](../../business-logic/classic-config-core) - provides `YamlDataCore`, crashgen registry source data used by `build_analysis_config_from_yaml()`, and the typed Crashgen Expectation model/evaluator at `classic_config_core::crashgen_rules::*` used by `SettingsValidator`
 - [`classic-settings-core`](../../business-logic/classic-settings-core) - provides `YamlOperations` used by intake for small path-backed sidecar reads such as simplify-log removal rules and legacy FormID database settings
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - resolves game-version matches and valid crashgen versions
 - [`classic-database-core`](../../business-logic/classic-database-core) - optional FormID description lookups through `DatabasePool`
@@ -534,7 +527,7 @@ If you need FormID descriptions instead of raw IDs only, initialize and attach a
 - `parse_segments()` and `parse_segments_parallel()` are still public but explicitly deprecated. The Python binding `parse_segments_parallel` now returns `dict[str, list[str]]` instead of `list[list[str]]`.
 - The source contains performance claims in comments and docs, but this page does not treat them as compatibility guarantees.
 - `process_logs_batch()` does not preserve input ordering.
-- `SettingsValidator::scan_addictol_settings_scaffold()` is intentionally a scaffold, not a complete Addictol rules implementation.
+- Addictol compatibility guidance is expressed through YAML `settings_rules.preflight`; there is no hardcoded Addictol scaffold path.
 - `derive_scanlog_config_layout()` is effectively a valid/invalid gate today: it returns `Og` for parseable detected versions and `Unknown` otherwise.
 - The crashgen rule model in `classic-config-core` still defines `ConfigLayout::Vr`, but this crate no longer uses `ConfigLayout` as the OG/VR selector; that decision now lives in Version Registry-backed config building.
 - Report output is designed for Python parity, so text shape matters to downstream consumers more than a stable structured schema does.
