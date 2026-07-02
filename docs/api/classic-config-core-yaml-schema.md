@@ -195,6 +195,7 @@ Under legacy `schema_version: "1.x"` the value was decorated (`CLASSIC v9.1.0`);
 - `settings_rules.preflight[].id`
 - `settings_rules.preflight[].when`
 - `settings_rules.preflight[].action.kind`
+- `settings_rules.preflight[].action.placement`
 - `settings_rules.preflight[].action.bucket`
 - `settings_rules.preflight[].action.severity`
 - `settings_rules.preflight[].action.message`
@@ -212,10 +213,18 @@ Under legacy `schema_version: "1.x"` the value was decorated (`CLASSIC v9.1.0`);
 
 Recognized predicate keys are `plugin_any`, `config_layout_is`, `crashgen_version_lt`, `all`, `any`, and `not`; omitted or malformed predicates default to always-applicable at the rule level. Supported action kinds are `notice_and_skip_remaining`, `notice`, and `issue`. Supported severities are `info`, `warning`, and `error`. Supported target types are `bool`, `int`, and `string`.
 
-`settings_rules.preflight[].action.bucket` currently accepts:
+`settings_rules.preflight[].action.placement` is the preferred Autoscan Report Placement key. `settings_rules.preflight[].action.bucket` remains a compatibility alias for older clients during the transition. Current shipped YAML dual-writes both keys when a non-default placement is required.
 
-- `settings` - default bucket when omitted or malformed
-- `error_information` - promotes the rendered notice or issue into the autoscan error-information section for bucket-aware callers
+Placement parse precedence is:
+
+1. valid `placement`
+2. valid `bucket`
+3. default `settings`
+
+Accepted placement values are:
+
+- `settings` - default placement when omitted or malformed
+- `error_information` - promotes the rendered notice or issue into the Autoscan Report `Error Information` section for placement-aware callers
 
 `Mods_CONF[]` entry shape (`ModConflictEntry`):
 

@@ -698,8 +698,8 @@ fn create_report_generator_with_crashgen_name_updates_error_section_label() {
 #[test]
 fn settings_validator_routes_to_addictol_rules_and_avoids_scaffold() {
     use classic_config_core::{
-        CrashgenSettingsRules, Predicate, PreflightAction, PreflightActionKind, PreflightRule,
-        RuleReportBucket, RuleSeverity,
+        AutoscanReportPlacement, CrashgenSettingsRules, Predicate, PreflightAction,
+        PreflightActionKind, PreflightRule, RuleSeverity,
     };
 
     let mut raw_registry: HashMap<String, classic_config_core::CrashgenEntryRaw> = HashMap::new();
@@ -727,7 +727,7 @@ fn settings_validator_routes_to_addictol_rules_and_avoids_scaffold() {
                     when: Predicate::Always,
                     action: PreflightAction {
                         kind: PreflightActionKind::Notice,
-                        bucket: RuleReportBucket::Settings,
+                        bucket: AutoscanReportPlacement::Settings,
                         severity: RuleSeverity::Info,
                         message: "Addictol rules active".to_string(),
                         fix: None,
@@ -787,10 +787,10 @@ fn settings_validator_routes_to_addictol_rules_and_avoids_scaffold() {
 }
 
 #[test]
-fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
+fn process_log_promotes_placement_compatibility_notice_into_error_information() {
     use classic_config_core::{
-        CrashgenSettingsRules, Predicate, PreflightAction, PreflightActionKind, PreflightRule,
-        RuleReportBucket, RuleSeverity,
+        AutoscanReportPlacement, CrashgenSettingsRules, Predicate, PreflightAction,
+        PreflightActionKind, PreflightRule, RuleSeverity,
     };
 
     let mut raw_registry: HashMap<String, classic_config_core::CrashgenEntryRaw> = HashMap::new();
@@ -821,7 +821,7 @@ fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
                     ]),
                     action: PreflightAction {
                         kind: PreflightActionKind::NoticeAndSkipRemaining,
-                        bucket: RuleReportBucket::ErrorInformation,
+                        bucket: AutoscanReportPlacement::ErrorInformation,
                         severity: RuleSeverity::Warning,
                         message: "{crashgen_name} and Buffout 4 are incompatible, remove one to avoid crashes.".to_string(),
                         fix: None,
@@ -874,7 +874,7 @@ fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
         "stack dump line",
     ]
     .join("\n");
-    let fixture = write_fixture_log("bucketed-addictol.log", &log_contents);
+    let fixture = write_fixture_log("placement-addictol.log", &log_contents);
 
     let result = get_runtime()
         .block_on(orchestrator.process_log(fixture.path.clone()))

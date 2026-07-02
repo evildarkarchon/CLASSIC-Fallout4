@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T06:01:20.625489+00:00",
+  "generated_at_utc": "2026-07-02T00:37:43.381962+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -51,6 +51,15 @@
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use crashgen_rules::*;",
       "source_expr": "crashgen_rules::*",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AutoscanReportPlacement",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub enum AutoscanReportPlacement",
       "tier": "tier1"
     },
     {
@@ -477,11 +486,11 @@
     },
     {
       "symbol": "RuleReportBucket",
-      "kind": "enum",
+      "kind": "type",
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
-      "source_decl": "pub enum RuleReportBucket",
+      "source_decl": "pub type RuleReportBucket",
       "tier": "tier1"
     },
     {
@@ -662,6 +671,16 @@
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use config::{ClassicConfig, PathConfig, YamlSource};",
       "source_expr": "config::YamlSource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_str",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn as_str(self)",
       "tier": "tier1"
     },
     {

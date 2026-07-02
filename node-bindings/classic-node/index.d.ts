@@ -3219,6 +3219,7 @@ export interface JsPoolStatistics {
 
 export interface JsPreflightAction {
   kind: string
+  placement?: string
   bucket?: string
   severity: string
   message: string

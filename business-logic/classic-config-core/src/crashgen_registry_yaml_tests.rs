@@ -1,5 +1,5 @@
 use super::parse_crashgen_registry;
-use crate::RuleReportBucket;
+use crate::AutoscanReportPlacement;
 use classic_settings_core::{merge_yaml_documents, parse_yaml_content};
 use std::collections::HashSet;
 use yaml_rust2::Yaml;
@@ -163,9 +163,99 @@ Crashgen_Registry:
     assert_eq!(rules.checks.len(), 1);
     assert_eq!(
         rules.preflight[0].action.bucket,
-        RuleReportBucket::ErrorInformation
+        AutoscanReportPlacement::ErrorInformation
     );
     assert_eq!(rules.checks[0].target.key, "Achievements");
+}
+
+#[test]
+fn test_parse_crashgen_registry_prefers_placement_over_bucket() {
+    let game_data = parse_yaml_document(
+        r#"
+Crashgen_Registry:
+  crash-og:
+    settings_rules:
+      preflight:
+        - id: placement_wins
+          action:
+            kind: notice
+            placement: settings
+            bucket: error_information
+            severity: info
+            message: "placement wins"
+"#,
+    );
+
+    let registry = parse_crashgen_registry(&game_data);
+    let rules = registry
+        .get("crash-og")
+        .and_then(|entry| entry.settings_rules.as_ref())
+        .expect("expected parsed settings rules");
+
+    assert_eq!(
+        rules.preflight[0].action.bucket,
+        AutoscanReportPlacement::Settings
+    );
+}
+
+#[test]
+fn test_parse_crashgen_registry_falls_back_to_bucket_when_placement_is_invalid() {
+    let game_data = parse_yaml_document(
+        r#"
+Crashgen_Registry:
+  crash-og:
+    settings_rules:
+      preflight:
+        - id: bucket_fallback
+          action:
+            kind: notice
+            placement: definitely_not_a_placement
+            bucket: error_information
+            severity: info
+            message: "bucket fallback"
+"#,
+    );
+
+    let registry = parse_crashgen_registry(&game_data);
+    let rules = registry
+        .get("crash-og")
+        .and_then(|entry| entry.settings_rules.as_ref())
+        .expect("expected parsed settings rules");
+
+    assert_eq!(
+        rules.preflight[0].action.bucket,
+        AutoscanReportPlacement::ErrorInformation
+    );
+}
+
+#[test]
+fn test_parse_crashgen_registry_defaults_invalid_placement_and_bucket_to_settings() {
+    let game_data = parse_yaml_document(
+        r#"
+Crashgen_Registry:
+  crash-og:
+    settings_rules:
+      preflight:
+        - id: default_settings
+          action:
+            kind: notice
+            placement: not_valid
+            bucket: also_not_valid
+            severity: info
+            message: "default settings"
+"#,
+    );
+
+    let registry = parse_crashgen_registry(&game_data);
+    let rules = registry
+        .get("crash-og")
+        .and_then(|entry| entry.settings_rules.as_ref())
+        .expect("expected parsed settings rules");
+
+    assert_eq!(
+        rules.preflight[0].action.bucket,
+        AutoscanReportPlacement::Settings
+    );
 }
 
 #[test]
@@ -195,7 +285,10 @@ Crashgen_Registry:
         .expect("expected parsed settings rules");
     assert_eq!(rules.version, 1);
     assert_eq!(rules.preflight.len(), 1);
-    assert_eq!(rules.preflight[0].action.bucket, RuleReportBucket::Settings);
+    assert_eq!(
+        rules.preflight[0].action.bucket,
+        AutoscanReportPlacement::Settings
+    );
     assert!(rules.checks.is_empty());
 }
 

@@ -21,7 +21,10 @@ use crate::mod_detector::{
 use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
 use crate::record_scanner::RecordScanner;
-use crate::report::{ReportFragment, ReportGenerator, write_autoscan_report};
+use crate::report::{
+    AutoscanReportAssembler, AutoscanReportContribution, AutoscanReportFacts, ModGuidanceGroup,
+    ReportFragment, ReportGenerator, write_autoscan_report,
+};
 use crate::segment_key;
 use crate::settings_validator::SettingsValidator;
 use crate::suspect_scanner::SuspectScanner;
@@ -165,14 +168,8 @@ struct CrashgenScanContext {
     config_layout: ConfigLayout,
 }
 
-struct SettingsScanFragments {
-    error_information: Vec<ReportFragment>,
-    settings: Vec<ReportFragment>,
-}
-
 struct SuspectScanFragments {
     fragments: Vec<ReportFragment>,
-    found_suspect: bool,
     count: usize,
 }
 
@@ -1216,8 +1213,6 @@ impl OrchestratorCore {
     where
         F: FnMut(ScanProgressPhase),
     {
-        use crate::report::ReportComposer;
-
         let start_time = std::time::Instant::now();
         let diagnostics_enabled = std::env::var_os("CLASSIC_SCAN_DIAGNOSTICS").is_some();
         let mut phase_started = diagnostics_enabled.then_some(start_time);
@@ -1243,86 +1238,53 @@ impl OrchestratorCore {
 
         enter_phase(ScanProgressPhase::Parse);
         let crashgen = self.resolve_crashgen_context(&log_path, &context);
-        let report_gen =
-            self.create_report_generator_with_crashgen_name(&crashgen.effective_crashgen_name);
-        let mut composer = ReportComposer::new();
-        composer.add(report_gen.generate_header(&crashgen.crashlog_filename));
 
         enter_phase(ScanProgressPhase::Analyze);
-        let settings_fragments = self.collect_settings_fragments(&context, &crashgen);
-
-        // Generate error section
-        let error_section = report_gen.generate_error_section_with_status_and_fake_mode(
-            &crashgen.main_error,
-            &crashgen.crashgen_version_str,
-            crashgen.crashgen_status,
-            crashgen.fake_bot_compatible_mode,
-        );
-        composer.add(Self::append_error_information_fragments(
-            error_section,
-            settings_fragments.error_information,
-        ));
+        let mut contributions = self.collect_settings_contributions(&context, &crashgen);
 
         // Store plugins for mod detection - IndexMap preserves load order for Python parity
         let (plugins_map, plugin_count) = self.collect_plugins(&context);
         let suspect_fragments = self.collect_suspect_fragments(&context, &crashgen.main_error);
-
-        // Add suspect section
-        composer.add(report_gen.generate_suspect_section_header());
-        for fragment in suspect_fragments.fragments {
-            composer.add(fragment);
-        }
-        composer.add(report_gen.generate_suspect_found_footer(suspect_fragments.found_suspect));
-
-        // Add FCX mode notice
-        let fcx_handler = if self.config.fcx_mode {
-            FcxModeHandler::enabled()
-        } else {
-            FcxModeHandler::disabled()
-        };
-        composer.add(fcx_handler.get_fcx_messages());
-
-        if !settings_fragments.settings.is_empty() {
-            composer.add(report_gen.generate_settings_section_header());
-            for settings_fragment in settings_fragments.settings {
-                composer.add(settings_fragment);
+        contributions.extend(suspect_fragments.fragments.into_iter().map(|fragment| {
+            AutoscanReportContribution::CrashSuspectFinding {
+                lines: fragment.to_list(),
             }
-        }
+        }));
 
         // Mod detection (if we have plugin data)
         if let Some(ref plugins) = plugins_map {
-            for fragment in self.collect_mod_fragments(&context, plugins, &report_gen) {
-                composer.add(fragment);
-            }
-            for fragment in self.collect_plugin_match_fragments(
+            contributions.extend(self.collect_mod_contributions(&context, plugins));
+            contributions.extend(self.collect_plugin_match_contributions(
                 &context,
                 plugins,
                 &crashgen.effective_crashgen_name,
-                &report_gen,
-            ) {
-                composer.add(fragment);
-            }
+            ));
         }
 
-        let (formid_record_fragments, formid_count) = self
-            .collect_formid_and_record_fragments(
+        let (formid_record_contributions, formid_count) = self
+            .collect_formid_and_record_contributions(
                 &context,
                 plugins_map.as_ref(),
                 &crashgen.effective_crashgen_name,
-                &report_gen,
             )
             .await?;
-        for fragment in formid_record_fragments {
-            composer.add(fragment);
-        }
+        contributions.extend(formid_record_contributions);
 
         enter_phase(ScanProgressPhase::Finalize);
 
-        composer.add(report_gen.generate_footer());
-
-        // Compose final report
-        let final_report = composer.compose();
-        let report_lines = final_report.to_list();
+        let report_lines = AutoscanReportAssembler::new().assemble(
+            &AutoscanReportFacts {
+                classic_version: self.config.classic_version.clone(),
+                crashlog_filename: crashgen.crashlog_filename.clone(),
+                main_error: crashgen.main_error.clone(),
+                crashgen_name: crashgen.effective_crashgen_name.clone(),
+                crashgen_version: crashgen.crashgen_version_str.clone(),
+                crashgen_status: crashgen.crashgen_status,
+                fake_bot_compatible_mode: crashgen.fake_bot_compatible_mode,
+                fcx_mode_enabled: self.config.fcx_mode,
+            },
+            contributions,
+        );
 
         if let (Some(phase_started), Some(phase_timings_us)) =
             (phase_started.as_ref(), phase_timings_us.as_mut())
@@ -1853,11 +1815,11 @@ impl OrchestratorCore {
         }
     }
 
-    fn collect_settings_fragments(
+    fn collect_settings_contributions(
         &self,
         context: &ScanAnalysisContext,
         crashgen: &CrashgenScanContext,
-    ) -> SettingsScanFragments {
+    ) -> Vec<AutoscanReportContribution> {
         let settings_validator = if !context.crashgen_settings.is_empty() {
             if crashgen
                 .effective_crashgen_name
@@ -1874,33 +1836,19 @@ impl OrchestratorCore {
             self.settings_validator.clone()
         };
 
-        let mut error_information = Vec::new();
-        let mut settings = Vec::new();
         if !crashgen.fake_bot_compatible_mode
             && !context.crashgen_settings.is_empty()
-            && let Ok(bucketed_settings_fragments) = settings_validator.scan_all_settings_bucketed(
+            && let Ok(contributions) = settings_validator.scan_all_settings_contributions(
                 &context.crashgen_settings,
                 &context.xse_modules_for_settings,
                 crashgen.crashgen_version,
                 crashgen.config_layout,
             )
         {
-            for bucketed_fragment in bucketed_settings_fragments {
-                match bucketed_fragment.bucket {
-                    classic_config_core::RuleReportBucket::Settings => {
-                        settings.push(bucketed_fragment.fragment);
-                    }
-                    classic_config_core::RuleReportBucket::ErrorInformation => {
-                        error_information.push(bucketed_fragment.fragment);
-                    }
-                }
-            }
+            return contributions;
         }
 
-        SettingsScanFragments {
-            error_information,
-            settings,
-        }
+        Vec::new()
     }
 
     fn collect_plugins(
@@ -1933,7 +1881,6 @@ impl OrchestratorCore {
         let Some(ref scanner) = self.suspect_scanner else {
             return SuspectScanFragments {
                 fragments: Vec::new(),
-                found_suspect: false,
                 count: 0,
             };
         };
@@ -1949,35 +1896,26 @@ impl OrchestratorCore {
             SuspectScanner::check_dll_crash(main_error).unwrap_or_else(|_| ReportFragment::empty());
 
         let mut fragments = Vec::new();
-        let mut found_suspect = false;
         if error_found {
             fragments.push(error_fragment);
-            found_suspect = true;
         }
         if stack_found {
             fragments.push(stack_fragment);
-            found_suspect = true;
         }
         if !dll_fragment.is_empty() {
             fragments.push(dll_fragment);
-            found_suspect = true;
         }
 
         let count = fragments.len();
-        SuspectScanFragments {
-            fragments,
-            found_suspect,
-            count,
-        }
+        SuspectScanFragments { fragments, count }
     }
 
-    fn collect_mod_fragments(
+    fn collect_mod_contributions(
         &self,
         context: &ScanAnalysisContext,
         plugins: &IndexMap<String, String>,
-        report_gen: &ReportGenerator,
-    ) -> Vec<ReportFragment> {
-        let mut fragments = Vec::new();
+    ) -> Vec<AutoscanReportContribution> {
+        let mut contributions = Vec::new();
         let user_gpu_string: Option<String> = if context.system_segment_lines.is_empty() {
             None
         } else {
@@ -1995,24 +1933,30 @@ impl OrchestratorCore {
             && let Ok(conflict_lines) = detect_mods_double(&self.config.mods_conf, plugins.clone())
             && !conflict_lines.is_empty()
         {
-            fragments.push(report_gen.generate_mod_check_header("May Conflict With Each Other"));
-            fragments.push(ReportFragment::from_lines(conflict_lines));
+            contributions.push(AutoscanReportContribution::ModGuidance {
+                group: ModGuidanceGroup::MayConflict,
+                lines: conflict_lines,
+            });
         }
 
         if !self.config.mods_freq.is_empty()
             && let Ok(freq_lines) = detect_mods_freq(&self.config.mods_freq, plugins)
             && !freq_lines.is_empty()
         {
-            fragments.push(report_gen.generate_mod_check_header("Can Cause Frequent Crashes"));
-            fragments.push(ReportFragment::from_lines(freq_lines));
+            contributions.push(AutoscanReportContribution::ModGuidance {
+                group: ModGuidanceGroup::FrequentCrashes,
+                lines: freq_lines,
+            });
         }
 
         if !self.config.mods_solu.is_empty()
             && let Ok(solu_lines) = detect_mods_solutions(&self.config.mods_solu, plugins)
             && !solu_lines.is_empty()
         {
-            fragments.push(report_gen.generate_mod_check_header("HAVE SOLUTIONS"));
-            fragments.push(ReportFragment::from_lines(solu_lines));
+            contributions.push(AutoscanReportContribution::ModGuidance {
+                group: ModGuidanceGroup::HasSolutions,
+                lines: solu_lines,
+            });
         }
 
         if !self.config.mods_core.is_empty()
@@ -2024,22 +1968,21 @@ impl OrchestratorCore {
             )
             && !important_lines.is_empty()
         {
-            fragments.push(ReportFragment::from_lines(vec![
-                "### Checking for Important Mods\n\n".to_string(),
-            ]));
-            fragments.push(ReportFragment::from_lines(important_lines));
+            contributions.push(AutoscanReportContribution::ModGuidance {
+                group: ModGuidanceGroup::ImportantMods,
+                lines: important_lines,
+            });
         }
 
-        fragments
+        contributions
     }
 
-    fn collect_plugin_match_fragments(
+    fn collect_plugin_match_contributions(
         &self,
         context: &ScanAnalysisContext,
         plugins: &IndexMap<String, String>,
         effective_crashgen_name: &str,
-        report_gen: &ReportGenerator,
-    ) -> Vec<ReportFragment> {
+    ) -> Vec<AutoscanReportContribution> {
         let Some(ref analyzer) = self.plugin_analyzer else {
             return Vec::new();
         };
@@ -2058,22 +2001,20 @@ impl OrchestratorCore {
             .map_or_else(
                 |_| Vec::new(),
                 |plugin_match_lines| {
-                    vec![
-                        report_gen.generate_plugin_suspect_header(),
-                        ReportFragment::from_lines(plugin_match_lines),
-                    ]
+                    vec![AutoscanReportContribution::PluginEvidence {
+                        lines: plugin_match_lines,
+                    }]
                 },
             )
     }
 
-    async fn collect_formid_and_record_fragments(
+    async fn collect_formid_and_record_contributions(
         &self,
         context: &ScanAnalysisContext,
         plugins_map: Option<&IndexMap<String, String>>,
         effective_crashgen_name: &str,
-        report_gen: &ReportGenerator,
-    ) -> Result<(Vec<ReportFragment>, usize)> {
-        let mut fragments = Vec::new();
+    ) -> Result<(Vec<AutoscanReportContribution>, usize)> {
+        let mut contributions = Vec::new();
         let mut formid_count = 0;
         if !context.combined_crash_lines.is_empty() {
             let formids = self
@@ -2089,8 +2030,9 @@ impl OrchestratorCore {
                     .formid_match_with_crashgen_name(formids, plugins_ref, effective_crashgen_name)
                     .await?;
 
-                fragments.push(report_gen.generate_formid_section_header());
-                fragments.push(ReportFragment::from_lines(formid_report_lines));
+                contributions.push(AutoscanReportContribution::FormIdFinding {
+                    lines: formid_report_lines,
+                });
             }
         }
 
@@ -2104,35 +2046,13 @@ impl OrchestratorCore {
                     effective_crashgen_name,
                 )?;
             if !record_report.is_empty() {
-                fragments.push(report_gen.generate_record_section_header());
-                fragments.push(ReportFragment::from_lines(record_report));
+                contributions.push(AutoscanReportContribution::NamedRecordFinding {
+                    lines: record_report,
+                });
             }
         }
 
-        Ok((fragments, formid_count))
-    }
-
-    fn append_error_information_fragments(
-        error_section: ReportFragment,
-        extra_fragments: Vec<ReportFragment>,
-    ) -> ReportFragment {
-        if extra_fragments.is_empty() {
-            return error_section;
-        }
-
-        let mut lines = error_section.to_list();
-        let separator = if matches!(lines.last(), Some(line) if line == "---\n\n") {
-            lines.pop().unwrap_or_default()
-        } else {
-            "---\n\n".to_string()
-        };
-
-        for fragment in extra_fragments {
-            lines.extend(fragment.to_list());
-        }
-        lines.push(separator);
-
-        ReportFragment::from_lines(lines)
+        Ok((contributions, formid_count))
     }
 
     /// Creates a SettingsValidator configured for this orchestrator.

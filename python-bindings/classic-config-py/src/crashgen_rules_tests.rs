@@ -1,6 +1,6 @@
 use super::parse_settings_rules;
 use classic_config_core::{
-    ExpectedValue, Predicate, RuleReportBucket, RuleSeverity, TargetValueType,
+    AutoscanReportPlacement, ExpectedValue, Predicate, RuleSeverity, TargetValueType,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
@@ -18,6 +18,7 @@ fn parse_settings_rules_reads_preflight_and_check_rules() {
         action
             .set_item("kind", "notice_and_skip_remaining")
             .unwrap();
+        action.set_item("placement", "error_information").unwrap();
         action.set_item("bucket", "error_information").unwrap();
         action.set_item("severity", "info").unwrap();
         action.set_item("message", "skip").unwrap();
@@ -56,7 +57,7 @@ fn parse_settings_rules_reads_preflight_and_check_rules() {
         assert_eq!(parsed.preflight.len(), 1);
         assert_eq!(
             parsed.preflight[0].action.bucket,
-            RuleReportBucket::ErrorInformation
+            AutoscanReportPlacement::ErrorInformation
         );
         assert_eq!(
             parsed.preflight[0].when,
@@ -66,6 +67,72 @@ fn parse_settings_rules_reads_preflight_and_check_rules() {
         assert_eq!(parsed.checks[0].target.value_type, TargetValueType::Bool);
         assert_eq!(parsed.checks[0].expect, ExpectedValue::Bool(false));
         assert_eq!(parsed.checks[0].severity, RuleSeverity::Warning);
+    });
+}
+
+#[test]
+fn parse_settings_rules_prefers_placement_and_falls_back_to_bucket() {
+    Python::initialize();
+    Python::attach(|py| {
+        let rules = PyDict::new(py);
+
+        let action_with_placement = PyDict::new(py);
+        action_with_placement.set_item("kind", "notice").unwrap();
+        action_with_placement
+            .set_item("placement", "settings")
+            .unwrap();
+        action_with_placement
+            .set_item("bucket", "error_information")
+            .unwrap();
+        action_with_placement.set_item("severity", "info").unwrap();
+        action_with_placement
+            .set_item("message", "placement wins")
+            .unwrap();
+        let placement_rule = PyDict::new(py);
+        placement_rule.set_item("id", "placement_wins").unwrap();
+        placement_rule
+            .set_item("action", &action_with_placement)
+            .unwrap();
+
+        let action_with_invalid_placement = PyDict::new(py);
+        action_with_invalid_placement
+            .set_item("kind", "notice")
+            .unwrap();
+        action_with_invalid_placement
+            .set_item("placement", "not_valid")
+            .unwrap();
+        action_with_invalid_placement
+            .set_item("bucket", "error_information")
+            .unwrap();
+        action_with_invalid_placement
+            .set_item("severity", "info")
+            .unwrap();
+        action_with_invalid_placement
+            .set_item("message", "bucket fallback")
+            .unwrap();
+        let fallback_rule = PyDict::new(py);
+        fallback_rule.set_item("id", "bucket_fallback").unwrap();
+        fallback_rule
+            .set_item("action", &action_with_invalid_placement)
+            .unwrap();
+
+        rules
+            .set_item(
+                "preflight",
+                PyList::new(py, [&placement_rule, &fallback_rule]).unwrap(),
+            )
+            .unwrap();
+
+        let parsed = parse_settings_rules(rules.as_any()).expect("rules should parse");
+
+        assert_eq!(
+            parsed.preflight[0].action.bucket,
+            AutoscanReportPlacement::Settings
+        );
+        assert_eq!(
+            parsed.preflight[1].action.bucket,
+            AutoscanReportPlacement::ErrorInformation
+        );
     });
 }
 

@@ -59,8 +59,10 @@ fn plugin_analyzer_and_settings_validator_dead_fallbacks_do_not_reappear() {
         );
     }
     assert!(
-        SETTINGS_VALIDATOR_RS.contains("check_disabled_settings(crashgen)?"),
-        "scan_all_settings_bucketed should append Disabled Setting Notices after rule evaluation"
+        SETTINGS_VALIDATOR_RS.contains(
+            "contributions.extend(self.disabled_setting_notice_contributions(crashgen));"
+        ),
+        "scan_all_settings_contributions should append Disabled Setting Notices after rule evaluation"
     );
     assert!(
         SETTINGS_VALIDATOR_TESTS_RS

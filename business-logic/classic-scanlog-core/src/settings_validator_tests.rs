@@ -1,9 +1,9 @@
 use super::*;
 use crate::crashgen_registry::CrashgenEntry;
 use classic_config_core::{
-    CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
-    PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity, RuleTarget,
-    TargetValueType,
+    AutoscanReportPlacement, CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue,
+    Predicate, PreflightAction, PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity,
+    RuleTarget, TargetValueType,
 };
 
 fn make_entry(
@@ -195,7 +195,7 @@ fn preflight_skip_remaining_still_allows_disabled_setting_notices() {
                 when: Predicate::Always,
                 action: PreflightAction {
                     kind: PreflightActionKind::NoticeAndSkipRemaining,
-                    bucket: RuleReportBucket::Settings,
+                    bucket: AutoscanReportPlacement::Settings,
                     severity: RuleSeverity::Warning,
                     message: "skip remaining".to_string(),
                     fix: None,

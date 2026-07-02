@@ -9,26 +9,22 @@
 
 use crate::crashgen_registry::CrashgenEntry;
 use crate::error::Result;
-use crate::report::ReportFragment;
+use crate::report::{AutoscanReportContribution, CrashgenExpectationContribution, ReportFragment};
 use classic_config_core::{
-    ConfigLayout, EvaluationContext, EvaluationOutcome, OutcomeKind, RuleReportBucket,
-    RuleSeverity, evaluate_rules,
+    AutoscanReportPlacement, ConfigLayout, EvaluationContext, evaluate_rules,
 };
 use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Debug)]
 pub(crate) struct BucketedSettingsFragment {
-    pub bucket: RuleReportBucket,
+    #[allow(dead_code)]
+    pub bucket: AutoscanReportPlacement,
     pub fragment: ReportFragment,
 }
 
 impl BucketedSettingsFragment {
-    fn new(bucket: RuleReportBucket, fragment: ReportFragment) -> Self {
+    fn new(bucket: AutoscanReportPlacement, fragment: ReportFragment) -> Self {
         Self { bucket, fragment }
-    }
-
-    fn settings(fragment: ReportFragment) -> Self {
-        Self::new(RuleReportBucket::Settings, fragment)
     }
 }
 
@@ -81,7 +77,30 @@ impl SettingsValidator {
         crashgen_version: Option<(u32, u32, u32)>,
         config_layout: ConfigLayout,
     ) -> Result<Vec<BucketedSettingsFragment>> {
-        let mut fragments = Vec::new();
+        Ok(self
+            .scan_all_settings_contributions(
+                crashgen,
+                xse_modules,
+                crashgen_version,
+                config_layout,
+            )?
+            .into_iter()
+            .filter_map(|contribution| {
+                contribution
+                    .legacy_settings_fragment()
+                    .map(|(bucket, fragment)| BucketedSettingsFragment::new(bucket, fragment))
+            })
+            .collect())
+    }
+
+    pub(crate) fn scan_all_settings_contributions(
+        &self,
+        crashgen: &HashMap<String, String>,
+        xse_modules: &HashSet<String>,
+        crashgen_version: Option<(u32, u32, u32)>,
+        config_layout: ConfigLayout,
+    ) -> Result<Vec<AutoscanReportContribution>> {
+        let mut contributions = Vec::new();
 
         if let Some(rules) = self.entry.settings_rules.as_ref() {
             let context = EvaluationContext {
@@ -95,92 +114,21 @@ impl SettingsValidator {
             let evaluation = evaluate_rules(rules, &context);
 
             for outcome in evaluation.outcomes {
-                let mut lines = Vec::new();
-                lines.extend(match outcome.bucket {
-                    RuleReportBucket::Settings => self.render_settings_bucket_lines(&outcome),
-                    RuleReportBucket::ErrorInformation => {
-                        self.render_error_information_bucket_lines(&outcome)
-                    }
-                });
-                fragments.push(BucketedSettingsFragment::new(
-                    outcome.bucket,
-                    ReportFragment::from_lines(lines),
+                contributions.push(AutoscanReportContribution::CrashgenExpectation(
+                    CrashgenExpectationContribution {
+                        kind: outcome.kind,
+                        severity: outcome.severity,
+                        message: outcome.message,
+                        fix: outcome.fix,
+                        placement: outcome.bucket,
+                    },
                 ));
             }
         }
 
-        let disabled_fragment = self.check_disabled_settings(crashgen)?;
-        if !disabled_fragment.is_empty() {
-            fragments.push(BucketedSettingsFragment::settings(disabled_fragment));
-        }
+        contributions.extend(self.disabled_setting_notice_contributions(crashgen));
 
-        Ok(fragments)
-    }
-
-    fn render_settings_bucket_lines(&self, outcome: &EvaluationOutcome) -> Vec<String> {
-        let mut lines = Vec::new();
-        match outcome.kind {
-            OutcomeKind::Issue => {
-                lines.push(format!("# ❌ CAUTION : {} # \n", outcome.message));
-                if let Some(fix) = outcome.fix.as_deref() {
-                    lines.push(format!(" FIX: {}\n\n-----\n", fix));
-                } else {
-                    lines.push("\n-----\n".to_string());
-                }
-            }
-            OutcomeKind::Notice => {
-                lines.push(format!(
-                    "# {} NOTICE : {} # \n",
-                    Self::notice_icon(outcome.severity),
-                    outcome.message
-                ));
-                if let Some(fix) = outcome.fix.as_deref() {
-                    lines.push(format!(" {}\n\n-----\n", fix));
-                } else {
-                    lines.push("\n-----\n".to_string());
-                }
-            }
-            OutcomeKind::Success => {
-                lines.push(format!("✔️ {}\n\n-----\n", outcome.message));
-            }
-        }
-        lines
-    }
-
-    fn render_error_information_bucket_lines(&self, outcome: &EvaluationOutcome) -> Vec<String> {
-        let mut lines = Vec::new();
-        match outcome.kind {
-            OutcomeKind::Issue => {
-                lines.push(format!("**# ❌ CAUTION : {} #**\n\n", outcome.message));
-                if let Some(fix) = outcome.fix.as_deref() {
-                    lines.push(format!("FIX: {}\n\n", fix));
-                }
-            }
-            OutcomeKind::Notice => {
-                lines.push(format!(
-                    "**# {} NOTICE : {} #**\n\n",
-                    Self::notice_icon(outcome.severity),
-                    outcome.message
-                ));
-                if let Some(fix) = outcome.fix.as_deref() {
-                    lines.push(format!("{}\n\n", fix));
-                }
-            }
-            OutcomeKind::Success => {
-                lines.push(format!("**✔️ {}**\n\n", outcome.message));
-            }
-        }
-        lines
-    }
-
-    fn notice_icon(severity: RuleSeverity) -> &'static str {
-        if severity == RuleSeverity::Error {
-            "❌"
-        } else if severity == RuleSeverity::Warning {
-            "⚠️"
-        } else {
-            "[!]"
-        }
+        Ok(contributions)
     }
 
     /// Check for disabled settings in crash generator configuration.
@@ -192,22 +140,39 @@ impl SettingsValidator {
         &self,
         crashgen: &HashMap<String, String>,
     ) -> Result<ReportFragment> {
-        let mut lines = Vec::new();
+        let lines = self
+            .disabled_setting_notice_contributions(crashgen)
+            .into_iter()
+            .filter_map(|contribution| {
+                contribution
+                    .legacy_settings_fragment()
+                    .map(|(_, fragment)| fragment.to_list())
+            })
+            .flatten()
+            .collect();
 
+        Ok(ReportFragment::from_lines(lines))
+    }
+
+    fn disabled_setting_notice_contributions(
+        &self,
+        crashgen: &HashMap<String, String>,
+    ) -> Vec<AutoscanReportContribution> {
+        let mut contributions = Vec::new();
         for (key, value) in crashgen.iter() {
             let setting_name = key.clone();
 
             if let Ok(false) = value.parse::<bool>()
                 && !self.entry.ignore_keys.contains(&setting_name)
             {
-                lines.push(format!(
-                        "* NOTICE : {} is disabled in your {} settings, is this intentional? * \n\n-----\n",
-                        setting_name, self.crashgen_name
-                    ));
+                contributions.push(AutoscanReportContribution::DisabledSettingNotice {
+                    setting_name,
+                    crashgen_name: self.crashgen_name.clone(),
+                });
             }
         }
 
-        Ok(ReportFragment::from_lines(lines))
+        contributions
     }
 }
 

@@ -1,7 +1,7 @@
 use classic_config_core::{
-    CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
-    PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket, RuleSeverity, RuleTarget,
-    TargetValueType,
+    AutoscanReportPlacement, CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue,
+    Predicate, PreflightAction, PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity,
+    RuleTarget, TargetValueType,
 };
 use serde_json::{Value, json};
 
@@ -9,6 +9,7 @@ use serde_json::{Value, json};
 #[napi(object)]
 pub struct JsPreflightAction {
     pub kind: String,
+    pub placement: Option<String>,
     pub bucket: Option<String>,
     pub severity: String,
     pub message: String,
@@ -87,11 +88,22 @@ fn severity_to_str(value: RuleSeverity) -> String {
     }
 }
 
-fn bucket_to_str(value: RuleReportBucket) -> String {
-    match value {
-        RuleReportBucket::Settings => "settings".to_string(),
-        RuleReportBucket::ErrorInformation => "error_information".to_string(),
-    }
+fn placement_to_str(value: AutoscanReportPlacement) -> String {
+    value.as_str().to_string()
+}
+
+fn parse_action_placement(action: &JsPreflightAction) -> AutoscanReportPlacement {
+    action
+        .placement
+        .as_deref()
+        .and_then(AutoscanReportPlacement::parse)
+        .or_else(|| {
+            action
+                .bucket
+                .as_deref()
+                .and_then(AutoscanReportPlacement::parse)
+        })
+        .unwrap_or_default()
 }
 
 fn parse_predicate(value: &Value) -> Option<Predicate> {
@@ -178,12 +190,7 @@ pub fn js_rules_to_core(rules: Option<JsCrashgenSettingsRules>) -> Option<Crashg
             action: PreflightAction {
                 kind: PreflightActionKind::parse(&rule.action.kind)
                     .unwrap_or(PreflightActionKind::Notice),
-                bucket: rule
-                    .action
-                    .bucket
-                    .as_deref()
-                    .and_then(RuleReportBucket::parse)
-                    .unwrap_or_default(),
+                bucket: parse_action_placement(&rule.action),
                 severity: parse_severity(&rule.action.severity, RuleSeverity::Info),
                 message: rule.action.message,
                 fix: rule.action.fix,
@@ -252,7 +259,8 @@ pub fn core_rules_to_js(rules: Option<&CrashgenSettingsRules>) -> Option<JsCrash
                         PreflightActionKind::Notice => "notice".to_string(),
                         PreflightActionKind::Issue => "issue".to_string(),
                     },
-                    bucket: Some(bucket_to_str(rule.action.bucket)),
+                    placement: Some(placement_to_str(rule.action.bucket)),
+                    bucket: Some(placement_to_str(rule.action.bucket)),
                     severity: severity_to_str(rule.action.severity),
                     message: rule.action.message.clone(),
                     fix: rule.action.fix.clone(),

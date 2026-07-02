@@ -159,6 +159,8 @@ fn preflight_rule_to_pydict(py: Python<'_>, rule: &PreflightRule) -> PyResult<Py
         classic_config_core::PreflightActionKind::Issue => "issue",
     };
     action.set_item("kind", kind)?;
+    action.set_item("placement", rule.action.bucket.as_str())?;
+    action.set_item("bucket", rule.action.bucket.as_str())?;
     action.set_item("severity", severity_to_str(rule.action.severity))?;
     action.set_item("message", &rule.action.message)?;
     action.set_item("fix", &rule.action.fix)?;

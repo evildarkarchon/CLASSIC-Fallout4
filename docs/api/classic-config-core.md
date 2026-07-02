@@ -422,7 +422,8 @@ Do not use this module for parsing YAML or TOML directly, formatting final autos
 - `RuleSeverity` - `Info`, `Warning`, `Error`
 - `PreflightActionKind` - `NoticeAndSkipRemaining`, `Notice`, `Issue`
 - `ConfigLayout` - `Og`, `Vr`, `Unknown`
-- `RuleReportBucket` - `Settings` (default) or `ErrorInformation` (promoted destination)
+- `AutoscanReportPlacement` - `Settings` (default) or `ErrorInformation` (promoted destination)
+- `RuleReportBucket` - deprecated compatibility alias for `AutoscanReportPlacement`
 
 ### Main function
 
@@ -481,7 +482,9 @@ Preflight rules run before check rules. Fields:
 - `PreflightRule`: `id`, `when`, `action`
 - `PreflightAction`: `kind`, `bucket`, `severity`, `message`, `fix`
 
-`RuleReportBucket` meanings:
+`PreflightAction.bucket` is a deprecated compatibility field name that carries an `AutoscanReportPlacement` value. New YAML and binding payloads should call this concept `placement`; the Rust field name stays `bucket` for one transition.
+
+`AutoscanReportPlacement` meanings:
 
 - `Settings` - default settings-related destination used by ordinary checks and preflight notices
 - `ErrorInformation` - promoted destination for notices or issues that callers want to render under `Error Information`
@@ -518,7 +521,7 @@ Matching behavior from `value_matches()`:
 
 ### `EvaluationOutcome` and `EvaluationResult`
 
-`EvaluationOutcome` is the emitted result unit. Fields: `id`, `kind`, `bucket`, `severity`, `message`, `fix`, `section`, `setting`, `expected`, `actual`.
+`EvaluationOutcome` is the emitted result unit. Fields: `id`, `kind`, `bucket`, `severity`, `message`, `fix`, `section`, `setting`, `expected`, `actual`. `EvaluationOutcome.bucket` is the same deprecated compatibility field name carrying an `AutoscanReportPlacement` value.
 
 `EvaluationResult` contains:
 
@@ -533,7 +536,8 @@ There is no separate summary or error channel. Callers interpret `outcomes` dire
 - `ConfigLayout::parse(&str) -> Option<ConfigLayout>`
 - `TargetValueType::parse(&str) -> Option<TargetValueType>`
 - `PreflightActionKind::parse(&str) -> Option<PreflightActionKind>`
-- `RuleReportBucket::parse(&str) -> Option<RuleReportBucket>`
+- `AutoscanReportPlacement::parse(&str) -> Option<AutoscanReportPlacement>`
+- `RuleReportBucket::parse(&str) -> Option<AutoscanReportPlacement>` through the deprecated alias
 
 These return `None` for unsupported strings. Useful in loaders and binding adapters, but they do not report detailed parse errors.
 
@@ -543,10 +547,10 @@ The source-visible evaluation order:
 
 1. Start with an empty `EvaluationResult`.
 2. Evaluate all `preflight` rules in declaration order.
-3. For each matching preflight rule: render `message` and optional `fix`, emit a `Notice` or `Issue` outcome based on `PreflightActionKind`, copy `PreflightAction.bucket` into the emitted `EvaluationOutcome`.
+3. For each matching preflight rule: render `message` and optional `fix`, emit a `Notice` or `Issue` outcome based on `PreflightActionKind`, copy `PreflightAction.bucket` / Autoscan Report Placement into the emitted `EvaluationOutcome`.
 4. If a preflight action is `NoticeAndSkipRemaining`, set `skip_remaining = true` and return immediately.
 5. Evaluate all `checks` in declaration order.
-6. For each matching check rule: look up `context.settings[rule.target.key]`, skip the rule if the key is absent, compare the current value to `expect`, emit an `Issue` on mismatch, emit a `Success` on match only when `messages.pass` exists, emit `RuleReportBucket::Settings` for those check outcomes.
+6. For each matching check rule: look up `context.settings[rule.target.key]`, skip the rule if the key is absent, compare the current value to `expect`, emit an `Issue` on mismatch, emit a `Success` on match only when `messages.pass` exists, emit `AutoscanReportPlacement::Settings` for those check outcomes.
 7. Return the ordered `EvaluationResult`.
 
 Template rendering is intentionally small in scope. `apply_template()` only replaces `{crashgen_name}`, `{display_section}`, and `{setting}`. If `display_section` is empty, the evaluator substitutes `[Compatibility]`.
@@ -585,6 +589,7 @@ Keep `Vr` support intact unless the downstream callers and rule schema are chang
 
 ```rust
 use classic_config_core::{
+    AutoscanReportPlacement,
     CheckRule, ConfigLayout, CrashgenSettingsRules, EvaluationContext, ExpectedValue,
     Predicate, PreflightAction, PreflightActionKind, PreflightRule, RuleMessages,
     RuleSeverity, RuleTarget, TargetValueType, evaluate_rules,
@@ -598,6 +603,7 @@ let rules = CrashgenSettingsRules {
         when: Predicate::PluginAny(vec!["addictol.dll".to_string()]),
         action: PreflightAction {
             kind: PreflightActionKind::NoticeAndSkipRemaining,
+            bucket: AutoscanReportPlacement::ErrorInformation,
             severity: RuleSeverity::Info,
             message: "Addictol detected - skipping {crashgen_name} checks".to_string(),
             fix: None,

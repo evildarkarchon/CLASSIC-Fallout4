@@ -325,10 +325,27 @@ Contributor notes:
 
 - `CrashgenEntry.settings_rules` is the only per-crashgen expectation source; there is no fallback to hardcoded Achievements, memory-management, ArchiveLimit, LooksMenu, or Addictol scaffold checks.
 - If `CrashgenEntry.settings_rules` is absent, no per-crashgen expectations run; `scan_all_settings()` still appends Disabled Setting Notices for non-ignored disabled settings.
-- Rule-driven preflight outcomes can now carry a report bucket from the crashgen rule model in [`classic-config-core`](classic-config-core.md#crashgen-rule-model); `error_information` outcomes are promoted into the report's `Error Information` section while the default bucket still renders under settings-related issues.
+- Rule-driven preflight outcomes can now carry Autoscan Report Placement from the crashgen rule model in [`classic-config-core`](classic-config-core.md#crashgen-rule-model); `error_information` outcomes are promoted into the report's `Error Information` section while the default `settings` placement still renders under settings-related issues.
 - `check_disabled_settings()` is the focused utility for Disabled Setting Notices and uses `ignore_keys` as its skip set.
 - In `classic-scanlog-core`, `config_layout` is currently a coarse valid/invalid fact for settings evaluation: `derive_scanlog_config_layout()` returns `Og` for parseable detected versions and `Unknown` otherwise.
 - OG vs VR selection is handled earlier through `AnalysisConfig` construction and Version Registry data, not by `config_layout` in this crate.
+
+## Autoscan Report Assembly
+
+`AutoscanReportAssembler` owns the canonical per-log Autoscan Report order and turns scan facts plus typed `AutoscanReportContribution` values into final report lines.
+
+Canonical section ownership:
+
+- header and Error Information
+- Crashgen Expectation outcomes placed in Error Information before that section's separator
+- crash suspect section, always present, including the no-suspects footer
+- deprecated FCX Mode notice from per-log facts
+- settings-related guidance, including settings-placement Crashgen Expectation outcomes and Disabled Setting Notices
+- Mod Guidance groups in fixed order: conflicts, frequent crashes, solutions, important mods
+- Plugin Evidence, FormID Finding, and Named Record Finding sections
+- footer
+
+The assembler does not choose Autoscan Report paths, write files, move Unsolved Logs, or run analyzers. `process_log_with_progress()` collects contributions during `Analyze` and performs assembly during `Finalize`.
 
 ## `PluginAnalyzer`
 
