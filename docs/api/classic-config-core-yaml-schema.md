@@ -70,6 +70,7 @@ All keys are read from the merged root mapping. Missing or malformed values usua
 | `show_formid_values` | boolean | no | defaults to `false` |
 | `stat_logging` | boolean | no | defaults to `false` |
 | `move_unsolved_logs` | boolean | no | defaults to `false` |
+| `unsolved_logs_destination` | string path | no | omitted or empty means no flat custom destination; TUI maps non-empty values to the Rust scan-run custom destination intent |
 | `simplify_logs` | boolean | no | defaults to `false` |
 | `update_check` | boolean | no | defaults to `true` |
 | `game_version` | string | no | defaults to `"auto"`; callers interpret values such as `auto`, `Original`, `NextGen`, `AnniversaryEdition`/`AE`, and `VR` |
@@ -89,6 +90,7 @@ Persistence notes:
 - `save_to_yaml()` always writes all scalar booleans/strings/integers.
 - `save_to_yaml()` always writes `paths.game_root`, even when empty.
 - Optional path fields are omitted when `None`; they are not written as explicit YAML nulls.
+- `unsolved_logs_destination` is omitted when `None`; the nested GUI/intake setting remains `CLASSIC_Settings.Unsolved Logs Destination` and is parsed during Crash Log Scan Intake.
 - `formid_databases` is omitted entirely when empty.
 - Relative `formid_databases.<game>[]` entries are preserved as strings and resolved by higher layers at runtime.
 
@@ -119,6 +121,8 @@ If the local YAML file does not exist, the method returns `Ok(())` and leaves th
 | `CLASSIC_Info.version_date` | string | populates `classic_version_date` |
 | `catch_log_records` | sequence of strings | populates `classic_records_list` |
 | `CLASSIC_Interface.autoscan_text_<Game>` | string | populates `autoscan_text` using the caller-provided game name |
+
+`CLASSIC Main.yaml` `schema_version: "2.1"` adds optional `CLASSIC_Settings.Unsolved Logs Destination` to the shipped `CLASSIC_Info.default_settings` template. Crash Log Scan Intake reads that nested setting when resolving the Rust-owned Unsolved Logs destination; the flat `ClassicConfig.unsolved_logs_destination` field is only the TUI-local persisted equivalent.
 
 #### `CLASSIC_Info.version` bare-SemVer contract
 

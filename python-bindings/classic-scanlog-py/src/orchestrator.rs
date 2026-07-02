@@ -6,9 +6,9 @@ use classic_config_core::{
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
     AnalysisConfig, AnalysisResult, BatchScanEventKind, BatchScanOptions, CrashLogScanIntake,
-    CrashLogScanOptions, CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunLogOutcome,
-    CrashLogScanRunMode, CrashLogScanRunRequest, OrchestratorCore, StandardCrashLogScanRunOptions,
-    UnsolvedLogsPolicy, build_analysis_config_from_yaml,
+    CrashLogScanOptions, CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunIntent,
+    CrashLogScanRunLogOutcome, CrashLogScanRunRequest, OrchestratorCore,
+    StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, build_analysis_config_from_yaml,
 };
 use classic_shared::without_gil_block_on;
 use pyo3::exceptions::{PyTypeError, PyValueError};
@@ -921,7 +921,7 @@ fn scan_run_log_outcome_to_py(outcome: CrashLogScanRunLogOutcome) -> PyScanRunLo
 /// behavior before returning each per-log outcome. Use `Orchestrator` methods
 /// only when callers explicitly need lower-level analysis results with report lines.
 #[pyfunction]
-#[pyo3(signature = (yaml_dir_root, yaml_dir_data, game, game_version, log_paths, show_formid_values=false, fcx_mode=false, simplify_logs=false, move_unsolved_logs=false, targeted_mode=false, max_concurrent=None, preserve_order=false, cancellation_token=None))]
+#[pyo3(signature = (yaml_dir_root, yaml_dir_data, game, game_version, log_paths, show_formid_values=false, fcx_mode=false, simplify_logs=false, move_unsolved_logs=false, targeted_mode=false, max_concurrent=None, preserve_order=false, cancellation_token=None, unsolved_logs_destination=None))]
 #[allow(clippy::too_many_arguments)]
 pub fn scan_run_execute(
     py: Python<'_>,
@@ -938,10 +938,14 @@ pub fn scan_run_execute(
     max_concurrent: Option<usize>,
     preserve_order: bool,
     cancellation_token: Option<PyCancellationToken>,
+    unsolved_logs_destination: Option<String>,
 ) -> PyResult<Vec<PyScanRunLogResult>> {
     let yaml_dir_root = PathBuf::from(yaml_dir_root);
     let yaml_dir_data = PathBuf::from(yaml_dir_data);
     let cancellation = cancellation_token.map(|token| token.inner.clone());
+    let unsolved_logs_destination = unsolved_logs_destination
+        .map(|destination| destination.trim().to_string())
+        .filter(|destination| !destination.is_empty());
 
     let result = without_gil_block_on(py, || async move {
         let prepared = CrashLogScanIntake::from_yaml_paths(
@@ -954,25 +958,26 @@ pub fn scan_run_execute(
         .prepare()
         .await?;
 
-        let mode = if targeted_mode {
-            CrashLogScanRunMode::Targeted
+        let intent = if targeted_mode {
+            CrashLogScanRunIntent::Targeted
         } else {
-            CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
-                unsolved_logs: if move_unsolved_logs {
-                    UnsolvedLogsPolicy::MoveTo {
-                        directory: yaml_dir_root.join("CLASSIC Backup").join("Unsolved Logs"),
-                    }
+            let unsolved_logs = if move_unsolved_logs {
+                if let Some(destination) = unsolved_logs_destination {
+                    StandardUnsolvedLogsIntent::MoveToCustom(PathBuf::from(destination))
                 } else {
-                    UnsolvedLogsPolicy::LeaveInPlace
-                },
-            })
+                    StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
+                }
+            } else {
+                StandardUnsolvedLogsIntent::LeaveInPlace
+            };
+            CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs })
         };
 
         CrashLogScanRun::new(prepared)
             .run(
                 CrashLogScanRunRequest {
                     logs: log_paths.into_iter().map(PathBuf::from).collect(),
-                    mode,
+                    intent,
                     max_concurrent,
                     cancellation,
                     preserve_order,

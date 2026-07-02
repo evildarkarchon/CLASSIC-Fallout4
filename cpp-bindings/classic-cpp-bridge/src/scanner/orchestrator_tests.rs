@@ -1,7 +1,7 @@
 use super::*;
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{ConfigIssue, GLOBAL_FCX_HANDLER};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 use tempfile::tempdir;
 
@@ -66,6 +66,78 @@ fn write_minimal_scan_yaml_tree(root: &Path, data: &Path) {
         "CLASSIC_Ignore_Fallout4: []\n",
     )
     .unwrap();
+}
+
+fn scan_run_request_dto(
+    move_unsolved_logs: bool,
+    unsolved_logs_destination: &str,
+    targeted_mode: bool,
+) -> ffi::ScanRunRequestDto {
+    ffi::ScanRunRequestDto {
+        yaml_dir_root: String::new(),
+        yaml_dir_data: String::new(),
+        game: "Fallout4".to_string(),
+        game_version: "auto".to_string(),
+        show_formid_values: false,
+        fcx_mode: false,
+        simplify_logs: false,
+        move_unsolved_logs,
+        unsolved_logs_destination: unsolved_logs_destination.to_string(),
+        targeted_mode,
+        max_concurrent: 0,
+        log_paths: Vec::new(),
+    }
+}
+
+#[test]
+fn test_scan_run_intent_targeted_wins_over_move_and_destination() {
+    let request = scan_run_request_dto(true, "C:/custom/unsolved", true);
+
+    let intent = scan_run_intent_from_request(&request);
+
+    assert!(matches!(intent, CrashLogScanRunIntent::Targeted));
+}
+
+#[test]
+fn test_scan_run_intent_ignores_destination_when_move_disabled() {
+    let request = scan_run_request_dto(false, "C:/custom/unsolved", false);
+
+    let intent = scan_run_intent_from_request(&request);
+
+    assert!(matches!(
+        intent,
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
+        })
+    ));
+}
+
+#[test]
+fn test_scan_run_intent_uses_custom_destination_when_standard_move_enabled() {
+    let request = scan_run_request_dto(true, "C:/custom/unsolved", false);
+
+    let intent = scan_run_intent_from_request(&request);
+
+    match intent {
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::MoveToCustom(destination),
+        }) => assert_eq!(destination, PathBuf::from("C:/custom/unsolved")),
+        _ => panic!("expected standard custom destination intent"),
+    }
+}
+
+#[test]
+fn test_scan_run_intent_uses_configured_or_default_when_move_enabled_without_destination() {
+    let request = scan_run_request_dto(true, "", false);
+
+    let intent = scan_run_intent_from_request(&request);
+
+    assert!(matches!(
+        intent,
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
+        })
+    ));
 }
 
 #[test]

@@ -9,8 +9,8 @@ use classic_file_io_core::LogCollector;
 use classic_path_core::validate_custom_scan_path;
 use classic_scanlog_core::{
     CrashLogScanIntake, CrashLogScanOptions, CrashLogScanRun, CrashLogScanRunEvent,
-    CrashLogScanRunEventKind, CrashLogScanRunMode, CrashLogScanRunRequest,
-    StandardCrashLogScanRunOptions, UnsolvedLogsPolicy,
+    CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunRequest,
+    StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent,
 };
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
@@ -601,6 +601,7 @@ impl App {
         let fcx_mode = self.config.fcx_mode;
         let simplify_logs = self.config.simplify_logs;
         let move_unsolved_logs = self.config.move_unsolved_logs;
+        let unsolved_logs_destination = self.config.unsolved_logs_destination.clone();
         let yaml_dir_root = std::env::current_dir().unwrap_or_default();
         let yaml_dir_data = yaml_dir_root.join("CLASSIC Data");
         let base_folder = yaml_dir_root.clone();
@@ -666,18 +667,20 @@ impl App {
                 })
             };
 
-            let mode = CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
-                unsolved_logs: if move_unsolved_logs {
-                    UnsolvedLogsPolicy::MoveTo {
-                        directory: yaml_dir_root.join("CLASSIC Backup").join("Unsolved Logs"),
-                    }
+            let unsolved_logs = if move_unsolved_logs {
+                if let Some(destination) = unsolved_logs_destination {
+                    StandardUnsolvedLogsIntent::MoveToCustom(destination)
                 } else {
-                    UnsolvedLogsPolicy::LeaveInPlace
-                },
-            });
+                    StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
+                }
+            } else {
+                StandardUnsolvedLogsIntent::LeaveInPlace
+            };
+            let intent =
+                CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs });
             let request = CrashLogScanRunRequest {
                 logs: log_paths,
-                mode,
+                intent,
                 max_concurrent: None,
                 cancellation: Some(cancellation),
                 preserve_order: false,

@@ -76,8 +76,8 @@ pub use scan_intake::{
 };
 pub use scan_run::{
     CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind,
-    CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, CrashLogScanRunResult,
-    StandardCrashLogScanRunOptions, UnsolvedLogsPolicy,
+    CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest,
+    CrashLogScanRunResult, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent,
 };
 pub use settings_validator::SettingsValidator;
 pub use suspect_scanner::SuspectScanner;

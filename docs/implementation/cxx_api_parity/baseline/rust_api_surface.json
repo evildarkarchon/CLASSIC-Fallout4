@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T08:38:25Z",
+  "generated_at_utc": "2026-07-02T03:12:08Z",
   "entries": [
     {
       "id": "b0d609f9ed78e468",
@@ -4776,6 +4776,10 @@
         {
           "name": "move_unsolved_logs",
           "type": "bool"
+        },
+        {
+          "name": "unsolved_logs_destination",
+          "type": "String"
         },
         {
           "name": "targeted_mode",

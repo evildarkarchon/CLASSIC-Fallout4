@@ -69,6 +69,7 @@ fn test_default_config() {
     assert!(!config.show_formid_values);
     assert!(!config.stat_logging);
     assert!(!config.move_unsolved_logs);
+    assert!(config.unsolved_logs_destination.is_none());
     assert!(!config.simplify_logs);
     assert!(config.update_check);
     assert_eq!(config.game_version, "auto");
@@ -140,6 +141,7 @@ fn test_yaml_round_trip() {
         show_formid_values: false,
         stat_logging: true,
         move_unsolved_logs: false,
+        unsolved_logs_destination: Some(PathBuf::from("C:\\Unsolved")),
         simplify_logs: true,
         update_check: false,
         game_version: "NextGen".to_string(),
@@ -166,6 +168,10 @@ fn test_yaml_round_trip() {
     assert_eq!(restored.show_formid_values, config.show_formid_values);
     assert_eq!(restored.stat_logging, config.stat_logging);
     assert_eq!(restored.move_unsolved_logs, config.move_unsolved_logs);
+    assert_eq!(
+        restored.unsolved_logs_destination,
+        config.unsolved_logs_destination
+    );
     assert_eq!(restored.simplify_logs, config.simplify_logs);
     assert_eq!(restored.update_check, config.update_check);
     assert_eq!(restored.game_version, config.game_version);
@@ -184,6 +190,18 @@ fn test_yaml_round_trip() {
     assert_eq!(restored.paths.game_root, config.paths.game_root);
     assert_eq!(restored.paths.docs_root, config.paths.docs_root);
     assert_eq!(restored.formid_databases, config.formid_databases);
+}
+
+#[test]
+fn test_unsolved_logs_destination_trims_flat_value() {
+    let yaml = parse_yaml_document(r#"unsolved_logs_destination: '  C:\Unsolved  '"#);
+
+    let config = ClassicConfig::from_yaml(&yaml).unwrap();
+
+    assert_eq!(
+        config.unsolved_logs_destination,
+        Some(PathBuf::from(r"C:\Unsolved"))
+    );
 }
 
 #[test]
@@ -229,6 +247,7 @@ async fn test_yaml_empty_paths() {
         show_formid_values: false,
         stat_logging: false,
         move_unsolved_logs: false,
+        unsolved_logs_destination: None,
         simplify_logs: false,
         update_check: true,
         game_version: "auto".to_string(),

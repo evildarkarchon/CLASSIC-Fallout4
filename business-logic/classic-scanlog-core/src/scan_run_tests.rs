@@ -8,6 +8,13 @@ use tempfile::tempdir;
 const FIXTURE_LOG_SMALL: &str = include_str!("../benches/fixtures/crash-0DB9300.log");
 
 fn make_ready_analysis() -> ScanReadyAnalysis {
+    make_ready_analysis_with(None, None)
+}
+
+fn make_ready_analysis_with(
+    paths: Option<crate::CrashLogScanIntakePaths>,
+    unsolved_logs_destination: Option<std::path::PathBuf>,
+) -> ScanReadyAnalysis {
     let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     config.crashgen_name = "Buffout 4".to_string();
     config.crashgen_latest = "1.26.2".to_string();
@@ -15,14 +22,16 @@ fn make_ready_analysis() -> ScanReadyAnalysis {
     config.game_version_vr = "1.2.72".to_string();
     config.xse_acronym = "F4SE".to_string();
 
-    ScanReadyAnalysis {
-        analysis_config: config,
-        formid_readiness: FormIdReadiness {
+    ScanReadyAnalysis::new(
+        config,
+        FormIdReadiness {
             enabled: false,
             database_paths: Vec::new(),
         },
-        cache_profile: SHORT_SCAN_CACHE_PROFILE,
-    }
+        SHORT_SCAN_CACHE_PROFILE,
+        paths,
+        unsolved_logs_destination,
+    )
 }
 
 fn write_fixture_log(temp: &tempfile::TempDir, filename: &str) -> std::path::PathBuf {
@@ -33,15 +42,11 @@ fn write_fixture_log(temp: &tempfile::TempDir, filename: &str) -> std::path::Pat
 
 fn standard_request(
     log_path: std::path::PathBuf,
-    unsolved_dir: std::path::PathBuf,
+    unsolved_logs: StandardUnsolvedLogsIntent,
 ) -> CrashLogScanRunRequest {
     CrashLogScanRunRequest {
         logs: vec![log_path],
-        mode: CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
-            unsolved_logs: UnsolvedLogsPolicy::MoveTo {
-                directory: unsolved_dir,
-            },
-        }),
+        intent: CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs }),
         max_concurrent: Some(1),
         cancellation: None,
         preserve_order: true,
@@ -52,16 +57,16 @@ fn standard_request(
 fn standard_scan_run_writes_autoscan_report() {
     let temp = tempdir().expect("tempdir should succeed");
     let log_path = write_fixture_log(&temp, "crash-success.log");
-    let unsolved_dir = temp.path().join("CLASSIC Backup").join("Unsolved Logs");
     let run = CrashLogScanRun::new(make_ready_analysis());
     let mut events = Vec::new();
 
     let result = get_runtime()
-        .block_on(
-            run.run(standard_request(log_path.clone(), unsolved_dir), |event| {
+        .block_on(run.run(
+            standard_request(log_path.clone(), StandardUnsolvedLogsIntent::LeaveInPlace),
+            |event| {
                 events.push(event);
-            }),
-        )
+            },
+        ))
         .expect("scan run should succeed");
 
     let autoscan_path = temp.path().join("crash-success-AUTOSCAN.md");
@@ -79,17 +84,141 @@ fn standard_scan_run_writes_autoscan_report() {
 }
 
 #[test]
-fn standard_scan_run_moves_failed_log_to_unsolved_logs() {
+fn standard_scan_run_leave_in_place_does_not_move_failed_log() {
     let temp = tempdir().expect("tempdir should succeed");
-    let log_path = write_fixture_log(&temp, "crash-write-fail.log");
-    let autoscan_path = temp.path().join("crash-write-fail-AUTOSCAN.md");
+    let log_path = write_fixture_log(&temp, "crash-leave-fail.log");
+    let autoscan_path = temp.path().join("crash-leave-fail-AUTOSCAN.md");
     std::fs::create_dir(&autoscan_path).expect("directory should block report write");
-    let unsolved_dir = temp.path().join("CLASSIC Backup").join("Unsolved Logs");
     let run = CrashLogScanRun::new(make_ready_analysis());
 
     let result = get_runtime()
         .block_on(run.run(
-            standard_request(log_path.clone(), unsolved_dir.clone()),
+            standard_request(log_path.clone(), StandardUnsolvedLogsIntent::LeaveInPlace),
+            |_| {},
+        ))
+        .expect("scan run should return per-log failure");
+
+    assert_eq!(result.succeeded, 0);
+    assert_eq!(result.failed, 1);
+    assert_eq!(result.logs[0].outcome, CrashLogScanOutcome::Failed);
+    assert!(!result.logs[0].moved_to_unsolved_logs);
+    assert!(log_path.exists());
+}
+
+#[test]
+fn standard_scan_run_configured_or_default_uses_canonical_destination_from_intake_paths() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let log_path = write_fixture_log(&temp, "crash-canonical-fail.log");
+    let autoscan_path = temp.path().join("crash-canonical-fail-AUTOSCAN.md");
+    std::fs::create_dir(&autoscan_path).expect("directory should block report write");
+    let unsolved_dir = temp.path().join("CLASSIC Backup").join("Unsolved Logs");
+    let paths = crate::CrashLogScanIntakePaths::new(temp.path(), temp.path().join("CLASSIC Data"));
+    let run = CrashLogScanRun::new(make_ready_analysis_with(Some(paths), None));
+
+    let result = get_runtime()
+        .block_on(run.run(
+            standard_request(
+                log_path.clone(),
+                StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
+            ),
+            |_| {},
+        ))
+        .expect("scan run should return per-log failure");
+
+    assert_eq!(result.succeeded, 0);
+    assert_eq!(result.failed, 1);
+    assert_eq!(result.logs[0].outcome, CrashLogScanOutcome::Failed);
+    assert!(result.logs[0].moved_to_unsolved_logs);
+    assert!(!log_path.exists());
+    assert!(unsolved_dir.join("crash-canonical-fail.log").exists());
+}
+
+#[test]
+fn standard_scan_run_configured_or_default_uses_configured_destination() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let log_path = write_fixture_log(&temp, "crash-configured-fail.log");
+    let autoscan_path = temp.path().join("crash-configured-fail-AUTOSCAN.md");
+    std::fs::create_dir(&autoscan_path).expect("directory should block report write");
+    let configured_dir = temp.path().join("user-selected-unsolved");
+    let paths = crate::CrashLogScanIntakePaths::new(temp.path(), temp.path().join("CLASSIC Data"));
+    let run = CrashLogScanRun::new(make_ready_analysis_with(
+        Some(paths),
+        Some(configured_dir.clone()),
+    ));
+
+    let result = get_runtime()
+        .block_on(run.run(
+            standard_request(
+                log_path.clone(),
+                StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
+            ),
+            |_| {},
+        ))
+        .expect("scan run should return per-log failure");
+
+    assert_eq!(result.failed, 1);
+    assert!(result.logs[0].moved_to_unsolved_logs);
+    assert!(!log_path.exists());
+    assert!(configured_dir.join("crash-configured-fail.log").exists());
+}
+
+#[test]
+fn standard_scan_run_configured_or_default_without_destination_source_fails_setup() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let log_path = write_fixture_log(&temp, "crash-no-destination-source.log");
+    let run = CrashLogScanRun::new(make_ready_analysis());
+
+    let error = match get_runtime().block_on(run.run(
+        standard_request(
+            log_path.clone(),
+            StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
+        ),
+        |_| {},
+    )) {
+        Ok(_) => panic!("missing destination source should fail setup"),
+        Err(error) => error,
+    };
+
+    assert!(matches!(error, ScanLogError::InvalidInput(_)));
+    assert!(log_path.exists());
+}
+
+#[test]
+fn standard_scan_run_relative_custom_destination_fails_setup() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let log_path = write_fixture_log(&temp, "crash-relative-destination.log");
+    let run = CrashLogScanRun::new(make_ready_analysis());
+
+    let error = match get_runtime().block_on(run.run(
+        standard_request(
+            log_path.clone(),
+            StandardUnsolvedLogsIntent::MoveToCustom(std::path::PathBuf::from("relative")),
+        ),
+        |_| {},
+    )) {
+        Ok(_) => panic!("relative custom destination should fail setup"),
+        Err(error) => error,
+    };
+
+    assert!(matches!(error, ScanLogError::InvalidInput(_)));
+    assert!(log_path.exists());
+}
+
+#[test]
+fn standard_scan_run_custom_destination_moves_failed_log_to_unsolved_logs() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let log_path = write_fixture_log(&temp, "crash-write-fail.log");
+    let autoscan_path = temp.path().join("crash-write-fail-AUTOSCAN.md");
+    std::fs::create_dir(&autoscan_path).expect("directory should block report write");
+    let unsolved_dir = temp.path().join("custom-unsolved");
+    let run = CrashLogScanRun::new(make_ready_analysis());
+
+    let result = get_runtime()
+        .block_on(run.run(
+            standard_request(
+                log_path.clone(),
+                StandardUnsolvedLogsIntent::MoveToCustom(unsolved_dir.clone()),
+            ),
             |_| {},
         ))
         .expect("scan run should return per-log failure");
@@ -103,12 +232,41 @@ fn standard_scan_run_moves_failed_log_to_unsolved_logs() {
 }
 
 #[test]
+fn standard_scan_run_unwritable_custom_destination_remains_per_log_failure() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let log_path = write_fixture_log(&temp, "crash-unwritable-fail.log");
+    let autoscan_path = temp.path().join("crash-unwritable-fail-AUTOSCAN.md");
+    std::fs::create_dir(&autoscan_path).expect("directory should block report write");
+    let blocked_destination = temp.path().join("blocked-destination");
+    std::fs::write(&blocked_destination, "not a directory")
+        .expect("destination blocker should be written");
+    let run = CrashLogScanRun::new(make_ready_analysis());
+
+    let result = get_runtime()
+        .block_on(run.run(
+            standard_request(
+                log_path.clone(),
+                StandardUnsolvedLogsIntent::MoveToCustom(blocked_destination.clone()),
+            ),
+            |_| {},
+        ))
+        .expect("unwritable destination should be a per-log failure");
+
+    assert_eq!(result.failed, 1);
+    assert_eq!(result.logs[0].outcome, CrashLogScanOutcome::Failed);
+    assert!(!result.logs[0].moved_to_unsolved_logs);
+    assert!(result.logs[0].error.is_some());
+    assert!(log_path.exists());
+    assert!(blocked_destination.is_file());
+}
+
+#[test]
 fn standard_scan_run_preserves_existing_unsolved_log() {
     let temp = tempdir().expect("tempdir should succeed");
     let log_path = write_fixture_log(&temp, "crash-overwrite-fail.log");
     let autoscan_path = temp.path().join("crash-overwrite-fail-AUTOSCAN.md");
     std::fs::create_dir(&autoscan_path).expect("directory should block report write");
-    let unsolved_dir = temp.path().join("CLASSIC Backup").join("Unsolved Logs");
+    let unsolved_dir = temp.path().join("custom-unsolved");
     std::fs::create_dir_all(&unsolved_dir).expect("unsolved directory should be created");
     let unsolved_log_path = unsolved_dir.join("crash-overwrite-fail.log");
     std::fs::write(&unsolved_log_path, "stale unsolved log")
@@ -117,7 +275,10 @@ fn standard_scan_run_preserves_existing_unsolved_log() {
 
     let result = get_runtime()
         .block_on(run.run(
-            standard_request(log_path.clone(), unsolved_dir.clone()),
+            standard_request(
+                log_path.clone(),
+                StandardUnsolvedLogsIntent::MoveToCustom(unsolved_dir.clone()),
+            ),
             |_| {},
         ))
         .expect("scan run should return per-log failure");
@@ -143,7 +304,7 @@ fn move_unsolved_artifacts_preserves_existing_log_and_report_destinations() {
     let temp = tempdir().expect("tempdir should succeed");
     let log_path = temp.path().join("crash-overwrite-artifacts.log");
     let report_path = temp.path().join("crash-overwrite-artifacts-AUTOSCAN.md");
-    let unsolved_dir = temp.path().join("CLASSIC Backup").join("Unsolved Logs");
+    let unsolved_dir = temp.path().join("custom-unsolved");
     std::fs::create_dir_all(&unsolved_dir).expect("unsolved directory should be created");
     let unsolved_log_path = unsolved_dir.join("crash-overwrite-artifacts.log");
     let unsolved_report_path = unsolved_dir.join("crash-overwrite-artifacts-AUTOSCAN.md");
@@ -193,7 +354,7 @@ fn targeted_scan_run_does_not_move_failed_log_to_unsolved_logs() {
         .block_on(run.run(
             CrashLogScanRunRequest {
                 logs: vec![log_path.clone()],
-                mode: CrashLogScanRunMode::Targeted,
+                intent: CrashLogScanRunIntent::Targeted,
                 max_concurrent: Some(1),
                 cancellation: None,
                 preserve_order: true,
@@ -220,8 +381,8 @@ fn cancellation_before_start_is_counted_separately() {
         .block_on(run.run(
             CrashLogScanRunRequest {
                 logs: vec![log_path],
-                mode: CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
-                    unsolved_logs: UnsolvedLogsPolicy::LeaveInPlace,
+                intent: CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+                    unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
                 }),
                 max_concurrent: Some(1),
                 cancellation: Some(Arc::clone(&cancellation)),

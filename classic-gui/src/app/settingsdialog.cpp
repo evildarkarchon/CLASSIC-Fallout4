@@ -128,8 +128,9 @@ void SettingsDialog::setupUi()
         auto* btnOk = new QPushButton(QStringLiteral("OK"));
         btnOk->setDefault(true);
         connect(btnOk, &QPushButton::clicked, this, [this]() {
-            saveSettings();
-            accept();
+            if (saveSettings()) {
+                accept();
+            }
         });
         btnRow->addWidget(btnOk);
 
@@ -174,6 +175,36 @@ void SettingsDialog::setupScanningTab(QTabWidget* tabs)
     layout->addWidget(m_chkSimplifyLogs);
     layout->addWidget(m_chkShowFormIdValues);
     layout->addWidget(m_chkMoveUnsolvedLogs);
+
+    {
+        auto* group = new QGroupBox(QStringLiteral("Unsolved Logs Destination"));
+        auto* groupLayout = new QVBoxLayout(group);
+
+        auto* helpLabel = new QLabel(
+            QStringLiteral("Optional absolute folder for moved Unsolved Logs. Leave empty to use the canonical "
+                           "CLASSIC Backup/Unsolved Logs folder."));
+        helpLabel->setWordWrap(true);
+        groupLayout->addWidget(helpLabel);
+
+        auto* row = new QHBoxLayout();
+        m_editUnsolvedLogsDestination = new QLineEdit();
+        m_editUnsolvedLogsDestination->setPlaceholderText(QStringLiteral("Leave empty for canonical destination..."));
+        row->addWidget(m_editUnsolvedLogsDestination);
+
+        auto* btnBrowse = new QPushButton(QStringLiteral("Browse"));
+        btnBrowse->setFixedWidth(80);
+        connect(btnBrowse, &QPushButton::clicked, this, &SettingsDialog::onBrowseUnsolvedLogsDestination);
+        row->addWidget(btnBrowse);
+
+        auto* btnReset = new QPushButton(QStringLiteral("Reset"));
+        btnReset->setFixedWidth(60);
+        connect(btnReset, &QPushButton::clicked, this, &SettingsDialog::onResetUnsolvedLogsDestination);
+        row->addWidget(btnReset);
+
+        groupLayout->addLayout(row);
+        layout->addWidget(group);
+    }
+
     layout->addWidget(m_chkAutoSwitchAfterScan);
 
     // Max Concurrent Scans
@@ -393,6 +424,12 @@ void SettingsDialog::loadSettings()
         m_chkMoveUnsolvedLogs->setChecked(getBool("CLASSIC_Settings.Move Unsolved Logs"));
         m_chkAutoSwitchAfterScan->setChecked(getBool("CLASSIC_Settings.Auto Switch After Scan"));
 
+        const auto unsolvedDestination = classic::settings::yaml_ops_get_string(
+            *ops, "CLASSIC_Settings.Unsolved Logs Destination", "");
+        if (m_editUnsolvedLogsDestination) {
+            m_editUnsolvedLogsDestination->setText(classic::toQString(unsolvedDestination));
+        }
+
         // Max Concurrent Scans
         auto maxScans = classic::settings::yaml_ops_get_setting_value(*ops, "CLASSIC_Settings.Max Concurrent Scans");
         if (maxScans.value_type == "integer") {
@@ -433,10 +470,19 @@ void SettingsDialog::loadSettings()
     }
 }
 
-void SettingsDialog::saveSettings()
+bool SettingsDialog::saveSettings()
 {
     if (m_dataDir.isEmpty())
-        return;
+        return true;
+
+    const QString rawUnsolvedDestination =
+        m_editUnsolvedLogsDestination ? m_editUnsolvedLogsDestination->text().trimmed() : QString();
+    const QString unsolvedDestination = rawUnsolvedDestination.isEmpty() ? QString() : QDir::cleanPath(rawUnsolvedDestination);
+    if (!unsolvedDestination.isEmpty() && !QDir::isAbsolutePath(unsolvedDestination)) {
+        QMessageBox::warning(this, QStringLiteral("Settings Error"),
+                             QStringLiteral("Unsolved Logs Destination must be an absolute path."));
+        return false;
+    }
 
     QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC Settings.yaml");
     try {
@@ -460,7 +506,10 @@ void SettingsDialog::saveSettings()
         classic::settings::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Move Unsolved Logs",
                                                      m_chkMoveUnsolvedLogs->isChecked());
         classic::settings::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Auto Switch After Scan",
-                                                     m_chkAutoSwitchAfterScan->isChecked());
+                                                      m_chkAutoSwitchAfterScan->isChecked());
+        classic::settings::yaml_ops_set_string_setting(
+            *ops, "CLASSIC_Settings.Unsolved Logs Destination",
+            std::string(unsolvedDestination.toUtf8().constData()));
 
         // Max Concurrent Scans
         classic::settings::yaml_ops_set_integer_setting(*ops, "CLASSIC_Settings.Max Concurrent Scans",
@@ -513,6 +562,8 @@ void SettingsDialog::saveSettings()
         // Save to disk
         classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
+        return true;
+
     } catch (const std::exception& e) {
         QMessageBox::warning(this, QStringLiteral("Settings Error"),
                              QStringLiteral("Failed to save settings: ") + QString::fromUtf8(e.what()));
@@ -520,6 +571,8 @@ void SettingsDialog::saveSettings()
         QMessageBox::warning(this, QStringLiteral("Settings Error"),
                              QStringLiteral("Failed to save settings: unknown error"));
     }
+
+    return false;
 }
 
 void SettingsDialog::resetToDefaults()
@@ -538,6 +591,9 @@ void SettingsDialog::resetToDefaults()
     m_chkSimplifyLogs->setChecked(false);
     m_chkShowFormIdValues->setChecked(false);
     m_chkMoveUnsolvedLogs->setChecked(false);
+    if (m_editUnsolvedLogsDestination) {
+        m_editUnsolvedLogsDestination->clear();
+    }
     m_chkAutoSwitchAfterScan->setChecked(true); // default is true
     m_spinMaxConcurrentScans->setValue(0);
     if (m_editGameFolder) {
@@ -583,6 +639,22 @@ void SettingsDialog::onBrowseIniFolder()
 void SettingsDialog::onResetIniFolder()
 {
     m_editIniFolder->clear();
+}
+
+void SettingsDialog::onBrowseUnsolvedLogsDestination()
+{
+    const QString initial = m_editUnsolvedLogsDestination ? m_editUnsolvedLogsDestination->text() : QString();
+    QString dir = QFileDialog::getExistingDirectory(this, QStringLiteral("Select Unsolved Logs Destination"), initial);
+    if (!dir.isEmpty() && m_editUnsolvedLogsDestination) {
+        m_editUnsolvedLogsDestination->setText(dir);
+    }
+}
+
+void SettingsDialog::onResetUnsolvedLogsDestination()
+{
+    if (m_editUnsolvedLogsDestination) {
+        m_editUnsolvedLogsDestination->clear();
+    }
 }
 
 void SettingsDialog::onAddFormIdDb()

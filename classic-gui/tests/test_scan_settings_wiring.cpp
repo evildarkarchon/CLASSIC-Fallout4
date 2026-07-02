@@ -84,7 +84,7 @@ void ScanSettingsWiringTests::scan_controller_forwards_flags_to_worker()
     const QString sourceText = QString::fromUtf8(file.readAll());
 
     const QRegularExpression lambdaRegex(QStringLiteral(
-        R"(worker->doScan\((?:.|\n)*?gameVersion,\s*showFormIdValues,\s*fcxMode,\s*simplifyLogs,\s*moveUnsolvedLogs,\s*maxConcurrentScans(?:,\s*targetedMode)?\s*\))"));
+        R"(worker->doScan\((?:.|\n)*?gameVersion,\s*showFormIdValues,\s*fcxMode,\s*simplifyLogs,\s*moveUnsolvedLogs,\s*unsolvedLogsDestination,\s*maxConcurrentScans(?:,\s*targetedMode)?\s*\))"));
     QVERIFY2(lambdaRegex.match(sourceText).hasMatch(),
              "ScanController should pass scan settings through to ScanWorker::doScan()");
 }
@@ -114,7 +114,7 @@ void ScanSettingsWiringTests::mainwindow_forwards_game_version_to_scan_controlle
     const QString sourceText = QString::fromUtf8(file.readAll());
 
     const QRegularExpression callRegex(QStringLiteral(
-        R"(m_scanController->startScan\((?:.|\n)*?m_gameVersion,\s*m_showFormIdValues,\s*m_fcxMode,\s*m_simplifyLogs,\s*m_moveUnsolvedLogs,\s*m_maxConcurrentScans\s*,(?:.|\n)*?\))"));
+        R"(m_scanController->startScan\((?:.|\n)*?m_gameVersion,\s*m_showFormIdValues,\s*m_fcxMode,\s*m_simplifyLogs,\s*m_moveUnsolvedLogs,\s*m_unsolvedLogsDestination,\s*m_maxConcurrentScans\s*,(?:.|\n)*?\))"));
     QVERIFY2(callRegex.match(sourceText).hasMatch(),
              "MainWindow should forward game version and all scan settings to ScanController::startScan()");
 }
@@ -128,9 +128,13 @@ void ScanSettingsWiringTests::scan_worker_handles_move_unsolved_and_max_concurre
 
     const QString sourceText = QString::fromUtf8(file.readAll());
     QVERIFY2(sourceText.contains(QStringLiteral("moveUnsolvedLogs")),
-             "ScanWorker should receive moveUnsolvedLogs setting");
+              "ScanWorker should receive moveUnsolvedLogs setting");
+    QVERIFY2(sourceText.contains(QStringLiteral("unsolvedLogsDestination")),
+             "ScanWorker should receive the custom Unsolved Logs Destination setting");
+    QVERIFY2(sourceText.contains(QStringLiteral("request.unsolved_logs_destination")),
+             "ScanWorker should forward the custom Unsolved Logs Destination to Rust");
     QVERIFY2(sourceText.contains(QStringLiteral("maxConcurrentScans")),
-             "ScanWorker should receive maxConcurrentScans setting");
+              "ScanWorker should receive maxConcurrentScans setting");
 }
 
 void ScanSettingsWiringTests::scan_worker_uses_progress_enabled_batch_api()
@@ -529,7 +533,7 @@ void ScanSettingsWiringTests::settings_dialog_resets_stale_game_exe_path_when_ga
         return sourceText.mid(start, end - start);
     };
 
-    const QString body = extractFunctionBody(QStringLiteral("void SettingsDialog::saveSettings()"));
+    const QString body = extractFunctionBody(QStringLiteral("bool SettingsDialog::saveSettings()"));
     QVERIFY2(!body.isEmpty(), "SettingsDialog::saveSettings() should exist");
     QVERIFY2(body.contains(QStringLiteral("QFileInfo")),
              "SettingsDialog should inspect existing game executable path location when saving");
@@ -940,7 +944,7 @@ void ScanSettingsWiringTests::scan_controller_disables_unsolved_relocation_for_t
              "ScanController should detect targeted mode before dispatching work to ScanWorker");
 
     const QRegularExpression lambdaRegex(
-        QStringLiteral(R"(worker->doScan\((?:.|\n)*?moveUnsolvedLogs,\s*maxConcurrentScans,\s*targetedMode\s*\))"));
+        QStringLiteral(R"(worker->doScan\((?:.|\n)*?moveUnsolvedLogs,\s*unsolvedLogsDestination,\s*maxConcurrentScans,\s*targetedMode\s*\))"));
     QVERIFY2(lambdaRegex.match(sourceText).hasMatch(),
              "ScanController should pass targetedMode to ScanWorker::doScan()");
 }
@@ -963,7 +967,9 @@ void ScanSettingsWiringTests::scan_worker_skips_unsolved_relocation_for_targeted
 
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
     QVERIFY2(sourceText.contains(QStringLiteral("request.move_unsolved_logs = moveUnsolvedLogs")),
-             "ScanWorker should pass the unsolved relocation setting to Rust");
+              "ScanWorker should pass the unsolved relocation setting to Rust");
+    QVERIFY2(sourceText.contains(QStringLiteral("request.unsolved_logs_destination = classic::toRustString(unsolvedLogsDestination)")),
+             "ScanWorker should pass the destination setting to Rust without constructing the canonical path");
     QVERIFY2(sourceText.contains(QStringLiteral("request.targeted_mode = targetedMode")),
              "ScanWorker should pass targetedMode to Rust");
     const QRegularExpression scanRunCallRegex(QStringLiteral(

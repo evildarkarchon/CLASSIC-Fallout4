@@ -25,8 +25,8 @@ files:
     # The drift-guard CI step (tools/schema_version_gate.py) uses this
     # mapping to cross-check the YAML header against the client constant.
     client_schemas_const: "MAIN_YAML"
-    min_client_schema: "1.0"
-    max_client_schema: "1.999"
+    min_client_schema: "2.0"
+    max_client_schema: "2.999"
   - name: "CLASSIC Fallout4.yaml"
     client_schemas_const: "GAME_FALLOUT4_YAML"
     min_client_schema: "1.0"

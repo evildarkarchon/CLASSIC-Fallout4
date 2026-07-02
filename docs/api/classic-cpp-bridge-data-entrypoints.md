@@ -588,6 +588,7 @@ C++ callers populate `ScanRunRequestDto` and pass it by reference. Request field
 - `fcx_mode`
 - `simplify_logs`
 - `move_unsolved_logs`
+- `unsolved_logs_destination` (empty string means not supplied)
 - `targeted_mode`
 - `max_concurrent`
 - `log_paths`
@@ -596,10 +597,13 @@ Current bridge behavior:
 
 - accepts selected Crash Log paths from C++ callers; it does not collect logs
 - `request.max_concurrent == 0` becomes the core adaptive concurrency default
-- `request.targeted_mode = true` creates a Targeted Crash Log Scan Run, which never moves failed Crash Logs or Autoscan Reports to Unsolved Logs
-- `request.targeted_mode = false` creates a Standard Crash Log Scan Run; when `request.move_unsolved_logs` is true, failed Crash Logs and sibling Autoscan Reports move to `{request.yaml_dir_root}/CLASSIC Backup/Unsolved Logs`
+- `request.targeted_mode = true` creates a Targeted Crash Log Scan Run and ignores `move_unsolved_logs` plus `unsolved_logs_destination`
+- `request.targeted_mode = false` creates a Standard Crash Log Scan Run
+- Standard requests with `move_unsolved_logs = false` leave failed logs in place and ignore `unsolved_logs_destination`
+- Standard requests with `move_unsolved_logs = true` and non-empty `unsolved_logs_destination` request that custom destination; Rust rejects relative paths as setup errors
+- Standard requests with `move_unsolved_logs = true` and empty `unsolved_logs_destination` use Rust destination resolution from `CLASSIC_Settings.Unsolved Logs Destination`, falling back to canonical `CLASSIC Backup/Unsolved Logs` under path-backed intake roots
 - Rust writes Autoscan Reports before returning per-log results; C++ callers no longer receive `report_lines` from this entry point
-- setup failures return a CXX `Result` error; per-log analysis, Autoscan Report write, and Unsolved Logs failures are represented in `ScanRunLogResult`
+- setup failures return a CXX `Result` error; per-log analysis, Autoscan Report write, and invalid or unwritable absolute Unsolved Logs movement failures are represented in `ScanRunLogResult`
 - progress uses the existing `ScanBatchProgressCallback` and `BatchProgressEvent` DTO shape
 - cooperative cancellation uses a Rust-owned `ScanCancellationToken`; callers create/reset the token, pass it alongside the request to `scan_run_execute(...)`, and call `scan_cancellation_token_cancel(...)` to stop queued logs before they start
 

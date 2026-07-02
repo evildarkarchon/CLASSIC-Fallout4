@@ -399,6 +399,9 @@ pub struct ClassicConfig {
     /// Move unsolved logs to subfolder
     pub move_unsolved_logs: bool,
 
+    /// Optional absolute folder for Unsolved Logs relocation
+    pub unsolved_logs_destination: Option<PathBuf>,
+
     /// Simplify logs (may remove important info)
     pub simplify_logs: bool,
 
@@ -487,6 +490,7 @@ impl Default for ClassicConfig {
             show_formid_values: false,
             stat_logging: false,
             move_unsolved_logs: false,
+            unsolved_logs_destination: None,
             simplify_logs: false,
             update_check: true,
             game_version: "auto".to_string(),
@@ -535,6 +539,11 @@ impl ClassicConfig {
         let show_formid_values = yaml["show_formid_values"].as_bool().unwrap_or(false);
         let stat_logging = yaml["stat_logging"].as_bool().unwrap_or(false);
         let move_unsolved_logs = yaml["move_unsolved_logs"].as_bool().unwrap_or(false);
+        let unsolved_logs_destination = yaml["unsolved_logs_destination"]
+            .as_str()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(PathBuf::from);
         let simplify_logs = yaml["simplify_logs"].as_bool().unwrap_or(false);
         let update_check = yaml["update_check"].as_bool().unwrap_or(true);
         let game_version = yaml["game_version"].as_str().unwrap_or("auto").to_string();
@@ -582,6 +591,7 @@ impl ClassicConfig {
             show_formid_values,
             stat_logging,
             move_unsolved_logs,
+            unsolved_logs_destination,
             simplify_logs,
             update_check,
             game_version,
@@ -613,6 +623,12 @@ impl ClassicConfig {
             Yaml::String("move_unsolved_logs".to_string()),
             Yaml::Boolean(self.move_unsolved_logs),
         );
+        if let Some(destination) = &self.unsolved_logs_destination {
+            root.insert(
+                Yaml::String("unsolved_logs_destination".to_string()),
+                Yaml::String(destination.to_string_lossy().to_string()),
+            );
+        }
         root.insert(
             Yaml::String("simplify_logs".to_string()),
             Yaml::Boolean(self.simplify_logs),

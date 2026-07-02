@@ -150,6 +150,7 @@ private:
     bool m_fcxMode = false;
     bool m_simplifyLogs = false;
     bool m_moveUnsolvedLogs = false;
+    QString m_unsolvedLogsDestination;
     int m_maxConcurrentScans = 0;
     QElapsedTimer m_crashScanTimer;
     int m_crashScanTotalLogs = 0;

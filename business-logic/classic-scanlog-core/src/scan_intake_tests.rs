@@ -52,6 +52,19 @@ fn write_minimal_yaml_tree(root: &Path, data: &Path) {
     .expect("ignore YAML should be written");
 }
 
+fn prepare_path_backed(root: &Path, data: &Path) -> Result<ScanReadyAnalysis> {
+    classic_shared_core::get_runtime().block_on(
+        CrashLogScanIntake::from_yaml_paths(
+            root,
+            data,
+            "Fallout4",
+            "auto",
+            CrashLogScanOptions::default(),
+        )
+        .prepare(),
+    )
+}
+
 #[test]
 fn path_backed_and_in_memory_yaml_prepare_equivalent_scan_ready_payloads() {
     let temp = tempdir().expect("tempdir should be created");
@@ -96,39 +109,44 @@ fn path_backed_and_in_memory_yaml_prepare_equivalent_scan_ready_payloads() {
         .expect("in-memory intake should prepare");
 
     assert_eq!(
-        path_ready.analysis_config.classic_version,
-        in_memory_ready.analysis_config.classic_version
+        path_ready.analysis_config().classic_version,
+        in_memory_ready.analysis_config().classic_version
     );
     assert_eq!(
-        path_ready.analysis_config.crashgen_name,
-        in_memory_ready.analysis_config.crashgen_name
+        path_ready.analysis_config().crashgen_name,
+        in_memory_ready.analysis_config().crashgen_name
     );
     assert_eq!(
-        path_ready.analysis_config.game_version,
-        in_memory_ready.analysis_config.game_version
+        path_ready.analysis_config().game_version,
+        in_memory_ready.analysis_config().game_version
     );
-    assert_eq!(path_ready.analysis_config.xse_acronym, "F4SE");
-    assert_eq!(path_ready.analysis_config.crashgen_name, "Buffout 4");
+    assert_eq!(path_ready.analysis_config().xse_acronym, "F4SE");
+    assert_eq!(path_ready.analysis_config().crashgen_name, "Buffout 4");
     assert!(
-        !path_ready.analysis_config.crashgen_latest.is_empty(),
+        !path_ready.analysis_config().crashgen_latest.is_empty(),
         "intake should resolve Crashgen metadata through registry or YAML fallback"
     );
-    assert!(path_ready.analysis_config.show_formid_values);
-    assert!(path_ready.analysis_config.fcx_mode);
-    assert!(path_ready.analysis_config.simplify_logs);
+    assert!(path_ready.analysis_config().show_formid_values);
+    assert!(path_ready.analysis_config().fcx_mode);
+    assert!(path_ready.analysis_config().simplify_logs);
     assert_eq!(
-        path_ready.analysis_config.remove_list,
+        path_ready.analysis_config().remove_list,
         vec!["(void*)".to_string(), "Basic Render Driver".to_string()]
     );
     assert_eq!(
-        path_ready.analysis_config.remove_list,
-        in_memory_ready.analysis_config.remove_list
+        path_ready.analysis_config().remove_list,
+        in_memory_ready.analysis_config().remove_list
     );
     assert_eq!(
-        path_ready.formid_readiness,
-        in_memory_ready.formid_readiness
+        path_ready.formid_readiness(),
+        in_memory_ready.formid_readiness()
     );
     assert!(path_ready.should_initialize_formid_database());
+    assert_eq!(
+        path_ready.paths(),
+        Some(&CrashLogScanIntakePaths::new(root, &data))
+    );
+    assert!(path_ready.unsolved_logs_destination().is_none());
 }
 
 #[test]
@@ -151,9 +169,9 @@ fn selected_game_version_resolution_flows_through_intake() {
         )
         .expect("VR intake should prepare");
 
-    assert_eq!(original_ready.analysis_config.game_version, "1.10.163");
-    assert_eq!(vr_ready.analysis_config.game_version, "1.2.72");
-    assert_eq!(vr_ready.analysis_config.game_version_vr, "1.2.72");
+    assert_eq!(original_ready.analysis_config().game_version, "1.10.163");
+    assert_eq!(vr_ready.analysis_config().game_version, "1.2.72");
+    assert_eq!(vr_ready.analysis_config().game_version_vr, "1.2.72");
 }
 
 #[test]
@@ -197,13 +215,103 @@ fn in_memory_yaml_without_paths_preserves_config_and_avoids_sidecar_paths() {
         )
         .expect("in-memory intake should prepare without paths");
 
-    assert_eq!(ready.analysis_config.classic_version, "v9.1.0");
-    assert!(ready.analysis_config.show_formid_values);
-    assert!(ready.analysis_config.simplify_logs);
-    assert!(ready.analysis_config.remove_list.is_empty());
-    assert!(ready.formid_readiness.is_enabled());
-    assert!(ready.formid_readiness.database_paths().is_empty());
+    assert_eq!(ready.analysis_config().classic_version, "v9.1.0");
+    assert!(ready.analysis_config().show_formid_values);
+    assert!(ready.analysis_config().simplify_logs);
+    assert!(ready.analysis_config().remove_list.is_empty());
+    assert!(ready.formid_readiness().is_enabled());
+    assert!(ready.formid_readiness().database_paths().is_empty());
+    assert!(ready.paths().is_none());
+    assert!(ready.unsolved_logs_destination().is_none());
     assert!(!ready.should_initialize_formid_database());
+}
+
+#[test]
+fn missing_unsolved_logs_destination_produces_no_configured_destination() {
+    let temp = tempdir().expect("tempdir should be created");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+
+    let ready = prepare_path_backed(root, &data).expect("intake should prepare");
+
+    assert!(ready.unsolved_logs_destination().is_none());
+}
+
+#[test]
+fn empty_unsolved_logs_destination_produces_no_configured_destination() {
+    let temp = tempdir().expect("tempdir should be created");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    std::fs::write(
+        root.join("CLASSIC Settings.yaml"),
+        "CLASSIC_Settings:\n  Unsolved Logs Destination:\n",
+    )
+    .expect("settings YAML should be written");
+
+    let ready = prepare_path_backed(root, &data).expect("intake should prepare");
+
+    assert!(ready.unsolved_logs_destination().is_none());
+}
+
+#[test]
+fn malformed_settings_yaml_preserves_fail_soft_destination_resolution() {
+    let temp = tempdir().expect("tempdir should be created");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    std::fs::write(root.join("CLASSIC Settings.yaml"), "CLASSIC_Settings: [\n")
+        .expect("settings YAML should be written");
+
+    let ready = prepare_path_backed(root, &data).expect("intake should prepare fail-soft");
+
+    assert!(ready.unsolved_logs_destination().is_none());
+}
+
+#[test]
+fn absolute_unsolved_logs_destination_is_stored_without_existing() {
+    let temp = tempdir().expect("tempdir should be created");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    let destination = root.join("custom unsolved logs");
+    write_minimal_yaml_tree(root, &data);
+    std::fs::write(
+        root.join("CLASSIC Settings.yaml"),
+        format!(
+            "CLASSIC_Settings:\n  Unsolved Logs Destination: '{}'\n",
+            destination.display()
+        ),
+    )
+    .expect("settings YAML should be written");
+
+    let ready = prepare_path_backed(root, &data).expect("intake should prepare");
+
+    assert_eq!(
+        ready.unsolved_logs_destination(),
+        Some(destination.as_path())
+    );
+    assert!(!destination.exists());
+}
+
+#[test]
+fn relative_unsolved_logs_destination_fails_setup() {
+    let temp = tempdir().expect("tempdir should be created");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    std::fs::write(
+        root.join("CLASSIC Settings.yaml"),
+        "CLASSIC_Settings:\n  Unsolved Logs Destination: relative/path\n",
+    )
+    .expect("settings YAML should be written");
+
+    let error = match prepare_path_backed(root, &data) {
+        Ok(_) => panic!("relative destination should fail"),
+        Err(error) => error,
+    };
+
+    assert!(matches!(error, ScanLogError::InvalidInput(_)));
 }
 
 #[test]

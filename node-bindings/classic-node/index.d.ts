@@ -3288,6 +3288,8 @@ export interface JsScanRunOptions {
   simplifyLogs?: boolean
   /** Whether failed Standard runs move logs and reports to Unsolved Logs. */
   moveUnsolvedLogs?: boolean
+  /** Optional custom destination for moved Unsolved Logs. */
+  unsolvedLogsDestination?: string
   /** Whether this is a Targeted Crash Log Scan Run. */
   targetedMode?: boolean
   /** Optional maximum number of concurrent scans. Zero and undefined use core defaults. */

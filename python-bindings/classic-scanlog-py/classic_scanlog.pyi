@@ -1012,6 +1012,7 @@ def scan_run_execute(
     max_concurrent: int | None = None,
     preserve_order: bool = False,
     cancellation_token: CancellationToken | None = None,
+    unsolved_logs_destination: str | None = None,
 ) -> list[ScanRunLogResult]:
     """Execute a full Crash Log Scan Run for selected logs.
 

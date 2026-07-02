@@ -21,8 +21,8 @@ use classic_scanlog_core::segment_key;
 use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};
 use classic_scanlog_core::{
     CrashLogScanIntake, CrashLogScanOptions, CrashLogScanOutcome, CrashLogScanRun,
-    CrashLogScanRunLogOutcome, CrashLogScanRunMode, CrashLogScanRunRequest, OrchestratorCore,
-    StandardCrashLogScanRunOptions, UnsolvedLogsPolicy,
+    CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, OrchestratorCore,
+    StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent,
 };
 use classic_shared_core::GameId;
 use std::collections::{HashMap, HashSet};
@@ -249,6 +249,8 @@ pub struct JsScanRunOptions {
     pub simplify_logs: Option<bool>,
     /// Whether failed Standard runs move logs and reports to Unsolved Logs.
     pub move_unsolved_logs: Option<bool>,
+    /// Optional custom destination for moved Unsolved Logs.
+    pub unsolved_logs_destination: Option<String>,
     /// Whether this is a Targeted Crash Log Scan Run.
     pub targeted_mode: Option<bool>,
     /// Optional maximum number of concurrent scans. Zero and undefined use core defaults.
@@ -559,6 +561,7 @@ pub async fn scan_run_execute(
     let simplify_logs = options.simplify_logs.unwrap_or(false);
     let targeted_mode = options.targeted_mode.unwrap_or(false);
     let move_unsolved_logs = options.move_unsolved_logs.unwrap_or(false);
+    let unsolved_logs_destination = options.unsolved_logs_destination.clone();
     let preserve_order = options.preserve_order.unwrap_or(false);
     let yaml_dir_root = PathBuf::from(&options.yaml_dir_root);
     let yaml_dir_data = PathBuf::from(&options.yaml_dir_data);
@@ -576,18 +579,20 @@ pub async fn scan_run_execute(
             .await
             .map_err(|error| format!("Failed to prepare scan run: {error}"))?;
 
-            let mode = if targeted_mode {
-                CrashLogScanRunMode::Targeted
+            let intent = if targeted_mode {
+                CrashLogScanRunIntent::Targeted
             } else {
-                CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
-                    unsolved_logs: if move_unsolved_logs {
-                        UnsolvedLogsPolicy::MoveTo {
-                            directory: yaml_dir_root.join("CLASSIC Backup").join("Unsolved Logs"),
+                let unsolved_logs = if move_unsolved_logs {
+                    match unsolved_logs_destination.as_deref().map(str::trim) {
+                        Some(destination) if !destination.is_empty() => {
+                            StandardUnsolvedLogsIntent::MoveToCustom(PathBuf::from(destination))
                         }
-                    } else {
-                        UnsolvedLogsPolicy::LeaveInPlace
-                    },
-                })
+                        _ => StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
+                    }
+                } else {
+                    StandardUnsolvedLogsIntent::LeaveInPlace
+                };
+                CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs })
             };
 
             let run = CrashLogScanRun::new(prepared);
@@ -595,7 +600,7 @@ pub async fn scan_run_execute(
                 .run(
                     CrashLogScanRunRequest {
                         logs: log_paths.into_iter().map(PathBuf::from).collect(),
-                        mode,
+                        intent,
                         max_concurrent,
                         cancellation: None,
                         preserve_order,

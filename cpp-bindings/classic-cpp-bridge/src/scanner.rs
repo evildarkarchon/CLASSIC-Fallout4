@@ -106,6 +106,7 @@ mod ffi {
         fcx_mode: bool,
         simplify_logs: bool,
         move_unsolved_logs: bool,
+        unsolved_logs_destination: String,
         targeted_mode: bool,
         max_concurrent: u32,
         log_paths: Vec<String>,

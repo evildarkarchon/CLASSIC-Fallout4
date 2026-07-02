@@ -80,12 +80,16 @@ _Avoid_: script extender path, docs plugin folder
 Crash Logs and related Autoscan Reports that could not be successfully analyzed and may be moved aside for later review.
 _Avoid_: failed scans, bad logs
 
+**Unsolved Logs Destination**:
+The directory where a Standard Crash Log Scan Run may move Unsolved Logs when relocation is enabled. It can be the canonical CLASSIC backup location or a user-selected location; Targeted Crash Log Scan Runs do not use it.
+_Avoid_: failed log folder, custom move path
+
 **Crash Log Scan Intake**:
 The preparation of an existing Crash Log for analysis. It resolves the selected game/version, YAML Data, Crashgen metadata, scan options, and FormID readiness into a scan-ready setup; it does not collect Crash Logs or move Unsolved Logs.
 _Avoid_: config loading, scan setup
 
 **Crash Log Scan Run**:
-The execution of analysis for one or more existing Crash Logs after intake. It produces Autoscan Reports, records per-log scan outcomes, and may move Unsolved Logs according to scan settings and scan mode.
+The execution of analysis for one or more existing Crash Logs after intake. It produces Autoscan Reports, records per-log scan outcomes, and may move Unsolved Logs according to scan settings and scan intent.
 _Avoid_: scan transaction, analysis job
 
 **Crash Suspect Finding**:

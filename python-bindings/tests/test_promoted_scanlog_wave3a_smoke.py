@@ -221,6 +221,71 @@ def test_scan_run_execute_returns_per_log_outcomes_without_report_lines(tmp_path
     assert result.to_dict()["success"] is False
 
 
+def test_scan_run_execute_targeted_ignores_move_and_destination(tmp_path) -> None:
+    """Targeted scan-run intent wins over move and destination inputs."""
+    _write_scan_run_data_root(tmp_path)
+    missing_log = tmp_path / "missing-targeted.log"
+
+    results = classic_scanlog.scan_run_execute(
+        str(tmp_path),
+        str(tmp_path / "CLASSIC Data"),
+        "Fallout4",
+        "auto",
+        [str(missing_log)],
+        move_unsolved_logs=True,
+        targeted_mode=True,
+        max_concurrent=1,
+        unsolved_logs_destination="relative-destination",
+    )
+
+    assert len(results) == 1
+    assert results[0].success is False
+    assert results[0].moved_to_unsolved_logs is False
+
+
+def test_scan_run_execute_ignores_destination_when_movement_disabled(tmp_path) -> None:
+    """A custom destination does not imply movement for Standard runs."""
+    _write_scan_run_data_root(tmp_path)
+    missing_log = tmp_path / "missing-leave.log"
+
+    results = classic_scanlog.scan_run_execute(
+        str(tmp_path),
+        str(tmp_path / "CLASSIC Data"),
+        "Fallout4",
+        "auto",
+        [str(missing_log)],
+        move_unsolved_logs=False,
+        max_concurrent=1,
+        unsolved_logs_destination="relative-destination",
+    )
+
+    assert len(results) == 1
+    assert results[0].success is False
+    assert results[0].moved_to_unsolved_logs is False
+
+
+def test_scan_run_execute_relative_destination_fails_when_movement_enabled(tmp_path) -> None:
+    """Relative custom destinations are setup errors only when movement is requested."""
+    _write_scan_run_data_root(tmp_path)
+    missing_log = tmp_path / "missing-relative.log"
+
+    try:
+        classic_scanlog.scan_run_execute(
+            str(tmp_path),
+            str(tmp_path / "CLASSIC Data"),
+            "Fallout4",
+            "auto",
+            [str(missing_log)],
+            move_unsolved_logs=True,
+            max_concurrent=1,
+            unsolved_logs_destination="relative-destination",
+        )
+    except Exception as exc:  # noqa: BLE001 - binding maps through project-specific PyErr types.
+        assert "absolute path" in str(exc).lower()
+    else:
+        raise AssertionError("relative destination should fail setup")
+
+
 # =============================================================================
 # papyrus sub-module: PapyrusStats
 # =============================================================================

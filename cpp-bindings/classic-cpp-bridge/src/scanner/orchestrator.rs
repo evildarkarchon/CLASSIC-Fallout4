@@ -2,9 +2,9 @@ use crate::runtime_support::{block_on, block_on_result};
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
     AnalysisConfig, BatchScanEventKind, BatchScanOptions, CrashLogScanIntake, CrashLogScanOptions,
-    CrashLogScanRun, CrashLogScanRunEventKind, CrashLogScanRunMode, CrashLogScanRunRequest,
+    CrashLogScanRun, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunRequest,
     FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER, OrchestratorCore, SHORT_SCAN_CACHE_PROFILE,
-    ScanReadyAnalysis, StandardCrashLogScanRunOptions, UnsolvedLogsPolicy,
+    ScanReadyAnalysis, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent,
     load_simplify_remove_list as core_load_simplify_remove_list,
     resolve_formid_database_paths as core_resolve_formid_database_paths,
     resolve_user_formid_database_paths as core_resolve_user_formid_database_paths,
@@ -189,21 +189,23 @@ pub(crate) fn build_full_scan_config(
 // ── Orchestrator ────────────────────────────────────────────────────
 
 pub(crate) fn orchestrator_new(config: &FullScanConfig) -> Result<Box<Orchestrator>, String> {
-    let mut orch = OrchestratorCore::new(config.prepared.analysis_config.clone())
+    let mut orch = OrchestratorCore::new(config.prepared.analysis_config().clone())
         .map_err(|e| format!("{e}"))?;
 
     // Match Python behavior: when FormID values are enabled, initialize DB pool
     // with intake-selected Main + hardcoded + user-configured database paths.
     if config.prepared.should_initialize_formid_database() {
-        let cache_profile = config.prepared.cache_profile;
+        let cache_profile = config.prepared.cache_profile();
         let pool = Arc::new(DatabasePool::new(
             None,
             Duration::from_secs(cache_profile.cache_ttl_secs),
-            config.prepared.analysis_config.game.clone(),
+            config.prepared.analysis_config().game.clone(),
         ));
         apply_short_scan_db_profile(&pool, cache_profile);
 
-        block_on_result(pool.initialize(config.prepared.formid_readiness.database_paths.clone()))?;
+        block_on_result(
+            pool.initialize(config.prepared.formid_readiness().database_paths().to_vec()),
+        )?;
 
         orch.attach_database_pool(pool)
             .map_err(|e| format!("{e}"))?;
@@ -378,21 +380,7 @@ pub(crate) fn scan_run_execute(
         .prepare(),
     )?;
 
-    let mode = if request.targeted_mode {
-        CrashLogScanRunMode::Targeted
-    } else {
-        CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
-            unsolved_logs: if request.move_unsolved_logs {
-                UnsolvedLogsPolicy::MoveTo {
-                    directory: PathBuf::from(request.yaml_dir_root.as_str())
-                        .join("CLASSIC Backup")
-                        .join("Unsolved Logs"),
-                }
-            } else {
-                UnsolvedLogsPolicy::LeaveInPlace
-            },
-        })
-    };
+    let intent = scan_run_intent_from_request(request);
 
     let max_parallel = if request.max_concurrent == 0 {
         None
@@ -406,7 +394,7 @@ pub(crate) fn scan_run_execute(
             .iter()
             .map(|path| PathBuf::from(path.as_str()))
             .collect(),
-        mode,
+        intent,
         max_concurrent: max_parallel,
         cancellation: Some(Arc::clone(&cancellation_token.cancelled)),
         preserve_order: false,
@@ -436,6 +424,25 @@ pub(crate) fn scan_run_execute(
         .into_iter()
         .map(scan_run_log_outcome_to_dto)
         .collect())
+}
+
+fn scan_run_intent_from_request(request: &ffi::ScanRunRequestDto) -> CrashLogScanRunIntent {
+    if request.targeted_mode {
+        return CrashLogScanRunIntent::Targeted;
+    }
+
+    let unsolved_logs = if !request.move_unsolved_logs {
+        StandardUnsolvedLogsIntent::LeaveInPlace
+    } else {
+        let destination = request.unsolved_logs_destination.trim();
+        if destination.is_empty() {
+            StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
+        } else {
+            StandardUnsolvedLogsIntent::MoveToCustom(PathBuf::from(destination))
+        }
+    };
+
+    CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs })
 }
 
 // ── FormID database path resolution ─────────────────────────────────

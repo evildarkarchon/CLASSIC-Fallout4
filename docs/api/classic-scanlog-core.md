@@ -69,8 +69,8 @@ Top-level scan pipeline and the main integration surface.
 Crash Log Scan Run owns the post-intake transaction for selected existing Crash Logs.
 
 - `CrashLogScanRun` - deep module that executes selected Crash Logs after Crash Log Scan Intake
-- `CrashLogScanRunRequest` - selected Crash Logs, run mode, concurrency, optional cancellation, and ordering preference
-- `CrashLogScanRunMode`, `StandardCrashLogScanRunOptions`, `UnsolvedLogsPolicy` - Standard versus Targeted Crash Log Scan Run behavior
+- `CrashLogScanRunRequest` - selected Crash Logs, run intent, concurrency, optional cancellation, and ordering preference
+- `CrashLogScanRunIntent`, `StandardCrashLogScanRunIntent`, `StandardUnsolvedLogsIntent` - Standard versus Targeted Crash Log Scan Run behavior and Unsolved Logs intent
 - `CrashLogScanRunResult`, `CrashLogScanRunLogOutcome`, `CrashLogScanOutcome` - per-run and per-log observable outcomes
 - `CrashLogScanRunEvent`, `CrashLogScanRunEventKind` - progress events emitted through the module interface
 
@@ -156,6 +156,7 @@ Behavior worth knowing:
 - In-memory intake accepts an already-loaded `YamlDataCore` so tests and later adapters can use the same readiness seam without unnecessary file setup.
 - Supplying paths to in-memory intake lets it resolve the same `CLASSIC Main.yaml` `exclude_log_records` and `CLASSIC Settings.yaml` FormID database sidecars as path-backed intake.
 - Missing or unreadable sidecar settings preserve existing fail-soft behavior: simplify-log removal and user FormID database lists become empty instead of new hard failures.
+- `ScanReadyAnalysis` stores path roots and the parsed `CLASSIC_Settings.Unsolved Logs Destination` for scan-run destination resolution. Missing or empty destination means canonical behavior; a non-empty relative destination is a setup error.
 - FormID database path order is main game DB, hardcoded Fallout 4/Fallout 4 VR FOLON DB, then user-configured paths, with normalized path de-duplication preserving first occurrence.
 - Intake chooses the short-scan cache profile, but `classic-database-core` still owns pool initialization, cache bounds, connection behavior, and lookup mechanics.
 
@@ -250,21 +251,24 @@ Important constructors/mutators:
 
 ## `CrashLogScanRun`
 
-`CrashLogScanRun` is the high-level seam for a full Crash Log Scan Run after intake. It accepts a `ScanReadyAnalysis`, selected Crash Logs, a Standard or Targeted mode, optional concurrency and cancellation settings, and a progress callback.
+`CrashLogScanRun` is the high-level seam for a full Crash Log Scan Run after intake. It accepts a `ScanReadyAnalysis`, selected Crash Logs, a Standard or Targeted intent, optional concurrency and cancellation settings, and a progress callback.
 
 Important types:
 
 - `CrashLogScanRun::new(scan_ready)`
 - `CrashLogScanRun::run(request, on_event).await -> Result<CrashLogScanRunResult, ScanLogError>`
-- `CrashLogScanRunRequest { logs, mode, max_concurrent, cancellation, preserve_order }`
-- `CrashLogScanRunMode::Standard(...)` and `CrashLogScanRunMode::Targeted`
-- `UnsolvedLogsPolicy::LeaveInPlace` and `UnsolvedLogsPolicy::MoveTo { directory }`
+- `CrashLogScanRunRequest { logs, intent, max_concurrent, cancellation, preserve_order }`
+- `CrashLogScanRunIntent::Standard(...)` and `CrashLogScanRunIntent::Targeted`
+- `StandardUnsolvedLogsIntent::LeaveInPlace`, `MoveToConfiguredOrDefault`, and `MoveToCustom(path)`
 
 Behavior worth knowing:
 
 - Adapters own Crash Log selection; `CrashLogScanRun` owns execution after selection.
-- `Standard` runs may move failed Crash Logs and sibling Autoscan Reports to Unsolved Logs when `MoveTo` is supplied.
+- `Standard` runs may move failed Crash Logs and sibling Autoscan Reports to Unsolved Logs when their intent requests movement.
 - `Targeted` runs never move Crash Logs or Autoscan Reports to Unsolved Logs.
+- `MoveToConfiguredOrDefault` uses the prepared `CLASSIC_Settings.Unsolved Logs Destination` when non-empty, otherwise the canonical `CLASSIC Backup/Unsolved Logs` directory under path-backed intake roots.
+- `MoveToCustom(path)` requires an absolute path and fails setup before analysis when the path is relative. It does not create the directory during setup.
+- Missing path roots with `MoveToConfiguredOrDefault` and no configured destination are setup errors. Invalid or unwritable absolute destinations remain per-log movement failures.
 - Autoscan Report paths are derived as sibling `{stem}-AUTOSCAN.md` paths and written by this module when analysis succeeds and report lines are present.
 - Autoscan Report write failure is a per-log failure in `CrashLogScanRunLogOutcome`, not a run-level setup error.
 - `cancellation` is a cooperative shared atomic checked before queued Crash Logs start; binding adapters should pass their frontend cancellation token rather than polling locally only.
@@ -537,12 +541,12 @@ This example follows the intended contributor flow for a full Crash Log Scan Run
 ```rust
 use classic_scanlog_core::{
     CrashLogScanRun,
-    CrashLogScanRunMode,
+    CrashLogScanRunIntent,
     CrashLogScanRunRequest,
     CrashLogScanIntake,
     CrashLogScanOptions,
-    StandardCrashLogScanRunOptions,
-    UnsolvedLogsPolicy,
+    StandardCrashLogScanRunIntent,
+    StandardUnsolvedLogsIntent,
 };
 use std::path::PathBuf;
 
@@ -564,8 +568,8 @@ let run = CrashLogScanRun::new(scan_ready);
 let result = run.run(
     CrashLogScanRunRequest {
         logs: vec![PathBuf::from("C:/CLASSIC/crash-2026-03-09.log")],
-        mode: CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
-            unsolved_logs: UnsolvedLogsPolicy::LeaveInPlace,
+        intent: CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
         }),
         max_concurrent: None,
         cancellation: None,

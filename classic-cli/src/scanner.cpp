@@ -15,6 +15,7 @@
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/runtime.h"
 #include "classic_cxx_bridge/scanner.h"
+#include "classic_cxx_bridge/settings.h"
 
 #include <atomic>
 #include <chrono>
@@ -95,6 +96,45 @@ static std::string startup_correlation_id() {
     return correlation_id;
 }
 
+static std::string settings_file_path(const DataDirs& dirs) {
+    return (fs::path(dirs.root) / "CLASSIC Settings.yaml").string();
+}
+
+static bool read_bool_setting(const std::string& settings_path, const char* key, bool default_value) {
+    try {
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, settings_path);
+        auto value = classic::settings::yaml_ops_get_setting_value(*ops, key);
+        if (value.value_type == "bool") {
+            return value.value == "true";
+        }
+    } catch (const rust::Error& e) {
+        fmt::print(stderr, "Warning: could not read {} from {}: {}\n", key, settings_path, std::string(e.what()));
+    }
+
+    return default_value;
+}
+
+static bool persist_unsolved_logs_destination_option(const CliArgs& args, const std::string& settings_path) {
+    if (args.unsolved_logs_destination.empty() && !args.reset_unsolved_logs_destination) {
+        return true;
+    }
+
+    try {
+        auto ops = classic::settings::yaml_ops_new();
+        classic::settings::yaml_ops_load_file(*ops, settings_path);
+        classic::settings::yaml_ops_set_string_setting(
+            *ops, "CLASSIC_Settings.Unsolved Logs Destination",
+            args.reset_unsolved_logs_destination ? "" : args.unsolved_logs_destination);
+        classic::settings::yaml_ops_save_file(*ops, settings_path);
+        return true;
+    } catch (const rust::Error& e) {
+        fmt::print(stderr, "Error: could not persist Unsolved Logs Destination to {}: {}\n", settings_path,
+                   std::string(e.what()));
+        return false;
+    }
+}
+
 class CliBatchProgressCallback final : public classic::scanner::ScanBatchProgressCallback {
 public:
     explicit CliBatchProgressCallback(ProgressDisplay& progress)
@@ -130,6 +170,12 @@ private:
 
 static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
                              std::chrono::steady_clock::time_point total_start) {
+    const std::string settings_path = settings_file_path(dirs);
+    if (!persist_unsolved_logs_destination_option(args, settings_path)) {
+        return 1;
+    }
+    const bool move_unsolved_logs = read_bool_setting(settings_path, "CLASSIC_Settings.Move Unsolved Logs", false);
+
     // Discover crash logs -- targeted mode or standard discovery
     rust::Vec<rust::String> log_paths;
     const bool targeted_mode = !args.input_paths.empty();
@@ -215,7 +261,8 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
             request.show_formid_values = args.show_fid_values;
             request.fcx_mode = args.fcx_mode;
             request.simplify_logs = args.simplify_logs;
-            request.move_unsolved_logs = false;
+            request.move_unsolved_logs = move_unsolved_logs;
+            request.unsolved_logs_destination = rust::String(args.unsolved_logs_destination);
             request.targeted_mode = targeted_mode;
             request.max_concurrent = concurrency;
             request.log_paths = std::move(log_paths);

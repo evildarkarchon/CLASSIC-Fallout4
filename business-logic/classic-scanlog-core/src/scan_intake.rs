@@ -68,6 +68,12 @@ impl CrashLogScanIntakePaths {
             yaml_dir_data: yaml_dir_data.into(),
         }
     }
+
+    pub(crate) fn canonical_unsolved_logs_destination(&self) -> PathBuf {
+        self.yaml_dir_root
+            .join("CLASSIC Backup")
+            .join("Unsolved Logs")
+    }
 }
 
 /// FormID database readiness selected during intake.
@@ -123,14 +129,64 @@ impl ShortScanCacheProfile {
 #[derive(Clone)]
 pub struct ScanReadyAnalysis {
     /// Fully populated analysis payload for `OrchestratorCore`.
-    pub analysis_config: AnalysisConfig,
+    pub(crate) analysis_config: AnalysisConfig,
     /// FormID database readiness selected for this scan.
-    pub formid_readiness: FormIdReadiness,
+    pub(crate) formid_readiness: FormIdReadiness,
     /// Short-scan database cache profile selected for native callers.
-    pub cache_profile: ShortScanCacheProfile,
+    pub(crate) cache_profile: ShortScanCacheProfile,
+    /// Path roots available to path-backed intake.
+    pub(crate) paths: Option<CrashLogScanIntakePaths>,
+    /// Persistent Unsolved Logs Destination, when configured.
+    pub(crate) unsolved_logs_destination: Option<PathBuf>,
 }
 
 impl ScanReadyAnalysis {
+    pub(crate) fn new(
+        analysis_config: AnalysisConfig,
+        formid_readiness: FormIdReadiness,
+        cache_profile: ShortScanCacheProfile,
+        paths: Option<CrashLogScanIntakePaths>,
+        unsolved_logs_destination: Option<PathBuf>,
+    ) -> Self {
+        Self {
+            analysis_config,
+            formid_readiness,
+            cache_profile,
+            paths,
+            unsolved_logs_destination,
+        }
+    }
+
+    /// Returns the prepared analysis configuration.
+    #[must_use]
+    pub fn analysis_config(&self) -> &AnalysisConfig {
+        &self.analysis_config
+    }
+
+    /// Returns FormID database readiness selected during intake.
+    #[must_use]
+    pub fn formid_readiness(&self) -> &FormIdReadiness {
+        &self.formid_readiness
+    }
+
+    /// Returns the short-scan database cache profile.
+    #[must_use]
+    pub const fn cache_profile(&self) -> ShortScanCacheProfile {
+        self.cache_profile
+    }
+
+    /// Returns the path roots for path-backed intake, when available.
+    #[must_use]
+    pub fn paths(&self) -> Option<&CrashLogScanIntakePaths> {
+        self.paths.as_ref()
+    }
+
+    /// Returns the configured Unsolved Logs Destination, when the setting is non-empty.
+    #[must_use]
+    pub fn unsolved_logs_destination(&self) -> Option<&Path> {
+        self.unsolved_logs_destination.as_deref()
+    }
+
     /// Returns whether this prepared scan should initialize FormID databases.
     ///
     /// In-memory intake can be used without filesystem sidecar paths; in that
@@ -264,16 +320,59 @@ impl<'a> CrashLogScanIntake<'a> {
                 )
             })
             .unwrap_or_default();
+        let unsolved_logs_destination = match self.paths.as_ref() {
+            Some(paths) => resolve_configured_unsolved_logs_destination(&paths.yaml_dir_root)?,
+            None => None,
+        };
+        let show_formid_values = analysis_config.show_formid_values;
 
-        Ok(ScanReadyAnalysis {
-            formid_readiness: FormIdReadiness {
-                enabled: analysis_config.show_formid_values,
+        Ok(ScanReadyAnalysis::new(
+            analysis_config,
+            FormIdReadiness {
+                enabled: show_formid_values,
                 database_paths,
             },
-            analysis_config,
-            cache_profile: SHORT_SCAN_CACHE_PROFILE,
-        })
+            SHORT_SCAN_CACHE_PROFILE,
+            self.paths.clone(),
+            unsolved_logs_destination,
+        ))
     }
+}
+
+/// Resolve the persistent Unsolved Logs Destination from `CLASSIC Settings.yaml`.
+///
+/// Missing or empty settings mean callers should use the canonical destination.
+/// Non-empty values must be absolute and are not created during intake.
+pub(crate) fn resolve_configured_unsolved_logs_destination(
+    yaml_dir_root: impl AsRef<Path>,
+) -> Result<Option<PathBuf>> {
+    let settings_path = yaml_dir_root.as_ref().join("CLASSIC Settings.yaml");
+
+    if !settings_path.exists() {
+        return Ok(None);
+    }
+
+    let ops = YamlOperations::new();
+    let doc = match ops.load_yaml_file(&settings_path) {
+        Ok(doc) => doc,
+        Err(_) => return Ok(None),
+    };
+    let raw = ops.get_string_value(&doc, "CLASSIC_Settings.Unsolved Logs Destination", "");
+    let trimmed = raw.trim();
+
+    if trimmed.is_empty() {
+        return Ok(None);
+    }
+
+    let destination = PathBuf::from(trimmed);
+    if !destination.is_absolute() {
+        return Err(ScanLogError::InvalidInput(format!(
+            "Unsolved Logs Destination must be an absolute path: {}",
+            destination.display()
+        )));
+    }
+
+    Ok(Some(normalize_path(destination)))
 }
 
 /// Resolve all FormID database paths needed for a scan.

@@ -45,7 +45,7 @@ private:
     void setupPathsTab(QTabWidget* tabs);
     void setupUpdatesTab(QTabWidget* tabs);
     void loadSettings();
-    void saveSettings();
+    bool saveSettings();
     void resetToDefaults();
 
     /// Lazily construct the YAML-update worker + its QThread on first use.
@@ -59,6 +59,8 @@ private slots:
     void onResetGameFolder();
     void onBrowseIniFolder();
     void onResetIniFolder();
+    void onBrowseUnsolvedLogsDestination();
+    void onResetUnsolvedLogsDestination();
     void onAddFormIdDb();
     void onRemoveFormIdDb();
     void onCheckForUpdates();
@@ -85,6 +87,7 @@ private:
     QCheckBox* m_chkSimplifyLogs = nullptr;
     QCheckBox* m_chkShowFormIdValues = nullptr;
     QCheckBox* m_chkMoveUnsolvedLogs = nullptr;
+    QLineEdit* m_editUnsolvedLogsDestination = nullptr;
     QCheckBox* m_chkAutoSwitchAfterScan = nullptr;
     QSpinBox* m_spinMaxConcurrentScans = nullptr;
 

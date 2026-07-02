@@ -29,6 +29,7 @@ import {
   type JsAnalysisBuildOptions,
   type JsAnalysisResult,
   type JsGpuInfo,
+  type JsScanRunOptions,
   type JsLogErrorEntry,
   type JsLogSegments,
   type JsPapyrusStats,
@@ -370,16 +371,21 @@ describe("YAML-backed analysis entry points", () => {
 });
 
 describe("scanRunExecute", () => {
+  const scanRunOptions = (root: string, options: Partial<JsScanRunOptions> = {}): JsScanRunOptions => ({
+    yamlDirRoot: root,
+    yamlDirData: join(root, "CLASSIC Data"),
+    game: "Fallout4",
+    gameVersion: "auto",
+    maxConcurrent: 1,
+    ...options,
+  });
+
   test("returns per-log failures without exposing report lines", async () => {
     const root = writeScanRunDataRoot("classic-node-scan-run-failure");
 
     try {
       const results = await scanRunExecute([MISSING_LOG_PATH], {
-        yamlDirRoot: root,
-        yamlDirData: join(root, "CLASSIC Data"),
-        game: "Fallout4",
-        gameVersion: "auto",
-        maxConcurrent: 1,
+        ...scanRunOptions(root),
       });
 
       expect(results).toHaveLength(1);
@@ -407,17 +413,72 @@ describe("scanRunExecute", () => {
       writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
 
       const results = await scanRunExecute([logPath], {
-        yamlDirRoot: root,
-        yamlDirData: join(root, "CLASSIC Data"),
-        game: "Fallout4",
-        gameVersion: "auto",
-        maxConcurrent: 1,
+        ...scanRunOptions(root),
       });
 
       expect(results).toHaveLength(1);
       expect(results[0].success).toBe(true);
       expect(results[0].autoscanReportPath).toContain("-AUTOSCAN.md");
       expect(existsSync(results[0].autoscanReportPath!)).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("targeted mode ignores move and destination options", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-targeted-policy");
+
+    try {
+      const results = await scanRunExecute(
+        [MISSING_LOG_PATH],
+        scanRunOptions(root, {
+          targetedMode: true,
+          moveUnsolvedLogs: true,
+          unsolvedLogsDestination: "relative-destination",
+        }),
+      );
+
+      expect(results).toHaveLength(1);
+      expect(results[0].success).toBe(false);
+      expect(results[0].movedToUnsolvedLogs).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("destination is ignored when moveUnsolvedLogs is false", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-ignore-destination");
+
+    try {
+      const results = await scanRunExecute(
+        [MISSING_LOG_PATH],
+        scanRunOptions(root, {
+          moveUnsolvedLogs: false,
+          unsolvedLogsDestination: "relative-destination",
+        }),
+      );
+
+      expect(results).toHaveLength(1);
+      expect(results[0].success).toBe(false);
+      expect(results[0].movedToUnsolvedLogs).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("relative destination fails setup when standard movement is enabled", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-relative-destination");
+
+    try {
+      await expect(
+        scanRunExecute(
+          [MISSING_LOG_PATH],
+          scanRunOptions(root, {
+            moveUnsolvedLogs: true,
+            unsolvedLogsDestination: "relative-destination",
+          }),
+        ),
+      ).rejects.toThrow(/absolute path/i);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

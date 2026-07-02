@@ -56,11 +56,13 @@ impl CrashLogScanRun {
 
         let CrashLogScanRunRequest {
             logs,
-            mode,
+            intent,
             max_concurrent,
             cancellation,
             preserve_order,
         } = request;
+
+        let unsolved_logs_destination = resolve_unsolved_logs_destination(&self.ready, &intent)?;
 
         let mut orchestrator = self.build_orchestrator().await?;
         let log_paths: Vec<String> = logs
@@ -88,7 +90,9 @@ impl CrashLogScanRun {
         let mut completed = 0usize;
         for indexed in indexed_results {
             completed += 1;
-            let outcome = finalize_log_outcome(indexed, &mode, &orchestrator).await;
+            let outcome =
+                finalize_log_outcome(indexed, unsolved_logs_destination.as_deref(), &orchestrator)
+                    .await;
             on_event(outcome.terminal_event(completed, total));
             outcomes.push(outcome);
         }
@@ -99,17 +103,17 @@ impl CrashLogScanRun {
     }
 
     async fn build_orchestrator(&self) -> Result<OrchestratorCore> {
-        let mut orchestrator = OrchestratorCore::new(self.ready.analysis_config.clone())?;
+        let mut orchestrator = OrchestratorCore::new(self.ready.analysis_config().clone())?;
 
         if self.ready.should_initialize_formid_database() {
-            let cache_profile = self.ready.cache_profile;
+            let cache_profile = self.ready.cache_profile();
             let pool = Arc::new(DatabasePool::new(
                 None,
                 Duration::from_secs(cache_profile.cache_ttl_secs),
-                self.ready.analysis_config.game.clone(),
+                self.ready.analysis_config().game.clone(),
             ));
             cache_profile.apply_to_pool(&pool);
-            pool.initialize(self.ready.formid_readiness.database_paths.clone())
+            pool.initialize(self.ready.formid_readiness().database_paths.clone())
                 .await
                 .map_err(|error| ScanLogError::DatabaseError(error.to_string()))?;
             orchestrator.attach_database_pool(pool)?;
@@ -124,8 +128,8 @@ impl CrashLogScanRun {
 pub struct CrashLogScanRunRequest {
     /// Selected Crash Logs. Adapters own selection; this module owns execution.
     pub logs: Vec<PathBuf>,
-    /// Standard or Targeted Crash Log Scan Run behavior.
-    pub mode: CrashLogScanRunMode,
+    /// Caller intent for Standard or Targeted Crash Log Scan Run behavior.
+    pub intent: CrashLogScanRunIntent,
     /// Optional maximum number of concurrently processed Crash Logs.
     pub max_concurrent: Option<usize>,
     /// Optional cooperative cancellation flag checked before each Crash Log starts.
@@ -134,29 +138,28 @@ pub struct CrashLogScanRunRequest {
     pub preserve_order: bool,
 }
 
-/// Crash Log Scan Run mode.
-pub enum CrashLogScanRunMode {
+/// Crash Log Scan Run intent.
+pub enum CrashLogScanRunIntent {
     /// A Standard Crash Log Scan Run may move failed logs to Unsolved Logs.
-    Standard(StandardCrashLogScanRunOptions),
+    Standard(StandardCrashLogScanRunIntent),
     /// A Targeted Crash Log Scan Run never moves failed logs to Unsolved Logs.
     Targeted,
 }
 
-/// Options for a Standard Crash Log Scan Run.
-pub struct StandardCrashLogScanRunOptions {
-    /// Unsolved Logs policy for failed Crash Logs and related Autoscan Reports.
-    pub unsolved_logs: UnsolvedLogsPolicy,
+/// Intent for a Standard Crash Log Scan Run.
+pub struct StandardCrashLogScanRunIntent {
+    /// Unsolved Logs intent for failed Crash Logs and related Autoscan Reports.
+    pub unsolved_logs: StandardUnsolvedLogsIntent,
 }
 
-/// Unsolved Logs relocation policy.
-pub enum UnsolvedLogsPolicy {
+/// Standard Crash Log Scan Run Unsolved Logs intent.
+pub enum StandardUnsolvedLogsIntent {
     /// Leave failed Crash Logs and Autoscan Reports in place.
     LeaveInPlace,
-    /// Move failed Crash Logs and Autoscan Reports to the provided directory.
-    MoveTo {
-        /// Destination directory for Unsolved Logs.
-        directory: PathBuf,
-    },
+    /// Move failed Crash Logs and Autoscan Reports to the configured destination, or canonical default.
+    MoveToConfiguredOrDefault,
+    /// Move failed Crash Logs and Autoscan Reports to the provided absolute directory.
+    MoveToCustom(PathBuf),
 }
 
 /// Result of a completed Crash Log Scan Run.
@@ -317,7 +320,7 @@ pub enum CrashLogScanRunEventKind {
 
 async fn finalize_log_outcome(
     indexed: IndexedAnalysisResult,
-    mode: &CrashLogScanRunMode,
+    unsolved_logs_destination: Option<&Path>,
     orchestrator: &OrchestratorCore,
 ) -> CrashLogScanRunLogOutcome {
     let input_index = indexed.input_index;
@@ -342,7 +345,7 @@ async fn finalize_log_outcome(
 
     let mut moved_to_unsolved_logs = false;
     if outcome == CrashLogScanOutcome::Failed
-        && let Some(directory) = unsolved_logs_directory(mode)
+        && let Some(directory) = unsolved_logs_destination
     {
         match move_unsolved_artifacts(&crash_log, directory).await {
             Ok(moved) => moved_to_unsolved_logs = moved,
@@ -380,15 +383,43 @@ fn outcome_from_analysis(result: &AnalysisResult) -> CrashLogScanOutcome {
     }
 }
 
-fn unsolved_logs_directory(mode: &CrashLogScanRunMode) -> Option<&Path> {
-    match mode {
-        CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
-            unsolved_logs: UnsolvedLogsPolicy::MoveTo { directory },
-        }) => Some(directory),
-        CrashLogScanRunMode::Standard(StandardCrashLogScanRunOptions {
-            unsolved_logs: UnsolvedLogsPolicy::LeaveInPlace,
-        })
-        | CrashLogScanRunMode::Targeted => None,
+fn resolve_unsolved_logs_destination(
+    ready: &ScanReadyAnalysis,
+    intent: &CrashLogScanRunIntent,
+) -> Result<Option<PathBuf>> {
+    match intent {
+        CrashLogScanRunIntent::Targeted => Ok(None),
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
+        }) => Ok(None),
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::MoveToCustom(destination),
+        }) => {
+            if destination.is_absolute() {
+                Ok(Some(destination.clone()))
+            } else {
+                Err(ScanLogError::InvalidInput(format!(
+                    "Unsolved Logs Destination must be an absolute path: {}",
+                    destination.display()
+                )))
+            }
+        }
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
+        }) => ready
+            .unsolved_logs_destination()
+            .map(|destination| Ok(Some(destination.to_path_buf())))
+            .unwrap_or_else(|| {
+                ready
+                    .paths()
+                    .map(|paths| Ok(Some(paths.canonical_unsolved_logs_destination())))
+                    .unwrap_or_else(|| {
+                        Err(ScanLogError::InvalidInput(
+                            "Unsolved Logs Destination requires path-backed intake or a custom absolute destination"
+                                .to_string(),
+                        ))
+                    })
+            }),
     }
 }
 
