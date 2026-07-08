@@ -135,9 +135,9 @@ impl PreflightActionKind {
     }
 }
 
-/// Report bucket used to place rendered rule outcomes in a final report.
+/// Autoscan Report placement used to place rendered rule outcomes in a final report.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub enum RuleReportBucket {
+pub enum AutoscanReportPlacement {
     /// Default settings-related destination.
     #[default]
     Settings,
@@ -145,8 +145,8 @@ pub enum RuleReportBucket {
     ErrorInformation,
 }
 
-impl RuleReportBucket {
-    /// Parse report bucket from text.
+impl AutoscanReportPlacement {
+    /// Parse Autoscan Report placement from text.
     pub fn parse(value: &str) -> Option<Self> {
         match value.trim().to_lowercase().as_str() {
             "settings" => Some(Self::Settings),
@@ -154,15 +154,29 @@ impl RuleReportBucket {
             _ => None,
         }
     }
+
+    /// Canonical YAML / binding string for this placement.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Settings => "settings",
+            Self::ErrorInformation => "error_information",
+        }
+    }
 }
+
+/// Deprecated compatibility alias for Autoscan Report placement.
+#[deprecated(note = "use AutoscanReportPlacement")]
+pub type RuleReportBucket = AutoscanReportPlacement;
 
 /// Preflight action payload.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PreflightAction {
     /// Action kind.
     pub kind: PreflightActionKind,
-    /// Report bucket for the rendered message.
-    pub bucket: RuleReportBucket,
+    /// Autoscan Report placement for the rendered message.
+    ///
+    /// Field name is retained as a compatibility name for one transition.
+    pub bucket: AutoscanReportPlacement,
     /// Severity.
     pub severity: RuleSeverity,
     /// Message text.
@@ -267,8 +281,10 @@ pub struct EvaluationOutcome {
     pub id: String,
     /// Outcome kind.
     pub kind: OutcomeKind,
-    /// Report bucket for the rendered message.
-    pub bucket: RuleReportBucket,
+    /// Autoscan Report placement for the rendered message.
+    ///
+    /// Field name is retained as a compatibility name for one transition.
+    pub bucket: AutoscanReportPlacement,
     /// Severity.
     pub severity: RuleSeverity,
     /// Rendered message.
@@ -351,7 +367,7 @@ pub fn evaluate_rules(
             result.outcomes.push(EvaluationOutcome {
                 id: rule.id.clone(),
                 kind: OutcomeKind::Issue,
-                bucket: RuleReportBucket::Settings,
+                bucket: AutoscanReportPlacement::Settings,
                 severity: rule.severity,
                 message: apply_template(&rule.messages.fail, context, token_setting),
                 fix: rule
@@ -368,7 +384,7 @@ pub fn evaluate_rules(
             result.outcomes.push(EvaluationOutcome {
                 id: rule.id.clone(),
                 kind: OutcomeKind::Success,
-                bucket: RuleReportBucket::Settings,
+                bucket: AutoscanReportPlacement::Settings,
                 severity: RuleSeverity::Info,
                 message: apply_template(pass_message, context, token_setting),
                 fix: None,

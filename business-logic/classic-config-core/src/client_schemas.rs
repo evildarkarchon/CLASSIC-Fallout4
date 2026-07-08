@@ -30,6 +30,9 @@
 //!   (scanlog report header) now prepends `CLASSIC ` at format time. See
 //!   `openspec/changes/yaml-version-drop-classic-prefix/` for the full
 //!   contract.
+//! - **MAIN_YAML 2.0 → 2.1 (2026-07)** — `CLASSIC_Settings.Unsolved Logs
+//!   Destination` was added as an optional default setting. Current clients
+//!   still accept 2.0 because the key is not required to parse or scan.
 
 use classic_settings_core::SchemaCompat;
 

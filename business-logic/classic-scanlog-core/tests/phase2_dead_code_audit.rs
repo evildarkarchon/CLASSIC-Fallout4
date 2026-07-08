@@ -46,14 +46,27 @@ fn plugin_analyzer_and_settings_validator_dead_fallbacks_do_not_reappear() {
         !SETTINGS_VALIDATOR_RS.contains("scan_all_settings_legacy_bucketed"),
         "settings_validator.rs should not reintroduce the removed legacy bucketed fallback"
     );
+    for forbidden in [
+        "scan_buffout_achievements_setting",
+        "scan_buffout_memorymanagement_settings",
+        "scan_archivelimit_setting",
+        "scan_buffout_looksmenu_setting",
+        "scan_addictol_settings_scaffold",
+    ] {
+        assert!(
+            !SETTINGS_VALIDATOR_RS.contains(forbidden),
+            "settings_validator.rs should not reintroduce removed named-check API: {forbidden}"
+        );
+    }
     assert!(
-        SETTINGS_VALIDATOR_RS.contains("Ok(Vec::new())"),
-        "scan_all_settings_bucketed should keep returning an empty Vec when settings_rules are absent"
+        SETTINGS_VALIDATOR_RS.contains(
+            "contributions.extend(self.disabled_setting_notice_contributions(crashgen));"
+        ),
+        "scan_all_settings_contributions should append Disabled Setting Notices after rule evaluation"
     );
     assert!(
-        SETTINGS_VALIDATOR_RS.contains("test_production_configs_never_hit_legacy_fallback")
-            || SETTINGS_VALIDATOR_TESTS_RS
-                .contains("test_production_configs_never_hit_legacy_fallback"),
-        "settings_validator should keep the invariant test proving production configs never need the legacy fallback (inline or sibling _tests.rs)"
+        SETTINGS_VALIDATOR_TESTS_RS
+            .contains("scan_all_settings_without_rules_returns_disabled_notices_only"),
+        "settings_validator should keep the no-rules contract test for disabled notices only"
     );
 }

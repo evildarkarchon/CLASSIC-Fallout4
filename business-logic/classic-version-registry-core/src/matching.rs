@@ -183,18 +183,18 @@ impl<'a> VersionMatcher<'a> {
     /// Find a version within a compatible range.
     fn find_range(&self, detected: &GameVersion, game: &str, is_vr: bool) -> Option<MatchResult> {
         for version in self.registry.get_all_for_game(game, Some(is_vr)) {
-            if let Some(range) = &version.compatible_range {
-                if range.contains(detected) {
-                    return Some(MatchResult::new(
-                        Some(version.clone()),
-                        MatchConfidence::Range,
-                        *detected,
-                        format!(
-                            "Version {} falls within compatible range for {}",
-                            detected, version.display_name
-                        ),
-                    ));
-                }
+            if let Some(range) = &version.compatible_range
+                && range.contains(detected)
+            {
+                return Some(MatchResult::new(
+                    Some(version.clone()),
+                    MatchConfidence::Range,
+                    *detected,
+                    format!(
+                        "Version {} falls within compatible range for {}",
+                        detected, version.display_name
+                    ),
+                ));
             }
         }
         None

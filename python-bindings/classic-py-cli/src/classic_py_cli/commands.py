@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -215,21 +217,48 @@ def _run_scenario(scenario: Scenario, context: CommandContext) -> dict[str, Any]
     """Execute one scenario through the same handler surface used by users."""
 
     result = dispatch_scenario_command(scenario.command, context)
+    contract_failure = _scenario_contract_failure(scenario, result)
+    passed = result.exit_code == scenario.expected_exit_code and contract_failure is None
     scenario_result = {
         "id": scenario.id,
         "owner": scenario.owner,
         "commandLine": ["classic-py", *scenario.command],
         "expectedExitCode": scenario.expected_exit_code,
         "exitCode": result.exit_code,
-        "status": "passed" if result.exit_code == scenario.expected_exit_code else "failed",
-        "summary": result.summary,
+        "status": "passed" if passed else "failed",
+        "summary": contract_failure or result.summary,
         "coveredExports": scenario.covered_exports,
-        "failureClassifications": scenario.failure_classifications if result.exit_code != scenario.expected_exit_code else [],
+        "failureClassifications": scenario.failure_classifications if not passed else [],
     }
+    if contract_failure is not None:
+        scenario_result["contractFailure"] = contract_failure
     report_data = _scenario_report_data(result)
     if report_data:
         scenario_result["data"] = report_data
     return scenario_result
+
+
+def _scenario_contract_failure(scenario: Scenario, result: CommandResult) -> str | None:
+    """Return a scenario-specific semantic failure not captured by exit status."""
+
+    if scenario.id != "scanlog-addictol-newer-than-floor" or result.exit_code != int(ExitCode.SUCCESS):
+        return None
+
+    if result.data.get("processedLogs") != 1:
+        return "Addictol scanlog scenario did not process exactly one log"
+    if result.data.get("failedLogs") != 0:
+        return "Addictol scanlog scenario reported failed logs"
+
+    evidence = result.data.get("reportEvidence", [])
+    if len(evidence) != 1:
+        return "Addictol scanlog scenario did not capture exactly one report evidence item"
+    if evidence[0].get("outdatedWarningPresent"):
+        return "Addictol scanlog scenario produced an outdated-version warning"
+
+    valid_line = str(evidence[0].get("validVersionLine", ""))
+    if "you have a valid version of addictol" not in valid_line.lower():
+        return "Addictol scanlog scenario did not prove a valid Addictol version"
+    return None
 
 
 def _scenario_report_data(result: CommandResult) -> dict[str, Any]:
@@ -406,7 +435,7 @@ def resource_detect(args: _PathArg, context: CommandContext) -> CommandResult:
 
 
 def _scan_result_success(result: object) -> bool:
-    """Return the per-log success flag from a scanlog AnalysisResult-like object."""
+    """Return the per-log success flag from a scanlog result-like object."""
 
     value = getattr(result, "success", False)
     if callable(value):
@@ -426,7 +455,13 @@ def _scan_failure_summary(result: object) -> dict[str, str]:
 
 
 def _scan_report_text(result: object) -> str:
-    """Return report text from an AnalysisResult-like object."""
+    """Return report text from a scanlog result-like object."""
+
+    autoscan_report_path = getattr(result, "autoscan_report_path", None)
+    if autoscan_report_path:
+        report_path = Path(str(autoscan_report_path))
+        if report_path.is_file():
+            return report_path.read_text(encoding="utf-8")
 
     get_report_text = getattr(result, "get_report_text", None)
     if callable(get_report_text):
@@ -445,10 +480,41 @@ def _scan_report_evidence(result: object) -> dict[str, Any]:
     }
     for line in report_text.splitlines():
         stripped = line.strip()
-        if "valid version" in stripped.lower():
+        if "you have a valid version of" in stripped.lower():
             evidence["validVersionLine"] = stripped
             break
     return evidence
+
+
+def _path_is_relative_to(path: Path, root: Path) -> bool:
+    """Return whether path is under root without requiring either to exist."""
+
+    try:
+        path.resolve().relative_to(root.resolve())
+    except ValueError:
+        return False
+    return True
+
+
+def _fixture_yaml_root(scan_path: Path, context: CommandContext) -> Path | None:
+    """Find a fixture-local YAML root for deterministic compliance scans."""
+
+    for root in (context.fixture_root, context.repo_root / "python-bindings" / "tests" / "fixtures"):
+        if _path_is_relative_to(scan_path, root) and (root / "CLASSIC Data").exists():
+            return root.resolve()
+    return None
+
+
+@contextmanager
+def _working_directory(path: Path):
+    """Temporarily set CWD for bindings that discover fixture data relative to it."""
+
+    previous = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(previous)
 
 
 def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
@@ -457,16 +523,23 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     scan_path = Path(args.path or context.fixture_root)
     if not scan_path.is_absolute():
         scan_path = context.repo_root / scan_path
+    yaml_dir_root = _fixture_yaml_root(scan_path, context) or context.repo_root
+    yaml_dir_data = yaml_dir_root / "CLASSIC Data"
     try:
         module = require_binding("classic_scanlog")
         paths = [str(path) for path in scan_path.glob("*.log")] if scan_path.is_dir() else [str(scan_path)]
-        config = module.AnalysisConfig("Fallout4", "auto")
-        processor = module.Orchestrator(config)
-        result = processor.process_logs_batch(paths)
+        with _working_directory(yaml_dir_root):
+            result = module.scan_run_execute(
+                str(yaml_dir_root),
+                str(yaml_dir_data),
+                "Fallout4",
+                "auto",
+                paths,
+            )
     except ImportError as exc:
         return failure("scan logs", str(exc), int(ExitCode.BINDING_IMPORT))
     except AttributeError:
-        return failure("scan logs", "classic_scanlog does not expose Orchestrator.process_logs_batch", int(ExitCode.BINDING_IMPORT))
+        return failure("scan logs", "classic_scanlog does not expose scan_run_execute", int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("scan logs", "classic_scanlog", exc)
     results = list(result)
@@ -478,6 +551,8 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         f"Scanlog binding completed: {successful_logs} succeeded, {len(failures)} failed",
         {
             "scanPath": str(scan_path),
+            "yamlRoot": str(yaml_dir_root),
+            "yamlData": str(yaml_dir_data),
             "processedLogs": len(results),
             "successfulLogs": successful_logs,
             "failedLogs": len(failures),

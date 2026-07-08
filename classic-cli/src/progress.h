@@ -9,8 +9,8 @@
 
 /// ANSI-based progress display for concurrent crash log scanning.
 ///
-/// Thread-safe: worker threads call report_started/report_finished/report_error,
-/// while the main thread polls render() every 100ms.
+/// Thread-safe: workers or scan-run callbacks call report_started/report_finished/report_error,
+/// while a renderer polls render() every 100ms.
 class ProgressDisplay {
 public:
     ProgressDisplay(uint32_t total, const std::string& game);
@@ -18,11 +18,20 @@ public:
     /// Called by a worker thread when it begins scanning a log.
     void report_started(std::thread::id tid, const std::string& log_name);
 
+    /// Called when a logical scan-run entry begins scanning a log.
+    void report_started(const std::string& key, const std::string& log_name);
+
     /// Called by a worker thread when it finishes scanning a log.
     void report_finished(std::thread::id tid);
 
+    /// Called when a logical scan-run entry finishes scanning a log.
+    void report_finished(const std::string& key);
+
     /// Called by a worker thread when a scan errors out.
     void report_error(std::thread::id tid);
+
+    /// Called when a logical scan-run entry errors out.
+    void report_error(const std::string& key);
 
     /// Render the progress bar + in-flight list to stdout (main thread).
     void render();
@@ -46,7 +55,7 @@ private:
     std::chrono::steady_clock::time_point start_time_;
 
     std::mutex inflight_mutex_;
-    std::map<std::thread::id, InFlightEntry> inflight_;
+    std::map<std::string, InFlightEntry> inflight_;
 
     int last_rendered_lines_ = 0;
 };

@@ -206,11 +206,11 @@ impl BackupManager {
             .map_err(|error| BackupError::InvalidVersionFormat(error.to_string()))?;
 
         for line in content.lines() {
-            if let Some(captures) = version_regex.captures(line) {
-                if let Some(version_match) = captures.get(1) {
-                    let version_str = version_match.as_str();
-                    return Ok(XseVersion::new(version_str));
-                }
+            if let Some(captures) = version_regex.captures(line)
+                && let Some(version_match) = captures.get(1)
+            {
+                let version_str = version_match.as_str();
+                return Ok(XseVersion::new(version_str));
             }
         }
 
@@ -318,10 +318,10 @@ impl BackupManager {
 
         for entry in entries {
             let entry = entry?;
-            if entry.path().is_dir() {
-                if let Some(name) = entry.file_name().to_str() {
-                    versions.push(name.to_string());
-                }
+            if entry.path().is_dir()
+                && let Some(name) = entry.file_name().to_str()
+            {
+                versions.push(name.to_string());
             }
         }
 

@@ -201,14 +201,12 @@ impl ConfigFileCache {
         }
 
         // Check size + mtime
-        if let (Ok(m1), Ok(m2)) = (file1.metadata(), file2.metadata()) {
-            if m1.len() == m2.len() {
-                if let (Ok(t1), Ok(t2)) = (m1.modified(), m2.modified()) {
-                    if t1 == t2 {
-                        return true;
-                    }
-                }
-            }
+        if let (Ok(m1), Ok(m2)) = (file1.metadata(), file2.metadata())
+            && m1.len() == m2.len()
+            && let (Ok(t1), Ok(t2)) = (m1.modified(), m2.modified())
+            && t1 == t2
+        {
+            return true;
         }
 
         false

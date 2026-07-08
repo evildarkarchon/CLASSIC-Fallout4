@@ -88,3 +88,34 @@ fn test_xse_type_from_str_internal_known_and_unknown() {
     assert!(xse_type_from_str_internal("SFSE").is_some());
     assert!(xse_type_from_str_internal("BOGUS").is_none());
 }
+
+#[test]
+fn test_resolve_xse_folder_for_scan_bridges_configured_docs_root() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let data = temp.path().join("CLASSIC Data");
+    std::fs::create_dir_all(&data).expect("create data dir");
+
+    let resolved = resolve_xse_folder_for_scan(
+        &data.to_string_lossy(),
+        "Fallout4",
+        "VR",
+        r"C:\Users\Test\Documents\My Games\Fallout4VR",
+    );
+
+    assert_eq!(
+        resolved,
+        r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE"
+    );
+}
+
+#[test]
+fn test_resolve_xse_folder_for_scan_returns_empty_for_missing_inputs() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let data = temp.path().join("CLASSIC Data");
+    std::fs::create_dir_all(&data).expect("create data dir");
+
+    assert_eq!(
+        resolve_xse_folder_for_scan(&data.to_string_lossy(), "Unknown", "auto", ""),
+        ""
+    );
+}

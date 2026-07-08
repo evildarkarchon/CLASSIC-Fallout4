@@ -13,6 +13,7 @@ use classic_shared_core::GameId;
 use classic_xse_core::{
     XseInfo as CoreXseInfo, XseType as CoreXseType, detect_xse_version as core_detect_xse_version,
     get_xse_info as core_get_xse_info, is_xse_installed as core_is_xse_installed,
+    resolve_xse_folder_for_scan as core_resolve_xse_folder_for_scan,
 };
 use std::path::Path;
 
@@ -114,6 +115,28 @@ fn xse_get_info(game_path: &str, t: ffi::XseType) -> ffi::XseInfoDto {
     }
 }
 
+fn resolve_xse_folder_for_scan(
+    yaml_dir_data: &str,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: &str,
+) -> String {
+    let configured_docs_root = if configured_docs_root.trim().is_empty() {
+        None
+    } else {
+        Some(Path::new(configured_docs_root))
+    };
+
+    core_resolve_xse_folder_for_scan(
+        Path::new(yaml_dir_data),
+        game,
+        selected_game_version,
+        configured_docs_root,
+    )
+    .map(|path| path.to_string_lossy().to_string())
+    .unwrap_or_default()
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // String-form helpers (D-08 backward-compat, also called from game.rs shims)
 // ─────────────────────────────────────────────────────────────────────
@@ -179,6 +202,12 @@ mod ffi {
         fn is_xse_installed(game_root: &str, t: XseType) -> bool;
         fn detect_xse_version(exe_path: &str, t: XseType) -> String;
         fn xse_get_info(game_path: &str, t: XseType) -> XseInfoDto;
+        fn resolve_xse_folder_for_scan(
+            yaml_dir_data: &str,
+            game: &str,
+            selected_game_version: &str,
+            configured_docs_root: &str,
+        ) -> String;
 
         // String-form D-08 backward-compat
         fn detect_xse_version_string(exe_path: &str, xse_type_str: &str) -> String;

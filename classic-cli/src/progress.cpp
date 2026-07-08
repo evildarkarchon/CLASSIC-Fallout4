@@ -1,7 +1,16 @@
 #include "progress.h"
 #include <algorithm>
 #include <fmt/core.h>
+#include <sstream>
 #include <vector>
+
+namespace {
+std::string key_for_thread(std::thread::id tid) {
+    std::ostringstream out;
+    out << tid;
+    return out.str();
+}
+} // namespace
 
 ProgressDisplay::ProgressDisplay(uint32_t total, const std::string& game)
     : total_(total)
@@ -9,21 +18,33 @@ ProgressDisplay::ProgressDisplay(uint32_t total, const std::string& game)
     , start_time_(std::chrono::steady_clock::now()) {}
 
 void ProgressDisplay::report_started(std::thread::id tid, const std::string& log_name) {
+    report_started(key_for_thread(tid), log_name);
+}
+
+void ProgressDisplay::report_started(const std::string& key, const std::string& log_name) {
     std::lock_guard lock(inflight_mutex_);
-    inflight_[tid] = InFlightEntry{log_name, std::chrono::steady_clock::now()};
+    inflight_[key] = InFlightEntry{log_name, std::chrono::steady_clock::now()};
 }
 
 void ProgressDisplay::report_finished(std::thread::id tid) {
+    report_finished(key_for_thread(tid));
+}
+
+void ProgressDisplay::report_finished(const std::string& key) {
     completed_.fetch_add(1, std::memory_order_relaxed);
     std::lock_guard lock(inflight_mutex_);
-    inflight_.erase(tid);
+    inflight_.erase(key);
 }
 
 void ProgressDisplay::report_error(std::thread::id tid) {
+    report_error(key_for_thread(tid));
+}
+
+void ProgressDisplay::report_error(const std::string& key) {
     completed_.fetch_add(1, std::memory_order_relaxed);
     errors_.fetch_add(1, std::memory_order_relaxed);
     std::lock_guard lock(inflight_mutex_);
-    inflight_.erase(tid);
+    inflight_.erase(key);
 }
 
 void ProgressDisplay::render() {

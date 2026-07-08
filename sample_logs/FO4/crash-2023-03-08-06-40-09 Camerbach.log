@@ -1,0 +1,731 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.31.1 Feb 28 2023 00:32:02
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6FDE2AB46 Fallout4.exe+03BAB46	cmp byte ptr [rax+0x1A], 0x20 |  TESObjectCELL::BuildTeleportDoorList(BSTObjectArena<TESObjectREFR*,BSTObjectArenaScrapAlloc,32>&)_3BAB46)
+
+	[Compatibility]
+		F4EE: false
+	[Debug]
+		Symcache: c:symcache
+		WaitForDebugger: false
+	[Fixes]
+		ActorIsHostileToActor: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		GreyMovies: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		PipboyLightInvFix: false
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+		WorkBenchSwap: true
+	[Patches]
+		Achievements: true
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: true
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: 2048
+		MemoryManager: true
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 10 Home v10.0.19041
+	CPU: AuthenticAMD AMD Athlon Gold 3150U with Radeon Graphics     
+	GPU #1: AMD Picasso/Raven 2 [Radeon Vega Series / Radeon Vega Mobile Series]
+	GPU #2: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 8.33 GB/21.88 GB
+
+
+PROBABLE CALL STACK:
+	[0] 0x7FF6FDE2AB46 Fallout4.exe+03BAB46	cmp byte ptr [rax+0x1A], 0x20 |  TESObjectCELL::BuildTeleportDoorList(BSTObjectArena<TESObjectREFR*,BSTObjectArenaScrapAlloc,32>&)_3BAB46 -> 755119+0x96	cmp byte ptr [rax+0x1A], 0x20
+	[1] 0x7FF6FDF01D8B Fallout4.exe+0491D8B	lea r14, [rsi+0x148] |  TESWorldSpace::InitItemImpl(void)_491D8B -> 908892+0x47B	lea r14, [rsi+0x148]
+	[2] 0x7FF6FDBC2C3C Fallout4.exe+0152C3C	or dword ptr [rdi+0x10], 0x08 |  TESForm::InitItem(void)_152C3C -> 1420843+0x7C	or dword ptr [rdi+0x10], 0x08
+	[3] 0x7FF6FDB98333 Fallout4.exe+0128333	add rbx, 0x08 |  `anonymous_namespace'::InitJL::DoExtInit(void*)_128333 -> 76564+0x43	add rbx, 0x08
+	[4] 0x7FF6FF5C0F26 Fallout4.exe+1B50F26	mov ecx, [rbx+0x0C] |  BSJobs::JobListLocal::RunJobsInternal(uint,BSJobs::ThreadJobListState&,bool)_1B50F26 -> 329005+0xC6	mov ecx, [rbx+0x0C]
+	[5] 0x7FF6FF5C1432 Fallout4.exe+1B51432	mov r14d, eax |  BSJobs::JobThread::RunJob(void)_1B51432 -> 194800+0x202	mov r14d, eax
+	[6] 0x7FF6FF5C3F67 Fallout4.exe+1B53F67	movzx eax, byte ptr [rbx+0xA74] |  BSJobs::JobThread::ThreadProc(void)_1B53F67 -> 1492866+0x67	movzx eax, byte ptr [rbx+0xA74]
+	[7] 0x7FF6FF58CFED Fallout4.exe+1B1CFED	mov rcx, [0x00007FF7035CBD38] |  BSThread::CallThreadProc(void)_1B1CFED -> 1079791+0x3D	mov rcx, [0x00007FF7035CBD38]
+	[8] 0x7FF859CB7614 KERNEL32.DLL+0017614
+	[9] 0x7FF85B7026A1    ntdll.dll+00526A1
+
+REGISTERS:
+	RAX 0x0                (size_t) [0]
+	RCX 0x20CB69A3760      (TESObjectREFR*)
+		Object Reference: 
+		File: "Fallout4.esm"
+		Flags: 0x00020009
+		FormID: 0x00044170
+		FormType: kLIGH (34)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00010D0D
+		FormID: 0x06056CF7
+		FormType: kREFR (64)
+	RDX 0xA90DC04          (size_t) [177265668]
+	RBX 0x20C2D3DAD30      (void*)
+	RSP 0x5937EFFA70       (void*)
+	RBP 0x1                (size_t) [1]
+	RSI 0x20CB69A3880      (TESObjectREFR*)
+		Object Reference: None
+		File: "Power Armor to the People - Nuka-World.esp"
+		Modified by: DLCNukaWorld.esm -> Power Armor to the People - Nuka-World.esp
+		Flags: 0x00000409
+		FormID: 0x06056D0B
+		FormType: kREFR (64)
+	RDI 0x68               (size_t) [104]
+	R8  0x20C2D3C7D80      (TESObjectREFR*)
+		Object Reference: 
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00000009
+		FormID: 0x060555F0
+		FormType: kDOOR (32)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00000409
+		FormID: 0x0605420B
+		FormType: kREFR (64)
+	R9  0x0                (size_t) [0]
+	R10 0x605              (size_t) [1541]
+	R11 0x5937EFFAB0       (void*)
+	R12 0x20C52B4DFB0      (char*) "d"
+	R13 0x5937EFFB00       (void*)
+	R14 0x32               (size_t) [50]
+	R15 0x20CB6A51D00      (TESObjectCELL*)
+		File: "Power Armor to the People - Nuka-World.esp"
+		Modified by: DLCNukaWorld.esm -> Unofficial Fallout 4 Patch.esp -> MutantMenagerie_NukaWorld.esm -> MutilatedDeadBodies.esp -> FO4 NPCs Travel.esp -> Power Armor to the People - Nuka-World.esp
+		Flags: 0x00040409
+		EditorID: "Wilderness"
+		FormID: 0x06007B9C
+		FormType: kCELL (63)
+		File: "Power Armor to the People - Nuka-World.esp"
+		Modified by: DLCNukaWorld.esm -> Unofficial Fallout 4 Patch.esp -> MutantMenagerie_NukaWorld.esm -> MutilatedDeadBodies.esp -> FO4 NPCs Travel.esp -> Power Armor to the People - Nuka-World.esp
+		Flags: 0x00040409
+		EditorID: "Wilderness"
+		FormID: 0x06007B9C
+		FormType: kCELL (63)
+
+STACK:
+	[RSP+0  ] 0x20C2D3DAD30      (void*)
+	[RSP+8  ] 0x5937EFFB40       (void*)
+	[RSP+10 ] 0x20CB6A66800      (TESWorldSpace*)
+		File: "Power Armor to the People - Nuka-World.esp"
+		Modified by: DLCNukaWorld.esm -> Unofficial Fallout 4 Patch.esp -> MutantMenagerie_NukaWorld.esm -> MutilatedDeadBodies.esp -> Some Assembly Required.esp -> Nuka World Bottle Fix.esp -> FO4 NPCs Travel.esp -> Power Armor to the People - Nuka-World.esp
+		Flags: 0x00000009
+		EditorID: "NukaWorld"
+		FormID: 0x0600290F
+		FormType: kWRLD (74)
+		GetFullName: "Nuka-World"
+	[RSP+18 ] 0x7FF6FF583861     (void* -> Fallout4.exe+1B13861	mov [rbx], rax |  BSTObjectArenaScrapAllocBase::BSTObjectArenaScrapAllocBase(void)_1B13861)
+	[RSP+20 ] 0x20CC2804700      (void*)
+	[RSP+28 ] 0x20C52B4DFB0      (char*) "d"
+	[RSP+30 ] 0x0                (size_t) [0]
+	[RSP+38 ] 0x20CC2804700      (void*)
+	[RSP+40 ] 0x20CB6A51D00      (TESObjectCELL*)
+		File: "Power Armor to the People - Nuka-World.esp"
+		Modified by: DLCNukaWorld.esm -> Unofficial Fallout 4 Patch.esp -> MutantMenagerie_NukaWorld.esm -> MutilatedDeadBodies.esp -> FO4 NPCs Travel.esp -> Power Armor to the People - Nuka-World.esp
+		Flags: 0x00040409
+		EditorID: "Wilderness"
+		FormID: 0x06007B9C
+		FormType: kCELL (63)
+		File: "Power Armor to the People - Nuka-World.esp"
+		Modified by: DLCNukaWorld.esm -> Unofficial Fallout 4 Patch.esp -> MutantMenagerie_NukaWorld.esm -> MutilatedDeadBodies.esp -> FO4 NPCs Travel.esp -> Power Armor to the People - Nuka-World.esp
+		Flags: 0x00040409
+		EditorID: "Wilderness"
+		FormID: 0x06007B9C
+		FormType: kCELL (63)
+	[RSP+48 ] 0x7FF6FDF01D8B     (void* -> Fallout4.exe+0491D8B	lea r14, [rsi+0x148] |  TESWorldSpace::InitItemImpl(void)_491D8B)
+	[RSP+50 ] 0x20C2D3C7D80      (TESObjectREFR*)
+		Object Reference: 
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00000009
+		FormID: 0x060555F0
+		FormType: kDOOR (32)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00000409
+		FormID: 0x0605420B
+		FormType: kREFR (64)
+	[RSP+58 ] 0x62               (size_t) [98]
+	[RSP+60 ] 0x5937EFFB40       (void*)
+	[RSP+68 ] 0x20CB6A66800      (TESWorldSpace*)
+		File: "Power Armor to the People - Nuka-World.esp"
+		Modified by: DLCNukaWorld.esm -> Unofficial Fallout 4 Patch.esp -> MutantMenagerie_NukaWorld.esm -> MutilatedDeadBodies.esp -> Some Assembly Required.esp -> Nuka World Bottle Fix.esp -> FO4 NPCs Travel.esp -> Power Armor to the People - Nuka-World.esp
+		Flags: 0x00000009
+		EditorID: "NukaWorld"
+		FormID: 0x0600290F
+		FormType: kWRLD (74)
+		GetFullName: "Nuka-World"
+	[RSP+70 ] 0x0                (size_t) [0]
+	[RSP+78 ] 0x20CB6A66800      (TESWorldSpace*)
+		File: "Power Armor to the People - Nuka-World.esp"
+		Modified by: DLCNukaWorld.esm -> Unofficial Fallout 4 Patch.esp -> MutantMenagerie_NukaWorld.esm -> MutilatedDeadBodies.esp -> Some Assembly Required.esp -> Nuka World Bottle Fix.esp -> FO4 NPCs Travel.esp -> Power Armor to the People - Nuka-World.esp
+		Flags: 0x00000009
+		EditorID: "NukaWorld"
+		FormID: 0x0600290F
+		FormType: kWRLD (74)
+		GetFullName: "Nuka-World"
+	[RSP+80 ] 0x7FF7006B96C8     (void* -> Fallout4.exe+2C496C8	 |  hkbInternal::hks::execute<0>(hkbInternal::lua_State*,hkbInternal::hksInstruction*,int)_2C496C8)
+	[RSP+88 ] 0x20CB5242648      (void*)
+	[RSP+90 ] 0x20C52B4DF10      (ScrapHeap*)
+	[RSP+98 ] 0x20CCEFE0900      (void*)
+	[RSP+A0 ] 0x20CCEFE08C0      (void*)
+	[RSP+A8 ] 0x20CCEFE07C0      (void*)
+	[RSP+B0 ] 0x0                (size_t) [0]
+	[RSP+B8 ] 0x20CCEFE08A8      (void*)
+	[RSP+C0 ] 0x20CCEFE0900      (void*)
+	[RSP+C8 ] 0x7FF60000003D     (size_t) [140694538682429]
+	[RSP+D0 ] 0x7FF703658084     (void* -> Fallout4.exe+5BE8084	add [rax], al |  aDiveBombChance_5BE8084)
+	[RSP+D8 ] 0x1                (size_t) [1]
+	[RSP+E0 ] 0x7FF703658080     (void* -> Fallout4.exe+5BE8080	add [rax], al |  aDiveBombChance_5BE8080)
+	[RSP+E8 ] 0x7FF703658088     (void* -> Fallout4.exe+5BE8088	add [rax], al |  aDiveBombChance_5BE8088)
+	[RSP+F0 ] 0x20CB6A66800      (TESWorldSpace*)
+		File: "Power Armor to the People - Nuka-World.esp"
+		Modified by: DLCNukaWorld.esm -> Unofficial Fallout 4 Patch.esp -> MutantMenagerie_NukaWorld.esm -> MutilatedDeadBodies.esp -> Some Assembly Required.esp -> Nuka World Bottle Fix.esp -> FO4 NPCs Travel.esp -> Power Armor to the People - Nuka-World.esp
+		Flags: 0x00000009
+		EditorID: "NukaWorld"
+		FormID: 0x0600290F
+		FormType: kWRLD (74)
+		GetFullName: "Nuka-World"
+	[RSP+F8 ] 0x20C52B4DFB0      (char*) "d"
+	[RSP+100] 0x0                (size_t) [0]
+	[RSP+108] 0x7FF6FDBC2C3C     (void* -> Fallout4.exe+0152C3C	or dword ptr [rdi+0x10], 0x08 |  TESForm::InitItem(void)_152C3C)
+	[RSP+110] 0x20C00000000      (void*)
+	[RSP+118] 0x62               (size_t) [98]
+	[RSP+120] 0x0                (size_t) [0]
+	[RSP+128] 0x2                (size_t) [2]
+	[RSP+130] 0x20CB6A66800      (TESWorldSpace*)
+		File: "Power Armor to the People - Nuka-World.esp"
+		Modified by: DLCNukaWorld.esm -> Unofficial Fallout 4 Patch.esp -> MutantMenagerie_NukaWorld.esm -> MutilatedDeadBodies.esp -> Some Assembly Required.esp -> Nuka World Bottle Fix.esp -> FO4 NPCs Travel.esp -> Power Armor to the People - Nuka-World.esp
+		Flags: 0x00000009
+		EditorID: "NukaWorld"
+		FormID: 0x0600290F
+		FormType: kWRLD (74)
+		GetFullName: "Nuka-World"
+	[RSP+138] 0x0                (size_t) [0]
+	[RSP+140] 0x0                (size_t) [0]
+	[RSP+148] 0x0                (size_t) [0]
+	[RSP+150] 0x0                (size_t) [0]
+	[RSP+158] 0x0                (size_t) [0]
+	[RSP+160] 0x0                (size_t) [0]
+	[RSP+168] 0x0                (size_t) [0]
+	[RSP+170] 0x20CB6A66820      (TESWorldSpace*)
+		File: "Power Armor to the People - Nuka-World.esp"
+		Modified by: DLCNukaWorld.esm -> Unofficial Fallout 4 Patch.esp -> MutantMenagerie_NukaWorld.esm -> MutilatedDeadBodies.esp -> Some Assembly Required.esp -> Nuka World Bottle Fix.esp -> FO4 NPCs Travel.esp -> Power Armor to the People - Nuka-World.esp
+		Flags: 0x00000009
+		EditorID: "NukaWorld"
+		FormID: 0x0600290F
+		FormType: kWRLD (74)
+		GetFullName: "Nuka-World"
+	[RSP+178] 0x0                (size_t) [0]
+	[RSP+180] 0x20CB6A66830      (TESWorldSpace*)
+		File: "Power Armor to the People - Nuka-World.esp"
+		Modified by: DLCNukaWorld.esm -> Unofficial Fallout 4 Patch.esp -> MutantMenagerie_NukaWorld.esm -> MutilatedDeadBodies.esp -> Some Assembly Required.esp -> Nuka World Bottle Fix.esp -> FO4 NPCs Travel.esp -> Power Armor to the People - Nuka-World.esp
+		Flags: 0x00000009
+		EditorID: "NukaWorld"
+		FormID: 0x0600290F
+		FormType: kWRLD (74)
+		GetFullName: "Nuka-World"
+	[RSP+188] 0x0                (size_t) [0]
+	[RSP+190] 0x0                (size_t) [0]
+	[RSP+198] 0x0                (size_t) [0]
+	[RSP+1A0] 0x0                (size_t) [0]
+	[RSP+1A8] 0x0                (size_t) [0]
+	[RSP+1B0] 0x0                (size_t) [0]
+	[RSP+1B8] 0x0                (size_t) [0]
+	[RSP+1C0] 0x0                (size_t) [0]
+	[RSP+1C8] 0x0                (size_t) [0]
+	[RSP+1D0] 0x0                (size_t) [0]
+	[RSP+1D8] 0x0                (size_t) [0]
+	[RSP+1E0] 0x0                (size_t) [0]
+	[RSP+1E8] 0x0                (size_t) [0]
+	[RSP+1F0] 0x0                (size_t) [0]
+	[RSP+1F8] 0x0                (size_t) [0]
+	[RSP+200] 0x0                (size_t) [0]
+	[RSP+208] 0x0                (size_t) [0]
+	[RSP+210] 0x0                (size_t) [0]
+	[RSP+218] 0x0                (size_t) [0]
+	[RSP+220] 0x0                (size_t) [0]
+	[RSP+228] 0x0                (size_t) [0]
+	[RSP+230] 0x0                (size_t) [0]
+	[RSP+238] 0x0                (size_t) [0]
+	[RSP+240] 0x0                (size_t) [0]
+	[RSP+248] 0x0                (size_t) [0]
+	[RSP+250] 0x0                (size_t) [0]
+	[RSP+258] 0x0                (size_t) [0]
+	[RSP+260] 0x0                (size_t) [0]
+	[RSP+268] 0x0                (size_t) [0]
+	[RSP+270] 0x0                (size_t) [0]
+	[RSP+278] 0x0                (size_t) [0]
+	[RSP+280] 0x0                (size_t) [0]
+	[RSP+288] 0x0                (size_t) [0]
+	[RSP+290] 0x0                (size_t) [0]
+	[RSP+298] 0x0                (size_t) [0]
+	[RSP+2A0] 0x20CB5EB2078      (void*)
+	[RSP+2A8] 0x7FF6FDB98333     (void* -> Fallout4.exe+0128333	add rbx, 0x08 |  `anonymous_namespace'::InitJL::DoExtInit(void*)_128333)
+	[RSP+2B0] 0x20CB5EB2048      (void*)
+	[RSP+2B8] 0x0                (size_t) [0]
+	[RSP+2C0] 0x0                (size_t) [0]
+	[RSP+2C8] 0x0                (size_t) [0]
+	[RSP+2D0] 0x20CCD8390C0      (void*)
+	[RSP+2D8] 0x7FF6FF5C0F26     (void* -> Fallout4.exe+1B50F26	mov ecx, [rbx+0x0C] |  BSJobs::JobListLocal::RunJobsInternal(uint,BSJobs::ThreadJobListState&,bool)_1B50F26)
+	[RSP+2E0] 0x7FF703658B98     (void* -> Fallout4.exe+5BE8B98	rcl byte ptr [rax+0x20CCD83], 0x00 |  aDiveBombChance_5BE8B98)
+	[RSP+2E8] 0x7FF703658B48     (BSJobs::JobThread*)
+	[RSP+2F0] 0x7FF703658B48     (BSJobs::JobThread*)
+	[RSP+2F8] 0x0                (size_t) [0]
+	[RSP+300] 0x0                (size_t) [0]
+	[RSP+308] 0x0                (size_t) [0]
+	[RSP+310] 0x11               (size_t) [17]
+	[RSP+318] 0x0                (size_t) [0]
+	[RSP+320] 0x7FF703658B48     (BSJobs::JobThread*)
+	[RSP+328] 0x7FF6FF5C1432     (void* -> Fallout4.exe+1B51432	mov r14d, eax |  BSJobs::JobThread::RunJob(void)_1B51432)
+	[RSP+330] 0x0                (size_t) [0]
+	[RSP+338] 0x7FF703658B48     (BSJobs::JobThread*)
+	[RSP+340] 0x0                (size_t) [0]
+	[RSP+348] 0x5937EFFE10       (void*)
+	[RSP+350] 0x0                (size_t) [0]
+	[RSP+358] 0x0                (size_t) [0]
+	[RSP+360] 0x0                (size_t) [0]
+	[RSP+368] 0x7FF6FF5C3F67     (void* -> Fallout4.exe+1B53F67	movzx eax, byte ptr [rbx+0xA74] |  BSJobs::JobThread::ThreadProc(void)_1B53F67)
+	[RSP+370] 0x7FF703658B48     (BSJobs::JobThread*)
+	[RSP+378] 0x0                (size_t) [0]
+	[RSP+380] 0x0                (size_t) [0]
+	[RSP+388] 0x0                (size_t) [0]
+	[RSP+390] 0x7FF703658B48     (BSJobs::JobThread*)
+	[RSP+398] 0x7FF6FF58CFED     (void* -> Fallout4.exe+1B1CFED	mov rcx, [0x00007FF7035CBD38] |  BSThread::CallThreadProc(void)_1B1CFED)
+	[RSP+3A0] 0x48A8             (size_t) [18600]
+	[RSP+3A8] 0x5937EFFE30       (void*)
+	[RSP+3B0] 0x20C2CEABC90      (void*)
+	[RSP+3B8] 0x0                (size_t) [0]
+	[RSP+3C0] 0x7FF703658B48     (BSJobs::JobThread*)
+	[RSP+3C8] 0x0                (size_t) [0]
+	[RSP+3D0] 0x0                (size_t) [0]
+	[RSP+3D8] 0x7FF859CB7614     (void* -> KERNEL32.DLL+0017614	mov ecx, eax)
+	[RSP+3E0] 0x0                (size_t) [0]
+	[RSP+3E8] 0x0                (size_t) [0]
+	[RSP+3F0] 0x0                (size_t) [0]
+	[RSP+3F8] 0x0                (size_t) [0]
+	[RSP+400] 0x0                (size_t) [0]
+	[RSP+408] 0x7FF85B7026A1     (void* -> ntdll.dll+00526A1	jmp 0x00007FF85B7026C3)
+	[RSP+410] 0x0                (size_t) [0]
+	[RSP+418] 0x0                (size_t) [0]
+	[RSP+420] 0x0                (size_t) [0]
+	[RSP+428] 0x0                (size_t) [0]
+	[RSP+430] 0x0                (size_t) [0]
+	[RSP+438] 0x0                (size_t) [0]
+	[RSP+440] 0x94E7C80600000000 (size_t) [uint: 10729764565328855040 int: -7716979508380696576]
+	[RSP+448] 0x0                (size_t) [0]
+	[RSP+450] 0x0                (size_t) [0]
+	[RSP+458] 0x7FF859150020     (void* -> KERNELBASE.dll+0110020	mov [rsp+0x10], rbx)
+	[RSP+460] 0x5937EFEBC0       (void*)
+	[RSP+468] 0x980001FFE337CB20 (size_t) [uint: 10952756492305419040 int: -7493987581404132576]
+	[RSP+470] 0x7FF8CDF2C826     (size_t) [140706583857190]
+	[RSP+478] 0x5937EFEBC0       (void*)
+	[RSP+480] 0x0                (size_t) [0]
+	[RSP+488] 0x0                (size_t) [0]
+	[RSP+490] 0x0                (size_t) [0]
+	[RSP+498] 0x0                (size_t) [0]
+	[RSP+4A0] 0x0                (size_t) [0]
+	[RSP+4A8] 0x0                (size_t) [0]
+	[RSP+4B0] 0x0                (size_t) [0]
+	[RSP+4B8] 0x0                (size_t) [0]
+	[RSP+4C0] 0x0                (size_t) [0]
+	[RSP+4C8] 0x0                (size_t) [0]
+	[RSP+4D0] 0x0                (size_t) [0]
+	[RSP+4D8] 0x0                (size_t) [0]
+	[RSP+4E0] 0x0                (size_t) [0]
+	[RSP+4E8] 0x0                (size_t) [0]
+	[RSP+4F0] 0x0                (size_t) [0]
+	[RSP+4F8] 0x0                (size_t) [0]
+	[RSP+500] 0x0                (size_t) [0]
+	[RSP+508] 0x0                (size_t) [0]
+	[RSP+510] 0x0                (size_t) [0]
+	[RSP+518] 0x0                (size_t) [0]
+	[RSP+520] 0x0                (size_t) [0]
+	[RSP+528] 0x0                (size_t) [0]
+	[RSP+530] 0x0                (size_t) [0]
+	[RSP+538] 0x0                (size_t) [0]
+	[RSP+540] 0x0                (size_t) [0]
+	[RSP+548] 0x0                (size_t) [0]
+	[RSP+550] 0x0                (size_t) [0]
+	[RSP+558] 0x0                (size_t) [0]
+	[RSP+560] 0x0                (size_t) [0]
+	[RSP+568] 0x0                (size_t) [0]
+	[RSP+570] 0x0                (size_t) [0]
+	[RSP+578] 0x0                (size_t) [0]
+	[RSP+580] 0x0                (size_t) [0]
+	[RSP+588] 0x0                (size_t) [0]
+
+MODULES:
+	xinput1_3.dll                 0x000000400000
+	X3DAudio1_7.dll               0x000055500000
+	steam_api64.dll               0x000055820000
+	Buffout4.dll                  0x020C2B090000
+	Fallout4.exe                  0x7FF6FDA70000
+	DSOUND.DLL                    0x7FF8076E0000
+	gameoverlayrenderer64.dll     0x7FF808520000
+	wsfw_identifier.dll           0x7FF8086B0000
+	XDI.dll                       0x7FF809E20000
+	PowerGridTools.dll            0x7FF80A140000
+	mcm.dll                       0x7FF80A1B0000
+	f4ee.dll                      0x7FF80A250000
+	crafting_highlight_fix.dll    0x7FF80A450000
+	ClassicHolsteredWeapons.dll   0x7FF80A4A0000
+	f4se_1_10_163.dll             0x7FF80A870000
+	XAudio2_7.dll                 0x7FF80A9A0000
+	tier0_s64.dll                 0x7FF80AA30000
+	IPHLPAPI.DLL                  0x7FF80ABD0000
+	BulletCountedReload.dll       0x7FF80C410000
+	vstdlib_s64.dll               0x7FF80C5A0000
+	cudart64_75.dll               0x7FF80C660000
+	GFSDK_GodraysLib.x64.dll      0x7FF80C6C0000
+	GFSDK_SSAO_D3D11.win64.dll    0x7FF80E9B0000
+	flexExtRelease_x64.dll        0x7FF80EA40000
+	flexRelease_x64.dll           0x7FF810E30000
+	MSVCR110.dll                  0x7FF811170000
+	MSVCP110.dll                  0x7FF811250000
+	bink2w64.dll                  0x7FF811300000
+	f4se_steam_loader.dll         0x7FF817F40000
+	ShadowBoost.asi               0x7FF819A80000
+	XINPUT1_3.dll                 0x7FF819BD0000
+	MSVCP140_ATOMIC_WAIT.dll      0x7FF81E8A0000
+	usvfs_x64.dll                 0x7FF82B900000
+	MSVCP140.dll                  0x7FF82C190000
+	WINSPOOL.DRV                  0x7FF834680000
+	OneCoreCommonProxyStub.dll    0x7FF837CB0000
+	MSIMG32.dll                   0x7FF839540000
+	COMCTL32.dll                  0x7FF83CAA0000
+	winmmbase.dll                 0x7FF83FD50000
+	DbgHelp.dll                   0x7FF843280000
+	nvToolsExt64_1.dll            0x7FF8463C0000
+	InputHost.dll                 0x7FF848B50000
+	textinputframework.dll        0x7FF848CB0000
+	Windows.UI.dll                0x7FF848E00000
+	D3DSCache.dll                 0x7FF84B8A0000
+	amdihk64.dll                  0x7FF84B8F0000
+	atidxx64.dll                  0x7FF84B9E0000
+	OneCoreUAPCommonProxyStub.dll 0x7FF84D940000
+	atiuxp64.dll                  0x7FF84E110000
+	WINHTTP.dll                   0x7FF84E150000
+	WINMM.dll                     0x7FF84FB90000
+	aticfx64.dll                  0x7FF84FBC0000
+	dxcore.dll                    0x7FF84FF30000
+	MMDevApi.dll                  0x7FF850430000
+	AUDIOSES.DLL                  0x7FF8504D0000
+	WindowManagementAPI.dll       0x7FF850B50000
+	VERSION.dll                   0x7FF851A00000
+	twinapi.appcore.dll           0x7FF852630000
+	avrt.dll                      0x7FF853460000
+	Secur32.dll                   0x7FF853960000
+	VCRUNTIME140_1.dll            0x7FF854790000
+	VCRUNTIME140.dll              0x7FF8547C0000
+	PROPSYS.dll                   0x7FF8548D0000
+	wintypes.dll                  0x7FF854DF0000
+	d3d11.dll                     0x7FF8553B0000
+	dcomp.dll                     0x7FF855BE0000
+	CoreUIComponents.dll          0x7FF855DD0000
+	CoreMessaging.dll             0x7FF8564B0000
+	apphelp.dll                   0x7FF8566E0000
+	resourcepolicyclient.dll      0x7FF856790000
+	UxTheme.dll                   0x7FF8567B0000
+	kernel.appcore.dll            0x7FF856B50000
+	dwmapi.dll                    0x7FF856B70000
+	windows.storage.dll           0x7FF856E60000
+	HID.DLL                       0x7FF857600000
+	dxgi.dll                      0x7FF857780000
+	ntmarta.dll                   0x7FF857EC0000
+	IpHlpAPI.dll                  0x7FF858170000
+	MSWSOCK.dll                   0x7FF858480000
+	CRYPTBASE.DLL                 0x7FF858700000
+	Wldp.dll                      0x7FF858790000
+	DEVOBJ.dll                    0x7FF858940000
+	MSASN1.dll                    0x7FF858970000
+	UMPDC.dll                     0x7FF858BF0000
+	powrprof.dll                  0x7FF858C10000
+	SSPICLI.DLL                   0x7FF858C60000
+	USERENV.dll                   0x7FF858CA0000
+	profapi.dll                   0x7FF858CE0000
+	msvcp_win.dll                 0x7FF858DA0000
+	win32u.dll                    0x7FF858E40000
+	CRYPT32.dll                   0x7FF858E70000
+	WINTRUST.dll                  0x7FF858FD0000
+	KERNELBASE.dll                0x7FF859040000
+	bcrypt.dll                    0x7FF859320000
+	bcryptPrimitives.dll          0x7FF859350000
+	cfgmgr32.dll                  0x7FF8593E0000
+	gdi32full.dll                 0x7FF859430000
+	ucrtbase.dll                  0x7FF8595F0000
+	combase.dll                   0x7FF8596F0000
+	KERNEL32.DLL                  0x7FF859CA0000
+	PSAPI.DLL                     0x7FF859D60000
+	GDI32.dll                     0x7FF859D70000
+	USER32.dll                    0x7FF859DA0000
+	OLEAUT32.dll                  0x7FF859F50000
+	SHELL32.dll                   0x7FF85A020000
+	ADVAPI32.dll                  0x7FF85A770000
+	RPCRT4.dll                    0x7FF85A880000
+	IMM32.DLL                     0x7FF85A9B0000
+	COMDLG32.dll                  0x7FF85A9F0000
+	SETUPAPI.dll                  0x7FF85AAE0000
+	imagehlp.dll                  0x7FF85AF50000
+	WS2_32.dll                    0x7FF85AF70000
+	SHLWAPI.dll                   0x7FF85AFE0000
+	msvcrt.dll                    0x7FF85B0A0000
+	ole32.dll                     0x7FF85B1A0000
+	sechost.dll                   0x7FF85B2D0000
+	clbcatq.dll                   0x7FF85B370000
+	shcore.dll                    0x7FF85B420000
+	MSCTF.dll                     0x7FF85B550000
+	ntdll.dll                     0x7FF85B6B0000
+	steamclient64.dll             0x7FFFDFB80000
+
+F4SE PLUGINS:
+	Buffout4.dll v1.31.1
+	BulletCountedReload.dll
+	ClassicHolsteredWeapons.dll
+	crafting_highlight_fix.dll
+	f4ee.dll
+	mcm.dll
+	PowerGridTools.dll
+	wsfw_identifier.dll
+	XDI.dll
+
+PLUGINS:
+	[00]     Fallout4.esm
+	[01]     DLCRobot.esm
+	[02]     DLCworkshop01.esm
+	[03]     DLCCoast.esm
+	[04]     DLCworkshop02.esm
+	[05]     DLCworkshop03.esm
+	[06]     DLCNukaWorld.esm
+	[07]     Unofficial Fallout 4 Patch.esp
+	[08]     HUDFramework.esm
+	[09]     XDI.esm
+	[0A]     WorkshopFramework.esm
+	[0B]     TrueStormsFO4.esm
+	[0C]     MutantMenagerie.esm
+	[0D]     MutantMenagerie_FarHarbor.esm
+	[0E]     MutantMenagerie_NukaWorld.esm
+	[0F]     SS2.esm
+	[10]     SettlementKeywords.esm
+	[11]     SS2_XPAC_Chapter2.esm
+	[12]     Arbitration - Resources.esm
+	[13]     CWPointLookoutFO4.esm
+	[14]     LooksMenu.esp
+	[15]     MutilatedDeadBodies.esp
+	[16]     SilentProtagonist.esp
+	[17]     Stm_DiamondCityExpansion.esp
+	[18]     SuperMutantRedux.esp
+	[19]     Reverb and Ambiance Overhaul.esp
+	[1A]     TrueStormsFO4-FarHarbor.esp
+	[1B]     TrueStormsFO4-NukaWorld-FH-Compat.esp
+	[1C]     DarkerNights.esp
+	[1D]     BetterModDescriptions.esp
+	[1E]     MojaveImports.esp
+	[1F]     Gas Masks of the Wasteland.esp
+	[20]     Gas Mask NPC.esp
+	[21]     brotherhood of steel overhaul.esp
+	[22]     Raider Children.esp
+	[23]     SS2Extended.esp
+	[24]     Some Assembly Required.esp
+	[25]     CombatZoneRestored.esp
+	[26]     Eli_Armour_Compendium.esp
+	[27]     W.A.T.Minutemen.esp
+	[28]     DT_GunnerOutfitPack.esp
+	[29]     DTG_LeveledListIntegration.esp
+	[2A]     More Smarter Companions Mod.esp
+	[2B]     3DNPC_FO4Settler.esp
+	[2C]     American180nv.esp
+	[2D]     TrueStormsFO4-EarlierSunsets.esp
+	[2E]     TrueStormsFO4-EarlierSunsetsFH.esp
+	[2F]     TrueStormsFO4-FarHarborExtraRads.esp
+	[30]     TrueStormsFO4-GlowingSeaExtraRads.esp
+	[31]     dD-Enhanced Blood Basic.esp
+	[32]     dD - Screen Blood Duration Long.esp
+	[33]     AzarPonytailHairstyles.esp
+	[34]     3dscopes.esp
+	[35]     BetterNightVision.esp
+	[36]     DarkerNightsDetection.esp
+	[37]     AnS Wearable Backpacks and Pouches.esp
+	[38]     Floaters.esp
+	[39]     DOOMMerged.esp
+	[3A]     MREs.esp
+	[3B]     T-51C Power Armor.esp
+	[3C]     T65PA.esp
+	[3D]     WattzLaserGun.esp
+	[3E]     FO4TribalPowerArmor.esp
+	[3F]     LString_Bow.esp
+	[40]     SkyrimInspiredPowerArmor.esp
+	[41]     AnS Wearable Backpacks and Pouches - Power Armor Carry Capacity.esp
+	[42]     BetterSettlers.esp
+	[43]     BetterSettlersNoLollygagging.esp
+	[44]     BetterSettlersCCAPack2.0.esp
+	[45]     RaiderOverhaul.esp
+	[46]     Killable Children.esp
+	[47]     Orphans.esp
+	[48]     BetterSettlersMortalPack.esp
+	[49]     Consistent Power Armor Overhaul.esp
+	[4A]     Brotherhood Power Armor Overhaul.esp
+	[4B]     PAMAP.esp
+	[4C]     Nuka World Bottle Fix.esp
+	[4D]     FO4 NPCs Travel.esp
+	[4E]     RU556.esp
+	[4F]     InstitutePowerArmor.esp
+	[50]     AtomicRadio.esp
+	[51]     LongerPowerLines3x.esp
+	[52]     EveryonesBestFriend.esp
+	[53]     CraftableAmmo.esp
+	[54]     CraftableAmmo_plus.esp
+	[55]     Crossbow.esp
+	[56]     ExcavatorPA.esp
+	[57]     SelectPowerArmor.esp
+	[58]     MP7.esp
+	[59]     ChildrenofBunkerHill.esp
+	[5A]     OWR.esp
+	[5B]     RAO - OWR patch.esp
+	[5C]     Lush Landscapes.esp
+	[5D]     Insignificant Object Remover.esp
+	[5E]     EnclaveX02.esp
+	[5F]     NanoSuit.esp
+	[60]     Vivid Fallout - All in One - Best Choice.esp
+	[61]     K9TacticalHarness.esp
+	[62]     WestTekTacticalOptics.esp
+	[63]     Faster Terminal Displays (20x).esp
+	[64]     ImmersiveVendors.esp
+	[65]     ImmersiveAnimationFramework.esp
+	[66]     Cannabis Commonwealth.esp
+	[67]     OWR_CraftableDecor.esp
+	[68]     OWR_CraftableDecor_SKEPatch.esp
+	[69]     OWR_SKEPatch.esp
+	[6A]     Campsite.esp
+	[6B]     Archimedes-II.esp
+	[6C]     BLD - AI Tweaks.esp
+	[6D]     Live Dismemberment - Regular.esp
+	[6E]     D.E.C.A.Y.esp
+	[6F]     Hellfirenew.esp
+	[70]     PA-Quick Animations.esp
+	[71]     CROSS_Jetpack.esp
+	[72]     Nexus_PMC.esp
+	[73]     X02Factions.esp
+	[74]     X03Factions.esp
+	[75]     CorpusPraesidium.esp
+	[76]     Institute Heavy Weaponry.esp
+	[77]     BPAO - PAMAP 2.0 Automatron Patch.esp
+	[78]     el_precursorsuit.esp
+	[79]     PerpetualBeta_OppressorDogArmor.esp
+	[7A]     ChineseStealthSuit.esp
+	[7B]     NPCGreetingTweak90.esp
+	[7C]     HK_MP5.esp
+	[7D]     G36Complex.esp
+	[7E]     HK_UMP.esp
+	[7F]     9x39Project.esp
+	[80]     MG69.esp
+	[81]     Assault Rifle Reanimated.esp
+	[82]     BetterModDescriptionsCOTC.esp
+	[83]     LegendaryModification.esp
+	[84]     BetterModDescriptionsLMSurvival.esp
+	[85]     LegendaryModification Enhanced.esp
+	[86]     BetterModDescriptionsLME.esp
+	[87]     BetterModDescriptionsROWIP.esp
+	[88]     BetterModDescriptionsSTCSAdd.esp
+	[89]     Arbitration - Button Lowered Weapons.esp
+	[8A]     Gas Mask Climate.esp
+	[8B]     Gas Mask True Storms.esp
+	[8C]     GlovesOfTheCommonwealth.esp
+	[8D]     Lacy Underwear.esp
+	[8E]     LegendaryModificationMisc.esp
+	[8F]     MilkThatBrahmin.esp
+	[90]     ChildrenofGoodneighbor.esp
+	[91]     Binoculars.esp
+	[92]     Female Tactical Armor.esp
+	[93]     Synth Overhaul.esp
+	[94]     Synth Overhaul - White Patch.esp
+	[95]     Sporty Underwear.esp
+	[96]     RemoteExplosives.esp
+	[97]     Realistic Roads - Black Asphalt.esp
+	[98]     QuickTrade.esp
+	[99]     PMC_extended.esp
+	[9A]     Famished.esp
+	[9B]     ConceptCentaur.esp
+	[9C]     AnotherLife.esp
+	[9D]     EnhancedLightsandFX.esp
+	[9E]     SatelliteWorldMap.esp
+	[9F]     WeaponsHD.esp
+	[A0]     1CAS_serviceRifle.esp
+	[A1]     WM Chinese Assault Rifle - Standalone.esp
+	[A2]     CutWeaponModsRestored-GOTY.esp
+	[A3]     ABundleofTape.esp
+	[A4]     Would You Kindly.esp
+	[A5]     0_Vault120.esp
+	[A6]     NVUMP.esp
+	[A7]     SubmersiblePowerArmorRedux.esp
+	[FE:000] CROSS_VertibirdFlightsuit.esl
+	[FE:001] Geckos.esl
+	[FE:002] Bighorner.esl
+	[FE:003] Cazadors.esl
+	[FE:004] Centaur.esl
+	[FE:005] Mantis.esl
+	[FE:006] CWPointLookoutFO4Patch.esl
+	[FE:007] M8rDisablePipboyEffects.esp
+	[FE:008] DCX_Optimization.esp
+	[FE:009] Dank_ECO.esp
+	[FE:00A] Dank_ECO-INNR.esp
+	[FE:00B] SS2_DLCSettlerPatch.esp
+	[FE:00C] SS2Extended_OutfitInjectionPatch.esp
+	[FE:00D] CROSS_BrotherhoodRecon.esp
+	[FE:00E] Some Assembly Rquired - CPAO patch.esp
+	[FE:00F] Some Assembly Required - Enclave X-02 Power Armor Patch.esp
+	[FE:010] Some Assembly Required - Excavator Power Armor Patch.esp
+	[FE:011] Some Assembly Required - Hellfire X-03 Power Armor Patch.esp
+	[FE:012] Some Assembly required - T-65 Power Armor Patch.esp
+	[FE:013] OMEGA - IAF Geckos Patch.esp
+	[FE:014] OMEGA - IAF MRE Patch.esp
+	[FE:015] OMEGA - MutantMenagerieFH IAF Patch.esp
+	[FE:016] OMEGA - MutantMenagerie IAF Patch.esp
+	[FE:017] IAF - Far Harbor & Nuka World.esp
+	[FE:018] OMEGA - IAF Wasteland Imports Patch.esp
+	[FE:019] No More Fake Puddles - Nuka World 1-0.esp
+	[FE:01A] WET.esp
+	[FE:01B] Silent Protagonist_Hi Honey.esp
+	[FE:01C] SilentProtagonist_DiamondCityExpansion.esp
+	[FE:01D] SilentProtagonist_SettlerAndCompanionDialogueOverhaul.esp
+	[FE:01E] SilentProtagonist_SettlersOfTheCommonwealth.esp
+	[FE:01F] SilentProtagonist_SS2Ch2.esp
+	[FE:020] SilentProtagonist_SimSettlements2.esp
+	[FE:021] SilentProtagonist_T49.esp
+	[FE:022] SilentProtagonist_UFO4P.esp
+	[FE:023] MAIM Distributor.esp
+	[FE:024] MAIM 2.esp
+	[FE:025] MAIM 2 - Point Lookout.esp
+	[FE:026] MAIM 2 - EZ Keywords.esp
+	[FE:027] Power Armor to the People - Automatron.esp
+	[FE:028] Power Armor to the People - Brotherhood Power Armor Overhaul.esp
+	[FE:029] Power Armor to the People - Consistent Power Armor Overhaul.esp
+	[FE:02A] Power Armor to the People - Enclave X-02 - All Factions Paintjob.esp
+	[FE:02B] Power Armor to the People - Enclave X-02.esp
+	[FE:02C] Power Armor to the People - Excavator Power Armor.esp
+	[FE:02D] Power Armor to the People - Far Harbor.esp
+	[FE:02E] Power Armor to the People - Gunner Outfit Pack LL Integration.esp
+	[FE:02F] Power Armor to the People - Gunner Outfit Pack.esp
+	[FE:030] Power Armor to the People - Hellfire X-03 - All Factions Paintjob.esp
+	[FE:031] Power Armor to the People - Hellfire X-03.esp
+	[FE:032] Power Armor to the People - Institute Power Armor - Corpus Praesidium.esp
+	[FE:033] Power Armor to the People - Institute Power Armor - Institute Heavy Weaponry.esp
+	[FE:034] Power Armor to the People - Institute Power Armor.esp
+	[FE:035] Power Armor to the People - Nuka-World.esp
+	[FE:036] Power Armor to the People - Raider Overhaul.esp
+	[FE:037] Power Armor to the People - Select Power Armor.esp
+	[FE:038] Power Armor to the People - T-51c.esp
+	[FE:039] Power Armor to the People - T-65.esp
+	[FE:03A] Power Armor to the People - Tribal Power Armor.esp
+	[FE:03B] Power Armor to the People - We Are The Minutemen.esp
+	[FE:03C] Power Armor to the People.esp

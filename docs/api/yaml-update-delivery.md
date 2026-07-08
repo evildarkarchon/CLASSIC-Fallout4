@@ -37,6 +37,8 @@ The authoritative list, plus per-file client-schema ranges, lives in [`CLASSIC D
 - **MAJOR bump** — the file removed, renamed, or reshaped a key an older client depended on. Existing client binaries stop accepting the file. Raising the client's `MAIN_YAML.accepted_major` / `GAME_FALLOUT4_YAML.accepted_major` constant is required before the new file is even parseable; contributors should bump both sides in the same change.
   - **Concrete example (2026-04):** `CLASSIC_Info.version` dropped the legacy `CLASSIC v` display prefix and became a bare SemVer string (`v9.1.0` instead of `CLASSIC v9.1.0`). The *shape* of an existing key's value changed, so `CLASSIC Main.yaml` bumped `schema_version` from `"1.0"` → `"2.0"` and `client_schemas::MAIN_YAML.accepted_major` bumped from 1 → 2 in the same commit. Full contract: [`openspec/specs/yaml-app-version-field/spec.md`](../../openspec/specs/yaml-app-version-field/spec.md).
 
+Current additive history: `CLASSIC Main.yaml` `"2.0"` → `"2.1"` added optional `CLASSIC_Settings.Unsolved Logs Destination`. Because the setting is optional, `client_schemas::MAIN_YAML` remains `SchemaCompat::new(2, 0)` while `client-schema-ranges.yaml` advertises the compatible 2.x publish range.
+
 The drift guard (`tools/schema_version_gate.py`, wired into `ci-python-bindings.yml :: parity-gates`) fails CI whenever a checked-in YAML's `schema_version` MAJOR diverges from the governing constant's `accepted_major`, or when MINOR falls below `minimum_minor`. This catches either side drifting without the other.
 
 ---

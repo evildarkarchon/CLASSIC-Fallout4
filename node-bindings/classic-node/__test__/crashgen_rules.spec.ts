@@ -45,10 +45,14 @@ describe("crashgen_rules: JsPreflightAction shape", () => {
   test("has kind, severity, message fields", () => {
     const action: JsPreflightAction = {
       kind: "warn",
+      placement: "error_information",
+      bucket: "error_information",
       severity: "medium",
       message: "Check your settings",
     };
     expect(typeof action.kind).toBe("string");
+    expect(action.placement).toBe("error_information");
+    expect(action.bucket).toBe("error_information");
     expect(typeof action.severity).toBe("string");
     expect(typeof action.message).toBe("string");
   });

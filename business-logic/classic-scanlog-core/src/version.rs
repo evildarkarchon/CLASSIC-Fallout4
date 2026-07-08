@@ -165,7 +165,7 @@ impl CrashgenVersion {
     ///
     /// # Returns
     ///
-    /// A tuple `(u32, u32, u32)` suitable for `SettingsValidator::scan_archivelimit_setting()`.
+    /// A tuple `(u32, u32, u32)` suitable for Crashgen Expectation evaluation.
     pub fn to_tuple(&self) -> (u32, u32, u32) {
         (self.major as u32, self.minor as u32, self.patch as u32)
     }

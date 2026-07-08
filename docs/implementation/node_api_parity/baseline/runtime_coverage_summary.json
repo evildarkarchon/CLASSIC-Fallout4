@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-29T05:31:26.740068+00:00",
+  "generated_at_utc": "2026-07-01T05:59:29.009202+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -11,7 +11,7 @@
     "runtime_verified_total": 730,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 704,
+    "tier1_contract_total": 703,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -4790,27 +4790,6 @@
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "AnalysisResult@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog.settings_validator.CheckId@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.settings_validator.CheckId@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "CheckId@rust",
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
@@ -13223,14 +13202,14 @@
       "notes": "Covers the canonical hash cache stats DTO plus clear/reset helpers through direct hash cache lifecycle assertions."
     },
     {
-      "trackedId": "binding:processLogsBatch",
+      "trackedId": "binding:JsScanRunLogResult",
       "trackedType": "registry_only",
       "ownerModule": "scanlog",
       "tier": "tier2",
       "gapType": "registry_only",
       "classification": "runtime_verified",
       "rustSymbol": null,
-      "bindingIdentifier": "processLogsBatch",
+      "bindingIdentifier": "JsScanRunLogResult",
       "coverageId": "node-tier2-scanlog-cli-runtime",
       "verificationMode": "cli_workflow",
       "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
@@ -13244,17 +13223,17 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scanlog/fileio helpers in runtime coverage."
+      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scan-run execution and Rust-owned Autoscan Report writing in runtime coverage."
     },
     {
-      "trackedId": "binding:writeAutoscanReport",
+      "trackedId": "binding:JsScanRunOptions",
       "trackedType": "registry_only",
       "ownerModule": "scanlog",
       "tier": "tier2",
       "gapType": "registry_only",
       "classification": "runtime_verified",
       "rustSymbol": null,
-      "bindingIdentifier": "writeAutoscanReport",
+      "bindingIdentifier": "JsScanRunOptions",
       "coverageId": "node-tier2-scanlog-cli-runtime",
       "verificationMode": "cli_workflow",
       "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
@@ -13268,7 +13247,31 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scanlog/fileio helpers in runtime coverage."
+      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scan-run execution and Rust-owned Autoscan Report writing in runtime coverage."
+    },
+    {
+      "trackedId": "binding:scanRunExecute",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "scanRunExecute",
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "verificationMode": "cli_workflow",
+      "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scan-run execution and Rust-owned Autoscan Report writing in runtime coverage."
     },
     {
       "trackedId": "binding:JsFcxConfigIssue",

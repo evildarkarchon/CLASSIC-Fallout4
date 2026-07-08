@@ -95,10 +95,10 @@ fn choose_settings_write_path_with_access(
         }
     }
 
-    if let Some(app_target) = app_dir.map(|dir| dir.join(DEFAULT_CONFIG_FILENAME)) {
-        if can_create_new(&app_target) {
-            return Ok(Some(app_target));
-        }
+    if let Some(app_target) = app_dir.map(|dir| dir.join(DEFAULT_CONFIG_FILENAME))
+        && can_create_new(&app_target)
+    {
+        return Ok(Some(app_target));
     }
 
     Ok(None)
@@ -399,6 +399,9 @@ pub struct ClassicConfig {
     /// Move unsolved logs to subfolder
     pub move_unsolved_logs: bool,
 
+    /// Optional absolute folder for Unsolved Logs relocation
+    pub unsolved_logs_destination: Option<PathBuf>,
+
     /// Simplify logs (may remove important info)
     pub simplify_logs: bool,
 
@@ -487,6 +490,7 @@ impl Default for ClassicConfig {
             show_formid_values: false,
             stat_logging: false,
             move_unsolved_logs: false,
+            unsolved_logs_destination: None,
             simplify_logs: false,
             update_check: true,
             game_version: "auto".to_string(),
@@ -535,6 +539,11 @@ impl ClassicConfig {
         let show_formid_values = yaml["show_formid_values"].as_bool().unwrap_or(false);
         let stat_logging = yaml["stat_logging"].as_bool().unwrap_or(false);
         let move_unsolved_logs = yaml["move_unsolved_logs"].as_bool().unwrap_or(false);
+        let unsolved_logs_destination = yaml["unsolved_logs_destination"]
+            .as_str()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(PathBuf::from);
         let simplify_logs = yaml["simplify_logs"].as_bool().unwrap_or(false);
         let update_check = yaml["update_check"].as_bool().unwrap_or(true);
         let game_version = yaml["game_version"].as_str().unwrap_or("auto").to_string();
@@ -582,6 +591,7 @@ impl ClassicConfig {
             show_formid_values,
             stat_logging,
             move_unsolved_logs,
+            unsolved_logs_destination,
             simplify_logs,
             update_check,
             game_version,
@@ -613,6 +623,12 @@ impl ClassicConfig {
             Yaml::String("move_unsolved_logs".to_string()),
             Yaml::Boolean(self.move_unsolved_logs),
         );
+        if let Some(destination) = &self.unsolved_logs_destination {
+            root.insert(
+                Yaml::String("unsolved_logs_destination".to_string()),
+                Yaml::String(destination.to_string_lossy().to_string()),
+            );
+        }
         root.insert(
             Yaml::String("simplify_logs".to_string()),
             Yaml::Boolean(self.simplify_logs),
@@ -762,25 +778,25 @@ impl ClassicConfig {
             );
         }
 
-        if let Some(ref ini_folder) = self.paths.ini_folder {
-            if !ini_folder.exists() {
-                anyhow::bail!("INI folder does not exist: {}", ini_folder.display());
-            }
+        if let Some(ref ini_folder) = self.paths.ini_folder
+            && !ini_folder.exists()
+        {
+            anyhow::bail!("INI folder does not exist: {}", ini_folder.display());
         }
 
-        if let Some(ref scan_custom) = self.paths.scan_custom {
-            if !scan_custom.exists() {
-                anyhow::bail!(
-                    "Custom scan folder does not exist: {}",
-                    scan_custom.display()
-                );
-            }
+        if let Some(ref scan_custom) = self.paths.scan_custom
+            && !scan_custom.exists()
+        {
+            anyhow::bail!(
+                "Custom scan folder does not exist: {}",
+                scan_custom.display()
+            );
         }
 
-        if let Some(ref mods_folder) = self.paths.mods_folder {
-            if !mods_folder.exists() {
-                anyhow::bail!("Mods folder does not exist: {}", mods_folder.display());
-            }
+        if let Some(ref mods_folder) = self.paths.mods_folder
+            && !mods_folder.exists()
+        {
+            anyhow::bail!("Mods folder does not exist: {}", mods_folder.display());
         }
 
         Ok(())

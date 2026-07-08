@@ -36,7 +36,7 @@ SCENARIOS = [
         "scanlog-addictol-newer-than-floor",
         "Scan an Addictol crash log newer than the configured floor and prove it remains valid.",
         "classic_scanlog",
-        ["AnalysisConfig", "Orchestrator.process_logs_batch", "AnalysisResult.report_lines"],
+        ["scan_run_execute", "ScanRunLogResult.autoscan_report_path"],
         ["scan", "logs", "--path", "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
         ["python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
         0,

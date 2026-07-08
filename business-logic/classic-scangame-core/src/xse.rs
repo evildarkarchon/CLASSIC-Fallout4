@@ -107,15 +107,15 @@ impl AddressLibInfo {
     ) -> Self {
         let registry = get_version_registry();
 
-        if let Some(info) = registry.get_by_id(id) {
-            if let Some(addr_lib) = &info.address_library {
-                return Self {
-                    version,
-                    filename: addr_lib.filename.clone(),
-                    description: format!("{} ({})", info.display_name, info.short_name),
-                    url: addr_lib.nexus_url.clone(),
-                };
-            }
+        if let Some(info) = registry.get_by_id(id)
+            && let Some(addr_lib) = &info.address_library
+        {
+            return Self {
+                version,
+                filename: addr_lib.filename.clone(),
+                description: format!("{} ({})", info.display_name, info.short_name),
+                url: addr_lib.nexus_url.clone(),
+            };
         }
 
         // Fallback to hardcoded values

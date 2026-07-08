@@ -4,6 +4,9 @@
 #include <QString>
 #include <QStringList>
 
+#include "classic_cxx_bridge/scanner.h"
+#include "rust/cxx.h"
+
 #include <atomic>
 
 class ScanWorker : public QObject {
@@ -14,8 +17,9 @@ public:
 
 public slots:
     void doScan(const QStringList& logPaths, const QString& yamlRoot, const QString& yamlData, const QString& game,
-                const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
-                bool moveUnsolvedLogs, int maxConcurrentScans, bool targetedMode);
+                 const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
+                 bool moveUnsolvedLogs, const QString& unsolvedLogsDestination, int maxConcurrentScans,
+                 bool targetedMode);
     void requestCancel();
 
 signals:
@@ -27,4 +31,5 @@ signals:
 
 private:
     std::atomic<bool> m_cancelled{false};
+    rust::Box<classic::scanner::ScanCancellationToken> m_cancellationToken;
 };

@@ -321,13 +321,12 @@ fn validate_release_semver_shape(value: &str) -> std::result::Result<(), String>
     // Explicitly reject the pre-2.0 `CLASSIC v...` / `CLASSIC ...` form
     // so the diagnostic is specific instead of the generic
     // "missing MAJOR.MINOR.PATCH".
-    if let Some(rest) = value.strip_prefix("CLASSIC") {
-        if rest.starts_with(' ') || rest.is_empty() {
-            return Err(
-                "schema-2.0 dropped the legacy `CLASSIC ` prefix; store the bare `vX.Y.Z` form"
-                    .into(),
-            );
-        }
+    if let Some(rest) = value.strip_prefix("CLASSIC")
+        && (rest.starts_with(' ') || rest.is_empty())
+    {
+        return Err(
+            "schema-2.0 dropped the legacy `CLASSIC ` prefix; store the bare `vX.Y.Z` form".into(),
+        );
     }
 
     let body = value

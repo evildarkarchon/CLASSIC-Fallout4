@@ -1,0 +1,950 @@
+Skyrim SSE v1.6.1170
+CrashLoggerSSE v1-15-0-0 Oct 12 2024 11:33:37
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x00030000003F
+Exception Flags: 0x00000000
+Number of Parameters: 2
+Access Violation: Tried to execute memory at 0x00030000003F
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 11 Pro v10.0.22631
+	CPU: AuthenticAMD AMD Ryzen 7 7800X3D 8-Core Processor           
+	GPU #1: Nvidia AD104 [GeForce RTX 4070]
+	GPU #2: AMD Raphael
+	GPU #3: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 37.37 GB/63.10 GB
+	GPU MEMORY: 5.93/10.98 GB
+	Detected Virtual Machine: Microsoft Hyper-V (100%)
+
+PROBABLE CALL STACK:
+
+REGISTERS:
+	RAX 0x1                (size_t) [1]
+	RCX 0x2896061FE70      (char*) "?"
+	RDX 0xE190AFF5CC       (void*)
+	RBX 0x70000003F        (size_t) [30064771135]
+	RSP 0xE190AFF5A0       (char*) "?"
+	RBP 0x70000003F        (size_t) [30064771135]
+	RSI 0x70000003C        (size_t) [30064771132]
+	RDI 0x100000027        (size_t) [4294967335]
+	R8  0xE190AFF5CC       (void*)
+	R9  0x282EACEEC34      (void*)
+	R10 0x7FF713FFEB00     (void* -> SkyrimSE.exe+17EEB00	add [rax], al)
+	R11 0xE190AFF590       (char*) "'"
+	R12 0x7FF715A680C8     (void* -> SkyrimSE.exe+32580C8	add [rax], al)
+	R13 0x7FF715A680C0     (void* -> SkyrimSE.exe+32580C0	add [rax], al)
+	R14 0x30000003F        (size_t) [12884901951]
+	R15 0x7FF715A680C4     (void* -> SkyrimSE.exe+32580C4	add [rax], al)
+
+STACK:
+	[RSP+0  ] 0x70000003F        (size_t) [30064771135]
+	[RSP+8  ] 0x30000003F        (size_t) [12884901951]
+	[RSP+10 ] 0x70000003F        (size_t) [30064771135]
+	[RSP+18 ] 0x70000003C        (size_t) [30064771132]
+	[RSP+20 ] 0x70000000E        (size_t) [30064771086]
+	[RSP+28 ] 0x100000027        (size_t) [4294967335]
+	[RSP+30 ] 0x0                (size_t) [0]
+	[RSP+38 ] 0x282EACEEBC0      (BSGeometryListCullingProcess*)
+	[RSP+40 ] 0x0                (size_t) [0]
+	[RSP+48 ] 0x59F              (size_t) [1439]
+	[RSP+50 ] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+58 ] 0x7FF713639040     (void* -> SkyrimSE.exe+0E29040	add rbx, 0x08)
+	[RSP+60 ] 0xFFFFFFFF         (size_t) [4294967295]
+	[RSP+68 ] 0x7FF713CCF707     (void* -> SkyrimSE.exe+14BF707	nop)
+	[RSP+70 ] 0x2                (size_t) [2]
+	[RSP+78 ] 0x0                (size_t) [0]
+	[RSP+80 ] 0x0                (size_t) [0]
+	[RSP+88 ] 0x2822104F478      (char*) " "
+	[RSP+90 ] 0xFFFFFF00         (size_t) [4294967040]
+	[RSP+98 ] 0x7FF713CCF787     (void* -> SkyrimSE.exe+14BF787	nop)
+	[RSP+A0 ] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+A8 ] 0x0                (size_t) [0]
+	[RSP+B0 ] 0x2822891BBA0      (void*)
+	[RSP+B8 ] 0x7FF713CDC3FE     (void* -> SkyrimSE.exe+14CC3FE	mov rcx, rbx)
+	[RSP+C0 ] 0xFFFFFFFF00000002 (size_t) [uint: 18446744069414584322 int: -4294967294]
+	[RSP+C8 ] 0x28967F65C88      (void*)
+	[RSP+D0 ] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+D8 ] 0x0                (size_t) [0]
+	[RSP+E0 ] 0x7FF715A6A0C8     (void* -> SkyrimSE.exe+325A0C8	)
+	[RSP+E8 ] 0x7FF713507888     (void* -> SkyrimSE.exe+0CF7888	mov ecx, [rbx+0x0C])
+	[RSP+F0 ] 0x28900000002      (void*)
+	[RSP+F8 ] 0x7FF715A6A0C8     (void* -> SkyrimSE.exe+325A0C8	)
+	[RSP+100] 0x0                (size_t) [0]
+	[RSP+108] 0x7FF8FB771E0D     (void* -> KERNELBASE.dll+0061E0D	nop [rax+rax*1], eax)
+	[RSP+110] 0x0                (size_t) [0]
+	[RSP+118] 0x7FF715A6A078     (BSJobs::JobThread*)
+	[RSP+120] 0x7FF715A6A078     (BSJobs::JobThread*)
+	[RSP+128] 0x2822891BBA0      (void*)
+	[RSP+130] 0x7FF715A7EB00     (void* -> SkyrimSE.exe+326EB00	or ecx, [rax])
+	[RSP+138] 0x7FF713507E51     (void* -> SkyrimSE.exe+0CF7E51	mov r15d, eax)
+	[RSP+140] 0x0                (size_t) [0]
+	[RSP+148] 0x0                (size_t) [0]
+	[RSP+150] 0x0                (size_t) [0]
+	[RSP+158] 0x7FF8B24E64B9     (void* -> EngineFixes.dll+00164B9	cmp dword ptr [0x00007FF8B25ABE38], 0xFFFFFFFF)
+	[RSP+160] 0x2822891BBA0      (void*)
+	[RSP+168] 0x0                (size_t) [0]
+	[RSP+170] 0x6A869B3D9317     (size_t) [117126362665751]
+	[RSP+178] 0x0                (size_t) [0]
+	[RSP+180] 0x2822891BE40      (void*)
+	[RSP+188] 0x100000004        (size_t) [4294967300]
+	[RSP+190] 0x7FF700000000     (size_t) [140698833649664]
+	[RSP+198] 0x2822891BE40      (void*)
+	[RSP+1A0] 0x48               (size_t) [72]
+	[RSP+1A8] 0x7FF700000001     (size_t) [140698833649665]
+	[RSP+1B0] 0x0                (size_t) [0]
+	[RSP+1B8] 0x0                (size_t) [0]
+	[RSP+1C0] 0x0                (size_t) [0]
+	[RSP+1C8] 0x0                (size_t) [0]
+	[RSP+1D0] 0x0                (size_t) [0]
+	[RSP+1D8] 0x0                (size_t) [0]
+	[RSP+1E0] 0x0                (size_t) [0]
+	[RSP+1E8] 0x0                (size_t) [0]
+	[RSP+1F0] 0x0                (size_t) [0]
+	[RSP+1F8] 0x0                (size_t) [0]
+	[RSP+200] 0x7FF715A6A078     (BSJobs::JobThread*)
+	[RSP+208] 0x7FF7135061DA     (void* -> SkyrimSE.exe+0CF61DA	movzx eax, byte ptr [rbx+0xA74])
+	[RSP+210] 0x7FF715A6A001     (void* -> SkyrimSE.exe+325A001	add [rax], al)
+	[RSP+218] 0x0                (size_t) [0]
+	[RSP+220] 0x0                (size_t) [0]
+	[RSP+228] 0x3C8              (size_t) [968]
+	[RSP+230] 0x7FF715A6A078     (BSJobs::JobThread*)
+	[RSP+238] 0x7FF7134E0DBD     (void* -> SkyrimSE.exe+0CD0DBD	mov rcx, [0x00007FF7159DC318])
+	[RSP+240] 0x7FF7159DC370     (void* -> SkyrimSE.exe+31CC370	add [rax], al)
+	[RSP+248] 0x7FF715A6A078     (BSJobs::JobThread*)
+	[RSP+250] 0x0                (size_t) [0]
+	[RSP+258] 0x0                (size_t) [0]
+	[RSP+260] 0x7FF715A6A078     (BSJobs::JobThread*)
+	[RSP+268] 0x0                (size_t) [0]
+	[RSP+270] 0x0                (size_t) [0]
+	[RSP+278] 0x7FF8FC32259D     (void* -> KERNEL32.DLL+001259D	mov ecx, eax)
+	[RSP+280] 0x0                (size_t) [0]
+	[RSP+288] 0x0                (size_t) [0]
+	[RSP+290] 0x0                (size_t) [0]
+	[RSP+298] 0x0                (size_t) [0]
+	[RSP+2A0] 0x0                (size_t) [0]
+	[RSP+2A8] 0x7FF8FDE0AF38     (void* -> ntdll.dll+005AF38	jmp 0x00007FF8FDE0AF59)
+	[RSP+2B0] 0x0                (size_t) [0]
+	[RSP+2B8] 0x0                (size_t) [0]
+	[RSP+2C0] 0x0                (size_t) [0]
+	[RSP+2C8] 0x0                (size_t) [0]
+	[RSP+2D0] 0x0                (size_t) [0]
+	[RSP+2D8] 0x0                (size_t) [0]
+	[RSP+2E0] 0x1000505400000000 (size_t) [1153009826314321920]
+	[RSP+2E8] 0x0                (size_t) [0]
+	[RSP+2F0] 0x4F0FFFFFB30      (size_t) [5433133628208]
+	[RSP+2F8] 0x7FF8FB87BE00     (void* -> KERNELBASE.dll+016BE00	mov [rsp+0x10], rbx)
+	[RSP+300] 0xE190AFE080       (void*)
+	[RSP+308] 0x7EE5400007FF8EB8 (size_t) [9143784987324026552]
+	[RSP+310] 0x7FF8EB87EE54     (size_t) [140707080171092]
+	[RSP+318] 0xE190AFE080       (void*)
+	[RSP+320] 0x0                (size_t) [0]
+	[RSP+328] 0x0                (size_t) [0]
+	[RSP+330] 0x0                (size_t) [0]
+	[RSP+338] 0x0                (size_t) [0]
+	[RSP+340] 0x0                (size_t) [0]
+	[RSP+348] 0x0                (size_t) [0]
+	[RSP+350] 0x0                (size_t) [0]
+	[RSP+358] 0x0                (size_t) [0]
+	[RSP+360] 0x0                (size_t) [0]
+	[RSP+368] 0x0                (size_t) [0]
+	[RSP+370] 0x0                (size_t) [0]
+	[RSP+378] 0x0                (size_t) [0]
+	[RSP+380] 0x0                (size_t) [0]
+	[RSP+388] 0x0                (size_t) [0]
+	[RSP+390] 0x0                (size_t) [0]
+	[RSP+398] 0x0                (size_t) [0]
+	[RSP+3A0] 0x0                (size_t) [0]
+	[RSP+3A8] 0x0                (size_t) [0]
+	[RSP+3B0] 0x0                (size_t) [0]
+	[RSP+3B8] 0x0                (size_t) [0]
+	[RSP+3C0] 0x0                (size_t) [0]
+	[RSP+3C8] 0x0                (size_t) [0]
+	[RSP+3D0] 0x0                (size_t) [0]
+	[RSP+3D8] 0x0                (size_t) [0]
+	[RSP+3E0] 0x0                (size_t) [0]
+	[RSP+3E8] 0x0                (size_t) [0]
+	[RSP+3F0] 0x0                (size_t) [0]
+	[RSP+3F8] 0x0                (size_t) [0]
+	[RSP+400] 0x0                (size_t) [0]
+	[RSP+408] 0x0                (size_t) [0]
+	[RSP+410] 0x0                (size_t) [0]
+	[RSP+418] 0x0                (size_t) [0]
+	[RSP+420] 0x0                (size_t) [0]
+	[RSP+428] 0x0                (size_t) [0]
+	[RSP+430] 0x0                (size_t) [0]
+	[RSP+438] 0x0                (size_t) [0]
+	[RSP+440] 0x0                (size_t) [0]
+	[RSP+448] 0x0                (size_t) [0]
+	[RSP+450] 0x0                (size_t) [0]
+	[RSP+458] 0x0                (size_t) [0]
+	[RSP+460] 0x0                (size_t) [0]
+	[RSP+468] 0x0                (size_t) [0]
+	[RSP+470] 0x0                (size_t) [0]
+	[RSP+478] 0x0                (size_t) [0]
+	[RSP+480] 0x0                (size_t) [0]
+	[RSP+488] 0x0                (size_t) [0]
+	[RSP+490] 0x0                (size_t) [0]
+	[RSP+498] 0x0                (size_t) [0]
+	[RSP+4A0] 0x0                (size_t) [0]
+	[RSP+4A8] 0x0                (size_t) [0]
+	[RSP+4B0] 0x0                (size_t) [0]
+	[RSP+4B8] 0x0                (size_t) [0]
+	[RSP+4C0] 0x0                (size_t) [0]
+	[RSP+4C8] 0x0                (size_t) [0]
+	[RSP+4D0] 0x0                (size_t) [0]
+	[RSP+4D8] 0x0                (size_t) [0]
+	[RSP+4E0] 0x0                (size_t) [0]
+	[RSP+4E8] 0x0                (size_t) [0]
+	[RSP+4F0] 0x0                (size_t) [0]
+	[RSP+4F8] 0x0                (size_t) [0]
+	[RSP+500] 0x0                (size_t) [0]
+	[RSP+508] 0x0                (size_t) [0]
+	[RSP+510] 0x0                (size_t) [0]
+	[RSP+518] 0x0                (size_t) [0]
+	[RSP+520] 0x0                (size_t) [0]
+	[RSP+528] 0x0                (size_t) [0]
+	[RSP+530] 0x0                (size_t) [0]
+	[RSP+538] 0x0                (size_t) [0]
+	[RSP+540] 0x0                (size_t) [0]
+	[RSP+548] 0x0                (size_t) [0]
+	[RSP+550] 0x0                (size_t) [0]
+	[RSP+558] 0x0                (size_t) [0]
+	[RSP+560] 0x0                (size_t) [0]
+	[RSP+568] 0x0                (size_t) [0]
+	[RSP+570] 0x0                (size_t) [0]
+	[RSP+578] 0x0                (size_t) [0]
+	[RSP+580] 0x0                (size_t) [0]
+	[RSP+588] 0x0                (size_t) [0]
+	[RSP+590] 0x0                (size_t) [0]
+	[RSP+598] 0x0                (size_t) [0]
+	[RSP+5A0] 0x0                (size_t) [0]
+	[RSP+5A8] 0x0                (size_t) [0]
+	[RSP+5B0] 0x0                (size_t) [0]
+	[RSP+5B8] 0x0                (size_t) [0]
+	[RSP+5C0] 0x0                (size_t) [0]
+	[RSP+5C8] 0x0                (size_t) [0]
+	[RSP+5D0] 0x0                (size_t) [0]
+	[RSP+5D8] 0x0                (size_t) [0]
+	[RSP+5E0] 0x0                (size_t) [0]
+	[RSP+5E8] 0x0                (size_t) [0]
+	[RSP+5F0] 0x0                (size_t) [0]
+	[RSP+5F8] 0x0                (size_t) [0]
+	[RSP+600] 0x0                (size_t) [0]
+	[RSP+608] 0x0                (size_t) [0]
+	[RSP+610] 0x0                (size_t) [0]
+	[RSP+618] 0x0                (size_t) [0]
+	[RSP+620] 0x0                (size_t) [0]
+	[RSP+628] 0x0                (size_t) [0]
+	[RSP+630] 0x0                (size_t) [0]
+	[RSP+638] 0x0                (size_t) [0]
+	[RSP+640] 0x0                (size_t) [0]
+	[RSP+648] 0x0                (size_t) [0]
+	[RSP+650] 0x0                (size_t) [0]
+	[RSP+658] 0x0                (size_t) [0]
+	[RSP+660] 0x0                (size_t) [0]
+	[RSP+668] 0x0                (size_t) [0]
+	[RSP+670] 0x0                (size_t) [0]
+	[RSP+678] 0x0                (size_t) [0]
+	[RSP+680] 0x0                (size_t) [0]
+	[RSP+688] 0x0                (size_t) [0]
+	[RSP+690] 0x0                (size_t) [0]
+	[RSP+698] 0x0                (size_t) [0]
+	[RSP+6A0] 0x0                (size_t) [0]
+	[RSP+6A8] 0x0                (size_t) [0]
+	[RSP+6B0] 0x0                (size_t) [0]
+	[RSP+6B8] 0x0                (size_t) [0]
+	[RSP+6C0] 0x0                (size_t) [0]
+	[RSP+6C8] 0x0                (size_t) [0]
+	[RSP+6D0] 0x0                (size_t) [0]
+	[RSP+6D8] 0x0                (size_t) [0]
+	[RSP+6E0] 0x0                (size_t) [0]
+	[RSP+6E8] 0x0                (size_t) [0]
+	[RSP+6F0] 0x0                (size_t) [0]
+	[RSP+6F8] 0x0                (size_t) [0]
+	[RSP+700] 0x0                (size_t) [0]
+	[RSP+708] 0x0                (size_t) [0]
+	[RSP+710] 0x0                (size_t) [0]
+	[RSP+718] 0x0                (size_t) [0]
+	[RSP+720] 0x0                (size_t) [0]
+	[RSP+728] 0x0                (size_t) [0]
+	[RSP+730] 0x0                (size_t) [0]
+	[RSP+738] 0x0                (size_t) [0]
+	[RSP+740] 0x0                (size_t) [0]
+	[RSP+748] 0x0                (size_t) [0]
+	[RSP+750] 0x0                (size_t) [0]
+	[RSP+758] 0x0                (size_t) [0]
+	[RSP+760] 0x0                (size_t) [0]
+	[RSP+768] 0x0                (size_t) [0]
+	[RSP+770] 0x0                (size_t) [0]
+	[RSP+778] 0x0                (size_t) [0]
+	[RSP+780] 0x0                (size_t) [0]
+	[RSP+788] 0x0                (size_t) [0]
+	[RSP+790] 0x0                (size_t) [0]
+	[RSP+798] 0x0                (size_t) [0]
+	[RSP+7A0] 0x0                (size_t) [0]
+	[RSP+7A8] 0x0                (size_t) [0]
+	[RSP+7B0] 0x0                (size_t) [0]
+	[RSP+7B8] 0x0                (size_t) [0]
+	[RSP+7C0] 0x0                (size_t) [0]
+	[RSP+7C8] 0x0                (size_t) [0]
+	[RSP+7D0] 0x0                (size_t) [0]
+	[RSP+7D8] 0x0                (size_t) [0]
+	[RSP+7E0] 0x0                (size_t) [0]
+	[RSP+7E8] 0x0                (size_t) [0]
+	[RSP+7F0] 0x0                (size_t) [0]
+	[RSP+7F8] 0x0                (size_t) [0]
+	[RSP+800] 0x0                (size_t) [0]
+	[RSP+808] 0x0                (size_t) [0]
+	[RSP+810] 0x0                (size_t) [0]
+	[RSP+818] 0x0                (size_t) [0]
+	[RSP+820] 0x0                (size_t) [0]
+	[RSP+828] 0x0                (size_t) [0]
+	[RSP+830] 0x0                (size_t) [0]
+	[RSP+838] 0x0                (size_t) [0]
+	[RSP+840] 0x0                (size_t) [0]
+	[RSP+848] 0x0                (size_t) [0]
+	[RSP+850] 0x0                (size_t) [0]
+	[RSP+858] 0x0                (size_t) [0]
+	[RSP+860] 0x0                (size_t) [0]
+	[RSP+868] 0x0                (size_t) [0]
+	[RSP+870] 0x0                (size_t) [0]
+	[RSP+878] 0x0                (size_t) [0]
+	[RSP+880] 0x0                (size_t) [0]
+	[RSP+888] 0x0                (size_t) [0]
+	[RSP+890] 0x0                (size_t) [0]
+	[RSP+898] 0x0                (size_t) [0]
+	[RSP+8A0] 0x0                (size_t) [0]
+	[RSP+8A8] 0x0                (size_t) [0]
+	[RSP+8B0] 0x0                (size_t) [0]
+	[RSP+8B8] 0x0                (size_t) [0]
+	[RSP+8C0] 0x0                (size_t) [0]
+	[RSP+8C8] 0x0                (size_t) [0]
+	[RSP+8D0] 0x0                (size_t) [0]
+	[RSP+8D8] 0x0                (size_t) [0]
+	[RSP+8E0] 0x0                (size_t) [0]
+	[RSP+8E8] 0x0                (size_t) [0]
+	[RSP+8F0] 0x0                (size_t) [0]
+	[RSP+8F8] 0x0                (size_t) [0]
+	[RSP+900] 0x0                (size_t) [0]
+	[RSP+908] 0x0                (size_t) [0]
+	[RSP+910] 0x0                (size_t) [0]
+	[RSP+918] 0x0                (size_t) [0]
+	[RSP+920] 0x0                (size_t) [0]
+	[RSP+928] 0x0                (size_t) [0]
+	[RSP+930] 0x0                (size_t) [0]
+	[RSP+938] 0x0                (size_t) [0]
+	[RSP+940] 0x0                (size_t) [0]
+	[RSP+948] 0x0                (size_t) [0]
+	[RSP+950] 0x0                (size_t) [0]
+	[RSP+958] 0x0                (size_t) [0]
+	[RSP+960] 0x0                (size_t) [0]
+	[RSP+968] 0x0                (size_t) [0]
+	[RSP+970] 0x0                (size_t) [0]
+	[RSP+978] 0x0                (size_t) [0]
+	[RSP+980] 0x0                (size_t) [0]
+	[RSP+988] 0x0                (size_t) [0]
+	[RSP+990] 0x0                (size_t) [0]
+	[RSP+998] 0x0                (size_t) [0]
+	[RSP+9A0] 0x0                (size_t) [0]
+	[RSP+9A8] 0x0                (size_t) [0]
+	[RSP+9B0] 0x0                (size_t) [0]
+	[RSP+9B8] 0x0                (size_t) [0]
+	[RSP+9C0] 0x0                (size_t) [0]
+	[RSP+9C8] 0x0                (size_t) [0]
+	[RSP+9D0] 0x0                (size_t) [0]
+	[RSP+9D8] 0x0                (size_t) [0]
+	[RSP+9E0] 0x0                (size_t) [0]
+	[RSP+9E8] 0x0                (size_t) [0]
+	[RSP+9F0] 0x0                (size_t) [0]
+	[RSP+9F8] 0x0                (size_t) [0]
+	[RSP+A00] 0x0                (size_t) [0]
+	[RSP+A08] 0x0                (size_t) [0]
+	[RSP+A10] 0x0                (size_t) [0]
+	[RSP+A18] 0x0                (size_t) [0]
+	[RSP+A20] 0x0                (size_t) [0]
+	[RSP+A28] 0x0                (size_t) [0]
+	[RSP+A30] 0x0                (size_t) [0]
+	[RSP+A38] 0x0                (size_t) [0]
+	[RSP+A40] 0x0                (size_t) [0]
+	[RSP+A48] 0x0                (size_t) [0]
+	[RSP+A50] 0x0                (size_t) [0]
+	[RSP+A58] 0x0                (size_t) [0]
+
+MODULES:
+	XINPUT1_3.dll                         0x000000400000
+	X3DAudio1_7.dll                       0x000051B30000
+	tbb.dll                               0x000180000000
+	tbbmalloc.dll                         0x02821F720000
+	AHZmoreHUDInventory.dll               0x02822AF90000
+	PerkAdjuster.dll                      0x028246B60000
+	SkyrimSE.exe                          0x7FF712810000
+	NativeEditorIDFix.dll                 0x7FF829F80000
+	EnemiesRespectEncounterZones.dll      0x7FF83B490000
+	FISS.dll                              0x7FF83BA10000
+	AchievementInjector.dll               0x7FF83BC50000
+	FaceGenFixes.dll                      0x7FF83BF80000
+	BugFixesSSE.dll                       0x7FF83BFF0000
+	CraftingCategories.dll                0x7FF86D9B0000
+	AnimationQueueFix.dll                 0x7FF86DA30000
+	ImWalkinHere.dll                      0x7FF86FB90000
+	Fuz Ro D'oh.dll                       0x7FF870650000
+	msdmo.dll                             0x7FF878460000
+	ResampleDmo.DLL                       0x7FF878470000
+	MSVCP140_ATOMIC_WAIT.dll              0x7FF878530000
+	DSOUND.DLL                            0x7FF878550000
+	encounter_zones_unlocked.dll          0x7FF891FD0000
+	AHZmoreHUDPlugin.dll                  0x7FF892030000
+	MessageBus.dll                        0x7FF89A410000
+	AddItemMenuSE.dll                     0x7FF8AED80000
+	DINPUT8.dll                           0x7FF8AFE20000
+	skse64_1_6_1170.dll                   0x7FF8B2160000
+	SKSEMenuFramework.dll                 0x7FF8B22D0000
+	EngineFixes.dll                       0x7FF8B24D0000
+	SkyrimUncapper.dll                    0x7FF8B2710000
+	VoltekLib.Detours.dll                 0x7FF8B2B20000
+	ncryptsslp.dll                        0x7FF8B7BC0000
+	nvppex.dll                            0x7FF8B7E80000
+	VoltekLib.RelocationDatabase.dll      0x7FF8B92F0000
+	bink2w64.dll                          0x7FF8B9330000
+	VoltekLib.MemoryManager.dll           0x7FF8B93F0000
+	VoltekLib.UnicodeConverter.dll        0x7FF8B9420000
+	steam_api64.dll                       0x7FF8B9450000
+	VCOMP140.DLL                          0x7FF8B94C0000
+	tier0_s64.dll                         0x7FF8B94F0000
+	ActorLimitFix.dll                     0x7FF8B9710000
+	vstdlib_s64.dll                       0x7FF8B97B0000
+	CONCRT140.dll                         0x7FF8B9E80000
+	nvspcap64.dll                         0x7FF8BAEF0000
+	uiautomationcore.dll                  0x7FF8C4610000
+	threadpoolwinrt.dll                   0x7FF8C8820000
+	xinput1_4.dll                         0x7FF8C9750000
+	inputhost.dll                         0x7FF8DB6C0000
+	Windows.UI.dll                        0x7FF8DE940000
+	MPR.dll                               0x7FF8DEAC0000
+	MSVCP140.dll                          0x7FF8E08C0000
+	VCRUNTIME140.dll                      0x7FF8E0950000
+	winmmbase.dll                         0x7FF8E0970000
+	d3dx9_42.dll                          0x7FF8E1910000
+	nvwgf2umx.dll                         0x7FF8E1E90000
+	COMCTL32.dll                          0x7FF8E5FB0000
+	OLEACC.dll                            0x7FF8E66B0000
+	WINSPOOL.DRV                          0x7FF8E6720000
+	COMCTL32.dll                          0x7FF8E67D0000
+	gdiplus.dll                           0x7FF8E6A70000
+	MMDevApi.dll                          0x7FF8E6C60000
+	webio.dll                             0x7FF8E73A0000
+	VCRUNTIME140_1.dll                    0x7FF8E7B90000
+	textinputframework.dll                0x7FF8E87A0000
+	XINPUT9_1_0.dll                       0x7FF8E8C90000
+	BarterLimitFix.dll                    0x7FF8E8CA0000
+	AUDIOSES.DLL                          0x7FF8E8DD0000
+	SMP-NPC crash fix.dll                 0x7FF8E92B0000
+	ELIF.dll                              0x7FF8E92D0000
+	MSVCP140_CODECVT_IDS.dll              0x7FF8E9300000
+	nvgpucomp64.dll                       0x7FF8EBE30000
+	NvMessageBus.dll                      0x7FF8EE080000
+	nvldumdx.dll                          0x7FF8EE3E0000
+	nvapi64.dll                           0x7FF8EF1E0000
+	WINMM.dll                             0x7FF8F0630000
+	MSIMG32.dll                           0x7FF8F06F0000
+	directxdatabasehelper.dll             0x7FF8F1920000
+	avrt.dll                              0x7FF8F1B10000
+	CoreUIComponents.dll                  0x7FF8F1C30000
+	dbghelp.dll                           0x7FF8F2DC0000
+	drvstore.dll                          0x7FF8F3390000
+	cryptnet.dll                          0x7FF8F3D30000
+	VERSION.dll                           0x7FF8F3DA0000
+	d3d11.dll                             0x7FF8F4CD0000
+	dcomp.dll                             0x7FF8F4F30000
+	CoreMessaging.dll                     0x7FF8F5700000
+	fwpuclnt.dll                          0x7FF8F5B70000
+	wevtapi.dll                           0x7FF8F62E0000
+	dhcpcsvc.DLL                          0x7FF8F6440000
+	rasadhlp.dll                          0x7FF8F6480000
+	WINHTTP.DLL                           0x7FF8F6490000
+	WindowsCodecs.dll                     0x7FF8F81B0000
+	UxTheme.dll                           0x7FF8F83B0000
+	dxgi.dll                              0x7FF8F8530000
+	WINNSI.DLL                            0x7FF8F8640000
+	dwmapi.dll                            0x7FF8F8650000
+	dxcore.dll                            0x7FF8F86B0000
+	resourcepolicyclient.dll              0x7FF8F8A60000
+	wintypes.dll                          0x7FF8F8E70000
+	windows.storage.dll                   0x7FF8F8FB0000
+	HID.DLL                               0x7FF8F98C0000
+	IPHLPAPI.DLL                          0x7FF8F9BD0000
+	DNSAPI.dll                            0x7FF8F9C00000
+	UMPDC.dll                             0x7FF8F9EE0000
+	POWRPROF.dll                          0x7FF8F9F00000
+	Secur32.dll                           0x7FF8F9F70000
+	schannel.DLL                          0x7FF8F9FF0000
+	rsaenh.dll                            0x7FF8FA100000
+	kernel.appcore.dll                    0x7FF8FA140000
+	ntmarta.dll                           0x7FF8FA2B0000
+	SSPICLI.DLL                           0x7FF8FA400000
+	MSWSOCK.dll                           0x7FF8FA610000
+	gpapi.dll                             0x7FF8FA680000
+	wldp.dll                              0x7FF8FA890000
+	CRYPTBASE.DLL                         0x7FF8FA940000
+	CRYPTSP.dll                           0x7FF8FA960000
+	msasn1.dll                            0x7FF8FA9B0000
+	NTASN1.dll                            0x7FF8FAA30000
+	ncrypt.dll                            0x7FF8FAA70000
+	devobj.dll                            0x7FF8FAD70000
+	CFGMGR32.dll                          0x7FF8FADC0000
+	DPAPI.DLL                             0x7FF8FAE10000
+	profapi.dll                           0x7FF8FAFE0000
+	bcrypt.dll                            0x7FF8FB0B0000
+	msvcp_win.dll                         0x7FF8FB0E0000
+	wintrust.dll                          0x7FF8FB180000
+	ucrtbase.dll                          0x7FF8FB2B0000
+	CRYPT32.dll                           0x7FF8FB3D0000
+	gdi32full.dll                         0x7FF8FB540000
+	bcryptPrimitives.dll                  0x7FF8FB660000
+	win32u.dll                            0x7FF8FB6E0000
+	KERNELBASE.dll                        0x7FF8FB710000
+	msvcrt.dll                            0x7FF8FBAF0000
+	SETUPAPI.dll                          0x7FF8FBC00000
+	OLEAUT32.dll                          0x7FF8FC080000
+	USER32.dll                            0x7FF8FC160000
+	KERNEL32.DLL                          0x7FF8FC310000
+	combase.dll                           0x7FF8FC430000
+	IMM32.DLL                             0x7FF8FC850000
+	SHLWAPI.dll                           0x7FF8FC890000
+	imagehlp.dll                          0x7FF8FC8F0000
+	RPCRT4.dll                            0x7FF8FC910000
+	ole32.dll                             0x7FF8FCA30000
+	PSAPI.DLL                             0x7FF8FCBE0000
+	clbcatq.dll                           0x7FF8FCBF0000
+	GDI32.dll                             0x7FF8FCCA0000
+	NSI.dll                               0x7FF8FCD60000
+	ADVAPI32.dll                          0x7FF8FCD70000
+	shcore.dll                            0x7FF8FCE30000
+	COMDLG32.dll                          0x7FF8FD150000
+	SHELL32.dll                           0x7FF8FD260000
+	WS2_32.dll                            0x7FF8FDAE0000
+	MSCTF.dll                             0x7FF8FDB60000
+	sechost.dll                           0x7FF8FDCC0000
+	ntdll.dll                             0x7FF8FDDB0000
+	NvCamera64.dll                        0x7FFF99EB0000
+	d3dcompiler_47_64.dll                 0x7FFF9CF80000
+	gameoverlayrenderer64.dll             0x7FFF9D390000
+	WhichKey-NG.dll                       0x7FFF9D530000
+	Weightless.dll                        0x7FFF9D6C0000
+	UnequipQuiverNG.dll                   0x7FFF9D7E0000
+	TrueDirectionalMovement.dll           0x7FFF9D880000
+	TheNewGentleman.dll                   0x7FFF9D980000
+	SSEDisplayTweaks.dll                  0x7FFF9DAA0000
+	SoundRecordDistributor.dll            0x7FFF9DB40000
+	SkyPatcher.dll                        0x7FFF9DC20000
+	skee64.dll                            0x7FFF9DE00000
+	SexLabUtil.dll                        0x7FFF9E070000
+	ScrambledBugs.dll                     0x7FFF9E2C0000
+	ReadingIsBad.dll                      0x7FFF9E360000
+	QuickLootIE.dll                       0x7FFF9E410000
+	QuickArmorRebalance.dll               0x7FFF9E640000
+	qui.dll                               0x7FFF9E810000
+	po3_Tweaks.dll                        0x7FFF9E960000
+	po3_SplashesOfStorms.dll              0x7FFF9EA60000
+	po3_SpellPerkItemDistributor.dll      0x7FFF9EB20000
+	po3_SimpleOffenceSuppression.dll      0x7FFF9ECE0000
+	po3_SimpleActivateSKSE.dll            0x7FFF9ED80000
+	po3_SaveUnbaker.dll                   0x7FFF9EE50000
+	po3_PapyrusExtender.dll               0x7FFF9EEF0000
+	po3_MoonMod.dll                       0x7FFF9F1D0000
+	po3_MagicSneakAttacks.dll             0x7FFF9F280000
+	po3_KeywordItemDistributor.dll        0x7FFF9F360000
+	po3_EnhancedInvisibility.dll          0x7FFF9F500000
+	po3_ENBLightForEffectShaders.dll      0x7FFF9F5B0000
+	po3_DualCastingFix.dll                0x7FFF9F6A0000
+	po3_DialogueHistory.dll               0x7FFF9F740000
+	po3_BaseObjectSwapper.dll             0x7FFF9FA50000
+	po3_AnimObjectSwapper.dll             0x7FFF9FBA0000
+	PerkEntryPointExtender.dll            0x7FFF9FC50000
+	PapyrusUtil.dll                       0x7FFF9FED0000
+	PapyrusTweaks.dll                     0x7FFFA0040000
+	OStim.dll                             0x7FFFA0140000
+	OSLAroused.dll                        0x7FFFA0820000
+	OpenAnimationReplacer.dll             0x7FFFA08C0000
+	OBody.dll                             0x7FFFA0C20000
+	NPCSpellVariance.dll                  0x7FFFA0CD0000
+	NoOppositeGenderAnims.dll             0x7FFFA0D70000
+	NGIO-NG.dll                           0x7FFFA0E60000
+	MuSkeletonEditor.dll                  0x7FFFA0FA0000
+	MoreInformativeConsole.dll            0x7FFFA1080000
+	hdtSMP64.dll                          0x7FFFA11B0000
+	MusicTypeDistributor.dll              0x7FFFA3370000
+	mfgfix.dll                            0x7FFFA3430000
+	MCMHelper.dll                         0x7FFFA34F0000
+	LocationalEncounterZones.dll          0x7FFFA35D0000
+	LeveledListCrashPrevention.dll        0x7FFFA36B0000
+	KreatE.dll                            0x7FFFA3790000
+	kxWhereAreYou.dll                     0x7FFFA4300000
+	k101PapyrusFunctions.dll              0x7FFFA43B0000
+	JContainers64.dll                     0x7FFFA44B0000
+	IWantWidgetsNative.dll                0x7FFFA4790000
+	FormListManipulator.dll               0x7FFFA4AD0000
+	XAudio2_7.dll                         0x7FFFA64A0000
+	DynDOLOD.DLL                          0x7FFFA6530000
+	DynamicStringDistributor.dll          0x7FFFA6610000
+	DynamicMagicModificationFramework.dll 0x7FFFA6730000
+	DeviousDevices.dll                    0x7FFFA6860000
+	DescriptionFramework.dll              0x7FFFA6AE0000
+	CurrencySwapper.dll                   0x7FFFA6BF0000
+	CrashLogger.dll                       0x7FFFA6CD0000
+	ControlledCasting.dll                 0x7FFFA6FC0000
+	ContainerDistributionFramework.dll    0x7FFFA70B0000
+	ComprehensiveAttackRatePatch.dll      0x7FFFA71C0000
+	CommunityShaders.dll                  0x7FFFA73B0000
+	D3DCOMPILER_47.dll                    0x7FFFA75E0000
+	ConsoleUtilSSE.dll                    0x7FFFAA2F0000
+	cbp.dll                               0x7FFFAA450000
+	InventoryInjector.dll                 0x7FFFAAF20000
+	BetterThirdPersonSelection.dll        0x7FFFAAFD0000
+	steamclient64.dll                     0x7FFFAB240000
+	AssetDoctor.dll                       0x7FFFAD530000
+	Ammo_Patcher.dll                      0x7FFFAD6F0000
+	PrivateProfileRedirector.dll          0x7FFFAD840000
+	PayloadInterpreter.dll                0x7FFFAE260000
+	InstantlySkipDialogueNG.dll           0x7FFFAE6B0000
+	MuJointFix.dll                        0x7FFFAE8D0000
+	ActorValueExtension.dll               0x7FFFAE970000
+	WINHTTP.dll                           0x7FFFAEC00000
+	MapMarkerFramework.dll                0x7FFFB1980000
+	GrassCacheHelperNG.dll                0x7FFFB3F70000
+	ContainerItemDistributor.dll          0x7FFFB5CF0000
+	PAPER.dll                             0x7FFFB9C80000
+	HDLocalMap.dll                        0x7FFFB9F40000
+	CaptureWarmer.dll                     0x7FFFBB460000
+	PairedAnimationImprovements.dll       0x7FFFF6EF0000
+
+SKSE PLUGINS:
+	AchievementInjector.dll v0.0.1
+	ActorLimitFix.dll
+	ActorValueExtension.dll v1.9.5.6
+	AddItemMenuSE.dll
+	AHZmoreHUDInventory.dll v2.1.3
+	AHZmoreHUDPlugin.dll v5.2.2
+	Ammo_Patcher.dll v1.2.0.1
+	AnimationQueueFix.dll v1.0.1
+	AssetDoctor.dll
+	BarterLimitFix.dll
+	BetterThirdPersonSelection.dll v1
+	BugFixesSSE.dll
+	CaptureWarmer.dll v1.2
+	cbp.dll
+	CommunityShaders.dll v0.8.7
+	ComprehensiveAttackRatePatch.dll v1.1.2.10
+	ConsoleUtilSSE.dll v1.5.1
+	ContainerDistributionFramework.dll v2.2.1
+	ContainerItemDistributor.dll v2.1
+	ControlledCasting.dll v3
+	CraftingCategories.dll v1.1.1
+	CrashLogger.dll v1.15
+	CurrencySwapper.dll v1.1
+	DescriptionFramework.dll v2.1.1
+	DeviousDevices.dll v3.0.0.1
+	DynamicMagicModificationFramework.dll v1
+	DynamicStringDistributor.dll v1.2.4
+	DynDOLOD.DLL v3.0.33
+	ELIF.dll v1.2
+	encounter_zones_unlocked.dll
+	EnemiesRespectEncounterZones.dll v1.4.2
+	EngineFixes.dll v6.1.1
+	FaceGenFixes.dll v1.0.3
+	FISS.dll
+	FormListManipulator.dll v1.8.1
+	Fuz Ro D'oh.dll v2.5.8.123
+	GrassCacheHelperNG.dll v1.0.1
+	HDLocalMap.dll v1.0.3
+	hdtSMP64.dll
+	ImWalkinHere.dll v1.7
+	InstantlySkipDialogueNG.dll v1.1.1
+	InventoryInjector.dll v1.1
+	IWantWidgetsNative.dll
+	JContainers64.dll v4.2.9
+	k101PapyrusFunctions.dll v1
+	KreatE.dll v1.3.1
+	kxWhereAreYou.dll
+	LeveledListCrashPrevention.dll v1.0.1
+	LocationalEncounterZones.dll v1.0.2
+	MapMarkerFramework.dll v2.2.1
+	MCMHelper.dll v1.5
+	mfgfix.dll v0.1
+	MoreInformativeConsole.dll v1.2.2
+	MuJointFix.dll v2.0.17
+	MusicTypeDistributor.dll v1.4
+	MuSkeletonEditor.dll v0.6.2
+	NativeEditorIDFix.dll v1.2.2
+	NGIO-NG.dll v1.1.5.1
+	NoOppositeGenderAnims.dll v1.1
+	NPCSpellVariance.dll v1
+	OBody.dll v1
+	OpenAnimationReplacer.dll v2.3.6
+	OSLAroused.dll v2.5
+	OStim.dll v7.3.3
+	PairedAnimationImprovements.dll v1.0.2
+	PAPER.dll v2.2.4
+	PapyrusTweaks.dll v4.1
+	PapyrusUtil.dll
+	PayloadInterpreter.dll v1
+	PerkAdjuster.dll v2.1
+	PerkEntryPointExtender.dll v1
+	po3_AnimObjectSwapper.dll v1.1.0.1
+	po3_BaseObjectSwapper.dll v3.3.1.1
+	po3_DialogueHistory.dll v2.0.1.1
+	po3_DualCastingFix.dll v1.0.0.1
+	po3_ENBLightForEffectShaders.dll v2.2.0.1
+	po3_EnhancedInvisibility.dll v1.3.0.1
+	po3_KeywordItemDistributor.dll v3.4.0.1
+	po3_MagicSneakAttacks.dll v1.3.0.1
+	po3_MoonMod.dll v2.0.2.1
+	po3_PapyrusExtender.dll v5.9.0.1
+	po3_SaveUnbaker.dll v1.0.3.1
+	po3_SimpleActivateSKSE.dll v1.4.2.1
+	po3_SimpleOffenceSuppression.dll v2.2.1.1
+	po3_SpellPerkItemDistributor.dll v7.2.0.16
+	po3_SplashesOfStorms.dll v1.3.0.1
+	po3_Tweaks.dll v1.12.2.1
+	PrivateProfileRedirector.dll
+	qui.dll v0.4
+	QuickArmorRebalance.dll
+	QuickLootIE.dll v2
+	ReadingIsBad.dll v1.0.13
+	ScrambledBugs.dll
+	SexLabUtil.dll v2.11.2.1
+	skee64.dll
+	SKSEMenuFramework.dll v2.1.1
+	SkyPatcher.dll v1.0.0.1
+	SkyrimUncapper.dll
+	SMP-NPC crash fix.dll
+	SoundRecordDistributor.dll v1.5
+	SSEDisplayTweaks.dll v0.5.16
+	TheNewGentleman.dll v3.0.2
+	TrueDirectionalMovement.dll v2.2.6
+	UnequipQuiverNG.dll v1.2
+	Weightless.dll v1
+	WhichKey-NG.dll v1.1
+
+PLUGINS:
+	Light: 93	Regular: 127	Total: 220
+	[ 0]     Skyrim.esm
+	[ 1]     Update.esm
+	[ 2]     Dawnguard.esm
+	[ 3]     HearthFires.esm
+	[ 4]     Dragonborn.esm
+	[ 5]     ccasvsse001-almsivi.esm
+	[ 6]     ccBGSSSE001-Fish.esm
+	[ 7]     cctwbsse001-puzzledungeon.esm
+	[ 8]     cceejsse001-hstead.esm
+	[ 9]     ccbgssse016-umbra.esm
+	[ A]     ccbgssse031-advcyrus.esm
+	[ B]     ccbgssse067-daedinv.esm
+	[ C]     ccBGSSSE025-AdvDSGS.esm
+	[ D]     cceejsse005-cave.esm
+	[ E]     ccafdsse001-dwesanctuary.esm
+	[ F]     unofficial skyrim special edition patch.esp
+	[10]     Unofficial Skyrim Modders Patch.esp
+	[11]     Immersive Wenches.esp
+	[12]     YurianaWench.esp
+	[13]     Master Occlusion.esm
+	[14]     VLC - References.esm
+	[15]     Skyrim Extended Cut - Saints and Seducers.esp
+	[16]     Water for ENB.esm
+	[17]     Coldhaven.esm
+	[18]     RaceCompatibility.esm
+	[19]     myrwatchhomefixer.esp
+	[1A]     ZaZAnimationPack.esm
+	[1B]     AyleidCitadel.esp
+	[1C]     paradise_halls.esm
+	[1D]     SexLab.esm
+	[1E]     Devious Devices - Assets.esm
+	[1F]     SexLabAroused.esm
+	[20]     Devious Devices - Integration.esm
+	[21]     Devious Devices - Expansion.esm
+	[22]     Devious Devices - Contraptions.esm
+	[23]     SOSVoices.esm
+	[24]     ApachiiHair.esm
+	[25]     wraithguardvaultfixer.esp
+	[26]     FISS.esp
+	[27]     High Poly Head.esm
+	[28]     Heels Sound.esm
+	[29]     Audio Overhaul Skyrim.esp
+	[2A]     Immersive Sounds - Compendium.esp
+	[2B]     TrueStormsSE.esp
+	[2C]     Obsidian Weathers.esp
+	[2D]     SMIM-SE-Merged-All.esp
+	[2E]     RaceCompatibilityUSKPOverride.esp
+	[2F]     Weapons Armor Clothing & Clutter Fixes.esp
+	[30]     Relationship Dialogue Overhaul.esp
+	[31]     castle volkihar rebuilt.esp
+	[32]     Landscape Fixes For Grass Mods.esp
+	[33]     paradise_halls_SLExtension.esp
+	[34]     MysticismMagic.esp
+	[35]     P1FlyingRing.esp
+	[36]     HORNY.esp
+	[37]     Book Covers Skyrim.esp
+	[38]     Bandit War.esp
+	[39]     Bloodchill_Manor_Enhanced.esp
+	[3A]     Embers XD.esp
+	[3B]     SeranaDialogAddon.esp
+	[3C]     WACCF_Armor and Clothing Extension.esp
+	[3D]     Travellersinn.esp
+	[3E]     Better Vampire NPCs.esp
+	[3F]     Wheres Your Smelter.esp
+	[40]     Lit Road Signs.esp
+	[41]     SnowElfPalace.esp
+	[42]     Lonewolf's Manor.esp
+	[43]     PAH_HomeSweetHome.esp
+	[44]     AyleidPalaceNEW.esp
+	[45]     Creation Cave - Arms of Chaos.esp
+	[46]     HearthfireMultiKid.esp
+	[47]     nwsJennaFollower.esp
+	[48]     Creation Cave - The Staff of Hasedoki.esp
+	[49]     PAH_AndYouGetASlave.esp
+	[4A]     Creation Cave - Redguard Elite Armaments.esp
+	[4B]     SkystoneCastle.esp
+	[4C]     Book Covers Skyrim - Lost Library.esp
+	[4D]     AyleidSanctuary.esp
+	[4E]     pahe_lakeview_manor_cell.esp
+	[4F]     k101Daegon.esp
+	[50]     Lonewolf's Manor Addon.esp
+	[51]     ThaneFailSafe.esp
+	[52]     paradise_halls_fellglow_slave_camp.esp
+	[53]     WhiterunSafehold.esp
+	[54]     DiaryOfMine.esp
+	[55]     The Amazing World of Bikini Armors REMASTERED.esp
+	[56]     My Home Is Your Home.esp
+	[57]     Apocalypse - Magic of Skyrim.esp
+	[58]     Summermyst - Enchantments of Skyrim.esp
+	[59]     ImGladYoureHere.esp
+	[5A]     Creation Cave - Headman's Cleaver.esp
+	[5B]     LustmordVampireArmor.esp
+	[5C]     nwsFollowerFramework.esp
+	[5D]     SDA_SpellToggleExtendedV2.esp
+	[5E]     Pahe_Dwarven_Devious_suits.esp
+	[5F]     AnubAnimObj.esp
+	[60]     SLALAnimObjBillyy.esp
+	[61]     SLAL_AnimationsByLeito.esp
+	[62]     Strapped Outfit.esp
+	[63]     Faction Crossbows.esp
+	[64]     Merta Assassin Armor.esp
+	[65]     [Melodic] Waitress.esp
+	[66]     [Melodic] Assassin Sister.esp
+	[67]     ENB Light.esp
+	[68]     ICRFixes.esp
+	[69]     Adamant.esp
+	[6A]     Better Stealth AI for Followers.esp
+	[6B]     SlaveTatsMagicManager.esp
+	[6C]     UIExtensions.esp
+	[6D]     AddItemMenuSE.esp
+	[6E]     SyncWigColor.esp
+	[6F]     AllEnchantmentsUnlocked.esp
+	[70]     atkspdmod.esp
+	[71]     Mining For Mages Redux.esp
+	[72]     OStimCommunityResource.esp
+	[73]     KS Hairdo's.esp
+	[74]     XPMSE.esp
+	[75]     Better Vampires.esp
+	[76]     Better Vampire Lords.esp
+	[77]     alternate start - live another life.esp
+	[78]     Pahe_AltStartLAL.esp
+	[79]     Coldhaven LAL Extension.esp
+	[7A]     Water for ENB (Shades of Skyrim).esp
+	[7B]     Summermyst - WACCF Patch.esp
+	[7C]     FloatingSwordFollower.esp
+	[7D]     TINUHighPolyOverhaul.esp
+	[7E]     Buxom Tweaks.esp
+	[FE:  0] ccbgssse002-exoticarrows.esl
+	[FE:  1] ccbgssse003-zombies.esl
+	[FE:  2] ccbgssse004-ruinsedge.esl
+	[FE:  3] ccbgssse005-goldbrand.esl
+	[FE:  4] ccbgssse006-stendarshammer.esl
+	[FE:  5] ccbgssse007-chrysamere.esl
+	[FE:  6] ccbgssse010-petdwarvenarmoredmudcrab.esl
+	[FE:  7] ccbgssse011-hrsarmrelvn.esl
+	[FE:  8] ccbgssse012-hrsarmrstl.esl
+	[FE:  9] ccbgssse014-spellpack01.esl
+	[FE:  A] ccbgssse019-staffofsheogorath.esl
+	[FE:  B] ccbgssse020-graycowl.esl
+	[FE:  C] ccbgssse021-lordsmail.esl
+	[FE:  D] ccmtysse001-knightsofthenine.esl
+	[FE:  E] ccQDRSSE001-SurvivalMode.esl
+	[FE:  F] ccqdrsse002-firewood.esl
+	[FE: 10] ccbgssse018-shadowrend.esl
+	[FE: 11] ccbgssse035-petnhound.esl
+	[FE: 12] ccfsvsse001-backpacks.esl
+	[FE: 13] cceejsse002-tower.esl
+	[FE: 14] ccedhsse001-norjewel.esl
+	[FE: 15] ccvsvsse002-pets.esl
+	[FE: 16] ccBGSSSE037-Curios.esl
+	[FE: 17] ccbgssse034-mntuni.esl
+	[FE: 18] ccbgssse045-hasedoki.esl
+	[FE: 19] ccbgssse008-wraithguard.esl
+	[FE: 1A] ccbgssse036-petbwolf.esl
+	[FE: 1B] ccffbsse001-imperialdragon.esl
+	[FE: 1C] ccmtysse002-ve.esl
+	[FE: 1D] ccbgssse043-crosselv.esl
+	[FE: 1E] ccvsvsse001-winter.esl
+	[FE: 1F] cceejsse003-hollow.esl
+	[FE: 20] ccbgssse038-bowofshadows.esl
+	[FE: 21] ccbgssse040-advobgobs.esl
+	[FE: 22] ccbgssse050-ba_daedric.esl
+	[FE: 23] ccbgssse052-ba_iron.esl
+	[FE: 24] ccbgssse054-ba_orcish.esl
+	[FE: 25] ccbgssse058-ba_steel.esl
+	[FE: 26] ccbgssse059-ba_dragonplate.esl
+	[FE: 27] ccbgssse061-ba_dwarven.esl
+	[FE: 28] ccpewsse002-armsofchaos.esl
+	[FE: 29] ccbgssse041-netchleather.esl
+	[FE: 2A] ccedhsse002-splkntset.esl
+	[FE: 2B] ccbgssse064-ba_elven.esl
+	[FE: 2C] ccbgssse063-ba_ebony.esl
+	[FE: 2D] ccbgssse062-ba_dwarvenmail.esl
+	[FE: 2E] ccbgssse060-ba_dragonscale.esl
+	[FE: 2F] ccbgssse056-ba_silver.esl
+	[FE: 30] ccbgssse055-ba_orcishscaled.esl
+	[FE: 31] ccbgssse053-ba_leather.esl
+	[FE: 32] ccbgssse051-ba_daedricmail.esl
+	[FE: 33] ccbgssse057-ba_stalhrim.esl
+	[FE: 34] ccbgssse066-staves.esl
+	[FE: 35] ccbgssse068-bloodfall.esl
+	[FE: 36] ccbgssse069-contest.esl
+	[FE: 37] ccvsvsse003-necroarts.esl
+	[FE: 38] ccvsvsse004-beafarmer.esl
+	[FE: 39] ccffbsse002-crossbowpack.esl
+	[FE: 3A] ccbgssse013-dawnfang.esl
+	[FE: 3B] ccrmssse001-necrohouse.esl
+	[FE: 3C] ccedhsse003-redguard.esl
+	[FE: 3D] cceejsse004-hall.esl
+	[FE: 3E] cckrtsse001_altar.esl
+	[FE: 3F] cccbhsse001-gaunt.esl
+	[FE: 40] _ResourcePack.esl
+	[FE: 41] Navigator-NavFixes.esl
+	[FE: 42] unofficial skyrim creation club content patch.esl
+	[FE: 43] SkyChild.esp
+	[FE: 44] Landscape and Water Fixes.esp
+	[FE: 45] IcyFixesLite.esl
+	[FE: 46] Praedys_Soulcairn.esm
+	[FE: 47] OCF.esp
+	[FE: 48] Tamrielic Distribution.esp
+	[FE: 49] Pahe_Dragonborn_fixes.esl
+	[FE: 4A] paradise_halls_farengars_study.esl
+	[FE: 4B] Merta Assassin Armor.esl
+	[FE: 4C] AHZmoreHUD.esl
+	[FE: 4D] AHZmoreHUDInventory.esl
+	[FE: 4E] IceShaderDisabled.esl
+	[FE: 4F] IceLOD.esl
+	[FE: 50] Partitioned snow Meshes.esl
+	[FE: 51] ProjectedGlacierSnow.esl
+	[FE: 52] WindhelmIcicles.esl
+	[FE: 53] kcf.esm
+	[FE: 54] iWant Widgets.esl
+	[FE: 55] Expressive Facegen Morphs.esl
+	[FE: 56] TheNewGentleman.esp
+	[FE: 57] SlutPrincess.esl
+	[FE: 58] Particle Patch for ENB.esp
+	[FE: 59] SkyUI_SE.esp
+	[FE: 5A] AOS_ISC_Integration.esp
+	[FE: 5B] ED Horns SSE.esp
+	[FE: 5C] DaedraSeducerRace.esp

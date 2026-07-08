@@ -1,20 +1,19 @@
 {
   "coveredExports": [
-    "AnalysisConfig",
-    "AnalysisResult.report_lines",
     "FileHasher.hash_file",
-    "Orchestrator.process_logs_batch",
     "PathValidator.is_valid_path",
+    "ScanRunLogResult.autoscan_report_path",
     "bindings.list",
     "format_version",
     "load_main_yaml_version",
-    "parse_version"
+    "parse_version",
+    "scan_run_execute"
   ],
   "delegatedGates": [],
   "environment": {
-    "fixtureRoot": "J:\\CLASSIC-Fallout4\\sample_logs\\FO4",
-    "python": "J:\\CLASSIC-Fallout4\\python-bindings\\.venv\\Scripts\\python.exe",
-    "repoRoot": "J:\\CLASSIC-Fallout4"
+    "fixtureRoot": "D:\\repos\\CLASSIC-Fallout4\\sample_logs\\FO4",
+    "python": "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\.venv\\Scripts\\python.exe",
+    "repoRoot": "D:\\repos\\CLASSIC-Fallout4"
   },
   "failureClassifications": [
     "local-environment-failure",
@@ -95,7 +94,7 @@
       "id": "path-validate-fixture",
       "owner": "classic_path",
       "status": "passed",
-      "summary": "Path is valid: J:\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures"
+      "summary": "Path is valid: D:\\repos\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures"
     },
     {
       "commandLine": [
@@ -113,7 +112,7 @@
       "id": "file-hash",
       "owner": "classic_file_io",
       "status": "passed",
-      "summary": "Cargo.toml c5c4b20f503ae1262b3d421b71d983ddf6cf2806fc22cf3e5c5553561a832544"
+      "summary": "Cargo.toml 41b5f69c21df0dcd2be620dcdc4821c5724417499194a43833a054467cef4663"
     },
     {
       "commandLine": [
@@ -124,9 +123,8 @@
         "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"
       ],
       "coveredExports": [
-        "AnalysisConfig",
-        "Orchestrator.process_logs_batch",
-        "AnalysisResult.report_lines"
+        "scan_run_execute",
+        "ScanRunLogResult.autoscan_report_path"
       ],
       "data": {
         "failedLogs": 0,
@@ -134,12 +132,12 @@
         "processedLogs": 1,
         "reportEvidence": [
           {
-            "logPath": "J:\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures\\scanlogs\\addictol-newer-than-floor.log",
+            "logPath": "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures\\scanlogs\\addictol-newer-than-floor.log",
             "outdatedWarningPresent": false,
             "validVersionLine": "\u2705 *You have a valid version of Addictol!*"
           }
         ],
-        "scanPath": "J:\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures\\scanlogs\\addictol-newer-than-floor.log",
+        "scanPath": "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures\\scanlogs\\addictol-newer-than-floor.log",
         "successfulLogs": 1
       },
       "exitCode": 0,

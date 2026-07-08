@@ -16,10 +16,12 @@ type BindingVersionInfo = {
 };
 
 type BindingScanResult = {
-	logPath: string;
-	reportLines: string[];
-	success: boolean;
-	error?: string;
+  logPath: string;
+  success: boolean;
+  autoscanReportPath?: string;
+  cancelled: boolean;
+  movedToUnsolvedLogs: boolean;
+  error?: string;
 };
 
 type DocsPathFinderInstance = {
@@ -37,31 +39,29 @@ type ClassicNodeModule = {
 		xseFolder?: string | null,
 		customFolder?: string | null,
 	) => LogCollectorInstance;
-	createAnalysisConfigFromYamlContent: (
-		mainContent: string,
-		gameContent: string,
-		ignoreContent: string,
-		game: string,
-		gameVersion: string,
-		options?: {
-			showFormidValues?: boolean;
-			fcxMode?: boolean;
-			simplifyLogs?: boolean;
-		},
-	) => unknown;
 	getAllVersionsForGame: (
 		game: string,
 		isVr?: boolean | null,
 	) => BindingVersionInfo[];
 	getVersion: () => string;
-	processLogsBatch: (
-		logPaths: string[],
-		config: unknown,
-		maxConcurrent?: number | null,
-	) => Promise<BindingScanResult[]>;
-	registrySetGame: (game: string) => void;
-	writeAutoscanReport: (logPath: string, content: string) => Promise<string>;
-	yamlParse: (content: string) => unknown;
+  scanRunExecute: (
+    logPaths: string[],
+    options: {
+      yamlDirRoot: string;
+      yamlDirData: string;
+      game: string;
+      gameVersion: string;
+      showFormidValues?: boolean;
+      fcxMode?: boolean;
+      simplifyLogs?: boolean;
+      moveUnsolvedLogs?: boolean;
+      targetedMode?: boolean;
+      maxConcurrent?: number | null;
+      preserveOrder?: boolean;
+    },
+  ) => Promise<BindingScanResult[]>;
+  registrySetGame: (game: string) => void;
+  yamlParse: (content: string) => unknown;
 };
 
 function loadClassicNode(cliDir: string): ClassicNodeModule {
@@ -120,10 +120,6 @@ function readRequiredFile(path: string, label: string): string {
 		throw new Error(`${label} not found at ${path}`);
 	}
 	return readFileSync(path, "utf8");
-}
-
-function readOptionalFile(path: string, fallback: string): string {
-	return existsSync(path) ? readFileSync(path, "utf8") : fallback;
 }
 
 function readYamlDocument(path: string): YamlDoc | undefined {
@@ -258,18 +254,12 @@ function loadScanInputs(paths: CliPaths, options: CliOptions): ScanInputs {
 		"databases",
 		`CLASSIC ${options.game}.yaml`,
 	);
-	const ignoreYamlPath = join(paths.root, "CLASSIC Ignore.yaml");
 	const localYamlPath = join(paths.data, `CLASSIC ${options.game} Local.yaml`);
 
-	return {
-		mainYaml: readRequiredFile(mainYamlPath, "CLASSIC Main.yaml"),
-		gameYaml: readRequiredFile(gameYamlPath, `CLASSIC ${options.game}.yaml`),
-		ignoreYaml: readOptionalFile(
-			ignoreYamlPath,
-			`CLASSIC_Ignore_${options.game}: []\n`,
-		),
-		xsePath: resolveXsePath(gameYamlPath, localYamlPath),
-	};
+	readRequiredFile(mainYamlPath, "CLASSIC Main.yaml");
+	readRequiredFile(gameYamlPath, `CLASSIC ${options.game}.yaml`);
+
+	return { xsePath: resolveXsePath(gameYamlPath, localYamlPath) };
 }
 
 function countOrZero(count: number | undefined): number {
@@ -316,7 +306,7 @@ function printOptionalPluralizedCount(
 
 function printHumanSummary(summary: JsonSummary): void {
 	const shouldPrintScanErrors = hasPositiveCount(summary.scanErrors);
-	const shouldPrintReportFailures = hasPositiveCount(summary.reportFailures);
+    const shouldPrintReportFailures = hasPositiveCount(summary.reportFailures);
 
 	console.log("\nScan Complete");
 	console.log(`  Scanned:  ${formatPluralizedCount(summary.logsFound, "log")}`);
@@ -433,20 +423,7 @@ export async function runCli(
 		}
 
 		const concurrency = effectiveConcurrency(options.maxConcurrent);
-		const analysisConfig = classicNode.createAnalysisConfigFromYamlContent(
-			scanInputs.mainYaml,
-			scanInputs.gameYaml,
-			scanInputs.ignoreYaml,
-			options.game,
-			normalizedGameVersion,
-			{
-				showFormidValues: options.showFidValues,
-				fcxMode: options.fcxMode,
-				simplifyLogs: options.simplifyLogs,
-			},
-		);
-
-		if (!options.json) {
+    if (!options.json) {
 			console.log(
 				`Found ${logPaths.length} crash log${logPaths.length === 1 ? "" : "s"}\n`,
 			);
@@ -455,28 +432,26 @@ export async function runCli(
 			);
 		}
 
-		const results: BindingScanResult[] = await classicNode.processLogsBatch(
-			logPaths,
-			analysisConfig,
-			concurrency,
-		);
-		let reportsWritten = 0;
-		let reportFailures = 0;
-
-		for (const result of results) {
-			if (!result.success || result.reportLines.length === 0) {
-				continue;
-			}
-			try {
-				await classicNode.writeAutoscanReport(
-					result.logPath,
-					result.reportLines.join(""),
-				);
-				reportsWritten += 1;
-			} catch {
-				reportFailures += 1;
-			}
-		}
+    const results: BindingScanResult[] = await classicNode.scanRunExecute(
+      logPaths,
+      {
+        yamlDirRoot: paths.root,
+        yamlDirData: paths.data,
+        game: options.game,
+        gameVersion: normalizedGameVersion,
+        showFormidValues: options.showFidValues,
+        fcxMode: options.fcxMode,
+        simplifyLogs: options.simplifyLogs,
+        moveUnsolvedLogs: false,
+        targetedMode: false,
+        maxConcurrent: concurrency,
+        preserveOrder: false,
+      },
+    );
+    const reportsWritten = results.filter(
+      (result) => result.success && result.autoscanReportPath,
+    ).length;
+    const reportFailures = 0;
 
 		const scanErrors = results.filter((result) => !result.success).length;
 		const durationSeconds = (performance.now() - startedAt) / 1000;

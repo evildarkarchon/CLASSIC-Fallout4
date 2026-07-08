@@ -56,8 +56,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 251,
-      "contractIdsHash": "8012b970e781c186ee9504799d989beed1095afe60032f2143ca601cbba8b62f",
+      "contractCount": 246,
+      "contractIdsHash": "0c0bef57b092541c968409b8b28668f65fe968bf0b62b9637dca9221f8fd7396",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
@@ -115,10 +115,6 @@
         "classic_scanlog.SuspectScanner.check_dll_crash",
         "classic_scanlog.SettingsValidator",
         "classic_scanlog.SettingsValidator.scan_all_settings",
-        "classic_scanlog.SettingsValidator.scan_buffout_achievements_setting",
-        "classic_scanlog.SettingsValidator.scan_buffout_memorymanagement_settings",
-        "classic_scanlog.SettingsValidator.scan_archivelimit_setting",
-        "classic_scanlog.SettingsValidator.scan_buffout_looksmenu_setting",
         "classic_scanlog.SettingsValidator.check_disabled_settings",
         "classic_scanlog.FcxModeHandler",
         "classic_scanlog.FcxModeHandler.get_fcx_messages",
@@ -160,6 +156,8 @@
         "classic_scanlog.CancellationToken.cancel",
         "classic_scanlog.CancellationToken.is_cancelled",
         "classic_scanlog.CancellationToken.reset",
+        "classic_scanlog.ScanRunLogResult",
+        "classic_scanlog.scan_run_execute",
         "classic_scanlog.Orchestrator",
         "classic_scanlog.Orchestrator.__init__",
         "classic_scanlog.Orchestrator.check_loadorder_exists",
@@ -187,7 +185,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_promoted_scanlog_wave3a_smoke.py",
       "testCaseId": "scanlog-wave3a-promoted-smoke",
-      "notes": "Per-class smoke tests for Wave 3a orchestration core added in Phase 3 Plan 04. Covers orchestrator/papyrus/version sub-modules (the only sub-modules with PyO3 wrappers); crashgen_registry/segment_key/error are pure Rust and tracked as @rust proxy contract rows that resolve against the classic-scanlog-core surface. Constructor signatures from 03-04-CONSTRUCTOR-INVENTORY.md. Rust-only symbol guard via test_rust_only_symbols_in_core_surface. Report sub-module is deferred to Plan 05."
+      "notes": "Per-class smoke tests for Wave 3a orchestration core added in Phase 3 Plan 04, plus the full Crash Log Scan Run binding seam. Covers orchestrator/papyrus/version sub-modules (the only sub-modules with PyO3 wrappers); crashgen_registry/segment_key/error are pure Rust and tracked as @rust proxy contract rows that resolve against the classic-scanlog-core surface. Constructor signatures from 03-04-CONSTRUCTOR-INVENTORY.md. Rust-only symbol guard via test_rust_only_symbols_in_core_surface. Report sub-module is deferred to Plan 05."
     },
     {
       "coverageId": "python-tier1-scanlog-wave3b-promoted",

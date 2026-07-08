@@ -31,10 +31,10 @@ static INIT_APP_DIR: Once = Once::new();
 /// working directory rather than the interpreter install path (node/bun).
 fn ensure_app_dir_initialized() {
     INIT_APP_DIR.call_once(|| {
-        if classic_registry_core::get_application_dir().is_none() {
-            if let Ok(cwd) = std::env::current_dir() {
-                classic_registry_core::set_application_dir(cwd);
-            }
+        if classic_registry_core::get_application_dir().is_none()
+            && let Ok(cwd) = std::env::current_dir()
+        {
+            classic_registry_core::set_application_dir(cwd);
         }
     });
 }
@@ -323,7 +323,7 @@ impl YamlData {
         self.inner.crashgen_ignore.clone()
     }
 
-    /// Crash generator registry with checks and optional settings rules.
+    /// Crash generator registry with deprecated checks metadata and optional settings rules.
     #[napi(getter)]
     pub fn crashgen_registry(&self) -> HashMap<String, JsCrashgenRegistryEntry> {
         self.inner

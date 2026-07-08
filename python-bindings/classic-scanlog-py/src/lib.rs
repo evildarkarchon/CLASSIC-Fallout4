@@ -137,6 +137,7 @@ pub use mod_detector::{
 };
 pub use orchestrator::{
     PyAnalysisConfig, PyAnalysisResult, PyCancellationToken, PyRustOrchestrator,
+    PyScanRunLogResult, scan_run_execute,
 };
 pub use papyrus::{PyPapyrusAnalyzer, PyPapyrusStats, papyrus_logging};
 pub use parser::PyLogParser;
@@ -177,10 +178,10 @@ pub fn to_pyerr(err: impl std::fmt::Display) -> PyErr {
 }
 
 fn auto_init_application_dir(py: Python<'_>) {
-    if classic_registry_core::get_application_dir().is_none() {
-        if let Some(app_dir) = classic_shared::resolve_python_entry_dir(py) {
-            classic_registry_core::set_application_dir(app_dir);
-        }
+    if classic_registry_core::get_application_dir().is_none()
+        && let Some(app_dir) = classic_shared::resolve_python_entry_dir(py)
+    {
+        classic_registry_core::set_application_dir(app_dir);
     }
 }
 
@@ -235,6 +236,8 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyAnalysisConfig>()?;
     m.add_class::<PyAnalysisResult>()?;
     m.add_class::<PyCancellationToken>()?;
+    m.add_class::<PyScanRunLogResult>()?;
+    m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;
 
     // Report generation
     m.add_class::<PyStringPool>()?;
@@ -309,6 +312,8 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyAnalysisConfig>()?;
     m.add_class::<PyAnalysisResult>()?;
     m.add_class::<PyCancellationToken>()?;
+    m.add_class::<PyScanRunLogResult>()?;
+    m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;
 
     // Report generation
     m.add_class::<PyStringPool>()?;

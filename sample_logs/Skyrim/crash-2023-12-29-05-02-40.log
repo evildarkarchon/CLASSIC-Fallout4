@@ -1,0 +1,1832 @@
+Skyrim SSE v1.6.640
+CrashLoggerSSE v1-11-1-0 Nov 18 2023 13:56:33
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF7424F0EBF SkyrimSE.exe+0170EBF	cmp [rdi], eax
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 11 Pro v10.0.22631
+	CPU: AuthenticAMD AMD Ryzen 7 7800X3D 8-Core Processor           
+	GPU #1: Nvidia AD104 [GeForce RTX 4070]
+	GPU #2: AMD Raphael
+	GPU #3: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 39.91 GB/63.15 GB
+	GPU MEMORY: 6.67/10.99 GB
+
+PROBABLE CALL STACK:
+	[ 0] 0x7FF7424F0EBF SkyrimSE.exe+0170EBF -> 13663+0x1F	cmp [rdi], eax
+	[ 1] 0x7FF74302D687 SkyrimSE.exe+0CAD687 -> 70950+0x17	mov rax, [rbx+0x160]
+	[ 2] 0x7FF74277043A SkyrimSE.exe+03F043A -> 26917+0x6A	mov r12, rax
+	[ 3] 0x7FF7427717EB SkyrimSE.exe+03F17EB -> 26926+0xFB	nop
+	[ 4] 0x7FF742772EEE SkyrimSE.exe+03F2EEE -> 26988+0x28E	inc ebx
+	[ 5] 0x7FF742773C08 SkyrimSE.exe+03F3C08 -> 26999+0x18	mov eax, 0xFFFFFFFF
+	[ 6] 0x7FF742FEC628 SkyrimSE.exe+0C6C628 -> 69378+0xD8	mov ecx, [rbx+0x0C]
+	[ 7] 0x7FF742FECBF1 SkyrimSE.exe+0C6CBF1 -> 69380+0x361	mov r15d, eax
+	[ 8] 0x7FF742FEAF7A SkyrimSE.exe+0C6AF7A -> 69344+0x8A	movzx eax, byte ptr [rbx+0xA74]
+	[ 9] 0x7FF742FC5E4D SkyrimSE.exe+0C45E4D -> 68445+0x3D	mov rcx, [0x00007FF745386898]
+	[10] 0x7FFE88EA257D KERNEL32.DLL+001257D
+	[11] 0x7FFE89ACAA58    ntdll.dll+005AA58
+
+REGISTERS:
+	RAX 0x154D0            (size_t) [87248]
+	RCX 0x168              (size_t) [360]
+	RDX 0x0                (size_t) [0]
+	RBX 0x0                (size_t) [0]
+	RSP 0x3C9F7FFA30       (void*)
+	RBP 0x154D0            (size_t) [87248]
+	RSI 0x0                (size_t) [0]
+	RDI 0x168              (size_t) [360]
+	R8  0x21               (size_t) [33]
+	R9  0x15E82844580      (BSTriShape*)
+		Name: "IW_FemaleHeadWench"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "FOD"
+		ExtraData[1] Name: "FMD"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Kristi"
+		Checking User Data: -----
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking Parent: 2
+			Name: "BSFaceGenNiNodeSkinned"
+			RTTIName: "BSFaceGenNiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Kristi"
+			Checking User Data: -----
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking Parent: 13
+				Name: "skeleton_female.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Kristi"
+				Checking User Data: -----
+					Object Reference: 
+					File: "NPC Improvements.esp"
+					Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+					Flags: 0x00000009 kDestructible | kInitialized
+					Name: "Kristi"
+					EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+					FormID: 0x1000C3BD
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					File: "NPC Improvements.esp"
+					Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+					Flags: 0x00000009 kDestructible | kInitialized
+					Name: "Kristi"
+					EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+					FormID: 0x1000C3BD
+					FormType: NPC (43)
+				Checking Parent: 275
+					RTTIName: "BSMultiBoundRoom"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 1
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 7
+							RTTIName: "BSMultiBoundNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "ObjectLODRoot"
+								RTTIName: "NiNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 3
+									Name: "shadow scene node"
+									RTTIName: "ShadowSceneNode"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+									Checking Parent: 1
+										Name: "WorldRoot Node"
+										RTTIName: "SceneGraph"
+										Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "IW_FemaleHeadWench"
+	R10 0x0                (size_t) [0]
+	R11 0x3                (size_t) [3]
+	R12 0x0                (size_t) [0]
+	R13 0x7FF745412601     (void* -> SkyrimSE.exe+3092601	add [rax], al)
+	R14 0x15E8295E7B8      (void*)
+	R15 0x15D3CB98410      (BSFaceGenMorphDataHead*)
+
+STACK:
+	[RSP+0  ] 0x15E8282E090      (void*)
+	[RSP+8  ] 0x7FF74302D855     (void* -> SkyrimSE.exe+0CAD855	test sil, sil)
+	[RSP+10 ] 0xB0               (size_t) [176]
+	[RSP+18 ] 0x7FF743146C31     (void* -> SkyrimSE.exe+0DC6C31	mov rbx, [rsp+0x40])
+	[RSP+20 ] 0x0                (size_t) [0]
+	[RSP+28 ] 0x7FF74302D687     (void* -> SkyrimSE.exe+0CAD687	mov rax, [rbx+0x160])
+	[RSP+30 ] 0x15E0000000C      (void*)
+	[RSP+38 ] 0xB0               (size_t) [176]
+	[RSP+40 ] 0x0                (size_t) [0]
+	[RSP+48 ] 0x15E82844580      (BSTriShape*)
+		Name: "IW_FemaleHeadWench"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "FOD"
+		ExtraData[1] Name: "FMD"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Kristi"
+		Checking User Data: -----
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking Parent: 2
+			Name: "BSFaceGenNiNodeSkinned"
+			RTTIName: "BSFaceGenNiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Kristi"
+			Checking User Data: -----
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking Parent: 13
+				Name: "skeleton_female.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Kristi"
+				Checking User Data: -----
+					Object Reference: 
+					File: "NPC Improvements.esp"
+					Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+					Flags: 0x00000009 kDestructible | kInitialized
+					Name: "Kristi"
+					EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+					FormID: 0x1000C3BD
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					File: "NPC Improvements.esp"
+					Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+					Flags: 0x00000009 kDestructible | kInitialized
+					Name: "Kristi"
+					EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+					FormID: 0x1000C3BD
+					FormType: NPC (43)
+				Checking Parent: 275
+					RTTIName: "BSMultiBoundRoom"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 1
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 7
+							RTTIName: "BSMultiBoundNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "ObjectLODRoot"
+								RTTIName: "NiNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 3
+									Name: "shadow scene node"
+									RTTIName: "ShadowSceneNode"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+									Checking Parent: 1
+										Name: "WorldRoot Node"
+										RTTIName: "SceneGraph"
+										Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "IW_FemaleHeadWench"
+	[RSP+50 ] 0x15D3CB98410      (BSFaceGenMorphDataHead*)
+	[RSP+58 ] 0x7FF74277043A     (void* -> SkyrimSE.exe+03F043A	mov r12, rax)
+	[RSP+60 ] 0x0                (size_t) [0]
+	[RSP+68 ] 0x7FF742FBE93F     (void* -> SkyrimSE.exe+0C3E93F	cmp [rdi], eax)
+	[RSP+70 ] 0x0                (size_t) [0]
+	[RSP+78 ] 0x7FF74301AF78     (void* -> SkyrimSE.exe+0C9AF78	nop)
+	[RSP+80 ] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+88 ] 0x0                (size_t) [0]
+	[RSP+90 ] 0x0                (size_t) [0]
+	[RSP+98 ] 0x7FF74301AF78     (void* -> SkyrimSE.exe+0C9AF78	nop)
+	[RSP+A0 ] 0x15E82844580      (BSTriShape*)
+		Name: "IW_FemaleHeadWench"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "FOD"
+		ExtraData[1] Name: "FMD"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Kristi"
+		Checking User Data: -----
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking Parent: 2
+			Name: "BSFaceGenNiNodeSkinned"
+			RTTIName: "BSFaceGenNiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Kristi"
+			Checking User Data: -----
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking Parent: 13
+				Name: "skeleton_female.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Kristi"
+				Checking User Data: -----
+					Object Reference: 
+					File: "NPC Improvements.esp"
+					Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+					Flags: 0x00000009 kDestructible | kInitialized
+					Name: "Kristi"
+					EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+					FormID: 0x1000C3BD
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					File: "NPC Improvements.esp"
+					Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+					Flags: 0x00000009 kDestructible | kInitialized
+					Name: "Kristi"
+					EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+					FormID: 0x1000C3BD
+					FormType: NPC (43)
+				Checking Parent: 275
+					RTTIName: "BSMultiBoundRoom"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 1
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 7
+							RTTIName: "BSMultiBoundNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "ObjectLODRoot"
+								RTTIName: "NiNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 3
+									Name: "shadow scene node"
+									RTTIName: "ShadowSceneNode"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+									Checking Parent: 1
+										Name: "WorldRoot Node"
+										RTTIName: "SceneGraph"
+										Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "IW_FemaleHeadWench"
+	[RSP+A8 ] 0x15E83E20458      (void*)
+	[RSP+B0 ] 0x0                (size_t) [0]
+	[RSP+B8 ] 0x0                (size_t) [0]
+	[RSP+C0 ] 0x15D3CB98410      (BSFaceGenMorphDataHead*)
+	[RSP+C8 ] 0x0                (size_t) [0]
+	[RSP+D0 ] 0x7FF745412601     (void* -> SkyrimSE.exe+3092601	add [rax], al)
+	[RSP+D8 ] 0x0                (size_t) [0]
+	[RSP+E0 ] 0xF                (size_t) [15]
+	[RSP+E8 ] 0x15E82844580      (BSTriShape*)
+		Name: "IW_FemaleHeadWench"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "FOD"
+		ExtraData[1] Name: "FMD"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Kristi"
+		Checking User Data: -----
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking Parent: 2
+			Name: "BSFaceGenNiNodeSkinned"
+			RTTIName: "BSFaceGenNiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Kristi"
+			Checking User Data: -----
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking Parent: 13
+				Name: "skeleton_female.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Kristi"
+				Checking User Data: -----
+					Object Reference: 
+					File: "NPC Improvements.esp"
+					Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+					Flags: 0x00000009 kDestructible | kInitialized
+					Name: "Kristi"
+					EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+					FormID: 0x1000C3BD
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					File: "NPC Improvements.esp"
+					Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+					Flags: 0x00000009 kDestructible | kInitialized
+					Name: "Kristi"
+					EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+					FormID: 0x1000C3BD
+					FormType: NPC (43)
+				Checking Parent: 275
+					RTTIName: "BSMultiBoundRoom"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 1
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 7
+							RTTIName: "BSMultiBoundNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "ObjectLODRoot"
+								RTTIName: "NiNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 3
+									Name: "shadow scene node"
+									RTTIName: "ShadowSceneNode"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+									Checking Parent: 1
+										Name: "WorldRoot Node"
+										RTTIName: "SceneGraph"
+										Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "IW_FemaleHeadWench"
+	[RSP+F0 ] 0x0                (size_t) [0]
+	[RSP+F8 ] 0x7FF7427717EB     (void* -> SkyrimSE.exe+03F17EB	nop)
+	[RSP+100] 0x15D3CB98410      (BSFaceGenMorphDataHead*)
+	[RSP+108] 0x0                (size_t) [0]
+	[RSP+110] 0x7FF74542D418     (void* -> SkyrimSE.exe+30AD418	add [rax], al)
+	[RSP+118] 0x15E82845300      (BSFaceGenNiNode*)
+		Name: "BSFaceGenNiNodeSkinned"
+		RTTIName: "BSFaceGenNiNode"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Kristi"
+		Checking User Data: -----
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking Parent: 13
+			Name: "skeleton_female.nif"
+			RTTIName: "BSFadeNode"
+			ExtraData[0] Name: "BSBoneLOD"
+			ExtraData[1] Name: "BOM"
+			ExtraData[2] Name: "BBX"
+			ExtraData[3] Name: "BSX"
+			ExtraData[4] Name: "SkeletonID"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Kristi"
+			Checking User Data: -----
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking Parent: 275
+				RTTIName: "BSMultiBoundRoom"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Checking Parent: 1
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 7
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 3
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "BSFaceGenNiNodeSkinned"
+	[RSP+120] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+128] 0x0                (size_t) [0]
+	[RSP+130] 0x0                (size_t) [0]
+	[RSP+138] 0xFFFE             (size_t) [65534]
+	[RSP+140] 0x3C               (size_t) [60]
+	[RSP+148] 0x7FF742772EEE     (void* -> SkyrimSE.exe+03F2EEE	inc ebx)
+	[RSP+150] 0xF                (size_t) [15]
+	[RSP+158] 0x15E82844580      (BSTriShape*)
+		Name: "IW_FemaleHeadWench"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "FOD"
+		ExtraData[1] Name: "FMD"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Kristi"
+		Checking User Data: -----
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking Parent: 2
+			Name: "BSFaceGenNiNodeSkinned"
+			RTTIName: "BSFaceGenNiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Kristi"
+			Checking User Data: -----
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking Parent: 13
+				Name: "skeleton_female.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Kristi"
+				Checking User Data: -----
+					Object Reference: 
+					File: "NPC Improvements.esp"
+					Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+					Flags: 0x00000009 kDestructible | kInitialized
+					Name: "Kristi"
+					EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+					FormID: 0x1000C3BD
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					File: "NPC Improvements.esp"
+					Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+					Flags: 0x00000009 kDestructible | kInitialized
+					Name: "Kristi"
+					EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+					FormID: 0x1000C3BD
+					FormType: NPC (43)
+				Checking Parent: 275
+					RTTIName: "BSMultiBoundRoom"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 1
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 7
+							RTTIName: "BSMultiBoundNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "ObjectLODRoot"
+								RTTIName: "NiNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 3
+									Name: "shadow scene node"
+									RTTIName: "ShadowSceneNode"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+									Checking Parent: 1
+										Name: "WorldRoot Node"
+										RTTIName: "SceneGraph"
+										Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "IW_FemaleHeadWench"
+	[RSP+160] 0x15E82845300      (BSFaceGenNiNode*)
+		Name: "BSFaceGenNiNodeSkinned"
+		RTTIName: "BSFaceGenNiNode"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Kristi"
+		Checking User Data: -----
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking Parent: 13
+			Name: "skeleton_female.nif"
+			RTTIName: "BSFadeNode"
+			ExtraData[0] Name: "BSBoneLOD"
+			ExtraData[1] Name: "BOM"
+			ExtraData[2] Name: "BBX"
+			ExtraData[3] Name: "BSX"
+			ExtraData[4] Name: "SkeletonID"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Kristi"
+			Checking User Data: -----
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking Parent: 275
+				RTTIName: "BSMultiBoundRoom"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Checking Parent: 1
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 7
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 3
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "BSFaceGenNiNodeSkinned"
+	[RSP+168] 0x15E82845300      (BSFaceGenNiNode*)
+		Name: "BSFaceGenNiNodeSkinned"
+		RTTIName: "BSFaceGenNiNode"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Kristi"
+		Checking User Data: -----
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking Parent: 13
+			Name: "skeleton_female.nif"
+			RTTIName: "BSFadeNode"
+			ExtraData[0] Name: "BSBoneLOD"
+			ExtraData[1] Name: "BOM"
+			ExtraData[2] Name: "BBX"
+			ExtraData[3] Name: "BSX"
+			ExtraData[4] Name: "SkeletonID"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Kristi"
+			Checking User Data: -----
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking Parent: 275
+				RTTIName: "BSMultiBoundRoom"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Checking Parent: 1
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 7
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 3
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "BSFaceGenNiNodeSkinned"
+	[RSP+170] 0x15D3A9B1AC9      (void*)
+	[RSP+178] 0x15D66C799C0      (void*)
+	[RSP+180] 0x10               (size_t) [16]
+	[RSP+188] 0x3                (size_t) [3]
+	[RSP+190] 0x15E82844580      (BSTriShape*)
+		Name: "IW_FemaleHeadWench"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "FOD"
+		ExtraData[1] Name: "FMD"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Kristi"
+		Checking User Data: -----
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking Parent: 2
+			Name: "BSFaceGenNiNodeSkinned"
+			RTTIName: "BSFaceGenNiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Kristi"
+			Checking User Data: -----
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking Parent: 13
+				Name: "skeleton_female.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Kristi"
+				Checking User Data: -----
+					Object Reference: 
+					File: "NPC Improvements.esp"
+					Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+					Flags: 0x00000009 kDestructible | kInitialized
+					Name: "Kristi"
+					EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+					FormID: 0x1000C3BD
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					File: "NPC Improvements.esp"
+					Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+					Flags: 0x00000009 kDestructible | kInitialized
+					Name: "Kristi"
+					EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+					FormID: 0x1000C3BD
+					FormType: NPC (43)
+				Checking Parent: 275
+					RTTIName: "BSMultiBoundRoom"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 1
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 7
+							RTTIName: "BSMultiBoundNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "ObjectLODRoot"
+								RTTIName: "NiNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 3
+									Name: "shadow scene node"
+									RTTIName: "ShadowSceneNode"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+									Checking Parent: 1
+										Name: "WorldRoot Node"
+										RTTIName: "SceneGraph"
+										Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "IW_FemaleHeadWench"
+	[RSP+198] 0x0                (size_t) [0]
+	[RSP+1A0] 0x0                (size_t) [0]
+	[RSP+1A8] 0x3F80000000000000 (size_t) [4575657221408423936]
+	[RSP+1B0] 0x15D3CB98410      (BSFaceGenMorphDataHead*)
+	[RSP+1B8] 0x100000000        (size_t) [4294967296]
+	[RSP+1C0] 0x0                (size_t) [0]
+	[RSP+1C8] 0x0                (size_t) [0]
+	[RSP+1D0] 0x0                (size_t) [0]
+	[RSP+1D8] 0x0                (size_t) [0]
+	[RSP+1E0] 0x0                (size_t) [0]
+	[RSP+1E8] 0x0                (size_t) [0]
+	[RSP+1F0] 0x0                (size_t) [0]
+	[RSP+1F8] 0x0                (size_t) [0]
+	[RSP+200] 0x7FF7453420C8     (void* -> SkyrimSE.exe+2FC20C8	add [rax], al)
+	[RSP+208] 0x7FF745412644     (void* -> SkyrimSE.exe+3092644	add [rax], al)
+	[RSP+210] 0x7FF745412640     (void* -> SkyrimSE.exe+3092640	add [rax], al)
+	[RSP+218] 0x15C89618100      (void*)
+	[RSP+220] 0x0                (size_t) [0]
+	[RSP+228] 0x15E82845300      (BSFaceGenNiNode*)
+		Name: "BSFaceGenNiNodeSkinned"
+		RTTIName: "BSFaceGenNiNode"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Kristi"
+		Checking User Data: -----
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			File: "NPC Improvements.esp"
+			Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+			Flags: 0x00000009 kDestructible | kInitialized
+			Name: "Kristi"
+			EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+			FormID: 0x1000C3BD
+			FormType: NPC (43)
+		Checking Parent: 13
+			Name: "skeleton_female.nif"
+			RTTIName: "BSFadeNode"
+			ExtraData[0] Name: "BSBoneLOD"
+			ExtraData[1] Name: "BOM"
+			ExtraData[2] Name: "BBX"
+			ExtraData[3] Name: "BSX"
+			ExtraData[4] Name: "SkeletonID"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Kristi"
+			Checking User Data: -----
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				File: "NPC Improvements.esp"
+				Modified by: Immersive Wenches.esp -> NPC Improvements.esp
+				Flags: 0x00000009 kDestructible | kInitialized
+				Name: "Kristi"
+				EditorID: "IW_INN_Riverwood_InnsleepG_W_Kristi_P"
+				FormID: 0x1000C3BD
+				FormType: NPC (43)
+			Checking Parent: 275
+				RTTIName: "BSMultiBoundRoom"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Checking Parent: 1
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 7
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 3
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "BSFaceGenNiNodeSkinned"
+	[RSP+230] 0x1                (size_t) [1]
+	[RSP+238] 0x7FF745412648     (void* -> SkyrimSE.exe+3092648	add [rax], al)
+	[RSP+240] 0x0                (size_t) [0]
+	[RSP+248] 0x7FF742773C08     (void* -> SkyrimSE.exe+03F3C08	mov eax, 0xFFFFFFFF)
+	[RSP+250] 0x7FF745342100     (void* -> SkyrimSE.exe+2FC2100	add [rax], eax)
+	[RSP+258] 0x7FF745386901     (void* -> SkyrimSE.exe+3006901	add [rax], al)
+	[RSP+260] 0x0                (size_t) [0]
+	[RSP+268] 0x0                (size_t) [0]
+	[RSP+270] 0x7FF745412700     (void* -> SkyrimSE.exe+3092700	add [rcx+0x15C8961], al)
+	[RSP+278] 0x7FF742FEC628     (void* -> SkyrimSE.exe+0C6C628	mov ecx, [rbx+0x0C])
+	[RSP+280] 0x7FF745387170     (ButtonEvent*)
+	[RSP+288] 0x7FF745412700     (void* -> SkyrimSE.exe+3092700	add [rcx+0x15C8961], al)
+	[RSP+290] 0x0                (size_t) [0]
+	[RSP+298] 0x7FFE86EB7B0D     (void* -> KERNELBASE.dll+0067B0D	nop [rax+rax*1], eax)
+	[RSP+2A0] 0x0                (size_t) [0]
+	[RSP+2A8] 0x7FF745412690     (BSJobs::JobThread*)
+	[RSP+2B0] 0x7FF7454126B0     (void* -> SkyrimSE.exe+30926B0	add [rax], al)
+	[RSP+2B8] 0x15C89618100      (void*)
+	[RSP+2C0] 0x7FF745428D00     (void* -> SkyrimSE.exe+30A8D00	xor al, [rax+rax*1])
+	[RSP+2C8] 0x7FF742FECBF1     (void* -> SkyrimSE.exe+0C6CBF1	mov r15d, eax)
+	[RSP+2D0] 0x1                (size_t) [1]
+	[RSP+2D8] 0x1                (size_t) [1]
+	[RSP+2E0] 0x0                (size_t) [0]
+	[RSP+2E8] 0x7FFDA4145D19     (void* -> EngineFixes.dll+0015D19	cmp dword ptr [0x00007FFDA4205DE8], 0xFFFFFFFF)
+	[RSP+2F0] 0x15C89618100      (void*)
+	[RSP+2F8] 0x1                (size_t) [1]
+	[RSP+300] 0x3FFAAEE85144     (size_t) [70345908834628]
+	[RSP+308] 0x7FF7442D6F80     (void* -> SkyrimSE.exe+1F56F80	add [rax], al)
+	[RSP+310] 0x15C89618800      (void*)
+	[RSP+318] 0x100000003        (size_t) [4294967299]
+	[RSP+320] 0x7FF700000000     (size_t) [140698833649664]
+	[RSP+328] 0x15C89618800      (void*)
+	[RSP+330] 0x48               (size_t) [72]
+	[RSP+338] 0x7FF700000001     (size_t) [140698833649665]
+	[RSP+340] 0x0                (size_t) [0]
+	[RSP+348] 0x0                (size_t) [0]
+	[RSP+350] 0x0                (size_t) [0]
+	[RSP+358] 0x0                (size_t) [0]
+	[RSP+360] 0x0                (size_t) [0]
+	[RSP+368] 0x0                (size_t) [0]
+	[RSP+370] 0x0                (size_t) [0]
+	[RSP+378] 0x0                (size_t) [0]
+	[RSP+380] 0x0                (size_t) [0]
+	[RSP+388] 0x0                (size_t) [0]
+	[RSP+390] 0x7FF745412690     (BSJobs::JobThread*)
+	[RSP+398] 0x7FF742FEAF7A     (void* -> SkyrimSE.exe+0C6AF7A	movzx eax, byte ptr [rbx+0xA74])
+	[RSP+3A0] 0x7FF745412601     (void* -> SkyrimSE.exe+3092601	add [rax], al)
+	[RSP+3A8] 0x0                (size_t) [0]
+	[RSP+3B0] 0x1                (size_t) [1]
+	[RSP+3B8] 0x36C              (size_t) [876]
+	[RSP+3C0] 0x7FF745412690     (BSJobs::JobThread*)
+	[RSP+3C8] 0x7FF742FC5E4D     (void* -> SkyrimSE.exe+0C45E4D	mov rcx, [0x00007FF745386898])
+	[RSP+3D0] 0x7FF7453868F0     (void* -> SkyrimSE.exe+30068F0	add [rax], al)
+	[RSP+3D8] 0x7FF745412690     (BSJobs::JobThread*)
+	[RSP+3E0] 0x0                (size_t) [0]
+	[RSP+3E8] 0x0                (size_t) [0]
+	[RSP+3F0] 0x7FF745412690     (BSJobs::JobThread*)
+	[RSP+3F8] 0x0                (size_t) [0]
+	[RSP+400] 0x0                (size_t) [0]
+	[RSP+408] 0x7FFE88EA257D     (void* -> KERNEL32.DLL+001257D	mov ecx, eax)
+	[RSP+410] 0x0                (size_t) [0]
+	[RSP+418] 0x0                (size_t) [0]
+	[RSP+420] 0x0                (size_t) [0]
+	[RSP+428] 0x0                (size_t) [0]
+	[RSP+430] 0x0                (size_t) [0]
+	[RSP+438] 0x7FFE89ACAA58     (void* -> ntdll.dll+005AA58	jmp 0x00007FFE89ACAA79)
+	[RSP+440] 0x0                (size_t) [0]
+	[RSP+448] 0x0                (size_t) [0]
+	[RSP+450] 0x0                (size_t) [0]
+	[RSP+458] 0x0                (size_t) [0]
+	[RSP+460] 0x0                (size_t) [0]
+	[RSP+468] 0x0                (size_t) [0]
+	[RSP+470] 0x80CD9C0500000000 (size_t) [uint: 9281245952369229824 int: -9165498121340321792]
+	[RSP+478] 0x0                (size_t) [0]
+	[RSP+480] 0x4F0FFFFFB30      (size_t) [5433133628208]
+	[RSP+488] 0x7FFE86FAC720     (void* -> KERNELBASE.dll+015C720	mov [rsp+0x10], rbx)
+	[RSP+490] 0x3C9F7FE500       (void*)
+	[RSP+498] 0x280003FFF031BAD9 (size_t) [2882308159298452185]
+	[RSP+4A0] 0x7FFE06375B25     (size_t) [140729002711845]
+	[RSP+4A8] 0x3C9F7FE500       (void*)
+	[RSP+4B0] 0x0                (size_t) [0]
+	[RSP+4B8] 0x0                (size_t) [0]
+	[RSP+4C0] 0x0                (size_t) [0]
+	[RSP+4C8] 0x0                (size_t) [0]
+	[RSP+4D0] 0x0                (size_t) [0]
+	[RSP+4D8] 0x0                (size_t) [0]
+	[RSP+4E0] 0x0                (size_t) [0]
+	[RSP+4E8] 0x0                (size_t) [0]
+	[RSP+4F0] 0x0                (size_t) [0]
+	[RSP+4F8] 0x0                (size_t) [0]
+	[RSP+500] 0x0                (size_t) [0]
+	[RSP+508] 0x0                (size_t) [0]
+	[RSP+510] 0x0                (size_t) [0]
+	[RSP+518] 0x0                (size_t) [0]
+	[RSP+520] 0x0                (size_t) [0]
+	[RSP+528] 0x0                (size_t) [0]
+	[RSP+530] 0x0                (size_t) [0]
+	[RSP+538] 0x0                (size_t) [0]
+	[RSP+540] 0x0                (size_t) [0]
+	[RSP+548] 0x0                (size_t) [0]
+	[RSP+550] 0x0                (size_t) [0]
+	[RSP+558] 0x0                (size_t) [0]
+	[RSP+560] 0x0                (size_t) [0]
+	[RSP+568] 0x0                (size_t) [0]
+	[RSP+570] 0x0                (size_t) [0]
+	[RSP+578] 0x0                (size_t) [0]
+	[RSP+580] 0x0                (size_t) [0]
+	[RSP+588] 0x0                (size_t) [0]
+	[RSP+590] 0x0                (size_t) [0]
+	[RSP+598] 0x0                (size_t) [0]
+	[RSP+5A0] 0x0                (size_t) [0]
+	[RSP+5A8] 0x0                (size_t) [0]
+	[RSP+5B0] 0x0                (size_t) [0]
+	[RSP+5B8] 0x0                (size_t) [0]
+	[RSP+5C0] 0x0                (size_t) [0]
+	[RSP+5C8] 0x0                (size_t) [0]
+
+MODULES:
+	XINPUT1_3.dll                                    0x000000400000
+	steam_api64.dll                                  0x0000771F0000
+	X3DAudio1_7.dll                                  0x000077230000
+	d3d11.dll                                        0x000180000000
+	PerkEntryPointExtender.dll                       0x015B0E4A0000
+	tbb.dll                                          0x015B56CD0000
+	tbbmalloc.dll                                    0x015B6D0C0000
+	SkyrimSE.exe                                     0x7FF742380000
+	d3d11on12.dll                                    0x7FFD1BAF0000
+	nvofapi64.dll                                    0x7FFD1BB80000
+	d3dcompiler_47_64.dll                            0x7FFD1BC30000
+	NvCamera64.dll                                   0x7FFD1C040000
+	XAudio2_7.dll                                    0x7FFD1C920000
+	d3dcompiler_46e.dll                              0x7FFD1C9B0000
+	nvcuda.dll                                       0x7FFD1CD70000
+	nvngx_dlssg.dll                                  0x7FFD1D0F0000
+	nvngx_dlss.dll                                   0x7FFD1E380000
+	nvwgf2umx.dll                                    0x7FFD3A3B0000
+	nvgpucomp64.dll                                  0x7FFD3F7D0000
+	vulkan-1.dll                                     0x7FFD57B80000
+	_nvngx.dll                                       0x7FFD57E60000
+	sl.dlss_g.dll                                    0x7FFD58000000
+	sl.common.dll                                    0x7FFD58060000
+	gameoverlayrenderer64.dll                        0x7FFD58110000
+	YesImSure.dll                                    0x7FFD582A0000
+	WhoseQuestIsItAnyway.dll                         0x7FFD58330000
+	WhichKey-NG.dll                                  0x7FFD583B0000
+	Weightless.dll                                   0x7FFD58540000
+	UnlimitedFastTravel.dll                          0x7FFD58660000
+	TrueHUD.dll                                      0x7FFD586D0000
+	TrueDirectionalMovement.dll                      0x7FFD58790000
+	SureOfStealing.dll                               0x7FFD58860000
+	libxess.dll                                      0x7FFD588D0000
+	ffx_fsr2_api_dx12_x64.dll                        0x7FFD59770000
+	SSEDisplayTweaks.dll                             0x7FFD59E30000
+	SoundRecordDistributor.dll                       0x7FFD59ED0000
+	SoftShadows.dll                                  0x7FFD5A110000
+	sl.interposer.dll                                0x7FFD5A1C0000
+	PDPerfPlugin.dll                                 0x7FFD5A240000
+	SkyrimUpscaler.dll                               0x7FFD5A2A0000
+	SkyPatcher.dll                                   0x7FFD5A3F0000
+	SkillOfSneaking.dll                              0x7FFD5A540000
+	skee64.dll                                       0x7FFD5A5B0000
+	ShadowBoost.dll                                  0x7FFD5A7C0000
+	ScrambledBugs.dll                                0x7FFD5A880000
+	ScaleformTranslationPP.dll                       0x7FFD5A920000
+	RecursionFPSFix.dll                              0x7FFD5A990000
+	ReadingIsBad.dll                                 0x7FFD5AA70000
+	QuickLootEE.dll                                  0x7FFD5AB10000
+	po3_UseOrTake.dll                                0x7FFD5ABF0000
+	po3_Tweaks.dll                                   0x7FFD5ACA0000
+	po3_SpellPerkItemDistributor.dll                 0x7FFD5AD70000
+	po3_SimpleOffenceSuppression.dll                 0x7FFD5AEE0000
+	po3_SimpleActivateSKSE.dll                       0x7FFD5AF80000
+	po3_SaveUnbaker.dll                              0x7FFD5B030000
+	po3_ReadOrTakeBooks.dll                          0x7FFD5B0D0000
+	po3_PapyrusExtender.dll                          0x7FFD5B170000
+	po3_MoonMod.dll                                  0x7FFD5B3E0000
+	po3_MagicSneakAttacks.dll                        0x7FFD5B490000
+	po3_KeywordItemDistributor.dll                   0x7FFD5B540000
+	po3_EnhancedInvisibility.dll                     0x7FFD632B0000
+	po3_ENBLightForEffectShaders.dll                 0x7FFD63360000
+	po3_DualCastingFix.dll                           0x7FFD63420000
+	po3_CraftingRecipeDistributor.dll                0x7FFD634C0000
+	po3_ConsolePlusPlus.dll                          0x7FFD63570000
+	po3_BaseObjectSwapper.dll                        0x7FFD63620000
+	po3_AnimObjectSwapper.dll                        0x7FFD63740000
+	PlayerPayCrimeGoldTweak.dll                      0x7FFD637F0000
+	PapyrusUtil.dll                                  0x7FFD63A60000
+	RemoveAllItemsFix.dll                            0x7FFD64CF0000
+	PayloadInterpreter.dll                           0x7FFD64D80000
+	PassiveWeaponEnchantmentRecharging.dll           0x7FFD64DF0000
+	PapyrusTweaks.dll                                0x7FFD64E50000
+	PapyrusIniManipulator.dll                        0x7FFD64F50000
+	PAPER.dll                                        0x7FFD65040000
+	PairedAnimationImprovements.dll                  0x7FFD650C0000
+	OStim.dll                                        0x7FFD65130000
+	OpenAnimationReplacer.dll                        0x7FFD65730000
+	OpenAnimationReplacer-IEDConditionExtensions.dll 0x7FFD659C0000
+	OSLAroused.dll                                   0x7FFD841B0000
+	OBody.dll                                        0x7FFD842A0000
+	NoOppositeGenderAnims.dll                        0x7FFD84590000
+	NotificationFilter.dll                           0x7FFD84800000
+	NoEnchantmentRestrictionRemake.dll               0x7FFD84870000
+	MuSkeletonEditor.dll                             0x7FFD84920000
+	MuJointFix.dll                                   0x7FFD84D90000
+	MoreInformativeConsole.dll                       0x7FFD84E30000
+	MenuMaid2.dll                                    0x7FFD85500000
+	MumsTheWord.dll                                  0x7FFD85A30000
+	MCMHelper.dll                                    0x7FFD85AB0000
+	NativeEditorIDFix.dll                            0x7FFD87C10000
+	loki_DynamicAnimationCasting.dll                 0x7FFD87C70000
+	LocationalEncounterZones.dll                     0x7FFD87E10000
+	kxWhereAreYou.dll                                0x7FFD87EF0000
+	KiENBExtender.dll                                0x7FFD87FA0000
+	JContainers64.dll                                0x7FFD88070000
+	hdtSMP64.dll                                     0x7FFD88350000
+	steamclient64.dll                                0x7FFD88B80000
+	MapMarkerFramework.dll                           0x7FFD8C0F0000
+	KiLoader.dll                                     0x7FFD8C190000
+	KillCapsLockNG.dll                               0x7FFD8C230000
+	IWantWidgetsNative.dll                           0x7FFD8C2C0000
+	ItemPropertyManipulator.dll                      0x7FFD8C3E0000
+	InventoryInjector.dll                            0x7FFD8C530000
+	InfinityUI.dll                                   0x7FFD91030000
+	ImWalkinHere.dll                                 0x7FFD91160000
+	IdrinthBuffsWorkOnNPCs.dll                       0x7FFD91230000
+	HelpExtender.dll                                 0x7FFD912D0000
+	GrassSamplerFix.dll                              0x7FFD91370000
+	FormListManipulator.dll                          0x7FFD91400000
+	ENBLightDetectionFix.dll                         0x7FFD91520000
+	ENBHelperSE.dll                                  0x7FFD915C0000
+	CrashLogger.dll                                  0x7FFD91660000
+	ComprehensiveAttackSpeedPatch.dll                0x7FFD91900000
+	mfgfix.dll                                       0x7FFD935C0000
+	CompassNavigationOverhaul.dll                    0x7FFD93630000
+	BetterThirdPersonSelection.dll                   0x7FFD937C0000
+	DescriptionFramework.dll                         0x7FFD947A0000
+	cbp.dll                                          0x7FFD94860000
+	dxgi.dll                                         0x7FFD94980000
+	MaxsuCombatEscape.dll                            0x7FFD94E60000
+	CraftingCategories.dll                           0x7FFD94EE0000
+	CCExtender.dll                                   0x7FFD97B30000
+	D3DCOMPILER_43.dll                               0x7FFD97C00000
+	WINHTTP.dll                                      0x7FFD97E70000
+	ENBWorldspaceWeatherlists.dll                    0x7FFD98AB0000
+	EnemiesRespectEncounterZones.dll                 0x7FFD99680000
+	nvcuda64.dll                                     0x7FFD9A3C0000
+	dxilconv.dll                                     0x7FFD9CB50000
+	CaptureWarmer.dll                                0x7FFD9DE20000
+	BugFixesSSE.dll                                  0x7FFD9DEC0000
+	Arcane-Disenchanter-NG.dll                       0x7FFD9DF50000
+	AnimationMotionRevolution.dll                    0x7FFD9E050000
+	BackportedESLSupport.dll                         0x7FFD9FEE0000
+	ActorValueExtension.dll                          0x7FFD9FF90000
+	AddItemMenuSE.dll                                0x7FFDA0920000
+	ContainerItemDistributor.dll                     0x7FFDA3400000
+	AutoParallax.dll                                 0x7FFDA40A0000
+	EngineFixes.dll                                  0x7FFDA4130000
+	vstdlib_s64.dll                                  0x7FFDA4240000
+	ActorLimitFix.dll                                0x7FFDA4D50000
+	skse64_1_6_640.dll                               0x7FFDA4EA0000
+	htfq_se.dll                                      0x7FFDA60B0000
+	HDLocalMap.dll                                   0x7FFDA6A80000
+	AHZmoreHUDPlugin.dll                             0x7FFDAFF50000
+	Fuz Ro D'oh.dll                                  0x7FFDCBB00000
+	FaceGenFixes.dll                                 0x7FFDF4340000
+	D3DSCache.dll                                    0x7FFDF4E40000
+	D3D12Core.dll                                    0x7FFDF4FF0000
+	ResampleDmo.DLL                                  0x7FFDF5240000
+	DSOUND.DLL                                       0x7FFDF5300000
+	d3d12.dll                                        0x7FFDF6F00000
+	KiLoaderSatelliteENB.dllplugin                   0x7FFDFC280000
+	tier0_s64.dll                                    0x7FFDFE220000
+	MessageBus.dll                                   0x7FFDFE710000
+	DynamicCollisionAdjustment.dll                   0x7FFE0BDF0000
+	FixNotesForSkyUI.dll                             0x7FFE16A50000
+	ConsoleUtilSSE.dll                               0x7FFE20290000
+	AnimationQueueFix.dll                            0x7FFE2F570000
+	nvapi64.dll                                      0x7FFE2F5E0000
+	encounter_zones_unlocked.dll                     0x7FFE302A0000
+	msdmo.dll                                        0x7FFE33130000
+	sl.reflex.dll                                    0x7FFE40A30000
+	nvspcap64.dll                                    0x7FFE40EC0000
+	ENBHelperPlus.dll                                0x7FFE46280000
+	KiLoaderSatelliteSKSE.dll                        0x7FFE46D90000
+	XeFX.dll                                         0x7FFE475D0000
+	CONCRT140.dll                                    0x7FFE47870000
+	fiss.dll                                         0x7FFE4A490000
+	BarterLimitFix.dll                               0x7FFE4A9E0000
+	d3dx11_43.dll                                    0x7FFE4ADA0000
+	UIAutomationCore.dll                             0x7FFE52B60000
+	bink2w64.dll                                     0x7FFE539D0000
+	SkyrimUncapper.dll                               0x7FFE53EB0000
+	usvfs_x64.dll                                    0x7FFE54030000
+	EVLaS.dll                                        0x7FFE541C0000
+	DINPUT8.dll                                      0x7FFE541F0000
+	AHZmoreHUDInventory.dll                          0x7FFE542B0000
+	diskCacheEnabler.dll                             0x7FFE543B0000
+	MSVCP140_ATOMIC_WAIT.dll                         0x7FFE55E80000
+	ondemandconnroutehelper.dll                      0x7FFE5A700000
+	threadpoolwinrt.dll                              0x7FFE5A740000
+	vmm-x64.dll                                      0x7FFE5FA30000
+	PrivateProfileRedirector.dll                     0x7FFE5FA60000
+	d3dx9_42.dll                                     0x7FFE60110000
+	XINPUT9_1_0.dll                                  0x7FFE61870000
+	WININET.dll                                      0x7FFE61AC0000
+	NvTelemetryAPI64.dll                             0x7FFE63660000
+	inputhost.dll                                    0x7FFE64AF0000
+	ncryptsslp.dll                                   0x7FFE65180000
+	SMP-NPC crash fix.dll                            0x7FFE65360000
+	nvldumdx.dll                                     0x7FFE65480000
+	XeFX_Loader.dll                                  0x7FFE65540000
+	MessageBus.dll                                   0x7FFE67300000
+	ffx_fsr2_api_x64.dll                             0x7FFE680B0000
+	dbgcore.DLL                                      0x7FFE68680000
+	Windows.UI.dll                                   0x7FFE69CC0000
+	winmmbase.dll                                    0x7FFE6B1F0000
+	MSVCP140.dll                                     0x7FFE6B610000
+	NvTelemetryBridge64.dll                          0x7FFE71000000
+	VCRUNTIME140.dll                                 0x7FFE71180000
+	webio.dll                                        0x7FFE71340000
+	urlmon.dll                                       0x7FFE71D70000
+	VCRUNTIME140_1.dll                               0x7FFE71F60000
+	amsi.dll                                         0x7FFE721B0000
+	textinputframework.dll                           0x7FFE745D0000
+	AUDIOSES.DLL                                     0x7FFE74B70000
+	wbemsvc.dll                                      0x7FFE77E40000
+	WINMM.dll                                        0x7FFE77EF0000
+	fastprox.dll                                     0x7FFE78B70000
+	srvcli.dll                                       0x7FFE79790000
+	iertutil.dll                                     0x7FFE797C0000
+	SPINF.dll                                        0x7FFE79EB0000
+	COMCTL32.dll                                     0x7FFE7A230000
+	OLEACC.dll                                       0x7FFE7A390000
+	gdiplus.dll                                      0x7FFE7A750000
+	MMDevApi.dll                                     0x7FFE7A980000
+	MSIMG32.dll                                      0x7FFE7B280000
+	wbemcomn.dll                                     0x7FFE7BFC0000
+	MpOav.dll                                        0x7FFE7C820000
+	twinapi.appcore.dll                              0x7FFE7C8A0000
+	dbghelp.dll                                      0x7FFE7D590000
+	drvstore.dll                                     0x7FFE7E1D0000
+	cryptnet.dll                                     0x7FFE7E400000
+	wbemprox.dll                                     0x7FFE7E490000
+	VERSION.dll                                      0x7FFE7E560000
+	DEVRTL.dll                                       0x7FFE7E6E0000
+	CoreUIComponents.dll                             0x7FFE7F350000
+	avrt.dll                                         0x7FFE7F9C0000
+	directxdatabasehelper.dll                        0x7FFE7FB30000
+	fwpuclnt.dll                                     0x7FFE7FDB0000
+	dhcpcsvc.DLL                                     0x7FFE80B90000
+	dhcpcsvc6.DLL                                    0x7FFE80C00000
+	WINHTTP.DLL                                      0x7FFE80DB0000
+	rasadhlp.dll                                     0x7FFE80F60000
+	D3DCOMPILER_47.dll                               0x7FFE813A0000
+	WindowsCodecs.dll                                0x7FFE81790000
+	d3d11.dll                                        0x7FFE82370000
+	XINPUT1_4.dll                                    0x7FFE82650000
+	KiHalloc.dll                                     0x7FFE826B0000
+	dcomp.dll                                        0x7FFE82730000
+	CoreMessaging.dll                                0x7FFE82DA0000
+	UxTheme.dll                                      0x7FFE84100000
+	dxgi.dll                                         0x7FFE84270000
+	dwmapi.dll                                       0x7FFE84380000
+	WINNSI.DLL                                       0x7FFE843B0000
+	dxcore.dll                                       0x7FFE843F0000
+	resourcepolicyclient.dll                         0x7FFE84770000
+	wintypes.dll                                     0x7FFE84B80000
+	windows.storage.dll                              0x7FFE84CC0000
+	HID.DLL                                          0x7FFE855C0000
+	netutils.dll                                     0x7FFE857E0000
+	IPHLPAPI.DLL                                     0x7FFE858D0000
+	DNSAPI.dll                                       0x7FFE85900000
+	UMPDC.dll                                        0x7FFE85BD0000
+	POWRPROF.dll                                     0x7FFE85BF0000
+	Secur32.dll                                      0x7FFE85C60000
+	schannel.DLL                                     0x7FFE85CE0000
+	rsaenh.dll                                       0x7FFE85DF0000
+	kernel.appcore.dll                               0x7FFE85E90000
+	ntmarta.dll                                      0x7FFE85EB0000
+	SSPICLI.DLL                                      0x7FFE860F0000
+	MSWSOCK.dll                                      0x7FFE86300000
+	gpapi.dll                                        0x7FFE86370000
+	USERENV.dll                                      0x7FFE863A0000
+	wldp.dll                                         0x7FFE86580000
+	CRYPTBASE.DLL                                    0x7FFE86630000
+	CRYPTSP.dll                                      0x7FFE86650000
+	NTASN1.dll                                       0x7FFE86700000
+	ncrypt.dll                                       0x7FFE86740000
+	bcrypt.dll                                       0x7FFE86770000
+	MSASN1.dll                                       0x7FFE86A80000
+	devobj.dll                                       0x7FFE86AA0000
+	CFGMGR32.dll                                     0x7FFE86AD0000
+	DPAPI.DLL                                        0x7FFE86B40000
+	profapi.dll                                      0x7FFE86D10000
+	wintrust.dll                                     0x7FFE86DE0000
+	KERNELBASE.dll                                   0x7FFE86E50000
+	CRYPT32.dll                                      0x7FFE87200000
+	bcryptPrimitives.dll                             0x7FFE87370000
+	ucrtbase.dll                                     0x7FFE873F0000
+	msvcp_win.dll                                    0x7FFE87510000
+	win32u.dll                                       0x7FFE87670000
+	gdi32full.dll                                    0x7FFE876A0000
+	ole32.dll                                        0x7FFE877C0000
+	USER32.dll                                       0x7FFE87960000
+	NSI.dll                                          0x7FFE87B10000
+	clbcatq.dll                                      0x7FFE87B20000
+	SHLWAPI.dll                                      0x7FFE87CB0000
+	RPCRT4.dll                                       0x7FFE87D10000
+	ADVAPI32.dll                                     0x7FFE87E30000
+	SHELL32.dll                                      0x7FFE88120000
+	sechost.dll                                      0x7FFE88980000
+	msvcrt.dll                                       0x7FFE88A30000
+	combase.dll                                      0x7FFE88AE0000
+	imagehlp.dll                                     0x7FFE88E70000
+	KERNEL32.DLL                                     0x7FFE88E90000
+	OLEAUT32.dll                                     0x7FFE88F60000
+	PSAPI.DLL                                        0x7FFE89040000
+	COMDLG32.dll                                     0x7FFE89050000
+	GDI32.dll                                        0x7FFE89150000
+	WS2_32.dll                                       0x7FFE89180000
+	IMM32.DLL                                        0x7FFE89270000
+	SETUPAPI.dll                                     0x7FFE892B0000
+	shcore.dll                                       0x7FFE89760000
+	MSCTF.dll                                        0x7FFE89860000
+	ntdll.dll                                        0x7FFE89A70000
+
+SKSE PLUGINS:
+	ActorLimitFix.dll
+	ActorValueExtension.dll v1.9.5.4
+	AddItemMenuSE.dll
+	AHZmoreHUDInventory.dll v2.1.2
+	AHZmoreHUDPlugin.dll v5.2.2
+	AnimationMotionRevolution.dll
+	AnimationQueueFix.dll v1.0.1
+	Arcane-Disenchanter-NG.dll v1.1
+	AutoParallax.dll v1.0.7
+	BackportedESLSupport.dll
+	BarterLimitFix.dll
+	BetterThirdPersonSelection.dll v1
+	BugFixesSSE.dll
+	CaptureWarmer.dll v1.1
+	cbp.dll
+	CCExtender.dll v1.11.0.1
+	CompassNavigationOverhaul.dll
+	ComprehensiveAttackSpeedPatch.dll v1
+	ConsoleUtilSSE.dll v1.4
+	ContainerItemDistributor.dll v1.1.4
+	CraftingCategories.dll v1.1
+	CrashLogger.dll v1.11.1
+	DescriptionFramework.dll v1.3
+	diskCacheEnabler.dll
+	DynamicCollisionAdjustment.dll v1.1
+	ENBHelperPlus.dll v1
+	ENBHelperSE.dll v2.2
+	ENBLightDetectionFix.dll v1
+	encounter_zones_unlocked.dll
+	EnemiesRespectEncounterZones.dll v1.4.1
+	EngineFixes.dll v6.1.1
+	EVLaS.dll v1.3.1
+	FaceGenFixes.dll v1.0.3
+	fiss.dll
+	FixNotesForSkyUI.dll v1.2.6
+	FormListManipulator.dll v1.7
+	Fuz Ro D'oh.dll v2.2.6.927
+	GrassSamplerFix.dll v1.0.1
+	HDLocalMap.dll v1.0.2
+	hdtSMP64.dll
+	HelpExtender.dll v1.2.1.1
+	htfq_se.dll v2
+	IdrinthBuffsWorkOnNPCs.dll v1
+	ImWalkinHere.dll v1.7
+	InfinityUI.dll
+	InventoryInjector.dll v1.0.2
+	ItemPropertyManipulator.dll v0.5.1
+	IWantWidgetsNative.dll
+	JContainers64.dll v4.2.3
+	KillCapsLockNG.dll v1
+	KiLoaderSatelliteSKSE.dll v1.2
+	kxWhereAreYou.dll
+	LocationalEncounterZones.dll v1.0.2
+	loki_DynamicAnimationCasting.dll v3.2.3
+	MapMarkerFramework.dll v2.2
+	MaxsuCombatEscape.dll v1
+	MCMHelper.dll v1.4
+	MenuMaid2.dll v2.2.2
+	mfgfix.dll v1.6.1
+	MoreInformativeConsole.dll v1.1
+	MuJointFix.dll v2.0.17
+	MumsTheWord.dll v2.1
+	MuSkeletonEditor.dll v0.4.3
+	NativeEditorIDFix.dll v1.2
+	NoEnchantmentRestrictionRemake.dll v3.0.1
+	NoOppositeGenderAnims.dll v1.1
+	NotificationFilter.dll v1.2.1
+	OBody.dll v1
+	OpenAnimationReplacer-IEDConditionExtensions.dll v1.0.2
+	OpenAnimationReplacer.dll v2.0.2
+	OSLAroused.dll v2.3
+	OStim.dll v1.0.0.5
+	PairedAnimationImprovements.dll v1.0.1
+	PAPER.dll v2.2.4
+	PapyrusIniManipulator.dll v1.9.3
+	PapyrusTweaks.dll v4.1
+	PapyrusUtil.dll
+	PassiveWeaponEnchantmentRecharging.dll v1
+	PayloadInterpreter.dll v1
+	PerkEntryPointExtender.dll v1
+	PlayerPayCrimeGoldTweak.dll v1.0.6
+	po3_AnimObjectSwapper.dll v1.1.0.1
+	po3_BaseObjectSwapper.dll v2.6.1.1
+	po3_ConsolePlusPlus.dll v1.4.0.1
+	po3_CraftingRecipeDistributor.dll v2.1.0.1
+	po3_DualCastingFix.dll v1.0.0.1
+	po3_ENBLightForEffectShaders.dll v2.1.0.1
+	po3_EnhancedInvisibility.dll v1.3.0.1
+	po3_KeywordItemDistributor.dll v3.0.4.1
+	po3_MagicSneakAttacks.dll v1.2.0.1
+	po3_MoonMod.dll v2.0.2.1
+	po3_PapyrusExtender.dll v5.6.1.1
+	po3_ReadOrTakeBooks.dll v1.3.0.1
+	po3_SaveUnbaker.dll v1.0.3.1
+	po3_SimpleActivateSKSE.dll v1.4.1.1
+	po3_SimpleOffenceSuppression.dll v2.2.1.1
+	po3_SpellPerkItemDistributor.dll v6.7.5.1
+	po3_Tweaks.dll v1.8.1.1
+	po3_UseOrTake.dll v1.2.0.1
+	PrivateProfileRedirector.dll
+	QuickLootEE.dll v1.1
+	ReadingIsBad.dll v1.0.12
+	RecursionFPSFix.dll v1.1
+	RemoveAllItemsFix.dll v1.1
+	ScaleformTranslationPP.dll v1.6
+	ScrambledBugs.dll
+	ShadowBoost.dll
+	skee64.dll
+	SkillOfSneaking.dll v1.1
+	SkyPatcher.dll v1.0.0.1
+	SkyrimUncapper.dll
+	SkyrimUpscaler.dll v1
+	SMP-NPC crash fix.dll
+	SoftShadows.dll v2
+	SoundRecordDistributor.dll v1.2
+	SSEDisplayTweaks.dll v0.5.16
+	SureOfStealing.dll v1.1.3
+	TrueDirectionalMovement.dll v2.2.5
+	TrueHUD.dll v1.1.8
+	UnlimitedFastTravel.dll v1.5.3
+	Weightless.dll v1
+	WhichKey-NG.dll v1.1
+	WhoseQuestIsItAnyway.dll v1.5
+	YesImSure.dll v1.7
+
+PLUGINS:
+	Light: 140	Regular: 151	Total: 291
+	[ 0]     Skyrim.esm
+	[ 1]     Update.esm
+	[ 2]     Dawnguard.esm
+	[ 3]     HearthFires.esm
+	[ 4]     Dragonborn.esm
+	[ 5]     ccasvsse001-almsivi.esm
+	[ 6]     ccBGSSSE001-Fish.esm
+	[ 7]     cctwbsse001-puzzledungeon.esm
+	[ 8]     ccbgssse016-umbra.esm
+	[ 9]     ccbgssse031-advcyrus.esm
+	[ A]     ccbgssse067-daedinv.esm
+	[ B]     ccBGSSSE025-AdvDSGS.esm
+	[ C]     cceejsse005-cave.esm
+	[ D]     ccafdsse001-dwesanctuary.esm
+	[ E]     Unofficial Skyrim Special Edition Patch.esp
+	[ F]     Unofficial Skyrim Modders Patch.esp
+	[10]     Immersive Wenches.esp
+	[11]     YurianaWench.esp
+	[12]     Lux Via.esp
+	[13]     Bandit War.esp
+	[14]     IcyFixes.esm
+	[15]     Skyrim Extended Cut - Saints and Seducers.esp
+	[16]     Water for ENB.esm
+	[17]     High Poly Head.esm
+	[18]     Lonewolf's Manor.esp
+	[19]     BBLuxurySuite.esm
+	[1A]     Triple Triad Skyrim.esp
+	[1B]     myrwatchhomefixer.esp
+	[1C]     Heels Sound.esm
+	[1D]     ApachiiHair.esm
+	[1E]     The Amazing World of Bikini Armors REMASTERED.esp
+	[1F]     SkyfallEstateRevampedMain.esp
+	[20]     Sapphire Castle.esp
+	[21]     FISS.esp
+	[22]     SGEyebrows.esp
+	[23]     Smooth Weapon.esm
+	[24]     wraithguardvaultfixer.esp
+	[25]     Schlongs of Skyrim - Core.esm
+	[26]     AncientDraugr.esp
+	[27]     Cassandra Apocrypha UNP.esp
+	[28]     Cassandra Frost Witch.esp
+	[29]     Celes Mercy.esp
+	[2A]     Celes Nightingale Armor.esp
+	[2B]     Celes Rogue Armor UNP.esp
+	[2C]     Celes Tarot Outfit Cloth UNP.esp
+	[2D]     Crimson Blood Armor.esp
+	[2E]     Emfy Cleric Robes.esp
+	[2F]     Daedric Reaper Armor.esp
+	[30]     Daily-Wear.esp
+	[31]     Demon Armor.esp
+	[32]     DX Christmas Bunny Outfit.esp
+	[33]     DX Daughter of the Sea.esp
+	[34]     DX Druid Armor.esp
+	[35]     DX Morenn Outfit.esp
+	[36]     DX Witch Hunter Armor.esp
+	[37]     DX Witcher Armor.esp
+	[38]     Fashions of the Banditry.esp
+	[39]     Gwelda Vampire.esp
+	[3A]     Gwelda Witch.esp
+	[3B]     Merta Black Rose Armor.esp
+	[3C]     Merta Assassin Armor.esp
+	[3D]     Gwelda Dawnguard Armor.esp
+	[3E]     Stella Mithril Armor.esp
+	[3F]     Spartan Bard Outfit.esp
+	[40]     Sotteta Necromancer Outfit.esp
+	[41]     Tembtra Thief Armor.esp
+	[42]     Sotteta Huntress Armor.esp
+	[43]     WildHuntress.esp
+	[44]     Lacy Teddy [SE].esp
+	[45]     DynDOLOD.esm
+	[46]     Audio Overhaul Skyrim.esp
+	[47]     Immersive Sounds - Compendium.esp
+	[48]     Obsidian Weathers.esp
+	[49]     SMIM-SE-Merged-All.esp
+	[4A]     TrueStormsSE.esp
+	[4B]     DLCIntegration.esp
+	[4C]     Weapons Armor Clothing & Clutter Fixes.esp
+	[4D]     Summermyst - Enchantments of Skyrim.esp
+	[4E]     Relationship Dialogue Overhaul.esp
+	[4F]     Castle Volkihar Rebuilt.esp
+	[50]     Book Covers Skyrim.esp
+	[51]     CollegeOfWinterholdImmersive.esp
+	[52]     OCW_Obscure's_CollegeofWinterhold.esp
+	[53]     Landscape Fixes For Grass Mods.esp
+	[54]     MysticismMagic.esp
+	[55]     Adamant.esp
+	[56]     HappyLittleTrees.esp
+	[57]     SeranaDialogAddon.esp
+	[58]     WACCF_Armor and Clothing Extension.esp
+	[59]     HearthfireMultiKid.esp
+	[5A]     Embers XD.esp
+	[5B]     NewArmoury.esp
+	[5C]     Better Vampire NPCs.esp
+	[5D]     Wheres Your Smelter.esp
+	[5E]     PrvtI_HeavyArmory.esp
+	[5F]     CFTO.esp
+	[60]     Lit Road Signs.esp
+	[61]     Mists of Tamriel.esp
+	[62]     Animated Armoury - Enchantments.esp
+	[63]     ThaneFailSafe.esp
+	[64]     HQEyes-2k.esp
+	[65]     ENB Light.esp
+	[66]     Cathedral - 3D Pine Grass.esp
+	[67]     My Home Is Your Home.esp
+	[68]     Apocalypse - Magic of Skyrim.esp
+	[69]     RaceMenu.esp
+	[6A]     XPMSE.esp
+	[6B]     ORomance.esp
+	[6C]     NPC Death Alerts.esp
+	[6D]     nwsFollowerFramework.esp
+	[6E]     DGPlayerIsVampire.esp
+	[6F]     Ritual - Unofficial Mysticism Addon.esp
+	[70]     Teach Followers Spells.esp
+	[71]     Resurrect.esp
+	[72]     ShowRaceMenuAlternative.esp
+	[73]     Take All Loose Gold and Arrows.esp
+	[74]     NewArmoury - Summermyst Patch.esp
+	[75]     Mining For Mages Redux.esp
+	[76]     AllEnchantmentsUnlocked.esp
+	[77]     FixVampireLord - Revert Form.esp
+	[78]     Faction Crossbows.esp
+	[79]     Dress Up Lovers.esp
+	[7A]     UIExtensions.esp
+	[7B]     RaceMenuPlugin.esp
+	[7C]     RaceMenuMorphsHIMBO.esp
+	[7D]     KS Hairdo's.esp
+	[7E]     AHZmoreHUD.esp
+	[7F]     OStimCommunityResource.esp
+	[80]     AdamantSmithing.esp
+	[81]     SOSRaceMenu.esp
+	[82]     Schlongs of Skyrim.esp
+	[83]     SOS - Smurf Average Addon.esp
+	[84]     ArenaHarderSpawns.esp
+	[85]     Better Vampires.esp
+	[86]     Better Vampire Lords.esp
+	[87]     Alternate Start - Live Another Life.esp
+	[88]     BBLS-ASLAL.esp
+	[89]     Lux.esp
+	[8A]     Water for ENB (Shades of Skyrim).esp
+	[8B]     Summermyst - WACCF Patch.esp
+	[8C]     BBLS_SKSE64_Patch.esp
+	[8D]     BBLuxurySuiteENM.esp
+	[8E]     Buxom Tweaks.esp
+	[8F]     Fusion Patcher.esp
+	[90]     AOS-ISC Patcher.esp
+	[91]     NPC Improvements.esp
+	[92]     ENB Light Compatibility.esp
+	[93]     Enhanced Books.esp
+	[94]     Heels Sound Patch.esp
+	[95]     Synthesis.esp
+	[96]     DynDOLOD.esp
+	[FE:  0] ccbgssse002-exoticarrows.esl
+	[FE:  1] ccbgssse003-zombies.esl
+	[FE:  2] ccbgssse004-ruinsedge.esl
+	[FE:  3] ccbgssse005-goldbrand.esl
+	[FE:  4] ccbgssse006-stendarshammer.esl
+	[FE:  5] ccbgssse007-chrysamere.esl
+	[FE:  6] ccbgssse010-petdwarvenarmoredmudcrab.esl
+	[FE:  7] ccbgssse011-hrsarmrelvn.esl
+	[FE:  8] ccbgssse012-hrsarmrstl.esl
+	[FE:  9] ccbgssse014-spellpack01.esl
+	[FE:  A] ccbgssse019-staffofsheogorath.esl
+	[FE:  B] ccbgssse020-graycowl.esl
+	[FE:  C] ccbgssse021-lordsmail.esl
+	[FE:  D] ccmtysse001-knightsofthenine.esl
+	[FE:  E] ccQDRSSE001-SurvivalMode.esl
+	[FE:  F] ccqdrsse002-firewood.esl
+	[FE: 10] ccbgssse018-shadowrend.esl
+	[FE: 11] ccbgssse035-petnhound.esl
+	[FE: 12] ccfsvsse001-backpacks.esl
+	[FE: 13] cceejsse002-tower.esl
+	[FE: 14] ccedhsse001-norjewel.esl
+	[FE: 15] ccvsvsse002-pets.esl
+	[FE: 16] ccBGSSSE037-Curios.esl
+	[FE: 17] ccbgssse034-mntuni.esl
+	[FE: 18] ccbgssse045-hasedoki.esl
+	[FE: 19] ccbgssse008-wraithguard.esl
+	[FE: 1A] ccbgssse036-petbwolf.esl
+	[FE: 1B] ccffbsse001-imperialdragon.esl
+	[FE: 1C] ccmtysse002-ve.esl
+	[FE: 1D] ccbgssse043-crosselv.esl
+	[FE: 1E] ccvsvsse001-winter.esl
+	[FE: 1F] cceejsse003-hollow.esl
+	[FE: 20] ccbgssse038-bowofshadows.esl
+	[FE: 21] ccbgssse040-advobgobs.esl
+	[FE: 22] ccbgssse050-ba_daedric.esl
+	[FE: 23] ccbgssse052-ba_iron.esl
+	[FE: 24] ccbgssse054-ba_orcish.esl
+	[FE: 25] ccbgssse058-ba_steel.esl
+	[FE: 26] ccbgssse059-ba_dragonplate.esl
+	[FE: 27] ccbgssse061-ba_dwarven.esl
+	[FE: 28] ccpewsse002-armsofchaos.esl
+	[FE: 29] ccbgssse041-netchleather.esl
+	[FE: 2A] ccedhsse002-splkntset.esl
+	[FE: 2B] ccbgssse064-ba_elven.esl
+	[FE: 2C] ccbgssse063-ba_ebony.esl
+	[FE: 2D] ccbgssse062-ba_dwarvenmail.esl
+	[FE: 2E] ccbgssse060-ba_dragonscale.esl
+	[FE: 2F] ccbgssse056-ba_silver.esl
+	[FE: 30] ccbgssse055-ba_orcishscaled.esl
+	[FE: 31] ccbgssse053-ba_leather.esl
+	[FE: 32] ccbgssse051-ba_daedricmail.esl
+	[FE: 33] ccbgssse057-ba_stalhrim.esl
+	[FE: 34] ccbgssse066-staves.esl
+	[FE: 35] ccbgssse068-bloodfall.esl
+	[FE: 36] ccbgssse069-contest.esl
+	[FE: 37] ccvsvsse003-necroarts.esl
+	[FE: 38] ccvsvsse004-beafarmer.esl
+	[FE: 39] ccffbsse002-crossbowpack.esl
+	[FE: 3A] ccbgssse013-dawnfang.esl
+	[FE: 3B] ccrmssse001-necrohouse.esl
+	[FE: 3C] ccedhsse003-redguard.esl
+	[FE: 3D] cceejsse004-hall.esl
+	[FE: 3E] cckrtsse001_altar.esl
+	[FE: 3F] cccbhsse001-gaunt.esl
+	[FE: 40] Cleaned Skyrim SE Textures.esp
+	[FE: 41] ATU 2x.esp
+	[FE: 42] ATU 2x0.esp
+	[FE: 43] ATU 2x1.esp
+	[FE: 44] ATU 2x2.esp
+	[FE: 45] ATU 2x3.esp
+	[FE: 46] ATU 2x4.esp
+	[FE: 47] Unofficial Silver Armor Patch.esl
+	[FE: 48] Unofficial Shadowrend Patch.esl
+	[FE: 49] Unofficial Shadowfoot Sanctum Patch.esl
+	[FE: 4A] Unofficial Saturalia Holiday Pack Patch.esl
+	[FE: 4B] Unofficial Ruin's Edge Patch.esl
+	[FE: 4C] Unofficial Redguard Elite Armaments Patch.esl
+	[FE: 4D] Unofficial Plague of the Dead Patch.esl
+	[FE: 4E] Unofficial Pets of Skyrim Patch.esl
+	[FE: 4F] Unofficial Orcish Scaled Armor Patch.esl
+	[FE: 50] Unofficial Orcish Plate Armor Patch.esl
+	[FE: 51] Unofficial Nordic Jewelry Patch.esl
+	[FE: 52] Unofficial Nix-Hound Patch.esl
+	[FE: 53] Unofficial Netch Leather Armors Patch.esl
+	[FE: 54] Unofficial Necromantic Grimoire Patch.esl
+	[FE: 55] Unofficial Farming Patch.esl
+	[FE: 56] Unofficial Forgotten Seasons Patch.esl
+	[FE: 57] Unofficial Civil War Champions Patch.esl
+	[FE: 58] Unofficial Dead Man's Dread Patch.esl
+	[FE: 59] Unofficial Myrwatch Patch.esl
+	[FE: 5A] Unofficial Sunder & Wraithguard Patch.esl
+	[FE: 5B] Unofficial Vigil Enforcer Armor Set Patch.esl
+	[FE: 5C] Unofficial Bloodchill Manor Patch.esl
+	[FE: 5D] Unofficial Spell Knight Armor Patch.esl
+	[FE: 5E] Unofficial Arms of Chaos Patch.esl
+	[FE: 5F] Unofficial Hendraheim Patch.esl
+	[FE: 60] Unofficial Umbra Patch.esl
+	[FE: 61] Unofficial Lord's Mail Patch.esl
+	[FE: 62] Unofficial Iron Armor Patch.esl
+	[FE: 63] Unofficial Headmans Cleaver Patch.esl
+	[FE: 64] Unofficial Gray Cowl Returns Patch.esl
+	[FE: 65] Unofficial Goldbrand Patch.esl
+	[FE: 66] Unofficial Goblins Patch.esl
+	[FE: 67] Unofficial Ghosts of the Tribunal Patch.esl
+	[FE: 68] Unofficial Gallows Hall Patch.esl
+	[FE: 69] Unofficial Expanded Crossbow Pack Patch.esl
+	[FE: 6A] Unofficial Elven Hunter Armor Patch.esl
+	[FE: 6B] Unofficial Elite Crossbows Patch.esl
+	[FE: 6C] Unofficial Ebony Plate Armor Patch.esl
+	[FE: 6D] Unofficial Dwarven Plate Armor Patch.esl
+	[FE: 6E] Unofficial Dwarven Mail Armor Patch.esl
+	[FE: 6F] Unofficial Dwarven Home Patch.esl
+	[FE: 70] Unofficial Dwarven Armored Mudcrab Patch.esl
+	[FE: 71] Unofficial Dragonscale Armor Patch.esl
+	[FE: 72] Unofficial Dragon Plate Armor Patch.esl
+	[FE: 73] Unofficial Divine Crusader Patch.esl
+	[FE: 74] Unofficial Dawnfang and Duskfang Patch.esl
+	[FE: 75] Unofficial Daedric Plate Armor Patch.esl
+	[FE: 76] Unofficial Daedric Mail Armor Patch.esl
+	[FE: 77] Unofficial Chrysamere Patch.esl
+	[FE: 78] Unofficial Bow of Shadows Patch.esl
+	[FE: 79] Unofficial Bone Wolf Patch.esl
+	[FE: 7A] Unofficial Bittercup Patch.esl
+	[FE: 7B] Unofficial Arcane Archer Pack Patch.esl
+	[FE: 7C] Unofficial Arcane Accessories Patch.esl
+	[FE: 7D] Unofficial Staff of Sheogorath Patch.esl
+	[FE: 7E] Unofficial Stalhrim Fur Armor Patch.esl
+	[FE: 7F] Unofficial Steel Soldier Armor Patch.esl
+	[FE: 80] Unofficial Stendarr's Hammer Patch.esl
+	[FE: 81] Unofficial The Cause Patch.esl
+	[FE: 82] Unofficial The Contest Patch.esl
+	[FE: 83] Unofficial Wild Horses Patch.esl
+	[FE: 84] YurianaWench1.esp
+	[FE: 85] YurianaWench0.esp
+	[FE: 86] Buxom Wench Yuriana BHUNP Body and Armor Conversion (COMPLETE).esm
+	[FE: 87] Buxom Wench Yuriana BHUNP Body and Armor Conversion (COMPLETE)0.esm
+	[FE: 88] [immyneedscake] RyanReos Elf Paladin.esp
+	[FE: 89] DX Black Widow Outfit - UNP.esp
+	[FE: 8A] DX Gwelda Red Riding Hood Outfit - UNP.esp
+	[FE: 8B] DX Succubus (Mazken) Armor - UNP.esp

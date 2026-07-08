@@ -1,0 +1,665 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.28.6
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF68B1538F0 Fallout4.exe+1B938F0
+
+	[Compatibility]
+		F4EE: true
+	[Crashlog]
+		AutoOpen: true
+		PromptUpload: true
+	[Fixes]
+		ActorIsHostileToActor: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		GreyMovies: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+	[Patches]
+		Achievements: true
+		ArchiveLimit: false
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: false
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: -1
+		MemoryManager: false
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 11 Pro v10.0.22621
+	CPU: GenuineIntel 11th Gen Intel(R) Core(TM) i5-11600 @ 2.80GHz
+	GPU #1: Nvidia GA104 [GeForce RTX 3060 Ti Lite Hash Rate]
+	GPU #2: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 14.69 GB/31.88 GB
+
+PROBABLE CALL STACK:
+	[ 0] 0x7FF68B1538F0      Fallout4.exe+1B938F0 -> 306612+0xB0
+	[ 1] 0x7FF68ABD09CF      Fallout4.exe+16109CF -> 215427+0x5F
+	[ 2] 0x7FF68ABD38B8      Fallout4.exe+16138B8 -> 874178+0x88
+	[ 3] 0x7FF68ABCE6F7      Fallout4.exe+160E6F7 -> 641901+0x67
+	[ 4] 0x7FF6896EA0F4      Fallout4.exe+012A0F4 -> 610272+0x1C4
+	[ 5] 0x7FF6896DB7D5      Fallout4.exe+011B7D5 -> 189223+0x765
+	[ 6] 0x7FF6896D7075      Fallout4.exe+0117075 -> 57137+0x455
+	[ 7] 0x7FF68A2F7CD4      Fallout4.exe+0D37CD4 -> 708657+0x2F4
+	[ 8] 0x7FF68A2FF253      Fallout4.exe+0D3F253 -> 407290+0x263
+	[ 9] 0x7FF68A3135A9      Fallout4.exe+0D535A9 -> 1085735+0x29
+	[10] 0x7FFF5DB3A8AC f4se_1_10_163.dll+000A8AC
+	[11] 0x7FF68B0DCFED      Fallout4.exe+1B1CFED -> 1079791+0x3D
+	[12] 0x7FFFC6CA26AD      KERNEL32.DLL+00126AD
+	[13] 0x7FFFC77AAA68         ntdll.dll+005AA68
+
+REGISTERS:
+	RAX 0x20A3A486500      (void*)
+	RCX 0x0                (size_t)
+	RDX 0x9C0              (size_t)
+	RBX 0x61               (size_t)
+	RSP 0x6F42C9F380       (void*)
+	RBP 0x6F42C9F4D0       (void*)
+	RSI 0x6F42C9F408       (BSResourceNiBinaryStream*)
+	RDI 0x1                (size_t)
+	R8  0x1                (size_t)
+	R9  0x7FF68F0C2901     (void* -> Fallout4.exe+5B02901)
+	R10 0x0                (size_t)
+	R11 0x6F42C9F878       (void*)
+	R12 0x20A3DB47880      (void*)
+	R13 0x0                (size_t)
+	R14 0x6F42C9F8A0       (void*)
+	R15 0x1                (size_t)
+
+STACK:
+	[RSP+0  ] 0x208AA14B3B0      (void*)
+	[RSP+8  ] 0x7FF68B0DC613     (void* -> Fallout4.exe+1B1C613)
+	[RSP+10 ] 0x20A4E6FB4E0      (char*) "T7"
+	[RSP+18 ] 0x20A4FFE6B01      (size_t)
+	[RSP+20 ] 0x6F42C9F8A0       (void*)
+	[RSP+28 ] 0x6F42C9F920       (void*)
+	[RSP+30 ] 0x20A3DB475B9      (void*)
+	[RSP+38 ] 0x0                (size_t)
+	[RSP+40 ] 0x3C56830          (size_t)
+	[RSP+48 ] 0x7FF68ABD09CF     (void* -> Fallout4.exe+16109CF)
+	[RSP+50 ] 0x6F42C9F4D0       (void*)
+	[RSP+58 ] 0x1                (size_t)
+	[RSP+60 ] 0x6F42C9F920       (void*)
+	[RSP+68 ] 0x7FF68B0CF0B4     (void* -> Fallout4.exe+1B0F0B4)
+	[RSP+70 ] 0x700000000        (size_t)
+	[RSP+78 ] 0x20A3DB46EC0      (void*)
+	[RSP+80 ] 0x1                (size_t)
+	[RSP+88 ] 0x7FF68C3D4278     (void* -> Fallout4.exe+2E14278)
+	[RSP+90 ] 0x0                (size_t)
+	[RSP+98 ] 0x0                (size_t)
+	[RSP+A0 ] 0x0                (size_t)
+	[RSP+A8 ] 0x0                (size_t)
+	[RSP+B0 ] 0x20800000000      (size_t)
+	[RSP+B8 ] 0x208A5D1EEC0      (BSResource::LooseFileLocation*)
+	[RSP+C0 ] 0x6F42C9F8A0       (void*)
+	[RSP+C8 ] 0x7FF68B14442D     (void* -> Fallout4.exe+1B8442D)
+	[RSP+D0 ] 0x6F00000000       (size_t)
+	[RSP+D8 ] 0x208A5D1EEC0      (BSResource::LooseFileLocation*)
+	[RSP+E0 ] 0x208A5D53140      (char*) "DATA\MESHES\AnimTextData\ClipGeneratorData\."
+	[RSP+E8 ] 0x6F42C9F8A0       (void*)
+	[RSP+F0 ] 0x6F42C9F860       (void*)
+	[RSP+F8 ] 0x7FFF7DF6FB00     (void* -> MSVCR110.dll+005FB00)
+	[RSP+100] 0x53454D5C41544144 (size_t)
+	[RSP+108] 0x6D696E415C534548 (size_t)
+	[RSP+110] 0x6174614474786554 (size_t)
+	[RSP+118] 0x6E654770696C435C (size_t)
+	[RSP+120] 0x6144726F74617265 (size_t)
+	[RSP+128] 0x7F00005C6174     (size_t)
+	[RSP+130] 0x208AD87EA50      (BGSCameraPath*)
+		File: "Fallout4.esm"
+		Flags: 0x00000009
+		Form ID: 0x00066DCA
+		Form Type: 100
+	[RSP+138] 0x208AD87EA50      (BGSCameraPath*)
+		File: "Fallout4.esm"
+		Flags: 0x00000009
+		Form ID: 0x00066DCA
+		Form Type: 100
+	[RSP+140] 0x208B09742E0      (void*)
+	[RSP+148] 0x0                (size_t)
+	[RSP+150] 0x7                (size_t)
+	[RSP+158] 0x7FF6897A20BE     (void* -> Fallout4.exe+01E20BE)
+	[RSP+160] 0x1                (size_t)
+	[RSP+168] 0x20A3DB47880      (void*)
+	[RSP+170] 0x0                (size_t)
+	[RSP+178] 0x208AD8713F0      (BGSCameraPath*)
+		File: "Fallout4.esm"
+		Flags: 0x00000009
+		Form ID: 0x00206463
+		Form Type: 100
+	[RSP+180] 0x17               (size_t)
+	[RSP+188] 0x7FF689A5FFD5     (void* -> Fallout4.exe+049FFD5)
+	[RSP+190] 0x208AD87E688      (BGSCameraPath*)
+		File: "Fallout4.esm"
+		Flags: 0x00000009
+		Form ID: 0x0001CEB2
+		Form Type: 100
+	[RSP+198] 0x208AD87E3C8      (BGSCameraPath*)
+		File: "Fallout4.esm"
+		Flags: 0x00000009
+		Form ID: 0x00026AC5
+		Form Type: 100
+	[RSP+1A0] 0x208B0974FE0      (NiFormArray*)
+	[RSP+1A8] 0x7FF689CED5AE     (void* -> Fallout4.exe+072D5AE)
+	[RSP+1B0] 0x20800000000      (size_t)
+	[RSP+1B8] 0x208AD87E3C8      (BGSCameraPath*)
+		File: "Fallout4.esm"
+		Flags: 0x00000009
+		Form ID: 0x00026AC5
+		Form Type: 100
+	[RSP+1C0] 0x208AD87EA50      (BGSCameraPath*)
+		File: "Fallout4.esm"
+		Flags: 0x00000009
+		Form ID: 0x00066DCA
+		Form Type: 100
+	[RSP+1C8] 0x1800000007       (size_t)
+	[RSP+1D0] 0xC0               (size_t)
+	[RSP+1D8] 0x20A3DB47880      (void*)
+	[RSP+1E0] 0x0                (size_t)
+	[RSP+1E8] 0x7FF68CC8B140     (type_info*)
+	[RSP+1F0] 0x208A88D99D0      (void*)
+	[RSP+1F8] 0x20A3DB475B9      (void*)
+	[RSP+200] 0x20A3DB47880      (void*)
+	[RSP+208] 0x208A5D5316B      (char*) "."
+	[RSP+210] 0x208A5D5316C      (void*)
+	[RSP+218] 0x3742333743000000 (size_t)
+	[RSP+220] 0x53454D5C41544144 (size_t)
+	[RSP+228] 0x6D696E415C534548 (size_t)
+	[RSP+230] 0x6174614474786554 (size_t)
+	[RSP+238] 0x6E654770696C435C (size_t)
+	[RSP+240] 0x6144726F74617265 (size_t)
+	[RSP+248] 0x7FF6005C6174     (size_t)
+	[RSP+250] 0x7FF68C219AD8     (char*) "%s Form '%s' (%08X)"
+	[RSP+258] 0x6F42C9F780       (void*)
+	[RSP+260] 0x7FF68F119BB0     (void* -> Fallout4.exe+5B59BB0)
+	[RSP+268] 0x7FF68F119900     (BSSmallBlockAllocator*)
+	[RSP+270] 0x7FF68F119900     (BSSmallBlockAllocator*)
+	[RSP+278] 0x7FF68B0CF0B4     (void* -> Fallout4.exe+1B0F0B4)
+	[RSP+280] 0x208B0977CE8      (void*)
+	[RSP+288] 0x7FF68B0DC613     (void* -> Fallout4.exe+1B1C613)
+	[RSP+290] 0x7FF68CE8C980     (void* -> Fallout4.exe+38CC980)
+	[RSP+298] 0x7FF68F119900     (BSSmallBlockAllocator*)
+	[RSP+2A0] 0x7FF68F119FE8     (void* -> Fallout4.exe+5B59FE8)
+	[RSP+2A8] 0x7FF68F119900     (BSSmallBlockAllocator*)
+	[RSP+2B0] 0x7FF68F119900     (BSSmallBlockAllocator*)
+	[RSP+2B8] 0x7FF68B0CF0B4     (void* -> Fallout4.exe+1B0F0B4)
+	[RSP+2C0] 0x6F42C9F730       (void*)
+	[RSP+2C8] 0xC8               (size_t)
+	[RSP+2D0] 0x7FF68CE8C980     (void* -> Fallout4.exe+38CC980)
+	[RSP+2D8] 0x7FF689772E39     (void* -> Fallout4.exe+01B2E39)
+	[RSP+2E0] 0x0                (size_t)
+	[RSP+2E8] 0x7FF68B0DC503     (void* -> Fallout4.exe+1B1C503)
+	[RSP+2F0] 0x700000000        (size_t)
+	[RSP+2F8] 0x20A3DB46EC0      (void*)
+	[RSP+300] 0x208A5CA5FF8      (void*)
+	[RSP+308] 0x7FF6896DEEF2     (void* -> Fallout4.exe+011EEF2)
+	[RSP+310] 0x0                (size_t)
+	[RSP+318] 0x208AD8713F0      (BGSCameraPath*)
+		File: "Fallout4.esm"
+		Flags: 0x00000009
+		Form ID: 0x00206463
+		Form Type: 100
+	[RSP+320] 0x0                (size_t)
+	[RSP+328] 0x7FF68B0DC503     (void* -> Fallout4.exe+1B1C503)
+	[RSP+330] 0x2E               (size_t)
+	[RSP+338] 0x7FF6896DF8CD     (void* -> Fallout4.exe+011F8CD)
+	[RSP+340] 0x1                (size_t)
+	[RSP+348] 0x208B0A9E160      (void*)
+	[RSP+350] 0x1                (size_t)
+	[RSP+358] 0x20A3DB47880      (void*)
+	[RSP+360] 0x0                (size_t)
+	[RSP+368] 0x208A88D99D0      (void*)
+	[RSP+370] 0x20A3DB47880      (void*)
+	[RSP+378] 0x7FF6896DF99B     (void* -> Fallout4.exe+011F99B)
+	[RSP+380] 0x2                (size_t)
+	[RSP+388] 0x1                (size_t)
+	[RSP+390] 0x7FF68EE90D00     (void* -> Fallout4.exe+58D0D00)
+	[RSP+398] 0x0                (size_t)
+	[RSP+3A0] 0x0                (size_t)
+	[RSP+3A8] 0x7FF6896DF99B     (void* -> Fallout4.exe+011F99B)
+	[RSP+3B0] 0x2                (size_t)
+	[RSP+3B8] 0x7FF6896DEEC0     (void* -> Fallout4.exe+011EEC0)
+	[RSP+3C0] 0x2                (size_t)
+	[RSP+3C8] 0x7FF689772E39     (void* -> Fallout4.exe+01B2E39)
+	[RSP+3D0] 0x208A5D37A60      (void*)
+	[RSP+3D8] 0x7FF68B102FE8     (void* -> Fallout4.exe+1B42FE8)
+	[RSP+3E0] 0x20880779608      (void*)
+	[RSP+3E8] 0x7FF6896DEEC0     (void* -> Fallout4.exe+011EEC0)
+	[RSP+3F0] 0x208A88D8418      (char*) "Human"
+	[RSP+3F8] 0x7FF6896DEEF2     (void* -> Fallout4.exe+011EEF2)
+	[RSP+400] 0x20880779460      (MemoryHeap*)
+	[RSP+408] 0x208A5D37A40      (void*)
+	[RSP+410] 0x7FF68F1C7C40     (void* -> Fallout4.exe+5C07C40)
+	[RSP+418] 0x208A5D37A60      (void*)
+	[RSP+420] 0x6F42C9F901       (void*)
+	[RSP+428] 0x7FF68B101F2C     (void* -> Fallout4.exe+1B41F2C)
+	[RSP+430] 0x2090E7FE600      (void*)
+	[RSP+438] 0x7FF68B0DEFED     (void* -> Fallout4.exe+1B1EFED)
+	[RSP+440] 0x61               (size_t)
+	[RSP+448] 0x7FF68B131B93     (void* -> Fallout4.exe+1B71B93)
+	[RSP+450] 0x6F42C9F8A0       (void*)
+	[RSP+458] 0x208A5D378F8      (void*)
+	[RSP+460] 0x6F42C9F900       (void*)
+	[RSP+468] 0x1                (size_t)
+	[RSP+470] 0x7FF68F11A500     (void* -> Fallout4.exe+5B5A500)
+	[RSP+478] 0x0                (size_t)
+	[RSP+480] 0x208A5D378F8      (void*)
+	[RSP+488] 0x7FF68B138116     (void* -> Fallout4.exe+1B78116)
+	[RSP+490] 0x1                (size_t)
+	[RSP+498] 0x6F42C9FA70       (void*)
+	[RSP+4A0] 0x6F42C9F8A8       (void*)
+	[RSP+4A8] 0x208A5D378F8      (void*)
+	[RSP+4B0] 0x6F42C9F920       (void*)
+	[RSP+4B8] 0x6F42C9F8A0       (void*)
+	[RSP+4C0] 0x1                (size_t)
+	[RSP+4C8] 0x6F42C9FA70       (void*)
+	[RSP+4D0] 0x20A3DB475B8      (void*)
+	[RSP+4D8] 0x6F42C9F8A0       (void*)
+	[RSP+4E0] 0x0                (size_t)
+	[RSP+4E8] 0x1                (size_t)
+	[RSP+4F0] 0x0                (size_t)
+	[RSP+4F8] 0x7FF68ABD38B8     (void* -> Fallout4.exe+16138B8)
+	[RSP+500] 0x1                (size_t)
+	[RSP+508] 0x0                (size_t)
+	[RSP+510] 0x6F42C9F920       (void*)
+	[RSP+518] 0x3C56830          (size_t)
+	[RSP+520] 0x0                (size_t)
+	[RSP+528] 0x0                (size_t)
+	[RSP+530] 0x7FF603C56830     (size_t)
+	[RSP+538] 0x0                (size_t)
+	[RSP+540] 0x20A03C56830      (size_t)
+	[RSP+548] 0x0                (size_t)
+	[RSP+550] 0x7FF68EE8ECA0     (char*) "T7"
+	[RSP+558] 0x7FF68ABCE6F7     (void* -> Fallout4.exe+160E6F7)
+	[RSP+560] 0x7FF68F0186D8     (char*) "T7"
+	[RSP+568] 0x6F42C9F939       (void*)
+	[RSP+570] 0x7FF68F018630     (AnimationClipDataSingleton*)
+	[RSP+578] 0x208A5D378F8      (void*)
+	[RSP+580] 0x7FF68F119B20     (void* -> Fallout4.exe+5B59B20)
+	[RSP+588] 0x208B009FE40      (void*)
+	[RSP+590] 0x0                (size_t)
+	[RSP+598] 0x7FF603C56830     (size_t)
+	[RSP+5A0] 0x7FF68F0C2970     (void* -> Fallout4.exe+5B02970)
+	[RSP+5A8] 0x7FF68F018630     (AnimationClipDataSingleton*)
+	[RSP+5B0] 0x7FF68F119A90     (void* -> Fallout4.exe+5B59A90)
+	[RSP+5B8] 0x208AA09E080      (void*)
+	[RSP+5C0] 0x6F42C9FA70       (void*)
+	[RSP+5C8] 0x7FF68F0C2850     (void* -> Fallout4.exe+5B02850)
+	[RSP+5D0] 0x0                (size_t)
+	[RSP+5D8] 0x1                (size_t)
+	[RSP+5E0] 0x0                (size_t)
+	[RSP+5E8] 0x7FF6895E44E3     (void* -> Fallout4.exe+00244E3)
+	[RSP+5F0] 0x6F42C9FA70       (void*)
+	[RSP+5F8] 0x20A3DB475B8      (void*)
+	[RSP+600] 0x0                (size_t)
+	[RSP+608] 0x7FF68EE8ECA0     (char*) "T7"
+	[RSP+610] 0x7FF68F0C2560     (void* -> Fallout4.exe+5B02560)
+	[RSP+618] 0x7FF6896EA0F4     (void* -> Fallout4.exe+012A0F4)
+	[RSP+620] 0x0                (size_t)
+	[RSP+628] 0x208A8570580      (void*)
+	[RSP+630] 0x208A85705A8      (void*)
+	[RSP+638] 0x7FF68F0C2850     (void* -> Fallout4.exe+5B02850)
+	[RSP+640] 0x7FF68F0C2850     (void* -> Fallout4.exe+5B02850)
+	[RSP+648] 0x7FF68F0C2848     (void* -> Fallout4.exe+5B02848)
+	[RSP+650] 0x1F               (size_t)
+	[RSP+658] 0x7FF6896E2480     (void* -> Fallout4.exe+0122480)
+	[RSP+660] 0x0                (size_t)
+	[RSP+668] 0x0                (size_t)
+	[RSP+670] 0x208A9EA8210      (void*)
+	[RSP+678] 0x7FF640000000     (size_t)
+	[RSP+680] 0x7FF68EE90D00     (void* -> Fallout4.exe+58D0D00)
+	[RSP+688] 0x7FF68F0C2560     (void* -> Fallout4.exe+5B02560)
+	[RSP+690] 0x0                (size_t)
+	[RSP+698] 0x20A3DB47880      (void*)
+	[RSP+6A0] 0x0                (size_t)
+	[RSP+6A8] 0x7FF6896DB7D5     (void* -> Fallout4.exe+011B7D5)
+	[RSP+6B0] 0x1                (size_t)
+	[RSP+6B8] 0x6F42C9FA70       (void*)
+	[RSP+6C0] 0x208A8570580      (void*)
+	[RSP+6C8] 0x7FF68EE90D00     (void* -> Fallout4.exe+58D0D00)
+	[RSP+6D0] 0x208A88D99D0      (void*)
+	[RSP+6D8] 0x2                (size_t)
+	[RSP+6E0] 0x208A4D4D090      (void*)
+	[RSP+6E8] 0x7FF6896D7075     (void* -> Fallout4.exe+0117075)
+	[RSP+6F0] 0x7FF68F09FF00     (void* -> Fallout4.exe+5ADFF00)
+	[RSP+6F8] 0x208A88D99D0      (void*)
+	[RSP+700] 0x7FF68EE90B00     (void* -> Fallout4.exe+58D0B00)
+	[RSP+708] 0x2                (size_t)
+	[RSP+710] 0x7FF68C2096C8     (void* -> Fallout4.exe+2C496C8)
+	[RSP+718] 0x7FF68EE91AD8     (void* -> Fallout4.exe+58D1AD8)
+	[RSP+720] 0x7FF68EE90B00     (void* -> Fallout4.exe+58D0B00)
+	[RSP+728] 0x6F42C9FB00       (void*)
+	[RSP+730] 0x66               (size_t)
+	[RSP+738] 0x9C0              (size_t)
+	[RSP+740] 0x208A5D9BE30      (SceneGraph*)
+		Name: "WorldRoot Node"
+	[RSP+748] 0x0                (size_t)
+	[RSP+750] 0x0                (size_t)
+	[RSP+758] 0x20A3DB46E00      (void*)
+	[RSP+760] 0x7FF68CD4E400     (void* -> Fallout4.exe+378E400)
+	[RSP+768] 0x208A5D1D2C0      (NiNode*)
+		Name: "ObjectLODRoot"
+	[RSP+770] 0x7FF68CD4E400     (void* -> Fallout4.exe+378E400)
+	[RSP+778] 0x7FF68A2F7CD4     (void* -> Fallout4.exe+0D37CD4)
+	[RSP+780] 0x7FF600200000     (size_t)
+	[RSP+788] 0x20906312A00      (void*)
+	[RSP+790] 0x7FF600000002     (size_t)
+	[RSP+798] 0x20A3DB47880      (void*)
+	[RSP+7A0] 0x0                (size_t)
+	[RSP+7A8] 0x208A5D1D540      (NiNode*)
+		Name: "WaterLOD"
+	[RSP+7B0] 0x0                (size_t)
+	[RSP+7B8] 0x0                (size_t)
+	[RSP+7C0] 0x80000            (size_t)
+	[RSP+7C8] 0x7FF600000000     (size_t)
+	[RSP+7D0] 0x0                (size_t)
+	[RSP+7D8] 0x4                (size_t)
+	[RSP+7E0] 0x0                (size_t)
+	[RSP+7E8] 0x8                (size_t)
+	[RSP+7F0] 0x7FF68F09D640     (GameScript::PathingCallbackMgr*)
+	[RSP+7F8] 0x7FF68B0D0DBA     (void* -> Fallout4.exe+1B10DBA)
+	[RSP+800] 0x7FF68F065178     (void* -> Fallout4.exe+5AA5178)
+	[RSP+808] 0x7FF68F065168     (void* -> Fallout4.exe+5AA5168)
+	[RSP+810] 0x0                (size_t)
+	[RSP+818] 0x0                (size_t)
+	[RSP+820] 0x0                (size_t)
+	[RSP+828] 0x0                (size_t)
+	[RSP+830] 0x7FF68F065160     (void* -> Fallout4.exe+5AA5160)
+	[RSP+838] 0x7FF68A901B9B     (void* -> Fallout4.exe+1341B9B)
+	[RSP+840] 0x7FF68F065160     (void* -> Fallout4.exe+5AA5160)
+	[RSP+848] 0x0                (size_t)
+	[RSP+850] 0x20A3DB47880      (void*)
+	[RSP+858] 0x208A8296948      (BSEffectShaderPropertyColorController*)
+	[RSP+860] 0x7FF68F119BF8     (void* -> Fallout4.exe+5B59BF8)
+	[RSP+868] 0x208A829FF60      (void*)
+	[RSP+870] 0x0                (size_t)
+	[RSP+878] 0x0                (size_t)
+	[RSP+880] 0x7FF68C20A948     (void* -> Fallout4.exe+2C4A948)
+	[RSP+888] 0x7FF68F065168     (void* -> Fallout4.exe+5AA5168)
+	[RSP+890] 0x7FF68F09D640     (GameScript::PathingCallbackMgr*)
+	[RSP+898] 0x7FF68A8FFDE6     (void* -> Fallout4.exe+133FDE6)
+	[RSP+8A0] 0x0                (size_t)
+	[RSP+8A8] 0x20A3DB47880      (void*)
+	[RSP+8B0] 0x2                (size_t)
+	[RSP+8B8] 0x0                (size_t)
+	[RSP+8C0] 0x20A3DB47880      (void*)
+	[RSP+8C8] 0x7FF68A931DAA     (void* -> Fallout4.exe+1371DAA)
+	[RSP+8D0] 0x2                (size_t)
+	[RSP+8D8] 0x0                (size_t)
+	[RSP+8E0] 0x0                (size_t)
+	[RSP+8E8] 0x0                (size_t)
+	[RSP+8F0] 0x0                (size_t)
+	[RSP+8F8] 0x7FF68A2FF253     (void* -> Fallout4.exe+0D3F253)
+	[RSP+900] 0x2                (size_t)
+	[RSP+908] 0x0                (size_t)
+	[RSP+910] 0x0                (size_t)
+	[RSP+918] 0x20A3DB47880      (void*)
+	[RSP+920] 0x0                (size_t)
+	[RSP+928] 0x7FF68A3135A9     (void* -> Fallout4.exe+0D535A9)
+	[RSP+930] 0x208A5D7C478      (`anonymous namespace'::InitGameDataThread*)
+	[RSP+938] 0x0                (size_t)
+	[RSP+940] 0x0                (size_t)
+	[RSP+948] 0x0                (size_t)
+	[RSP+950] 0x208A5D7C478      (`anonymous namespace'::InitGameDataThread*)
+	[RSP+958] 0x7FFF5DB3A8AC     (void* -> f4se_1_10_163.dll+000A8AC)
+	[RSP+960] 0x0                (size_t)
+	[RSP+968] 0x0                (size_t)
+	[RSP+970] 0x0                (size_t)
+	[RSP+978] 0x0                (size_t)
+	[RSP+980] 0x0                (size_t)
+	[RSP+988] 0x0                (size_t)
+	[RSP+990] 0x208A5D7C478      (`anonymous namespace'::InitGameDataThread*)
+	[RSP+998] 0x0                (size_t)
+	[RSP+9A0] 0x0                (size_t)
+	[RSP+9A8] 0x7FF68B0DCFED     (void* -> Fallout4.exe+1B1CFED)
+	[RSP+9B0] 0x0                (size_t)
+	[RSP+9B8] 0x6F42C9FD50       (void*)
+	[RSP+9C0] 0x208A5D1EE70      (void*)
+	[RSP+9C8] 0x0                (size_t)
+	[RSP+9D0] 0x208A5D7C478      (`anonymous namespace'::InitGameDataThread*)
+	[RSP+9D8] 0x0                (size_t)
+	[RSP+9E0] 0x0                (size_t)
+	[RSP+9E8] 0x7FFFC6CA26AD     (void* -> KERNEL32.DLL+00126AD)
+	[RSP+9F0] 0x0                (size_t)
+	[RSP+9F8] 0x0                (size_t)
+	[RSP+A00] 0x0                (size_t)
+	[RSP+A08] 0x0                (size_t)
+	[RSP+A10] 0x0                (size_t)
+	[RSP+A18] 0x7FFFC77AAA68     (void* -> ntdll.dll+005AA68)
+	[RSP+A20] 0x0                (size_t)
+	[RSP+A28] 0x0                (size_t)
+	[RSP+A30] 0x0                (size_t)
+	[RSP+A38] 0x0                (size_t)
+	[RSP+A40] 0x0                (size_t)
+	[RSP+A48] 0x0                (size_t)
+	[RSP+A50] 0x5E009BE200000000 (size_t)
+	[RSP+A58] 0x0                (size_t)
+	[RSP+A60] 0x4F0FFFFFB30      (size_t)
+	[RSP+A68] 0x7FFFC500BD30     (void* -> KERNELBASE.dll+015BD30)
+	[RSP+A70] 0x6F42C9DE00       (void*)
+	[RSP+A78] 0xE6C009B480001FFF (size_t)
+	[RSP+A80] 0x7FFF9B0026D2     (size_t)
+	[RSP+A88] 0x6F42C9DE00       (void*)
+	[RSP+A90] 0x0                (size_t)
+	[RSP+A98] 0x0                (size_t)
+	[RSP+AA0] 0x0                (size_t)
+	[RSP+AA8] 0x0                (size_t)
+	[RSP+AB0] 0x0                (size_t)
+	[RSP+AB8] 0x0                (size_t)
+	[RSP+AC0] 0x0                (size_t)
+	[RSP+AC8] 0x0                (size_t)
+	[RSP+AD0] 0x0                (size_t)
+	[RSP+AD8] 0x0                (size_t)
+	[RSP+AE0] 0x0                (size_t)
+	[RSP+AE8] 0x0                (size_t)
+	[RSP+AF0] 0x0                (size_t)
+	[RSP+AF8] 0x0                (size_t)
+	[RSP+B00] 0x0                (size_t)
+	[RSP+B08] 0x0                (size_t)
+	[RSP+B10] 0x0                (size_t)
+	[RSP+B18] 0x0                (size_t)
+	[RSP+B20] 0x0                (size_t)
+	[RSP+B28] 0x0                (size_t)
+	[RSP+B30] 0x0                (size_t)
+	[RSP+B38] 0x0                (size_t)
+	[RSP+B40] 0x0                (size_t)
+	[RSP+B48] 0x0                (size_t)
+	[RSP+B50] 0x0                (size_t)
+	[RSP+B58] 0x0                (size_t)
+	[RSP+B60] 0x0                (size_t)
+	[RSP+B68] 0x0                (size_t)
+	[RSP+B70] 0x0                (size_t)
+	[RSP+B78] 0x0                (size_t)
+	[RSP+B80] 0x0                (size_t)
+	[RSP+B88] 0x0                (size_t)
+	[RSP+B90] 0x0                (size_t)
+	[RSP+B98] 0x0                (size_t)
+	[RSP+BA0] 0x0                (size_t)
+	[RSP+BA8] 0x0                (size_t)
+	[RSP+BB0] 0x0                (size_t)
+	[RSP+BB8] 0x0                (size_t)
+	[RSP+BC0] 0x0                (size_t)
+	[RSP+BC8] 0x0                (size_t)
+	[RSP+BD0] 0x0                (size_t)
+	[RSP+BD8] 0x0                (size_t)
+	[RSP+BE0] 0x0                (size_t)
+	[RSP+BE8] 0x0                (size_t)
+	[RSP+BF0] 0x0                (size_t)
+	[RSP+BF8] 0x0                (size_t)
+	[RSP+C00] 0x0                (size_t)
+	[RSP+C08] 0x0                (size_t)
+	[RSP+C10] 0x0                (size_t)
+	[RSP+C18] 0x0                (size_t)
+	[RSP+C20] 0x0                (size_t)
+	[RSP+C28] 0x0                (size_t)
+	[RSP+C30] 0x0                (size_t)
+	[RSP+C38] 0x0                (size_t)
+	[RSP+C40] 0x0                (size_t)
+	[RSP+C48] 0x0                (size_t)
+	[RSP+C50] 0x0                (size_t)
+	[RSP+C58] 0x0                (size_t)
+	[RSP+C60] 0x0                (size_t)
+	[RSP+C68] 0x0                (size_t)
+	[RSP+C70] 0x0                (size_t)
+	[RSP+C78] 0x0                (size_t)
+
+MODULES:
+	XINPUT1_3.dll                 0x000000400000
+	X3DAudio1_7.dll               0x000050120000
+	steam_api64.dll               0x000050130000
+	Fallout4.exe                  0x7FF6895C0000
+	nvcuda64.dll                  0x7FFF40980000
+	d3dcompiler_47_64.dll         0x7FFF41340000
+	NvCamera64.dll                0x7FFF41750000
+	Buffout4.dll                  0x7FFF41FC0000
+	steamclient64.dll             0x7FFF42320000
+	IPHLPAPI.DLL                  0x7FFF43930000
+	XAudio2_7.dll                 0x7FFF45320000
+	gameoverlayrenderer64.dll     0x7FFF45860000
+	HHS.dll                       0x7FFF45BE0000
+	tier0_s64.dll                 0x7FFF58A10000
+	f4ee.dll                      0x7FFF58CA0000
+	BakaScrapHeap.dll             0x7FFF5CC60000
+	f4se_1_10_163.dll             0x7FFF5DB30000
+	HighFPSPhysicsFix.dll         0x7FFF5DCB0000
+	flexRelease_x64.dll           0x7FFF5E140000
+	nvspcap64.dll                 0x7FFF5ED50000
+	vstdlib_s64.dll               0x7FFF6D860000
+	ResampleDmo.DLL               0x7FFF7D760000
+	DSOUND.DLL                    0x7FFF7D820000
+	DINPUT8.dll                   0x7FFF7DE60000
+	cudart64_75.dll               0x7FFF7DEB0000
+	MSVCR110.dll                  0x7FFF7DF10000
+	MSVCP110.dll                  0x7FFF7E080000
+	GFSDK_SSAO_D3D11.win64.dll    0x7FFF7E150000
+	GFSDK_GodraysLib.x64.dll      0x7FFF7E520000
+	bink2w64.dll                  0x7FFF7E580000
+	flexExtRelease_x64.dll        0x7FFF90D10000
+	MSVCP140.dll                  0x7FFF93FF0000
+	VCRUNTIME140.dll              0x7FFF94080000
+	VCRUNTIME140_1.dll            0x7FFF992B0000
+	f4se_steam_loader.dll         0x7FFF9B340000
+	Secur32.dll                   0x7FFF9EE60000
+	MessageBus.dll                0x7FFFA9C90000
+	msdmo.dll                     0x7FFFAABB0000
+	XINPUT9_1_0.dll               0x7FFFAC060000
+	nvwgf2umx.dll                 0x7FFFAD060000
+	winmmbase.dll                 0x7FFFB4070000
+	Windows.UI.dll                0x7FFFB4420000
+	inputhost.dll                 0x7FFFB46C0000
+	textinputframework.dll        0x7FFFB5EF0000
+	OneCoreCommonProxyStub.dll    0x7FFFB6020000
+	AUDIOSES.DLL                  0x7FFFB6290000
+	MessageBus.dll                0x7FFFB74E0000
+	WINSPOOL.DRV                  0x7FFFB7DA0000
+	COMCTL32.dll                  0x7FFFB7E40000
+	MSIMG32.dll                   0x7FFFB8290000
+	DbgHelp.dll                   0x7FFFB8500000
+	WINMM.dll                     0x7FFFB8FB0000
+	nvapi64.dll                   0x7FFFB9E70000
+	nvldumdx.dll                  0x7FFFBA920000
+	MMDevApi.dll                  0x7FFFBB240000
+	OneCoreUAPCommonProxyStub.dll 0x7FFFBB2E0000
+	drvstore.dll                  0x7FFFBD750000
+	cryptnet.dll                  0x7FFFBDAB0000
+	VERSION.dll                   0x7FFFBDAF0000
+	CoreUIComponents.dll          0x7FFFBDB80000
+	WINHTTP.dll                   0x7FFFBE3D0000
+	directxdatabasehelper.dll     0x7FFFBE510000
+	dhcpcsvc.DLL                  0x7FFFBE940000
+	avrt.dll                      0x7FFFBE9F0000
+	WindowsCodecs.dll             0x7FFFBFEB0000
+	d3d11.dll                     0x7FFFC02D0000
+	nvToolsExt64_1.dll            0x7FFFC0B30000
+	dcomp.dll                     0x7FFFC0C60000
+	CoreMessaging.dll             0x7FFFC1390000
+	UxTheme.dll                   0x7FFFC2050000
+	dxgi.dll                      0x7FFFC21C0000
+	dwmapi.dll                    0x7FFFC22D0000
+	dxcore.dll                    0x7FFFC2340000
+	resourcepolicyclient.dll      0x7FFFC25E0000
+	wintypes.dll                  0x7FFFC29D0000
+	windows.storage.dll           0x7FFFC2B10000
+	HID.DLL                       0x7FFFC3400000
+	IpHlpAPI.dll                  0x7FFFC36D0000
+	UMPDC.dll                     0x7FFFC3A00000
+	powrprof.dll                  0x7FFFC3A20000
+	rsaenh.dll                    0x7FFFC3BD0000
+	kernel.appcore.dll            0x7FFFC3C10000
+	ntmarta.dll                   0x7FFFC3C80000
+	SSPICLI.DLL                   0x7FFFC3EC0000
+	MSWSOCK.dll                   0x7FFFC40E0000
+	CRYPTSP.dll                   0x7FFFC4330000
+	CRYPTBASE.DLL                 0x7FFFC4350000
+	wldp.dll                      0x7FFFC43E0000
+	bcrypt.dll                    0x7FFFC44D0000
+	msasn1.dll                    0x7FFFC47D0000
+	devobj.dll                    0x7FFFC47F0000
+	cfgmgr32.dll                  0x7FFFC4820000
+	profapi.dll                   0x7FFFC4A60000
+	win32u.dll                    0x7FFFC4B30000
+	CRYPT32.dll                   0x7FFFC4C20000
+	gdi32full.dll                 0x7FFFC4D90000
+	KERNELBASE.dll                0x7FFFC4EB0000
+	bcryptPrimitives.dll          0x7FFFC5260000
+	ucrtbase.dll                  0x7FFFC52E0000
+	msvcp_win.dll                 0x7FFFC5400000
+	wintrust.dll                  0x7FFFC54A0000
+	MSCTF.dll                     0x7FFFC5530000
+	PSAPI.DLL                     0x7FFFC5660000
+	clbcatq.dll                   0x7FFFC5700000
+	RPCRT4.dll                    0x7FFFC57B0000
+	ole32.dll                     0x7FFFC58D0000
+	NSI.dll                       0x7FFFC5A70000
+	imagehlp.dll                  0x7FFFC5A80000
+	msvcrt.dll                    0x7FFFC5B20000
+	ADVAPI32.dll                  0x7FFFC5BE0000
+	shcore.dll                    0x7FFFC5CF0000
+	COMDLG32.dll                  0x7FFFC5DF0000
+	WS2_32.dll                    0x7FFFC5EF0000
+	SETUPAPI.dll                  0x7FFFC5FF0000
+	SHELL32.dll                   0x7FFFC6470000
+	KERNEL32.DLL                  0x7FFFC6C90000
+	SHLWAPI.dll                   0x7FFFC6F20000
+	OLEAUT32.dll                  0x7FFFC6F80000
+	IMM32.DLL                     0x7FFFC7060000
+	USER32.dll                    0x7FFFC70A0000
+	combase.dll                   0x7FFFC7250000
+	GDI32.dll                     0x7FFFC7630000
+	sechost.dll                   0x7FFFC7660000
+	ntdll.dll                     0x7FFFC7750000
+
+F4SE PLUGINS:
+	BakaScrapHeap.dll v1.3
+	Buffout4.dll v1.28.6
+	f4ee.dll
+	HHS.dll
+	HighFPSPhysicsFix.dll
+
+PLUGINS:
+	[00]     Fallout4.esm
+	[01]     DLCRobot.esm
+	[02]     DLCworkshop01.esm
+	[03]     DLCCoast.esm
+	[04]     DLCworkshop02.esm
+	[05]     DLCworkshop03.esm
+	[06]     DLCNukaWorld.esm
+	[07]     LooksMenu.esp
+	[08]     CBBE.esp
+	[FE:000] DiscreteFemaleSkeleton.esp
+	[FE:001] FO4HHS_AAF.esp

@@ -1,0 +1,886 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.26.2
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF769647CCE Fallout4.exe+10B7CCE
+
+	[Compatibility]
+		F4EE: true
+	[Fixes]
+		ActorIsHostileToActor: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		GreyMovies: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+	[Patches]
+		Achievements: true
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: true
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: -1
+		MemoryManager: true
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 10 Home v10.0.19041
+	CPU: AuthenticAMD AMD Ryzen 5 5600X 6-Core Processor             
+	GPU #1: Nvidia TU106 [GeForce RTX 2060 Rev. A]
+	GPU #2: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 14.64 GB/15.94 GB
+
+PROBABLE CALL STACK:
+	[ 0] 0x7FF769647CCE Fallout4.exe+10B7CCE -> 966851+0x29E
+	[ 1] 0x7FF7695D2911 Fallout4.exe+1042911 -> 853442+0x141
+	[ 2] 0x7FF7695D24ED Fallout4.exe+10424ED -> 987774+0xED
+	[ 3] 0x7FF7695D18C9 Fallout4.exe+10418C9 -> 966474+0x169
+	[ 4] 0x7FF7695DA9E4 Fallout4.exe+104A9E4 -> 55835+0x24
+	[ 5] 0x7FF7693A4561 Fallout4.exe+0E14561 -> 79844+0x61
+	[ 6] 0x7FF7695CE52C Fallout4.exe+103E52C -> 190057+0x14C
+	[ 7] 0x7FF768E2E0CE Fallout4.exe+089E0CE -> 65489+0x6E
+	[ 8] 0x7FF768E2D450 Fallout4.exe+089D450 -> 1187571+0xA0
+	[ 9] 0x7FF76938F476 Fallout4.exe+0DFF476 -> 429978+0x146
+	[10] 0x7FF769617398 Fallout4.exe+1087398 -> 1562287+0x38
+	[11] 0x7FF76A0E0F26 Fallout4.exe+1B50F26 -> 329005+0xC6
+	[12] 0x7FF76A0E1432 Fallout4.exe+1B51432 -> 194800+0x202
+	[13] 0x7FF76A0E3F67 Fallout4.exe+1B53F67 -> 1492866+0x67
+	[14] 0x7FF76A0ACFED Fallout4.exe+1B1CFED -> 1079791+0x3D
+	[15] 0x7FFAC2CC7034 KERNEL32.DLL+0017034
+	[16] 0x7FFAC34826A1    ntdll.dll+00526A1
+
+REGISTERS:
+	RAX 0x0                (size_t)
+	RCX 0x2575A7B4100      (EffectSetting*)
+		File: "Supreme Perks.esp"
+		Flags: 0x00400008
+		Form ID: 0x270090B0
+		Form Type: 21
+		Full Name: "Knock Down: 50%"
+	RDX 0x2575B916DD0      (void*)
+	RBX 0xEC6E65F760       (void*)
+	RSP 0xEC6E65F6B0       (void*)
+	RBP 0x0                (size_t)
+	RSI 0x0                (size_t)
+	RDI 0x2575B929A80      (SpellItem*)
+		File: "Supreme Perks.esp"
+		Flags: 0x00000008
+		Form ID: 0x270090A6
+		Form Type: 25
+		Full Name: "Knock Down"
+	R8  0x2575BA3C680      (void*)
+	R9  0x7FF768590000     (void*)
+	R10 0xEE0E61           (size_t)
+	R11 0xEC6E65F720       (void*)
+	R12 0x2575B929A80      (SpellItem*)
+		File: "Supreme Perks.esp"
+		Flags: 0x00000008
+		Form ID: 0x270090A6
+		Form Type: 25
+		Full Name: "Knock Down"
+	R13 0x258602D2400      (void*)
+	R14 0x0                (size_t)
+	R15 0x0                (size_t)
+
+STACK:
+	[RSP+0  ] 0xEC6E65F760       (void*)
+	[RSP+8  ] 0x0                (size_t)
+	[RSP+10 ] 0x0                (size_t)
+	[RSP+18 ] 0x2575B929A80      (SpellItem*)
+		File: "Supreme Perks.esp"
+		Flags: 0x00000008
+		Form ID: 0x270090A6
+		Form Type: 25
+		Full Name: "Knock Down"
+	[RSP+20 ] 0xEC6E65F7A0       (CombatMagicItemData*)
+	[RSP+28 ] 0x7FF7695E4024     (void* -> Fallout4.exe+1054024)
+	[RSP+30 ] 0xFFFFFFFF         (size_t)
+	[RSP+38 ] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+40 ] 0x0                (size_t)
+	[RSP+48 ] 0x2579D634100      (Actor*)
+		Object Reference: 
+			File: ""
+			Flags: 0x00000008
+			Form ID: 0xFF002658
+			Form Type: 45
+		File: ""
+		Flags: 0x00400508
+		Form ID: 0xFF001431
+		Form Type: 65
+	[RSP+50 ] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+58 ] 0x7FF768887B8A     (void* -> Fallout4.exe+02F7B8A)
+	[RSP+60 ] 0x41F00000         (size_t)
+	[RSP+68 ] 0x0                (size_t)
+	[RSP+70 ] 0x0                (size_t)
+	[RSP+78 ] 0x0                (size_t)
+	[RSP+80 ] 0x0                (size_t)
+	[RSP+88 ] 0x7FF7695D2911     (void* -> Fallout4.exe+1042911)
+	[RSP+90 ] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+98 ] 0xFFFFFFFF         (size_t)
+	[RSP+A0 ] 0xEC6E65F7E9       (void*)
+	[RSP+A8 ] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+B0 ] 0x0                (size_t)
+	[RSP+B8 ] 0x0                (size_t)
+	[RSP+C0 ] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+C8 ] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+D0 ] 0x25800000000      (void*)
+	[RSP+D8 ] 0x2575B929A80      (SpellItem*)
+		File: "Supreme Perks.esp"
+		Flags: 0x00000008
+		Form ID: 0x270090A6
+		Form Type: 25
+		Full Name: "Knock Down"
+	[RSP+E0 ] 0x0                (size_t)
+	[RSP+E8 ] 0x7FF7695D2019     (void* -> Fallout4.exe+1042019)
+	[RSP+F0 ] 0x7FF76B2ECF88     (void* -> Fallout4.exe+2D5CF88)
+	[RSP+F8 ] 0x0                (size_t)
+	[RSP+100] 0x2575B929A80      (SpellItem*)
+		File: "Supreme Perks.esp"
+		Flags: 0x00000008
+		Form ID: 0x270090A6
+		Form Type: 25
+		Full Name: "Knock Down"
+	[RSP+108] 0x25860173740      (void*)
+	[RSP+110] 0x0                (size_t)
+	[RSP+118] 0x0                (size_t)
+	[RSP+120] 0x2575B916F80      (void*)
+	[RSP+128] 0x25740400000      (void*)
+	[RSP+130] 0x7FF76E067B80     (void* -> Fallout4.exe+5AD7B80)
+	[RSP+138] 0x10041F00000      (size_t)
+	[RSP+140] 0x0                (size_t)
+	[RSP+148] 0x0                (size_t)
+	[RSP+150] 0x0                (size_t)
+	[RSP+158] 0x0                (size_t)
+	[RSP+160] 0x0                (size_t)
+	[RSP+168] 0x0                (size_t)
+	[RSP+170] 0x257BC641D00      (void*)
+	[RSP+178] 0x0                (size_t)
+	[RSP+180] 0x258602D2400      (void*)
+	[RSP+188] 0xEC6E65FA00       (ForEachFunctorAdapter<SpellItem &,Actor::ForEachSpellVisitor,<lambda_74d47e067d27bfae8c7df29fba23a31e> >*)
+	[RSP+190] 0x257429ED300      (BGSEquipSlot*)
+		File: "Fallout4.esm"
+		Flags: 0x00000009
+		Form ID: 0x00013F44
+		Form Type: 124
+	[RSP+198] 0x7FF7695D24ED     (void* -> Fallout4.exe+10424ED)
+	[RSP+1A0] 0xEC0020A764       (size_t)
+	[RSP+1A8] 0x25700000004      (void*)
+	[RSP+1B0] 0x2575B929A80      (SpellItem*)
+		File: "Supreme Perks.esp"
+		Flags: 0x00000008
+		Form ID: 0x270090A6
+		Form Type: 25
+		Full Name: "Knock Down"
+	[RSP+1B8] 0x2575B929A80      (SpellItem*)
+		File: "Supreme Perks.esp"
+		Flags: 0x00000008
+		Form ID: 0x270090A6
+		Form Type: 25
+		Full Name: "Knock Down"
+	[RSP+1C0] 0x0                (size_t)
+	[RSP+1C8] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+1D0] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+1D8] 0x7FF700000000     (size_t)
+	[RSP+1E0] 0x7FF76B2ECFA0     (void* -> Fallout4.exe+2D5CFA0)
+	[RSP+1E8] 0x0                (size_t)
+	[RSP+1F0] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+1F8] 0x2575B929A80      (SpellItem*)
+		File: "Supreme Perks.esp"
+		Flags: 0x00000008
+		Form ID: 0x270090A6
+		Form Type: 25
+		Full Name: "Knock Down"
+	[RSP+200] 0x257BC5A7601      (void*)
+	[RSP+208] 0x7FF7695D188B     (void* -> Fallout4.exe+104188B)
+	[RSP+210] 0xEC6E65FA00       (ForEachFunctorAdapter<SpellItem &,Actor::ForEachSpellVisitor,<lambda_74d47e067d27bfae8c7df29fba23a31e> >*)
+	[RSP+218] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+220] 0xEC6E65FA00       (ForEachFunctorAdapter<SpellItem &,Actor::ForEachSpellVisitor,<lambda_74d47e067d27bfae8c7df29fba23a31e> >*)
+	[RSP+228] 0x7FF7695D18C9     (void* -> Fallout4.exe+10418C9)
+	[RSP+230] 0x0                (size_t)
+	[RSP+238] 0x2570020A764      (char*) "IIHIIIJHILLKGIGHGNPNPGHDIDHDIIIIIJJJOKLKONNMNPPQQMSNSQRTV^TXTTRWWW[TXXXXXXVUTWRSTZVTTTSWTSRQMOQPRQOONMMJNLMLMMMJMJNLMNSSUVX\\[\"
+	[RSP+240] 0x258602D2400      (void*)
+	[RSP+248] 0x7FF768887B8A     (void* -> Fallout4.exe+02F7B8A)
+	[RSP+250] 0xEC6E65FA30       (void*)
+	[RSP+258] 0x7FF7695D86AB     (void* -> Fallout4.exe+10486AB)
+	[RSP+260] 0x257BC5A7690      (void*)
+	[RSP+268] 0x25860290C70      (BGSInventoryItem::Stack*)
+	[RSP+270] 0x0                (size_t)
+	[RSP+278] 0x7FF7695DA9E4     (void* -> Fallout4.exe+104A9E4)
+	[RSP+280] 0xEC6E65FA00       (ForEachFunctorAdapter<SpellItem &,Actor::ForEachSpellVisitor,<lambda_74d47e067d27bfae8c7df29fba23a31e> >*)
+	[RSP+288] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+290] 0x1                (size_t)
+	[RSP+298] 0xECDEF90DAA       (size_t)
+	[RSP+2A0] 0x2575B929A80      (SpellItem*)
+		File: "Supreme Perks.esp"
+		Flags: 0x00000008
+		Form ID: 0x270090A6
+		Form Type: 25
+		Full Name: "Knock Down"
+	[RSP+2A8] 0x0                (size_t)
+	[RSP+2B0] 0x1                (size_t)
+	[RSP+2B8] 0x7FF7693A4561     (void* -> Fallout4.exe+0E14561)
+	[RSP+2C0] 0xEC6E65F9D8       (void*)
+	[RSP+2C8] 0x258602D2400      (void*)
+	[RSP+2D0] 0x257BC5A76A0      (void*)
+	[RSP+2D8] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+2E0] 0x0                (size_t)
+	[RSP+2E8] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+2F0] 0x0                (size_t)
+	[RSP+2F8] 0x257BC641D00      (void*)
+	[RSP+300] 0x257BC641D78      (void*)
+	[RSP+308] 0x7FF7695CE52C     (void* -> Fallout4.exe+103E52C)
+	[RSP+310] 0x258602D2400      (void*)
+	[RSP+318] 0xEC6E65FA39       (void*)
+	[RSP+320] 0x258602D25EC      (char*) ",["
+	[RSP+328] 0x7FF700000001     (size_t)
+	[RSP+330] 0x0                (size_t)
+	[RSP+338] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+340] 0xFFFFFFFF         (size_t)
+	[RSP+348] 0x25860173740      (void*)
+	[RSP+350] 0x7FF76B2EBE68     (void* -> Fallout4.exe+2D5BE68)
+	[RSP+358] 0x258602D2400      (void*)
+	[RSP+360] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+368] 0xEC00000000       (size_t)
+	[RSP+370] 0x25860173740      (void*)
+	[RSP+378] 0x2579D634100      (Actor*)
+		Object Reference: 
+			File: ""
+			Flags: 0x00000008
+			Form ID: 0xFF002658
+			Form Type: 45
+		File: ""
+		Flags: 0x00400508
+		Form ID: 0xFF001431
+		Form Type: 65
+	[RSP+380] 0xEC6E65FAA8       (void*)
+	[RSP+388] 0x257BC5A7690      (void*)
+	[RSP+390] 0xEC6E65FAB8       (void*)
+	[RSP+398] 0x25860173740      (void*)
+	[RSP+3A0] 0x7FF76BE5CE04     (void* -> Fallout4.exe+38CCE04)
+	[RSP+3A8] 0x7FF76BE5CE04     (void* -> Fallout4.exe+38CCE04)
+	[RSP+3B0] 0x25860173740      (void*)
+	[RSP+3B8] 0x7FF76E178080     (void* -> Fallout4.exe+5BE8080)
+	[RSP+3C0] 0x7FF76E178088     (void* -> Fallout4.exe+5BE8088)
+	[RSP+3C8] 0x0                (size_t)
+	[RSP+3D0] 0x0                (size_t)
+	[RSP+3D8] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+3E0] 0x0                (size_t)
+	[RSP+3E8] 0x7FF768E2E0CE     (void* -> Fallout4.exe+089E0CE)
+	[RSP+3F0] 0x258602D2400      (void*)
+	[RSP+3F8] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+400] 0xEC0020A764       (size_t)
+	[RSP+408] 0x258602D2400      (void*)
+	[RSP+410] 0x0                (size_t)
+	[RSP+418] 0x7FF769632F2A     (void* -> Fallout4.exe+10A2F2A)
+	[RSP+420] 0x0                (size_t)
+	[RSP+428] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+430] 0x25860173701      (void*)
+	[RSP+438] 0x7FF768E2D332     (void* -> Fallout4.exe+089D332)
+	[RSP+440] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+448] 0x25700000000      (void*)
+	[RSP+450] 0x0                (size_t)
+	[RSP+458] 0x7FF7685B44E3     (void* -> Fallout4.exe+00244E3)
+	[RSP+460] 0x7FF76E178084     (void* -> Fallout4.exe+5BE8084)
+	[RSP+468] 0x0                (size_t)
+	[RSP+470] 0x25860173740      (void*)
+	[RSP+478] 0x0                (size_t)
+	[RSP+480] 0x1                (size_t)
+	[RSP+488] 0x7FF768E2D450     (void* -> Fallout4.exe+089D450)
+	[RSP+490] 0x2580020A764      (void*)
+	[RSP+498] 0x0                (size_t)
+	[RSP+4A0] 0x25860173770      (char*) ",["
+	[RSP+4A8] 0x25860173740      (void*)
+	[RSP+4B0] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+4B8] 0x7FF700000000     (size_t)
+	[RSP+4C0] 0x0                (size_t)
+	[RSP+4C8] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+4D0] 0x256B364B8C0      (char*) "q"
+	[RSP+4D8] 0x25860173740      (void*)
+	[RSP+4E0] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+4E8] 0x7FF76938F476     (void* -> Fallout4.exe+0DFF476)
+	[RSP+4F0] 0x2                (size_t)
+	[RSP+4F8] 0x20A764           (size_t)
+	[RSP+500] 0x0                (size_t)
+	[RSP+508] 0x2                (size_t)
+	[RSP+510] 0x256AFACCC60      (void*)
+	[RSP+518] 0x7FF769617398     (void* -> Fallout4.exe+1087398)
+	[RSP+520] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+528] 0x0                (size_t)
+	[RSP+530] 0x0                (size_t)
+	[RSP+538] 0x1                (size_t)
+	[RSP+540] 0x257403AE400      (Actor*)
+		Object Reference: 
+			File: "More Smarter Companions Mod.esp"
+			Flags: 0x00440009
+			Form ID: 0x00027683
+			Form Type: 45
+		File: "Fallout4.esm"
+		Flags: 0x00500409
+		Form ID: 0x0005DE4D
+		Form Type: 65
+	[RSP+548] 0x7FFAC1141ACE     (void* -> KERNELBASE.dll+0021ACE)
+	[RSP+550] 0x7FF76E17B598     (void* -> Fallout4.exe+5BEB598)
+	[RSP+558] 0x7FF76A0E0F26     (void* -> Fallout4.exe+1B50F26)
+	[RSP+560] 0x7FF70020A764     (size_t)
+	[RSP+568] 0x0                (size_t)
+	[RSP+570] 0x0                (size_t)
+	[RSP+578] 0x2569F317FA0      (void*)
+	[RSP+580] 0x0                (size_t)
+	[RSP+588] 0x0                (size_t)
+	[RSP+590] 0x7FF76E18E240     (void* -> Fallout4.exe+5BFE240)
+	[RSP+598] 0x1                (size_t)
+	[RSP+5A0] 0x7FF76E17B528     (BSJobs::JobThread*)
+	[RSP+5A8] 0x7FF76A0E1432     (void* -> Fallout4.exe+1B51432)
+	[RSP+5B0] 0x1                (size_t)
+	[RSP+5B8] 0x7FF76E17B548     (void* -> Fallout4.exe+5BEB548)
+	[RSP+5C0] 0x0                (size_t)
+	[RSP+5C8] 0xEC6E65FCD0       (void*)
+	[RSP+5D0] 0x0                (size_t)
+	[RSP+5D8] 0x0                (size_t)
+	[RSP+5E0] 0x0                (size_t)
+	[RSP+5E8] 0x7FF76A0E3F67     (void* -> Fallout4.exe+1B53F67)
+	[RSP+5F0] 0x7FF76E17B528     (BSJobs::JobThread*)
+	[RSP+5F8] 0x0                (size_t)
+	[RSP+600] 0x0                (size_t)
+	[RSP+608] 0x0                (size_t)
+	[RSP+610] 0x7FF76E17B528     (BSJobs::JobThread*)
+	[RSP+618] 0x7FF76A0ACFED     (void* -> Fallout4.exe+1B1CFED)
+	[RSP+620] 0x49B8             (size_t)
+	[RSP+628] 0xEC6E65FCF0       (void*)
+	[RSP+630] 0x256AFAABC90      (void*)
+	[RSP+638] 0x0                (size_t)
+	[RSP+640] 0x7FF76E17B528     (BSJobs::JobThread*)
+	[RSP+648] 0x0                (size_t)
+	[RSP+650] 0x0                (size_t)
+	[RSP+658] 0x7FFAC2CC7034     (void* -> KERNEL32.DLL+0017034)
+	[RSP+660] 0x0                (size_t)
+	[RSP+668] 0x0                (size_t)
+	[RSP+670] 0x0                (size_t)
+	[RSP+678] 0x0                (size_t)
+	[RSP+680] 0x0                (size_t)
+	[RSP+688] 0x7FFAC34826A1     (void* -> ntdll.dll+00526A1)
+	[RSP+690] 0x0                (size_t)
+	[RSP+698] 0x0                (size_t)
+	[RSP+6A0] 0x0                (size_t)
+	[RSP+6A8] 0x0                (size_t)
+	[RSP+6B0] 0x0                (size_t)
+	[RSP+6B8] 0x0                (size_t)
+	[RSP+6C0] 0x15219DFE00000000 (size_t)
+	[RSP+6C8] 0x0                (size_t)
+	[RSP+6D0] 0x0                (size_t)
+	[RSP+6D8] 0x7FFAC122FE70     (void* -> KERNELBASE.dll+010FE70)
+	[RSP+6E0] 0xEC6E65E800       (void*)
+	[RSP+6E8] 0x1FFEB500D8E38    (size_t)
+	[RSP+6F0] 0x7FFAD403638E     (size_t)
+	[RSP+6F8] 0xEC6E65E800       (void*)
+	[RSP+700] 0x0                (size_t)
+	[RSP+708] 0x0                (size_t)
+	[RSP+710] 0x0                (size_t)
+	[RSP+718] 0x0                (size_t)
+	[RSP+720] 0x0                (size_t)
+	[RSP+728] 0x0                (size_t)
+	[RSP+730] 0x0                (size_t)
+	[RSP+738] 0x0                (size_t)
+	[RSP+740] 0x0                (size_t)
+	[RSP+748] 0x0                (size_t)
+	[RSP+750] 0x0                (size_t)
+	[RSP+758] 0x0                (size_t)
+	[RSP+760] 0x0                (size_t)
+	[RSP+768] 0x0                (size_t)
+	[RSP+770] 0x0                (size_t)
+	[RSP+778] 0x0                (size_t)
+	[RSP+780] 0x0                (size_t)
+	[RSP+788] 0x0                (size_t)
+	[RSP+790] 0x0                (size_t)
+	[RSP+798] 0x0                (size_t)
+	[RSP+7A0] 0x0                (size_t)
+	[RSP+7A8] 0x0                (size_t)
+	[RSP+7B0] 0x0                (size_t)
+	[RSP+7B8] 0x0                (size_t)
+	[RSP+7C0] 0x0                (size_t)
+	[RSP+7C8] 0x0                (size_t)
+	[RSP+7D0] 0x0                (size_t)
+	[RSP+7D8] 0x0                (size_t)
+	[RSP+7E0] 0x0                (size_t)
+	[RSP+7E8] 0x0                (size_t)
+	[RSP+7F0] 0x0                (size_t)
+	[RSP+7F8] 0x0                (size_t)
+	[RSP+800] 0x0                (size_t)
+	[RSP+808] 0x0                (size_t)
+	[RSP+810] 0x0                (size_t)
+	[RSP+818] 0x0                (size_t)
+	[RSP+820] 0x0                (size_t)
+	[RSP+828] 0x0                (size_t)
+	[RSP+830] 0x0                (size_t)
+	[RSP+838] 0x0                (size_t)
+	[RSP+840] 0x0                (size_t)
+	[RSP+848] 0x0                (size_t)
+	[RSP+850] 0x0                (size_t)
+	[RSP+858] 0x0                (size_t)
+	[RSP+860] 0x0                (size_t)
+	[RSP+868] 0x0                (size_t)
+	[RSP+870] 0x0                (size_t)
+	[RSP+878] 0x0                (size_t)
+	[RSP+880] 0x0                (size_t)
+	[RSP+888] 0x0                (size_t)
+	[RSP+890] 0x0                (size_t)
+	[RSP+898] 0x0                (size_t)
+	[RSP+8A0] 0x0                (size_t)
+	[RSP+8A8] 0x0                (size_t)
+	[RSP+8B0] 0x0                (size_t)
+	[RSP+8B8] 0x0                (size_t)
+	[RSP+8C0] 0x0                (size_t)
+	[RSP+8C8] 0x0                (size_t)
+	[RSP+8D0] 0x0                (size_t)
+	[RSP+8D8] 0x0                (size_t)
+	[RSP+8E0] 0x0                (size_t)
+	[RSP+8E8] 0x0                (size_t)
+	[RSP+8F0] 0x0                (size_t)
+	[RSP+8F8] 0x0                (size_t)
+	[RSP+900] 0x0                (size_t)
+	[RSP+908] 0x0                (size_t)
+	[RSP+910] 0x0                (size_t)
+	[RSP+918] 0x0                (size_t)
+	[RSP+920] 0x0                (size_t)
+	[RSP+928] 0x0                (size_t)
+	[RSP+930] 0x0                (size_t)
+	[RSP+938] 0x0                (size_t)
+	[RSP+940] 0x0                (size_t)
+	[RSP+948] 0x0                (size_t)
+
+MODULES:
+
+F4SE PLUGINS:
+	BetterConsole.dll
+	Buffout4.dll v1.26.2
+	ClassicHolsteredWeapons.dll
+	crafting_highlight_fix.dll
+	f4ee.dll
+	HHS.dll
+	HighFPSPhysicsFix.dll
+	LL_fourPlay_1_10_163.dll
+	mcm.dll
+	place.dll
+	PowerGridTools.dll
+	PRKF.dll
+	ShadowBoostFO4.dll
+	SprintStutteringFix.dll
+	WeaponDebrisCrashFix.dll
+	wsfw_identifier.dll
+	XDI.dll
+
+PLUGINS:
+	[00]     Fallout4.esm
+	[01]     DLCRobot.esm
+	[02]     DLCworkshop01.esm
+	[03]     DLCCoast.esm
+	[04]     DLCworkshop02.esm
+	[05]     DLCworkshop03.esm
+	[06]     DLCNukaWorld.esm
+	[07]     Unofficial Fallout 4 Patch.esp
+	[08]     ArmorKeywords.esm
+	[09]     WorkshopFramework.esm
+	[0A]     XDI.esm
+	[0B]     HUDFramework.esm
+	[0C]     AAF.esm
+	[0D]     Homemaker.esm
+	[0E]     SS2.esm
+	[0F]     SS2_XPAC_Chapter2.esm
+	[10]     TortureDevices.esm
+	[11]     AAF_AutonomyEnhanced.esp
+	[12]     Another Pine Forest Mod.esp
+	[13]     PiperCaitCurieDialogueOverhaul.esp
+	[14]     SlaversCamp.esp
+	[15]     GoodneighborExpanded.esp
+	[16]     OutcastsAndRemnants.esp
+	[17]     NorwegiansCleanQuincy.esp
+	[18]     ECO.esp
+	[19]     INVB_WastelandDairy.esp
+	[1A]     W.A.T.Minutemen.esp
+	[1B]     SS2Extended.esp
+	[1C]     DCGuard_Overhaul.esp
+	[1D]     Stm_DiamondCityExpansion.esp
+	[1E]     CompanionJasmineWITHQUEST.esp
+	[1F]     AnimalLoverWastelandSeducer.esp
+	[20]     MiscHairstyle.esp
+	[21]     KSHairdos.esp
+	[22]     KSHairsFemsheppingRadbeetle.esp
+	[23]     AzarPonytailHairstyles.esp
+	[24]     The Eyes Of Beauty.esp
+	[25]     LooksMenu Customization Compendium.esp
+	[26]     GKSinjinRaiders.esp
+	[27]     Supreme Perks.esp
+	[28]     More Smarter Companions Mod.esp
+	[29]     CompanionLauraWITHQUEST.esp
+	[2A]     AAF_Prostitution.esp
+	[2B]     AAF_Violate.esp
+	[2C]     AAF_Four-Play_Animations_Crazy6987.esp
+	[2D]     Deathclaw_nude.esp
+	[2E]     ErectionFix_SilverPerv.esp
+	[2F]     UAP Moans.esp
+	[30]     Vioxsis_Strap-Ons.esp
+	[31]     FO4_AnimationsByLeito.esp
+	[32]     Wasteland Heroines Replacer All in One_2.0.esp
+	[33]     TWH_TheWayHome.esp
+	[34]     LaserMusketMk2.esp
+	[35]     AAF_CreaturePack01.esp
+	[36]     FPAttributes.esp
+	[37]     FPAttributesHUD.esp
+	[38]     TBOS-AntoHairPack.esp
+	[39]     Wastelander's_Storage.esp
+	[3A]     DX Courser X-92 Power Suit.esp
+	[3B]     INVB_WastelandResources.esp
+	[3C]     OppaiMilkPasties.esp
+	[3D]     Reimagin Vault Suit .esp
+	[3E]     EveryonesBestFriend.esp
+	[3F]     SS2_FDK_TinyLiving.esp
+	[40]     ProjectValkyrie.esp
+	[41]     LilyCompanion.esp
+	[42]     HandmadeShotgun.esp
+	[43]     MakeshiftCMG.esp
+	[44]     FP_FamilyPlanningEnhanced.esp
+	[45]     FPE_Resources.esp
+	[46]     sarahRageArmor.esp
+	[47]     Idiot Slut.esp
+	[48]     HiPolyFaces.esp
+	[49]     CBBE.esp
+	[4A]     Ciri.18B5F4.18B5F4.18B5F4.esp
+	[4B]     Ellie.23134B.esp
+	[4C]     Ghost.231346.231346.esp
+	[4D]     Heather.18B5F3.18B5F3.18B5F3.esp
+	[4E]     Jodelle.23134A.esp
+	[4F]     Krisa.esp
+	[50]     Lexxa.225B67.225B67.225B67.225B67.esp
+	[51]     Lima.225B6A.225B6A.225B6A.225B6A.esp
+	[52]     Lin.231349.231349.esp
+	[53]     Lora.18B5F7.esp
+	[54]     Roxy.225B68.225B68.225B68.225B68.225B68.225B68.esp
+	[55]     Triss.23134C.23134C.23134C.23134C.esp
+	[56]     With.225B69.esp
+	[57]     Yennefer.18B5F6.esp
+	[58]     cute.231348.231348.esp
+	[59]     LMBTOverlays.esp
+	[5A]     SkEyes.esp
+	[5B]     Sunshine.esp
+	[5C]     DX_Magnolia_New_Look.esp
+	[5D]     TheKite_ScoopDigger.esp
+	[5E]     BobbleGirl.esp
+	[5F]     B259.esp
+	[60]     AEWS.esp
+	[61]     MODGirlyAnimation.esp
+	[62]     PerpetualBeta_OppressorDogArmor.esp
+	[63]     Companion Infinite Ammo and Unbreakable Power Armour.esp
+	[64]     GKCait.esp
+	[65]     GKCurie.esp
+	[66]     GKPiper.esp
+	[67]     MsAutomatronPartsCollection.esp
+	[68]     LooksMirror.esp
+	[69]     TrueGrass.esp
+	[6A]     [ARRETH] FGEP.esp
+	[6B]     PD_LowerWeapon.esp
+	[6C]     SS2WastelandVenturers.esp
+	[6D]     0_Vault120.esp
+	[6E]     [SS20Addon] SimSettlements SuperStructures.esp
+	[6F]     PersonalShelter.esp
+	[70]     ASmallAdditionPenguinCom00.esp
+	[71]     Shino Vault Pack.esp
+	[72]     SettlementMenuManager.esp
+	[73]     Assaultron Ada Parts.esp
+	[74]     mm journals.esp
+	[75]     RILF.esp
+	[76]     TheEyesOfBeauty.esp
+	[77]     GKAnneHargraves.36D6F.esp
+	[78]     DiamondCitySecurityOverhaulVanilla.esp
+	[79]     GKAster.100463E.esp
+	[7A]     GKChase.esp
+	[7B]     GKDesdemona.esp
+	[7C]     GKGlory.esp
+	[7D]     GKIsabel.esp
+	[7E]     GKKasumi.esp
+	[7F]     GKKessler.1995C.esp
+	[80]     GKMagnolia.esp
+	[81]     UniqueNPCSettlers.esp
+	[82]     Vertidrones.esp
+	[83]     MamaMutie.esp
+	[84]     Vault-Tec Workshop Overhaul Redux.esp
+	[85]     Vault88 - Essentials.esp
+	[86]     Homemaker - Streetlights Use Passive Power.esp
+	[87]     SS2-Jampads2.esp
+	[88]     UndergroundHideout.esp
+	[89]     JunkTownTwo.esp
+	[8A]     SS2-PraRandomAddon.esp
+	[8B]     SimHomestead2.esp
+	[8C]     FIS-Naming-Weap-Armo-EN.esp
+	[8D]     GCM.esp
+	[8E]     LooksMenu.esp
+	[8F]     MakeshiftAssaultPack.esp
+	[90]     HandmadeMac.esp
+	[91]     BullpupHmar.esp
+	[92]     RailwayPistol.esp
+	[93]     RadiumPistol.esp
+	[94]     MakeshiftStealthPack.esp
+	[95]     GaussRevolver.esp
+	[96]     Zapgun.esp
+	[97]     HomemadeLasRevolver.esp
+	[98]     HandmadeSMG.esp
+	[99]     HandmadeAntiMat.esp
+	[9A]     NAC.esp
+	[9B]     Pip-Boy Flashlight.esp
+	[9C]     NAC-FH.esp
+	[9D]     NAC-NW.esp
+	[9E]     StartMeUp.esp
+	[FE:000] AAFThemes.esl
+	[FE:001] Bememoth Separated Cart.esl
+	[FE:002] BodyTalk3-RaiderNormalsFix.esl
+	[FE:003] PPF.esm
+	[FE:004] GulperCompanionChump.esl
+	[FE:005] HiPolyFacesCompanionPlugin.esl
+	[FE:006] CanarySaveFileMonitor.esl
+	[FE:007] YaoGuaiCompanionKatyushka.esl
+	[FE:008] WG City Plans Pack ESL.esl
+	[FE:009] CWGaussRifle.esl
+	[FE:00A] ClassicUnarmedPack.esl
+	[FE:00B] ClassicMeleePack.esl
+	[FE:00C] INVB_WastelandStory.esp
+	[FE:00D] SS2_NobodysLeaders2.esp
+	[FE:00E] Zaz Particle Effects.esp
+	[FE:00F] Faster Stations.esp
+	[FE:010] CROSS_MojaveManhunter.esp
+	[FE:011] PRP-SS2-Fixes-Ch2.esp
+	[FE:012] ImTalkingToYou.esp
+	[FE:013] FO4HHS.esp
+	[FE:014] SS2_NobodysLeaders2_Automatron.esp
+	[FE:015] Raze My Settlement.esp
+	[FE:016] SS2_NobodysLeaders2_NukaWorld.esp
+	[FE:017] SS2_NobodysLeaders2_VaultTecWorkshop.esp
+	[FE:018] SS2 XDI Perk Speech Checks.esp
+	[FE:019] SS2AOP_VaultTecTools.esp
+	[FE:01A] SS2_XDI Patch.esp
+	[FE:01B] M8rDisablePipboyEffects.esp
+	[FE:01C] PRP.esp
+	[FE:01D] Thuggysmurf_Optimization.esp
+	[FE:01E] Sinstitute_Teleport.esp
+	[FE:01F] PRP-SS2-Fixes.esp
+	[FE:020] PRP-SS2.esp
+	[FE:021] PRP-Vault120.esp
+	[FE:022] AlootHomePlate.esp

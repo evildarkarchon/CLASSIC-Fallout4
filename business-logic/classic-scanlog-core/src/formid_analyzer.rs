@@ -153,16 +153,16 @@ impl FormIDAnalyzerCore {
 
         // Process each line exactly as Python does
         for line in segment_callstack {
-            if let Some(captures) = FORMID_PATTERN.captures(&line) {
-                if let Some(formid_match) = captures.get(1) {
-                    let formid_id = formid_match.as_str().to_uppercase();
+            if let Some(captures) = FORMID_PATTERN.captures(&line)
+                && let Some(formid_match) = captures.get(1)
+            {
+                let formid_id = formid_match.as_str().to_uppercase();
 
-                    // Skip if it starts with FF (plugin limit)
-                    // Note: NULL FormIDs (00000000) are intentionally kept as they indicate errors
-                    // This matches Python's behavior exactly
-                    if !formid_id.starts_with("FF") {
-                        formids_matches.push(format!("Form ID: {}", formid_id));
-                    }
+                // Skip if it starts with FF (plugin limit)
+                // Note: NULL FormIDs (00000000) are intentionally kept as they indicate errors
+                // This matches Python's behavior exactly
+                if !formid_id.starts_with("FF") {
+                    formids_matches.push(format!("Form ID: {}", formid_id));
                 }
             }
         }
@@ -628,15 +628,15 @@ pub fn extract_formids_batch(callstack_segments: Vec<Vec<String>>) -> Vec<Vec<St
             let mut formids = Vec::new();
 
             for line in segment {
-                if let Some(captures) = FORMID_PATTERN.captures(line) {
-                    if let Some(formid_match) = captures.get(1) {
-                        let formid_id = formid_match.as_str().to_uppercase();
+                if let Some(captures) = FORMID_PATTERN.captures(line)
+                    && let Some(formid_match) = captures.get(1)
+                {
+                    let formid_id = formid_match.as_str().to_uppercase();
 
-                        // Skip FF-prefixed FormIDs (plugin limit)
-                        // Keep 00000000 (NULL) FormIDs as they indicate errors
-                        if !formid_id.starts_with("FF") {
-                            formids.push(format!("Form ID: {}", formid_id));
-                        }
+                    // Skip FF-prefixed FormIDs (plugin limit)
+                    // Keep 00000000 (NULL) FormIDs as they indicate errors
+                    if !formid_id.starts_with("FF") {
+                        formids.push(format!("Form ID: {}", formid_id));
                     }
                 }
             }

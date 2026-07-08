@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 348,
-    "current_total": 348,
-    "matched": 348,
+    "contract_total": 357,
+    "current_total": 357,
+    "matched": 357,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -683,6 +683,14 @@
     {
       "id": "8d5f7aa4b18d4e1f",
       "rustSymbol": "log_collector_new",
+      "kind": "function",
+      "bridgeModule": "files",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e3994ba433157302",
+      "rustSymbol": "log_collector_new_for_scan",
       "kind": "function",
       "bridgeModule": "files",
       "status": "matched",
@@ -1785,6 +1793,38 @@
       "reason": "-"
     },
     {
+      "id": "7172ab4eb19073ab",
+      "rustSymbol": "scan_cancellation_token_cancel",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fa6ec5be88d0ba46",
+      "rustSymbol": "scan_cancellation_token_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "12ba4e240dddca06",
+      "rustSymbol": "scan_cancellation_token_reset",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f79d7790f9ba9d64",
+      "rustSymbol": "scan_run_execute",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "19f1b50474db40e6",
       "rustSymbol": "CxxPapyrusAnalyzer",
       "kind": "opaque",
@@ -1811,6 +1851,14 @@
     {
       "id": "3e9306eed73901be",
       "rustSymbol": "ScanBatchProgressCallback",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b4632cb1192f6ccd",
+      "rustSymbol": "ScanCancellationToken",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -1851,6 +1899,22 @@
     {
       "id": "1100118d4f482241",
       "rustSymbol": "ScanResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b88124b36f1347e2",
+      "rustSymbol": "ScanRunLogResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "87e07059e225ead6",
+      "rustSymbol": "ScanRunRequestDto",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -2747,6 +2811,14 @@
     {
       "id": "866ec46b5dbb24ca",
       "rustSymbol": "is_xse_installed_check",
+      "kind": "function",
+      "bridgeModule": "xse",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d6aeb07b6b9d96e1",
+      "rustSymbol": "resolve_xse_folder_for_scan",
       "kind": "function",
       "bridgeModule": "xse",
       "status": "matched",

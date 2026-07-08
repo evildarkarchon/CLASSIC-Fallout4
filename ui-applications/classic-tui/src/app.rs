@@ -1,20 +1,24 @@
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
-use classic_config_core::{ClassicConfig, YamlSource, resolve_registry_version_info};
+use classic_config_core::ClassicConfig;
 use classic_file_io_core::BackupType;
 use classic_file_io_core::LogCollector;
-use classic_path_core::{DocsPathFinder, validate_custom_scan_path};
-use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
+use classic_path_core::validate_custom_scan_path;
+use classic_scanlog_core::{
+    CrashLogScanIntake, CrashLogScanOptions, CrashLogScanRun, CrashLogScanRunEvent,
+    CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunRequest,
+    StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent,
+};
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
-use classic_version_registry_core::Fallout4Version;
 use ratatui::Terminal;
 use ratatui::backend::Backend;
 use ratatui::layout::Rect;
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
-use yaml_rust2::YamlLoader;
 
 mod backup_workflow;
 mod results_workflow;
@@ -55,6 +59,27 @@ fn write_clipboard_default(text: &str) -> Result<(), String> {
 
 fn write_clipboard_noop(_text: &str) -> Result<(), String> {
     Ok(())
+}
+
+fn format_scan_run_progress(event: &CrashLogScanRunEvent) -> (f64, String) {
+    let percent = if event.total == 0 {
+        0.0
+    } else {
+        (event.completed as f64 / event.total as f64) * 100.0
+    };
+    let filename = event
+        .crash_log
+        .file_name()
+        .map(|name| name.to_string_lossy().to_string())
+        .unwrap_or_else(|| "unknown".to_string());
+    let action = match event.kind {
+        CrashLogScanRunEventKind::Queued => "Queued",
+        CrashLogScanRunEventKind::Started | CrashLogScanRunEventKind::Phase => "Scanning",
+        CrashLogScanRunEventKind::Completed => "Scanned",
+        CrashLogScanRunEventKind::Failed => "Failed",
+    };
+
+    (percent, format!("{percent:.0}% - {action} {filename}"))
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -430,12 +455,12 @@ impl App {
 
     pub fn tick(&mut self) {
         self.tick_count = self.tick_count.wrapping_add(1);
-        if let Some(clear_at) = self.status_clear_at {
-            if Instant::now() >= clear_at {
-                self.scan_status = "Ready".to_string();
-                self.scan_progress = 0.0;
-                self.status_clear_at = None;
-            }
+        if let Some(clear_at) = self.status_clear_at
+            && Instant::now() >= clear_at
+        {
+            self.scan_status = "Ready".to_string();
+            self.scan_progress = 0.0;
+            self.status_clear_at = None;
         }
 
         if matches!(self.active_tab, TabIndex::Results) {
@@ -570,12 +595,26 @@ impl App {
 
         let tx = self.async_tx.clone();
         let custom_folder = self.config.paths.scan_custom.clone();
-        let xse_folder = resolve_xse_folder_for_scan(&self.config);
         let selected_game_version = self.config.game_version.clone();
-        let base_folder = std::env::current_dir().unwrap_or_default();
+        let configured_docs_root = self.config.paths.docs_root.clone();
+        let show_formid_values = self.config.show_formid_values;
+        let fcx_mode = self.config.fcx_mode;
+        let simplify_logs = self.config.simplify_logs;
+        let move_unsolved_logs = self.config.move_unsolved_logs;
+        let unsolved_logs_destination = self.config.unsolved_logs_destination.clone();
+        let yaml_dir_root = std::env::current_dir().unwrap_or_default();
+        let yaml_dir_data = yaml_dir_root.join("CLASSIC Data");
+        let base_folder = yaml_dir_root.clone();
 
         get_runtime().spawn(async move {
-            let collector = LogCollector::new(base_folder, xse_folder, custom_folder);
+            let collector = LogCollector::new_for_scan(
+                base_folder,
+                yaml_dir_data.clone(),
+                "Fallout4",
+                &selected_game_version,
+                configured_docs_root.as_deref(),
+                custom_folder,
+            );
             let log_paths = match collector.collect_all().await {
                 Ok(paths) => paths,
                 Err(error) => {
@@ -596,15 +635,20 @@ impl App {
                 return;
             }
 
-            let mut processed = 0usize;
-            let mut errors = 0usize;
             let total = log_paths.len();
 
-            let orchestrator = match OrchestratorCore::new(AnalysisConfig::new(
-                "Fallout4".to_string(),
+            let options = CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs);
+            let ready = match CrashLogScanIntake::from_yaml_paths(
+                yaml_dir_root.clone(),
+                yaml_dir_data.clone(),
+                "Fallout4",
                 selected_game_version,
-            )) {
-                Ok(orchestrator) => orchestrator,
+                options,
+            )
+            .prepare()
+            .await
+            {
+                Ok(ready) => ready,
                 Err(error) => {
                     let _ = tx.send(AsyncMessage::ScanError(format!(
                         "Failed to initialize scanner: {error}"
@@ -613,45 +657,63 @@ impl App {
                 }
             };
 
-            for (index, path) in log_paths.iter().enumerate() {
-                if cancel_token.is_cancelled() {
-                    let _ = tx.send(AsyncMessage::ScanComplete {
-                        processed,
-                        total,
-                        errors,
-                        cancelled: true,
-                    });
+            let cancellation = Arc::new(AtomicBool::new(cancel_token.is_cancelled()));
+            let cancellation_watcher = {
+                let cancellation = Arc::clone(&cancellation);
+                let cancel_token = cancel_token.clone();
+                tokio::spawn(async move {
+                    cancel_token.cancelled().await;
+                    cancellation.store(true, Ordering::Relaxed);
+                })
+            };
+
+            let unsolved_logs = if move_unsolved_logs {
+                if let Some(destination) = unsolved_logs_destination {
+                    StandardUnsolvedLogsIntent::MoveToCustom(destination)
+                } else {
+                    StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
+                }
+            } else {
+                StandardUnsolvedLogsIntent::LeaveInPlace
+            };
+            let intent =
+                CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs });
+            let request = CrashLogScanRunRequest {
+                logs: log_paths,
+                intent,
+                max_concurrent: None,
+                cancellation: Some(cancellation),
+                preserve_order: false,
+            };
+            let run = CrashLogScanRun::new(ready);
+            let result = run
+                .run(request, |event| {
+                    let (percent, status) = format_scan_run_progress(&event);
+                    let _ = tx.send(AsyncMessage::ScanProgress { percent, status });
+                })
+                .await;
+
+            cancellation_watcher.abort();
+
+            let result = match result {
+                Ok(result) => result,
+                Err(error) => {
+                    let _ = tx.send(AsyncMessage::ScanError(format!(
+                        "Failed to scan logs: {error}"
+                    )));
                     return;
                 }
+            };
 
-                let percent = ((index + 1) as f64 / total as f64) * 100.0;
-                let filename = path
-                    .file_name()
-                    .map(|name| name.to_string_lossy().to_string())
-                    .unwrap_or_else(|| "unknown".to_string());
-
-                let _ = tx.send(AsyncMessage::ScanProgress {
-                    percent,
-                    status: format!("{percent:.0}% - Scanning {filename}"),
-                });
-
-                match orchestrator
-                    .process_log(path.to_string_lossy().to_string())
-                    .await
-                {
-                    Ok(_) => processed += 1,
-                    Err(_) => {
-                        processed += 1;
-                        errors += 1;
-                    }
-                }
-            }
+            let processed = result.succeeded + result.failed;
+            let errors = result.failed;
+            let cancelled = result.cancelled > 0;
 
             let _ = tx.send(AsyncMessage::ScanComplete {
                 processed,
                 total,
                 errors,
-                cancelled: false,
+                cancelled,
             });
         });
     }
@@ -816,51 +878,6 @@ impl App {
             }
             self.status_clear_at = Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
         }
-    }
-}
-
-fn resolve_xse_folder_for_scan(config: &ClassicConfig) -> Option<PathBuf> {
-    if let Some(xse_from_local) = xse_folder_from_local_yaml() {
-        return Some(xse_from_local);
-    }
-
-    if let Some(docs_root) = &config.paths.docs_root
-        && !docs_root.as_os_str().is_empty()
-    {
-        return Some(docs_root.join("F4SE"));
-    }
-
-    let relative_docs = resolve_selected_docs_relative_path(config);
-    // Opt in to Fallout 4's Steam/Proton documents lookup on Linux.
-    // The canonical 377160 literal lives in classic_version_registry_core.
-    let finder = DocsPathFinder::new(&relative_docs)
-        .with_steam_app_id(Fallout4Version::Original.steam_app_id());
-    finder
-        .find_docs_path(None)
-        .ok()
-        .map(|path| path.join("F4SE"))
-}
-
-fn resolve_selected_docs_relative_path(config: &ClassicConfig) -> String {
-    resolve_registry_version_info("Fallout4", &config.game_version)
-        .map(|info| format!(r"My Games\{}", info.docs_name))
-        .unwrap_or_else(|| r"My Games\Fallout4".to_string())
-}
-
-fn xse_folder_from_local_yaml() -> Option<PathBuf> {
-    let local_yaml_path = YamlSource::GameLocal.path("Fallout4");
-    let content = std::fs::read_to_string(local_yaml_path).ok()?;
-    parse_xse_folder_from_local_yaml(&content)
-}
-
-fn parse_xse_folder_from_local_yaml(content: &str) -> Option<PathBuf> {
-    let docs = YamlLoader::load_from_str(content).ok()?;
-    let doc = docs.first()?;
-    let xse = doc["Game_Info"]["Docs_Folder_XSE"].as_str()?;
-    if xse.trim().is_empty() {
-        None
-    } else {
-        Some(PathBuf::from(xse))
     }
 }
 

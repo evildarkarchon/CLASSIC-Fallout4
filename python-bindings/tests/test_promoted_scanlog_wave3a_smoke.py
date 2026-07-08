@@ -13,7 +13,7 @@ were verified in
 ``.planning/phases/03-python-tier-collapse/03-04-CONSTRUCTOR-INVENTORY.md``.
 
 Rust-only symbols promoted as ``@rust`` proxy rows (``ScanProgressPhase``,
-``CrashgenRegistry``, ``CheckId``, ``ScanLogError``, ``PapyrusError``,
+``CrashgenRegistry``, ``ScanLogError``, ``PapyrusError``,
 ``segment_key``, etc.) do NOT have Python wrappers at runtime. Tests
 cannot construct them directly. The parity contract rows enforce that
 the rust symbols exist in the parsed ``-core`` surface, and a single
@@ -27,6 +27,48 @@ active, but Wave 3a does not touch FCX state.
 from __future__ import annotations
 
 import classic_scanlog
+
+
+MAIN_YAML = """
+CLASSIC_Info:
+  version: "9.0.0"
+  version_date: "2026-02-25"
+catch_log_records:
+  - "LAND"
+"""
+
+GAME_YAML = """
+Game_Info:
+  XSE_Acronym: "F4SE"
+  GameVersion: "1.10.163"
+  GameVersionNEW: "1.10.984"
+  CRASHGEN_LatestVer: "1.37.0"
+  CRASHGEN_LogName: "Buffout 4"
+  Main_Root_Name: "Fallout4"
+Warnings_CRASHGEN:
+  Warn_NOPlugins: "No plugins found"
+  Warn_Outdated: "Outdated"
+Crashlog_Plugins_Exclude: []
+Crashlog_Records_Exclude: []
+Crashlog_Error_Check: []
+Crashlog_Stack_Check: []
+Mods_CONF: []
+Mods_CORE: []
+Mods_FREQ: []
+Mods_SOLU: []
+"""
+
+IGNORE_YAML = """
+CLASSIC_Ignore_Fallout4: []
+"""
+
+
+def _write_scan_run_data_root(root) -> None:
+    database_dir = root / "CLASSIC Data" / "databases"
+    database_dir.mkdir(parents=True)
+    (database_dir / "CLASSIC Main.yaml").write_text(MAIN_YAML, encoding="utf-8")
+    (database_dir / "CLASSIC Fallout4.yaml").write_text(GAME_YAML, encoding="utf-8")
+    (root / "CLASSIC Ignore.yaml").write_text(IGNORE_YAML, encoding="utf-8")
 
 # =============================================================================
 # orchestrator sub-module: AnalysisConfig
@@ -150,6 +192,98 @@ def test_orchestrator_process_logs_parallel_is_declared_if_present() -> None:
         result = orch.process_logs_parallel([])
         assert isinstance(result, list)
     # Else: known stub-vs-runtime divergence, documented in Plan 04 inventory
+
+
+def test_scan_run_execute_returns_per_log_outcomes_without_report_lines(tmp_path) -> None:
+    """``scan_run_execute`` exposes Rust-owned scan-run outcomes, not report lines."""
+    _write_scan_run_data_root(tmp_path)
+    missing_log = tmp_path / "missing.log"
+
+    results = classic_scanlog.scan_run_execute(
+        str(tmp_path),
+        str(tmp_path / "CLASSIC Data"),
+        "Fallout4",
+        "auto",
+        [str(missing_log)],
+        max_concurrent=1,
+    )
+
+    assert len(results) == 1
+    result = results[0]
+    assert isinstance(result, classic_scanlog.ScanRunLogResult)
+    assert result.input_index == 0
+    assert result.log_path == str(missing_log)
+    assert result.success is False
+    assert result.cancelled is False
+    assert result.autoscan_report_path is None
+    assert result.error is not None
+    assert not hasattr(result, "report_lines")
+    assert result.to_dict()["success"] is False
+
+
+def test_scan_run_execute_targeted_ignores_move_and_destination(tmp_path) -> None:
+    """Targeted scan-run intent wins over move and destination inputs."""
+    _write_scan_run_data_root(tmp_path)
+    missing_log = tmp_path / "missing-targeted.log"
+
+    results = classic_scanlog.scan_run_execute(
+        str(tmp_path),
+        str(tmp_path / "CLASSIC Data"),
+        "Fallout4",
+        "auto",
+        [str(missing_log)],
+        move_unsolved_logs=True,
+        targeted_mode=True,
+        max_concurrent=1,
+        unsolved_logs_destination="relative-destination",
+    )
+
+    assert len(results) == 1
+    assert results[0].success is False
+    assert results[0].moved_to_unsolved_logs is False
+
+
+def test_scan_run_execute_ignores_destination_when_movement_disabled(tmp_path) -> None:
+    """A custom destination does not imply movement for Standard runs."""
+    _write_scan_run_data_root(tmp_path)
+    missing_log = tmp_path / "missing-leave.log"
+
+    results = classic_scanlog.scan_run_execute(
+        str(tmp_path),
+        str(tmp_path / "CLASSIC Data"),
+        "Fallout4",
+        "auto",
+        [str(missing_log)],
+        move_unsolved_logs=False,
+        max_concurrent=1,
+        unsolved_logs_destination="relative-destination",
+    )
+
+    assert len(results) == 1
+    assert results[0].success is False
+    assert results[0].moved_to_unsolved_logs is False
+
+
+def test_scan_run_execute_relative_destination_fails_when_movement_enabled(tmp_path) -> None:
+    """Relative custom destinations are setup errors only when movement is requested."""
+    _write_scan_run_data_root(tmp_path)
+    missing_log = tmp_path / "missing-relative.log"
+
+    try:
+        classic_scanlog.scan_run_execute(
+            str(tmp_path),
+            str(tmp_path / "CLASSIC Data"),
+            "Fallout4",
+            "auto",
+            [str(missing_log)],
+            move_unsolved_logs=True,
+            max_concurrent=1,
+            unsolved_logs_destination="relative-destination",
+        )
+    except Exception as exc:  # noqa: BLE001 - binding maps through project-specific PyErr types.
+        assert "absolute path" in str(exc).lower()
+    else:
+        raise AssertionError("relative destination should fail setup")
 
 
 # =============================================================================
@@ -368,7 +502,6 @@ def test_rust_only_symbols_in_core_surface() -> None:
         "crashgen_registry",
         "CrashgenRegistry",
         "CrashgenEntry",
-        "CheckId",
         # segment_key sub-module (constants only)
         "segment_key",
         # error sub-module (pure Rust)

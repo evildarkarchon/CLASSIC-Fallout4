@@ -273,12 +273,12 @@ impl CrashgenChecker {
     fn detect_installed_plugins(&self) -> Vec<String> {
         let mut plugins = Vec::new();
 
-        if self.plugins_path.exists() {
-            if let Ok(entries) = fs::read_dir(&self.plugins_path) {
-                for entry in entries.flatten() {
-                    if let Ok(file_name) = entry.file_name().into_string() {
-                        plugins.push(file_name.to_lowercase());
-                    }
+        if self.plugins_path.exists()
+            && let Ok(entries) = fs::read_dir(&self.plugins_path)
+        {
+            for entry in entries.flatten() {
+                if let Ok(file_name) = entry.file_name().into_string() {
+                    plugins.push(file_name.to_lowercase());
                 }
             }
         }
@@ -607,34 +607,34 @@ impl CrashgenChecker {
             }
 
             // Check if condition is met and setting needs attention
-            if setting.condition {
-                if let Some(current) = current_value {
-                    if current != &setting.desired_value {
-                        let issue = TomlConfigIssue {
-                            file_path: config_file.clone(),
-                            section: setting.section.clone(),
-                            setting: setting.key.clone(),
-                            current_value: format!("{:?}", current),
-                            recommended_value: format!("{:?}", setting.desired_value),
-                            description: format!("{}. {}", setting.description, setting.reason),
-                            severity: TomlIssueSeverity::Warning,
-                        };
-                        issues.push(issue);
-                        self.message_list.push(format!(
-                            "# ❌ CAUTION : {}, but {} parameter is set to {:?} #\n",
-                            setting.description, setting.name, current
-                        ));
-                        self.message_list.push(format!(
-                            " FIX: Open {}'s TOML file and change {} to {:?} {}.\n-----\n",
-                            self.crashgen_name, setting.name, setting.desired_value, setting.reason
-                        ));
-                    } else {
-                        // Setting is correctly configured
-                        self.message_list.push(format!(
-                            "✔️ {} parameter is correctly configured in your {} settings!\n-----\n",
-                            setting.name, self.crashgen_name
-                        ));
-                    }
+            if setting.condition
+                && let Some(current) = current_value
+            {
+                if current != &setting.desired_value {
+                    let issue = TomlConfigIssue {
+                        file_path: config_file.clone(),
+                        section: setting.section.clone(),
+                        setting: setting.key.clone(),
+                        current_value: format!("{:?}", current),
+                        recommended_value: format!("{:?}", setting.desired_value),
+                        description: format!("{}. {}", setting.description, setting.reason),
+                        severity: TomlIssueSeverity::Warning,
+                    };
+                    issues.push(issue);
+                    self.message_list.push(format!(
+                        "# ❌ CAUTION : {}, but {} parameter is set to {:?} #\n",
+                        setting.description, setting.name, current
+                    ));
+                    self.message_list.push(format!(
+                        " FIX: Open {}'s TOML file and change {} to {:?} {}.\n-----\n",
+                        self.crashgen_name, setting.name, setting.desired_value, setting.reason
+                    ));
+                } else {
+                    // Setting is correctly configured
+                    self.message_list.push(format!(
+                        "✔️ {} parameter is correctly configured in your {} settings!\n-----\n",
+                        setting.name, self.crashgen_name
+                    ));
                 }
             }
         }

@@ -3,7 +3,7 @@
 # File schema version (MAJOR.MINOR). See docs/api/yaml-update-delivery.md.
 # - MAJOR bumps are breaking (renamed/removed keys, changed value shapes)
 # - MINOR bumps are additive (new optional keys older clients ignore)
-schema_version: "1.0"
+schema_version: "1.1"
 
 Game_Info:
   Main_Root_Name: Fallout 4
@@ -46,6 +46,7 @@ Crashgen_Registry:
               - plugin_any: [buffout4.dll, buffout4ae.dll]
           action:
             kind: notice_and_skip_remaining
+            placement: error_information
             bucket: error_information
             severity: error
             message: "{crashgen_name} and Addictol are incompatible, remove one to avoid crashes."
@@ -81,6 +82,7 @@ Crashgen_Registry:
                     ]
           action:
             kind: issue
+            placement: error_information
             bucket: error_information
             severity: error
             message: "Baka ScrapHeap is redundant with {crashgen_name}"
@@ -222,6 +224,7 @@ Crashgen_Registry:
               - plugin_any: [buffout4.dll, buffout4ae.dll]
           action:
             kind: notice_and_skip_remaining
+            placement: error_information
             bucket: error_information
             severity: error
             message: "{crashgen_name} and Buffout 4 are incompatible, remove one to avoid crashes."
@@ -230,6 +233,7 @@ Crashgen_Registry:
             plugin_any: [bakascrapheap.dll]
           action:
             kind: notice
+            placement: error_information
             bucket: error_information
             severity: error
             message: "Baka ScrapHeap is redundant with Addictol"

@@ -214,8 +214,8 @@ pub fn load_crash_log_fixture(name: &str) -> String {
 
     // Handle "any" - return first available log
     if name.to_lowercase() == "any" {
-        if let Ok(mut entries) = fs::read_dir(&dir) {
-            if let Some(Ok(entry)) = entries.find(|e| {
+        if let Ok(mut entries) = fs::read_dir(&dir)
+            && let Some(Ok(entry)) = entries.find(|e| {
                 e.as_ref()
                     .ok()
                     .map(|e| {
@@ -225,11 +225,10 @@ pub fn load_crash_log_fixture(name: &str) -> String {
                             .unwrap_or(false)
                     })
                     .unwrap_or(false)
-            }) {
-                if let Ok(content) = fs::read_to_string(entry.path()) {
-                    return content;
-                }
-            }
+            })
+            && let Ok(content) = fs::read_to_string(entry.path())
+        {
+            return content;
         }
         return "ERROR: No log files found in benches/fixtures/".to_string();
     }
@@ -251,10 +250,10 @@ pub fn load_crash_log_fixture(name: &str) -> String {
     if let Ok(entries) = fs::read_dir(&dir) {
         for entry in entries.filter_map(|e| e.ok()) {
             let file_name = entry.file_name();
-            if file_name.to_string_lossy().contains(name) {
-                if let Ok(content) = fs::read_to_string(entry.path()) {
-                    return content;
-                }
+            if file_name.to_string_lossy().contains(name)
+                && let Ok(content) = fs::read_to_string(entry.path())
+            {
+                return content;
             }
         }
     }
@@ -466,14 +465,14 @@ pub fn generate_synthetic_yaml(entries: usize) -> String {
 pub fn list_available_fixtures() -> Vec<(String, usize)> {
     let mut fixtures = Vec::new();
 
-    if let Some(dir) = find_sample_logs_dir() {
-        if let Ok(entries) = fs::read_dir(dir) {
-            for entry in entries.filter_map(|e| e.ok()) {
-                if let Ok(metadata) = entry.metadata() {
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    if name.ends_with(".log") {
-                        fixtures.push((name, metadata.len() as usize));
-                    }
+    if let Some(dir) = find_sample_logs_dir()
+        && let Ok(entries) = fs::read_dir(dir)
+    {
+        for entry in entries.filter_map(|e| e.ok()) {
+            if let Ok(metadata) = entry.metadata() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                if name.ends_with(".log") {
+                    fixtures.push((name, metadata.len() as usize));
                 }
             }
         }

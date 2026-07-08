@@ -394,26 +394,26 @@ impl DocumentsChecker {
 
         // Validate main INI
         let main_ini = format!("{}.ini", self.game_name);
-        if let Ok(result) = self.validate_ini_file(docs_path, &main_ini) {
-            if !result.message.is_empty() {
-                messages.push(result.message);
-            }
+        if let Ok(result) = self.validate_ini_file(docs_path, &main_ini)
+            && !result.message.is_empty()
+        {
+            messages.push(result.message);
         }
 
         // Validate Custom INI
         let custom_ini = format!("{}Custom.ini", self.game_name);
-        if let Ok(result) = self.validate_ini_file(docs_path, &custom_ini) {
-            if !result.message.is_empty() {
-                messages.push(result.message);
-            }
+        if let Ok(result) = self.validate_ini_file(docs_path, &custom_ini)
+            && !result.message.is_empty()
+        {
+            messages.push(result.message);
         }
 
         // Validate Prefs INI
         let prefs_ini = format!("{}Prefs.ini", self.game_name);
-        if let Ok(result) = self.validate_ini_file(docs_path, &prefs_ini) {
-            if !result.message.is_empty() {
-                messages.push(result.message);
-            }
+        if let Ok(result) = self.validate_ini_file(docs_path, &prefs_ini)
+            && !result.message.is_empty()
+        {
+            messages.push(result.message);
         }
 
         Ok(messages)

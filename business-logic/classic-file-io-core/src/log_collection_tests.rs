@@ -96,6 +96,60 @@ async fn test_collect_all() {
     assert!(log3.exists());
 }
 
+#[tokio::test]
+async fn test_new_for_scan_keeps_custom_folder_additive_to_xse_folder() {
+    let temp = TempDir::new().unwrap();
+    let base = temp.path().join("app");
+    let data = temp.path().join("CLASSIC Data");
+    let xse_folder = temp.path().join("docs").join("F4SE");
+    let custom_folder = temp.path().join("custom");
+
+    tokio::fs::create_dir_all(&base).await.unwrap();
+    tokio::fs::create_dir_all(&data).await.unwrap();
+    tokio::fs::create_dir_all(&xse_folder).await.unwrap();
+    tokio::fs::create_dir_all(&custom_folder).await.unwrap();
+
+    let xse_path_for_yaml = xse_folder.to_string_lossy().replace('\\', "/");
+    tokio::fs::write(
+        data.join("CLASSIC Fallout4 Local.yaml"),
+        format!("Game_Info:\n  Docs_Folder_XSE: {xse_path_for_yaml}\n"),
+    )
+    .await
+    .unwrap();
+
+    let xse_log = xse_folder.join("crash-2024-01-01-13-00-00.log");
+    let custom_log = custom_folder.join("crash-2024-01-01-14-00-00.log");
+    tokio::fs::write(&xse_log, b"xse log").await.unwrap();
+    tokio::fs::write(&custom_log, b"custom log").await.unwrap();
+
+    let collector = LogCollector::new_for_scan(
+        base.clone(),
+        &data,
+        "Fallout4",
+        "auto",
+        None,
+        Some(custom_folder.clone()),
+    );
+
+    let logs = collector.collect_all().await.unwrap();
+
+    assert_eq!(logs.len(), 2);
+    assert!(
+        xse_log.exists(),
+        "XSE source log should be copied, not moved"
+    );
+    assert!(
+        base.join("Crash Logs")
+            .join("crash-2024-01-01-13-00-00.log")
+            .exists(),
+        "standard XSE crash logs should still be imported"
+    );
+    assert!(
+        logs.contains(&custom_log),
+        "custom folder logs should remain part of discovery"
+    );
+}
+
 // ── Targeted input resolution tests ─────────────────────────────
 
 #[tokio::test]

@@ -85,10 +85,10 @@ impl VersionRegistry {
 
         for path_str in &possible_paths {
             let path = Path::new(path_str);
-            if path.exists() {
-                if let Ok(registry) = Self::load_from_yaml(path) {
-                    return Ok(registry);
-                }
+            if path.exists()
+                && let Ok(registry) = Self::load_from_yaml(path)
+            {
+                return Ok(registry);
             }
         }
 

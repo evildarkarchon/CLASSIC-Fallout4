@@ -1,0 +1,626 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.28.6
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF7AF05093F Fallout4.exe+1B1093F
+
+	[Compatibility]
+		F4EE: true
+	[Crashlog]
+		AutoOpen: true
+		PromptUpload: true
+	[Fixes]
+		ActorIsHostileToActor: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		GreyMovies: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+	[Patches]
+		Achievements: true
+		ArchiveLimit: false
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: false
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: -1
+		MemoryManager: false
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 10 Home v10.0.19045
+	CPU: GenuineIntel Intel(R) Core(TM) i3-10100 CPU @ 3.60GHz
+	GPU #1: Nvidia TU117 [GeForce0GTX01650]
+	PHYSICAL MEMORY: 8.93 GB/15.93 GB
+
+PROBABLE CALL STACK:
+	[00] 0x7FF7AF05093F Fallout4.exe+1B1093F -> 1573164+0xF
+	[01] 0x7FF7AD5836C1 Fallout4.exe+00436C1 -> 877089+0x21
+	[02] 0x7FF7AD5D01CB Fallout4.exe+00901CB -> 1520699+0xB
+	[03] 0x7FFBD680C95E Buffout4.dll+008C95E
+	[04] 0x7FFBCFD2C95E Buffout4.dll+008C95E
+	[05] 0x7FF7AD9BF439 Fallout4.exe+047F439 -> 1413642+0x19
+	[06] 0x7FF7AD9BF585 Fallout4.exe+047F585 -> 1134005+0x15
+	[07] 0x7FF7AD69C5F5 Fallout4.exe+015C5F5 -> 507405+0x65
+	[08] 0x7FF7AD688F74 Fallout4.exe+0148F74 -> 382446+0x334
+	[09] 0x7FF7AD92D5A3 Fallout4.exe+03ED5A3 -> 918070+0x4B3
+	[10] 0x7FF7AE2EDB03 Fallout4.exe+0DADB03 -> 643034+0x23
+	[11] 0x7FF7AD692C3C Fallout4.exe+0152C3C -> 1420843+0x7C
+	[12] 0x7FF7AD8EE2FC Fallout4.exe+03AE2FC -> 891796+0x59C
+	[13] 0x7FF7AD8EDD46 Fallout4.exe+03ADD46 -> 280207+0x36
+	[14] 0x7FF7AD692C3C Fallout4.exe+0152C3C -> 1420843+0x7C
+	[15] 0x7FF7AD9D1D56 Fallout4.exe+0491D56 -> 908892+0x446
+	[16] 0x7FF7AD692C3C Fallout4.exe+0152C3C -> 1420843+0x7C
+	[17] 0x7FF7AD668333 Fallout4.exe+0128333 -> 76564+0x43
+	[18] 0x7FF7AF090F26 Fallout4.exe+1B50F26 -> 329005+0xC6
+	[19] 0x7FF7AF091432 Fallout4.exe+1B51432 -> 194800+0x202
+	[20] 0x7FF7AF093F67 Fallout4.exe+1B53F67 -> 1492866+0x67
+	[21] 0x7FF7AF05CFED Fallout4.exe+1B1CFED -> 1079791+0x3D
+	[22] 0x7FFC10DB7344 KERNEL32.DLL+0017344
+	[23] 0x7FFC12C226B1    ntdll.dll+00526B1
+
+REGISTERS:
+	RBP 0x28ABF3C4248      (TESLevCharacter*)
+		File: "DLCRobot.esm"
+		Flags: 0x00000009
+		Form ID: 0x0101107A
+		Form Type: 46
+	R12 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	R14 0x28ABF3C41E0      (TESLevCharacter*)
+		File: "DLCRobot.esm"
+		Flags: 0x00000009
+		Form ID: 0x0101107A
+		Form Type: 46
+	R15 0x7FF7B0C164F4     (void* -> Fallout4.exe+36D64F4)
+
+STACK:
+	[RSP+2800] 0x7FF7AD5836C1     (void* -> Fallout4.exe+00436C1)
+	[RSP+5800] 0x7FF7AD5D01CB     (void* -> Fallout4.exe+00901CB)
+	[RSP+8800] 0x7FFBD680C95E     (void* -> Buffout4.dll+008C95E)
+	[RSP+C800] 0x7FFBCFD2C95E     (void* -> Buffout4.dll+008C95E)
+	[RSP+D800] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+1000] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+1080] 0x7FF7AD9BF439     (void* -> Fallout4.exe+047F439)
+	[RSP+1180] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+1200] 0x28A71ADBB20      (char*) "d"
+	[RSP+1380] 0x7FF7AD9BF585     (void* -> Fallout4.exe+047F585)
+	[RSP+1400] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+1480] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+1580] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+1680] 0x7FF7AD69C5F5     (void* -> Fallout4.exe+015C5F5)
+	[RSP+1700] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+1880] 0x28ABF3C41E0      (TESLevCharacter*)
+		File: "DLCRobot.esm"
+		Flags: 0x00000009
+		Form ID: 0x0101107A
+		Form Type: 46
+	[RSP+1980] 0x7FF7AF051325     (void* -> Fallout4.exe+1B11325)
+	[RSP+1C80] 0x7FF7AD688F74     (void* -> Fallout4.exe+0148F74)
+	[RSP+1E80] 0x28ABF3C41E0      (TESLevCharacter*)
+		File: "DLCRobot.esm"
+		Flags: 0x00000009
+		Form ID: 0x0101107A
+		Form Type: 46
+	[RSP+1F80] 0x7FF7AF0514CA     (void* -> Fallout4.exe+1B114CA)
+	[RSP+2080] 0x28A71ADBA80      (ScrapHeap*)
+	[RSP+2280] 0x7FF7AD591B9F     (void* -> Fallout4.exe+0051B9F)
+	[RSP+2680] 0x28ABF3C41E0      (TESLevCharacter*)
+		File: "DLCRobot.esm"
+		Flags: 0x00000009
+		Form ID: 0x0101107A
+		Form Type: 46
+	[RSP+2780] 0x7FF7AD5D8943     (void* -> Fallout4.exe+0098943)
+	[RSP+2900] 0x7FF7B0C164F4     (void* -> Fallout4.exe+36D64F4)
+	[RSP+2980] 0x28A71ADBA80      (ScrapHeap*)
+	[RSP+2A80] 0x7FF7B01896C8     (void* -> Fallout4.exe+2C496C8)
+	[RSP+2B80] 0x7FF7AF05093F     (void* -> Fallout4.exe+1B1093F)
+	[RSP+3280] 0x28AB3655AB0      (BGSKeyword*)
+		File: "Fallout4.esm"
+		Flags: 0x00000009
+		Form ID: 0x000EECC2
+		Form Type: 04
+	[RSP+3380] 0xD37899F450       (BGSLoadFormBuffer*)
+	[RSP+3400] 0x28ABF08D2E8      (TESNPC*)
+		File: "DLCRobot.esm"
+		Flags: 0x00440009
+		Form ID: 0x0100FD5A
+		Form Type: 45
+		Full Name: "Ada"
+	[RSP+3500] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+3680] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+3780] 0x7FF7AD92D5A3     (void* -> Fallout4.exe+03ED5A3)
+	[RSP+3800] 0x28ABF08D2E8      (TESNPC*)
+		File: "DLCRobot.esm"
+		Flags: 0x00440009
+		Form ID: 0x0100FD5A
+		Form Type: 45
+		Full Name: "Ada"
+	[RSP+3880] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+3B80] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+3F00] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+3F80] 0x28A71ADBB20      (char*) "d"
+	[RSP+4080] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+4100] 0x28ABB19BF00      (TESObjectCELL*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00040409
+		Form ID: 0x00018AA2
+		Form Type: 63
+		Full Name: ""
+	[RSP+4180] 0x7FF7AE2EDB03     (void* -> Fallout4.exe+0DADB03)
+	[RSP+4280] 0x28A71ADBB20      (char*) "d"
+	[RSP+4480] 0x7FF7AD692C3C     (void* -> Fallout4.exe+0152C3C)
+	[RSP+4500] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+4700] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+5E80] 0x7FF7AD8EE2FC     (void* -> Fallout4.exe+03AE2FC)
+	[RSP+5F00] 0x28ABEF1AB00      (Actor*)
+		Object Reference: 
+			File: "DLCRobot.esm"
+			Flags: 0x00440009
+			Form ID: 0x0100FD5A
+			Form Type: 45
+		File: "DLCRobot.esm"
+		Flags: 0x00200C01
+		Form ID: 0x0100FF12
+		Form Type: 65
+	[RSP+6180] 0x7FF7ADD071E3     (void* -> Fallout4.exe+07C71E3)
+	[RSP+6380] 0x28A71ADBA80      (ScrapHeap*)
+	[RSP+6580] 0x7FF7ADD04F84     (void* -> Fallout4.exe+07C4F84)
+	[RSP+6900] 0x7FF7B01896C8     (void* -> Fallout4.exe+2C496C8)
+	[RSP+7280] 0x28A71ADBB20      (char*) "d"
+	[RSP+7300] 0x28A71ADBB20      (char*) "d"
+	[RSP+7480] 0x28ABB19BF00      (TESObjectCELL*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00040409
+		Form ID: 0x00018AA2
+		Form Type: 63
+		Full Name: ""
+	[RSP+7580] 0x7FF7AD8EDD46     (void* -> Fallout4.exe+03ADD46)
+	[RSP+7680] 0x28ABB19BF00      (TESObjectCELL*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00040409
+		Form ID: 0x00018AA2
+		Form Type: 63
+		Full Name: ""
+	[RSP+7800] 0x7FF7B0196C68     (void* -> Fallout4.exe+2C56C68)
+	[RSP+7C80] 0x7FF7AF000000     (void* -> Fallout4.exe+1AC0000)
+	[RSP+7D80] 0x7FF7AD692C3C     (void* -> Fallout4.exe+0152C3C)
+	[RSP+7E00] 0x28ABB19BF00      (TESObjectCELL*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00040409
+		Form ID: 0x00018AA2
+		Form Type: 63
+		Full Name: ""
+	[RSP+7F00] 0x28AC42543E0      (NiTObjectArray<NiPointer<NiAVObject> >*)
+	[RSP+7F80] 0x28AC42543E0      (NiTObjectArray<NiPointer<NiAVObject> >*)
+	[RSP+8000] 0x28ABB19BF00      (TESObjectCELL*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00040409
+		Form ID: 0x00018AA2
+		Form Type: 63
+		Full Name: ""
+	[RSP+8400] 0x28ABB19BF20      (TESObjectCELL*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00040409
+		Form ID: 0x00018AA2
+		Form Type: 63
+		Full Name: ""
+	[RSP+9700] 0x28ABB19BF00      (TESObjectCELL*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00040409
+		Form ID: 0x00018AA2
+		Form Type: 63
+		Full Name: ""
+	[RSP+9780] 0x7FF7AD9D1D56     (void* -> Fallout4.exe+0491D56)
+	[RSP+9880] 0x28AAF226B00      (TESWorldSpace*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00000009
+		Form ID: 0x0000003C
+		Form Type: 74
+		Full Name: "Commonwealth"
+	[RSP+9A80] 0x28AAF226B00      (TESWorldSpace*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00000009
+		Form ID: 0x0000003C
+		Form Type: 74
+		Full Name: "Commonwealth"
+	[RSP+9B80] 0x7FF7AF081D5D     (void* -> Fallout4.exe+1B41D5D)
+	[RSP+9C80] 0x28AC3791980      (TESNPC*)
+		File: "FPAttributes.esp"
+		Flags: 0x00040008
+		Form ID: 0x1F00DD5D
+		Form Type: 45
+		Full Name: "Doctor Neura"
+	[RSP+9D00] 0x7FF7B3128084     (void* -> Fallout4.exe+5BE8084)
+	[RSP+9E00] 0x7FF7B3128080     (void* -> Fallout4.exe+5BE8080)
+	[RSP+9E80] 0x7FF7B3128088     (void* -> Fallout4.exe+5BE8088)
+	[RSP+9F80] 0x7FF7AD687A82     (void* -> Fallout4.exe+0147A82)
+	[RSP+A000] 0x7FF7B3128084     (void* -> Fallout4.exe+5BE8084)
+	[RSP+A100] 0x7FF7B3128080     (void* -> Fallout4.exe+5BE8080)
+	[RSP+A180] 0x7FF7B3128088     (void* -> Fallout4.exe+5BE8088)
+	[RSP+A200] 0x28AAF226B00      (TESWorldSpace*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00000009
+		Form ID: 0x0000003C
+		Form Type: 74
+		Full Name: "Commonwealth"
+	[RSP+A280] 0x28A71ADBB20      (char*) "d"
+	[RSP+A380] 0x7FF7AD692C3C     (void* -> Fallout4.exe+0152C3C)
+	[RSP+A600] 0x28AAF226B00      (TESWorldSpace*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00000009
+		Form ID: 0x0000003C
+		Form Type: 74
+		Full Name: "Commonwealth"
+	[RSP+AA00] 0x28AAF226B20      (TESWorldSpace*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00000009
+		Form ID: 0x0000003C
+		Form Type: 74
+		Full Name: "Commonwealth"
+	[RSP+AB00] 0x28AAF226B30      (TESWorldSpace*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00000009
+		Form ID: 0x0000003C
+		Form Type: 74
+		Full Name: "Commonwealth"
+	[RSP+BD80] 0x7FF7AD668333     (void* -> Fallout4.exe+0128333)
+	[RSP+C080] 0x7FF7AF090F26     (void* -> Fallout4.exe+1B50F26)
+	[RSP+C100] 0x7FF7B3128120     (void* -> Fallout4.exe+5BE8120)
+	[RSP+C180] 0x7FF7B31280D0     (BSJobs::JobThread*)
+	[RSP+C200] 0x7FF7B31280D0     (BSJobs::JobThread*)
+	[RSP+C500] 0x7FF7B31280D0     (BSJobs::JobThread*)
+	[RSP+C580] 0x7FF7AF091432     (void* -> Fallout4.exe+1B51432)
+	[RSP+C680] 0x7FF7B31280D0     (BSJobs::JobThread*)
+	[RSP+C980] 0x7FF7AF093F67     (void* -> Fallout4.exe+1B53F67)
+	[RSP+CA00] 0x7FF7B31280D0     (BSJobs::JobThread*)
+	[RSP+CC00] 0x7FF7B31280D0     (BSJobs::JobThread*)
+	[RSP+CC80] 0x7FF7AF05CFED     (void* -> Fallout4.exe+1B1CFED)
+	[RSP+CF00] 0x7FF7B31280D0     (BSJobs::JobThread*)
+	[RSP+D080] 0x7FFC10DB7344     (void* -> KERNEL32.DLL+0017344)
+	[RSP+D380] 0x7FFC12C226B1     (void* -> ntdll.dll+00526B1)
+	[RSP+D880] 0x7FFC1052DFB0     (void* -> KERNELBASE.dll+012DFB0)
+
+MODULES:
+	XINPUT1_3.dll                 0x000000400000
+	X3DAudio1_7.dll               0x0000548F0000
+	steam_api64.dll               0x000054900000
+	LL_fourPlay_1_10_163.dll      0x000180000000
+	mcm.dll                       0x028A6A560000
+	Fallout4.exe                  0x7FF7AD540000
+	steamclient64.dll             0x7FFB9D3F0000
+	DSOUND.DLL                    0x7FFBBB390000
+	MSVCP140.dll                  0x7FFBC11B0000
+	SUP_F4SE.dll                  0x7FFBCFA70000
+	Buffout4.dll                  0x7FFBCFCA0000
+	IPHLPAPI.DLL                  0x7FFBD0390000
+	graphics-hook64.dll           0x7FFBD4450000
+	XAudio2_7.dll                 0x7FFBD44A0000
+	gameoverlayrenderer64.dll     0x7FFBD5D70000
+	f4ee.dll                      0x7FFBD5F10000
+	BakaFramework.dll             0x7FFBD6020000
+	f4se_1_10_163.dll             0x7FFBD6410000
+	Buffout4.dll                  0x7FFBD6780000
+	vstdlib_s64.dll               0x7FFBD6BF0000
+	tier0_s64.dll                 0x7FFBD6CB0000
+	GFSDK_SSAO_D3D11.win64.dll    0x7FFBD7020000
+	flexRelease_x64.dll           0x7FFBD70B0000
+	MSVCP110.dll                  0x7FFBD7200000
+	MSVCR110.dll                  0x7FFBD7810000
+	RaceChanger.dll               0x7FFBD9020000
+	bink2w64.dll                  0x7FFBDC240000
+	cudart64_75.dll               0x7FFBDC7D0000
+	GFSDK_GodraysLib.x64.dll      0x7FFBDCF90000
+	flexExtRelease_x64.dll        0x7FFBDD050000
+	f4se_steam_loader.dll         0x7FFBDDB70000
+	usvfs_x64.dll                 0x7FFBDE620000
+	VCRUNTIME140.dll              0x7FFBE3050000
+	OneCoreCommonProxyStub.dll    0x7FFBE5520000
+	VCRUNTIME140_1.dll            0x7FFBEC3C0000
+	nvwgf2umx.dll                 0x7FFBF1720000
+	WININET.dll                   0x7FFBF8D10000
+	nvgpucomp64.dll               0x7FFBF91F0000
+	winmmbase.dll                 0x7FFBFC290000
+	nvldumdx.dll                  0x7FFBFC320000
+	dxcore.dll                    0x7FFBFC3E0000
+	OneCoreUAPCommonProxyStub.dll 0x7FFBFD150000
+	nvToolsExt64_1.dll            0x7FFBFE180000
+	gdiplus.dll                   0x7FFBFE590000
+	COMCTL32.dll                  0x7FFBFEBA0000
+	textinputframework.dll        0x7FFBFF140000
+	InputHost.dll                 0x7FFBFF240000
+	Windows.UI.dll                0x7FFBFF460000
+	WindowManagementAPI.dll       0x7FFBFFF40000
+	avrt.dll                      0x7FFC00540000
+	MpOav.dll                     0x7FFC026F0000
+	amsi.dll                      0x7FFC02780000
+	MessageBus.dll                0x7FFC02850000
+	wbemsvc.dll                   0x7FFC02F90000
+	fastprox.dll                  0x7FFC03030000
+	wbemcomn.dll                  0x7FFC033B0000
+	nvapi64.dll                   0x7FFC03440000
+	WINMM.dll                     0x7FFC04340000
+	WINSPOOL.DRV                  0x7FFC06D60000
+	twinapi.appcore.dll           0x7FFC08130000
+	Secur32.dll                   0x7FFC084E0000
+	wbemprox.dll                  0x7FFC08770000
+	drvstore.dll                  0x7FFC08AD0000
+	WINHTTP.dll                   0x7FFC08C20000
+	cryptnet.dll                  0x7FFC08D30000
+	dhcpcsvc.DLL                  0x7FFC0A390000
+	MMDevApi.dll                  0x7FFC0A9C0000
+	AUDIOSES.DLL                  0x7FFC0AAA0000
+	VERSION.dll                   0x7FFC0AC40000
+	MSIMG32.dll                   0x7FFC0AC60000
+	PROPSYS.dll                   0x7FFC0B890000
+	d3d11.dll                     0x7FFC0BD50000
+	wintypes.dll                  0x7FFC0C9E0000
+	dcomp.dll                     0x7FFC0CB40000
+	CoreUIComponents.dll          0x7FFC0D0B0000
+	CoreMessaging.dll             0x7FFC0D410000
+	UxTheme.dll                   0x7FFC0D820000
+	resourcepolicyclient.dll      0x7FFC0D8E0000
+	dwmapi.dll                    0x7FFC0DB10000
+	windows.storage.dll           0x7FFC0DF90000
+	DbgHelp.dll                   0x7FFC0E730000
+	HID.DLL                       0x7FFC0EA70000
+	kernel.appcore.dll            0x7FFC0EAC0000
+	dxgi.dll                      0x7FFC0EB50000
+	rsaenh.dll                    0x7FFC0F2C0000
+	ntmarta.dll                   0x7FFC0F3E0000
+	UMPDC.dll                     0x7FFC0F680000
+	IpHlpAPI.dll                  0x7FFC0F6A0000
+	POWRPROF.dll                  0x7FFC0F7C0000
+	MSWSOCK.dll                   0x7FFC0FA10000
+	CRYPTBASE.DLL                 0x7FFC0FC00000
+	CRYPTSP.dll                   0x7FFC0FC10000
+	Wldp.dll                      0x7FFC0FCB0000
+	msasn1.dll                    0x7FFC0FE40000
+	devobj.dll                    0x7FFC10010000
+	USERENV.dll                   0x7FFC10130000
+	SSPICLI.DLL                   0x7FFC10160000
+	profapi.dll                   0x7FFC101B0000
+	bcryptPrimitives.dll          0x7FFC10280000
+	msvcp_win.dll                 0x7FFC10310000
+	cfgmgr32.dll                  0x7FFC103B0000
+	KERNELBASE.dll                0x7FFC10400000
+	win32u.dll                    0x7FFC10700000
+	gdi32full.dll                 0x7FFC10730000
+	ucrtbase.dll                  0x7FFC10850000
+	bcrypt.dll                    0x7FFC10950000
+	CRYPT32.dll                   0x7FFC10980000
+	wintrust.dll                  0x7FFC10B90000
+	SHLWAPI.dll                   0x7FFC10C00000
+	shcore.dll                    0x7FFC10CF0000
+	KERNEL32.DLL                  0x7FFC10DA0000
+	PSAPI.DLL                     0x7FFC10E60000
+	RPCRT4.dll                    0x7FFC10E70000
+	OLEAUT32.dll                  0x7FFC10FA0000
+	imagehlp.dll                  0x7FFC11070000
+	GDI32.dll                     0x7FFC110F0000
+	combase.dll                   0x7FFC11180000
+	msvcrt.dll                    0x7FFC114F0000
+	NSI.dll                       0x7FFC11590000
+	ole32.dll                     0x7FFC115A0000
+	USER32.dll                    0x7FFC11730000
+	WS2_32.dll                    0x7FFC118D0000
+	MSCTF.dll                     0x7FFC11940000
+	clbcatq.dll                   0x7FFC11A60000
+	SETUPAPI.dll                  0x7FFC11B90000
+	SHELL32.dll                   0x7FFC12000000
+	IMM32.DLL                     0x7FFC12770000
+	sechost.dll                   0x7FFC127B0000
+	COMDLG32.dll                  0x7FFC12850000
+	ADVAPI32.dll                  0x7FFC12AE0000
+	ntdll.dll                     0x7FFC12BD0000
+
+F4SE PLUGINS:
+	BakaFramework.dll v1.10
+	Buffout4.dll v1.28.6
+	f4ee.dll
+	LL_fourPlay_1_10_163.dll
+	mcm.dll
+	RaceChanger.dll v1
+	SUP_F4SE.dll
+
+PLUGINS:
+	[00]     Fallout4.esm
+	[01]     DLCRobot.esm
+	[02]     DLCworkshop01.esm
+	[03]     DLCCoast.esm
+	[04]     DLCworkshop02.esm
+	[05]     DLCworkshop03.esm
+	[06]     DLCNukaWorld.esm
+	[07]     AAF.esm
+	[08]     SharkRace.esp
+	[09]     Vioxsis_Strap-Ons.esp
+	[0A]     FusionGirl.esp
+	[0B]     ZaZOut4.esp
+	[0C]     LooksMenu.esp
+	[0D]     AAF_Violate.esp
+	[0E]     Farelle_Animations.esp
+	[0F]     Vadermania[AAF_anims].esp
+	[10]     AAF_CreaturePack02DLC.esp
+	[11]     Mutated Lust.esp
+	[12]     SavageCabbage_Animations.esp
+	[13]     rxl_bp70_animations.esp
+	[14]     RZSex.esp
+	[15]     FO4_AnimationsByLeito.esp
+	[16]     AAF_SEU.esp
+	[17]     KSHairdos_oel.esp
+	[18]     GetDirty.esp
+	[19]     AAF_CreaturePack01.esp
+	[1A]     ZeX-BodyGen-F.esp
+	[1B]     ZeX-BodyGen-M.esp
+	[1C]     ZeX-InGameSliders.esp
+	[1D]     Scopes.esp
+	[1E]     TatsAfterRape.esp
+	[1F]     FPAttributes.esp
+	[20]     CombatStripLite.esp
+	[21]     CombinedArmsNV.esp
+	[22]     SlaveTattoos.esp
+	[FE:000] BakaFramework.esm
+	[FE:001] AAFThemes.esl
+	[FE:002] AAF_SCRS.esp
+	[FE:003] VividFallout - AiO - 2k.esp
+	[FE:004] AAF_Dirty_Sex.esp
+	[FE:005] SpicyAlteredCreatureAnims.esp
+	[FE:006] DiverseBodies.esp
+	[FE:007] SharkCait.esp
+	[FE:008] SharkPlayer.esp

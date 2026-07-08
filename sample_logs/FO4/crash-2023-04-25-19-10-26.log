@@ -1,0 +1,497 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.26.2
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF776947EEF Fallout4.exe+05B7EEF
+
+	[Compatibility]
+		F4EE: false
+	[Fixes]
+		ActorIsHostileToActor: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		GreyMovies: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+	[Patches]
+		Achievements: true
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: true
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: -1
+		MemoryManager: true
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 10 Pro v10.0.19041
+	CPU: AuthenticAMD AMD Ryzen 5 PRO 4650G with Radeon Graphics
+	GPU #1: AMD Renoir
+	GPU #2: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 10.44 GB/15.30 GB
+
+PROBABLE CALL STACK:
+	[0] 0x7FF776947EEF Fallout4.exe+05B7EEF -> 561320+0x83F
+	[1] 0x7FF7764E2C3C Fallout4.exe+0152C3C -> 1420843+0x7C
+	[2] 0x7FF7764B84CD Fallout4.exe+01284CD -> 1551875+0x4D
+	[3] 0x7FF777EE0F26 Fallout4.exe+1B50F26 -> 329005+0xC6
+	[4] 0x7FF777EE1432 Fallout4.exe+1B51432 -> 194800+0x202
+	[5] 0x7FF777EE3F67 Fallout4.exe+1B53F67 -> 1492866+0x67
+	[6] 0x7FF777EACFED Fallout4.exe+1B1CFED -> 1079791+0x3D
+	[7] 0x7FFA0C627604 KERNEL32.DLL+0017604
+	[8] 0x7FFA0D0826A1    ntdll.dll+00526A1
+
+REGISTERS:
+	RAX 0x1E158DA3E20      (void*)
+	RCX 0xD071             (size_t)
+	RDX 0x99D74            (size_t)
+	RBX 0x1E14A821580      (BGSCharacterTint::PaletteEntry*)
+	RSP 0x2B8EAFFA80       (void*)
+	RBP 0x2B8EAFFAF8       (void*)
+	RSI 0x1E158CDF8C0      (BGSCharacterTint::Template::TextureSet*)
+	RDI 0x1E158E82400      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	R8  0x1E158D67230      (void*)
+	R9  0xD071             (size_t)
+	R10 0x457C             (size_t)
+	R11 0x78FFADE8         (size_t)
+	R12 0x0                (size_t)
+	R13 0xFFFF             (size_t)
+	R14 0x0                (size_t)
+	R15 0x1E142606B00      (TESRace*)
+		File: "PeopleArentlmcpatch510.esp"
+		Flags: 0x00000009
+		Form ID: 0x00013746
+		Form Type: 17
+		Full Name: "Human"
+
+STACK:
+	[RSP+0  ] 0x1E14A821580      (BGSCharacterTint::PaletteEntry*)
+	[RSP+8  ] 0x1E14A81077F      (void*)
+	[RSP+10 ] 0x0                (size_t)
+	[RSP+18 ] 0x1E158CDF8C0      (BGSCharacterTint::Template::TextureSet*)
+	[RSP+20 ] 0x2B8EAFFB18       (void*)
+	[RSP+28 ] 0x7FF77BF78088     (void* -> Fallout4.exe+5BE8088)
+	[RSP+30 ] 0x1E09E01CE50      (ScrapHeap*)
+	[RSP+38 ] 0x1E158F5FF00      (void*)
+	[RSP+40 ] 0x10               (size_t)
+	[RSP+48 ] 0x1E10000000F      (void*)
+	[RSP+50 ] 0x7FF77BF78084     (void* -> Fallout4.exe+5BE8084)
+	[RSP+58 ] 0x1                (size_t)
+	[RSP+60 ] 0x7FF77BF78080     (void* -> Fallout4.exe+5BE8080)
+	[RSP+68 ] 0x7FF77BF78088     (void* -> Fallout4.exe+5BE8088)
+	[RSP+70 ] 0x1E09E01CEF0      (char*) "b"
+	[RSP+78 ] 0x1E158E82400      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+80 ] 0x0                (size_t)
+	[RSP+88 ] 0x7FF7764E2C3C     (void* -> Fallout4.exe+0152C3C)
+	[RSP+90 ] 0x1E10010742F      (char*) "GD"
+	[RSP+98 ] 0xF                (size_t)
+	[RSP+A0 ] 0x2                (size_t)
+	[RSP+A8 ] 0x1E000000000      (size_t)
+	[RSP+B0 ] 0x1E158E82400      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+B8 ] 0x1E158E824F8      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+C0 ] 0x1E158E82468      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+C8 ] 0x0                (size_t)
+	[RSP+D0 ] 0x0                (size_t)
+	[RSP+D8 ] 0x1E158E824D0      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+E0 ] 0x0                (size_t)
+	[RSP+E8 ] 0x0                (size_t)
+	[RSP+F0 ] 0x1E158E82520      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+F8 ] 0x0                (size_t)
+	[RSP+100] 0x0                (size_t)
+	[RSP+108] 0x0                (size_t)
+	[RSP+110] 0x0                (size_t)
+	[RSP+118] 0x0                (size_t)
+	[RSP+120] 0x1E158E825B0      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+128] 0x0                (size_t)
+	[RSP+130] 0x1E158E824E8      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+138] 0x0                (size_t)
+	[RSP+140] 0x0                (size_t)
+	[RSP+148] 0x0                (size_t)
+	[RSP+150] 0x0                (size_t)
+	[RSP+158] 0x1E158E82538      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+160] 0x0                (size_t)
+	[RSP+168] 0x0                (size_t)
+	[RSP+170] 0x0                (size_t)
+	[RSP+178] 0x0                (size_t)
+	[RSP+180] 0x0                (size_t)
+	[RSP+188] 0x0                (size_t)
+	[RSP+190] 0x1E158E82548      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+198] 0x1E158E82558      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+1A0] 0x0                (size_t)
+	[RSP+1A8] 0x0                (size_t)
+	[RSP+1B0] 0x1E158E82578      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+1B8] 0x1E158E825C0      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+1C0] 0x1E158E82588      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+1C8] 0x1E158E82620      (BGSAttachParentArray*)
+	[RSP+1D0] 0x1E158E82430      (BGSMod::Template::Items*)
+	[RSP+1D8] 0x1E158E82450      (BGSPreviewTransform*)
+	[RSP+1E0] 0x0                (size_t)
+	[RSP+1E8] 0x0                (size_t)
+	[RSP+1F0] 0x1E158E825A0      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+1F8] 0x1E158E825F8      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+200] 0x1E158E82608      (TESNPC*)
+		File: "Fatigues Extended.esp"
+		Flags: 0x00440000
+		Form ID: 0x53005481
+		Form Type: 45
+		Full Name: "Commando"
+	[RSP+208] 0x0                (size_t)
+	[RSP+210] 0x1E158E82460      (BGSSoundTagComponent*)
+	[RSP+218] 0x0                (size_t)
+	[RSP+220] 0x1E14833CB38      (void*)
+	[RSP+228] 0x7FF7764B84CD     (void* -> Fallout4.exe+01284CD)
+	[RSP+230] 0x1E14833C370      (void*)
+	[RSP+238] 0x0                (size_t)
+	[RSP+240] 0x0                (size_t)
+	[RSP+248] 0x0                (size_t)
+	[RSP+250] 0x1E145059440      (void*)
+	[RSP+258] 0x7FF777EE0F26     (void* -> Fallout4.exe+1B50F26)
+	[RSP+260] 0x7FF77BF79610     (void* -> Fallout4.exe+5BE9610)
+	[RSP+268] 0x7FF77BF795C0     (BSJobs::JobThread*)
+	[RSP+270] 0x7FF77BF795C0     (BSJobs::JobThread*)
+	[RSP+278] 0x7FF77810C6DE     (void* -> Fallout4.exe+1D7C6DE)
+	[RSP+280] 0x0                (size_t)
+	[RSP+288] 0x0                (size_t)
+	[RSP+290] 0x0                (size_t)
+	[RSP+298] 0x0                (size_t)
+	[RSP+2A0] 0x7FF77BF795C0     (BSJobs::JobThread*)
+	[RSP+2A8] 0x7FF777EE1432     (void* -> Fallout4.exe+1B51432)
+	[RSP+2B0] 0x0                (size_t)
+	[RSP+2B8] 0x7FF77BF795C0     (BSJobs::JobThread*)
+	[RSP+2C0] 0x0                (size_t)
+	[RSP+2C8] 0x2B8EAFFDA0       (char*) "8G"
+	[RSP+2D0] 0x0                (size_t)
+	[RSP+2D8] 0x0                (size_t)
+	[RSP+2E0] 0x0                (size_t)
+	[RSP+2E8] 0x7FF777EE3F67     (void* -> Fallout4.exe+1B53F67)
+	[RSP+2F0] 0x7FF77BF795C0     (BSJobs::JobThread*)
+	[RSP+2F8] 0x0                (size_t)
+	[RSP+300] 0x0                (size_t)
+	[RSP+308] 0x0                (size_t)
+	[RSP+310] 0x7FF77BF795C0     (BSJobs::JobThread*)
+	[RSP+318] 0x7FF777EACFED     (void* -> Fallout4.exe+1B1CFED)
+	[RSP+320] 0x4738             (size_t)
+	[RSP+328] 0x2B8EAFFDC0       (void*)
+	[RSP+330] 0x1E098FEBC90      (void*)
+	[RSP+338] 0x0                (size_t)
+	[RSP+340] 0x7FF77BF795C0     (BSJobs::JobThread*)
+	[RSP+348] 0x0                (size_t)
+	[RSP+350] 0x0                (size_t)
+	[RSP+358] 0x7FFA0C627604     (void* -> KERNEL32.DLL+0017604)
+	[RSP+360] 0x0                (size_t)
+	[RSP+368] 0x0                (size_t)
+	[RSP+370] 0x0                (size_t)
+	[RSP+378] 0x0                (size_t)
+	[RSP+380] 0x0                (size_t)
+	[RSP+388] 0x7FFA0D0826A1     (void* -> ntdll.dll+00526A1)
+	[RSP+390] 0x0                (size_t)
+	[RSP+398] 0x0                (size_t)
+	[RSP+3A0] 0x0                (size_t)
+	[RSP+3A8] 0x0                (size_t)
+	[RSP+3B0] 0x0                (size_t)
+	[RSP+3B8] 0x0                (size_t)
+	[RSP+3C0] 0x6E636CAA00000000 (size_t)
+	[RSP+3C8] 0x0                (size_t)
+	[RSP+3D0] 0x0                (size_t)
+	[RSP+3D8] 0x7FFA0AC37FE0     (void* -> KERNELBASE.dll+0117FE0)
+	[RSP+3E0] 0x2B8EAFEC00       (void*)
+	[RSP+3E8] 0xFE992804D280001F (size_t)
+	[RSP+3F0] 0x7FFA64A0134A     (size_t)
+	[RSP+3F8] 0x2B8EAFEC00       (void*)
+	[RSP+400] 0x0                (size_t)
+	[RSP+408] 0x0                (size_t)
+	[RSP+410] 0x0                (size_t)
+	[RSP+418] 0x0                (size_t)
+	[RSP+420] 0x0                (size_t)
+	[RSP+428] 0x0                (size_t)
+	[RSP+430] 0x0                (size_t)
+	[RSP+438] 0x0                (size_t)
+	[RSP+440] 0x0                (size_t)
+	[RSP+448] 0x0                (size_t)
+	[RSP+450] 0x0                (size_t)
+	[RSP+458] 0x0                (size_t)
+	[RSP+460] 0x0                (size_t)
+	[RSP+468] 0x0                (size_t)
+	[RSP+470] 0x0                (size_t)
+	[RSP+478] 0x0                (size_t)
+	[RSP+480] 0x0                (size_t)
+	[RSP+488] 0x0                (size_t)
+	[RSP+490] 0x0                (size_t)
+	[RSP+498] 0x0                (size_t)
+	[RSP+4A0] 0x0                (size_t)
+	[RSP+4A8] 0x0                (size_t)
+	[RSP+4B0] 0x0                (size_t)
+	[RSP+4B8] 0x0                (size_t)
+	[RSP+4C0] 0x0                (size_t)
+	[RSP+4C8] 0x0                (size_t)
+	[RSP+4D0] 0x0                (size_t)
+	[RSP+4D8] 0x0                (size_t)
+	[RSP+4E0] 0x0                (size_t)
+	[RSP+4E8] 0x0                (size_t)
+	[RSP+4F0] 0x0                (size_t)
+	[RSP+4F8] 0x0                (size_t)
+	[RSP+500] 0x0                (size_t)
+	[RSP+508] 0x0                (size_t)
+	[RSP+510] 0x0                (size_t)
+	[RSP+518] 0x0                (size_t)
+	[RSP+520] 0x0                (size_t)
+	[RSP+528] 0x0                (size_t)
+	[RSP+530] 0x0                (size_t)
+	[RSP+538] 0x0                (size_t)
+	[RSP+540] 0x0                (size_t)
+	[RSP+548] 0x0                (size_t)
+	[RSP+550] 0x0                (size_t)
+	[RSP+558] 0x0                (size_t)
+	[RSP+560] 0x0                (size_t)
+	[RSP+568] 0x0                (size_t)
+	[RSP+570] 0x0                (size_t)
+	[RSP+578] 0x0                (size_t)
+
+MODULES:
+
+F4SE PLUGINS:
+	Buffout4.dll v1.26.2
+	ClassicHolsteredWeapons.dll
+	f4ee.dll
+	mcm.dll
+	place.dll
+
+PLUGINS:
+	[00]     Fallout4.esm
+	[01]     DLCRobot.esm
+	[02]     DLCworkshop01.esm
+	[03]     DLCCoast.esm
+	[04]     DLCworkshop02.esm
+	[05]     DLCworkshop03.esm
+	[06]     DLCNukaWorld.esm
+	[07]     Unofficial Fallout 4 Patch.esp
+	[08]     ArmorKeywords.esm
+	[09]     Homemaker.esm
+	[0A]     JonsMod.esm
+	[0B]     Retro_Style.esm
+	[0C]     rhlegendary.esp
+	[0D]     NoHumanDecaps.esp
+	[0E]     NoHumanDismember.esp
+	[0F]     MinigunDamage v2.0x.esp
+	[10]     MG42.esp
+	[11]     M4k4rov - PPSh.esp
+	[12]     Weightless Junk and Stuff.esp
+	[13]     A Forest.esp
+	[14]     Stm_DiamondCityExpansion.esp
+	[15]     GunnersOverhaul.esp
+	[16]     UrbanFoodExpanded.esp
+	[17]     GoodneighborExpanded.esp
+	[18]     FunctionalDisplays.esp
+	[19]     CrimeTown.esp
+	[1A]     CombatZoneRestored.esp
+	[1B]     DCVendorOverhaulAIO.esp
+	[1C]     Armorsmith Extended.esp
+	[1D]     More Armor Slots - All Dlc.esp
+	[1E]     Eli_Armour_Compendium.esp
+	[1F]     W.A.T.Minutemen.esp
+	[20]     CheatTerminal.esp
+	[21]     Lootable_Redcoat_Mannequins.esp
+	[22]     SKS.esp
+	[23]     F76BlackPowderWeapons.esp
+	[24]     Remington.esp
+	[25]     F4NVServiceRifleRedux.esp
+	[26]     Remington 1858.esp
+	[27]     0londonplanecrash.esp
+	[28]     M1Garand.esp
+	[29]     essen_protovta.esp
+	[2A]     LeeEnfieldNo4MkI.esp
+	[2B]     AK74M.esp
+	[2C]     ImmersiveAnimationFramework.esp
+	[2D]     InteractionAnimations.esp
+	[2E]     [ARR] FallEvil - Mega Zombie Pack.esp
+	[2F]     Homemaker - Greenhouse and Bunker Disabler.esp
+	[30]     Homemaker - Streetlights Use Passive Power.esp
+	[31]     Homemaker - Unlocked Institute Objects.esp
+	[32]     DragAnything.esp
+	[33]     Lots More Male Hairstyles.esp
+	[34]     Lots More Facial Hair.esp
+	[35]     Sandbag Fortifications - Version 2C.esp
+	[36]     FO4Hotkeys.esp
+	[37]     NPC's Use Grenades.esp
+	[38]     ImmersiveVendors.esp
+	[39]     BrighterSettlementLights_ExtraBrightv1.1.esp
+	[3A]     Realistic Death Physics - ALL DLC.esp
+	[3B]     CarryWeight200Strength.esp
+	[3C]     CarryWeight99999.esp
+	[3D]     Schofield.esp
+	[3E]     RagdollCollision.esp
+	[3F]     Weightless Bodies and Objects.esp
+	[40]     PushAwayCompanions.esp
+	[41]     Extended weapon mods.esp
+	[42]     Food&WaterCrate.esp
+	[43]     Companion Infinite Ammo.esp
+	[44]     VeryRichMerchants.esp
+	[45]     SilentProtagonist.esp
+	[46]     Saloon Girl.esp
+	[47]     LootVision.esp
+	[48]     win1897.esp
+	[49]     FOLON - LugerP08.esp
+	[4A]     Mosin.esp
+	[4B]     PilesofCorpses.esp
+	[4C]     MGRemesh.esp
+	[4D]     Communist_Army.esp
+	[4E]     MortalYouths.esp
+	[4F]     Fatigues Extended - Gunners.esp
+	[50]     Dear_Pip-Boy.esp
+	[51]     VisibleCompanionAffinity.esp
+	[52]     Actor Scale Remover.esp
+	[53]     Fatigues Extended.esp
+	[54]     LooksMenu Customization Compendium.esp
+	[55]     wd_huntingrifle.esp
+	[56]     FOLON_Household_Cavalry.esp
+	[57]     MP40.esp
+	[58]     Family Mauser.esp
+	[59]     GreaseGunSMG.esp
+	[5A]     MartiniHenryICI.esp
+	[5B]     ArtilleryFlare.esp
+	[5C]     Simple Artillery Strikes.esp
+	[5D]     ArtillerySuper.esp
+	[5E]     PulseRifle.esp
+	[5F]     Classic_Army_Helmet.esp
+	[60]     155mm Howitzer M1.esp
+	[61]     C17 Combine Units.esp
+	[62]     Commonwealth War Stories.esp
+	[63]     WW2 Gear.esp
+	[64]     SettlementLimitSlashedFarHarbor.esp
+	[65]     StrangerValentine.esp
+	[66]     BetterSettlers.esp
+	[67]     BetterSettlersCleanFacePack.esp
+	[68]     BetterSettlersMostlyMale.esp
+	[69]     BetterSettlersNoLollygagging.esp
+	[6A]     LongerPowerLinesInf.esp
+	[6B]     AzarPonytailHairstyles.esp
+	[6C]     LooksMenu.esp
+	[6D]     SettlementMenuManager.esp
+	[6E]     Police_Officers.esp
+	[6F]     M1Garand - AWKCR.esp
+	[70]     CBBE.esp
+	[71]     StartMeUp.esp
+	[72]     StartMeUpNukaWorldPatch.esp
+	[73]     Scrap Everything - Ultimate Edition.esp
+	[FE:000] PPF.esm
+	[FE:001] pipboy sounds.esl
+	[FE:002] AUR_SanctuaryRepaired.esp
+	[FE:003] PeopleArentTheSameHeightTodd510.esp
+	[FE:004] IAF - Far Harbor & Nuka World.esp
+	[FE:005] FilledBookcasesAIO.esp
+	[FE:006] Springfield M1903.esp
+	[FE:007] A-Body.esp
+	[FE:008] WW1 German Helmets.esp
+	[FE:009] SimpleDodges.esp
+	[FE:00A] StartMeUpShaunDefaultAppearance.esp
+	[FE:00B] LaserGarand.esp
+	[FE:00C] Makeshifttextures.esp
+	[FE:00D] PeopleArentlmcpatch510.esp
+	[FE:00E] Scrap (Not Quite) Everything - 1 Sanctuary Roads, Foundations, Houses and Driveways.esp
+	[FE:00F] Scrap (Not Quite) Everything - 1a Retaining Walls.esp
+	[FE:010] Scrap (Not Quite) Everything - 1a Sanctuary Sidewalks.esp
+	[FE:011] Scrap (Not Quite) Everything - 1a Sanctuary Sign.esp
+	[FE:012] Scrap (Not Quite) Everything - 1a Sanctuary Steps.esp
+	[FE:013] Scrap (Not Quite) Everything - 2 Red Rocket and Starlight Combo.esp
+	[FE:014] Scrap (Not Quite) Everything - 4 Covenant Houses.esp
+	[FE:015] Scrap (Not Quite) Everything - 4 Covenant Sign.esp
+	[FE:016] Scrap (Not Quite) Everything - 4 Covenant Turret Platforms.esp
+	[FE:017] Scrap (Not Quite) Everything - 4 Covenant Walls.esp

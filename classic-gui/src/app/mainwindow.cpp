@@ -829,6 +829,7 @@ void MainWindow::loadSettings()
     m_fcxMode = false;
     m_simplifyLogs = false;
     m_moveUnsolvedLogs = false;
+    m_unsolvedLogsDestination.clear();
     m_maxConcurrentScans = 0;
 
     m_dataRoot = findDataRoot();
@@ -903,6 +904,8 @@ void MainWindow::loadSettings()
         m_fcxMode = getBool("CLASSIC_Settings.FCX Mode", false);
         m_simplifyLogs = getBool("CLASSIC_Settings.Simplify Logs", false);
         m_moveUnsolvedLogs = getBool("CLASSIC_Settings.Move Unsolved Logs", false);
+        m_unsolvedLogsDestination = classic::toQString(
+            classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Unsolved Logs Destination", ""));
         m_maxConcurrentScans = qMax(0, getInt("CLASSIC_Settings.Max Concurrent Scans", 0));
         if (m_resultsController) {
             m_resultsController->setAutoSwitchToResults(m_autoSwitchToResultsAfterScan);
@@ -1582,8 +1585,8 @@ void MainWindow::onScanCrashLogs()
                          .arg(format_elapsed_seconds(m_crashScanTimer)));
 
     m_scanController->startScan(m_dataRoot, m_dataDir, QStringLiteral("Fallout4"), m_gameVersion, m_showFormIdValues,
-                                m_fcxMode, m_simplifyLogs, m_moveUnsolvedLogs, m_maxConcurrentScans,
-                                m_editCustomFolder->text(), m_targetedInputPaths);
+                                m_fcxMode, m_simplifyLogs, m_moveUnsolvedLogs, m_unsolvedLogsDestination,
+                                m_maxConcurrentScans, m_editCustomFolder->text(), m_targetedInputPaths);
 }
 
 void MainWindow::onScanGameFiles()
@@ -1777,6 +1780,7 @@ void MainWindow::onShowSettings()
 {
     SettingsDialog dlg(m_dataRoot, m_signalHub, this);
     if (dlg.exec() == QDialog::Accepted) {
+        loadSettings();
         emit m_signalHub->settingsChanged();
     }
 }

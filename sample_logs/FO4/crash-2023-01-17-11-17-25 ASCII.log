@@ -1,0 +1,712 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.26.2
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6E5B217AC Fallout4.exe+0D617AC
+
+	[Compatibility]
+		F4EE: false
+	[Fixes]
+		ActorIsHostileToActor: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		GreyMovies: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+	[Patches]
+		Achievements: true
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: true
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: -1
+		MemoryManager: true
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 10 Pro v10.0.19041
+	CPU: GenuineIntel Intel(R) Core(TM) i7-4770K CPU @ 3.50GHz
+	GPU #1: Nvidia GM204 [GeForce GTX 970]
+	GPU #2: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 9.64 GB/15.94 GB
+
+PROBABLE CALL STACK:
+	[0] 0x7FF6E5B217AC      Fallout4.exe+0D617AC -> 1546751+0x136C
+	[1] 0x7FF6E5B180DB      Fallout4.exe+0D580DB -> 882638+0x13B
+	[2] 0x7FFF9BF065AC f4se_1_10_163.dll+00165AC
+	[3] 0x7FF6E5AFB503      Fallout4.exe+0D3B503 -> 338354+0x23
+	[4] 0x7FF6E6910F26      Fallout4.exe+1B50F26 -> 329005+0xC6
+	[5] 0x7FF6E6911432      Fallout4.exe+1B51432 -> 194800+0x202
+	[6] 0x7FF6E6913F67      Fallout4.exe+1B53F67 -> 1492866+0x67
+	[7] 0x7FF6E68DCFED      Fallout4.exe+1B1CFED -> 1079791+0x3D
+	[8] 0x7FFFD5447614      KERNEL32.DLL+0017614
+	[9] 0x7FFFD58026A1         ntdll.dll+00526A1
+
+REGISTERS:
+	RAX 0x0                (size_t)
+	RCX 0x22E5C762B00      (void*)
+	RDX 0x22F04EE5EC0      (BSFadeNode*)
+		Name: "skeleton.nif"
+	RBX 0x22F04EE5EC0      (BSFadeNode*)
+		Name: "skeleton.nif"
+	RSP 0x88447AF7F0       (void*)
+	RBP 0x88447AF8F0       (void*)
+	RSI 0x2                (size_t)
+	RDI 0x22E5C762B00      (void*)
+	R8  0x88447AFD00       (char*) ")"
+	R9  0x0                (size_t)
+	R10 0x88447AF790       (BSTArrayAllocatorFunctor<BSTArrayHeapAllocator>*)
+	R11 0x88447AFCD8       (void*)
+	R12 0x88447AFD00       (char*) ")"
+	R13 0x1A5319AF28C      (size_t)
+	R14 0x22D927BD140      (void*)
+	R15 0x0                (size_t)
+
+STACK:
+	[RSP+0  ] 0x22F04EE5EC0      (BSFadeNode*)
+		Name: "skeleton.nif"
+	[RSP+8  ] 0x2                (size_t)
+	[RSP+10 ] 0x88447AF8F0       (void*)
+	[RSP+18 ] 0x2                (size_t)
+	[RSP+20 ] 0x88447AF7C0       (void*)
+	[RSP+28 ] 0x88447AFD00       (char*) ")"
+	[RSP+30 ] 0x80000002         (size_t)
+	[RSP+38 ] 0x88447AFD00       (char*) ")"
+	[RSP+40 ] 0x88447AFCC0       (void*)
+	[RSP+48 ] 0x0                (size_t)
+	[RSP+50 ] 0x22D927BD140      (void*)
+	[RSP+58 ] 0x8000000200000000 (size_t)
+	[RSP+60 ] 0x22E8F38E680      (void*)
+	[RSP+68 ] 0x7FF600000002     (size_t)
+	[RSP+70 ] 0x22E537EE080      (PlayerCharacter*)
+		Object Reference: 
+			File: "(CyberDanz) Better Locational Damage + DLC Patch (AWKCR-AE-VIS-G).esp"
+			Flags: 0x00040009
+			Form ID: 0x00000007
+			Form Type: 45
+		File: ""
+		Flags: 0x00440448
+		Form ID: 0x00000014
+		Form Type: 65
+	[RSP+78 ] 0x18               (size_t)
+	[RSP+80 ] 0x1                (size_t)
+	[RSP+88 ] 0x22F04921980      (void*)
+	[RSP+90 ] 0x22E90B01DA0      (hkBaseObject*)
+	[RSP+98 ] 0x7FF6E66433FF     (void* -> Fallout4.exe+18833FF)
+	[RSP+A0 ] 0x88447AF840       (void*)
+	[RSP+A8 ] 0x88447AFD00       (char*) ")"
+	[RSP+B0 ] 0x80000002         (size_t)
+	[RSP+B8 ] 0x88447AFD00       (char*) ")"
+	[RSP+C0 ] 0x88447AFCC0       (void*)
+	[RSP+C8 ] 0x7FFF83EC9FC5     (void* -> Buffout4.dll+0049FC5)
+	[RSP+D0 ] 0x22E8F38E580      (void*)
+	[RSP+D8 ] 0x8000000200000000 (size_t)
+	[RSP+E0 ] 0x22E8F38E580      (void*)
+	[RSP+E8 ] 0x7FF600000002     (size_t)
+	[RSP+F0 ] 0x7FF6EA833D70     (`anonymous namespace'::DDQueueCollection*)
+	[RSP+F8 ] 0x30               (size_t)
+	[RSP+100] 0x1                (size_t)
+	[RSP+108] 0x22F04921980      (void*)
+	[RSP+110] 0x22E90AFED50      (hkBaseObject*)
+	[RSP+118] 0x7FF6E66433FF     (void* -> Fallout4.exe+18833FF)
+	[RSP+120] 0x88447AF8C0       (void*)
+	[RSP+128] 0x88447AFD00       (char*) ")"
+	[RSP+130] 0x80000002         (size_t)
+	[RSP+138] 0x200000447AFD00   (size_t)
+	[RSP+140] 0x88447AFCC0       (void*)
+	[RSP+148] 0x2451E900000200   (size_t)
+	[RSP+150] 0x22E8F38E500      (void*)
+	[RSP+158] 0x8000000200000000 (size_t)
+	[RSP+160] 0x22E8F38E500      (void*)
+	[RSP+168] 0x7FF600000002     (size_t)
+	[RSP+170] 0x4921980          (size_t)
+	[RSP+178] 0x0                (size_t)
+	[RSP+180] 0x1                (size_t)
+	[RSP+188] 0x22F04921980      (void*)
+	[RSP+190] 0x22E90AFD100      (hkBaseObject*)
+	[RSP+198] 0x7FF6E66433FF     (void* -> Fallout4.exe+18833FF)
+	[RSP+1A0] 0x88447AF940       (void*)
+	[RSP+1A8] 0x88447AFD00       (char*) ")"
+	[RSP+1B0] 0x0                (size_t)
+	[RSP+1B8] 0x88447AFD00       (char*) ")"
+	[RSP+1C0] 0x88447AFCC0       (void*)
+	[RSP+1C8] 0x22F0B4E1240      (void*)
+	[RSP+1D0] 0x22E8F38E480      (void*)
+	[RSP+1D8] 0x8000000200000000 (size_t)
+	[RSP+1E0] 0x22F04EE5EC0      (BSFadeNode*)
+		Name: "skeleton.nif"
+	[RSP+1E8] 0x0                (size_t)
+	[RSP+1F0] 0x7FF6EA833D70     (`anonymous namespace'::DDQueueCollection*)
+	[RSP+1F8] 0x30               (size_t)
+	[RSP+200] 0x2                (size_t)
+	[RSP+208] 0x22F04EE5EC0      (BSFadeNode*)
+		Name: "skeleton.nif"
+	[RSP+210] 0x22E7F435600      (Actor*)
+		Object Reference: 
+			File: ""
+			Flags: 0x00000008
+			Form ID: 0xFF00330F
+			Form Type: 45
+		File: "DLCworkshop03.esm"
+		Flags: 0x00410449
+		Form ID: 0x050049D5
+		Form Type: 65
+	[RSP+218] 0x7FF6E66433FF     (void* -> Fallout4.exe+18833FF)
+	[RSP+220] 0x88447AF9C0       (void*)
+	[RSP+228] 0x88447AFD00       (char*) ")"
+	[RSP+230] 0x0                (size_t)
+	[RSP+238] 0x88447AFD00       (char*) ")"
+	[RSP+240] 0x88447AFCC0       (void*)
+	[RSP+248] 0x7FF6EA833D70     (`anonymous namespace'::DDQueueCollection*)
+	[RSP+250] 0x22E8F38E400      (void*)
+	[RSP+258] 0x8000000400000000 (size_t)
+	[RSP+260] 0x22E8F38E400      (void*)
+	[RSP+268] 0x7FF600000004     (size_t)
+	[RSP+270] 0x1A5319AC4E4      (size_t)
+	[RSP+278] 0x18               (size_t)
+	[RSP+280] 0x1                (size_t)
+	[RSP+288] 0x22F04921980      (void*)
+	[RSP+290] 0x22E90AF8560      (hkBaseObject*)
+	[RSP+298] 0x7FF6E66433FF     (void* -> Fallout4.exe+18833FF)
+	[RSP+2A0] 0x88447AFA40       (void*)
+	[RSP+2A8] 0x88447AFD00       (char*) ")"
+	[RSP+2B0] 0x0                (size_t)
+	[RSP+2B8] 0x88447AFD00       (char*) ")"
+	[RSP+2C0] 0x88447AFCC0       (void*)
+	[RSP+2C8] 0x7FFF83EC9E2E     (void* -> Buffout4.dll+0049E2E)
+	[RSP+2D0] 0x22E8F38E380      (void*)
+	[RSP+2D8] 0x8000000200000000 (size_t)
+	[RSP+2E0] 0x22E8F38E380      (void*)
+	[RSP+2E8] 0x7FF600000002     (size_t)
+	[RSP+2F0] 0x22F04921980      (void*)
+	[RSP+2F8] 0x0                (size_t)
+	[RSP+300] 0x2                (size_t)
+	[RSP+308] 0x22F04921980      (void*)
+	[RSP+310] 0x0                (size_t)
+	[RSP+318] 0x7FF6E66433FF     (void* -> Fallout4.exe+18833FF)
+	[RSP+320] 0x88447AFAC0       (void*)
+	[RSP+328] 0x88447AFD00       (char*) ")"
+	[RSP+330] 0x80000002         (size_t)
+	[RSP+338] 0x88447AFD00       (char*) ")"
+	[RSP+340] 0x88447AFCC0       (void*)
+	[RSP+348] 0x22F0B75D480      (void*)
+	[RSP+350] 0x22E8F38E300      (void*)
+	[RSP+358] 0x8000000200000000 (size_t)
+	[RSP+360] 0x22E8F38E300      (void*)
+	[RSP+368] 0x7FF600000002     (size_t)
+	[RSP+370] 0x2710             (size_t)
+	[RSP+378] 0x48               (size_t)
+	[RSP+380] 0x1                (size_t)
+	[RSP+388] 0x22F04921980      (void*)
+	[RSP+390] 0x22E90AF01F0      (hkBaseObject*)
+	[RSP+398] 0x7FFF83EC9E2E     (void* -> Buffout4.dll+0049E2E)
+	[RSP+3A0] 0x88447AFB40       (void*)
+	[RSP+3A8] 0x88447AFD00       (char*) ")"
+	[RSP+3B0] 0x80000002         (size_t)
+	[RSP+3B8] 0x88447AFD00       (char*) ")"
+	[RSP+3C0] 0x7FFF840E2510     (void* -> Buffout4.dll+0262510)
+	[RSP+3C8] 0x7FFF83EC9E2E     (void* -> Buffout4.dll+0049E2E)
+	[RSP+3D0] 0x22F047E3E80      (void*)
+	[RSP+3D8] 0x22E90AEEA10      (hkBaseObject*)
+	[RSP+3E0] 0x22E8F38E280      (void*)
+	[RSP+3E8] 0x7FF600000002     (size_t)
+	[RSP+3F0] 0x7FFF840E2510     (void* -> Buffout4.dll+0262510)
+	[RSP+3F8] 0x7FFF83EC9E2E     (void* -> Buffout4.dll+0049E2E)
+	[RSP+400] 0x22F047E0460      (void*)
+	[RSP+408] 0x22F047E0490      (void*)
+	[RSP+410] 0x22E90AEEA10      (hkBaseObject*)
+	[RSP+418] 0x7FF6E66433FF     (void* -> Fallout4.exe+18833FF)
+	[RSP+420] 0x7FFF840E2510     (void* -> Buffout4.dll+0262510)
+	[RSP+428] 0x7FFF83EC9E2E     (void* -> Buffout4.dll+0049E2E)
+	[RSP+430] 0x22F047E0480      (void*)
+	[RSP+438] 0x22F04869510      (void*)
+	[RSP+440] 0x88447AFCC0       (void*)
+	[RSP+448] 0x22E87A6A468      (void*)
+	[RSP+450] 0x7FFF840E2510     (void* -> Buffout4.dll+0262510)
+	[RSP+458] 0x7FFF83ECA2E9     (void* -> Buffout4.dll+004A2E9)
+	[RSP+460] 0x22F0BB5E8E0      (void*)
+	[RSP+468] 0x0                (size_t)
+	[RSP+470] 0x22F04869510      (void*)
+	[RSP+478] 0x7FF6E6902FE8     (void* -> Fallout4.exe+1B42FE8)
+	[RSP+480] 0x1                (size_t)
+	[RSP+488] 0x7FF6E5B0CF36     (void* -> Fallout4.exe+0D4CF36)
+	[RSP+490] 0x40A00000         (size_t)
+	[RSP+498] 0x0                (size_t)
+	[RSP+4A0] 0x22F04868550      (void*)
+	[RSP+4A8] 0x0                (size_t)
+	[RSP+4B0] 0x1A5319AF28C      (size_t)
+	[RSP+4B8] 0x22DD4F47E58      (BSTCommonScrapHeapMessageQueue<BSPackedTask>*)
+	[RSP+4C0] 0x22DD4F08140      (void*)
+	[RSP+4C8] 0x8                (size_t)
+	[RSP+4D0] 0x5C8              (size_t)
+	[RSP+4D8] 0x0                (size_t)
+	[RSP+4E0] 0x0                (size_t)
+	[RSP+4E8] 0x7FF6E5B180DB     (void* -> Fallout4.exe+0D580DB)
+	[RSP+4F0] 0x22DD4F47E58      (BSTCommonScrapHeapMessageQueue<BSPackedTask>*)
+	[RSP+4F8] 0x7FF6E4DE44E3     (void* -> Fallout4.exe+00244E3)
+	[RSP+500] 0x7FF6EA927580     (void* -> Fallout4.exe+5B67580)
+	[RSP+508] 0x1                (size_t)
+	[RSP+510] 0x29               (size_t)
+	[RSP+518] 0x22E5C762B00      (void*)
+	[RSP+520] 0x22F04EE5EC0      (BSFadeNode*)
+		Name: "skeleton.nif"
+	[RSP+528] 0x0                (size_t)
+	[RSP+530] 0x0                (size_t)
+	[RSP+538] 0x0                (size_t)
+	[RSP+540] 0x0                (size_t)
+	[RSP+548] 0x0                (size_t)
+	[RSP+550] 0x0                (size_t)
+	[RSP+558] 0x0                (size_t)
+	[RSP+560] 0x0                (size_t)
+	[RSP+568] 0x0                (size_t)
+	[RSP+570] 0x0                (size_t)
+	[RSP+578] 0x0                (size_t)
+	[RSP+580] 0x0                (size_t)
+	[RSP+588] 0x0                (size_t)
+	[RSP+590] 0x0                (size_t)
+	[RSP+598] 0x0                (size_t)
+	[RSP+5A0] 0x7FF6EA9A8084     (void* -> Fallout4.exe+5BE8084)
+	[RSP+5A8] 0x1                (size_t)
+	[RSP+5B0] 0x7FF6EA9A8080     (void* -> Fallout4.exe+5BE8080)
+	[RSP+5B8] 0x7FF6EA9A8088     (void* -> Fallout4.exe+5BE8088)
+	[RSP+5C0] 0x22DD4F2E240      (void*)
+	[RSP+5C8] 0x0                (size_t)
+	[RSP+5D0] 0x0                (size_t)
+	[RSP+5D8] 0x7FFF9BF065AC     (void* -> f4se_1_10_163.dll+00165AC)
+	[RSP+5E0] 0xC350             (size_t)
+	[RSP+5E8] 0x22DD4F47D80      (Main*)
+	[RSP+5F0] 0x7FF600000008     (size_t)
+	[RSP+5F8] 0x7FF600000000     (size_t)
+	[RSP+600] 0x22DD4F2E240      (void*)
+	[RSP+608] 0x7FF6E5AFB503     (void* -> Fallout4.exe+0D3B503)
+	[RSP+610] 0x22DD4F2E240      (void*)
+	[RSP+618] 0x7FF6EA9A8BD8     (void* -> Fallout4.exe+5BE8BD8)
+	[RSP+620] 0x0                (size_t)
+	[RSP+628] 0x0                (size_t)
+	[RSP+630] 0x7FF6EA9A8BD8     (void* -> Fallout4.exe+5BE8BD8)
+	[RSP+638] 0x7FF6E6910F26     (void* -> Fallout4.exe+1B50F26)
+	[RSP+640] 0x7FF6EA9A8BD8     (void* -> Fallout4.exe+5BE8BD8)
+	[RSP+648] 0x7FF6EA9A8B88     (void* -> Fallout4.exe+5BE8B88)
+	[RSP+650] 0x7FF6EA9A8B48     (BSJobs::JobThread*)
+	[RSP+658] 0x22DD4F2E240      (void*)
+	[RSP+660] 0x0                (size_t)
+	[RSP+668] 0x0                (size_t)
+	[RSP+670] 0x11               (size_t)
+	[RSP+678] 0x2                (size_t)
+	[RSP+680] 0x7FF6EA9A8B48     (BSJobs::JobThread*)
+	[RSP+688] 0x7FF6E6911432     (void* -> Fallout4.exe+1B51432)
+	[RSP+690] 0x2                (size_t)
+	[RSP+698] 0x7FF6EA9A8B88     (void* -> Fallout4.exe+5BE8B88)
+	[RSP+6A0] 0x0                (size_t)
+	[RSP+6A8] 0x88447AFEF0       (char*) "(L"
+	[RSP+6B0] 0x0                (size_t)
+	[RSP+6B8] 0x0                (size_t)
+	[RSP+6C0] 0x0                (size_t)
+	[RSP+6C8] 0x7FF6E6913F67     (void* -> Fallout4.exe+1B53F67)
+	[RSP+6D0] 0x7FF6EA9A8B48     (BSJobs::JobThread*)
+	[RSP+6D8] 0x0                (size_t)
+	[RSP+6E0] 0x0                (size_t)
+	[RSP+6E8] 0x0                (size_t)
+	[RSP+6F0] 0x7FF6EA9A8B48     (BSJobs::JobThread*)
+	[RSP+6F8] 0x7FF6E68DCFED     (void* -> Fallout4.exe+1B1CFED)
+	[RSP+700] 0x4C28             (size_t)
+	[RSP+708] 0x88447AFF10       (void*)
+	[RSP+710] 0x22DD4F0BC90      (void*)
+	[RSP+718] 0x0                (size_t)
+	[RSP+720] 0x7FF6EA9A8B48     (BSJobs::JobThread*)
+	[RSP+728] 0x0                (size_t)
+	[RSP+730] 0x0                (size_t)
+	[RSP+738] 0x7FFFD5447614     (void* -> KERNEL32.DLL+0017614)
+	[RSP+740] 0x0                (size_t)
+	[RSP+748] 0x0                (size_t)
+	[RSP+750] 0x0                (size_t)
+	[RSP+758] 0x0                (size_t)
+	[RSP+760] 0x0                (size_t)
+	[RSP+768] 0x7FFFD58026A1     (void* -> ntdll.dll+00526A1)
+	[RSP+770] 0x0                (size_t)
+	[RSP+778] 0x0                (size_t)
+	[RSP+780] 0x0                (size_t)
+	[RSP+788] 0x0                (size_t)
+	[RSP+790] 0x0                (size_t)
+	[RSP+798] 0x0                (size_t)
+	[RSP+7A0] 0x80F830DF00000000 (size_t)
+	[RSP+7A8] 0x0                (size_t)
+	[RSP+7B0] 0x0                (size_t)
+	[RSP+7B8] 0x7FFFD3040140     (void* -> KERNELBASE.dll+0110140)
+	[RSP+7C0] 0x88447AE940       (void*)
+	[RSP+7C8] 0xA7F8633E0000FFFE (size_t)
+	[RSP+7D0] 0x7FFF53FC319F     (size_t)
+	[RSP+7D8] 0x88447AE940       (void*)
+	[RSP+7E0] 0x0                (size_t)
+	[RSP+7E8] 0x0                (size_t)
+	[RSP+7F0] 0x0                (size_t)
+	[RSP+7F8] 0x0                (size_t)
+	[RSP+800] 0x0                (size_t)
+	[RSP+808] 0x0                (size_t)
+
+MODULES:
+
+F4SE PLUGINS:
+	achievements.dll
+	BakaScrapHeap.dll v1.3
+	Buffout4.dll v1.26.2
+	crafting_highlight_fix.dll
+	def_ui.dll
+	f4ee.dll
+	faster_workshop.dll
+	HighFPSPhysicsFix.dll
+	hudextension.dll
+	mcm.dll
+	place.dll
+	PowerGridTools.dll
+	PrivateProfileRedirector.dll
+	weaponInstanceExtended.dll v1
+	wsfw_identifier.dll
+	XDI.dll
+
+PLUGINS:
+	[00]     Fallout4.esm
+	[01]     DLCRobot.esm
+	[02]     DLCworkshop01.esm
+	[03]     DLCCoast.esm
+	[04]     DLCworkshop02.esm
+	[05]     DLCworkshop03.esm
+	[06]     DLCNukaWorld.esm
+	[07]     Unofficial Fallout 4 Patch.esp
+	[08]     WorkshopFramework.esm
+	[09]     ArmorKeywords.esm
+	[0A]     XDI.esm
+	[0B]     HUDFramework.esm
+	[0C]     SimSettlements.esm
+	[0D]     RAW INPUT.esp
+	[0E]     spacefiddle_Follower-Stealth-Distance-Fixes.esp
+	[0F]     Merged Fixes.esp
+	[10]     CBBE.esp
+	[11]     Armorsmith Extended.esp
+	[12]     Immersive HUD.esp
+	[13]     VIS-G Item Sorting.esp
+	[14]     CraftingFramework.esp
+	[15]     QuickTrade.esp
+	[16]     WheelMenu.esp
+	[17]     FO3VaultSuit.esp
+	[18]     Mercenary.esp
+	[19]     K9TacticalHarness.esp
+	[1A]     Tactical Flashlights.esp
+	[1B]     Tactical Flashlights - Settings.esp
+	[1C]     Binoculars.esp
+	[1D]     W.A.T.Minutemen.esp
+	[1E]     ImprovedBoSRedux.esp
+	[1F]     ImprovedBoSRedux-Uniforms.esp
+	[20]     ImprovedBoSRedux-Vertibirds.esp
+	[21]     Better Locational Damage.esp
+	[22]     Better Locational Damage - DLC_Automatron.esp
+	[23]     Better Locational Damage - DLC_WWorkshop.esp
+	[24]     Better Locational Damage - DLC_Far_Harbor.esp
+	[25]     Better Locational Damage - DLC_Nuka_World.esp
+	[26]     BLD - Leveled Lists - DLC.esp
+	[27]     SuperMutantRedux.esp
+	[28]     SuperMutantRedux_ArmorSmithExtended.esp
+	[29]     SuperMutantRedux_VIS-G_Patch.esp
+	[2A]     BP AE patch - CROSS_IES.esp
+	[2B]     BP AE patch - CROSS_IES X6-88.esp
+	[2C]     Synth Overhaul.esp
+	[2D]     Synth Overhaul - No level requirements Patch.esp
+	[2E]     EveryonesBestFriend.esp
+	[2F]     LBPAC.esp
+	[30]     LBPAC AWKCR Patch.esp
+	[31]     Immersive Fallout (DLC).esp
+	[32]     3dscopes-replacer.esp
+	[33]     Better Cooking Stations.esp
+	[34]     Better Cooking Stations - Far Harbor + Nuka World patch.esp
+	[35]     Better Explosives Redux.esp
+	[36]     BLD - AI Tweaks.esp
+	[37]     Better Locational Damage - Ghoul Edition.esp
+	[38]     Better Perks.esp
+	[39]     Better VATS - No Reduction.esp
+	[3A]     Better Cooking.esp
+	[3B]     Better Chems.esp
+	[3C]     LooksMenu.esp
+	[3D]     LooksMenu Customization Compendium.esp
+	[3E]     MiscHairstyle.esp
+	[3F]     MoreHairstyles4Female4.1.esp
+	[40]     MoreHairstyles4Male3.1.esp
+	[41]     MoreBeards.esp
+	[42]     KSHairdos.esp
+	[43]     The Eyes Of Beauty.esp
+	[44]     Lots More Male Hairstyles.esp
+	[45]     Lots More Facial Hair.esp
+	[46]     Merged Appearance.esp
+	[47]     CompanionOverhaul.esp
+	[48]     Cito.esp
+	[49]     DeterminedDesdemona.esp
+	[4A]     KindKasumi.esp
+	[4B]     Mason.esp
+	[4C]     MesmerizingMagnolia.esp
+	[4D]     Maxson.esp
+	[4E]     MagsBlack.esp
+	[4F]     NastyNisha_MystolleVersion.esp
+	[50]     NewFace_Settlers.esp
+	[51]     PD_LowerWeapon.esp
+	[52]     SettlementMenuManager.esp
+	[53]     WorkshopRearranged.esp
+	[54]     SalvageBeacons.esp
+	[55]     SKKSettlementAttackSystem.esp
+	[56]     SKKSettlementAttackSystemMarkers.esp
+	[57]     SKKCombatSettlers.esp
+	[58]     Clarity.esp
+	[59]     HBT - Better Locational Damage.esp
+	[5A]     Hollywood Lasers.esp
+	[5B]     UltraInteriorLighting.esp
+	[5C]     Pip-Boy Flashlight.esp
+	[5D]     Thaylar Lighting 3.2 - Big Edition.esp
+	[5E]     Thaylar Lighting 3.2 Workshop Rearranged Patch - Big Edition.esp
+	[5F]     PowerArmorImpactEffects.esp
+	[60]     Swinging Meat Bags.esp
+	[61]     Merged Audio.esp
+	[62]     Quieter Settlements - Vanilla.esp
+	[63]     Quieter Settlements - Contraptions.esp
+	[64]     Quieter Settlements - Wasteland Workshop.esp
+	[65]     Realistic_conversations - More_NPCs.esp
+	[66]     Vivid Weathers - FO4.esp
+	[67]     Vivid Weathers - FO4 - Far Harbor.esp
+	[68]     Vivid Weathers - Nuka World.esp
+	[69]     JaneBod.esp
+	[6A]     AzarPonytailHairstyles.esp
+	[6B]     9x39Project.esp
+	[6C]     9x39ProjectAWKCR.esp
+	[6D]     AK74M.esp
+	[6E]     ASVektor.esp
+	[6F]     ClassicSniper.esp
+	[70]     ClassicSniperCombatScopes.esp
+	[71]     ClassicSniperVisibleWeap.esp
+	[72]     DOOMMerged.esp
+	[73]     F4NVServiceRifleRedux.esp
+	[74]     BattleRifle.esp
+	[75]     G36Complex.esp
+	[76]     M1Garand.esp
+	[77]     M1Garand - AWKCR-VIS-VW.esp
+	[78]     M2216.esp
+	[79]     m82a.esp
+	[7A]     mk14.esp
+	[7B]     mk14-awkcr.esp
+	[7C]     ModularKalash.esp
+	[7D]     mjp_PTRS41ATR.esp
+	[7E]     Mosin.esp
+	[7F]     RU556.esp
+	[80]     P220.esp
+	[81]     SCAR-L.esp
+	[82]     P99.esp
+	[83]     WattzLaserGun.esp
+	[84]     Yona_Weapon_DefenseGun.esp
+	[85]     DX_Black_Widow.esp
+	[86]     More Armor Slots - All Dlc.esp
+	[87]     DX_Banshee_Recon_Armor.esp
+	[88]     Deathclaw Hunter Armor Nuka World.esp
+	[89]     DX_Atom_Girl_Outfit.esp
+	[8A]     Eli_Accessories.esp
+	[8B]     el_AgentOutfit.esp
+	[8C]     VisibleWeapons.esp
+	[8D]     Friffy_Holstered Weapons.esp
+	[8E]     RaiderOverhaul.esp
+	[8F]     Merged Visuals.esp
+	[90]     Patch BLD-HBT.esp
+	[91]     AA FusionCityRising.esp
+	[92]     OutcastsAndRemnants.esp
+	[93]     ProjectValkyrie.esp
+	[94]     Depravity.esp
+	[FE:000] PPF.esm
+	[FE:001] Flicker Fixer.esp
+	[FE:002] VIS-G Item Sorting Vanilla Weight Patch.esp
+	[FE:003] CROSS_BrotherhoodRecon.esp
+	[FE:004] CROSS_InstituteExpeditionarySuit.esp
+	[FE:005] CROSS_CourserStrigidae.esp
+	[FE:006] CROSS_CoA.esp
+	[FE:007] Better Cooking Stations Immersive Patch.esp
+	[FE:008] Better Locational Damage - Robot Edition.esp
+	[FE:009] WET.esp
+	[FE:00A] CMRQL.esp
+	[FE:00B] RTH_DX_Banshee_Recon_Armor_ChameleonFix.esp
+	[FE:00C] (CyberDanz) VIS-G Item Sorting - BRB Core Mods  - (Merged)(Compatibility).esp
+	[FE:00D] (CyberDanz) VIS-G Item Sorting - Immersive HUD (Compatibility).esp
+	[FE:00E] (CyberDanz) VIS-G Item Sorting - BRB Clothing (Merged)(Compatibility).esp
+	[FE:00F] (CyberDanz) VIS-G Item Sorting - BRB Factions (Merged)(Compatibility).esp
+	[FE:010] Schnips - CROSS_CoA - AWKCR, VIS-G Patch.esp
+	[FE:011] (CyberDanz) VIS-G Item Sorting - BRB Gameplay (Merged)(Compatibility).esp
+	[FE:012] (CyberDanz) Compatibility - BRB Looks and Animations (Merged)(Compatibility).esp
+	[FE:013] (CyberDanz) Compatibility - BRB Settlements (Merged)(Compatibility).esp
+	[FE:014] Schnips - Immersive HUD - VIS-G Patch.esp
+	[FE:015] Schnips - FO3VaultSuit - VIS-G Patch.esp
+	[FE:016] Schnips - Mercenary - VIS-G Patch.esp
+	[FE:017] Schnips - K9TacticalHarness - VIS-G Patch.esp
+	[FE:018] Schnips - Binoculars - VIS-G Patch.esp
+	[FE:019] Schnips - W.A.T.Minutemen - VIS-G Patch.esp
+	[FE:01A] Schnips - Better Locational Damage - Raider Overhaul - VIS-G Patch.esp
+	[FE:01B] Schnips - ImprovedBoSRedux - VIS-G Patch.esp
+	[FE:01C] Schnips - ImprovedBoSRedux-Uniforms - VIS-G Patch.esp
+	[FE:01D] Schnips - CROSS_BrotherhoodRecon - AWKCR, VIS-G Patch.esp
+	[FE:01E] Schnips - Better Locational Damage - VIS-G Patch.esp
+	[FE:01F] Schnips - Better Locational Damage - DLC_Automatron - VIS-G Patch.esp
+	[FE:020] Schnips - Better Locational Damage - DLC_Far_Harbor - VIS-G Patch.esp
+	[FE:021] Schnips - Better Locational Damage - DLC_Nuka_World - VIS-G Patch.esp
+	[FE:022] Schnips - BLD - Leveled Lists - DLC - VIS-G Patch.esp
+	[FE:023] Schnips - SuperMutantRedux - VIS-G Patch.esp
+	[FE:024] Schnips - CROSS_InstituteExpeditionarySuit - AWKCR, VIS-G Patch.esp
+	[FE:025] Schnips - CROSS_CourserStrigidae - AWKCR, VIS-G Patch.esp
+	[FE:026] Schnips - LBPAC - VIS-G Patch.esp
+	[FE:027] Schnips - 3dscopes-replacer - VIS-G Patch.esp
+	[FE:028] Schnips - Better Cooking Stations - VIS-G Patch.esp
+	[FE:029] Schnips - Better Explosives Redux - VIS-G Patch.esp
+	[FE:02A] Schnips - Better Cooking - VIS-G Patch.esp
+	[FE:02B] Schnips - Better Chems - VIS-G Patch.esp
+	[FE:02C] Schnips - SettlementMenuManager - VIS-G Patch.esp
+	[FE:02D] Schnips - Workshop Rearranged - VIS-G Patch.esp
+	[FE:02E] Schnips - SimSettlements - VIS-G Patch.esp
+	[FE:02F] Schnips - Salvage Beacon - VIS-G Patch.esp
+	[FE:030] Schnips - SKKSettlementAttackSystem - VIS-G Patch.esp
+	[FE:031] Schnips - SKKCombatSettlers - VIS-G Patch.esp
+	[FE:032] Schnips - Depravity - VIS-G Patch.esp
+	[FE:033] Schnips - Friffy_Holstered Weapons - VIS-G Patch.esp
+	[FE:034] Schnips - FusionCityRisings - VIS-G Patch.esp
+	[FE:035] Schnips - OutcastsAndRemnants - VIS-G Patch.esp
+	[FE:036] Schnips - ProjectValkyrie - VIS-G Patch.esp
+	[FE:037] Schnips - Visible Weapons - VIS-G Patch.esp
+	[FE:038] (CyberDanz) 9x39 Project Patch (Weapons).esp
+	[FE:039] (CyberDanz) AK74M Assault Rifle Patch (Weapons).esp
+	[FE:03A] (CyberDanz) AS Vektor Patch (Weapons).esp
+	[FE:03B] (CyberDanz) Better Chems Patch (AWKCR-AE-VIS-G).esp
+	[FE:03C] (CyberDanz) Better Cooking  - Better Cooking Stations (Compatibility).esp
+	[FE:03D] (CyberDanz) Better Cooking Patch (AWKCR-AE-VIS-G).esp
+	[FE:03E] (CyberDanz) Better Cooking Stations - Crafting Framework (Compatibility).esp
+	[FE:03F] (CyberDanz) Better Cooking Stations Patch (AWKCR-AE-VIS-G).esp
+	[FE:040] (CyberDanz) Better Explosives Redux Patch (AWKCR-AE-VIS-G).esp
+	[FE:041] (CyberDanz) Better Locational Damage + DLC Patch (AWKCR-AE-VIS-G).esp
+	[FE:042] (CyberDanz) Better Locational Damage - LooksMenu Customization Compendium (Override).esp
+	[FE:043] (CyberDanz) Better Locational Damage Armor Overhaul Patch (AWKCR-AE-VIS-G).esp
+	[FE:044] (CyberDanz) Better Locational Damage Robot Edition - Better Locational Damage (Compatibility).esp
+	[FE:045] (CyberDanz) Better Perks Patch (AWKCR-AE-VIS-G).esp
+	[FE:046] (CyberDanz) BLD AI Tweaks - Companion Stealth Distance Fix (Compatibility).esp
+	[FE:047] (CyberDanz) C.A.S.T. Synth Overhaul Patch (AWKCR-AE-VIS-G).esp
+	[FE:048] (CyberDanz) Captivating Companions - Better Locational Damage (Compatibility).esp
+	[FE:049] (CyberDanz) Caution Tape (AWKCR-AE-VIS-G).esp
+	[FE:04A] (CyberDanz) Charming Cito - FO4 + DLC - Merged Mods - Appearance (Compatibility).esp
+	[FE:04B] (CyberDanz) Crafting Framework Patch (AWKCR-AE-VIS-G).esp
+	[FE:04C] (CyberDanz) CROSS Brotherhood Recon Patch (AWKCR-AE-VIS-G).esp
+	[FE:04D] (CyberDanz) CROSS Chosen of Atom Patch (AWKCR-AE-VIS-G).esp
+	[FE:04E] (CyberDanz) CROSS Courser Strigidae Patch (AWKCR-AE-VIS-G).esp
+	[FE:04F] (CyberDanz) CROSS Institute Expeditionary Suit Patch (AWKCR-AE-VIS-G).esp
+	[FE:050] (CyberDanz) DKS-501 Sniper Rifle Patch (Weapons).esp
+	[FE:051] (CyberDanz) DOOM Merged Patch (Weapons).esp
+	[FE:052] (CyberDanz) F4NV Service Rifle Redux Patch (Weapons).esp
+	[FE:053] (CyberDanz) Fallout 4 - DLC Content  (AWKCR-AE-VIS-G).esp
+	[FE:054] (CyberDanz) FO3-FNV Vault Suit Patch (AWKCR-AE-VIS-G).esp
+	[FE:055] (CyberDanz) Friffy Just Visible Holstered Weapons Patch (AWKCR-AE-VIS-G).esp
+	[FE:056] (CyberDanz) G67 Battle Rifle Patch (Weapons).esp
+	[FE:057] (CyberDanz) HK G36 Complex Patch (Weapons).esp
+	[FE:058] (CyberDanz) Hollywood Lasers - Better Locational Damage (Compatibility).esp
+	[FE:059] (CyberDanz) Hollywood Lasers Patch (AWKCR-AE-VIS-G).esp
+	[FE:05A] (CyberDanz) Immersive Fallout DLC Patch (AWKCR-AE-VIS-G).esp
+	[FE:05B] (CyberDanz) Immersive HUD Patch (AWKCR-AE-VIS-G).esp
+	[FE:05C] (CyberDanz) Improved BoS Redux - Uniforms - Vertibirds Patch (AWKCR-AE-VIS-G).esp
+	[FE:05D] (CyberDanz) K9 Tactical Harness Patch (AWKCR-AE-VIS-G).esp
+	[FE:05E] (CyberDanz) Kind Kasumi - FO4 + DLC - Misc Hairstyles (Compatibility).esp
+	[FE:05F] (CyberDanz) Lore-Based Power Armor Changes  - Raider Overhaul (Compatibility).esp
+	[FE:060] (CyberDanz) Lore-Based Power Armor Changes - Improved BoS Redux (Compatibility).esp
+	[FE:061] (CyberDanz) Lore-Based Power Armor Changes Patch (AWKCR-AE-VIS-G).esp
+	[FE:062] (CyberDanz) M1 Garand Patch (Weapons).esp
+	[FE:063] (CyberDanz) M2216 Assault Rifle Patch (Weapons).esp
+	[FE:064] (CyberDanz) M82A-A3 Anti-Material Rifle Patch (Weapons).esp
+	[FE:065] (CyberDanz) Merged Mods - Appearance - FO4 + DLC (Compatibility).esp
+	[FE:066] (CyberDanz) Mesmerizing Magnolia - FO4 - Misc Hairstyles (Compatibility).esp
+	[FE:067] (CyberDanz) MK14 EBR Patch (Weapons).esp
+	[FE:068] (CyberDanz) Modular Kalash Assault Rifle Patch (Weapons).esp
+	[FE:069] (CyberDanz) Modular Simonov PTRS41 Patch (Weapons).esp
+	[FE:06A] (CyberDanz) Mosin Nagant Sniper Rifle Patch (Weapons).esp
+	[FE:06B] (CyberDanz) NewFace Settlers - AWKCR (Compatibility).esp
+	[FE:06C] (CyberDanz) NewFace Settlers - Better Locational Damage (Compatibility).esp
+	[FE:06D] (CyberDanz) Pipboy Flashlight - Clarity (Compatibility).esp
+	[FE:06E] (CyberDanz) Pipboy Flashlight Patch (AWKCR-AE-VIS-G).esp
+	[FE:06F] (CyberDanz) Pre-War Binoculars Patch (AWKCR-AE-VIS-G).esp
+	[FE:070] (CyberDanz) Quick Trade Redux Patch (AWKCR-AE-VIS-G).esp
+	[FE:071] (CyberDanz) Raider Overhaul - Better Locational Damage + DLC (Compatibility).esp
+	[FE:072] (CyberDanz) Raider Overhaul v12.4 Patch (AWKCR-AE-VIS-G).esp
+	[FE:073] (CyberDanz) RAW Input - Merged Fixes Patch (Compatibility).esp
+	[FE:074] (CyberDanz) Robco Recon Scopes - See-Through Scopes Replacer (Compatibility).esp
+	[FE:075] (CyberDanz) RU556 Assault Rifle Patch (Weapons).esp
+	[FE:076] (CyberDanz) SCAR-H Final Patch (Weapons).esp
+	[FE:077] (CyberDanz) See-Through Scopes Replacer Patch (AWKCR-AE-VIS-G).esp
+	[FE:078] (CyberDanz) Settlement Menu Manager Patch (AWKCR-AE-VIS-G).esp
+	[FE:079] (CyberDanz) Sig Sauer P220 Pistol Patch (Weapons).esp
+	[FE:07A] (CyberDanz) SKK Settlment Attack System Patch (AWKCR-AE-VIS-G).esp
+	[FE:07B] (CyberDanz) Super Mutant Redux - Better Locational Damage + DLC (Compatibility).esp
+	[FE:07C] (CyberDanz) Super Mutant Redux - Raider Overhaul (Compatibility).esp
+	[FE:07D] (CyberDanz) Super Mutant Redux Patch (AWKCR-AE-VIS-G).esp
+	[FE:07E] (CyberDanz) Tactical Flashlights Patch (AWKCR-AE-VIS-G).esp
+	[FE:07F] (CyberDanz) Thaylar Lighting - Workshop Rearranged - Clarity (Compatibility).esp
+	[FE:080] (CyberDanz) Thaylar Lighting Brighter Settlement Lights Patch (AWKCR-AE-VIS-G).esp
+	[FE:081] (CyberDanz) Ultra Interior Lighting - Clarity (Compatibility).esp
+	[FE:082] (CyberDanz) Ultra Interior Lighting - UFO4P (Compatibility).esp
+	[FE:083] (CyberDanz) Visible Weapons Patch (AWKCR-AE-VIS-G).esp
+	[FE:084] (CyberDanz) Vivid Weathers Patch (AWKCR-AE-VIS-G).esp
+	[FE:085] (CyberDanz) W.E.T. - Clarity (Compatibility).esp
+	[FE:086] (CyberDanz) Walther P99 Pistol Patch (Weapons).esp
+	[FE:087] (CyberDanz) Wattz Laser Gun Patch (Weapons).esp
+	[FE:088] (CyberDanz) We Are the Minutemen - Better Locational Damage + DLC (Compatibility).esp
+	[FE:089] (CyberDanz) We Are The Minutemen - BLD AI Tweaks (Compatibility).esp
+	[FE:08A] (CyberDanz) We Are the Minutemen Patch (AWKCR-AE-VIS-G).esp
+	[FE:08B] (CyberDanz) Workshop Rearranged - Better Cooking (Compatibility).esp
+	[FE:08C] (CyberDanz) Workshop Rearranged - Better Cooking Stations (Compatibility).esp
+	[FE:08D] (CyberDanz) Workshop Rearranged - Clarity (Compatibility).esp
+	[FE:08E] (CyberDanz) Workshop Rearranged Patch (AWKCR-AE-VIS-G).esp
+	[FE:08F] (CyberDanz) Yona Defense Gun SMG Patch (Weapons).esp
+	[FE:090] LOST AK74M Patch.esp
+	[FE:091] LOST Better Cooking Stations Patch.esp
+	[FE:092] LOST Black Widow Armor Patch.esp
+	[FE:093] LOST Brotherhood Recon Patch.esp
+	[FE:094] LOST Chosen of Atom Patch.esp
+	[FE:095] LOST Combat Settlers Patch.esp
+	[FE:096] LOST Courser Strigidae Patch.esp
+	[FE:097] LOST Depravity Patch.esp
+	[FE:098] LOST DOOM Merged Patch.esp
+	[FE:099] LOST Explosives Redux Patch.esp
+	[FE:09A] LOST Fusion City Rising Patch.esp
+	[FE:09B] LOST G36 Patch.esp
+	[FE:09C] LOST Holstered Weapons Patch.esp
+	[FE:09D] LOST Immersive HUD Patch.esp
+	[FE:09E] LOST Institute Expeditionary Patch.esp
+	[FE:09F] LOST K9 Harness Patch.esp
+	[FE:0A0] LOST M1 Garand Patch.esp
+	[FE:0A1] LOST MK14 EBR Patch.esp
+	[FE:0A2] LOST Modular Simonov Patch.esp
+	[FE:0A3] LOST Outcasts and Remnants Patch.esp
+	[FE:0A4] LOST PreWar Binoculars Patch.esp
+	[FE:0A5] LOST Project Valkyrie Patch.esp
+	[FE:0A6] LOST RU556 Patch.esp
+	[FE:0A7] LOST Salvage Becons Patch.esp
+	[FE:0A8] LOST See Through Scopes REPLACER Patch.esp
+	[FE:0A9] LOST Service Rifle Patch.esp
+	[FE:0AA] LOST Settlement Attack System Patch.esp
+	[FE:0AB] LOST Settlement Menu Manager Patch.esp
+	[FE:0AC] LOST Sig Sauer P220 Patch.esp
+	[FE:0AD] LOST Sim Settlements Patch.esp
+	[FE:0AE] LOST Super Mutant Redux Patch.esp
+	[FE:0AF] LOST Synth Overhaul Patch.esp
+	[FE:0B0] LOST Tactical Flashlights Patch.esp
+	[FE:0B1] LOST Visible Weapons Patch.esp
+	[FE:0B2] LOST Vivid Weathers Patch.esp
+	[FE:0B3] LOST WATM Patch.esp
+	[FE:0B4] LOST Wattz Laser Patch.esp
+	[FE:0B5] LOST Workshop Framework Patch.esp
+	[FE:0B6] Bashed Patch, 0.esp

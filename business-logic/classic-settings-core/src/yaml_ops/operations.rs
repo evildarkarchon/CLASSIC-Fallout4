@@ -178,21 +178,21 @@ impl YamlOperations {
         let file_path = path.to_path_buf();
 
         // Check cache first
-        if self.cache_enabled {
-            if let Some(cached) = YAML_CACHE.get(&file_path) {
-                // Check if file has been modified
-                if let Ok(metadata) = std::fs::metadata(&file_path) {
-                    if let Ok(modified) = metadata.modified() {
-                        if modified <= cached.modified {
-                            // Cache is still valid - record hit
-                            CACHE_HITS.fetch_add(1, Ordering::Relaxed);
-                            trace!(cache = "yaml", path = %file_path.display(), "cache hit");
-                            return Ok((*cached.data).clone());
-                        }
-
-                        let _ = YAML_CACHE.remove(&file_path);
-                    }
+        if self.cache_enabled
+            && let Some(cached) = YAML_CACHE.get(&file_path)
+        {
+            // Check if file has been modified
+            if let Ok(metadata) = std::fs::metadata(&file_path)
+                && let Ok(modified) = metadata.modified()
+            {
+                if modified <= cached.modified {
+                    // Cache is still valid - record hit
+                    CACHE_HITS.fetch_add(1, Ordering::Relaxed);
+                    trace!(cache = "yaml", path = %file_path.display(), "cache hit");
+                    return Ok((*cached.data).clone());
                 }
+
+                let _ = YAML_CACHE.remove(&file_path);
             }
         }
 
@@ -209,19 +209,18 @@ impl YamlOperations {
         let yaml = docs.first().cloned().ok_or(YamlError::EmptyDocument)?;
 
         // Update cache
-        if self.cache_enabled {
-            if let Ok(metadata) = std::fs::metadata(&file_path) {
-                if let Ok(modified) = metadata.modified() {
-                    YAML_CACHE.insert(
-                        file_path.clone(),
-                        CachedYaml {
-                            data: Arc::new(yaml.clone()),
-                            modified,
-                            raw_content: Some(content),
-                        },
-                    );
-                }
-            }
+        if self.cache_enabled
+            && let Ok(metadata) = std::fs::metadata(&file_path)
+            && let Ok(modified) = metadata.modified()
+        {
+            YAML_CACHE.insert(
+                file_path.clone(),
+                CachedYaml {
+                    data: Arc::new(yaml.clone()),
+                    modified,
+                    raw_content: Some(content),
+                },
+            );
         }
 
         Ok(yaml)

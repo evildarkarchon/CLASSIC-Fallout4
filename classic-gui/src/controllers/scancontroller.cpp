@@ -5,7 +5,6 @@
 #include "workers/scanworker.h"
 
 #include "classic_cxx_bridge/files.h"
-#include "classic_cxx_bridge/settings.h"
 #include "rust/cxx.h"
 
 #include <QCoreApplication>
@@ -15,38 +14,6 @@
 #include <QThread>
 
 namespace {
-
-QString cleanDirectoryPath(const rust::String& value)
-{
-    const QString trimmed = classic::toQString(value).trimmed();
-    return trimmed.isEmpty() ? QString() : QDir::cleanPath(trimmed);
-}
-
-QString resolveXseFolderFromLocalYaml(const QString& yamlData, const QString& game)
-{
-    const QString localYamlPath = QDir(yamlData).filePath(QStringLiteral("CLASSIC %1 Local.yaml").arg(game));
-
-    try {
-        auto ops = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*ops, classic::toRustString(localYamlPath));
-
-        const QString xsePath =
-            cleanDirectoryPath(classic::settings::yaml_ops_get_string(*ops, "Game_Info.Docs_Folder_XSE", ""));
-        if (!xsePath.isEmpty()) {
-            return xsePath;
-        }
-
-        const QString docsRoot =
-            cleanDirectoryPath(classic::settings::yaml_ops_get_string(*ops, "Game_Info.Root_Folder_Docs", ""));
-        if (!docsRoot.isEmpty()) {
-            return QDir(docsRoot).filePath(QStringLiteral("F4SE"));
-        }
-
-        return {};
-    } catch (const rust::Error&) {
-        return {};
-    }
-}
 
 bool isCrashLogPath(const QString& path)
 {
@@ -111,9 +78,9 @@ ScanController::ScanController(SignalHub* signalHub, ThreadManager* threadManage
 }
 
 void ScanController::startScan(const QString& yamlRoot, const QString& yamlData, const QString& game,
-                               const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
-                               bool moveUnsolvedLogs, int maxConcurrentScans, const QString& customFolder,
-                               const QStringList& targetedInputs)
+                                const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
+                                bool moveUnsolvedLogs, const QString& unsolvedLogsDestination,
+                                int maxConcurrentScans, const QString& customFolder, const QStringList& targetedInputs)
 {
     if (m_scanning) {
         return;
@@ -161,9 +128,9 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
             // portable app, so the application directory is expected to be writable and we do
             // not use a separate per-user/AppData fallback here.
             const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
-            auto xseFolder = resolveXseFolderFromLocalYaml(yamlData, game);
-            auto collector = classic::files::log_collector_new(
-                classic::toRustString(baseDir), classic::toRustString(xseFolder), classic::toRustString(customFolder));
+            auto collector = classic::files::log_collector_new_for_scan(
+                classic::toRustString(baseDir), classic::toRustString(yamlData), classic::toRustString(game),
+                classic::toRustString(gameVersion), "", classic::toRustString(customFolder));
             auto rustPaths = classic::files::log_collector_collect_all(*collector);
 
             logPathsList.reserve(static_cast<int>(rustPaths.size()));
@@ -226,10 +193,11 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
     // Start the worker thread and invoke doScan once the thread is running
     connect(thread, &QThread::started, worker,
             [worker, logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode, simplifyLogs,
-             moveUnsolvedLogs, maxConcurrentScans, targetedMode]() {
-                worker->doScan(logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode,
-                               simplifyLogs, moveUnsolvedLogs, maxConcurrentScans, targetedMode);
-            });
+             moveUnsolvedLogs, unsolvedLogsDestination, maxConcurrentScans, targetedMode]() {
+                 worker->doScan(logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode,
+                                simplifyLogs, moveUnsolvedLogs, unsolvedLogsDestination, maxConcurrentScans,
+                                targetedMode);
+             });
 
     m_threadManager->startWorker(QStringLiteral("crash_scan"), thread, worker);
 }

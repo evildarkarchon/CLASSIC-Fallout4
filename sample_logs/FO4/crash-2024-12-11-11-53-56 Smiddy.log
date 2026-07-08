@@ -1,0 +1,950 @@
+Fallout 4 v1.10.984
+Buffout 4 v1.36.0 Oct 13 2024 01:09:30
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6ED3510E0 Fallout4.exe+17010E0	call [rax+0x38] |  BSGraphics::Renderer::GetTextureDimensions_17010E0)
+Exception Flags: 0x00000000
+Number of Parameters: 2
+Access Violation: Tried to read memory at 0xFFFFFFFFFFFFFFFF
+
+	[Compatibility]
+		F4EE: false
+	[Debug]
+		Symcache: c:symcache
+		WaitForDebugger: false
+	[Fixes]
+		ActorIsHostileToActor: true
+		BGSAIWorldLocationRefRadiusNull: true
+		BSLightingShaderMaterialGlowmap: true
+		BackportedBA2Support: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		EscapeFreeze: true
+		FixScriptPageAllocation: true
+		FixToggleScriptsCommand: true
+		FollowerStrayBullet: true
+		GreyMovies: true
+		InteriorNavCut: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		PipboyLightInvFix: true
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+		WorkBenchSwap: true
+	[Patches]
+		Achievements: true
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: true
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: 2048
+		MemoryManager: true
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Tweaks]
+		MaxPapyrusOpsPerFrame: 500
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 10 Home v10.0.19041
+	CPU: GenuineIntel 12th Gen Intel(R) Core(TM) i9-12900K
+	GPU #1: Nvidia AD104 [GeForce RTX 4070 Ti]
+	GPU #2: Intel AlderLake-S GT1
+	PHYSICAL MEMORY: 13.76 GB/63.78 GB
+
+
+PROBABLE CALL STACK:
+	[ 0] 0x7FF6ED3510E0 Fallout4.exe+17010E0	call [rax+0x38] |  BSGraphics::Renderer::GetTextureDimensions_17010E0 -> 2276926+0x20	call [rax+0x38]
+	[ 1] 0x7FF6EC81D9D2 Fallout4.exe+0BCD9D2	add r12d, edi |  FUN_140bcd8c0_BCD9D2 -> 2229468+0x92	add r12d, edi
+	[ 2] 0x7FF6EDC6F1EC Fallout4.exe+201F1EC	mov ebx, eax |  FUN_14201f190_201F1EC -> 2316441+0x5C	mov ebx, eax
+	[ 3] 0x7FF6EC8204FA Fallout4.exe+0BD04FA	mov [rbx+0x20], r15d |  FUN_140bd0420_BD04FA -> 2229528+0xDA	mov [rbx+0x20], r15d
+	[ 4] 0x7FF6EC8206A3 Fallout4.exe+0BD06A3	xor r8d, r8d |  FUN_140bd0420_BD06A3 -> 2229528+0x283	xor r8d, r8d
+	[ 5] 0x7FF6EC820753 Fallout4.exe+0BD0753	xor r8d, r8d |  FUN_140bd0420_BD0753 -> 2229528+0x333	xor r8d, r8d
+	[ 6] 0x7FF6EC820753 Fallout4.exe+0BD0753	xor r8d, r8d |  FUN_140bd0420_BD0753 -> 2229528+0x333	xor r8d, r8d
+	[ 7] 0x7FF6EC820753 Fallout4.exe+0BD0753	xor r8d, r8d |  FUN_140bd0420_BD0753 -> 2229528+0x333	xor r8d, r8d
+	[ 8] 0x7FF6EC820753 Fallout4.exe+0BD0753	xor r8d, r8d |  FUN_140bd0420_BD0753 -> 2229528+0x333	xor r8d, r8d
+	[ 9] 0x7FF6EC81D905 Fallout4.exe+0BCD905	cmp eax, 0x01 |  FUN_140bcd8c0_BCD905 -> 2229467+0x45	cmp eax, 0x01
+	[10] 0x7FF6EC81E880 Fallout4.exe+0BCE880	test al, al |  FUN_140bce750_BCE880 -> 2229487+0x130	test al, al
+	[11] 0x7FF6ED1BEBFA Fallout4.exe+156EBFA	mov rax, [rdi+0x18] |  FUN_14156eb30_156EBFA -> 2268897+0xCA	mov rax, [rdi+0x18]
+	[12] 0x7FF6ED1BF10B Fallout4.exe+156F10B	mov [rbp+0x04], eax |  FUN_14156ee60_156F10B -> 2268899+0x2AB	mov [rbp+0x04], eax
+	[13] 0x7FF6ED1BD619 Fallout4.exe+156D619	movzx eax, byte ptr [rbx+0xA74] |  FUN_14156d5b0_156D619 -> 2268871+0x69	movzx eax, byte ptr [rbx+0xA74]
+	[14] 0x7FF6ED19ADED Fallout4.exe+154ADED	mov rcx, [0x00007FF6EED3F620] |  FUN_14154adb0_154ADED -> 2268179+0x3D	mov rcx, [0x00007FF6EED3F620]
+	[15] 0x7FF886157374 KERNEL32.DLL+0017374
+	[16] 0x7FF8875DCC91    ntdll.dll+004CC91
+
+REGISTERS:
+	RCX 0x2A1BBBC0600      (void*)
+	RBX 0xEBF433F560       (void*)
+	RBP 0x5                (size_t) [5]
+	RDI 0xEBF433F568       (void*)
+	R9  0xEBF433F560       (void*)
+	R11 0x7FF87FCD5488     (void* -> d3d11.dll+0235488	add [rax], al)
+	R13 0x2                (size_t) [2]
+	R14 0x7FF6EE911EB8     (ProcessObjects1*)
+
+STACK:
+	[RSP+8  ] 0x2A1D5247180      (NiNode*)
+		Name: "SPINE2"
+		RTTIName: "NiNode"
+		Flags: 8000000000e
+		Checking Parent: 
+			Name: "SPINE1"
+			RTTIName: "NiNode"
+			Flags: 8000000000e
+			Checking Parent: 
+				Name: "SPINE1_FULL_OFFSET"
+				RTTIName: "NiNode"
+				Flags: 8000000000e
+				Checking Parent: 
+					Name: "COM"
+					RTTIName: "NiNode"
+					Flags: 8000000000e
+					Checking Parent: 
+						Name: "COM_OR_SUBNODE"
+						RTTIName: "NiNode"
+						Flags: 8000000000e
+						Checking Parent: 
+							Name: "COM_Override"
+							RTTIName: "NiNode"
+							Flags: 8000000000e
+							Checking Parent: 
+								Name: "Root"
+								RTTIName: "BSFlattenedBoneTree"
+								Flags: 8000000000e
+								Checking Parent: 
+									Name: "skeleton.nif"
+									RTTIName: "BSFadeNode"
+									Flags: 8a30480400e
+									Checking Parent: 
+										RTTIName: "NiNode"
+										Flags: 88002000280e
+										Checking Parent: 
+											RTTIName: "BSMultiBoundNode"
+											Flags: 2000280e
+											Checking Parent: 
+												Name: "ObjectLODRoot"
+												RTTIName: "NiNode"
+												Flags: 2000280e
+												Checking Parent: 
+													Name: "shadow scene node"
+													RTTIName: "ShadowSceneNode"
+													Flags: 2000280e
+													Checking Parent: 
+														Name: "WorldRoot Node"
+														RTTIName: "SceneGraph"
+														Flags: 2000280e
+		Name: "SPINE2"
+	[RSP+18 ] 0x7FF87FAE700C     (void* -> d3d11.dll+004700C	mov eax, [rdi+0xD4])
+	[RSP+28 ] 0x10000000B        (size_t) [4294967307]
+	[RSP+38 ] 0x0                (size_t) [0]
+	[RSP+48 ] 0x7FF600000000     (size_t) [140694538682368]
+	[RSP+58 ] 0x7FF6EC81D9D2     (void* -> Fallout4.exe+0BCD9D2	add r12d, edi |  FUN_140bcd8c0_BCD9D2)
+	[RSP+60 ] 0x2A1CA323830      (NiTexture*)
+		Name: "Textures\Architecture\DiamondCity\DiamondEmbers01.DDS"
+		RTTIName: "NiTexture"
+	[RSP+70 ] 0x40000000400      (size_t) [4398046512128]
+	[RSP+80 ] 0x100000047        (size_t) [4294967367]
+	[RSP+90 ] 0x0                (size_t) [0]
+	[RSP+A0 ] 0x2                (size_t) [2]
+	[RSP+B0 ] 0x2A1CE71A570      (BSLightingShaderProperty*)
+		Flags: 0xE180400201
+		Name: "Materials\Architecture\DiamondCity\DiamondWood02Burn.BGSM"
+		RTTIName: "BSLightingShaderProperty"
+		Name: "Materials\Architecture\DiamondCity\DiamondWood02Burn.BGSM"
+	[RSP+B8 ] 0x7FF6EE911EB8     (ProcessObjects1*)
+	[RSP+C8 ] 0x7FF6EDC6F1EC     (void* -> Fallout4.exe+201F1EC	mov ebx, eax |  FUN_14201f190_201F1EC)
+	[RSP+D8 ] 0xEB00000002       (size_t) [1009317314562]
+	[RSP+E8 ] 0x7FF600000400     (size_t) [140694538683392]
+	[RSP+F0 ] 0x2A1CA322DC8      (NiTexture*)
+		Name: "Textures\Architecture\DiamondCity\DiamondWood02.DDS"
+		RTTIName: "NiTexture"
+	[RSP+F8 ] 0x2A1CDA701F8      (NiTexture*)
+		Name: "Textures\Architecture\DiamondCity\DiamondWood02_n.DDS"
+		RTTIName: "NiTexture"
+	[RSP+100] 0x2A1CA323830      (NiTexture*)
+		Name: "Textures\Architecture\DiamondCity\DiamondEmbers01.DDS"
+		RTTIName: "NiTexture"
+	[RSP+108] 0x2A1C9B77EF0      (NiTexture*)
+		Name: "Textures\interiors\Building\bldconcreteceilinggross01_s.DDS"
+		RTTIName: "NiTexture"
+	[RSP+110] 0x2A1CA323830      (NiTexture*)
+		Name: "Textures\Architecture\DiamondCity\DiamondEmbers01.DDS"
+		RTTIName: "NiTexture"
+	[RSP+118] 0x7FF6EDC6F1EC     (void* -> Fallout4.exe+201F1EC	mov ebx, eax |  FUN_14201f190_201F1EC)
+	[RSP+128] 0x7FF600000000     (size_t) [140694538682368]
+	[RSP+138] 0x2A100000400      (void*)
+	[RSP+140] 0x2A1CE5AFBD8      (NiTexture*)
+		Name: "Textures\Landscape\Ground\CommonwealthDefault01_d.DDS"
+		RTTIName: "NiTexture"
+	[RSP+148] 0x2A1C9637E60      (NiTexture*)
+		Name: "Textures\Landscape\Ground\CommonwealthDefault01_N.DDS"
+		RTTIName: "NiTexture"
+	[RSP+150] 0x2A1BBDE0E10      (NiTexture*)
+		Name: "DefaultTexture_NormalMap"
+		RTTIName: "NiTexture"
+	[RSP+158] 0x2A1C9636948      (NiTexture*)
+		Name: "Textures\Landscape\Ground\CommonwealthDefault01_s.DDS"
+		RTTIName: "NiTexture"
+	[RSP+160] 0x2A1D6195A28      (NiTexture*)
+		Name: "Textures\Terrain\Commonwealth\Commonwealth.4.0.0.DDS"
+		RTTIName: "NiTexture"
+	[RSP+168] 0x2A1CBF2DBD8      (NiTexture*)
+		Name: "Textures\Terrain\Noise.dds"
+		RTTIName: "NiTexture"
+	[RSP+170] 0x2A1C8A89CF8      (NiTexture*)
+		Name: "Textures\Terrain\DetailNormals.dds"
+		RTTIName: "NiTexture"
+	[RSP+178] 0x7FF6EDC6AF35     (void* -> Fallout4.exe+201AF35	mov eax, edi |  BSEffectShaderProperty::ForEachTexture_201AF35)
+	[RSP+180] 0x7FF6EE911EB0     (ProcessObjects1*)
+	[RSP+188] 0x2A1D6CE2DC0      (NiNode*)
+		Name: "COM_Override"
+		RTTIName: "NiNode"
+		Flags: 8000000000e
+		Checking Parent: 
+			Name: "Root"
+			RTTIName: "BSFlattenedBoneTree"
+			Flags: 8000000000e
+			Checking Parent: 
+				Name: "skeleton.nif"
+				RTTIName: "BSFadeNode"
+				Flags: 8a30480400e
+				Checking Parent: 
+					RTTIName: "NiNode"
+					Flags: 88002000280e
+					Checking Parent: 
+						RTTIName: "BSMultiBoundNode"
+						Flags: 2000280e
+						Checking Parent: 
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: 2000280e
+							Checking Parent: 
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: 2000280e
+								Checking Parent: 
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: 2000280e
+		Name: "COM_Override"
+	[RSP+198] 0x2A1CB75D7A0      (BSMergeInstancedTriShape*)
+		RTTIName: "BSMergeInstancedTriShape"
+		Flags: 100e
+		Checking Parent: 
+			RTTIName: "BSFadeNode"
+			Flags: 14210000500e
+			Checking Parent: 
+				RTTIName: "NiNode"
+				Flags: 280e
+				Checking Parent: 
+					RTTIName: "NiNode"
+					Flags: 80002000280e
+					Checking Parent: 
+						RTTIName: "BSMultiBoundNode"
+						Flags: 2000280e
+						Checking Parent: 
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: 2000280e
+							Checking Parent: 
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: 2000280e
+								Checking Parent: 
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: 2000280e
+	[RSP+1A0] 0x2A1CB75D7A0      (BSMergeInstancedTriShape*)
+		RTTIName: "BSMergeInstancedTriShape"
+		Flags: 100e
+		Checking Parent: 
+			RTTIName: "BSFadeNode"
+			Flags: 14210000500e
+			Checking Parent: 
+				RTTIName: "NiNode"
+				Flags: 280e
+				Checking Parent: 
+					RTTIName: "NiNode"
+					Flags: 80002000280e
+					Checking Parent: 
+						RTTIName: "BSMultiBoundNode"
+						Flags: 2000280e
+						Checking Parent: 
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: 2000280e
+							Checking Parent: 
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: 2000280e
+								Checking Parent: 
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: 2000280e
+	[RSP+1A8] 0x7FF6EC8204FA     (void* -> Fallout4.exe+0BD04FA	mov [rbx+0x20], r15d |  FUN_140bd0420_BD04FA)
+	[RSP+1B0] 0x7FF6EE911EB0     (ProcessObjects1*)
+	[RSP+1C0] 0x2A1CE71A570      (BSLightingShaderProperty*)
+		Flags: 0xE180400201
+		Name: "Materials\Architecture\DiamondCity\DiamondWood02Burn.BGSM"
+		RTTIName: "BSLightingShaderProperty"
+		Name: "Materials\Architecture\DiamondCity\DiamondWood02Burn.BGSM"
+	[RSP+1C8] 0x7FF6ED193358     (void* -> Fallout4.exe+1543358	mov rax, [rsp+0x30] |  FUN_141543340_1543358)
+	[RSP+1D8] 0x2A1CC760540      (BSFadeNode*)
+		RTTIName: "BSFadeNode"
+		Flags: 14210000500e
+		Checking Parent: 
+			RTTIName: "NiNode"
+			Flags: 280e
+			Checking Parent: 
+				RTTIName: "NiNode"
+				Flags: 80002000280e
+				Checking Parent: 
+					RTTIName: "BSMultiBoundNode"
+					Flags: 2000280e
+					Checking Parent: 
+						Name: "ObjectLODRoot"
+						RTTIName: "NiNode"
+						Flags: 2000280e
+						Checking Parent: 
+							Name: "shadow scene node"
+							RTTIName: "ShadowSceneNode"
+							Flags: 2000280e
+							Checking Parent: 
+								Name: "WorldRoot Node"
+								RTTIName: "SceneGraph"
+								Flags: 2000280e
+	[RSP+1E0] 0x2A1CC760540      (BSFadeNode*)
+		RTTIName: "BSFadeNode"
+		Flags: 14210000500e
+		Checking Parent: 
+			RTTIName: "NiNode"
+			Flags: 280e
+			Checking Parent: 
+				RTTIName: "NiNode"
+				Flags: 80002000280e
+				Checking Parent: 
+					RTTIName: "BSMultiBoundNode"
+					Flags: 2000280e
+					Checking Parent: 
+						Name: "ObjectLODRoot"
+						RTTIName: "NiNode"
+						Flags: 2000280e
+						Checking Parent: 
+							Name: "shadow scene node"
+							RTTIName: "ShadowSceneNode"
+							Flags: 2000280e
+							Checking Parent: 
+								Name: "WorldRoot Node"
+								RTTIName: "SceneGraph"
+								Flags: 2000280e
+	[RSP+1F0] 0x0                (size_t) [0]
+	[RSP+1F8] 0x7FF6EC8206A3     (void* -> Fallout4.exe+0BD06A3	xor r8d, r8d |  FUN_140bd0420_BD06A3)
+	[RSP+200] 0x7FF6EE911EB0     (ProcessObjects1*)
+	[RSP+210] 0x7FF6EE911EB0     (ProcessObjects1*)
+	[RSP+218] 0x7FF6ED193358     (void* -> Fallout4.exe+1543358	mov rax, [rsp+0x30] |  FUN_141543340_1543358)
+	[RSP+220] 0x7FF6EEDC1504     (void* -> Fallout4.exe+3171504	add [rax], al |  FUN_14229e738_3171504)
+	[RSP+228] 0x2A1D2F57900      (NiNode*)
+		RTTIName: "NiNode"
+		Flags: 280e
+		Checking Parent: 
+			RTTIName: "NiNode"
+			Flags: 80002000280e
+			Checking Parent: 
+				RTTIName: "BSMultiBoundNode"
+				Flags: 2000280e
+				Checking Parent: 
+					Name: "ObjectLODRoot"
+					RTTIName: "NiNode"
+					Flags: 2000280e
+					Checking Parent: 
+						Name: "shadow scene node"
+						RTTIName: "ShadowSceneNode"
+						Flags: 2000280e
+						Checking Parent: 
+							Name: "WorldRoot Node"
+							RTTIName: "SceneGraph"
+							Flags: 2000280e
+	[RSP+238] 0x2A1D2F57900      (NiNode*)
+		RTTIName: "NiNode"
+		Flags: 280e
+		Checking Parent: 
+			RTTIName: "NiNode"
+			Flags: 80002000280e
+			Checking Parent: 
+				RTTIName: "BSMultiBoundNode"
+				Flags: 2000280e
+				Checking Parent: 
+					Name: "ObjectLODRoot"
+					RTTIName: "NiNode"
+					Flags: 2000280e
+					Checking Parent: 
+						Name: "shadow scene node"
+						RTTIName: "ShadowSceneNode"
+						Flags: 2000280e
+						Checking Parent: 
+							Name: "WorldRoot Node"
+							RTTIName: "SceneGraph"
+							Flags: 2000280e
+	[RSP+248] 0x7FF6EC820753     (void* -> Fallout4.exe+0BD0753	xor r8d, r8d |  FUN_140bd0420_BD0753)
+	[RSP+250] 0x7FF6EEDC1508     (void* -> Fallout4.exe+3171508	add [rax], al |  FUN_14229e738_3171508)
+	[RSP+258] 0x7FF6EEDC1500     (void* -> Fallout4.exe+3171500	add [rax], al |  FUN_14229e738_3171500)
+	[RSP+260] 0x7FF6EE911EB0     (ProcessObjects1*)
+	[RSP+268] 0x7FF6ED193358     (void* -> Fallout4.exe+1543358	mov rax, [rsp+0x30] |  FUN_141543340_1543358)
+	[RSP+270] 0x7FF6EEDC1504     (void* -> Fallout4.exe+3171504	add [rax], al |  FUN_14229e738_3171504)
+	[RSP+278] 0x2A1D2F56640      (NiNode*)
+		RTTIName: "NiNode"
+		Flags: 80002000280e
+		Checking Parent: 
+			RTTIName: "BSMultiBoundNode"
+			Flags: 2000280e
+			Checking Parent: 
+				Name: "ObjectLODRoot"
+				RTTIName: "NiNode"
+				Flags: 2000280e
+				Checking Parent: 
+					Name: "shadow scene node"
+					RTTIName: "ShadowSceneNode"
+					Flags: 2000280e
+					Checking Parent: 
+						Name: "WorldRoot Node"
+						RTTIName: "SceneGraph"
+						Flags: 2000280e
+	[RSP+288] 0x2A1D2F56640      (NiNode*)
+		RTTIName: "NiNode"
+		Flags: 80002000280e
+		Checking Parent: 
+			RTTIName: "BSMultiBoundNode"
+			Flags: 2000280e
+			Checking Parent: 
+				Name: "ObjectLODRoot"
+				RTTIName: "NiNode"
+				Flags: 2000280e
+				Checking Parent: 
+					Name: "shadow scene node"
+					RTTIName: "ShadowSceneNode"
+					Flags: 2000280e
+					Checking Parent: 
+						Name: "WorldRoot Node"
+						RTTIName: "SceneGraph"
+						Flags: 2000280e
+	[RSP+298] 0x7FF6EC820753     (void* -> Fallout4.exe+0BD0753	xor r8d, r8d |  FUN_140bd0420_BD0753)
+	[RSP+2A0] 0x7FF6EEDC1508     (void* -> Fallout4.exe+3171508	add [rax], al |  FUN_14229e738_3171508)
+	[RSP+2A8] 0x7FF6EEDC1500     (void* -> Fallout4.exe+3171500	add [rax], al |  FUN_14229e738_3171500)
+	[RSP+2B0] 0x7FF6EE911EB0     (ProcessObjects1*)
+	[RSP+2C0] 0x7FF6EEDC1504     (void* -> Fallout4.exe+3171504	add [rax], al |  FUN_14229e738_3171504)
+	[RSP+2C8] 0x2A1CFC1BA40      (BSMultiBoundNode*)
+		RTTIName: "BSMultiBoundNode"
+		Flags: 2000280e
+		Checking Parent: 
+			Name: "ObjectLODRoot"
+			RTTIName: "NiNode"
+			Flags: 2000280e
+			Checking Parent: 
+				Name: "shadow scene node"
+				RTTIName: "ShadowSceneNode"
+				Flags: 2000280e
+				Checking Parent: 
+					Name: "WorldRoot Node"
+					RTTIName: "SceneGraph"
+					Flags: 2000280e
+	[RSP+2D8] 0x2A1CFC1BA40      (BSMultiBoundNode*)
+		RTTIName: "BSMultiBoundNode"
+		Flags: 2000280e
+		Checking Parent: 
+			Name: "ObjectLODRoot"
+			RTTIName: "NiNode"
+			Flags: 2000280e
+			Checking Parent: 
+				Name: "shadow scene node"
+				RTTIName: "ShadowSceneNode"
+				Flags: 2000280e
+				Checking Parent: 
+					Name: "WorldRoot Node"
+					RTTIName: "SceneGraph"
+					Flags: 2000280e
+	[RSP+2E8] 0x7FF6EC820753     (void* -> Fallout4.exe+0BD0753	xor r8d, r8d |  FUN_140bd0420_BD0753)
+	[RSP+2F8] 0x7FF6EBED9903     (void* -> Fallout4.exe+0289903	mov esi, eax |  BSSpinLock::Lock_289903)
+	[RSP+300] 0x7FF6EE911EB0     (ProcessObjects1*)
+	[RSP+310] 0x7FF6EEDC1504     (void* -> Fallout4.exe+3171504	add [rax], al |  FUN_14229e738_3171504)
+	[RSP+318] 0x2A1BB7DF400      (NiNode*)
+		Name: "ObjectLODRoot"
+		RTTIName: "NiNode"
+		Flags: 2000280e
+		Checking Parent: 
+			Name: "shadow scene node"
+			RTTIName: "ShadowSceneNode"
+			Flags: 2000280e
+			Checking Parent: 
+				Name: "WorldRoot Node"
+				RTTIName: "SceneGraph"
+				Flags: 2000280e
+		Name: "ObjectLODRoot"
+	[RSP+328] 0x2A1BB7DF400      (NiNode*)
+		Name: "ObjectLODRoot"
+		RTTIName: "NiNode"
+		Flags: 2000280e
+		Checking Parent: 
+			Name: "shadow scene node"
+			RTTIName: "ShadowSceneNode"
+			Flags: 2000280e
+			Checking Parent: 
+				Name: "WorldRoot Node"
+				RTTIName: "SceneGraph"
+				Flags: 2000280e
+		Name: "ObjectLODRoot"
+	[RSP+338] 0x7FF6EC820753     (void* -> Fallout4.exe+0BD0753	xor r8d, r8d |  FUN_140bd0420_BD0753)
+	[RSP+340] 0x7FF6EEDC1500     (void* -> Fallout4.exe+3171500	add [rax], al |  FUN_14229e738_3171500)
+	[RSP+350] 0x7FF6EE911EB0     (ProcessObjects1*)
+	[RSP+358] 0x7FF6EC96B6FB     (void* -> Fallout4.exe+0D1B6FB	mov eax, [rsp+0x68] |  FUN_140d1b680_D1B6FB)
+	[RSP+360] 0x7FF6EEDC1504     (void* -> Fallout4.exe+3171504	add [rax], al |  FUN_14229e738_3171504)
+	[RSP+368] 0x7FF6EE911D10     (void* -> Fallout4.exe+2CC1D10	js 0x00007FF6EE911D30 |  FUN_14229e738_2CC1D10)
+	[RSP+378] 0x0                (size_t) [0]
+	[RSP+388] 0x7FF6EC81D905     (void* -> Fallout4.exe+0BCD905	cmp eax, 0x01 |  FUN_140bcd8c0_BCD905)
+	[RSP+398] 0x7FF6EEC9D820     (void* -> Fallout4.exe+304D820	add [rax], al |  FUN_14229e738_304D820)
+	[RSP+3A0] 0x7FF6EE911EB0     (ProcessObjects1*)
+	[RSP+3A8] 0x7FF6ECA9C22E     (void* -> Fallout4.exe+0E4C22E	mov rdi, [rsp+0x60] |  FUN_140e4c140_E4C22E)
+	[RSP+3B8] 0x7FF6EC81E880     (void* -> Fallout4.exe+0BCE880	test al, al |  FUN_140bce750_BCE880)
+	[RSP+3C8] 0x0                (size_t) [0]
+	[RSP+3D8] 0x0                (size_t) [0]
+	[RSP+3E8] 0x0                (size_t) [0]
+	[RSP+3F0] 0x7FF6EEDC3548     (void* -> Fallout4.exe+3173548	adc [rcx], dh |  FUN_14229e738_3173548)
+	[RSP+3F8] 0x7FF6ED1BEBFA     (void* -> Fallout4.exe+156EBFA	mov rax, [rdi+0x18] |  FUN_14156eb30_156EBFA)
+	[RSP+408] 0x0                (size_t) [0]
+	[RSP+418] 0x1                (size_t) [1]
+	[RSP+428] 0x7FF6EEDC34B8     (BSJobs::JobThread*)
+	[RSP+438] 0x7FF6EEDC3548     (void* -> Fallout4.exe+3173548	adc [rcx], dh |  FUN_14229e738_3173548)
+	[RSP+440] 0x7FF6EEDD6600     (void* -> Fallout4.exe+3186600	adc [rcx], dh |  FUN_14229e738_3186600)
+	[RSP+448] 0x7FF6ED1BF10B     (void* -> Fallout4.exe+156F10B	mov [rbp+0x04], eax |  FUN_14156ee60_156F10B)
+	[RSP+458] 0x2                (size_t) [2]
+	[RSP+468] 0x1                (size_t) [1]
+	[RSP+478] 0x7FF6ED3E4D75     (void* -> Fallout4.exe+1794D75	test rbx, rbx |  FUN_141794990_1794D75)
+	[RSP+488] 0x7FF6EEDC3548     (void* -> Fallout4.exe+3173548	adc [rcx], dh |  FUN_14229e738_3173548)
+	[RSP+498] 0x2                (size_t) [2]
+	[RSP+4A8] 0x2A1BB7E31E0      (void*)
+	[RSP+4B8] 0x7FF884F6920E     (void* -> KERNELBASE.dll+002920E	nop [rax+rax*1], eax)
+	[RSP+4C8] 0x100000062        (size_t) [4294967394]
+	[RSP+4D8] 0x500000005        (size_t) [21474836485]
+	[RSP+4E8] 0xFFFFFFFF         (size_t) [4294967295]
+	[RSP+4F8] 0x7FF600000001     (size_t) [140694538682369]
+	[RSP+508] 0x0                (size_t) [0]
+	[RSP+518] 0x0                (size_t) [0]
+	[RSP+528] 0x0                (size_t) [0]
+	[RSP+538] 0x0                (size_t) [0]
+	[RSP+548] 0x0                (size_t) [0]
+	[RSP+558] 0x7FF6ED1BD619     (void* -> Fallout4.exe+156D619	movzx eax, byte ptr [rbx+0xA74] |  FUN_14156d5b0_156D619)
+	[RSP+560] 0x7FF6EEDC34B8     (BSJobs::JobThread*)
+	[RSP+570] 0x0                (size_t) [0]
+	[RSP+580] 0x7FF6EEDC34B8     (BSJobs::JobThread*)
+	[RSP+588] 0x7FF6ED19ADED     (void* -> Fallout4.exe+154ADED	mov rcx, [0x00007FF6EED3F620] |  FUN_14154adb0_154ADED)
+	[RSP+598] 0x0                (size_t) [0]
+	[RSP+5A8] 0x0                (size_t) [0]
+	[RSP+5B0] 0x7FF6EEDC34B8     (BSJobs::JobThread*)
+	[RSP+5C0] 0x0                (size_t) [0]
+	[RSP+5C8] 0x7FF886157374     (void* -> KERNEL32.DLL+0017374	mov ecx, eax)
+	[RSP+5D8] 0x0                (size_t) [0]
+	[RSP+5E8] 0x0                (size_t) [0]
+	[RSP+5F8] 0x7FF8875DCC91     (void* -> ntdll.dll+004CC91	jmp 0x00007FF8875DCCB3)
+	[RSP+608] 0x0                (size_t) [0]
+	[RSP+618] 0x0                (size_t) [0]
+	[RSP+628] 0x0                (size_t) [0]
+	[RSP+638] 0x0                (size_t) [0]
+	[RSP+648] 0x7FF885073C50     (void* -> KERNELBASE.dll+0133C50	mov [rsp+0x10], rbx)
+	[RSP+658] 0x7FF8976F41E4000  (size_t) [576330421321482240]
+	[RSP+668] 0xEBF433E600       (void*)
+	[RSP+678] 0x0                (size_t) [0]
+	[RSP+688] 0x0                (size_t) [0]
+	[RSP+698] 0x0                (size_t) [0]
+	[RSP+6A8] 0x0                (size_t) [0]
+	[RSP+6B8] 0x0                (size_t) [0]
+	[RSP+6C8] 0x0                (size_t) [0]
+	[RSP+6D8] 0x0                (size_t) [0]
+	[RSP+6E8] 0x0                (size_t) [0]
+	[RSP+6F8] 0x0                (size_t) [0]
+	[RSP+708] 0x0                (size_t) [0]
+	[RSP+718] 0x0                (size_t) [0]
+	[RSP+728] 0x0                (size_t) [0]
+	[RSP+738] 0x0                (size_t) [0]
+	[RSP+748] 0x0                (size_t) [0]
+	[RSP+758] 0x0                (size_t) [0]
+	[RSP+768] 0x0                (size_t) [0]
+	[RSP+778] 0x0                (size_t) [0]
+	[RSP+788] 0x0                (size_t) [0]
+	[RSP+798] 0x0                (size_t) [0]
+	[RSP+7A8] 0x0                (size_t) [0]
+	[RSP+7B8] 0x0                (size_t) [0]
+	[RSP+7C8] 0x0                (size_t) [0]
+	[RSP+7D8] 0x0                (size_t) [0]
+	[RSP+7E8] 0x0                (size_t) [0]
+	[RSP+7F8] 0x0                (size_t) [0]
+	[RSP+808] 0x0                (size_t) [0]
+	[RSP+818] 0x0                (size_t) [0]
+	[RSP+828] 0x0                (size_t) [0]
+	[RSP+838] 0x0                (size_t) [0]
+	[RSP+848] 0x0                (size_t) [0]
+	[RSP+858] 0x0                (size_t) [0]
+	[RSP+868] 0x0                (size_t) [0]
+	[RSP+878] 0x0                (size_t) [0]
+	[RSP+888] 0x0                (size_t) [0]
+	[RSP+898] 0x0                (size_t) [0]
+	[RSP+8A8] 0x0                (size_t) [0]
+	[RSP+8B8] 0x0                (size_t) [0]
+	[RSP+8C8] 0x0                (size_t) [0]
+	[RSP+8D8] 0x0                (size_t) [0]
+	[RSP+8E8] 0x0                (size_t) [0]
+	[RSP+8F8] 0x0                (size_t) [0]
+	[RSP+908] 0x0                (size_t) [0]
+	[RSP+918] 0x0                (size_t) [0]
+	[RSP+928] 0x0                (size_t) [0]
+	[RSP+938] 0x0                (size_t) [0]
+	[RSP+948] 0x0                (size_t) [0]
+	[RSP+958] 0x0                (size_t) [0]
+	[RSP+968] 0x0                (size_t) [0]
+	[RSP+978] 0x0                (size_t) [0]
+	[RSP+988] 0x0                (size_t) [0]
+	[RSP+998] 0x0                (size_t) [0]
+	[RSP+9A8] 0x0                (size_t) [0]
+	[RSP+9B8] 0x0                (size_t) [0]
+	[RSP+9C8] 0x0                (size_t) [0]
+	[RSP+9D8] 0x0                (size_t) [0]
+	[RSP+9E8] 0x0                (size_t) [0]
+	[RSP+9F8] 0x0                (size_t) [0]
+	[RSP+A08] 0x0                (size_t) [0]
+	[RSP+A18] 0x0                (size_t) [0]
+	[RSP+A28] 0x0                (size_t) [0]
+	[RSP+A38] 0x0                (size_t) [0]
+	[RSP+A48] 0x0                (size_t) [0]
+	[RSP+A58] 0x0                (size_t) [0]
+	[RSP+A68] 0x0                (size_t) [0]
+	[RSP+A78] 0x0                (size_t) [0]
+	[RSP+A88] 0x0                (size_t) [0]
+	[RSP+A98] 0x0                (size_t) [0]
+	[RSP+AA8] 0x0                (size_t) [0]
+	[RSP+AB8] 0x0                (size_t) [0]
+	[RSP+AC8] 0x0                (size_t) [0]
+	[RSP+AD8] 0x0                (size_t) [0]
+	[RSP+AE8] 0x0                (size_t) [0]
+	[RSP+AF8] 0x0                (size_t) [0]
+	[RSP+B08] 0x0                (size_t) [0]
+	[RSP+B18] 0x0                (size_t) [0]
+	[RSP+B28] 0x0                (size_t) [0]
+	[RSP+B38] 0x0                (size_t) [0]
+	[RSP+B48] 0x0                (size_t) [0]
+	[RSP+B58] 0x0                (size_t) [0]
+	[RSP+B68] 0x0                (size_t) [0]
+	[RSP+B78] 0x0                (size_t) [0]
+
+MODULES:
+	XINPUT1_3.dll              0x000000400000
+	X3DAudio1_7.dll            0x00005F140000
+	dcomp.dll                  0x02A248210000
+	Fallout4.exe               0x7FF6EBC50000
+	gameoverlayrenderer64.dll  0x7FF805250000
+	MODExplorer.dll            0x7FF8053F0000
+	HHS.dll                    0x7FF805470000
+	f4ee.dll                   0x7FF805560000
+	Buffout4.dll               0x7FF808590000
+	mcm.dll                    0x7FF80CD90000
+	vstdlib_s64.dll            0x7FF80E660000
+	tier0_s64.dll              0x7FF80EC20000
+	f4se_1_10_984.dll          0x7FF80FC70000
+	flexRelease_x64.dll        0x7FF80FD50000
+	MSVCR110.dll               0x7FF810210000
+	XDI.dll                    0x7FF810BE0000
+	MSVCP110.dll               0x7FF8117A0000
+	HighFPSPhysicsFix.dll      0x7FF811C90000
+	cbp.dll                    0x7FF813CE0000
+	DINPUT8.dll                0x7FF817A50000
+	place.dll                  0x7FF82BD80000
+	usvfs_x64.dll              0x7FF82E010000
+	crafting_highlight_fix.dll 0x7FF8389C0000
+	CONCRT140.dll              0x7FF838A10000
+	FloatingDamage.dll         0x7FF838AF0000
+	nvppex.dll                 0x7FF8397D0000
+	nvspcap64.dll              0x7FF839930000
+	cudart64_75.dll            0x7FF83A090000
+	GFSDK_GodraysLib.x64.dll   0x7FF83C1F0000
+	GFSDK_SSAO_D3D11.win64.dll 0x7FF83C250000
+	bink2w64.dll               0x7FF83C2E0000
+	flexExtRelease_x64.dll     0x7FF84BDD0000
+	mskeyprotect.dll           0x7FF85A560000
+	ncryptsslp.dll             0x7FF85A5B0000
+	winmmbase.dll              0x7FF85D5B0000
+	MessageBus.dll             0x7FF861F50000
+	Secur32.dll                0x7FF8642E0000
+	inputhost.dll              0x7FF8680D0000
+	textinputframework.dll     0x7FF8682B0000
+	Windows.UI.dll             0x7FF868480000
+	webio.dll                  0x7FF869880000
+	MSVCP140.dll               0x7FF86A000000
+	VCRUNTIME140.dll           0x7FF86A130000
+	VCRUNTIME140_1.dll         0x7FF86A170000
+	nvwgf2umx.dll              0x7FF86AE10000
+	nvgpucomp64.dll            0x7FF8715C0000
+	NvMessageBus.dll           0x7FF874E30000
+	nvldumdx.dll               0x7FF8780D0000
+	nvapi64.dll                0x7FF8781A0000
+	dxcore.dll                 0x7FF8788A0000
+	dbghelp.dll                0x7FF8788E0000
+	WINMM.dll                  0x7FF879220000
+	fwpuclnt.dll               0x7FF87A4C0000
+	rasadhlp.dll               0x7FF87C460000
+	WindowManagementAPI.dll    0x7FF87C530000
+	WINHTTP.dll                0x7FF87C9A0000
+	twinapi.appcore.dll        0x7FF87CE90000
+	drvstore.dll               0x7FF87D230000
+	cryptnet.dll               0x7FF87DBB0000
+	dhcpcsvc.DLL               0x7FF87DD50000
+	VERSION.dll                0x7FF87E100000
+	WINNSI.DLL                 0x7FF87E380000
+	avrt.dll                   0x7FF87E450000
+	MMDevApi.dll               0x7FF87E470000
+	AUDIOSES.DLL               0x7FF87E6C0000
+	d3d11.dll                  0x7FF87FAA0000
+	CoreUIComponents.dll       0x7FF880580000
+	CoreMessaging.dll          0x7FF8808E0000
+	XINPUT9_1_0.dll            0x7FF880EA0000
+	MSVCP140_ATOMIC_WAIT.dll   0x7FF880EB0000
+	steam_api64.dll            0x7FF880F40000
+	nvToolsExt64_1.dll         0x7FF881320000
+	wintypes.dll               0x7FF881810000
+	PROPSYS.dll                0x7FF881F30000
+	WindowsCodecs.dll          0x7FF8822F0000
+	uxtheme.dll                0x7FF882540000
+	resourcepolicyclient.dll   0x7FF8826C0000
+	dwmapi.dll                 0x7FF8828F0000
+	kernel.appcore.dll         0x7FF882AD0000
+	windows.storage.dll        0x7FF882CD0000
+	HID.DLL                    0x7FF883480000
+	gpapi.dll                  0x7FF883490000
+	dxgi.dll                   0x7FF8834C0000
+	schannel.DLL               0x7FF883B80000
+	rsaenh.dll                 0x7FF883C70000
+	ntmarta.dll                0x7FF883EC0000
+	UMPDC.dll                  0x7FF884030000
+	IPHLPAPI.DLL               0x7FF884050000
+	DNSAPI.dll                 0x7FF884090000
+	POWRPROF.dll               0x7FF8841C0000
+	MSWSOCK.dll                0x7FF8843C0000
+	CRYPTSP.dll                0x7FF8845B0000
+	CRYPTBASE.DLL              0x7FF8845D0000
+	Wldp.dll                   0x7FF884660000
+	NTASN1.dll                 0x7FF884690000
+	ncrypt.dll                 0x7FF8846D0000
+	msasn1.dll                 0x7FF8847F0000
+	devobj.dll                 0x7FF8849C0000
+	DPAPI.DLL                  0x7FF884A20000
+	SSPICLI.DLL                0x7FF884B10000
+	profapi.dll                0x7FF884B60000
+	msvcp_win.dll              0x7FF884C30000
+	wintrust.dll               0x7FF884CD0000
+	win32u.dll                 0x7FF884D40000
+	gdi32full.dll              0x7FF884E20000
+	KERNELBASE.dll             0x7FF884F40000
+	CRYPT32.dll                0x7FF885240000
+	ucrtbase.dll               0x7FF8853A0000
+	bcryptPrimitives.dll       0x7FF8854A0000
+	bcrypt.dll                 0x7FF885530000
+	cfgmgr32.dll               0x7FF885560000
+	ADVAPI32.dll               0x7FF8855B0000
+	NSI.dll                    0x7FF885670000
+	ole32.dll                  0x7FF8856E0000
+	sechost.dll                0x7FF885A40000
+	imagehlp.dll               0x7FF885AE0000
+	MSCTF.dll                  0x7FF885B00000
+	shlwapi.dll                0x7FF885C20000
+	SHCORE.dll                 0x7FF885C80000
+	msvcrt.dll                 0x7FF885D30000
+	combase.dll                0x7FF885DE0000
+	KERNEL32.DLL               0x7FF886140000
+	SHELL32.dll                0x7FF886210000
+	clbcatq.dll                0x7FF886980000
+	IMM32.DLL                  0x7FF886A90000
+	SETUPAPI.dll               0x7FF886BB0000
+	WS2_32.dll                 0x7FF887020000
+	PSAPI.DLL                  0x7FF887090000
+	GDI32.dll                  0x7FF8870A0000
+	RPCRT4.dll                 0x7FF8871B0000
+	USER32.dll                 0x7FF8872E0000
+	OLEAUT32.dll               0x7FF887480000
+	ntdll.dll                  0x7FF887590000
+	steamclient64.dll          0x7FFFEC650000
+	XAudio2_7.dll              0x7FFFF7560000
+	d3dcompiler_47_64.dll      0x7FFFF7E40000
+	NvCamera64.dll             0x7FFFF8250000
+	DSOUND.DLL                 0x7FFFFA360000
+
+F4SE PLUGINS:
+	Buffout4.dll v1.36
+	cbp.dll
+	crafting_highlight_fix.dll
+	f4ee.dll
+	FloatingDamage.dll
+	HHS.dll
+	HighFPSPhysicsFix.dll
+	mcm.dll
+	MODExplorer.dll
+	place.dll
+	XDI.dll
+
+PLUGINS:
+	[00]Fallout4.esm
+	[01]DLCRobot.esm
+	[02]DLCworkshop01.esm
+	[03]DLCCoast.esm
+	[04]DLCworkshop02.esm
+	[05]DLCworkshop03.esm
+	[06]DLCNukaWorld.esm
+	[FE]ccBGSFO4044-HellfirePowerArmor.esl
+	[FE]ccBGSFO4115-X02.esl
+	[FE]ccBGSFO4116-HeavyFlamer.esl
+	[FE]ccBGSFO4110-WS_Enclave.esl
+	[FE]ccBGSFO4096-AS_Enclave.esl
+	[FE]ccFSVFO4007-Halloween.esl
+	[FE]ccBGSFO4046-TesCan.esl
+	[FE]ccSBJFO4003-Grenade.esl
+	[FE]ccOTMFO4001-Remnants.esl
+	[07]unofficial fallout 4 patch.esp
+	[08]XDI.esm
+	[FE]NoDialogueAutoRotAndForcedPos.esl
+	[FE]ClassicMeleePack.esl
+	[FE]ClassicUnarmedPack.esl
+	[FE]Dank_ArmorPaintExtended.esl
+	[FE]Skb-MinigunsRebirth.esl
+	[FE]Skb_MachinegunsRebirth.esl
+	[FE]community fixes merged.esp
+	[FE]Institute-blue Lasers.esl
+	[09]Homemaker.esm
+	[0A]LooksMenu.esp
+	[0B]KSHairdos.esp
+	[0C]CBBE.esp
+	[0D]AzarPonytailHairstyles.esp
+	[0E]rpampas.esp
+	[0F]The Eyes Of Beauty.esp
+	[10]TheEyesOfBeauty.esp
+	[FE]Dank_ArmorOverrides.esp
+	[FE]Dank_ArmorOverrides_DLCNukaWorld.esp
+	[11]Simple Ballistic Weave Expansion.esp
+	[12]The Deadly Commonwealth Expansion.esp
+	[13]W.A.T.Minutemen.esp
+	[14]Vivid Weathers - FO4.esp
+	[15]RRTV_GoodneighborCondo.esp
+	[FE]Dank_LEO.esp
+	[16]Backpacks of the Commonwealth.esp
+	[FE]Dank_ECO.esp
+	[17]DOOMMerged.esp
+	[18]officersRevolver.esp
+	[19]Eli_Armour_Compendium.esp
+	[1A]CorvalhoWidowShotgun.esp
+	[1B]MK18.esp
+	[1C]RU556.esp
+	[1D]AAC_HoneyBadger.esp
+	[1E]TavorX95.esp
+	[1F]AK74M.esp
+	[20]FalloutSamurai.esp
+	[21]SKKMobileWorkshop.esp
+	[22]Companion Infinite Ammo and Unbreakable Power Armour.esp
+	[23]NoRailRoadBallisticWeave.esp
+	[24]SettlementMenuManager.esp
+	[25]Homemaker - Streetlights Use Passive Power.esp
+	[26]DarkerNightsDetection.esp
+	[27]Vivid Weathers - FO4 - Far Harbor.esp
+	[28]DarkerNights.esp
+	[29]Vivid Weathers - Nuka World.esp
+	[2A]SKKFeralNights.esp
+	[2B]VendorTrunk.esp
+	[2C]Building Materials Dispenser.esp
+	[2D]SkibsWeapons-REDUX.esp
+	[2E]DX_Banshee_Recon_Armor.esp
+	[2F]MP7.esp
+	[30]AQUILA.esp
+	[31]HK_MP5.esp
+	[32]GIAT_FAMAS.esp
+	[33]HK_UMP.esp
+	[34]G36Complex.esp
+	[35]Glock19x.esp
+	[36]9x39Project.esp
+	[37]Krebs.esp
+	[38]HuntingRevolver.esp
+	[39]M1A.esp
+	[3A]OTs33Pernach.esp
+	[3B]ConceptCentaur.esp
+	[3C]BetterSettlersNoLollygagging.esp
+	[3D]BetterSettlers.esp
+	[3E]IncreasedCarryWeight.esp
+	[3F]LongerPowerLines3x.esp
+	[40]RAW INPUT.esp
+	[41]VendorCaps.esp
+	[42]FalloutKensei.esp
+	[43]G231_HoldBlock.esp
+	[FE]StartMeUpShaunDefaultAppearance.esp
+	[44]FIS-Naming-Weap-Armo-EN.esp
+	[FE]Dank_ArmorOverrides_DLCInterconnected.esp
+	[FE]Eli_Armour_Compendium_LIF.esp
+	[FE]Dank_ArmorOverrides_DLCCoast.esp
+	[FE]Dank_ArmorOverrides_DLCRobot.esp
+	[FE]Eli_Armour_Compendium_Tweaks.esp
+	[FE]Dank_SynthArmorDarkDefault.esp
+	[FE]Dank_SynthUniformDistribution.esp
+	[FE]Dank_ECO_DLCCoast.esp
+	[FE]Dank_ECO_DLCNukaWorld.esp
+	[FE]Dank_ECO_DLCRobot.esp
+	[FE]Dank_LEO-Automatron.esp
+	[FE]Dank_LEO_ChipCraft_Mats.esp
+	[FE]Dank_LEO_DLCCoast.esp
+	[FE]Dank_LEO_DLCNukaWorld.esp
+	[45]Elysium.esp
+	[46]ReconPack.esp
+	[47]AUG-A1.esp
+	[48]Mosin.esp
+	[49]REAPER.esp
+	[4A]Factor.esp
+	[4B]PIP-Pad.esp
+	[4C]NezzarSexyOutfitCollection.esp
+	[4D]NezzarUltimateCollection.esp
+	[4E]xy - Jumpsuits.esp
+	[4F]xy - Misty Outfit.esp
+	[50]Clothes Pack 4 by DonEb14n.esp
+	[51]Clothes Pack v2.0 by DonEb14n.esp
+	[52]Clothes Pack 2 by DonEb14n.esp
+	[53]Clothes Pack 3 by DonEb14n.esp
+	[54]Clothes Pack 6 by DonEb14n.esp
+	[55]VtawWardrobe1.esp
+	[56]VtawWardrobe2.esp
+	[57]VtawWardrobe7.esp
+	[58]VtawCammy.esp
+	[59]VtawWardrobe4.esp
+	[5A]VtawWardrobe6.esp
+	[5B]VtawWardrobe8.esp
+	[5C]ESPExplorerFO4.esp
+	[5D]VtawWardrobe5.esp
+	[5E]Crimsomrider's Accessories.esp
+	[5F]Idiot Slut.esp
+	[60]TheStaffmaster.esp
+	[61]LightsaberMod.esp
+	[FE]LightsaberAnimations.esp
+	[FE]FOVSlider.esp
+	[62]StartMeUp.esp
+	[63]StartMeUpNukaWorldPatch.esp
+	[64]Vivid Waters.esp
+	[65]HaxRPG7.esp
+	[66]CBBEHeadRearFix.esp
+	[67]No Underarmor Scaling Far Harbor.esp
+	[68]No Underarmor Scaling Nuka World.esp
+	[69]No UnderArmor Scaling.esp
+	[6A]RRTV_AtomCats_Home.esp
+	[6B]CraftableAmmo.esp
+	[6C]CraftableAmmo_plus.esp
+	[FE]Anti-Aging Cream.esp
+	[FF]Bashed Patch, 0.esp
+	[6D]MSTP_InstitutePowerArmor.esp
+	[6E]Phase4DLC.esp
+	[FF]RPD.esp

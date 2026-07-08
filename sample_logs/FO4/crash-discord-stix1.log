@@ -1,0 +1,715 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.24.5
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF67A8A4B60 Fallout4.exe+0154B60
+
+SETTINGS:
+	[Compatibility]
+		F4EE: true
+	[Fixes]
+		ActorIsHostileToActor: true
+		CellInit: true
+		EncounterZoneReset: true
+		GreyMovies: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		SafeExit: true
+		UnalignedLoad: true
+		UtilityShader: true
+	[Patches]
+		Achievements: false
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: true
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: -1
+		MemoryManager: false
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 10 Home v10.0.19041
+	CPU: AuthenticAMD AMD Ryzen 5 3600 6-Core Processor              
+	GPU #1: Nvidia TU116 [GeForce GTX 1660 SUPER]
+	GPU #2: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 7.52 GB/7.91 GB
+
+PROBABLE CALL STACK:
+	[0] 0x7FF67A8A4B60 Fallout4.exe+0154B60 -> 1035838+0x20
+
+REGISTERS:
+	RAX 0x7CFC2CF904       (void*)
+	RCX 0x0                (size_t)
+	RDX 0x524C4643         (size_t)
+	RBX 0x62               (size_t)
+	RSP 0x7CFC2CF868       (void*)
+	RBP 0x7CFC2CF929       (void*)
+	RSI 0x7CFC2CF920       (void*)
+	RDI 0x24080377260      (Actor*)
+		Object Reference: None
+		File: "FROST - AccessibleFortHagen.esp"
+		Flags: 0x00200000
+		Form ID: 0x000CD46C
+		Form Type: 65
+	R8  0x8                (size_t)
+	R9  0x24175797EF0      (ExtraLocationRefType*)
+	R10 0x24171542468      (void*)
+	R11 0x2416ED3F660      (void*)
+	R12 0x7FF680338088     (void* -> Fallout4.exe+5BE8088)
+	R13 0x7FF680338080     (void* -> Fallout4.exe+5BE8080)
+	R14 0x4                (size_t)
+	R15 0x15               (size_t)
+
+STACK:
+	[RSP+0  ] 0x7FF67ABD0C55     (void* -> Fallout4.exe+0480C55)
+	[RSP+8  ] 0x24171542480      (void*)
+	[RSP+10 ] 0x2416E4F43C0      (BGSLocation*)
+		File: "RedsFrostFixes.esp"
+		Flags: 0x00000001
+		Form ID: 0x000BAACA
+		Form Type: 107
+		Full Name: "Fort Hagen"
+	[RSP+18 ] 0x7FF67DE1E430     (type_info*)
+	[RSP+20 ] 0x0                (size_t)
+	[RSP+28 ] 0x60               (size_t)
+	[RSP+30 ] 0x7FF67AAD5585     (void* -> Fallout4.exe+0385585)
+	[RSP+38 ] 0x0                (size_t)
+	[RSP+40 ] 0x2416E4F5E00      (BGSLocation*)
+		File: "Fallout4.esm"
+		Flags: 0x00000001
+		Form ID: 0x00148C5E
+		Form Type: 107
+		Full Name: "Fort Hagen"
+	[RSP+48 ] 0x7CFC2CF920       (void*)
+	[RSP+50 ] 0x7FF680338088     (void* -> Fallout4.exe+5BE8088)
+	[RSP+58 ] 0x60               (size_t)
+	[RSP+60 ] 0x7FF67AACEF26     (void* -> Fallout4.exe+037EF26)
+	[RSP+68 ] 0x62               (size_t)
+	[RSP+70 ] 0x2416E4F5E00      (BGSLocation*)
+		File: "Fallout4.esm"
+		Flags: 0x00000001
+		Form ID: 0x00148C5E
+		Form Type: 107
+		Full Name: "Fort Hagen"
+	[RSP+78 ] 0x2416E4F5E00      (BGSLocation*)
+		File: "Fallout4.esm"
+		Flags: 0x00000001
+		Form ID: 0x00148C5E
+		Form Type: 107
+		Full Name: "Fort Hagen"
+	[RSP+80 ] 0x7FF600000008     (size_t)
+	[RSP+88 ] 0x0                (size_t)
+	[RSP+90 ] 0x2416E4F5E00      (BGSLocation*)
+		File: "Fallout4.esm"
+		Flags: 0x00000001
+		Form ID: 0x00148C5E
+		Form Type: 107
+		Full Name: "Fort Hagen"
+	[RSP+98 ] 0x9D2C300154FB5    (size_t)
+	[RSP+A0 ] 0x2400020AC4E      (size_t)
+	[RSP+A8 ] 0x24080377260      (Actor*)
+		Object Reference: None
+		File: "FROST - AccessibleFortHagen.esp"
+		Flags: 0x00200000
+		Form ID: 0x000CD46C
+		Form Type: 65
+	[RSP+B0 ] 0x240A61FE640      (char*) "h"
+	[RSP+B8 ] 0x7CFC2CF910       (void*)
+	[RSP+C0 ] 0x7CFC2CF990       (void*)
+	[RSP+C8 ] 0x7CFC2CF904       (void*)
+	[RSP+D0 ] 0x7FF680338088     (void* -> Fallout4.exe+5BE8088)
+	[RSP+D8 ] 0x7CFC2CF9B0       (void*)
+	[RSP+E0 ] 0x7FF680338084     (void* -> Fallout4.exe+5BE8084)
+	[RSP+E8 ] 0x1                (size_t)
+	[RSP+F0 ] 0x7FF680338080     (void* -> Fallout4.exe+5BE8080)
+	[RSP+F8 ] 0x7FF680338088     (void* -> Fallout4.exe+5BE8088)
+	[RSP+100] 0x2416E4F5E00      (BGSLocation*)
+		File: "Fallout4.esm"
+		Flags: 0x00000001
+		Form ID: 0x00148C5E
+		Form Type: 107
+		Full Name: "Fort Hagen"
+	[RSP+108] 0x240A61FE640      (char*) "h"
+	[RSP+110] 0x2                (size_t)
+	[RSP+118] 0x0                (size_t)
+	[RSP+120] 0x7FF67A8A2C3C     (void* -> Fallout4.exe+0152C3C)
+	[RSP+128] 0x2416E4F5E01      (void*)
+	[RSP+130] 0x0                (size_t)
+	[RSP+138] 0x24F9A            (size_t)
+	[RSP+140] 0x24170F45E80      (BGSMaterialType*)
+		File: "DLCNukaWorld.esm"
+		Flags: 0x00000009
+		Form ID: 0x0604E4C1
+		Form Type: 102
+	[RSP+148] 0x2416E4F5E00      (BGSLocation*)
+		File: "Fallout4.esm"
+		Flags: 0x00000001
+		Form ID: 0x00148C5E
+		Form Type: 107
+		Full Name: "Fort Hagen"
+	[RSP+150] 0x0                (size_t)
+	[RSP+158] 0x0                (size_t)
+	[RSP+160] 0x0                (size_t)
+	[RSP+168] 0x0                (size_t)
+	[RSP+170] 0x0                (size_t)
+	[RSP+178] 0x0                (size_t)
+	[RSP+180] 0x0                (size_t)
+	[RSP+188] 0x2416E4F5E20      (BGSLocation*)
+		File: "Fallout4.esm"
+		Flags: 0x00000001
+		Form ID: 0x00148C5E
+		Form Type: 107
+		Full Name: "Fort Hagen"
+	[RSP+190] 0x0                (size_t)
+	[RSP+198] 0x0                (size_t)
+	[RSP+1A0] 0x0                (size_t)
+	[RSP+1A8] 0x0                (size_t)
+	[RSP+1B0] 0x0                (size_t)
+	[RSP+1B8] 0x0                (size_t)
+	[RSP+1C0] 0x0                (size_t)
+	[RSP+1C8] 0x0                (size_t)
+	[RSP+1D0] 0x0                (size_t)
+	[RSP+1D8] 0x0                (size_t)
+	[RSP+1E0] 0x0                (size_t)
+	[RSP+1E8] 0x0                (size_t)
+	[RSP+1F0] 0x0                (size_t)
+	[RSP+1F8] 0x0                (size_t)
+	[RSP+200] 0x0                (size_t)
+	[RSP+208] 0x0                (size_t)
+	[RSP+210] 0x0                (size_t)
+	[RSP+218] 0x0                (size_t)
+	[RSP+220] 0x0                (size_t)
+	[RSP+228] 0x0                (size_t)
+	[RSP+230] 0x2416E4F5E30      (BGSLocation*)
+		File: "Fallout4.esm"
+		Flags: 0x00000001
+		Form ID: 0x00148C5E
+		Form Type: 107
+		Full Name: "Fort Hagen"
+	[RSP+238] 0x0                (size_t)
+	[RSP+240] 0x0                (size_t)
+	[RSP+248] 0x0                (size_t)
+	[RSP+250] 0x0                (size_t)
+	[RSP+258] 0x0                (size_t)
+	[RSP+260] 0x0                (size_t)
+	[RSP+268] 0x0                (size_t)
+	[RSP+270] 0x0                (size_t)
+	[RSP+278] 0x0                (size_t)
+	[RSP+280] 0x0                (size_t)
+	[RSP+288] 0x0                (size_t)
+	[RSP+290] 0x0                (size_t)
+	[RSP+298] 0x0                (size_t)
+	[RSP+2A0] 0x0                (size_t)
+	[RSP+2A8] 0x0                (size_t)
+	[RSP+2B0] 0x0                (size_t)
+	[RSP+2B8] 0x240F81944F8      (void*)
+	[RSP+2C0] 0x7FF67A8784CD     (void* -> Fallout4.exe+01284CD)
+	[RSP+2C8] 0x240F81939B8      (void*)
+	[RSP+2D0] 0x0                (size_t)
+	[RSP+2D8] 0x0                (size_t)
+	[RSP+2E0] 0x7FFD59711ACE     (void* -> KERNELBASE.dll+0021ACE)
+	[RSP+2E8] 0x2417A05CD00      (void*)
+	[RSP+2F0] 0x7FF67C2A0F26     (void* -> Fallout4.exe+1B50F26)
+	[RSP+2F8] 0x7FF680339610     (void* -> Fallout4.exe+5BE9610)
+	[RSP+300] 0x0                (size_t)
+	[RSP+308] 0x0                (size_t)
+	[RSP+310] 0x7FF67C4CC6DE     (void* -> Fallout4.exe+1D7C6DE)
+	[RSP+318] 0x0                (size_t)
+	[RSP+320] 0x0                (size_t)
+	[RSP+328] 0x0                (size_t)
+	[RSP+330] 0x0                (size_t)
+	[RSP+338] 0x7FF6803395C0     (BSJobs::JobThread*)
+	[RSP+340] 0x7FF67C2A1432     (void* -> Fallout4.exe+1B51432)
+	[RSP+348] 0x0                (size_t)
+	[RSP+350] 0x7FF6803395C0     (BSJobs::JobThread*)
+	[RSP+358] 0x0                (size_t)
+	[RSP+360] 0x7CFC2CFC20       (void*)
+	[RSP+368] 0x0                (size_t)
+	[RSP+370] 0x0                (size_t)
+	[RSP+378] 0x0                (size_t)
+	[RSP+380] 0x7FF67C2A3F67     (void* -> Fallout4.exe+1B53F67)
+	[RSP+388] 0x7FF6803395C0     (BSJobs::JobThread*)
+	[RSP+390] 0x0                (size_t)
+	[RSP+398] 0x0                (size_t)
+	[RSP+3A0] 0x0                (size_t)
+	[RSP+3A8] 0x7FF6803395C0     (BSJobs::JobThread*)
+	[RSP+3B0] 0x7FF67C26CFED     (void* -> Fallout4.exe+1B1CFED)
+	[RSP+3B8] 0x4B8C             (size_t)
+	[RSP+3C0] 0x7CFC2CFC40       (void*)
+	[RSP+3C8] 0x2416636EE70      (void*)
+	[RSP+3D0] 0x0                (size_t)
+	[RSP+3D8] 0x7FF6803395C0     (BSJobs::JobThread*)
+	[RSP+3E0] 0x0                (size_t)
+	[RSP+3E8] 0x0                (size_t)
+	[RSP+3F0] 0x7FFD5A067034     (void* -> KERNEL32.DLL+0017034)
+	[RSP+3F8] 0x0                (size_t)
+	[RSP+400] 0x0                (size_t)
+	[RSP+408] 0x0                (size_t)
+	[RSP+410] 0x0                (size_t)
+	[RSP+418] 0x0                (size_t)
+	[RSP+420] 0x7FFD5BAC2651     (void* -> ntdll.dll+0052651)
+	[RSP+428] 0x0                (size_t)
+	[RSP+430] 0x0                (size_t)
+	[RSP+438] 0x0                (size_t)
+	[RSP+440] 0x0                (size_t)
+	[RSP+448] 0x0                (size_t)
+	[RSP+450] 0x0                (size_t)
+	[RSP+458] 0x3EC1228E00000000 (size_t)
+	[RSP+460] 0x0                (size_t)
+	[RSP+468] 0x0                (size_t)
+	[RSP+470] 0x7FFD597FFD40     (void* -> KERNELBASE.dll+010FD40)
+	[RSP+478] 0x7CFC2CE9C0       (void*)
+	[RSP+480] 0x7F380001FFF59EFB (size_t)
+	[RSP+488] 0x7FFD67BEDFCE     (size_t)
+	[RSP+490] 0x7CFC2CE9C0       (void*)
+	[RSP+498] 0x0                (size_t)
+	[RSP+4A0] 0x0                (size_t)
+	[RSP+4A8] 0x0                (size_t)
+	[RSP+4B0] 0x0                (size_t)
+	[RSP+4B8] 0x0                (size_t)
+	[RSP+4C0] 0x0                (size_t)
+	[RSP+4C8] 0x0                (size_t)
+	[RSP+4D0] 0x0                (size_t)
+	[RSP+4D8] 0x0                (size_t)
+	[RSP+4E0] 0x0                (size_t)
+	[RSP+4E8] 0x0                (size_t)
+	[RSP+4F0] 0x0                (size_t)
+	[RSP+4F8] 0x0                (size_t)
+	[RSP+500] 0x0                (size_t)
+	[RSP+508] 0x0                (size_t)
+	[RSP+510] 0x0                (size_t)
+	[RSP+518] 0x0                (size_t)
+	[RSP+520] 0x0                (size_t)
+	[RSP+528] 0x0                (size_t)
+	[RSP+530] 0x0                (size_t)
+	[RSP+538] 0x0                (size_t)
+	[RSP+540] 0x0                (size_t)
+	[RSP+548] 0x0                (size_t)
+	[RSP+550] 0x0                (size_t)
+	[RSP+558] 0x0                (size_t)
+	[RSP+560] 0x0                (size_t)
+	[RSP+568] 0x0                (size_t)
+	[RSP+570] 0x0                (size_t)
+	[RSP+578] 0x0                (size_t)
+	[RSP+580] 0x0                (size_t)
+	[RSP+588] 0x0                (size_t)
+	[RSP+590] 0x0                (size_t)
+	[RSP+598] 0x0                (size_t)
+	[RSP+5A0] 0x0                (size_t)
+	[RSP+5A8] 0x0                (size_t)
+	[RSP+5B0] 0x0                (size_t)
+	[RSP+5B8] 0x0                (size_t)
+	[RSP+5C0] 0x0                (size_t)
+	[RSP+5C8] 0x0                (size_t)
+	[RSP+5D0] 0x0                (size_t)
+	[RSP+5D8] 0x0                (size_t)
+	[RSP+5E0] 0x0                (size_t)
+	[RSP+5E8] 0x0                (size_t)
+	[RSP+5F0] 0x0                (size_t)
+	[RSP+5F8] 0x0                (size_t)
+	[RSP+600] 0x0                (size_t)
+	[RSP+608] 0x0                (size_t)
+	[RSP+610] 0x0                (size_t)
+	[RSP+618] 0x0                (size_t)
+	[RSP+620] 0x0                (size_t)
+	[RSP+628] 0x0                (size_t)
+	[RSP+630] 0x0                (size_t)
+	[RSP+638] 0x0                (size_t)
+	[RSP+640] 0x0                (size_t)
+	[RSP+648] 0x0                (size_t)
+	[RSP+650] 0x0                (size_t)
+	[RSP+658] 0x0                (size_t)
+	[RSP+660] 0x0                (size_t)
+	[RSP+668] 0x0                (size_t)
+	[RSP+670] 0x0                (size_t)
+	[RSP+678] 0x0                (size_t)
+	[RSP+680] 0x0                (size_t)
+	[RSP+688] 0x0                (size_t)
+	[RSP+690] 0x0                (size_t)
+	[RSP+698] 0x0                (size_t)
+	[RSP+6A0] 0x0                (size_t)
+	[RSP+6A8] 0x0                (size_t)
+	[RSP+6B0] 0x0                (size_t)
+	[RSP+6B8] 0x0                (size_t)
+	[RSP+6C0] 0x0                (size_t)
+	[RSP+6C8] 0x0                (size_t)
+	[RSP+6D0] 0x0                (size_t)
+	[RSP+6D8] 0x0                (size_t)
+	[RSP+6E0] 0x0                (size_t)
+	[RSP+6E8] 0x0                (size_t)
+	[RSP+6F0] 0x0                (size_t)
+	[RSP+6F8] 0x0                (size_t)
+	[RSP+700] 0x0                (size_t)
+	[RSP+708] 0x0                (size_t)
+	[RSP+710] 0x0                (size_t)
+	[RSP+718] 0x0                (size_t)
+	[RSP+720] 0x0                (size_t)
+	[RSP+728] 0x0                (size_t)
+	[RSP+730] 0x0                (size_t)
+	[RSP+738] 0x0                (size_t)
+	[RSP+740] 0x0                (size_t)
+	[RSP+748] 0x0                (size_t)
+	[RSP+750] 0x0                (size_t)
+	[RSP+758] 0x0                (size_t)
+	[RSP+760] 0x0                (size_t)
+	[RSP+768] 0x0                (size_t)
+	[RSP+770] 0x0                (size_t)
+	[RSP+778] 0x0                (size_t)
+	[RSP+780] 0x0                (size_t)
+	[RSP+788] 0x0                (size_t)
+	[RSP+790] 0x0                (size_t)
+
+MODULES:
+	XINPUT1_3.dll                 0x000000400000
+	steam_api64.dll               0x000063290000
+	X3DAudio1_7.dll               0x0000632D0000
+	rename_anything.dll           0x0240B0A70000
+	Fallout4.exe                  0x7FF67A750000
+	nvcuda64.dll                  0x7FFCCE920000
+	steamclient64.dll             0x7FFCCFE40000
+	NvCamera64.dll                0x7FFCE3060000
+	DSOUND.DLL                    0x7FFCF7170000
+	nvwgf2umx.dll                 0x7FFCF7470000
+	d3dcompiler_47_64.dll         0x7FFCFB760000
+	gameoverlayrenderer64.dll     0x7FFCFC5F0000
+	XAudio2_7.dll                 0x7FFCFDBC0000
+	XDI.dll                       0x7FFD03A30000
+	UnlimitedSurvivalMode.dll     0x7FFD03AA0000
+	PRKF.dll                      0x7FFD03AF0000
+	place.dll                     0x7FFD03B80000
+	mcm.dll                       0x7FFD03C00000
+	IPHLPAPI.DLL                  0x7FFD03CA0000
+	HighFPSPhysicsFix.dll         0x7FFD04AC0000
+	Buffout4.dll                  0x7FFD04B50000
+	ClassicHolsteredWeapons.dll   0x7FFD05D60000
+	BulletCountedReload.dll       0x7FFD05E10000
+	BakaScrapHeap.dll             0x7FFD05EA0000
+	tier0_s64.dll                 0x7FFD05F70000
+	PipboyTabs.dll                0x7FFD06250000
+	FallSouls.dll                 0x7FFD06430000
+	tbbmalloc.dll                 0x7FFD06490000
+	f4se_1_10_163.dll             0x7FFD066D0000
+	MSVCR110.dll                  0x7FFD067B0000
+	BakaWaitAnywhere.dll          0x7FFD06AC0000
+	crafting_highlight_fix.dll    0x7FFD06BE0000
+	ALR.dll                       0x7FFD06C30000
+	flexRelease_x64.dll           0x7FFD07000000
+	achievements.dll              0x7FFD07C90000
+	vstdlib_s64.dll               0x7FFD07F30000
+	MSVCP110.dll                  0x7FFD09800000
+	nvspcap64.dll                 0x7FFD0A0C0000
+	GFSDK_SSAO_D3D11.win64.dll    0x7FFD12DF0000
+	DINPUT8.dll                   0x7FFD2C8E0000
+	f4se_steam_loader.dll         0x7FFD2CF70000
+	GFSDK_GodraysLib.x64.dll      0x7FFD2CFA0000
+	bink2w64.dll                  0x7FFD2D000000
+	cudart64_75.dll               0x7FFD2D2D0000
+	flexExtRelease_x64.dll        0x7FFD2E860000
+	XINPUT9_1_0.dll               0x7FFD38620000
+	VCRUNTIME140_1.dll            0x7FFD39E80000
+	MSVCP140.dll                  0x7FFD39E90000
+	VCRUNTIME140.dll              0x7FFD39F50000
+	winmmbase.dll                 0x7FFD3A690000
+	Secur32.dll                   0x7FFD3C490000
+	SprintStutteringFix.dll       0x7FFD3E790000
+	PhotoMetadataHandler.dll      0x7FFD3EF90000
+	OneCoreCommonProxyStub.dll    0x7FFD3F270000
+	MessageBus.dll                0x7FFD40C30000
+	Oleacc.dll                    0x7FFD414C0000
+	WINSPOOL.DRV                  0x7FFD41530000
+	COMCTL32.dll                  0x7FFD415D0000
+	DbgHelp.dll                   0x7FFD42EA0000
+	WINHTTP.dll                   0x7FFD45F70000
+	inputhost.dll                 0x7FFD46630000
+	textinputframework.dll        0x7FFD46790000
+	Windows.UI.dll                0x7FFD46890000
+	MSVCP140_ATOMIC_WAIT.dll      0x7FFD46C40000
+	nvapi64.dll                   0x7FFD474C0000
+	MSIMG32.dll                   0x7FFD48720000
+	WINMM.dll                     0x7FFD4A400000
+	drvstore.dll                  0x7FFD4CEE0000
+	cryptnet.dll                  0x7FFD4D030000
+	nvldumdx.dll                  0x7FFD4DCF0000
+	dxcore.dll                    0x7FFD4DF60000
+	OneCoreUAPCommonProxyStub.dll 0x7FFD4E6C0000
+	nvToolsExt64_1.dll            0x7FFD50460000
+	windowscodecs.dll             0x7FFD51C90000
+	dhcpcsvc.DLL                  0x7FFD51EE0000
+	VERSION.dll                   0x7FFD52150000
+	twinapi.appcore.dll           0x7FFD52380000
+	WindowManagementAPI.dll       0x7FFD52580000
+	avrt.dll                      0x7FFD53000000
+	MMDevApi.dll                  0x7FFD53010000
+	AUDIOSES.DLL                  0x7FFD53240000
+	PROPSYS.dll                   0x7FFD548A0000
+	d3d11.dll                     0x7FFD54ED0000
+	wintypes.dll                  0x7FFD55D90000
+	dcomp.dll                     0x7FFD55EF0000
+	CoreUIComponents.dll          0x7FFD56460000
+	CoreMessaging.dll             0x7FFD567C0000
+	apphelp.dll                   0x7FFD569F0000
+	UxTheme.dll                   0x7FFD56B30000
+	resourcepolicyclient.dll      0x7FFD56CC0000
+	dwmapi.dll                    0x7FFD56DC0000
+	kernel.appcore.dll            0x7FFD570B0000
+	windows.storage.dll           0x7FFD572B0000
+	HID.DLL                       0x7FFD57A50000
+	dxgi.dll                      0x7FFD57A90000
+	ntmarta.dll                   0x7FFD57E90000
+	rsaenh.dll                    0x7FFD58260000
+	UMPDC.dll                     0x7FFD585D0000
+	IpHlpAPI.dll                  0x7FFD585F0000
+	powrprof.dll                  0x7FFD58760000
+	MSWSOCK.dll                   0x7FFD58950000
+	CRYPTBASE.DLL                 0x7FFD58B40000
+	CRYPTSP.dll                   0x7FFD58B50000
+	Wldp.dll                      0x7FFD58BF0000
+	msasn1.dll                    0x7FFD58D80000
+	devobj.dll                    0x7FFD58F40000
+	SSPICLI.DLL                   0x7FFD59050000
+	profapi.dll                   0x7FFD590D0000
+	gdi32full.dll                 0x7FFD59190000
+	bcrypt.dll                    0x7FFD592A0000
+	ucrtbase.dll                  0x7FFD592D0000
+	bcryptPrimitives.dll          0x7FFD593D0000
+	win32u.dll                    0x7FFD59510000
+	cfgmgr32.dll                  0x7FFD59540000
+	CRYPT32.dll                   0x7FFD59590000
+	KERNELBASE.dll                0x7FFD596F0000
+	WINTRUST.DLL                  0x7FFD599C0000
+	msvcp_win.dll                 0x7FFD59A30000
+	combase.dll                   0x7FFD59AD0000
+	NSI.dll                       0x7FFD59E30000
+	COMDLG32.dll                  0x7FFD59E40000
+	ole32.dll                     0x7FFD59F20000
+	KERNEL32.DLL                  0x7FFD5A050000
+	clbcatq.dll                   0x7FFD5A110000
+	msvcrt.dll                    0x7FFD5A1C0000
+	sechost.dll                   0x7FFD5A260000
+	shcore.dll                    0x7FFD5A300000
+	SHLWAPI.dll                   0x7FFD5A440000
+	USER32.dll                    0x7FFD5A5F0000
+	PSAPI.DLL                     0x7FFD5A790000
+	ADVAPI32.dll                  0x7FFD5A7A0000
+	SHELL32.dll                   0x7FFD5A850000
+	WS2_32.dll                    0x7FFD5AFA0000
+	IMM32.DLL                     0x7FFD5B010000
+	imagehlp.dll                  0x7FFD5B040000
+	GDI32.dll                     0x7FFD5B060000
+	MSCTF.dll                     0x7FFD5B090000
+	OLEAUT32.dll                  0x7FFD5B3C0000
+	SETUPAPI.dll                  0x7FFD5B490000
+	RPCRT4.dll                    0x7FFD5B900000
+	ntdll.dll                     0x7FFD5BA70000
+
+F4SE PLUGINS:
+	achievements.dll
+	ALR.dll
+	BakaScrapHeap.dll v1.3
+	BakaWaitAnywhere.dll v1.3
+	Buffout4.dll v1.24.5
+	BulletCountedReload.dll
+	ClassicHolsteredWeapons.dll
+	crafting_highlight_fix.dll
+	FallSouls.dll
+	HighFPSPhysicsFix.dll
+	mcm.dll
+	PipboyTabs.dll
+	place.dll
+	PRKF.dll
+	rename_anything.dll
+	SprintStutteringFix.dll
+	UnlimitedSurvivalMode.dll
+	XDI.dll
+
+PLUGINS:
+	[00]     Fallout4.esm
+	[01]     DLCRobot.esm
+	[02]     DLCworkshop01.esm
+	[03]     DLCCoast.esm
+	[04]     DLCworkshop02.esm
+	[05]     DLCworkshop03.esm
+	[06]     DLCNukaWorld.esm
+	[07]     ArmorKeywords.esm
+	[08]     XDI.esm
+	[09]     HUDFramework.esm
+	[0A]     Loads.esm
+	[0B]     PACE.esm
+	[0C]     PANPC.esm
+	[0D]     TacticalReload.esm
+	[0E]     Unofficial Fallout 4 Patch.esp
+	[0F]     ConcealedArmor.esm
+	[10]     ASVektor.esp
+	[11]     BobbleGirl.esp
+	[12]     LegendaryModification.esp
+	[13]     MoreUniques.esp
+	[14]     WeightlessAid.esp
+	[15]     Vivid Waters.esp
+	[16]     CriticalHitsOutsideofVATS.esp
+	[17]     VAFS Redux.esp
+	[18]     VAFS Redux DLC Patch.esp
+	[19]     DP_CaravanShotgun.esp
+	[1A]     BetterNightVision.esp
+	[1B]     Vivid Weathers - FO4.esp
+	[1C]     Radiant Clouds and Fogs.esp
+	[1D]     DarkerNights.esp
+	[1E]     DarkerNights-Radiant.esp
+	[1F]     DarkerNightsDetection.esp
+	[20]     WeaponsHD.esp
+	[21]     HuntingRevolver.esp
+	[22]     PPSh-41.esp
+	[23]     FO4LaserBolts - InstituteRoyalBlue.esp
+	[24]     FO4LaserBolts - NormalYellow.esp
+	[25]     FO4LaserBolts.esp
+	[26]     Lasers Have No Recoil.esp
+	[27]     LegendaryModification - DLC Far Harbor.esp
+	[28]     LegendaryModification2LM.esp
+	[29]     LegendaryModification - DLC Far Harbor (2LM).esp
+	[2A]     LegendaryModificationCSA.esp
+	[2B]     LegendaryModificationGroknak.esp
+	[2C]     LegendaryModificationMisc.esp
+	[2D]     SilentProtagonist.esp
+	[2E]     3dscopes-replacer-huntingrevolver.esp
+	[2F]     3dscopes-replacer.esp
+	[30]     IncreasedWeaponModDistribution-GOTY.esp
+	[31]     Realistic Shotguns.esp
+	[32]     Vivid Fallout - All in One - Best Choice.esp
+	[33]     Vivid Weathers - FO4 - Far Harbor.esp
+	[34]     Vivid Weathers - Nuka World.esp
+	[35]     WeightlessMods.esp
+	[36]     WeightlessJunk.esp
+	[37]     WeightlessSpecialAmmo.esp
+	[38]     WestTekTacticalOptics.esp
+	[39]     ALR - All DLC.esp
+	[3A]     Any Armour on Any Clothes - Legendary Edition.esp
+	[3B]     MojaveImports.esp
+	[3C]     Armorsmith Extended.esp
+	[3D]     Basic Ammo Framework.esp
+	[3E]     Be Exceptional - Uninstall.esp
+	[3F]     Be Exceptional.esp
+	[40]     Better Cooking.esp
+	[41]     CROSS_Cybernetics.esp
+	[42]     CROSS_GoreCrits.esp
+	[43]     CROSS_GoreCrits_FarHarborPatch.esp
+	[44]     CROSS_Jetpack.esp
+	[45]     PersonalGuard.esp
+	[46]     CheatTerminal.esp
+	[47]     CWMR-GOTY-Patch-IncreasedWeaponModDistribution-GOTY.esp
+	[48]     CutWeaponModsRestored-GOTY.esp
+	[49]     Cinematographic fog effect - Heavy.esp
+	[4A]     EnhancedLightsandFX.esp
+	[4B]     Extended weapon mods.esp
+	[4C]     FG-42.esp
+	[4D]     Fallschirmjagergewehr.esp
+	[4E]     Factor.esp
+	[4F]     FIS-Naming-Weap-Armo-EN.esp
+	[50]     AtomicAnnieLagrieGun.esp
+	[51]     FROST - It Snowed.esp
+	[52]     FROST - LootableCars.esp
+	[53]     FROSTmoreDoors.esp
+	[54]     FROST - SuperMutantLocations.esp
+	[55]     FrostNukaWorld.esp
+	[56]     aFrostMod.esp
+	[57]     Frost PipTab.esp
+	[58]     FROST.esp
+	[59]     Gas Mask ArmorKeywords.esp
+	[5A]     Gas Mask NPC.esp
+	[5B]     Gas Masks of the Wasteland.esp
+	[5C]     RedsFrostFixes.esp
+	[5D]     FunctionalDisplays-AID-VIS-WI-Weightless.esp
+	[5E]     FunctionalDisplays-Collectibles.esp
+	[5F]     FunctionalDisplays-MISC-VIS-HTNJ-Weightless.esp
+	[60]     FunctionalDisplays-Patch-DLC-ALL-VIS-Weightless.esp
+	[61]     FunctionalDisplays.esp
+	[62]     GCM.esp
+	[63]     Give Me That Bottle.esp
+	[64]     GrenadeExpansionPack.esp
+	[65]     GrenadeExpansionPackAWKCRPatch.esp
+	[66]     GrenadeExpansionPackLoadsPatch.esp
+	[67]     GrenadeExpansionPackValsPatch.esp
+	[68]     CapsWidget.esp
+	[69]     brtrn_highValueAreNotJunk.esp
+	[6A]     brtrn_uniqueItemsAreNotJunk.esp
+	[6B]     InteriorsEnhanced-All-In-One.esp
+	[6C]     DOOMMerged.esp
+	[6D]     LegendaryModification2LMAKPatch.esp
+	[6E]     LeverShotgunReceiver.esp
+	[6F]     Loads of Ammo - Leveled Lists.esp
+	[70]     M1Garand - AWKCR.esp
+	[71]     M1Garand-2xDMG.esp
+	[72]     M1Garand.esp
+	[73]     Mute_Player_Character_Voice_v0.1.esp
+	[74]     NoAffinityCooldown.esp
+	[75]     NoNegativeAffinityNoFucks.esp
+	[76]     NightstrikerCreatureMod.esp
+	[77]     NO NPC GREETINGS.esp
+	[78]     PACE - Less Combat Chatter.esp
+	[79]     SCM_GMTB.esp
+	[7A]     PiP-Boy2000.esp
+	[7B]     Pip-Boy Flashlight.esp
+	[7C]     RAW INPUT.esp
+	[7D]     CombinedArmsNV.esp
+	[7E]     REAPER.esp
+	[7F]     Remington700.esp
+	[80]     RemovedStimpakInjectionAnimation.esp
+	[81]     Reverb and Ambiance Overhaul.esp
+	[82]     AlexSleevePatcher.esp
+	[83]     SCM.esp
+	[84]     SurvivalOptions.esp
+	[85]     TacticalReloadDLC.esp
+	[86]     TacticalReloadVanilla.esp
+	[87]     TacticalModsDLC.esp
+	[88]     TacticalMods.esp
+	[89]     Dark Drifter.esp
+	[8A]     CCOFO4 - Traits and More Perks.esp
+	[8B]     UltraExteriorLighting.esp
+	[8C]     UltraInteriorLighting.esp
+	[8D]     UniqueUniques.esp
+	[8E]     VisibleWeapons.esp
+	[8F]     Vivid Weathers - FROST Patch.esp
+	[90]     Vivid Weathers - FO4 - Quest.esp
+	[91]     Vivid Weathers - FO4 - Winter.esp
+	[92]     Vivid Weathers - Natural Bright.esp
+	[93]     Weapons of Fate.esp
+	[94]     Winter Commonwealth Pines.esp
+	[95]     ZygsFrostStart.esp
+	[96]     Freeze.esp
+	[97]     Mercenary.esp
+	[98]     Companion Infinite Ammo and Unbreakable Power Armour.esp
+	[99]     PipBoyShadows.esp
+	[9A]     ConcealedArmor.esp
+	[9B]     CompanionStatus.esp
+	[FE:000] BakaWaitAnywhere.esm
+	[FE:001] _LandAnimMod.esl
+	[FE:002] GCM_DLC_Far_Harbor.esl
+	[FE:003] HoloGlow25.esl
+	[FE:004] MoreWildlife.esl
+	[FE:005] GCM_DLC_Automatron.esl
+	[FE:006] RCW.esp
+	[FE:007] RSh-12.esp
+	[FE:008] Caravan Shotgun Bug Fixes.esp
+	[FE:009] Hunting Revolver and Ranger Sequoia - SeeThruReplacer.esp
+	[FE:00A] CROSS_MojaveManhunter.esp
+	[FE:00B] FAR.esp
+	[FE:00C] FROST - AccessibleArcJet.esp
+	[FE:00D] FROST - AccessibleFortHagen.esp
+	[FE:00E] FROST - AccessibleFortStrong.esp
+	[FE:00F] FROST - Caravan Shotgun.esp
+	[FE:010] FROST_RCW.esp
+	[FE:011] FROST - UFO4P Patch.esp
+	[FE:012] FCF_Main.esp
+	[FE:013] FCF_Previsibines.esp
+	[FE:014] M8rDisablePipboyEffects.esp
+	[FE:015] FROST - AccessibleMedTekResearch.esp
+	[FE:016] Power Armor HUD Switcher.esp
+	[FE:017] M8rDisableCreationClub.esp
+	[FE:018] CROSS_BreakActionLaser.esp
+	[FE:019] CROSS_Blades.esp

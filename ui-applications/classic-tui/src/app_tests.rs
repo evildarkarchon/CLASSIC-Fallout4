@@ -1,5 +1,6 @@
-use super::{App, AsyncMessage, TabIndex};
+use super::{App, AsyncMessage, TabIndex, format_scan_run_progress};
 use crate::widgets::path_input::PathValidationState;
+use classic_scanlog_core::{CrashLogScanRunEvent, CrashLogScanRunEventKind, ScanProgressPhase};
 use std::path::PathBuf;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
@@ -38,6 +39,24 @@ fn scan_complete_with_errors_updates_status_message() {
     assert_eq!(app.scan_status, "Scanned 3 logs (1 errors)");
     assert_eq!(app.scan_progress, 100.0);
     assert!(app.status_clear_at.is_some());
+}
+
+#[test]
+fn scan_run_progress_formatter_uses_completion_count_and_filename() {
+    let event = CrashLogScanRunEvent {
+        input_index: 1,
+        crash_log: PathBuf::from("Crash Logs/crash-02.log"),
+        kind: CrashLogScanRunEventKind::Completed,
+        phase: ScanProgressPhase::Finalize,
+        completed: 2,
+        total: 4,
+        success: true,
+    };
+
+    let (percent, status) = format_scan_run_progress(&event);
+
+    assert_eq!(percent, 50.0);
+    assert_eq!(status, "50% - Scanned crash-02.log");
 }
 
 #[test]
@@ -153,64 +172,6 @@ fn poll_results_refreshes_when_snapshot_changes() {
 
     let after = app.results.filtered_indices.len();
     assert!(after > before);
-}
-
-#[test]
-fn resolve_xse_folder_uses_docs_root_for_fo4() {
-    let mut app = App::new_for_testing();
-    app.config.paths.docs_root = Some(PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4"));
-    app.config.game_version = "auto".to_string();
-
-    let folder = super::resolve_xse_folder_for_scan(&app.config).expect("expected xse folder");
-    assert_eq!(
-        folder,
-        PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4\F4SE")
-    );
-}
-
-#[test]
-fn resolve_xse_folder_uses_docs_root_for_fo4_vr() {
-    let mut app = App::new_for_testing();
-    app.config.paths.docs_root = Some(PathBuf::from(
-        r"C:\Users\Test\Documents\My Games\Fallout4VR",
-    ));
-    app.config.game_version = "VR".to_string();
-
-    let folder = super::resolve_xse_folder_for_scan(&app.config).expect("expected xse folder");
-    assert_eq!(
-        folder,
-        PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE")
-    );
-}
-
-#[test]
-fn parse_xse_folder_from_local_yaml_reads_game_info() {
-    let yaml = r#"
-Game_Info:
-  Docs_Folder_XSE: C:\Users\Test\Documents\My Games\Fallout4\F4SE
-"#;
-    let parsed = super::parse_xse_folder_from_local_yaml(yaml);
-    assert_eq!(
-        parsed,
-        Some(PathBuf::from(
-            r"C:\Users\Test\Documents\My Games\Fallout4\F4SE"
-        ))
-    );
-}
-
-#[test]
-fn parse_xse_folder_from_local_yaml_reads_registry_backed_vr_path() {
-    let yaml = r#"
-Game_Info:
-  Docs_Folder_XSE: C:\Users\Test\Documents\My Games\Fallout4VR\F4SE
-"#;
-    let parsed = super::parse_xse_folder_from_local_yaml(yaml);
-    assert_eq!(
-        parsed,
-        Some(PathBuf::from(
-            r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE"
-        ))
-    );
 }
 
 #[test]

@@ -26,8 +26,8 @@ private slots:
     void mainwindow_uses_exe_relative_crash_logs_dir();
     void mainwindow_resets_stale_game_exe_path_outside_selected_root();
     void controllers_emit_global_scan_started_signal_on_scan_start();
-    void scan_controller_uses_exe_dir_and_docs_fallback_for_log_collection();
-    void scan_controller_treats_blank_xse_paths_as_missing();
+    void scan_controller_uses_exe_dir_and_xse_resolver_for_log_collection();
+    void scan_controller_delegates_xse_folder_resolution_to_core();
     void settings_dialog_wires_game_folder_path_controls();
     void settings_dialog_resets_stale_game_exe_path_when_game_folder_changes();
     void settings_dialog_adds_multiple_formid_databases();
@@ -62,16 +62,16 @@ void ScanSettingsWiringTests::scan_worker_forwards_runtime_flags_to_rust_config(
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("build_full_scan_config(")),
-             "ScanWorker should call build_full_scan_config()");
+    QVERIFY2(sourceText.contains(QStringLiteral("scan_run_execute(")),
+             "ScanWorker should call the Rust Crash Log Scan Run seam");
     QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(gameVersion)")),
-             "ScanWorker should forward gameVersion to build_full_scan_config()");
+             "ScanWorker should forward gameVersion to scan_run_execute()");
     QVERIFY2(sourceText.contains(QStringLiteral("showFormIdValues")),
-             "ScanWorker should forward showFormIdValues to build_full_scan_config()");
+             "ScanWorker should forward showFormIdValues to scan_run_execute()");
     QVERIFY2(sourceText.contains(QStringLiteral("fcxMode")),
-             "ScanWorker should forward fcxMode to build_full_scan_config()");
+             "ScanWorker should forward fcxMode to scan_run_execute()");
     QVERIFY2(sourceText.contains(QStringLiteral("simplifyLogs")),
-             "ScanWorker should forward simplifyLogs to build_full_scan_config()");
+             "ScanWorker should forward simplifyLogs to scan_run_execute()");
 }
 
 void ScanSettingsWiringTests::scan_controller_forwards_flags_to_worker()
@@ -84,7 +84,7 @@ void ScanSettingsWiringTests::scan_controller_forwards_flags_to_worker()
     const QString sourceText = QString::fromUtf8(file.readAll());
 
     const QRegularExpression lambdaRegex(QStringLiteral(
-        R"(worker->doScan\((?:.|\n)*?gameVersion,\s*showFormIdValues,\s*fcxMode,\s*simplifyLogs,\s*moveUnsolvedLogs,\s*maxConcurrentScans(?:,\s*targetedMode)?\s*\))"));
+        R"(worker->doScan\((?:.|\n)*?gameVersion,\s*showFormIdValues,\s*fcxMode,\s*simplifyLogs,\s*moveUnsolvedLogs,\s*unsolvedLogsDestination,\s*maxConcurrentScans(?:,\s*targetedMode)?\s*\))"));
     QVERIFY2(lambdaRegex.match(sourceText).hasMatch(),
              "ScanController should pass scan settings through to ScanWorker::doScan()");
 }
@@ -114,7 +114,7 @@ void ScanSettingsWiringTests::mainwindow_forwards_game_version_to_scan_controlle
     const QString sourceText = QString::fromUtf8(file.readAll());
 
     const QRegularExpression callRegex(QStringLiteral(
-        R"(m_scanController->startScan\((?:.|\n)*?m_gameVersion,\s*m_showFormIdValues,\s*m_fcxMode,\s*m_simplifyLogs,\s*m_moveUnsolvedLogs,\s*m_maxConcurrentScans\s*,(?:.|\n)*?\))"));
+        R"(m_scanController->startScan\((?:.|\n)*?m_gameVersion,\s*m_showFormIdValues,\s*m_fcxMode,\s*m_simplifyLogs,\s*m_moveUnsolvedLogs,\s*m_unsolvedLogsDestination,\s*m_maxConcurrentScans\s*,(?:.|\n)*?\))"));
     QVERIFY2(callRegex.match(sourceText).hasMatch(),
              "MainWindow should forward game version and all scan settings to ScanController::startScan()");
 }
@@ -128,9 +128,13 @@ void ScanSettingsWiringTests::scan_worker_handles_move_unsolved_and_max_concurre
 
     const QString sourceText = QString::fromUtf8(file.readAll());
     QVERIFY2(sourceText.contains(QStringLiteral("moveUnsolvedLogs")),
-             "ScanWorker should receive moveUnsolvedLogs setting");
+              "ScanWorker should receive moveUnsolvedLogs setting");
+    QVERIFY2(sourceText.contains(QStringLiteral("unsolvedLogsDestination")),
+             "ScanWorker should receive the custom Unsolved Logs Destination setting");
+    QVERIFY2(sourceText.contains(QStringLiteral("request.unsolved_logs_destination")),
+             "ScanWorker should forward the custom Unsolved Logs Destination to Rust");
     QVERIFY2(sourceText.contains(QStringLiteral("maxConcurrentScans")),
-             "ScanWorker should receive maxConcurrentScans setting");
+              "ScanWorker should receive maxConcurrentScans setting");
 }
 
 void ScanSettingsWiringTests::scan_worker_uses_progress_enabled_batch_api()
@@ -145,8 +149,8 @@ void ScanSettingsWiringTests::scan_worker_uses_progress_enabled_batch_api()
              "ScanWorker should define a CXX batch progress callback adapter");
     QVERIFY2(sourceText.contains(QStringLiteral("BatchProgressEvent")),
              "ScanWorker should consume the richer batch progress event payload");
-    QVERIFY2(sourceText.contains(QStringLiteral("orchestrator_process_logs_batch_with_progress")),
-             "ScanWorker should use the CXX batch API that reports progress");
+    QVERIFY2(sourceText.contains(QStringLiteral("scan_run_execute")),
+             "ScanWorker should use the CXX Crash Log Scan Run API that reports progress");
 }
 
 void ScanSettingsWiringTests::scan_worker_forwards_batch_counts_in_progress_updates()
@@ -173,9 +177,11 @@ void ScanSettingsWiringTests::scan_worker_defaults_to_batch_for_multi_log_scans(
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("scan_run_execute")),
+             "ScanWorker should delegate both single-log and multi-log runs to Rust");
     const QRegularExpression batchGateRegex(QStringLiteral(R"(if\s*\(\s*total\s*>\s*1\s*\))"));
-    QVERIFY2(batchGateRegex.match(sourceText).hasMatch(),
-             "ScanWorker should default to batch mode whenever there is more than one log");
+    QVERIFY2(!batchGateRegex.match(sourceText).hasMatch(),
+             "ScanWorker should not preserve a separate C++ batch-mode branch");
 }
 
 void ScanSettingsWiringTests::mainwindow_wires_live_crash_scan_progress_updates()
@@ -454,7 +460,7 @@ void ScanSettingsWiringTests::controllers_emit_global_scan_started_signal_on_sca
              "GameFilesController should emit SignalHub::scanStarted() when a game-files scan begins");
 }
 
-void ScanSettingsWiringTests::scan_controller_uses_exe_dir_and_docs_fallback_for_log_collection()
+void ScanSettingsWiringTests::scan_controller_uses_exe_dir_and_xse_resolver_for_log_collection()
 {
     const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
     QFile file(sourcePath);
@@ -462,10 +468,10 @@ void ScanSettingsWiringTests::scan_controller_uses_exe_dir_and_docs_fallback_for
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("Game_Info.Root_Folder_Docs")),
-             "ScanController should fall back to Root_Folder_Docs when Docs_Folder_XSE is unavailable");
-    QVERIFY2(sourceText.contains(QStringLiteral("filePath(QStringLiteral(\"F4SE\"))")),
-             "ScanController should derive the F4SE folder from the docs root when needed");
+    QVERIFY2(sourceText.contains(QStringLiteral("classic::files::log_collector_new_for_scan")),
+             "ScanController should delegate scan-time XSE Folder resolution to Rust file-IO core");
+    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(gameVersion)")),
+             "ScanController should forward gameVersion to XSE Folder resolution");
     QVERIFY2(sourceText.contains(QStringLiteral("QCoreApplication::applicationDirPath()")),
              "ScanController should collect crash logs relative to the GUI executable directory");
     QVERIFY2(!sourceText.contains(QStringLiteral("QDir::currentPath()")),
@@ -474,7 +480,7 @@ void ScanSettingsWiringTests::scan_controller_uses_exe_dir_and_docs_fallback_for
              "ScanController should continue forwarding the custom scan folder separately");
 }
 
-void ScanSettingsWiringTests::scan_controller_treats_blank_xse_paths_as_missing()
+void ScanSettingsWiringTests::scan_controller_delegates_xse_folder_resolution_to_core()
 {
     const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
     QFile file(sourcePath);
@@ -482,11 +488,12 @@ void ScanSettingsWiringTests::scan_controller_treats_blank_xse_paths_as_missing(
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("const QString trimmed = classic::toQString(value).trimmed();")),
-             "ScanController should trim YAML directory values before deciding whether they are present");
-    QVERIFY2(sourceText.contains(QStringLiteral("return trimmed.isEmpty() ? QString() : QDir::cleanPath(trimmed);")),
-             "ScanController should keep blank Docs_Folder_XSE values empty instead of normalizing them to the current "
-             "directory");
+    QVERIFY2(!sourceText.contains(QStringLiteral("Game_Info.Docs_Folder_XSE")),
+             "ScanController should not parse Docs_Folder_XSE itself");
+    QVERIFY2(!sourceText.contains(QStringLiteral("Game_Info.Root_Folder_Docs")),
+             "ScanController should not parse Root_Folder_Docs itself");
+    QVERIFY2(!sourceText.contains(QStringLiteral("classic::settings::yaml_ops")),
+             "ScanController should not load Local.yaml through settings helpers");
 }
 
 void ScanSettingsWiringTests::settings_dialog_wires_game_folder_path_controls()
@@ -526,7 +533,7 @@ void ScanSettingsWiringTests::settings_dialog_resets_stale_game_exe_path_when_ga
         return sourceText.mid(start, end - start);
     };
 
-    const QString body = extractFunctionBody(QStringLiteral("void SettingsDialog::saveSettings()"));
+    const QString body = extractFunctionBody(QStringLiteral("bool SettingsDialog::saveSettings()"));
     QVERIFY2(!body.isEmpty(), "SettingsDialog::saveSettings() should exist");
     QVERIFY2(body.contains(QStringLiteral("QFileInfo")),
              "SettingsDialog should inspect existing game executable path location when saving");
@@ -937,7 +944,7 @@ void ScanSettingsWiringTests::scan_controller_disables_unsolved_relocation_for_t
              "ScanController should detect targeted mode before dispatching work to ScanWorker");
 
     const QRegularExpression lambdaRegex(
-        QStringLiteral(R"(worker->doScan\((?:.|\n)*?moveUnsolvedLogs,\s*maxConcurrentScans,\s*targetedMode\s*\))"));
+        QStringLiteral(R"(worker->doScan\((?:.|\n)*?moveUnsolvedLogs,\s*unsolvedLogsDestination,\s*maxConcurrentScans,\s*targetedMode\s*\))"));
     QVERIFY2(lambdaRegex.match(sourceText).hasMatch(),
              "ScanController should pass targetedMode to ScanWorker::doScan()");
 }
@@ -959,8 +966,20 @@ void ScanSettingsWiringTests::scan_worker_skips_unsolved_relocation_for_targeted
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("moveUnsolvedLogs && !targetedMode")),
-             "ScanWorker should skip unsolved-log relocation when running a targeted scan");
+    QVERIFY2(sourceText.contains(QStringLiteral("request.move_unsolved_logs = moveUnsolvedLogs")),
+              "ScanWorker should pass the unsolved relocation setting to Rust");
+    QVERIFY2(sourceText.contains(QStringLiteral("request.unsolved_logs_destination = classic::toRustString(unsolvedLogsDestination)")),
+             "ScanWorker should pass the destination setting to Rust without constructing the canonical path");
+    QVERIFY2(sourceText.contains(QStringLiteral("request.targeted_mode = targetedMode")),
+             "ScanWorker should pass targetedMode to Rust");
+    const QRegularExpression scanRunCallRegex(QStringLiteral(
+        R"(scan_run_execute\(\s*request,\s*progress_callback,\s*\*m_cancellationToken\s*\))"));
+    QVERIFY2(scanRunCallRegex.match(sourceText).hasMatch(),
+             "ScanWorker should pass the scan request and cancellation token to Rust");
+    QVERIFY2(sourceText.contains(QStringLiteral("scan_cancellation_token_cancel(*m_cancellationToken)")),
+             "ScanWorker::requestCancel should propagate cancellation to the Rust scan-run token");
+    QVERIFY2(!sourceText.contains(QStringLiteral("move_unsolved_artifacts")),
+             "ScanWorker should not own Unsolved Logs movement after scan_run migration");
 }
 
 void ScanSettingsWiringTests::scan_worker_counts_per_log_failures_without_scan_level_error()
@@ -971,10 +990,10 @@ void ScanSettingsWiringTests::scan_worker_counts_per_log_failures_without_scan_l
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
-    const QRegularExpression perLogCatchRegex(QStringLiteral(
-        R"(catch\s*\(\s*const\s+rust::Error&\s*\)\s*\{(?:.|\n)*?\+\+errorCount;(?:.|\n)*?emit\s+logScanned\(i,\s*false)"));
-    QVERIFY2(perLogCatchRegex.match(sourceText).hasMatch(),
-             "ScanWorker should treat orchestrator_process_log failures as per-log failures");
+    const QRegularExpression resultLoopRegex(QStringLiteral(
+        R"(for\s*\(\s*const\s+auto&\s+result\s*:\s*results\s*\)(?:.|\n)*?if\s*\(\s*result\.success\s*\)(?:.|\n)*?\+\+successCount;(?:.|\n)*?else(?:.|\n)*?\+\+errorCount;(?:.|\n)*?emit\s+logScanned\(index,\s*result\.success)"));
+    QVERIFY2(resultLoopRegex.match(sourceText).hasMatch(),
+             "ScanWorker should treat Rust scan_run per-log outcomes as per-log success/failure signals");
 
     const qsizetype outerCatchStart = sourceText.indexOf(QStringLiteral("} catch (const rust::Error& e) {"));
     QVERIFY2(outerCatchStart > 0, "ScanWorker should have an outer rust::Error handler for setup failures");

@@ -2,7 +2,7 @@
 name = "classic-file-io-core"
 version = "9.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
 description = "Pure Rust file I/O operations for CLASSIC (no PyO3)"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
@@ -13,6 +13,7 @@ crate-type = ["rlib"]  # Pure Rust library only - no PyO3
 [dependencies]
 # CLASSIC shared utilities
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
+classic-xse-core = { path = "../classic-xse-core" }
 
 # File I/O
 encoding_rs = { workspace = true }

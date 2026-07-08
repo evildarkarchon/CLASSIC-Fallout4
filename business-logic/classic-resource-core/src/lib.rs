@@ -208,71 +208,71 @@ impl FromStr for ResourceType {
 /// ```
 #[must_use]
 pub fn detect_resource_type(path: &Path) -> ResourceType {
-    if let Some(ext) = path.extension() {
-        if let Some(ext_str) = ext.to_str() {
-            let ext_lower = ext_str.to_lowercase();
+    if let Some(ext) = path.extension()
+        && let Some(ext_str) = ext.to_str()
+    {
+        let ext_lower = ext_str.to_lowercase();
 
-            // Check each resource type's extensions
-            if ResourceType::Texture
-                .extensions()
-                .contains(&ext_lower.as_str())
-            {
-                return ResourceType::Texture;
-            }
-            if ResourceType::Mesh
-                .extensions()
-                .contains(&ext_lower.as_str())
-            {
-                return ResourceType::Mesh;
-            }
-            if ResourceType::Script
-                .extensions()
-                .contains(&ext_lower.as_str())
-            {
-                return ResourceType::Script;
-            }
-            if ResourceType::Plugin
-                .extensions()
-                .contains(&ext_lower.as_str())
-            {
-                return ResourceType::Plugin;
-            }
-            if ResourceType::Sound
-                .extensions()
-                .contains(&ext_lower.as_str())
-            {
-                return ResourceType::Sound;
-            }
-            if ResourceType::Animation
-                .extensions()
-                .contains(&ext_lower.as_str())
-            {
-                return ResourceType::Animation;
-            }
-            if ResourceType::Interface
-                .extensions()
-                .contains(&ext_lower.as_str())
-            {
-                return ResourceType::Interface;
-            }
-            if ResourceType::Strings
-                .extensions()
-                .contains(&ext_lower.as_str())
-            {
-                return ResourceType::Strings;
-            }
-            if ResourceType::Archive
-                .extensions()
-                .contains(&ext_lower.as_str())
-            {
-                return ResourceType::Archive;
-            }
-            if ResourceType::Config
-                .extensions()
-                .contains(&ext_lower.as_str())
-            {
-                return ResourceType::Config;
-            }
+        // Check each resource type's extensions
+        if ResourceType::Texture
+            .extensions()
+            .contains(&ext_lower.as_str())
+        {
+            return ResourceType::Texture;
+        }
+        if ResourceType::Mesh
+            .extensions()
+            .contains(&ext_lower.as_str())
+        {
+            return ResourceType::Mesh;
+        }
+        if ResourceType::Script
+            .extensions()
+            .contains(&ext_lower.as_str())
+        {
+            return ResourceType::Script;
+        }
+        if ResourceType::Plugin
+            .extensions()
+            .contains(&ext_lower.as_str())
+        {
+            return ResourceType::Plugin;
+        }
+        if ResourceType::Sound
+            .extensions()
+            .contains(&ext_lower.as_str())
+        {
+            return ResourceType::Sound;
+        }
+        if ResourceType::Animation
+            .extensions()
+            .contains(&ext_lower.as_str())
+        {
+            return ResourceType::Animation;
+        }
+        if ResourceType::Interface
+            .extensions()
+            .contains(&ext_lower.as_str())
+        {
+            return ResourceType::Interface;
+        }
+        if ResourceType::Strings
+            .extensions()
+            .contains(&ext_lower.as_str())
+        {
+            return ResourceType::Strings;
+        }
+        if ResourceType::Archive
+            .extensions()
+            .contains(&ext_lower.as_str())
+        {
+            return ResourceType::Archive;
+        }
+        if ResourceType::Config
+            .extensions()
+            .contains(&ext_lower.as_str())
+        {
+            return ResourceType::Config;
         }
     }
 
@@ -433,10 +433,10 @@ pub fn enumerate_resources(
             continue;
         }
 
-        if let Some(filter) = filter_type {
-            if resource_type != filter {
-                continue;
-            }
+        if let Some(filter) = filter_type
+            && resource_type != filter
+        {
+            continue;
         }
 
         let size = entry.metadata().map(|m| m.len()).unwrap_or(0);

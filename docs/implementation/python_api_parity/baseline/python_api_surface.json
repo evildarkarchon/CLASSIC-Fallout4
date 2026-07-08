@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-29T05:10:40.604760+00:00",
+  "generated_at_utc": "2026-07-01T03:11:48.254722+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -6655,54 +6655,6 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def scan_all_settings( self, crashgen: dict[str, str], xsemodules: set[str], crashgen_version: tuple[int, int, int] | None = None, config_layout: str | None = None, ) -> list[list[str]]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "scan_archivelimit_setting",
-      "export_path": "SettingsValidator.scan_archivelimit_setting",
-      "parent_class": "SettingsValidator",
-      "kind": "method",
-      "arity": 2,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def scan_archivelimit_setting( self, crashgen: dict[str, str], crashgen_version: Any = None ) -> list[str]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "scan_buffout_achievements_setting",
-      "export_path": "SettingsValidator.scan_buffout_achievements_setting",
-      "parent_class": "SettingsValidator",
-      "kind": "method",
-      "arity": 2,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def scan_buffout_achievements_setting( self, xsemodules: set[str], crashgen: dict[str, str] ) -> list[str]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "scan_buffout_looksmenu_setting",
-      "export_path": "SettingsValidator.scan_buffout_looksmenu_setting",
-      "parent_class": "SettingsValidator",
-      "kind": "method",
-      "arity": 2,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def scan_buffout_looksmenu_setting( self, crashgen: dict[str, str], xsemodules: set[str] ) -> list[str]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "scan_buffout_memorymanagement_settings",
-      "export_path": "SettingsValidator.scan_buffout_memorymanagement_settings",
-      "parent_class": "SettingsValidator",
-      "kind": "method",
-      "arity": 4,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def scan_buffout_memorymanagement_settings( self, crashgen: dict[str, str], has_xcell: bool, has_old_xcell: bool, has_baka_scrapheap: bool, ) -> list[str]:"
     },
     {
       "module": "classic_scanlog",

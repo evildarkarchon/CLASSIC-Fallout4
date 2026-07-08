@@ -2225,14 +2225,6 @@
       "rustKind": "class"
     },
     {
-      "id": "scanlog.settings_validator.CheckId@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "CheckId@rust",
-      "rustKind": "enum"
-    },
-    {
       "id": "scanlog.settings_validator.ConfigIssue@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",

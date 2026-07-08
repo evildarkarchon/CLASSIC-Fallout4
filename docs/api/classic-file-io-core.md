@@ -450,6 +450,8 @@ Crash-log collection flow for `LogCollector::collect_all()`:
 3. Copy `crash-*.log` from the optional XSE folder into `Crash Logs/`.
 4. Return all `crash-*.log` files found under `Crash Logs/` plus the optional custom folder.
 
+For UI-driven crash scans, prefer `LogCollector::new_for_scan(...)` over resolving the XSE folder in the UI layer. It resolves the XSE folder from Local.yaml/configured docs roots in Rust and treats a custom scan folder as additive to normal XSE crash-log import.
+
 ---
 
 ## Error Handling Model
@@ -527,6 +529,7 @@ Related CLASSIC crates:
 - [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - downstream consumer of `FileIOCore` for reading crash logs and writing `-AUTOSCAN.md` reports
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core) - downstream consumer of `DDSAnalyzer` for texture and game-file checks
 - [`classic-config-core`](../../business-logic/classic-config-core) - neighboring loader crate; both participate in file-backed business logic but at different layers
+- [`classic-xse-core`](../../business-logic/classic-xse-core) - XSE Folder resolution used by `LogCollector::new_for_scan(...)`
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../node-bindings/classic-node) - binding layers that depend on stable higher-level behavior built on top of these helpers
 
 Source-observed note:

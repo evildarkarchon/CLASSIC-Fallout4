@@ -1,0 +1,309 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.26.2
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF7E24760C0 Fallout4.exe+02560C0
+
+	[Compatibility]
+		F4EE: false
+	[Fixes]
+		ActorIsHostileToActor: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		GreyMovies: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+	[Patches]
+		Achievements: true
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: true
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: -1
+		MemoryManager: true
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 10 Home v10.0.19041
+	CPU: AuthenticAMD AMD Ryzen 9 5900HX with Radeon Graphics        
+	GPU #1: Nvidia GA104M [GeForce RTX 3070 Mobile / Max-Q]
+	GPU #2: AMD Cezanne
+	GPU #3: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 11.67 GB/15.40 GB
+
+PROBABLE CALL STACK:
+	[0] 0x7FF7E24760C0 Fallout4.exe+02560C0 -> 22388+0x30
+	[1] 0x7FF7E2476AD6 Fallout4.exe+0256AD6 -> 1163354+0x2E6
+	[2] 0x7FF7E248CA1E Fallout4.exe+026CA1E -> 1352309+0x2FE
+	[3] 0x7FF7E248C45E Fallout4.exe+026C45E -> 782523+0xEE
+	[4] 0x7FF7E248AB0C Fallout4.exe+026AB0C -> 1350679+0x8C
+	[5] 0x7FF7E3D3CFED Fallout4.exe+1B1CFED -> 1079791+0x3D
+	[6] 0x7FFAD2DE74B4 KERNEL32.DLL+00174B4
+	[7] 0x7FFAD41C26A1    ntdll.dll+00526A1
+
+REGISTERS:
+	RAX 0x258331D5440      (void*)
+	RCX 0x258331D4E20      (void*)
+	RDX 0x258331D4E20      (void*)
+	RBX 0x258331D4E20      (void*)
+	RSP 0x926303F9E0       (void*)
+	RBP 0x926303FB10       (void*)
+	RSI 0x257E7345B80      (void*)
+	RDI 0x257CB97A710      (void*)
+	R8  0x257FFAA1490      (void*)
+	R9  0x926303FC40       (void*)
+	R10 0x0                (size_t)
+	R11 0x926303FBEC       (void*)
+	R12 0x257CB97A080      (hknpBSWorld*)
+	R13 0x1                (size_t)
+	R14 0x2580851C50C      (void*)
+	R15 0x257B1871DD0      (void*)
+
+STACK:
+	[RSP+0  ] 0x258A238A2B0      (hknpScaledConvexShape*)
+	[RSP+8  ] 0x257E7345B80      (void*)
+	[RSP+10 ] 0x0                (size_t)
+	[RSP+18 ] 0x0                (size_t)
+	[RSP+20 ] 0x0                (size_t)
+	[RSP+28 ] 0x0                (size_t)
+	[RSP+30 ] 0x0                (size_t)
+	[RSP+38 ] 0x0                (size_t)
+	[RSP+40 ] 0x0                (size_t)
+	[RSP+48 ] 0x0                (size_t)
+	[RSP+50 ] 0x0                (size_t)
+	[RSP+58 ] 0x0                (size_t)
+	[RSP+60 ] 0x0                (size_t)
+	[RSP+68 ] 0x0                (size_t)
+	[RSP+70 ] 0x0                (size_t)
+	[RSP+78 ] 0x0                (size_t)
+	[RSP+80 ] 0x0                (size_t)
+	[RSP+88 ] 0x0                (size_t)
+	[RSP+90 ] 0x0                (size_t)
+	[RSP+98 ] 0x0                (size_t)
+	[RSP+A0 ] 0x0                (size_t)
+	[RSP+A8 ] 0x0                (size_t)
+	[RSP+B0 ] 0x0                (size_t)
+	[RSP+B8 ] 0x0                (size_t)
+	[RSP+C0 ] 0x0                (size_t)
+	[RSP+C8 ] 0x0                (size_t)
+	[RSP+D0 ] 0xC00000BB         (size_t)
+	[RSP+D8 ] 0x0                (size_t)
+	[RSP+E0 ] 0x7FF7E4E88E98     (char*) "SCALED_CONVEX"
+	[RSP+E8 ] 0x7FFAD1E9B03E     (void* -> KERNELBASE.dll+004B03E)
+	[RSP+F0 ] 0x926303FB01       (void*)
+	[RSP+F8 ] 0x7FFA6304C228     (void* -> nvcuda64.dll+015C228)
+	[RSP+100] 0x0                (size_t)
+	[RSP+108] 0x257B37C98F0      (void*)
+	[RSP+110] 0x0                (size_t)
+	[RSP+118] 0x926303FB79       (void*)
+	[RSP+120] 0x48               (size_t)
+	[RSP+128] 0x7FFA00000001     (size_t)
+	[RSP+130] 0x0                (size_t)
+	[RSP+138] 0x0                (size_t)
+	[RSP+140] 0x0                (size_t)
+	[RSP+148] 0x0                (size_t)
+	[RSP+150] 0x0                (size_t)
+	[RSP+158] 0x0                (size_t)
+	[RSP+160] 0x0                (size_t)
+	[RSP+168] 0x0                (size_t)
+	[RSP+170] 0x257CB97A758      (void*)
+	[RSP+178] 0x257E7345BA0      (char*) "*"
+	[RSP+180] 0x8B               (size_t)
+	[RSP+188] 0x7FF7E3D3093F     (void* -> Fallout4.exe+1B1093F)
+	[RSP+190] 0x405FF8D5         (size_t)
+	[RSP+198] 0x0                (size_t)
+	[RSP+1A0] 0x257E7345BA0      (char*) "*"
+	[RSP+1A8] 0x1575             (size_t)
+	[RSP+1B0] 0x926303FCA0       (void*)
+	[RSP+1B8] 0x7FF7E2476AD6     (void* -> Fallout4.exe+0256AD6)
+	[RSP+1C0] 0x1575             (size_t)
+	[RSP+1C8] 0x258331D4E20      (void*)
+	[RSP+1D0] 0x257793CD710      (void*)
+	[RSP+1D8] 0x926303FC40       (void*)
+	[RSP+1E0] 0x2573F800000      (void*)
+	[RSP+1E8] 0x1                (size_t)
+	[RSP+1F0] 0x2580851C50C      (void*)
+	[RSP+1F8] 0x7FFA93639FC5     (void* -> Buffout4.dll+0049FC5)
+	[RSP+200] 0x0                (size_t)
+	[RSP+208] 0x460C313500001575 (size_t)
+	[RSP+210] 0x0                (size_t)
+	[RSP+218] 0x10               (size_t)
+	[RSP+220] 0x25776F9E940      (void*)
+	[RSP+228] 0x2584EF17FB8      (void*)
+	[RSP+230] 0xFF833C3E2000     (size_t)
+	[RSP+238] 0x257CB97A080      (hknpBSWorld*)
+	[RSP+240] 0x2E               (size_t)
+	[RSP+248] 0x7FF7E4E86E10     (char*) "NVFlex::CollisionGeometryCache::GetCollisionGeometries"
+	[RSP+250] 0x4EF2BF80         (size_t)
+	[RSP+258] 0x257CB97A001      (void*)
+	[RSP+260] 0xBF166F4CBF4EE832 (size_t)
+	[RSP+268] 0x3AFEEE143D1BECA8 (size_t)
+	[RSP+270] 0xBF48676E3F0E56A2 (size_t)
+	[RSP+278] 0x3E335A66BE8F06A0 (size_t)
+	[RSP+280] 0xBE51858E3E469C12 (size_t)
+	[RSP+288] 0x3BB36AC83F759D8C (size_t)
+	[RSP+290] 0xC48FA821C36A956A (size_t)
+	[RSP+298] 0x421805A3         (size_t)
+	[RSP+2A0] 0x3C5A7F08         (size_t)
+	[RSP+2A8] 0x0                (size_t)
+	[RSP+2B0] 0x3C5A7F08         (size_t)
+	[RSP+2B8] 0x0                (size_t)
+	[RSP+2C0] 0x0                (size_t)
+	[RSP+2C8] 0x0                (size_t)
+	[RSP+2D0] 0x257D3FCF5E8      (void*)
+	[RSP+2D8] 0x257E7345600      (void*)
+	[RSP+2E0] 0x257CB97A080      (hknpBSWorld*)
+	[RSP+2E8] 0x257B19712B0      (void*)
+	[RSP+2F0] 0x926303FD69       (void*)
+	[RSP+2F8] 0x7FF7E248CA1E     (void* -> Fallout4.exe+026CA1E)
+	[RSP+300] 0x257E7345B80      (void*)
+	[RSP+308] 0x257CB97A080      (hknpBSWorld*)
+	[RSP+310] 0x926303FD00       (void*)
+	[RSP+318] 0x7FF7E248DEED     (void* -> Fallout4.exe+026DEED)
+	[RSP+320] 0x2584EF17F00      (void*)
+	[RSP+328] 0x25700000040      (void*)
+	[RSP+330] 0x2570000002E      (void*)
+	[RSP+338] 0x0                (size_t)
+	[RSP+340] 0x421C3AC056A6     (size_t)
+	[RSP+348] 0x40E633454E44     (size_t)
+	[RSP+350] 0x7FF7E4E696C8     (void* -> Fallout4.exe+2C496C8)
+	[RSP+358] 0x926303FD00       (void*)
+	[RSP+360] 0x7FF7E4E87F08     (char*) "Collect Havok Ids"
+	[RSP+368] 0x420B1BF9         (size_t)
+	[RSP+370] 0xC48F3CD7C3696501 (size_t)
+	[RSP+378] 0x421BC6A5         (size_t)
+	[RSP+380] 0x7FF7E4E87ED0     (char*) "NVFlex::Simulation::updateCollisionGeometryCache"
+	[RSP+388] 0x7FF7E4E87E88     (char*) "NVFlex::Simulation::updateHostSideSolverData"
+	[RSP+390] 0x25700000001      (char*) "ctx "
+	[RSP+398] 0x25700000001      (char*) "ctx "
+	[RSP+3A0] 0x3C5A7F08         (size_t)
+	[RSP+3A8] 0x0                (size_t)
+	[RSP+3B0] 0x0                (size_t)
+	[RSP+3B8] 0x0                (size_t)
+	[RSP+3C0] 0x0                (size_t)
+	[RSP+3C8] 0x257D3FCF5E8      (void*)
+	[RSP+3D0] 0x0                (size_t)
+	[RSP+3D8] 0x257019E59F0      (NVFlex::FlexThread*)
+	[RSP+3E0] 0x257E7345600      (void*)
+	[RSP+3E8] 0x7FF7E248C45E     (void* -> Fallout4.exe+026C45E)
+	[RSP+3F0] 0x257E7345600      (void*)
+	[RSP+3F8] 0x257D3FCF5E0      (void*)
+	[RSP+400] 0x0                (size_t)
+	[RSP+408] 0x0                (size_t)
+	[RSP+410] 0x0                (size_t)
+	[RSP+418] 0x0                (size_t)
+	[RSP+420] 0x0                (size_t)
+	[RSP+428] 0x0                (size_t)
+	[RSP+430] 0x0                (size_t)
+	[RSP+438] 0x0                (size_t)
+	[RSP+440] 0x0                (size_t)
+	[RSP+448] 0x7FF7E248AB0C     (void* -> Fallout4.exe+026AB0C)
+	[RSP+450] 0x257D3FCF5E0      (void*)
+	[RSP+458] 0x257019E59F0      (NVFlex::FlexThread*)
+	[RSP+460] 0x257D3FCF5E8      (void*)
+	[RSP+468] 0x0                (size_t)
+	[RSP+470] 0x0                (size_t)
+	[RSP+478] 0x7FF7E3D3CFED     (void* -> Fallout4.exe+1B1CFED)
+	[RSP+480] 0x257019E59F0      (NVFlex::FlexThread*)
+	[RSP+488] 0x0                (size_t)
+	[RSP+490] 0x0                (size_t)
+	[RSP+498] 0x0                (size_t)
+	[RSP+4A0] 0x257019E59F0      (NVFlex::FlexThread*)
+	[RSP+4A8] 0x0                (size_t)
+	[RSP+4B0] 0x0                (size_t)
+	[RSP+4B8] 0x7FFAD2DE74B4     (void* -> KERNEL32.DLL+00174B4)
+	[RSP+4C0] 0x0                (size_t)
+	[RSP+4C8] 0x0                (size_t)
+	[RSP+4D0] 0x0                (size_t)
+	[RSP+4D8] 0x0                (size_t)
+	[RSP+4E0] 0x0                (size_t)
+	[RSP+4E8] 0x7FFAD41C26A1     (void* -> ntdll.dll+00526A1)
+	[RSP+4F0] 0x0                (size_t)
+	[RSP+4F8] 0x0                (size_t)
+	[RSP+500] 0x0                (size_t)
+	[RSP+508] 0x0                (size_t)
+	[RSP+510] 0x0                (size_t)
+	[RSP+518] 0x0                (size_t)
+	[RSP+520] 0x3D86262B00000000 (size_t)
+	[RSP+528] 0x0                (size_t)
+	[RSP+530] 0x0                (size_t)
+	[RSP+538] 0x7FFAD1F60100     (void* -> KERNELBASE.dll+0110100)
+	[RSP+540] 0x926303EB40       (void*)
+	[RSP+548] 0xFF5D8E04E560000F (size_t)
+	[RSP+550] 0x7FFAEC70272B     (size_t)
+	[RSP+558] 0x926303EB40       (void*)
+	[RSP+560] 0x0                (size_t)
+	[RSP+568] 0x0                (size_t)
+	[RSP+570] 0x0                (size_t)
+	[RSP+578] 0x0                (size_t)
+	[RSP+580] 0x0                (size_t)
+	[RSP+588] 0x0                (size_t)
+	[RSP+590] 0x0                (size_t)
+	[RSP+598] 0x0                (size_t)
+	[RSP+5A0] 0x0                (size_t)
+	[RSP+5A8] 0x0                (size_t)
+	[RSP+5B0] 0x0                (size_t)
+	[RSP+5B8] 0x0                (size_t)
+	[RSP+5C0] 0x0                (size_t)
+	[RSP+5C8] 0x0                (size_t)
+	[RSP+5D0] 0x0                (size_t)
+	[RSP+5D8] 0x0                (size_t)
+	[RSP+5E0] 0x0                (size_t)
+	[RSP+5E8] 0x0                (size_t)
+	[RSP+5F0] 0x0                (size_t)
+	[RSP+5F8] 0x0                (size_t)
+	[RSP+600] 0x0                (size_t)
+	[RSP+608] 0x0                (size_t)
+	[RSP+610] 0x0                (size_t)
+	[RSP+618] 0x0                (size_t)
+
+MODULES:
+
+F4SE PLUGINS:
+	achievements.dll
+	Buffout4.dll v1.26.2
+	HighFPSPhysicsFix.dll
+	SprintStutteringFix.dll
+	WeaponDebrisCrashFix.dll
+
+PLUGINS:
+	[00] Fallout4.esm
+	[01] DLCRobot.esm
+	[02] DLCworkshop01.esm
+	[03] DLCCoast.esm
+	[04] DLCworkshop02.esm
+	[05] DLCworkshop03.esm
+	[06] DLCNukaWorld.esm
+	[07] Z_Architect.esm
+	[08] Z_Horizon.esp
+	[09] Z_Horizon_DLC_All.esp
+	[0A] Z_Architect_TEMP_1_8_Fix.esp
+	[0B] Z_Horizon_WeaponPack01.esp
+	[0C] Z_Horizon_Loot_Respawn.esp
+	[0D] Z_Horizon_Loot_Respawn_DLC.esp
+	[0E] Z_Horizon_Timescale.esp
+	[0F] Z_Horizon_DEFUI.esp
+	[10] Z_BlurRemoval.esp
+	[11] Z_Extras.esp
+	[12] Z_Architect_Extras.esp
+	[13] Z_Architect_HomePlate.esp
+	[14] Z_Horizon_Desolation.esp
+	[15] Z_Architect_EnhancedSettlements.esp
+	[16] Z_Architect_EnhancedSettlements_DLC.esp
+	[17] SaveManager.esp
+	[18] SKKFastStartNewGame.esp
+	[19] SilentProtagonist.esp
+	[1A] RAW INPUT.esp

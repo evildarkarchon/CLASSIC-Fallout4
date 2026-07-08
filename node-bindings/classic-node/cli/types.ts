@@ -20,9 +20,6 @@ export type CliPaths = {
 };
 
 export type ScanInputs = {
-  mainYaml: string;
-  gameYaml: string;
-  ignoreYaml: string;
   xsePath?: string;
 };
 
