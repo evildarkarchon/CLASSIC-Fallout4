@@ -99,6 +99,7 @@ const CLASSIFICATION_UP_TO_DATE: &str = "upToDate";
 const CLASSIFICATION_UPDATE_AVAILABLE: &str = "updateAvailable";
 const CLASSIFICATION_DEPRECATED_CLIENT: &str = "deprecatedClient";
 const CLASSIFICATION_UNKNOWN: &str = "unknown";
+const CLASSIFICATION_NOT_PUBLISHED: &str = "notPublished";
 
 fn classification_tag(c: core::Classification) -> &'static str {
     match c {
@@ -106,6 +107,7 @@ fn classification_tag(c: core::Classification) -> &'static str {
         core::Classification::UpdateAvailable => CLASSIFICATION_UPDATE_AVAILABLE,
         core::Classification::DeprecatedClient => CLASSIFICATION_DEPRECATED_CLIENT,
         core::Classification::Unknown => CLASSIFICATION_UNKNOWN,
+        core::Classification::NotPublished => CLASSIFICATION_NOT_PUBLISHED,
     }
 }
 
@@ -136,7 +138,8 @@ impl PyAppNotificationDisplay {
 }
 
 /// Result of `check_app_notification`. `classification` is one of:
-/// `"upToDate"`, `"updateAvailable"`, `"deprecatedClient"`, `"unknown"`.
+/// `"upToDate"`, `"updateAvailable"`, `"deprecatedClient"`, `"unknown"`,
+/// or `"notPublished"`.
 /// Error outcomes are raised as `ClassicNotificationError` or one of its
 /// subclasses, not as an additional classification value.
 #[pyclass(name = "NotificationStatus", from_py_object)]

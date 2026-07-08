@@ -40,4 +40,6 @@
 		}
 	],
 	"cmake.sourceDirectory": "D:/repos/CLASSIC-Fallout4/classic-gui",
+	"cmake.useCMakePresets": "always",
+	"cmake.useVsDeveloperEnvironment": "always",
 }

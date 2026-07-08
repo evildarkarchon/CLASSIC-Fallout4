@@ -336,6 +336,8 @@ fn get_xse_info(game_path: &str, xse_type: PyXseType) -> PyXseInfo {
 /// Bethesda games, including version detection, file location, and status checking.
 #[pymodule]
 fn classic_xse(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
+
     // Register classes
     m.add_class::<PyXseType>()?;
     m.add_class::<PyXseInfo>()?;

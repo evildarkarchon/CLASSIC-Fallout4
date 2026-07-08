@@ -768,11 +768,12 @@ pub async fn apply_yaml_update(request: JsYamlApplyRequest) -> napi::Result<JsYa
 ///
 /// Following the YAML-update tag convention in this module, these are
 /// camelCase so TypeScript consumers can use string-discriminated unions:
-/// `"upToDate" | "updateAvailable" | "deprecatedClient" | "unknown"`.
+/// `"upToDate" | "updateAvailable" | "deprecatedClient" | "unknown" | "notPublished"`.
 const NOTIFICATION_TAG_UP_TO_DATE: &str = "upToDate";
 const NOTIFICATION_TAG_UPDATE_AVAILABLE: &str = "updateAvailable";
 const NOTIFICATION_TAG_DEPRECATED_CLIENT: &str = "deprecatedClient";
 const NOTIFICATION_TAG_UNKNOWN: &str = "unknown";
+const NOTIFICATION_TAG_NOT_PUBLISHED: &str = "notPublished";
 
 /// Error-code strings on NAPI `Error.code` for notification failures.
 ///
@@ -809,7 +810,8 @@ pub struct JsNotificationDisplay {
 }
 
 /// Result of `checkAppNotification`. `classification` is one of:
-/// `"upToDate"`, `"updateAvailable"`, `"deprecatedClient"`, `"unknown"`.
+/// `"upToDate"`, `"updateAvailable"`, `"deprecatedClient"`, `"unknown"`,
+/// or `"notPublished"`.
 /// Error outcomes are surfaced as rejected promises (see NAPI
 /// `Error.code` constants in the module docs), not as an additional
 /// classification value.
@@ -837,6 +839,7 @@ fn classification_tag(c: core::Classification) -> &'static str {
         core::Classification::UpdateAvailable => NOTIFICATION_TAG_UPDATE_AVAILABLE,
         core::Classification::DeprecatedClient => NOTIFICATION_TAG_DEPRECATED_CLIENT,
         core::Classification::Unknown => NOTIFICATION_TAG_UNKNOWN,
+        core::Classification::NotPublished => NOTIFICATION_TAG_NOT_PUBLISHED,
     }
 }
 
@@ -896,8 +899,10 @@ fn runtime_join_error<E: std::fmt::Display>(e: E) -> napi::Error {
 ///
 /// Drives the Pages-first manifest fetch with ETag caching, falling back
 /// to listing releases filtered by the `app-notification-v*` tag prefix.
-/// On success resolves to a [`JsNotificationStatus`]; on total failure
-/// the returned promise rejects with an `Error` whose `message` is
+/// On success resolves to a [`JsNotificationStatus`], including
+/// `classification = "notPublished"` when no manifest exists on either
+/// channel. On total failure the returned promise rejects with an `Error`
+/// whose `message` is
 /// prefixed with the variant-keyed code (`"FETCH_FAILED: …"`,
 /// `"DECODE: …"`, `"INSTALLED_VERSION_PARSE: …"`, `"CACHE_IO: …"`, or
 /// `"UPDATE_ERROR: …"`). Consumers discriminate via
@@ -953,3 +958,7 @@ pub fn rollback_yaml_update(file_name: String) -> napi::Result<JsYamlRollbackOut
         },
     })
 }
+
+#[cfg(test)]
+#[path = "update_tests.rs"]
+mod tests;

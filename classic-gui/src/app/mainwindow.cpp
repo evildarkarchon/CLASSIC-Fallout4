@@ -26,6 +26,7 @@
 #include <QTimer>
 #include <QVBoxLayout>
 #include <vector>
+#include <string>
 
 #include "app/aboutdialog.h"
 #include "app/papyrusdialog.h"
@@ -47,6 +48,7 @@
 #include "classic_cxx_bridge/config.h"
 #include "classic_cxx_bridge/files.h"
 #include "classic_cxx_bridge/game.h"
+#include "classic_cxx_bridge/message.h"
 #include "classic_cxx_bridge/path.h"
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/scangame.h"
@@ -73,6 +75,13 @@ QString format_elapsed_seconds(const QElapsedTimer& timer)
 QString settingsFilePath(const QString& dataRoot)
 {
     return dataRoot + QStringLiteral("/CLASSIC Settings.yaml");
+}
+
+void logUpdateCheckFailure(const QString& errorMessage)
+{
+    const QString detail = errorMessage.isEmpty() ? QStringLiteral("unknown error") : errorMessage;
+    const std::string message = (QStringLiteral("Update check failed: ") + detail).toStdString();
+    classic::message::log_warning(message);
 }
 
 QString ignoreFilePath(const QString& dataRoot)
@@ -1925,11 +1934,14 @@ void MainWindow::checkForUpdates(bool explicitCheck)
                 const QString errorMessage = result.value(UpdateWorker::kKeyErrorMessage).toString();
 
                 if (classification == QLatin1String(UpdateWorker::kClassificationError)) {
+                    const QString detail =
+                        errorMessage.isEmpty() ? QStringLiteral("unknown error") : errorMessage;
                     setStatusMessage(QStringLiteral("Update check failed"));
-                    QMessageBox::warning(
-                        this, QStringLiteral("Update Check"),
-                        QStringLiteral("Error checking for updates:\n") +
-                            (errorMessage.isEmpty() ? QStringLiteral("unknown error") : errorMessage));
+                    logUpdateCheckFailure(errorMessage);
+                    if (explicitCheck) {
+                        QMessageBox::warning(this, QStringLiteral("Update Check Failed"),
+                                             QStringLiteral("Update check failed: ") + detail);
+                    }
                 } else if (classification == QLatin1String(UpdateWorker::kClassificationUpdateAvailable)) {
                     setStatusMessage(QStringLiteral("Update available: v") + latestVersion);
                     QString body = QStringLiteral("A new version is available: v%1").arg(latestVersion);
@@ -1982,6 +1994,13 @@ void MainWindow::checkForUpdates(bool explicitCheck)
                             parseError.isEmpty()
                                 ? QStringLiteral("Update check returned an unknown status.")
                                 : QStringLiteral("Update check inconclusive: ") + parseError);
+                    }
+                } else if (classification == QLatin1String(UpdateWorker::kClassificationNotPublished)) {
+                    if (explicitCheck) {
+                        setStatusMessage(QStringLiteral("No update information available"));
+                        QMessageBox::information(
+                            this, QStringLiteral("Update Check"),
+                            QStringLiteral("No update information is currently available."));
                     }
                 } else if (explicitCheck) {
                     // UpToDate (or any unexpected classification treated as

@@ -383,45 +383,71 @@ def expand_pub_use_statement(body: str) -> list[tuple[str, str]]:
 
 
 def _collect_crate_sources(repo_root: Path, lib_rs_rel: str) -> list[tuple[str, str]]:
-    """Return ordered [(rel_path, content), ...] for lib.rs + referenced sub-modules.
+    """Return ordered [(rel_path, content), ...] for lib.rs and child modules.
 
-    Scans `mod foo;` and `pub mod foo;` declarations inside `lib.rs` and resolves
-    each to either `<crate_src>/foo.rs` or `<crate_src>/foo/mod.rs` if the file
-    exists. One level deep is enough for the parity gate's use case (post-v9.1.0
-    Phase 1 merge: yaml_ops.rs lives as a sibling of lib.rs in settings-core).
+    Rust resolves ``mod child;`` differently depending on the declaring source:
+    ``lib.rs``/``mod.rs`` search beside the file, while a file module such as
+    ``yaml_ops.rs`` searches below ``yaml_ops/``. The parity scanner mirrors
+    that source layout so nested facades keep their public inherent methods in
+    the generated Rust surface.
     """
     lib_path = repo_root / lib_rs_rel
-    content = lib_path.read_text(encoding="utf-8")
-    sources = [(lib_rs_rel, content)]
-    src_dir = lib_path.parent
-    mod_names: list[str] = []
-    for match in re.finditer(r"(?m)^\s*(?:pub\s+)?mod\s+([A-Za-z0-9_]+)\s*;", content):
-        mod_names.append(match.group(1))
-    for mod_name in mod_names:
-        candidate_file = src_dir / f"{mod_name}.rs"
-        candidate_mod = src_dir / mod_name / "mod.rs"
-        chosen: Path | None = None
+
+    def module_search_dir(source_path: Path) -> Path:
+        if source_path.name in {"lib.rs", "main.rs", "mod.rs"}:
+            return source_path.parent
+        return source_path.with_suffix("")
+
+    def resolve_module_path(source_path: Path, mod_name: str) -> Path | None:
+        base_dir = module_search_dir(source_path)
+        candidate_file = base_dir / f"{mod_name}.rs"
+        candidate_mod = base_dir / mod_name / "mod.rs"
         if candidate_file.exists():
-            chosen = candidate_file
-        elif candidate_mod.exists():
-            chosen = candidate_mod
-        if chosen is not None:
-            sub_rel = str(chosen.relative_to(repo_root)).replace("\\", "/")
-            try:
-                sub_content = chosen.read_text(encoding="utf-8")
-            except OSError:
-                continue
-            sources.append((sub_rel, sub_content))
+            return candidate_file
+        if candidate_mod.exists():
+            return candidate_mod
+        return None
+
+    sources: list[tuple[str, str]] = []
+    seen: set[Path] = set()
+
+    def visit(source_path: Path) -> None:
+        try:
+            resolved = source_path.resolve()
+        except OSError:
+            return
+        if resolved in seen:
+            return
+
+        try:
+            content = source_path.read_text(encoding="utf-8")
+        except OSError:
+            return
+
+        seen.add(resolved)
+        rel_path = str(source_path.relative_to(repo_root)).replace("\\", "/")
+        sources.append((rel_path, content))
+
+        # Restricted modules are implementation details; public re-exports
+        # must be discovered through an unrestricted facade instead.
+        for match in re.finditer(
+            r"(?m)^\s*(?:pub\s+)?mod\s+([A-Za-z0-9_]+)\s*;", content
+        ):
+            child_path = resolve_module_path(source_path, match.group(1))
+            if child_path is not None:
+                visit(child_path)
+
+    visit(lib_path)
     return sources
 
 
-def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[str, Any]:
+def parse_rust_surface(repo_root: Path, _tier1_rust_symbols: set[str]) -> dict[str, Any]:
     """Extract Rust symbols from target crate `lib.rs` files.
 
-    Post v9.1.0 Phase 1: when a `-core` crate uses a sub-module (e.g.,
-    `classic-settings-core/src/yaml_ops.rs`), this function also scans that
-    sub-module file for `pub fn` / `pub struct` / `pub use` declarations so the
-    parity gate can see methods and types declared there.
+    Post v9.1.0 Phase 1: when a `-core` crate uses nested modules (e.g.,
+    `classic-settings-core/src/yaml_ops/operations.rs`), this function scans
+    those source files for `pub fn` / `pub struct` / `pub use` declarations so
+    the parity gate can see methods and types declared there.
     """
     entries: list[dict[str, Any]] = []
 
@@ -444,7 +470,7 @@ def _extract_rust_symbols(
     source_rel: str,
     crate_name: str,
     owner_module: str,
-    crate_lib_rel: str,
+    _crate_lib_rel: str,
 ) -> None:
     for match in re.finditer(r"(?m)^\s*pub\s+mod\s+([A-Za-z0-9_]+)\s*;", content):
         symbol = match.group(1)
@@ -569,7 +595,7 @@ def _is_property_decorator(decorators: list[str]) -> bool:
 
 
 def parse_python_surface(
-    repo_root: Path, tier1_python_exports: set[str]
+    repo_root: Path, _tier1_python_exports: set[str]
 ) -> dict[str, Any]:
     """Extract public classes, top-level functions, and callable methods from `.pyi` files."""
     exports: list[dict[str, Any]] = []

@@ -278,7 +278,6 @@ if (activeTier1Owners.has("aux")) {
       );
       assert.equal(message.messageType, "Info");
       assert.equal(classic.formatMessage(message).includes("phase4a"), true);
-      assert.equal(classic.stripEmojiText("Ready [ok]"), "Ready [ok]");
 
       classic.clearSettingsCache();
       assert.equal(classic.loadBatchSync([settingsA, settingsB]), 2);

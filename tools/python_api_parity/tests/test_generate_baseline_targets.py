@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 # sys.path bootstrap handled by conftest.py
+import generate_baseline as gb  # noqa: E402
 from generate_baseline import (  # noqa: E402
     PYTHON_OWNER_BY_MODULE,
     PYTHON_TARGET_MODULES,
@@ -45,6 +46,55 @@ def test_every_rust_target_parses_to_nonempty_symbols() -> None:
         assert symbols_by_crate.get(crate_name, 0) > 0, (
             f"Crate '{crate_name}' parsed to zero symbols -- check the lib.rs path"
         )
+
+
+def test_settings_yaml_ops_nested_modules_are_scanned() -> None:
+    """The settings YAML facade stores inherent methods two module levels deep."""
+    manifest = parse_rust_surface(REPO_ROOT, set())
+    symbols = {
+        entry["symbol"]: entry
+        for entry in manifest["symbols"]
+        if entry["crate"] == "classic-settings-core"
+    }
+    assert symbols["parse_yaml"]["source_file"] == (
+        "business-logic/classic-settings-core/src/yaml_ops/operations.rs"
+    )
+    assert symbols["get_setting"]["source_file"] == (
+        "business-logic/classic-settings-core/src/yaml_ops/accessors.rs"
+    )
+
+
+def test_pub_crate_modules_do_not_emit_public_symbols(tmp_path: Path) -> None:
+    crate_dir = tmp_path / "fixture" / "src"
+    crate_dir.mkdir(parents=True)
+    (crate_dir / "lib.rs").write_text(
+        "pub(crate) mod hidden;\npub mod visible;\n",
+        encoding="utf-8",
+    )
+    (crate_dir / "hidden.rs").write_text(
+        "pub fn hidden_api() {}\npub struct HiddenType;\n",
+        encoding="utf-8",
+    )
+    (crate_dir / "visible.rs").write_text(
+        "pub fn visible_api() {}\npub struct VisibleType;\n",
+        encoding="utf-8",
+    )
+
+    original_targets = gb.RUST_TARGET_CRATES
+    original_owners = gb.RUST_OWNER_BY_CRATE
+    try:
+        gb.RUST_TARGET_CRATES = {"fixture-crate": "fixture/src/lib.rs"}
+        gb.RUST_OWNER_BY_CRATE = {"fixture-crate": "aux"}
+        surface = gb.parse_rust_surface(tmp_path, set())
+    finally:
+        gb.RUST_TARGET_CRATES = original_targets
+        gb.RUST_OWNER_BY_CRATE = original_owners
+
+    symbols = {entry["symbol"] for entry in surface["symbols"]}
+    assert "hidden_api" not in symbols
+    assert "HiddenType" not in symbols
+    assert "visible_api" in symbols
+    assert "VisibleType" in symbols
 
 
 def test_python_target_modules_count_matches_repo_root_inventory() -> None:

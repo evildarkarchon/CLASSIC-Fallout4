@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-04-23T01:51:20.119357+00:00`
-- Tier-1 contract rows: **705**
-- Tier-1 matched: **705**
+- Generated: `2026-06-29T05:31:26.736529+00:00`
+- Tier-1 contract rows: **704**
+- Tier-1 matched: **704**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -179,7 +179,6 @@
 | `aux-phase4a-registry-set` | `aux` | `register` | `registrySet` | `matched` |
 | `aux-phase4a-registry-set-game` | `aux` | `set_game` | `registrySetGame` | `matched` |
 | `aux-phase4a-remove-readonly` | `aux` | `remove_readonly` | `removeReadonly` | `matched` |
-| `aux-phase4a-strip-emoji-text` | `aux` | `strip_emoji` | `stripEmojiText` | `matched` |
 | `aux-phase4a-validate-custom-scan-path` | `aux` | `validate_custom_scan_path` | `validateCustomScanPath` | `matched` |
 | `aux-phase4a-validate-path-with-permissions` | `aux` | `validate_path_with_permissions` | `validatePathWithPermissions` | `matched` |
 | `aux-phase4a-validate-paths-batch` | `aux` | `path_core` | `validatePathsBatch` | `matched` |

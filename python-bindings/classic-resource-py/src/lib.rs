@@ -448,6 +448,8 @@ fn validate_resource(path: &str) -> PyResult<()> {
 /// including file type detection, resource enumeration, and validation.
 #[pymodule]
 fn classic_resource(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
+
     // Register classes
     m.add_class::<PyResourceType>()?;
     m.add_class::<PyResourceInfo>()?;

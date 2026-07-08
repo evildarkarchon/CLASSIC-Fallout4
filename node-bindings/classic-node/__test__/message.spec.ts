@@ -2,7 +2,6 @@ import { describe, test, expect } from "bun:test";
 import {
   createMessage,
   formatMessage,
-  stripEmojiText,
   createLogger,
   JsLogger,
   JsMessageType,
@@ -85,11 +84,10 @@ describe("createMessage", () => {
 });
 
 describe("formatMessage", () => {
-  test("strips emojis from message content", () => {
+  test("preserves emojis in message content", () => {
     const msg = createMessage(JsMessageType.Success, "Done! ✅");
     const formatted = formatMessage(msg);
-    expect(formatted).not.toContain("✅");
-    expect(formatted).toContain("Done!");
+    expect(formatted).toBe("Done! ✅");
   });
 
   test("formats message without details", () => {
@@ -120,7 +118,7 @@ describe("formatMessage", () => {
     expect(formatted).toContain("Stack trace here");
   });
 
-  test("strips emojis from both content and details", () => {
+  test("preserves emojis in content and details", () => {
     const msg = {
       messageType: "Success",
       target: "All",
@@ -130,30 +128,7 @@ describe("formatMessage", () => {
       timestamp: Date.now(),
     };
     const formatted = formatMessage(msg);
-    expect(formatted).not.toContain("🎉");
-    expect(formatted).not.toContain("✅");
-    expect(formatted).toContain("Success!");
-    expect(formatted).toContain("All tests passed");
-  });
-});
-
-describe("stripEmojiText", () => {
-  test("strips emojis from text", () => {
-    const result = stripEmojiText("Hello 👋 World 🌍!");
-    expect(result).not.toContain("👋");
-    expect(result).not.toContain("🌍");
-    expect(result).toContain("Hello");
-    expect(result).toContain("World");
-  });
-
-  test("returns original text when no emojis present", () => {
-    const result = stripEmojiText("Hello, world!");
-    expect(result).toBe("Hello, world!");
-  });
-
-  test("returns empty string for emoji-only text", () => {
-    const result = stripEmojiText("👋🌍🎉");
-    expect(result).toBe("");
+    expect(formatted).toBe("Success! 🎉\nDetails: All tests passed ✅");
   });
 });
 

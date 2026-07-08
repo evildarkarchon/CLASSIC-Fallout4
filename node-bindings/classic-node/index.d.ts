@@ -1369,8 +1369,10 @@ export declare function calculateTextSimilarity(text1: string, text2: string): n
  *
  * Drives the Pages-first manifest fetch with ETag caching, falling back
  * to listing releases filtered by the `app-notification-v*` tag prefix.
- * On success resolves to a [`JsNotificationStatus`]; on total failure
- * the returned promise rejects with an `Error` whose `message` is
+ * On success resolves to a [`JsNotificationStatus`], including
+ * `classification = "notPublished"` when no manifest exists on either
+ * channel. On total failure the returned promise rejects with an `Error`
+ * whose `message` is
  * prefixed with the variant-keyed code (`"FETCH_FAILED: …"`,
  * `"DECODE: …"`, `"INSTALLED_VERSION_PARSE: …"`, `"CACHE_IO: …"`, or
  * `"UPDATE_ERROR: …"`). Consumers discriminate via
@@ -1792,10 +1794,10 @@ export interface FileIoConfig {
 }
 
 /**
- * Format a message for display/logging, stripping emojis.
+ * Format a message for display/logging while preserving valid UTF-8.
  *
  * @param message - A JsMessage object.
- * @returns A clean, emoji-free string suitable for logging.
+ * @returns A formatted string suitable for logging.
  */
 export declare function formatMessage(message: JsMessage): string
 
@@ -3097,7 +3099,8 @@ export interface JsNotificationDisplay {
 
 /**
  * Result of `checkAppNotification`. `classification` is one of:
- * `"upToDate"`, `"updateAvailable"`, `"deprecatedClient"`, `"unknown"`.
+ * `"upToDate"`, `"updateAvailable"`, `"deprecatedClient"`, `"unknown"`,
+ * or `"notPublished"`.
  * Error outcomes are surfaced as rejected promises (see NAPI
  * `Error.code` constants in the module docs), not as an additional
  * classification value.
@@ -4093,14 +4096,6 @@ export interface SettingsCacheStats {
   /** Maximum bounded cache capacity. */
   capacity: number
 }
-
-/**
- * Strip emojis from a string.
- *
- * @param text - The text to strip emojis from.
- * @returns The text with all emojis removed and whitespace trimmed.
- */
-export declare function stripEmojiText(text: string): string
 
 /** Timing statistics for a single operation. */
 export interface TimingStats {

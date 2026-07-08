@@ -70,16 +70,16 @@ Payload-free app-update notification channel: fetches a published JSON manifest 
 
 - `AppNotificationManifest` - decoded manifest DTO (`manifest_version`, `release_tag`, `latest_version`, `published_at`, optional `min_supported_version`, optional `display`)
 - `AppNotificationDisplay` - optional display payload (`title`, `body`, `cta_url`)
-- `Classification` - discriminated outcome (`UpToDate`, `UpdateAvailable`, `DeprecatedClient`, `Unknown`)
+- `Classification` - discriminated outcome (`UpToDate`, `UpdateAvailable`, `DeprecatedClient`, `Unknown`, `NotPublished`)
 - `NotificationStatus` - classification + echoed manifest fields
-- `check_app_notification(owner, repo, installed_version)` - orchestrator; Pages-first with Releases fallback
+- `check_app_notification(owner, repo, installed_version)` - orchestrator; Pages-first with Releases fallback, returning `NotPublished` when no manifest exists on either channel
 - `check_app_notification_with(client, pages_url, cache_dir, installed)` - testable form that takes a caller-built `GithubClient` and explicit cache dir
 - `classify(installed, &manifest)` - pure classifier
 - `fetch_app_notification_manifest(client, pages_url, cache_dir)` - low-level Pages fetch
 - `fetch_via_releases_fallback(client)` - low-level Releases-API fallback
 - `build_app_notification_pages_url(client)` - canonical Pages URL builder (shared with binding layers)
 
-Error variants for notification failures live on `UpdateError` as `NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, and `NotificationCacheIo` (design D-05 — nested on `UpdateError` rather than a sibling enum so the per-binding error mapping does not double). Shared manifest-validation variants (`ManifestInvalid`, `ManifestUnsupportedVersion`) can also surface directly from the notification path when a fetched notification manifest violates cross-field invariants or advertises a newer `manifest_version` major. See [`error-contract.md`](error-contract.md) for per-binding shapes.
+Error variants for notification failures live on `UpdateError` as `NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, and `NotificationCacheIo` (design D-05 — nested on `UpdateError` rather than a sibling enum so the per-binding error mapping does not double). Shared manifest-validation variants (`ManifestInvalid`, `ManifestUnsupportedVersion`) can also surface directly from the notification path when a fetched notification manifest violates cross-field invariants or advertises a newer `manifest_version` major. A genuinely absent notification (Pages `404` plus no matching `app-notification-v*` release) is not a failure; it returns `Classification::NotPublished`. A matching notification release that omits `manifest.json` is a broken publish and remains a fetch failure. See [`error-contract.md`](error-contract.md) for per-binding shapes.
 
 Contributor note:
 

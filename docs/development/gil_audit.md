@@ -238,7 +238,6 @@
 | Operation | Timing | GIL Status | Notes |
 |-----------|--------|------------|-------|
 | All operations | <0.1ms | NOT NEEDED | Fast message handling |
-| `strip_emoji` | <0.1ms | NOT NEEDED | Simple string processing |
 | `format_log_message` | <0.1ms | NOT NEEDED | Simple formatting |
 
 ### Low-Priority Crates (NOT NEEDED for GIL release)

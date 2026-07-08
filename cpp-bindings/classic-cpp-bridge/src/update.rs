@@ -353,6 +353,7 @@ const CLASSIFICATION_UP_TO_DATE: &str = "up_to_date";
 const CLASSIFICATION_UPDATE_AVAILABLE: &str = "update_available";
 const CLASSIFICATION_DEPRECATED: &str = "deprecated_client";
 const CLASSIFICATION_UNKNOWN: &str = "unknown";
+const CLASSIFICATION_NOT_PUBLISHED: &str = "not_published";
 const CLASSIFICATION_ERROR: &str = "error";
 
 fn classification_label(c: Classification) -> &'static str {
@@ -361,6 +362,7 @@ fn classification_label(c: Classification) -> &'static str {
         Classification::UpdateAvailable => CLASSIFICATION_UPDATE_AVAILABLE,
         Classification::DeprecatedClient => CLASSIFICATION_DEPRECATED,
         Classification::Unknown => CLASSIFICATION_UNKNOWN,
+        Classification::NotPublished => CLASSIFICATION_NOT_PUBLISHED,
     }
 }
 
@@ -543,6 +545,9 @@ mod ffi {
     /// - `"unknown"` — the installed-version string could not be parsed as
     ///   semver; `parse_error` carries the diagnostic. The caller MUST NOT
     ///   treat this as `up_to_date`.
+    /// - `"not_published"` — no notification manifest exists on either channel.
+    ///   Manifest fields, `parse_error`, and `error_message` are empty-string
+    ///   sentinels; callers MUST NOT treat this as the `"error"` classification.
     /// - `"error"` — both Pages and Releases fallbacks failed (or the
     ///   manifest body was structurally invalid). `error_message` carries
     ///   the `Display` rendering of the underlying `UpdateError`, and every

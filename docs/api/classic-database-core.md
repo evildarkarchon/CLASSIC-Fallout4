@@ -111,11 +111,13 @@ Variants:
 - `NotFound(String)`
 - `IoError(std::io::Error)`
 - `SqlxError(sqlx::Error)`
+- `InvalidTableIdentifier(String)` - resolved table name failed SQL-identifier validation and was rejected to prevent SQL injection (see [Table identifier validation](#table-identifier-validation))
 
 Contributor notes:
 
 - `DatabasePool` production code mainly surfaces `OpenError` and `SqlxError`
 - `QueryError` exists publicly, but in current source it is mostly constructed in test helpers rather than the main pool implementation
+- `InvalidTableIdentifier` is returned by `get_entry()` and `get_entries_batch()` when the resolved table name is not a safe unquoted SQLite identifier; it is the only variant that is a deliberate injection-prevention rejection rather than an I/O or driver failure
 - missing database files during `initialize()` do not currently raise `NotFound`; they are skipped
 
 ## `PoolStatistics`
@@ -175,26 +177,36 @@ The source-visible lifecycle is:
 
 1. maybe run proactive cache cleanup
 2. resolve the effective table name from `table` or the pool's current `game_table`
-3. check the in-memory cache using a case-normalized plugin key
-4. on cache miss, query each open database file with exact plugin case first
-5. if exact-case queries miss everywhere, retry with `COLLATE nocase`
-6. cache the first found value and return `Ok(Some(entry))`
-7. if no database returns a row, return `Ok(None)`
+3. validate the resolved table name as a safe unquoted SQLite identifier, returning `InvalidTableIdentifier` otherwise
+4. check the in-memory cache using a case-normalized plugin key
+5. on cache miss, query each open database file with exact plugin case first
+6. if exact-case queries miss everywhere, retry with `COLLATE nocase`
+7. cache the first found value and return `Ok(Some(entry))`
+8. if no database returns a row, return `Ok(None)`
 
 ### Batch lookup flow
 
 `get_entries_batch()` adds more optimization on top of the same lookup semantics:
 
-1. pre-check the cache for every requested pair
-2. group remaining uncached pairs into caller-sized chunks, clamped to `1..=1024`
-3. round each chunk up to a stable bucket shape (`8`, `16`, `32`, `64`, `128`, `256`, `512`, `1024`) by padding with duplicate pairs
-4. build or reuse cached `UNION ALL` query templates for that bucket size
-5. query all active database pools in parallel with `join_all`
-6. run an exact-case pass first, then a `COLLATE nocase` pass only for unresolved keys
-7. merge results into a `HashMap<String, String>` keyed as `"{formid}:{plugin}"`
-8. cache found values and update stable-shape statistics
+1. resolve the effective table name from `table` or the pool's current `game_table`, then validate it as a safe unquoted SQLite identifier, returning `InvalidTableIdentifier` otherwise
+2. pre-check the cache for every requested pair
+3. group remaining uncached pairs into caller-sized chunks, clamped to `1..=1024`
+4. round each chunk up to a stable bucket shape (`8`, `16`, `32`, `64`, `128`, `256`, `512`, `1024`) by padding with duplicate pairs
+5. build or reuse cached `UNION ALL` query templates for that bucket size
+6. query all active database pools in parallel with `join_all`
+7. run an exact-case pass first, then a `COLLATE nocase` pass only for unresolved keys
+8. merge results into a `HashMap<String, String>` keyed as `"{formid}:{plugin}"`
+9. cache found values and update stable-shape statistics
 
 Contributor-relevant detail: stable-shape padding is an internal optimization for query-template reuse. Callers still see results only for the real requested pairs.
+
+### Table identifier validation
+
+SQLite does not support binding identifiers (table or column names) as query parameters, so the resolved game table name is interpolated directly into the SQL strings built by `get_entry()` and `get_entries_batch()`. All `(formid, plugin)` lookup values are still bound with `.bind(...)`, but the table name itself cannot be.
+
+To keep that interpolation safe, both lookup methods validate the resolved table name with `DatabasePool::validate_table_identifier` before any SQL is constructed. A name is accepted only if it matches the unquoted SQLite identifier grammar `[A-Za-z_][A-Za-z0-9_]*` (non-empty, ASCII letters/underscore/digits only, and not starting with a digit). Anything else — including empty strings, spaces, punctuation, quotes, semicolons, or substrings like `x; DROP TABLE y--` — is rejected with `DatabaseError::InvalidTableIdentifier` rather than forwarded to sqlx.
+
+This guard matters because the foreign-language `set_game_table` bindings (`classic-database-py`, `classic-node`) can otherwise supply an arbitrary string from outside Rust. Internally set game names such as `Fallout4`, `Skyrim`, and `FalloutNewVegas` always pass validation.
 
 ### Expected SQLite shape
 
@@ -221,6 +233,7 @@ These cases can return an actual error:
 - invalid SQLite connection options or pool creation failures during `initialize()` / `rebalance_connections()`
 - `sqlx` row extraction failures when a query succeeds but result decoding fails
 - explicit I/O errors surfaced while creating or opening database files in tests or wrappers
+- an unsafe table name passed to `get_entry()` or `get_entries_batch()`, rejected up front as `InvalidTableIdentifier` (see [Table identifier validation](#table-identifier-validation))
 
 ## Fail-soft behavior
 
@@ -322,7 +335,7 @@ If you want to query a different table than the pool's default game table, pass 
 
 - The public API is entirely re-export based; changing `src/lib.rs` changes the crate surface.
 - The internal module name is `pool_sqlx`, but consumers should treat `lib.rs` re-exports as the supported surface.
-- Table names are interpolated directly into SQL strings; the API assumes trusted internal caller input rather than untrusted arbitrary SQL identifiers.
+- Table names are interpolated directly into SQL strings (SQLite cannot bind identifiers as parameters), but `get_entry()` and `get_entries_batch()` validate the resolved name as a safe unquoted SQLite identifier first and reject unsafe values with `DatabaseError::InvalidTableIdentifier`; see [Table identifier validation](#table-identifier-validation). `set_game_table()` itself does not validate, so the lookup-time guard is the enforcement point.
 - Cross-database duplicate resolution is not documented as a stable priority contract. The current implementation returns the first match it encounters, and contributors should not assume a documented precedence rule between database files.
 - `initialize()` silently ignores nonexistent database files, so `is_available()` is the practical check for whether any usable pools exist.
 - `DatabaseError::NotFound` is public, but the normal initialization path does not currently use it for missing files.

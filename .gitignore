@@ -341,7 +341,6 @@ classic-cli/install/
 classic-cli/install-debug/
 classic-cli/install-clang-cl/
 classic-cli/install-debug-clang-cl/
-qt.conf
 !classic-gui/**/qt.conf
 *.pyinstaller
 .coverage.*
@@ -357,5 +356,5 @@ opencode.json
 .claude/worktrees
 *.pfx
 .kilocode/package-lock.json
-graphify-out/
 .pi-lens/
+/qt.conf

@@ -56,6 +56,25 @@ fn manifest_invalid_maps_directly_to_notification_base_with_reason() {
 }
 
 #[test]
+fn not_published_status_maps_to_python_success_classification() {
+    let py_status = core_status_to_py(core::NotificationStatus {
+        classification: core::Classification::NotPublished,
+        latest_version: String::new(),
+        published_at: String::new(),
+        min_supported_version: None,
+        display: None,
+        parse_error: None,
+    });
+
+    assert_eq!(py_status.classification, "notPublished");
+    assert!(py_status.latest_version.is_empty());
+    assert!(py_status.published_at.is_empty());
+    assert!(py_status.min_supported_version.is_none());
+    assert!(py_status.display.is_none());
+    assert!(py_status.parse_error.is_none());
+}
+
+#[test]
 fn notification_block_on_releases_gil_while_waiting() {
     Python::initialize();
     Python::attach(|py| {

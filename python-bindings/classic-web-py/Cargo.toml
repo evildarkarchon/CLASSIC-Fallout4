@@ -18,6 +18,9 @@ classic-web-core = { path = "../../business-logic/classic-web-core" }
 # PyO3 for Python bindings
 pyo3 = { workspace = true }
 
+# Shared Python binding utilities
+classic-shared-py = { path = "../../foundation/classic-shared-py" }
+
 # Error handling
 anyhow = { workspace = true }
 

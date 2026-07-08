@@ -60,5 +60,6 @@ pub(super) fn format_update_status(status: &NotificationStatus) -> String {
             Some(detail) => format!("Update check returned unknown status: {detail}"),
             None => "Update check returned unknown status".to_string(),
         },
+        Classification::NotPublished => "No update information available".to_string(),
     }
 }

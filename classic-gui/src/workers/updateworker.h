@@ -38,6 +38,7 @@ public:
     static constexpr const char* kClassificationUpdateAvailable = "update_available";
     static constexpr const char* kClassificationDeprecated = "deprecated_client";
     static constexpr const char* kClassificationUnknown = "unknown";
+    static constexpr const char* kClassificationNotPublished = "not_published";
     static constexpr const char* kClassificationError = "error";
 
 public slots:

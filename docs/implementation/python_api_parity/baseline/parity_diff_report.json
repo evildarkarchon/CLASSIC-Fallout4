@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-04-23T01:51:15.427958+00:00",
+  "generated_at_utc": "2026-06-29T05:10:40.608719+00:00",
   "summary": {
-    "tier1_contract_total": 1098,
-    "tier1_matched": 1098,
+    "tier1_contract_total": 1097,
+    "tier1_matched": 1097,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
@@ -3789,21 +3789,6 @@
       "actual_python_kind": "function",
       "expected_python_arity": null,
       "actual_python_arity": 2
-    },
-    {
-      "id": "message.lib.strip_emoji",
-      "tier": "tier1",
-      "owner_module": "message",
-      "squad": "Squad F (perf/message/path/version/web/update)",
-      "rust_symbol": "strip_emoji",
-      "python_module": "classic_message",
-      "python_export": "strip_emoji",
-      "python_export_path": "strip_emoji",
-      "status": "matched",
-      "expected_python_kind": "function",
-      "actual_python_kind": "function",
-      "expected_python_arity": null,
-      "actual_python_arity": 1
     },
     {
       "id": "message.logging.ContractEvent@rust",

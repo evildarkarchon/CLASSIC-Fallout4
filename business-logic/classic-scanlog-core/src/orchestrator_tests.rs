@@ -4,6 +4,7 @@ use tempfile::tempdir;
 
 const FIXTURE_LOG_SMALL: &str = include_str!("../benches/fixtures/crash-0DB9300.log");
 const FIXTURE_LOG_LARGE: &str = include_str!("../benches/fixtures/crash-2022-06-05-12-58-02.log");
+const ADDICTOL_AE_GAME_VERSION_HEADER: &str = "Fallout 4 v1.11.191";
 
 fn make_fixture_orchestrator() -> OrchestratorCore {
     let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
@@ -40,6 +41,26 @@ fn write_fixture_log(filename: &str, contents: &str) -> FixtureLog {
         _temp: temp,
         path: log_path.to_string_lossy().to_string(),
     }
+}
+
+fn addictol_version_newer_than_ae_registry_floor() -> String {
+    let match_result = get_version_registry().match_version(
+        &classic_version_registry_core::GameVersion::new(1, 11, 191, 0),
+        "Fallout4",
+        false,
+    );
+    let version_info = match_result
+        .version_info
+        .as_ref()
+        .expect("Fallout 4 AE registry entry should exist");
+    let floor = OrchestratorCore::crashgen_configs_for_name(version_info, "Addictol")
+        .into_iter()
+        .filter(|config| !config.exact_match)
+        .filter_map(|config| crate::version::CrashgenVersion::parse(&config.version))
+        .min()
+        .expect("Addictol should have an AE registry floor");
+
+    format!("{}.{}.{}", floor.major, floor.minor, floor.patch + 1)
 }
 
 fn make_yaml_data(classic_version: &str) -> classic_config_core::YamlDataCore {
@@ -325,10 +346,13 @@ fn process_log_accepts_addictol_versions_newer_than_registry_floor() {
     let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     config.crashgen_name = "Buffout 4".to_string();
     let orchestrator = OrchestratorCore::new(config).unwrap();
+    let addictol_version = addictol_version_newer_than_ae_registry_floor();
+    let addictol_header = format!("Addictol v{addictol_version} Feb 16 2026 08:02:06");
+    let addictol_module = format!("addictol.dll v{addictol_version}");
 
     let log_contents = [
-        "Fallout 4 v1.11.191",
-        "Addictol v1.3.1 Feb 16 2026 08:02:06",
+        ADDICTOL_AE_GAME_VERSION_HEADER,
+        addictol_header.as_str(),
         "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
         "",
         "SYSTEM SPECS:",
@@ -338,7 +362,7 @@ fn process_log_accepts_addictol_versions_newer_than_registry_floor() {
         "MODULES:",
         "kernel32.dll v10.0.0",
         "F4SE PLUGINS:",
-        "addictol.dll v1.3.1",
+        addictol_module.as_str(),
         "PLUGINS:",
         "[00] Fallout4.esm",
         "REGISTERS:",
@@ -822,10 +846,13 @@ fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
     config.crashgen_name = "Buffout 4".to_string();
     config.crashgen_registry = build_crashgen_registry(&raw_registry);
     let orchestrator = OrchestratorCore::new(config).unwrap();
+    let addictol_version = addictol_version_newer_than_ae_registry_floor();
+    let addictol_header = format!("Addictol v{addictol_version} Feb 16 2026 08:02:06");
+    let addictol_module = format!("addictol.dll v{addictol_version}");
 
     let log_contents = [
-        "Fallout 4 v1.11.191",
-        "Addictol v1.3.1 Feb 16 2026 08:02:06",
+        ADDICTOL_AE_GAME_VERSION_HEADER,
+        addictol_header.as_str(),
         "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x0 Fallout4.exe+0000000",
         "",
         "[Patches]",
@@ -837,7 +864,7 @@ fn process_log_promotes_bucketed_compatibility_notice_into_error_information() {
         "MODULES:",
         "kernel32.dll v10.0.0",
         "F4SE PLUGINS:",
-        "addictol.dll v1.3.1",
+        addictol_module.as_str(),
         "buffout4.dll v1.28.6",
         "PLUGINS:",
         "[00] Fallout4.esm",

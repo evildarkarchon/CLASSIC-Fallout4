@@ -91,12 +91,13 @@ jobs:
       #      `get_all_releases(include_drafts=false, include_prereleases=false)`
       #      so API-fallback clients filter the release out entirely while
       #      the prerelease flag is set.
-      #   3. Anonymously verify every manifest `download_url` is actually
-      #      reachable without credentials. Prereleases are anonymously
-      #      downloadable (unlike drafts), so this probe exercises the real
-      #      client code path.
+      #   3. Anonymously verify the release `manifest.json` asset and every
+      #      manifest `files[].download_url` serve the staged bytes without
+      #      credentials. Prereleases are anonymously downloadable (unlike
+      #      drafts), so this probe exercises the real client code path.
       #   4. Clear the prerelease flag so API-fallback clients can discover
-      #      the release once every advertised asset URL is proven warm.
+      #      the release once the manifest asset and every advertised file
+      #      asset URL are proven warm.
       #   5. Push `manifest-latest.json` to gh-pages so Pages-first clients
       #      will start seeing the new tag once Pages propagates.
       #   6. Smoke-test the Pages URL serves that tag.
@@ -108,7 +109,8 @@ jobs:
       # flight — defeating the probe's purpose. Gating client visibility
       # behind the prerelease flag closes that window: until step 4 runs,
       # no anonymous discovery path sees the release at all, and by step 4
-      # every advertised asset URL is proven reachable.
+      # the manifest asset and every advertised file asset URL are proven
+      # reachable.
       #
       # Clearing the prerelease flag before the gh-pages push prevents the
       # Pages pointer from ever advancing to a tag hidden from fallback
@@ -189,10 +191,11 @@ jobs:
             --prerelease=true \
             --latest=false
 
-      # Gate: verify every advertised `download_url` in manifest.json is
-      # reachable without credentials. Fails the workflow if any asset 404s
-      # or is still propagating after the probe's retry budget, which keeps
-      # us from advancing to client visibility. If this step fails, the
+      # Gate: verify the release manifest.json asset and every advertised
+      # `files[].download_url` serve the staged bytes without credentials.
+      # Fails the workflow if any asset 404s or is still propagating after
+      # the probe's retry budget, which keeps us from advancing to client
+      # visibility. If this step fails, the
       # release remains a prerelease — invisible to API-fallback clients and
       # unreferenced by Pages. The operator can delete it manually and rerun
       # the workflow; the "Reset stale draft" step will hard-fail if a
@@ -203,9 +206,10 @@ jobs:
             --manifest "$RUNNER_TEMP/staging/manifest.json"
 
       # Make the release discoverable to Releases-API fallback clients before
-      # publishing the Pages pointer. At this point every advertised asset URL
-      # has been proven warm, and clearing the flag before the gh-pages commit
-      # prevents Pages from advancing to a release hidden from fallback.
+      # publishing the Pages pointer. At this point the manifest asset and
+      # every advertised file asset URL have been proven warm, and clearing
+      # the flag before the gh-pages commit prevents Pages from advancing to a
+      # release hidden from fallback.
       - name: Clear prerelease flag (make client-discoverable)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -251,10 +255,14 @@ jobs:
             git push origin "$PAGES_BRANCH"
           fi
 
-      # Task 11.8: smoke-test that the Pages manifest serves the new tag.
+      # Task 11.8: smoke-test that the Pages manifest serves the staged bytes.
       # The helper retries for up to 180s to cover Pages propagation lag.
-      # Failure here means the previous step's push succeeded but Pages has
-      # not served the new content yet — not an asset-reachability problem.
+      # For a same-tag republish, the previous manifest-latest.json may
+      # already carry the same release_tag, so comparing only release_tag
+      # can pass before gh-pages has propagated the new payload. Strict-body
+      # mode compares SHA-256 of the live Pages response against the staged
+      # manifest bytes, so the smoke test cannot pass until the new payload
+      # is actually live.
       - name: Smoke-test Pages manifest
         run: |
           OWNER="${GITHUB_REPOSITORY_OWNER}"
@@ -262,4 +270,4 @@ jobs:
           python tools/publish_yaml_data/smoke_test_pages.py \
             --owner "$OWNER" \
             --repo  "$REPO" \
-            --tag   "$TAG"
+            --expected-body-path "$RUNNER_TEMP/staging/manifest.json"

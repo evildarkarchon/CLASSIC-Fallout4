@@ -187,6 +187,7 @@ fn auto_init_application_dir(py: Python<'_>) {
 /// Python module initialization
 #[pymodule]
 fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
     auto_init_application_dir(m.py());
 
     // Parser

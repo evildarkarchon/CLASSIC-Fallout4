@@ -82,7 +82,7 @@ fn main() {
 /// Deliberately minimal: this is build-time scaffolding, not a YAML parser.
 /// The accepted shape is `CLASSIC_Info.version: v?MAJOR.MINOR.PATCH`,
 /// matching the schema-2.0 contract enforced at runtime by
-/// `classic_config_core::shippable::validate_release_semver_shape`.
+/// `classic_config_core::shippable::main_version::validate_release_semver_shape`.
 fn extract_classic_info_version(yaml_text: &str) -> Result<String, String> {
     let mut in_section = false;
     for line in yaml_text.lines() {
@@ -147,6 +147,19 @@ fn extract_classic_info_version(yaml_text: &str) -> Result<String, String> {
                      metadata are not allowed under the schema-2.0 contract"
                 ));
             }
+            if part.len() > 1 && part.starts_with('0') {
+                return Err(format!(
+                    "`CLASSIC_Info.version: {value}` component `{part}` has \
+                     a leading zero; strict SemVer numeric identifiers must \
+                     not include leading zeros"
+                ));
+            }
+            if part.parse::<u32>().is_err() {
+                return Err(format!(
+                    "`CLASSIC_Info.version: {value}` component `{part}` does \
+                     not fit in a 32-bit version number"
+                ));
+            }
         }
         return Ok(bare.to_string());
     }
@@ -156,3 +169,7 @@ fn extract_classic_info_version(yaml_text: &str) -> Result<String, String> {
             .into(),
     )
 }
+
+#[cfg(test)]
+#[path = "build_tests.rs"]
+mod tests;

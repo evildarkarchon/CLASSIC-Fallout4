@@ -20,3 +20,15 @@ def test_release_is_discoverable_before_pages_pointer_can_publish() -> None:
     deploy_pages = workflow.index("- name: Deploy manifest to gh-pages")
 
     assert assets_reachable < clear_prerelease < deploy_pages
+
+
+def test_pages_smoke_test_uses_strict_body_comparison() -> None:
+    """Pin strict-body Pages smoke test for same-tag republish safety."""
+    workflow = WORKFLOW_PATH.read_text(encoding="utf-8")
+
+    smoke_step = workflow.index("- name: Smoke-test Pages manifest")
+    smoke_block = workflow[smoke_step : smoke_step + 600]
+
+    assert "--expected-body-path" in smoke_block
+    assert "$RUNNER_TEMP/staging/manifest.json" in smoke_block
+    assert "--tag" not in smoke_block

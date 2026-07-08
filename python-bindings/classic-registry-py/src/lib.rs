@@ -472,6 +472,8 @@ fn get_game_version_string(py: Python) -> String {
 /// ```
 #[pymodule]
 fn classic_registry(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
+
     // Add the Keys class
     m.add_class::<Keys>()?;
 

@@ -17,7 +17,7 @@ classic-database-core = { path = "../../business-logic/classic-database-core" }
 
 # PyO3 bindings
 pyo3 = { workspace = true, features = ["extension-module"] }
-pyo3-async-runtimes = { version = "0.28.0", features = ["tokio-runtime"] }
+pyo3-async-runtimes = { workspace = true, features = ["tokio-runtime"] }
 
 # Shared utilities
 classic-shared-core = { path = "../../foundation/classic-shared-core" }

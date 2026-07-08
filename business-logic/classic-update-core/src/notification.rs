@@ -115,7 +115,7 @@ pub struct AppNotificationManifest {
     pub display: Option<AppNotificationDisplay>,
 }
 
-/// Classification outcome produced by [`classify`].
+/// Classification outcome produced by [`classify`] or the fetch orchestrator.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Classification {
@@ -130,6 +130,10 @@ pub enum Classification {
     /// cannot be determined. The caller SHOULD surface the companion
     /// [`NotificationStatus::parse_error`] message to the user.
     Unknown,
+    /// No notification manifest exists on either the Pages or Releases
+    /// channel. Produced only when both channels report the manifest absent.
+    #[serde(rename = "not_published")]
+    NotPublished,
 }
 
 /// Full result returned from [`check_app_notification`]. Carries the
@@ -151,6 +155,19 @@ pub struct NotificationStatus {
     /// description of the installed-version parse failure so callers can
     /// surface it instead of silently treating the result as `UpToDate`.
     pub parse_error: Option<String>,
+}
+
+impl NotificationStatus {
+    fn not_published() -> Self {
+        Self {
+            classification: Classification::NotPublished,
+            latest_version: String::new(),
+            published_at: String::new(),
+            min_supported_version: None,
+            display: None,
+            parse_error: None,
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -258,7 +275,7 @@ async fn fetch_via_releases_fallback_bytes(
         .iter()
         .find(|a| a.name == FALLBACK_ASSET_NAME)
         .ok_or_else(|| {
-            UpdateError::NotFound(format!(
+            UpdateError::GithubError(format!(
                 "release `{}` has no `{FALLBACK_ASSET_NAME}` asset",
                 release.tag_name
             ))
@@ -292,7 +309,7 @@ async fn fetch_via_releases_fallback_bytes(
 
 /// Compare the caller-supplied installed version against the manifest's
 /// `latest_version` and optional `min_supported_version`, emitting one of
-/// four [`Classification`] outcomes.
+/// four comparison [`Classification`] outcomes.
 ///
 /// The installed-version string is trimmed of a leading `v` or `V`
 /// before semver parse. When `installed_version` fails semver parsing
@@ -526,14 +543,15 @@ pub async fn check_app_notification_with(
             if let UpdateError::ManifestUnsupportedVersion { .. } = pages_err {
                 return Err(pages_err);
             }
-            // During a prolonged Pages outage, reuse a fallback-seeded
-            // manifest that is still within TTL instead of hammering the
-            // Releases API on every startup. This is the reuse path the
-            // spec requires ("Fallback manifest populates cache" + the
-            // review finding on the cache seed never suppressing repeated
-            // Releases hits).
-            if let Some(cached) = try_fallback_cache(cache_dir) {
-                return Ok(classify(installed_version, &cached));
+            if !matches!(&pages_err, UpdateError::NotFound(_)) {
+                // During a prolonged Pages outage, reuse a fallback-seeded
+                // manifest that is still within TTL instead of hammering the
+                // Releases API on every startup. A Pages 404 is different:
+                // it can mean the notification was deliberately unpublished,
+                // so it must still reach Releases to confirm absence.
+                if let Some(cached) = try_fallback_cache(cache_dir) {
+                    return Ok(classify(installed_version, &cached));
+                }
             }
             match fetch_via_releases_fallback_bytes(client).await {
                 Ok((manifest, bytes)) => {
@@ -556,6 +574,17 @@ pub async fn check_app_notification_with(
                     | UpdateError::ManifestInvalid { .. }
                     | UpdateError::NotificationDecode { .. }),
                 ) => Err(fallback_err),
+                Err(fallback_err)
+                    if matches!(&pages_err, UpdateError::NotFound(_))
+                        && matches!(&fallback_err, UpdateError::NotFound(_)) =>
+                {
+                    // Both channels confirm absence. Purge any fallback-seeded cache
+                    // (marker + body + stale ETag) so a later non-404 Pages failure
+                    // within FALLBACK_CACHE_TTL cannot resurrect, via try_fallback_cache,
+                    // the notification we just confirmed unpublished.
+                    clear_fallback_cache(cache_dir);
+                    Ok(NotificationStatus::not_published())
+                }
                 Err(fallback_err) => Err(UpdateError::NotificationFetchFailed {
                     pages_error: pages_err.to_string(),
                     releases_error: fallback_err.to_string(),
@@ -729,6 +758,45 @@ fn clear_fallback_marker(cache_dir: Option<&Path>) {
                 "failed to clear fallback cache marker at {} after Pages success: {e}",
                 marker_path.display(),
             );
+        }
+    }
+}
+
+/// Purge the entire cached notification triplet - fallback marker,
+/// manifest body, and any stale Pages ETag - when both channels confirm
+/// the notification is unpublished (Pages `404` + no matching
+/// `app-notification-v*` release).
+///
+/// Distinct from [`clear_fallback_marker`], which runs on a Pages
+/// success: there `try_pages` has just rewritten the body with
+/// Pages-authoritative bytes, so only the now-stale marker must go. A
+/// confirmed `NotPublished` leaves no authoritative body anywhere, so the
+/// body and ETag are dropped too. Removing the marker alone already closes
+/// the [`try_fallback_cache`] reuse window, but clearing the body and ETag
+/// as well prevents a later non-404 Pages failure within
+/// [`FALLBACK_CACHE_TTL`] from resurrecting the just-unpublished manifest
+/// and avoids leaving an orphan ETag paired with a removed body.
+///
+/// All I/O errors are logged and swallowed: the `NotPublished` result is
+/// already correct and a best-effort cache cleanup must not demote it.
+fn clear_fallback_cache(cache_dir: Option<&Path>) {
+    let Some(dir) = cache_dir else {
+        return;
+    };
+    for (path, label) in [
+        (dir.join(FALLBACK_MARKER_FILENAME), "fallback cache marker"),
+        (dir.join(CACHED_MANIFEST_FILENAME), "cached manifest body"),
+        (dir.join(ETAG_FILENAME), "stale Pages ETag"),
+    ] {
+        match std::fs::remove_file(&path) {
+            Ok(()) => {}
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+            Err(e) => {
+                log::warn!(
+                    "failed to clear {label} at {} after confirmed not-published: {e}",
+                    path.display(),
+                );
+            }
         }
     }
 }

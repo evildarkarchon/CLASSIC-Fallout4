@@ -5,16 +5,9 @@ fn test_integration_message_with_formatting() {
     let msg =
         Message::new("Success! ✅", MessageType::Success).with_details("Operation completed 🎉");
 
-    // Format for logging
     let log_text = format_log_message(msg.content(), msg.details());
 
-    // Should not contain emojis
-    assert!(!log_text.contains('✅'));
-    assert!(!log_text.contains('🎉'));
-
-    // Should contain actual text
-    assert!(log_text.contains("Success"));
-    assert!(log_text.contains("Operation completed"));
+    assert_eq!(log_text, "Success! ✅\nDetails: Operation completed 🎉");
 }
 
 #[test]

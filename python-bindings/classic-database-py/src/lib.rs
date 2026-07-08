@@ -122,12 +122,18 @@ pub fn to_pyerr(err: classic_database_core::DatabaseError) -> PyErr {
         DatabaseError::SqlxError(e) => {
             RustDatabaseQueryError::new_err(format!("Database error: {}", e))
         }
+        DatabaseError::InvalidTableIdentifier(name) => RustDatabaseQueryError::new_err(format!(
+            "Invalid game table identifier (rejected to prevent SQL injection): {:?}",
+            name
+        )),
     }
 }
 
 /// Python module initialization
 #[pymodule]
 fn classic_database(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
+
     m.add_class::<PyDatabasePool>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 

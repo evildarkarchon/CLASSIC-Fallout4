@@ -29,7 +29,7 @@ CliArgs parse_args(int argc, char* argv[]) {
                    "Game version mode (auto, Original, NextGen, AnniversaryEdition/AE, VR)")
         ->default_val("auto")
         ->check(CLI::IsMember({"auto", "Original", "NextGen", "AnniversaryEdition", "AE", "VR"}));
-    app.add_flag("--fcx-mode", args.fcx_mode, "Enable FCX enhanced analysis");
+    app.add_flag("--fcx-mode", args.fcx_mode, "Enable FCX enhanced analysis (deprecated)");
     app.add_flag("--show-fid-values", args.show_fid_values, "Show FormID database values");
     app.add_flag("--simplify-logs", args.simplify_logs, "Remove specified strings from logs");
 

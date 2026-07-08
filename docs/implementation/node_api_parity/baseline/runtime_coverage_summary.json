@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-23T01:51:20.123572+00:00",
+  "generated_at_utc": "2026-06-29T05:31:26.740068+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,19 +7,19 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 731,
-    "runtime_verified_total": 731,
+    "tracked_surface_total": 730,
+    "runtime_verified_total": 730,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 705,
+    "tier1_contract_total": 704,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
   "registryMismatches": [],
   "perOwnerModule": {
     "aux": {
-      "runtime_verified": 169,
-      "total": 169
+      "runtime_verified": 168,
+      "total": 168
     },
     "config": {
       "runtime_verified": 111,
@@ -3185,23 +3185,6 @@
       "classification": "runtime_verified",
       "rustSymbol": "remove_readonly",
       "bindingIdentifier": "removeReadonly",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
-    },
-    {
-      "trackedId": "contract:aux-phase4a-strip-emoji-text",
-      "trackedType": "contract_row",
-      "contractId": "aux-phase4a-strip-emoji-text",
-      "ownerModule": "aux",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "strip_emoji",
-      "bindingIdentifier": "stripEmojiText",
       "coverageId": "node-tier1-aux",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",

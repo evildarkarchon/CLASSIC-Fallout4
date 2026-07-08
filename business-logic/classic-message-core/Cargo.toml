@@ -9,6 +9,7 @@ license = "MIT"
 
 [dependencies]
 # Logging
+env_logger = { workspace = true }
 log = { workspace = true }
 
 # Serialization (for message formatting)

@@ -18,6 +18,9 @@ classic-version-core = { path = "../../business-logic/classic-version-core" }
 # PyO3 bindings
 pyo3 = { workspace = true }
 
+# Shared Python binding utilities
+classic-shared-py = { path = "../../foundation/classic-shared-py" }
+
 # Version handling (for Python-visible version types)
 semver = "1.0"
 

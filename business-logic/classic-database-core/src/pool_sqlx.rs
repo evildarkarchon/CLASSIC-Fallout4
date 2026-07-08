@@ -93,6 +93,13 @@ pub enum DatabaseError {
     /// SQLx library error occurred
     #[error("Sqlx error: {0}")]
     SqlxError(#[from] sqlx::Error),
+
+    /// Game table name failed SQL-identifier validation. The table name is
+    /// interpolated directly into SQL strings (SQLite cannot bind identifiers
+    /// as query parameters), so an unsafe value is rejected to prevent SQL
+    /// injection rather than forwarded to `AssertSqlSafe`.
+    #[error("Invalid game table identifier (rejected to prevent SQL injection): {0:?}")]
+    InvalidTableIdentifier(String),
 }
 
 /// Cache entry with TTL support
@@ -1137,6 +1144,7 @@ impl DatabasePool {
         self.maybe_run_proactive_cleanup(1);
 
         let game_table = self.game_table.resolve(table);
+        Self::validate_table_identifier(&game_table)?;
 
         let cache_key = CacheKey::new(&game_table, formid, plugin);
 
@@ -1173,7 +1181,7 @@ impl DatabasePool {
         for (query_label, query) in [("exact", &exact_query), ("nocase", &nocase_query)] {
             for (db_path, pool) in self.registry.pool_snapshots() {
                 // TRUE ASYNC QUERY - no blocking!
-                match sqlx::query(query)
+                match sqlx::query(sqlx::AssertSqlSafe(query.as_str()))
                     .bind(formid)
                     .bind(plugin)
                     .fetch_optional(&pool)
@@ -1203,6 +1211,31 @@ impl DatabasePool {
 
         debug!("FormID {} not found in any database", formid);
         Ok(None)
+    }
+
+    /// Validate that `table` is a safe unquoted SQLite identifier.
+    ///
+    /// The active game table name is interpolated directly into SQL strings
+    /// because SQLite does not support binding identifiers (table/column
+    /// names) as query parameters — only values are bound via `.bind(...)`.
+    /// Restricting the name to `[A-Za-z_][A-Za-z0-9_]*` before it reaches
+    /// `AssertSqlSafe` closes the SQL-injection vector exposed through the
+    /// foreign-language `set_game_table` bindings, which can otherwise supply
+    /// an arbitrary string (e.g. `"x; DROP TABLE y--"`).
+    fn validate_table_identifier(table: &str) -> Result<(), DatabaseError> {
+        fn is_ident_char(ch: char) -> bool {
+            ch.is_ascii_alphanumeric() || ch == '_'
+        }
+
+        let mut chars = table.chars();
+        match chars.next() {
+            Some(first) if first.is_ascii_alphabetic() || first == '_' => {}
+            _ => return Err(DatabaseError::InvalidTableIdentifier(table.to_string())),
+        }
+        if !chars.all(is_ident_char) {
+            return Err(DatabaseError::InvalidTableIdentifier(table.to_string()));
+        }
+        Ok(())
     }
 
     /// Build a UNION ALL query for better index utilization.
@@ -1312,7 +1345,7 @@ impl DatabasePool {
 
                 async move {
                     // Build query with bindings
-                    let mut sqlx_query = sqlx::query(&query_clone);
+                    let mut sqlx_query = sqlx::query(sqlx::AssertSqlSafe(query_clone.as_str()));
                     for (formid, plugin) in &bindings_clone {
                         sqlx_query = sqlx_query.bind(formid).bind(plugin);
                     }
@@ -1414,6 +1447,7 @@ impl DatabasePool {
         self.maybe_run_proactive_cleanup(formid_plugin_pairs.len() as u64);
 
         let game_table = self.game_table.resolve(table);
+        Self::validate_table_identifier(&game_table)?;
 
         info!(
             "Starting optimized batch lookup for {} FormID/plugin pairs (parallel + UNION ALL)",

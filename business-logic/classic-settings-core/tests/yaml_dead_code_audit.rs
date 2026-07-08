@@ -1,6 +1,6 @@
 //! Source-backed contract audit for Phase 2 YAML dead code removal.
 
-const LIB_RS: &str = include_str!("../src/yaml_ops.rs");
+const LIB_RS: &str = include_str!("../src/yaml_ops/operations.rs");
 const INTEGRATION_TESTS_RS: &str = include_str!("yaml_integration_tests.rs");
 const YAML_BENCHMARKS_RS: &str = include_str!("../benches/yaml_benchmarks.rs");
 

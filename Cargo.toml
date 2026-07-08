@@ -57,15 +57,15 @@ resolver = "2"
 
 [workspace.dependencies]
 # PyO3 bindings
-pyo3 = { version = "0.28.3", features = ["abi3-py312"] }
-pyo3-async-runtimes = { version = "0.28.0" }
+pyo3 = { version = "0.29.0", features = ["abi3-py312"] }
+pyo3-async-runtimes = { version = "0.29.0" }
 
 # Async runtime (ONE RUNTIME RULE)
-tokio = { version = "1.52.0", features = ["full"] }
+tokio = { version = "1.52.3", features = ["full"] }
 futures = "0.3.32"
 
 # Performance
-dashmap = "6.1"
+dashmap = "6.2.1"
 parking_lot = "0.12.5"
 rayon = "1.12.0"
 crossbeam = "0.8.4"
@@ -81,15 +81,15 @@ lasso = { version = "0.7.3", features = [
     "multi-threaded",
 ] } # Fast string interning (optimization 3.1)
 thiserror = "2.0.18"
-anyhow = "1.0.102"
+anyhow = "1.0.103"
 
 # Database
-sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
+sqlx = { version = "0.9.0", features = ["runtime-tokio", "sqlite"] }
 
 # File I/O
 encoding_rs = "0.8.35"
 chardetng = "1.0.0"   # Character encoding detection (Phase 5 - PapyrusLog)
-memmap2 = "0.9.10"
+memmap2 = "0.9.11"
 walkdir = "2.5.0"
 ddsfile = "0.6.0"
 dirs = "6.0.0"
@@ -99,21 +99,21 @@ directories = "6.0.0"  # Cross-platform config/data directories
 ba2 = "3.0.1"
 
 # Parsing
-regex = "1.12.3"
-memchr = "2.8.0"
+regex = "1.12.4"
+memchr = "2.8.2"
 aho-corasick = "1.1.4"
-phf = { version = "0.13.1", features = ["macros"] }
+phf = { version = "0.14.0", features = ["macros"] }
 
 # Alternative allocator (Phase 16 optimization - optional)
-mimalloc = { version = "0.1.48", default-features = false }
+mimalloc = { version = "0.1.52", default-features = false }
 
 # Ordered collections
 indexmap = "2.14"  # Preserves insertion order (required for YAML key order parity)
 
 # Caching
-lru = "0.17.0"
+lru = "0.18.0"
 linked-hash-map = "0.5.6"
-quick_cache = "0.6.21"     # Lock-free concurrent cache (optimization 1.3)
+quick_cache = "0.6.24"     # Lock-free concurrent cache (optimization 1.3)
 rustc-hash = "2.1.2"      # Fast hasher for short strings (optimization 1.2)
 
 # Hashing
@@ -124,7 +124,7 @@ sha2 = "0.11.0" # Cryptographic hashing (SHA256 for file comparison)
 
 # Text processing
 strsim = "0.11.1"      # String similarity algorithms
-configparser = "3.1.0" # INI file parsing
+configparser = "3.2.0" # INI file parsing
 
 # Version parsing
 semver = "1.0.28" # Semantic versioning for crashgen version comparison
@@ -132,18 +132,18 @@ pelite = "0.10.0" # PE file parsing for version extraction
 
 # Serialization
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.149"
+serde_json = "1.0.150"
 
 # Network (Phase 5 - Update system)
-reqwest = { version = "0.13.2", features = ["json"] } # Async HTTP client
-scraper = "0.26.0"                                    # HTML parsing
+reqwest = { version = "0.13.4", features = ["json"] } # Async HTTP client
+scraper = "0.27.0"                                    # HTML parsing
 
 # Logging
-log = "0.4.29"
-env_logger = "0.11.10"
+log = "0.4.33"
+env_logger = "0.11.11"
 tracing = "0.1.44"
 tracing-subscriber = "0.3.23"
-tracing-appender = "0.2.4"
+tracing-appender = "0.2.5"
 
 # C++ FFI (CXX)
 cxx = "1.0.194"
@@ -153,14 +153,14 @@ cxx-build = "1.0.194"
 winreg = "0.56.0"
 
 # Markdown
-pulldown-cmark = { version = "0.13.3", default-features = false }
+pulldown-cmark = { version = "0.13.4", default-features = false }
 
 # Utilities
 tokio-util = "0.7.18"
 
 # Testing
 tempfile = "3.27.0"
-serial_test = "3.4.0"
+serial_test = "3.5.0"
 
 [workspace.lints.rust]
 deprecated = "deny"

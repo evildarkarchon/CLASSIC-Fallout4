@@ -44,9 +44,8 @@ fn test_fcx_disabled_messages() {
     let handler = FcxModeHandler::new(false);
     let fragment = handler.get_fcx_messages();
 
-    assert!(!fragment.is_empty());
-    let lines = fragment.to_list();
-    assert!(lines.iter().any(|line| line.contains("DISABLED")));
+    assert!(fragment.is_empty());
+    assert!(fragment.to_list().is_empty());
 }
 
 #[test]

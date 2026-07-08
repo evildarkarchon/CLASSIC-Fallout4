@@ -687,8 +687,9 @@ Entry points:
   `/databases`). Passing `None` keeps the default relative-path behavior.
 - `load_main_yaml_version_with_env(bundled_dir, env)` — test-only variant
   that threads an `env` closure through to `yaml_cache_dir_with_env`; used
-  by the sibling `shippable_tests.rs` to drive the reader against a mocked
-  `LOCALAPPDATA` / `XDG_CACHE_HOME` without touching process env.
+  by the sibling `shippable/main_version_tests.rs` to drive the reader
+  against a mocked `LOCALAPPDATA` / `XDG_CACHE_HOME` without touching process
+  env.
 
 Error type: `MainYamlVersionError` (`#[non_exhaustive]`). Variants:
 

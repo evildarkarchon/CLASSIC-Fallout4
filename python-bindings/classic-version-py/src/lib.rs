@@ -367,6 +367,8 @@ fn is_valid_pe_path(path: &str) -> bool {
 /// - PE file version extraction
 #[pymodule]
 fn classic_version(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
+
     // Version parsing
     m.add_function(wrap_pyfunction!(parse_version, m)?)?;
     m.add_function(wrap_pyfunction!(try_parse_version, m)?)?;

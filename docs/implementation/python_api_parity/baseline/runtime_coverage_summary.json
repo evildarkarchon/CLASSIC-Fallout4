@@ -1,16 +1,16 @@
 {
-  "generated_at_utc": "2026-04-23T01:51:15.433928+00:00",
+  "generated_at_utc": "2026-06-29T05:10:40.624367+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1264,
-    "runtime_verified_total": 1264,
+    "tracked_surface_total": 1263,
+    "runtime_verified_total": 1263,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 1098,
+    "tier1_contract_total": 1097,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -29,8 +29,8 @@
       "total": 95
     },
     "message": {
-      "runtime_verified": 46,
-      "total": 46
+      "runtime_verified": 45,
+      "total": 45
     },
     "path": {
       "runtime_verified": 72,
@@ -4535,23 +4535,6 @@
       "classification": "runtime_verified",
       "rustSymbol": "format_log_message",
       "bindingIdentifier": "classic_message.format_log_message",
-      "coverageId": "python-tier1-message",
-      "verificationMode": "direct_call",
-      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "message-residuals-smoke",
-      "fixtureRefs": [],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:message.lib.strip_emoji",
-      "trackedType": "contract_row",
-      "contractId": "message.lib.strip_emoji",
-      "ownerModule": "message",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "strip_emoji",
-      "bindingIdentifier": "classic_message.strip_emoji",
       "coverageId": "python-tier1-message",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",

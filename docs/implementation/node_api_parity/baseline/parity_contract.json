@@ -1431,14 +1431,6 @@
       "nodeKind": "function"
     },
     {
-      "id": "aux-phase4a-strip-emoji-text",
-      "tier": "tier1",
-      "ownerModule": "aux",
-      "rustSymbol": "strip_emoji",
-      "nodeExport": "stripEmojiText",
-      "nodeKind": "function"
-    },
-    {
       "id": "aux-phase4a-validate-custom-scan-path",
       "tier": "tier1",
       "ownerModule": "aux",

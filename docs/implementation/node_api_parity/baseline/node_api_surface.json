@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-21T23:39:22.583792+00:00",
+  "generated_at_utc": "2026-06-29T05:31:26.735277+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -2241,6 +2241,15 @@
       "arity": 1
     },
     {
+      "export": "loadMainYamlVersion",
+      "kind": "function",
+      "owner_module": "version_registry",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function loadMainYamlVersion(bundledYamlDir?: string | undefined | null): Promise<string>",
+      "arity": 1
+    },
+    {
       "export": "loadSettingsAsync",
       "kind": "function",
       "owner_module": "config",
@@ -2637,15 +2646,6 @@
       "arity": 0
     },
     {
-      "export": "stripEmojiText",
-      "kind": "function",
-      "owner_module": "aux",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function stripEmojiText(text: string): string",
-      "arity": 1
-    },
-    {
       "export": "tryParseVersion",
       "kind": "function",
       "owner_module": "version_registry",
@@ -2831,7 +2831,7 @@
       "owner_module": "config",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function yamlGetStringValue(content: string, keyPath: string, default: string): string",
+      "signature": "export declare function yamlGetStringValue(content: string, keyPath: string, defaultValue: string): string",
       "arity": 3
     },
     {

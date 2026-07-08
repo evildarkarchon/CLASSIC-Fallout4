@@ -27,9 +27,9 @@ fn test_log_trace_no_panic() {
 }
 
 #[test]
-fn test_init_logging_idempotent() {
+fn test_init_logging_delegates_to_core_and_is_idempotent() {
     init_logging();
-    init_logging();
+    classic_message_core::logging::init();
     init_logging();
 }
 

@@ -93,6 +93,7 @@ impl DeterministicDbFixture {
         if config.records_per_db == 0 {
             return Err("records_per_db must be greater than 0".to_string());
         }
+        validate_table_identifier(config.table_name)?;
 
         let mut temp_files = Vec::with_capacity(config.database_count);
         let mut db_paths = Vec::with_capacity(config.database_count);
@@ -118,7 +119,7 @@ impl DeterministicDbFixture {
                 )",
                 config.table_name
             );
-            sqlx::query(&create_table_sql)
+            sqlx::query(sqlx::AssertSqlSafe(create_table_sql.as_str()))
                 .execute(&pool)
                 .await
                 .map_err(|err| format!("create benchmark table: {err}"))?;
@@ -127,7 +128,7 @@ impl DeterministicDbFixture {
                 "CREATE INDEX IF NOT EXISTS idx_{0}_lookup ON {0} (formid, plugin)",
                 config.table_name
             );
-            sqlx::query(&create_index_sql)
+            sqlx::query(sqlx::AssertSqlSafe(create_index_sql.as_str()))
                 .execute(&pool)
                 .await
                 .map_err(|err| format!("create benchmark index: {err}"))?;
@@ -145,7 +146,7 @@ impl DeterministicDbFixture {
                 let global_index = db_index * config.records_per_db + local_index;
                 let record = record_for_index(global_index);
 
-                sqlx::query(&insert_sql)
+                sqlx::query(sqlx::AssertSqlSafe(insert_sql.as_str()))
                     .bind(record.suffix)
                     .bind(record.plugin)
                     .bind(record.entry)
@@ -239,6 +240,23 @@ impl DeterministicDbFixture {
             .map(|spec| (spec.plugin.to_string(), spec.prefix.to_string()))
             .collect()
     }
+}
+
+fn validate_table_identifier(table: &str) -> Result<(), String> {
+    fn is_ident_char(ch: char) -> bool {
+        ch.is_ascii_alphanumeric() || ch == '_'
+    }
+
+    let mut chars = table.chars();
+    match chars.next() {
+        Some(first) if first.is_ascii_alphabetic() || first == '_' => {}
+        _ => return Err(format!("invalid benchmark table identifier: {table:?}")),
+    }
+    if !chars.all(is_ident_char) {
+        return Err(format!("invalid benchmark table identifier: {table:?}"));
+    }
+
+    Ok(())
 }
 
 /// Resolve canonical two-character load-order prefix for a plugin.

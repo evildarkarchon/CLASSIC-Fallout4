@@ -897,6 +897,42 @@ mod fallback_cache {
         clear_fallback_marker(Some(tmp.path()));
         clear_fallback_marker(None);
     }
+
+    #[test]
+    fn clear_fallback_cache_removes_marker_body_and_etag() {
+        let tmp = TempDir::new().unwrap();
+        persist_fallback_manifest_body(Some(tmp.path()), minimal_manifest_bytes());
+        // A stray ETag proves the purge also drops an orphan ETag that could
+        // otherwise be paired with a removed or stale body after unpublish.
+        std::fs::write(tmp.path().join(ETAG_FILENAME), b"\"W/stale\"").unwrap();
+        assert!(tmp.path().join(FALLBACK_MARKER_FILENAME).exists());
+        assert!(tmp.path().join(CACHED_MANIFEST_FILENAME).exists());
+
+        clear_fallback_cache(Some(tmp.path()));
+
+        assert!(
+            !tmp.path().join(FALLBACK_MARKER_FILENAME).exists(),
+            "marker purged",
+        );
+        assert!(
+            !tmp.path().join(CACHED_MANIFEST_FILENAME).exists(),
+            "body purged",
+        );
+        assert!(
+            !tmp.path().join(ETAG_FILENAME).exists(),
+            "stale ETag purged",
+        );
+        // Reuse window is closed even while still within TTL.
+        assert!(
+            try_fallback_cache_at(Some(tmp.path()), SystemTime::now()).is_none(),
+            "no cache may be reused after a confirmed not-published purge",
+        );
+    }
+
+    #[test]
+    fn clear_fallback_cache_is_noop_when_cache_dir_is_none() {
+        clear_fallback_cache(None);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1010,6 +1046,262 @@ mod orchestrator {
         // returns Pages-authoritative bytes, not the old fallback body.
         assert!(tmp.path().join(CACHED_MANIFEST_FILENAME).exists());
         assert!(tmp.path().join(ETAG_FILENAME).exists());
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn pages_404_and_empty_releases_returns_not_published() {
+        let mut server = mockito::Server::new_async().await;
+        let pages_url = format!("{}/app-notification/manifest-latest.json", server.url());
+
+        let pages_mock = server
+            .mock("GET", "/app-notification/manifest-latest.json")
+            .with_status(404)
+            .create_async()
+            .await;
+        let releases_mock = server
+            .mock(
+                "GET",
+                mockito::Matcher::Regex(r"^/repos/.*/releases.*".into()),
+            )
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body("[]")
+            .create_async()
+            .await;
+
+        let tmp = TempDir::new().unwrap();
+        let client = tokenless_client(&server.url());
+        let status = check_app_notification_with(&client, &pages_url, Some(tmp.path()), "9.2.0")
+            .await
+            .expect("absent notification should be benign");
+
+        assert_eq!(status.classification, Classification::NotPublished);
+        assert!(status.latest_version.is_empty());
+        assert!(status.published_at.is_empty());
+        assert!(status.min_supported_version.is_none());
+        assert!(status.display.is_none());
+        assert!(status.parse_error.is_none());
+        pages_mock.assert_async().await;
+        releases_mock.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn pages_404_with_matching_release_missing_manifest_asset_returns_fetch_failed() {
+        let mut server = mockito::Server::new_async().await;
+        let pages_url = format!("{}/app-notification/manifest-latest.json", server.url());
+
+        let pages_mock = server
+            .mock("GET", "/app-notification/manifest-latest.json")
+            .with_status(404)
+            .create_async()
+            .await;
+        let releases_body = r#"[{
+            "tag_name": "app-notification-v9.2.0",
+            "name": "Notification v9.2.0",
+            "body": "",
+            "prerelease": false,
+            "draft": false,
+            "html_url": "https://example.com/release",
+            "assets": [],
+            "created_at": "2026-05-01T12:00:00Z",
+            "published_at": "2026-05-01T12:00:00Z"
+        }]"#;
+        let releases_mock = server
+            .mock(
+                "GET",
+                mockito::Matcher::Regex(r"^/repos/.*/releases.*".into()),
+            )
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(releases_body)
+            .create_async()
+            .await;
+
+        let tmp = TempDir::new().unwrap();
+        let client = tokenless_client(&server.url());
+        let err = check_app_notification_with(&client, &pages_url, Some(tmp.path()), "9.2.0")
+            .await
+            .expect_err("matching release missing manifest asset is a broken publish");
+
+        match err {
+            UpdateError::NotificationFetchFailed {
+                pages_error,
+                releases_error,
+            } => {
+                assert!(pages_error.contains("Resource not found"));
+                assert!(releases_error.contains("has no `manifest.json` asset"));
+            }
+            other => panic!("expected NotificationFetchFailed, got {other:?}"),
+        }
+        pages_mock.assert_async().await;
+        releases_mock.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn pages_404_with_fresh_fallback_cache_still_checks_releases_absence() {
+        // A Pages 404 is semantic absence, not an outage. Even if a prior
+        // outage seeded a fresh fallback marker, the orchestrator must
+        // confirm Releases has no app-notification-v* release so a deliberate
+        // unpublish can surface as NotPublished instead of stale cached state.
+        let mut server = mockito::Server::new_async().await;
+        let pages_url = format!("{}/app-notification/manifest-latest.json", server.url());
+
+        let tmp = TempDir::new().unwrap();
+        persist_fallback_manifest_body(
+            Some(tmp.path()),
+            br#"{"manifest_version":"1.0","release_tag":"v9.2.0","latest_version":"9.2.0","published_at":"2026-05-01T12:00:00Z"}"#,
+        );
+        assert!(tmp.path().join(FALLBACK_MARKER_FILENAME).exists());
+
+        let pages_mock = server
+            .mock("GET", "/app-notification/manifest-latest.json")
+            .with_status(404)
+            .create_async()
+            .await;
+        let releases_mock = server
+            .mock(
+                "GET",
+                mockito::Matcher::Regex(r"^/repos/.*/releases.*".into()),
+            )
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body("[]")
+            .create_async()
+            .await;
+
+        let client = tokenless_client(&server.url());
+        let status = check_app_notification_with(&client, &pages_url, Some(tmp.path()), "9.1.0")
+            .await
+            .expect("absent notification should bypass stale fallback cache");
+
+        assert_eq!(status.classification, Classification::NotPublished);
+        assert!(status.latest_version.is_empty());
+        assert!(status.published_at.is_empty());
+        // The confirmed not-published result MUST purge the fallback cache so a
+        // later non-404 Pages failure within TTL cannot resurrect the stale
+        // manifest via try_fallback_cache.
+        assert!(
+            !tmp.path().join(FALLBACK_MARKER_FILENAME).exists(),
+            "not-published must clear the fallback marker",
+        );
+        assert!(
+            !tmp.path().join(CACHED_MANIFEST_FILENAME).exists(),
+            "not-published must clear the fallback body",
+        );
+        assert!(
+            try_fallback_cache_at(Some(tmp.path()), SystemTime::now()).is_none(),
+            "purged cache must not be reusable on a later Pages outage",
+        );
+        pages_mock.assert_async().await;
+        releases_mock.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn pages_500_and_empty_releases_still_returns_fetch_failed() {
+        let mut server = mockito::Server::new_async().await;
+        let pages_url = format!("{}/app-notification/manifest-latest.json", server.url());
+
+        let pages_mock = server
+            .mock("GET", "/app-notification/manifest-latest.json")
+            .with_status(500)
+            .create_async()
+            .await;
+        let releases_mock = server
+            .mock(
+                "GET",
+                mockito::Matcher::Regex(r"^/repos/.*/releases.*".into()),
+            )
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body("[]")
+            .create_async()
+            .await;
+
+        let tmp = TempDir::new().unwrap();
+        let client = tokenless_client(&server.url());
+        let err = check_app_notification_with(&client, &pages_url, Some(tmp.path()), "9.2.0")
+            .await
+            .expect_err("Pages 500 plus no release is a fetch failure");
+
+        match err {
+            UpdateError::NotificationFetchFailed {
+                pages_error,
+                releases_error,
+            } => {
+                assert!(pages_error.contains("500"));
+                assert!(
+                    releases_error.contains("no releases matching prefix `app-notification-v`")
+                );
+            }
+            other => panic!("expected NotificationFetchFailed, got {other:?}"),
+        }
+        pages_mock.assert_async().await;
+        releases_mock.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn pages_404_with_valid_release_classifies_from_fallback() {
+        let mut server = mockito::Server::new_async().await;
+        let pages_url = format!("{}/app-notification/manifest-latest.json", server.url());
+
+        let pages_mock = server
+            .mock("GET", "/app-notification/manifest-latest.json")
+            .with_status(404)
+            .create_async()
+            .await;
+
+        let asset_url = format!("{}/assets/manifest.json", server.url());
+        let releases_body = format!(
+            r#"[{{
+                "tag_name": "app-notification-v9.2.0",
+                "name": "Notification v9.2.0",
+                "body": "",
+                "prerelease": false,
+                "draft": false,
+                "html_url": "https://example.com/release",
+                "assets": [
+                    {{
+                        "name": "manifest.json",
+                        "size": 256,
+                        "browser_download_url": "{asset_url}",
+                        "content_type": "application/json",
+                        "download_count": 0
+                    }}
+                ],
+                "created_at": "2026-05-01T12:00:00Z",
+                "published_at": "2026-05-01T12:00:00Z"
+            }}]"#,
+        );
+        let releases_mock = server
+            .mock(
+                "GET",
+                mockito::Matcher::Regex(r"^/repos/.*/releases.*".into()),
+            )
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(releases_body)
+            .create_async()
+            .await;
+        let asset_mock = server
+            .mock("GET", "/assets/manifest.json")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(minimal_manifest_json())
+            .create_async()
+            .await;
+
+        let tmp = TempDir::new().unwrap();
+        let client = tokenless_client(&server.url());
+        let status = check_app_notification_with(&client, &pages_url, Some(tmp.path()), "9.1.0")
+            .await
+            .expect("valid fallback release must classify normally");
+
+        assert_eq!(status.classification, Classification::UpdateAvailable);
+        assert_eq!(status.latest_version, "9.2.0");
+        assert_eq!(status.published_at, "2026-05-01T12:00:00Z");
+        pages_mock.assert_async().await;
+        releases_mock.assert_async().await;
+        asset_mock.assert_async().await;
     }
 
     #[tokio::test(flavor = "multi_thread")]

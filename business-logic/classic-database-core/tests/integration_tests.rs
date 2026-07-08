@@ -40,7 +40,7 @@ async fn create_test_database(
         )",
         table_name
     );
-    sqlx::query(&create_table_sql)
+    sqlx::query(sqlx::AssertSqlSafe(create_table_sql.as_str()))
         .execute(&pool)
         .await
         .map_err(|e| DatabaseError::QueryError(e.to_string()))?;
@@ -51,7 +51,7 @@ async fn create_test_database(
             "INSERT OR REPLACE INTO {} (formid, plugin, entry) VALUES (?, ?, ?)",
             table_name
         );
-        sqlx::query(&insert_sql)
+        sqlx::query(sqlx::AssertSqlSafe(insert_sql.as_str()))
             .bind(*formid)
             .bind(*plugin)
             .bind(*entry)

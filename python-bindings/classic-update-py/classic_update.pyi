@@ -494,9 +494,9 @@ class NotificationStatus:
     """Result of :func:`check_app_notification`.
 
     ``classification`` is one of ``"upToDate"``, ``"updateAvailable"``,
-    ``"deprecatedClient"``, ``"unknown"``. Error outcomes are raised as
-    :class:`ClassicNotificationError` or one of its subclasses, not as an
-    additional classification value.
+    ``"deprecatedClient"``, ``"unknown"``, or ``"notPublished"``. Error
+    outcomes are raised as :class:`ClassicNotificationError` or one of its
+    subclasses, not as an additional classification value.
 
     Attributes:
         classification: Discriminator string (see above).

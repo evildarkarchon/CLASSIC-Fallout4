@@ -17,6 +17,10 @@ private slots:
     void mainwindow_wires_live_crash_scan_progress_updates();
     void mainwindow_does_not_use_deprecated_vr_mode_setting();
     void mainwindow_preserves_legacy_settings_on_failed_migration();
+    void update_worker_declares_not_published_classification();
+    void mainwindow_handles_not_published_without_error_dialog();
+    void mainwindow_shows_error_details_for_explicit_update_failures();
+    void settings_dialog_handles_not_published_as_benign();
     void mainwindow_blocks_game_files_scan_when_paths_unresolved();
     void mainwindow_blocks_crash_logs_scan_when_fcx_enabled_and_paths_unresolved();
     void mainwindow_uses_exe_relative_crash_logs_dir();
@@ -26,6 +30,7 @@ private slots:
     void scan_controller_treats_blank_xse_paths_as_missing();
     void settings_dialog_wires_game_folder_path_controls();
     void settings_dialog_resets_stale_game_exe_path_when_game_folder_changes();
+    void settings_dialog_adds_multiple_formid_databases();
     void mainwindow_enables_drag_and_drop();
     void mainwindow_forwards_drops_through_targeted_child_event_filter();
     void mainwindow_forwards_drag_moves_through_targeted_child_event_filter();
@@ -221,6 +226,91 @@ void ScanSettingsWiringTests::mainwindow_preserves_legacy_settings_on_failed_mig
              "MainWindow settings bootstrap should use QSaveFile for an atomic publish when rename fails");
     QVERIFY2(!sourceText.contains(QStringLiteral("QFile::copy(legacySettingsPath, settingsPath)")),
              "MainWindow settings bootstrap should not use QFile::copy directly for legacy settings migration");
+}
+
+void ScanSettingsWiringTests::update_worker_declares_not_published_classification()
+{
+    const QString headerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/updateworker.h");
+    QFile file(headerPath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(headerPath)));
+
+    const QString headerText = QString::fromUtf8(file.readAll());
+    QVERIFY2(headerText.contains(QStringLiteral("kClassificationNotPublished")),
+             "UpdateWorker should declare the not_published classification constant");
+    QVERIFY2(headerText.contains(QStringLiteral("\"not_published\"")),
+             "UpdateWorker constant should match the CXX bridge classification label");
+}
+
+void ScanSettingsWiringTests::mainwindow_handles_not_published_without_error_dialog()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const qsizetype branchStart = sourceText.indexOf(QStringLiteral("kClassificationNotPublished"));
+    QVERIFY2(branchStart >= 0, "MainWindow should branch on the not_published classification");
+
+    const qsizetype nextBranch = sourceText.indexOf(QStringLiteral("} else if (explicitCheck)"), branchStart);
+    QVERIFY2(nextBranch > branchStart, "not_published should be handled before the generic explicit-check branch");
+
+    const QString branch = sourceText.mid(branchStart, nextBranch - branchStart);
+    QVERIFY2(branch.contains(QStringLiteral("if (explicitCheck)")),
+             "not_published should stay silent for startup/background checks");
+    QVERIFY2(branch.contains(QStringLiteral("QMessageBox::information")),
+             "explicit not_published checks should show an informational dialog");
+    QVERIFY2(!branch.contains(QStringLiteral("QMessageBox::warning")),
+             "not_published must not reach the warning/error dialog path");
+}
+
+void ScanSettingsWiringTests::mainwindow_shows_error_details_for_explicit_update_failures()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const qsizetype branchStart = sourceText.indexOf(QStringLiteral("kClassificationError"));
+    QVERIFY2(branchStart >= 0, "MainWindow should branch on the error classification");
+
+    const qsizetype nextBranch = sourceText.indexOf(QStringLiteral("} else if"), branchStart);
+    QVERIFY2(nextBranch > branchStart, "error classification should be handled in its own branch");
+
+    const QString branch = sourceText.mid(branchStart, nextBranch - branchStart);
+    QVERIFY2(branch.contains(QStringLiteral("logUpdateCheckFailure(errorMessage)")),
+             "update-check failures should still be logged");
+    QVERIFY2(branch.contains(QStringLiteral("if (explicitCheck)")),
+             "manual update-check failures should be separated from background checks");
+    QVERIFY2(branch.contains(QStringLiteral("QMessageBox::warning")),
+             "manual update-check failures should show a warning dialog");
+    QVERIFY2(branch.contains(QStringLiteral("errorMessage.isEmpty()")),
+             "manual update-check failures should include the detailed error when available");
+    QVERIFY2(branch.contains(QStringLiteral("Update check failed: ")),
+             "manual update-check failures should show the same failure context as the log");
+}
+
+void ScanSettingsWiringTests::settings_dialog_handles_not_published_as_benign()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/settingsdialog.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const qsizetype branchStart = sourceText.indexOf(QStringLiteral("classification == \"not_published\""));
+    QVERIFY2(branchStart >= 0, "SettingsDialog should handle not_published separately");
+
+    const qsizetype nextBranch = sourceText.indexOf(QStringLiteral("} else {"), branchStart);
+    QVERIFY2(nextBranch > branchStart, "not_published should be handled before the generic fallback branch");
+
+    const QString branch = sourceText.mid(branchStart, nextBranch - branchStart);
+    QVERIFY2(branch.contains(QStringLiteral("No update information available.")),
+             "SettingsDialog should show a benign not_published message");
+    QVERIFY2(!branch.contains(QStringLiteral("Error:")),
+             "SettingsDialog must not render not_published as an error");
 }
 
 void ScanSettingsWiringTests::mainwindow_blocks_game_files_scan_when_paths_unresolved()
@@ -444,6 +534,43 @@ void ScanSettingsWiringTests::settings_dialog_resets_stale_game_exe_path_when_ga
              "SettingsDialog should reset stale game executable paths when the stored executable no longer exists");
     QVERIFY2(body.contains(QStringLiteral("Qt::CaseInsensitive")),
              "SettingsDialog should compare executable parent and selected game folder case-insensitively");
+}
+
+void ScanSettingsWiringTests::settings_dialog_adds_multiple_formid_databases()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/settingsdialog.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const QString marker = QStringLiteral("void SettingsDialog::onAddFormIdDb()");
+    const qsizetype start = sourceText.indexOf(marker);
+    QVERIFY2(start >= 0, "SettingsDialog::onAddFormIdDb() should exist");
+
+    const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid SettingsDialog::"), start + marker.size());
+    const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
+    const QString body = sourceText.mid(start, end - start);
+
+    QVERIFY2(body.contains(QStringLiteral("QFileDialog::getOpenFileNames")),
+             "FormID database Add should use a multi-select file dialog");
+    QVERIFY2(body.contains(QStringLiteral("Select FormID Databases")),
+             "FormID database Add dialog title should be plural");
+    QVERIFY2(body.contains(QStringLiteral("const QStringList files")),
+             "FormID database Add should retain the returned QStringList");
+    QVERIFY2(body.contains(QStringLiteral("for (const QString& file : files)")),
+             "FormID database Add should iterate selected files in order");
+    QVERIFY2(body.contains(QStringLiteral("m_listFormIdDbs->addItem(file)")),
+             "FormID database Add should append each selected file to the list widget");
+
+    const qsizetype seenStart = body.indexOf(QStringLiteral("QSet<QString> seen"));
+    const qsizetype guardStart = body.indexOf(QStringLiteral("seen.contains(key)"));
+    const qsizetype addStart = body.indexOf(QStringLiteral("m_listFormIdDbs->addItem(file)"));
+    const qsizetype insertAfterAdd = body.indexOf(QStringLiteral("seen.insert(key)"), addStart);
+    QVERIFY2(seenStart >= 0, "FormID database Add should track normalized paths with QSet<QString>");
+    QVERIFY2(guardStart > seenStart && guardStart < addStart,
+             "FormID database Add should skip duplicate normalized paths before appending");
+    QVERIFY2(insertAfterAdd > addStart, "FormID database Add should remember newly appended paths as seen");
 }
 
 void ScanSettingsWiringTests::mainwindow_enables_drag_and_drop()

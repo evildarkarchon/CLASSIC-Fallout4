@@ -125,7 +125,8 @@ pub use stream::{PyLineStreamer, PySyncLineStreamer};
 
 /// Python module for file I/O operations
 #[pymodule]
-fn classic_file_io(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn classic_file_io(py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(py);
     register_file_io_module(m)?;
     Ok(())
 }

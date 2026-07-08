@@ -295,6 +295,8 @@ fn build_url_with_query(base: &str, params: Vec<(String, String)>) -> PyResult<S
 /// URL validation, user agent generation, and mod site constants.
 #[pymodule]
 fn classic_web(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    classic_shared::configure_python_stdio(m.py());
+
     // Register classes
     m.add_class::<PyModSite>()?;
 

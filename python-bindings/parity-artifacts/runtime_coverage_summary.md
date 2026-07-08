@@ -1,8 +1,8 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-06-07T06:11:39.553179+00:00`
-- Tracked surfaces: **1264**
-- Runtime verified: **1264**
+- Generated: `2026-06-29T05:11:04.228875+00:00`
+- Tracked surfaces: **1263**
+- Runtime verified: **1263**
 - Contract mapped only: **0**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
@@ -14,7 +14,7 @@
 | `config` | 58 | 0 | 0 | 58 |
 | `database` | 44 | 0 | 0 | 44 |
 | `file_io` | 95 | 0 | 0 | 95 |
-| `message` | 46 | 0 | 0 | 46 |
+| `message` | 45 | 0 | 0 | 45 |
 | `path` | 72 | 0 | 0 | 72 |
 | `perf` | 10 | 0 | 0 | 10 |
 | `registry` | 20 | 0 | 0 | 20 |

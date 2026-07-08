@@ -24,6 +24,7 @@ constexpr const char* kClassificationUpToDate = "up_to_date";
 constexpr const char* kClassificationUpdateAvailable = "update_available";
 constexpr const char* kClassificationDeprecated = "deprecated_client";
 constexpr const char* kClassificationUnknown = "unknown";
+constexpr const char* kClassificationNotPublished = "not_published";
 constexpr const char* kClassificationError = "error";
 
 bool is_classification(const rust::String& classification, const char* expected) {
@@ -87,6 +88,11 @@ int report_notification(const classic::update::NotificationStatusDto& status) {
             fmt::print(stderr, "Update check inconclusive (unknown classification).\n");
         }
         return 1;
+    }
+
+    if (is_classification(status.classification, kClassificationNotPublished)) {
+        fmt::print("No update information is currently published.\n");
+        return 0;
     }
 
     if (is_classification(status.classification, kClassificationError)) {

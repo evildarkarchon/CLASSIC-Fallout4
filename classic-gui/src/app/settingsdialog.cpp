@@ -11,6 +11,7 @@
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QMetaType>
+#include <QSet>
 #include <QStringList>
 #include <QThread>
 #include <QVBoxLayout>
@@ -162,7 +163,8 @@ void SettingsDialog::setupScanningTab(QTabWidget* tabs)
     layout->setContentsMargins(16, 16, 16, 16);
     layout->setSpacing(8);
 
-    m_chkFcxMode = new ToggleSwitch(QStringLiteral("FCX Mode"));
+    m_chkFcxMode = new ToggleSwitch(QStringLiteral("FCX Mode (Deprecated)"));
+    m_chkFcxMode->setToolTip(QStringLiteral("FCX Mode is deprecated and will be removed in a future release."));
     m_chkSimplifyLogs = new ToggleSwitch(QStringLiteral("Simplify Logs"));
     m_chkShowFormIdValues = new ToggleSwitch(QStringLiteral("Show FormID Values"));
     m_chkMoveUnsolvedLogs = new ToggleSwitch(QStringLiteral("Move Unsolved Logs"));
@@ -585,10 +587,23 @@ void SettingsDialog::onResetIniFolder()
 
 void SettingsDialog::onAddFormIdDb()
 {
-    QString file = QFileDialog::getOpenFileName(this, QStringLiteral("Select FormID Database"), QString(),
-                                                QStringLiteral("Database Files (*.db *.sqlite);;All Files (*)"));
-    if (!file.isEmpty()) {
+    const QStringList files = QFileDialog::getOpenFileNames(
+        this, QStringLiteral("Select FormID Databases"), QString(),
+        QStringLiteral("Database Files (*.db *.sqlite);;All Files (*)"));
+
+    QSet<QString> seen;
+    for (int i = 0; i < m_listFormIdDbs->count(); ++i) {
+        seen.insert(QDir::cleanPath(m_listFormIdDbs->item(i)->text()).toLower());
+    }
+
+    for (const QString& file : files) {
+        const QString key = QDir::cleanPath(file).toLower();
+        if (seen.contains(key)) {
+            continue;
+        }
+
         m_listFormIdDbs->addItem(file);
+        seen.insert(key);
     }
 }
 
@@ -633,6 +648,8 @@ void SettingsDialog::onCheckForUpdates()
             m_lblUpdateStatus->setText(QStringLiteral("Update check inconclusive: ") +
                                        (parseError.empty() ? QStringLiteral("unknown reason")
                                                            : QString::fromUtf8(parseError)));
+        } else if (classification == "not_published") {
+            m_lblUpdateStatus->setText(QStringLiteral("No update information available."));
         } else {
             // "up_to_date" or any unexpected classification.
             m_lblUpdateStatus->setText(QStringLiteral("You are up to date."));

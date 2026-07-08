@@ -27,7 +27,6 @@ thiserror = { workspace = true }
 
 # Logging
 log = { workspace = true }
-env_logger = { workspace = true }
 
 # Version parsing
 semver = { workspace = true }
