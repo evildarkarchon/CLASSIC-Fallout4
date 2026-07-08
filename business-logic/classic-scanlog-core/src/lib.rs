@@ -39,6 +39,7 @@ pub mod record_scanner;
 pub mod report;
 pub mod scan_intake;
 pub mod scan_run;
+mod scan_sidecar_settings;
 pub mod segment_key;
 pub mod settings_validator;
 pub mod suspect_scanner;
