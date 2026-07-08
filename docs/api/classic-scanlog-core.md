@@ -51,6 +51,7 @@ Crash Log Scan Intake prepares an existing Crash Log for analysis before orchest
 - `FormIdReadiness` - whether FormID databases should initialize and which paths to use
 - `ShortScanCacheProfile`, `SHORT_SCAN_CACHE_PROFILE` - short native-scan DB cache profile selected by intake
 - `load_simplify_remove_list()`, `resolve_formid_database_paths()`, `resolve_user_formid_database_paths()` - characterization-friendly helpers for sidecar readiness rules
+- `scan_sidecar_settings` - crate-private implementation that keeps sidecar YAML file names, legacy key paths, compatibility fallback, normalization, and fail-soft behavior local to intake
 
 ### `orchestrator`
 
@@ -158,6 +159,7 @@ Behavior worth knowing:
 - Missing or unreadable sidecar settings preserve existing fail-soft behavior: simplify-log removal and user FormID database lists become empty instead of new hard failures.
 - `ScanReadyAnalysis` stores path roots and the parsed `CLASSIC_Settings.Unsolved Logs Destination` for scan-run destination resolution. Missing or empty destination means canonical behavior; a non-empty relative destination is a setup error.
 - FormID database path order is main game DB, hardcoded Fallout 4/Fallout 4 VR FOLON DB, then user-configured paths, with normalized path de-duplication preserving first occurrence.
+- The crate-private sidecar settings module owns those file names and legacy key paths; the public helper functions remain compatibility wrappers for existing callers and tests.
 - Intake chooses the short-scan cache profile, but `classic-database-core` still owns pool initialization, cache bounds, connection behavior, and lookup mechanics.
 
 ## `AnalysisConfig`

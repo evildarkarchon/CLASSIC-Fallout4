@@ -5,11 +5,10 @@
 //! database settings into a payload ready for `OrchestratorCore`.
 
 use crate::error::{Result, ScanLogError};
+use crate::scan_sidecar_settings::{self, ScanSidecarSettings};
 use crate::{AnalysisConfig, build_analysis_config_from_yaml};
 use classic_config_core::YamlDataCore;
 use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
-use classic_settings_core::YamlOperations;
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
@@ -295,11 +294,16 @@ impl<'a> CrashLogScanIntake<'a> {
             YamlDataSource::InMemory(yaml) => yaml,
         };
 
-        let remove_list = self
-            .paths
-            .as_ref()
-            .map(|paths| load_simplify_remove_list(&paths.yaml_dir_data))
-            .unwrap_or_default();
+        let sidecar_settings = match self.paths.as_ref() {
+            Some(paths) => ScanSidecarSettings::load(paths, &self.game)?,
+            None => ScanSidecarSettings::empty(),
+        };
+        let ScanSidecarSettings {
+            remove_list,
+            formid_database_paths,
+            unsolved_logs_destination,
+        } = sidecar_settings;
+
         let analysis_config = build_analysis_config_from_yaml(
             yaml,
             &self.game,
@@ -309,28 +313,13 @@ impl<'a> CrashLogScanIntake<'a> {
             self.options.simplify_logs,
             remove_list,
         );
-        let database_paths = self
-            .paths
-            .as_ref()
-            .map(|paths| {
-                resolve_formid_database_paths(
-                    &paths.yaml_dir_root,
-                    &paths.yaml_dir_data,
-                    &self.game,
-                )
-            })
-            .unwrap_or_default();
-        let unsolved_logs_destination = match self.paths.as_ref() {
-            Some(paths) => resolve_configured_unsolved_logs_destination(&paths.yaml_dir_root)?,
-            None => None,
-        };
         let show_formid_values = analysis_config.show_formid_values;
 
         Ok(ScanReadyAnalysis::new(
             analysis_config,
             FormIdReadiness {
                 enabled: show_formid_values,
-                database_paths,
+                database_paths: formid_database_paths,
             },
             SHORT_SCAN_CACHE_PROFILE,
             self.paths.clone(),
@@ -339,152 +328,44 @@ impl<'a> CrashLogScanIntake<'a> {
     }
 }
 
-/// Resolve the persistent Unsolved Logs Destination from `CLASSIC Settings.yaml`.
-///
-/// Missing or empty settings mean callers should use the canonical destination.
-/// Non-empty values must be absolute and are not created during intake.
-pub(crate) fn resolve_configured_unsolved_logs_destination(
-    yaml_dir_root: impl AsRef<Path>,
-) -> Result<Option<PathBuf>> {
-    let settings_path = yaml_dir_root.as_ref().join("CLASSIC Settings.yaml");
-
-    if !settings_path.exists() {
-        return Ok(None);
-    }
-
-    let ops = YamlOperations::new();
-    let doc = match ops.load_yaml_file(&settings_path) {
-        Ok(doc) => doc,
-        Err(_) => return Ok(None),
-    };
-    let raw = ops.get_string_value(&doc, "CLASSIC_Settings.Unsolved Logs Destination", "");
-    let trimmed = raw.trim();
-
-    if trimmed.is_empty() {
-        return Ok(None);
-    }
-
-    let destination = PathBuf::from(trimmed);
-    if !destination.is_absolute() {
-        return Err(ScanLogError::InvalidInput(format!(
-            "Unsolved Logs Destination must be an absolute path: {}",
-            destination.display()
-        )));
-    }
-
-    Ok(Some(normalize_path(destination)))
-}
-
 /// Resolve all FormID database paths needed for a scan.
 ///
 /// The order preserves existing behavior: main game database, hardcoded
-/// compatibility databases, then user-configured databases from settings.
+/// compatibility databases, then user-configured databases from settings. This
+/// compatibility helper delegates to the typed sidecar settings module that owns
+/// the YAML path/key implementation details.
 #[must_use]
 pub fn resolve_formid_database_paths(
     yaml_dir_root: impl AsRef<Path>,
     yaml_dir_data: impl AsRef<Path>,
     game: &str,
 ) -> Vec<PathBuf> {
-    let data_dir = yaml_dir_data.as_ref();
-    let main_db = data_dir
-        .join("databases")
-        .join(format!("{game} FormIDs Main.db"));
-
-    let hardcoded = hardcoded_formid_database_relpaths(game)
-        .iter()
-        .map(|rel| data_dir.join(rel))
-        .collect::<Vec<_>>();
-
-    let user_paths = resolve_user_formid_database_paths(yaml_dir_root, yaml_dir_data, game);
-
-    let mut all_paths = Vec::with_capacity(1 + hardcoded.len() + user_paths.len());
-    all_paths.push(main_db);
-    all_paths.extend(hardcoded);
-    all_paths.extend(user_paths);
-    dedupe_paths(all_paths)
+    scan_sidecar_settings::resolve_formid_database_paths(yaml_dir_root, yaml_dir_data, game)
 }
 
 /// Resolve user-configured FormID database paths from `CLASSIC Settings.yaml`.
 ///
 /// Relative paths are interpreted under `yaml_dir_data`, matching the legacy
-/// native bridge behavior.
+/// native bridge behavior. This compatibility helper delegates to the typed
+/// sidecar settings module that owns the YAML path/key implementation details.
 #[must_use]
 pub fn resolve_user_formid_database_paths(
     yaml_dir_root: impl AsRef<Path>,
     yaml_dir_data: impl AsRef<Path>,
     game: &str,
 ) -> Vec<PathBuf> {
-    let settings_path = yaml_dir_root.as_ref().join("CLASSIC Settings.yaml");
-
-    if !settings_path.exists() {
-        return Vec::new();
-    }
-
-    let ops = YamlOperations::new();
-    let doc = match ops.load_yaml_file(&settings_path) {
-        Ok(doc) => doc,
-        Err(_) => return Vec::new(),
-    };
-
-    let key_path = format!("CLASSIC_Settings.FormID Databases.{game}");
-    ops.get_vec_value(&doc, &key_path)
-        .into_iter()
-        .map(PathBuf::from)
-        .map(|path| {
-            if path.is_absolute() {
-                normalize_path(path)
-            } else {
-                normalize_path(yaml_dir_data.as_ref().join(path))
-            }
-        })
-        .collect()
+    scan_sidecar_settings::resolve_user_formid_database_paths(yaml_dir_root, yaml_dir_data, game)
 }
 
 /// Load simplify-log removal rules from `CLASSIC Main.yaml`.
 ///
 /// Missing or unreadable files return an empty list so intake preserves the
-/// existing adapter fail-soft behavior.
+/// existing adapter fail-soft behavior. This compatibility helper delegates to
+/// the typed sidecar settings module that owns the YAML path/key implementation
+/// details.
 #[must_use]
 pub fn load_simplify_remove_list(yaml_dir_data: impl AsRef<Path>) -> Vec<String> {
-    let main_yaml = yaml_dir_data
-        .as_ref()
-        .join("databases")
-        .join("CLASSIC Main.yaml");
-
-    if !main_yaml.exists() {
-        return Vec::new();
-    }
-
-    let ops = YamlOperations::new();
-    let doc = match ops.load_yaml_file(&main_yaml) {
-        Ok(doc) => doc,
-        Err(_) => return Vec::new(),
-    };
-
-    ops.get_vec_value(&doc, "exclude_log_records")
-}
-
-fn hardcoded_formid_database_relpaths(game: &str) -> &'static [&'static str] {
-    match game {
-        "Fallout4" | "Fallout4VR" => &["databases/FOLON FormIDs.db"],
-        _ => &[],
-    }
-}
-
-fn normalize_path(path: PathBuf) -> PathBuf {
-    path.components().collect()
-}
-
-fn dedupe_paths(paths: Vec<PathBuf>) -> Vec<PathBuf> {
-    let mut seen = HashSet::new();
-    let mut deduped = Vec::with_capacity(paths.len());
-    for path in paths {
-        let normalized = normalize_path(path);
-        if seen.insert(normalized.clone()) {
-            deduped.push(normalized);
-        }
-    }
-    deduped
+    scan_sidecar_settings::load_simplify_remove_list(yaml_dir_data)
 }
 
 #[cfg(test)]
