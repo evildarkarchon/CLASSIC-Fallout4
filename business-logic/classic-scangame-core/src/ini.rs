@@ -284,38 +284,38 @@ impl IniValidator {
 
         // Check standard VSync settings
         for vsync_setting in &self.vsync_settings {
-            if let Some(file_path) = config_files.get(&vsync_setting.file_name) {
-                if let Some(value) = self.get_setting(
+            if let Some(file_path) = config_files.get(&vsync_setting.file_name)
+                && let Some(value) = self.get_setting(
                     &vsync_setting.file_name,
                     &vsync_setting.section,
                     &vsync_setting.setting,
-                ) {
-                    // Check if value represents "enabled" (true, 1, yes, etc.)
-                    let enabled = value.trim().eq_ignore_ascii_case("true")
-                        || value.trim().eq_ignore_ascii_case("1")
-                        || value.trim().eq_ignore_ascii_case("yes");
-
-                    if enabled {
-                        vsync_list.push(format!(
-                            "{} | SETTING: {}\n",
-                            file_path.display(),
-                            vsync_setting.setting
-                        ));
-                    }
-                }
-            }
-        }
-
-        // Check highfpsphysicsfix.ini separately
-        if let Some(file_path) = config_files.get("highfpsphysicsfix.ini") {
-            if let Some(value) = self.get_setting("highfpsphysicsfix.ini", "Main", "EnableVSync") {
+                )
+            {
+                // Check if value represents "enabled" (true, 1, yes, etc.)
                 let enabled = value.trim().eq_ignore_ascii_case("true")
                     || value.trim().eq_ignore_ascii_case("1")
                     || value.trim().eq_ignore_ascii_case("yes");
 
                 if enabled {
-                    vsync_list.push(format!("{} | SETTING: EnableVSync\n", file_path.display()));
+                    vsync_list.push(format!(
+                        "{} | SETTING: {}\n",
+                        file_path.display(),
+                        vsync_setting.setting
+                    ));
                 }
+            }
+        }
+
+        // Check highfpsphysicsfix.ini separately
+        if let Some(file_path) = config_files.get("highfpsphysicsfix.ini")
+            && let Some(value) = self.get_setting("highfpsphysicsfix.ini", "Main", "EnableVSync")
+        {
+            let enabled = value.trim().eq_ignore_ascii_case("true")
+                || value.trim().eq_ignore_ascii_case("1")
+                || value.trim().eq_ignore_ascii_case("yes");
+
+            if enabled {
+                vsync_list.push(format!("{} | SETTING: EnableVSync\n", file_path.display()));
             }
         }
 
@@ -335,97 +335,94 @@ impl IniValidator {
         let mut issues = Vec::new();
 
         // ESPExplorer hotkey check
-        if let Some(file_path) = config_files.get("espexplorer.ini") {
-            if let Some(value) = self.get_setting("espexplorer.ini", "General", "HotKey") {
-                if value.contains("; F10") {
-                    issues.push(ConfigIssue {
-                        file_path: file_path.clone(),
-                        section: "General".to_string(),
-                        setting: "HotKey".to_string(),
-                        current_value: value,
-                        recommended_value: "0x79".to_string(),
-                        description: "Hotkey is commented out and won't work. Change to hex code 0x79 for F10.".to_string(),
-                        severity: IssueSeverity::Warning,
-                    });
-                }
-            }
+        if let Some(file_path) = config_files.get("espexplorer.ini")
+            && let Some(value) = self.get_setting("espexplorer.ini", "General", "HotKey")
+            && value.contains("; F10")
+        {
+            issues.push(ConfigIssue {
+                file_path: file_path.clone(),
+                section: "General".to_string(),
+                setting: "HotKey".to_string(),
+                current_value: value,
+                recommended_value: "0x79".to_string(),
+                description:
+                    "Hotkey is commented out and won't work. Change to hex code 0x79 for F10."
+                        .to_string(),
+                severity: IssueSeverity::Warning,
+            });
         }
 
         // EPO particle count check
-        if let Some(file_path) = config_files.get("epo.ini") {
-            if let Some(value) = self.get_setting("epo.ini", "Particles", "iMaxDesired") {
-                if let Ok(count) = value.parse::<i32>() {
-                    if count > 5000 {
-                        issues.push(ConfigIssue {
-                            file_path: file_path.clone(),
-                            section: "Particles".to_string(),
-                            setting: "iMaxDesired".to_string(),
-                            current_value: value,
-                            recommended_value: "5000".to_string(),
-                            description:
-                                "High particle count can cause performance issues and crashes."
-                                    .to_string(),
-                            severity: IssueSeverity::Warning,
-                        });
-                    }
-                }
-            }
+        if let Some(file_path) = config_files.get("epo.ini")
+            && let Some(value) = self.get_setting("epo.ini", "Particles", "iMaxDesired")
+            && let Ok(count) = value.parse::<i32>()
+            && count > 5000
+        {
+            issues.push(ConfigIssue {
+                file_path: file_path.clone(),
+                section: "Particles".to_string(),
+                setting: "iMaxDesired".to_string(),
+                current_value: value,
+                recommended_value: "5000".to_string(),
+                description: "High particle count can cause performance issues and crashes."
+                    .to_string(),
+                severity: IssueSeverity::Warning,
+            });
         }
 
         // F4EE settings checks
         if let Some(file_path) = config_files.get("f4ee.ini") {
             // Head parts unlock check
-            if let Some(value) = self.get_setting("f4ee.ini", "CharGen", "bUnlockHeadParts") {
-                if value.trim() == "0" {
-                    issues.push(ConfigIssue {
-                        file_path: file_path.clone(),
-                        section: "CharGen".to_string(),
-                        setting: "bUnlockHeadParts".to_string(),
-                        current_value: value,
-                        recommended_value: "1".to_string(),
-                        description: "Head parts are locked. Set to 1 to unlock all head parts."
-                            .to_string(),
-                        severity: IssueSeverity::Warning,
-                    });
-                }
+            if let Some(value) = self.get_setting("f4ee.ini", "CharGen", "bUnlockHeadParts")
+                && value.trim() == "0"
+            {
+                issues.push(ConfigIssue {
+                    file_path: file_path.clone(),
+                    section: "CharGen".to_string(),
+                    setting: "bUnlockHeadParts".to_string(),
+                    current_value: value,
+                    recommended_value: "1".to_string(),
+                    description: "Head parts are locked. Set to 1 to unlock all head parts."
+                        .to_string(),
+                    severity: IssueSeverity::Warning,
+                });
             }
 
             // Face tints unlock check
-            if let Some(value) = self.get_setting("f4ee.ini", "CharGen", "bUnlockTints") {
-                if value.trim() == "0" {
-                    issues.push(ConfigIssue {
-                        file_path: file_path.clone(),
-                        section: "CharGen".to_string(),
-                        setting: "bUnlockTints".to_string(),
-                        current_value: value,
-                        recommended_value: "1".to_string(),
-                        description: "Face tints are locked. Set to 1 to unlock all face tints."
-                            .to_string(),
-                        severity: IssueSeverity::Warning,
-                    });
-                }
+            if let Some(value) = self.get_setting("f4ee.ini", "CharGen", "bUnlockTints")
+                && value.trim() == "0"
+            {
+                issues.push(ConfigIssue {
+                    file_path: file_path.clone(),
+                    section: "CharGen".to_string(),
+                    setting: "bUnlockTints".to_string(),
+                    current_value: value,
+                    recommended_value: "1".to_string(),
+                    description: "Face tints are locked. Set to 1 to unlock all face tints."
+                        .to_string(),
+                    severity: IssueSeverity::Warning,
+                });
             }
         }
 
         // High FPS Physics Fix loading screen FPS check
-        if let Some(file_path) = config_files.get("highfpsphysicsfix.ini") {
-            if let Some(value) =
+        if let Some(file_path) = config_files.get("highfpsphysicsfix.ini")
+            && let Some(value) =
                 self.get_setting("highfpsphysicsfix.ini", "Limiter", "LoadingScreenFPS")
-            {
-                if let Ok(fps) = value.parse::<f64>() {
-                    if fps < 600.0 {
-                        issues.push(ConfigIssue {
-                            file_path: file_path.clone(),
-                            section: "Limiter".to_string(),
-                            setting: "LoadingScreenFPS".to_string(),
-                            current_value: value,
-                            recommended_value: "600.0".to_string(),
-                            description: "Loading screen FPS is too low. Increase to 600.0 to prevent physics issues.".to_string(),
-                            severity: IssueSeverity::Warning,
-                        });
-                    }
-                }
-            }
+            && let Ok(fps) = value.parse::<f64>()
+            && fps < 600.0
+        {
+            issues.push(ConfigIssue {
+                file_path: file_path.clone(),
+                section: "Limiter".to_string(),
+                setting: "LoadingScreenFPS".to_string(),
+                current_value: value,
+                recommended_value: "600.0".to_string(),
+                description:
+                    "Loading screen FPS is too low. Increase to 600.0 to prevent physics issues."
+                        .to_string(),
+                severity: IssueSeverity::Warning,
+            });
         }
 
         issues
@@ -503,11 +500,11 @@ impl IniValidator {
             // Only process .ini and .conf files
             if let Some(ext) = path.extension() {
                 let ext_lower = ext.to_string_lossy().to_lowercase();
-                if ext_lower == "ini" || ext_lower == "conf" {
-                    if let Some(file_name) = path.file_name() {
-                        let file_name_lower = file_name.to_string_lossy().to_lowercase();
-                        config_files.insert(file_name_lower, path.to_path_buf());
-                    }
+                if (ext_lower == "ini" || ext_lower == "conf")
+                    && let Some(file_name) = path.file_name()
+                {
+                    let file_name_lower = file_name.to_string_lossy().to_lowercase();
+                    config_files.insert(file_name_lower, path.to_path_buf());
                 }
             }
         }

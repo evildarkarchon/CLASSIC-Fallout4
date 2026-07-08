@@ -213,12 +213,10 @@ fn get_game(py: Python) -> String {
     // Try PyObjectWrapper first (Python-stored value), then native
     if let Some(wrapper) =
         classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::GAME)
+        && let Ok(value) = wrapper.get(py).extract::<String>(py)
+        && !value.is_empty()
     {
-        if let Ok(value) = wrapper.get(py).extract::<String>(py) {
-            if !value.is_empty() {
-                return value;
-            }
-        }
+        return value;
     }
     classic_registry_core::get_game()
 }
@@ -331,10 +329,9 @@ fn is_version_auto_detected(py: Python) -> bool {
     // Try PyObjectWrapper first (Python-stored value), then native
     if let Some(wrapper) = classic_registry_core::get::<_, PyObjectWrapper>(
         classic_registry_core::Keys::VERSION_AUTO_DETECTED,
-    ) {
-        if let Ok(value) = wrapper.get(py).extract::<bool>(py) {
-            return value;
-        }
+    ) && let Ok(value) = wrapper.get(py).extract::<bool>(py)
+    {
+        return value;
     }
     classic_registry_core::is_version_auto_detected()
 }
@@ -358,12 +355,10 @@ fn get_local_dir(py: Python) -> String {
     // Try PyObjectWrapper first (Python-stored value), then native
     if let Some(wrapper) =
         classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::LOCAL_DIR)
+        && let Ok(value) = wrapper.get(py).extract::<String>(py)
+        && !value.is_empty()
     {
-        if let Ok(value) = wrapper.get(py).extract::<String>(py) {
-            if !value.is_empty() {
-                return value;
-            }
-        }
+        return value;
     }
     classic_registry_core::get_local_dir()
         .to_string_lossy()
@@ -408,10 +403,9 @@ fn is_xse_valid(py: Python) -> bool {
     // Try PyObjectWrapper first, then native
     if let Some(wrapper) =
         classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::XSE_VALID)
+        && let Ok(value) = wrapper.get(py).extract::<bool>(py)
     {
-        if let Ok(value) = wrapper.get(py).extract::<bool>(py) {
-            return value;
-        }
+        return value;
     }
     classic_registry_core::is_xse_valid()
 }
@@ -422,10 +416,9 @@ fn is_enb_present(py: Python) -> bool {
     // Try PyObjectWrapper first, then native
     if let Some(wrapper) =
         classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::ENB_PRESENT)
+        && let Ok(value) = wrapper.get(py).extract::<bool>(py)
     {
-        if let Ok(value) = wrapper.get(py).extract::<bool>(py) {
-            return value;
-        }
+        return value;
     }
     classic_registry_core::is_enb_present()
 }
@@ -438,12 +431,10 @@ fn get_game_version_string(py: Python) -> String {
     // Try PyObjectWrapper first, then native
     if let Some(wrapper) =
         classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::GAME_VERSION)
+        && let Ok(value) = wrapper.get(py).extract::<String>(py)
+        && !value.is_empty()
     {
-        if let Ok(value) = wrapper.get(py).extract::<String>(py) {
-            if !value.is_empty() {
-                return value;
-            }
-        }
+        return value;
     }
     classic_registry_core::get_game_version_string()
 }

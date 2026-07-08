@@ -2,7 +2,7 @@ use classic_config_core::{
     CoreModEntry, CrashgenEntryRaw, CrashgenSettingsRules, ModConflictEntry, ModSolutionCriteria,
     ModSolutionEntry,
 };
-use classic_scanlog_core::{CheckId, CrashgenEntry};
+use classic_scanlog_core::CrashgenEntry;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
 use std::collections::{HashMap, HashSet};
@@ -52,11 +52,6 @@ fn crashgen_entry_from_raw(raw: &CrashgenEntryRaw) -> CrashgenEntry {
     CrashgenEntry {
         display_section: raw.display_section.clone(),
         ignore_keys: raw.ignore_keys.iter().cloned().collect::<HashSet<_>>(),
-        checks: raw
-            .checks
-            .iter()
-            .filter_map(|name| CheckId::parse(name))
-            .collect(),
         settings_rules: raw.settings_rules.clone(),
     }
 }

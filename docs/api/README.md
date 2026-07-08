@@ -65,7 +65,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `classic-config-core` loads YAML and uses Version Registry metadata to build config data; the typed crashgen rule model and evaluator now live at `classic_config_core::crashgen_rules::*` (historical note: this owner absorbed the former `classic-crashgen-settings-core` crate during v9.1.0 Phase 2)
 - `classic-config-core-yaml-schema.md` captures the runtime YAML contract for merged settings files and the Main/Game/Ignore sections that `classic-config-core` actually consumes
 - `classic-path-core` handles game-path discovery, documents-folder checks, path validation, and versioned backups
-- `classic-xse-core` builds on path/version helpers to detect XSE installation state and parse XSE versions
+- `classic-xse-core` builds on path/version helpers to resolve XSE Folder paths, detect XSE installation state, and parse XSE versions
 - `game-setup-workflow.md` explains how current setup/install validation is split across path, XSE, scangame, and Version Registry crates
 - `formid-settings-boundary.md` documents the current split between `ClassicConfig.formid_databases` and the legacy scan-startup settings path still used by the C++ bridge
 - `classic-file-io-core` provides shared file-system, decoding, hashing, and log collection helpers used by higher layers

@@ -1418,20 +1418,20 @@ fn check_client_schema_bounds(
         None => None,
     };
 
-    if let (Some(min), Some(max)) = (&min, &max) {
-        if min > max {
-            return Err(format!(
-                "file client schema bounds inverted: min_client_schema {min} exceeds max_client_schema {max}"
-            ));
-        }
+    if let (Some(min), Some(max)) = (&min, &max)
+        && min > max
+    {
+        return Err(format!(
+            "file client schema bounds inverted: min_client_schema {min} exceeds max_client_schema {max}"
+        ));
     }
 
-    if let Some(ref min) = min {
-        if accepted_major < min.major {
-            return Err(format!(
-                "client major {accepted_major} below file min_client_schema {min}"
-            ));
-        }
+    if let Some(ref min) = min
+        && accepted_major < min.major
+    {
+        return Err(format!(
+            "client major {accepted_major} below file min_client_schema {min}"
+        ));
     }
     if let Some(ref max) = max {
         if accepted_major > max.major {
@@ -1724,15 +1724,15 @@ pub async fn apply_yaml_update_with_decision(
     }
 
     for entry in &manifest.files {
-        if let Some(approved_sha256) = approved_sha_by_name.get(entry.name.as_str()) {
-            if !approved_sha256.eq_ignore_ascii_case(&entry.sha256) {
-                return Err(UpdateError::DecisionDigestStale {
-                    release_tag: manifest.release_tag.clone(),
-                    file: entry.name.clone(),
-                    approved_sha256: (*approved_sha256).to_string(),
-                    manifest_sha256: entry.sha256.clone(),
-                });
-            }
+        if let Some(approved_sha256) = approved_sha_by_name.get(entry.name.as_str())
+            && !approved_sha256.eq_ignore_ascii_case(&entry.sha256)
+        {
+            return Err(UpdateError::DecisionDigestStale {
+                release_tag: manifest.release_tag.clone(),
+                file: entry.name.clone(),
+                approved_sha256: (*approved_sha256).to_string(),
+                manifest_sha256: entry.sha256.clone(),
+            });
         }
     }
 

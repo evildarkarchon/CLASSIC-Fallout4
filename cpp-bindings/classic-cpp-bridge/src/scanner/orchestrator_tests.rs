@@ -1,6 +1,7 @@
 use super::*;
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{ConfigIssue, GLOBAL_FCX_HANDLER};
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 use tempfile::tempdir;
 
@@ -31,6 +32,112 @@ fn assert_clean_fcx_state() {
     assert!(handler.game_files_check.is_none());
     assert!(handler.detected_issues.is_empty());
     assert!(!handler.checks_run);
+}
+
+fn write_minimal_scan_yaml_tree(root: &Path, data: &Path) {
+    std::fs::create_dir_all(data.join("databases")).unwrap();
+    std::fs::write(
+        data.join("databases").join("CLASSIC Main.yaml"),
+        concat!(
+            "CLASSIC_Info:\n",
+            "  version: \"v9.1.0\"\n",
+            "  version_date: \"2026-06-30\"\n",
+            "CLASSIC_Interface:\n",
+            "  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n",
+            "exclude_log_records:\n",
+            "  - '(void*)'\n",
+        ),
+    )
+    .unwrap();
+    std::fs::write(
+        data.join("databases").join("CLASSIC Fallout4.yaml"),
+        concat!(
+            "Game_Info:\n",
+            "  XSE_Acronym: \"F4SE\"\n",
+            "  GameVersion: \"1.10.163\"\n",
+            "  CRASHGEN_LatestVer: \"1.28.6\"\n",
+            "  CRASHGEN_LogName: \"Buffout 4\"\n",
+            "  Main_Root_Name: \"Fallout4\"\n",
+        ),
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("CLASSIC Ignore.yaml"),
+        "CLASSIC_Ignore_Fallout4: []\n",
+    )
+    .unwrap();
+}
+
+fn scan_run_request_dto(
+    move_unsolved_logs: bool,
+    unsolved_logs_destination: &str,
+    targeted_mode: bool,
+) -> ffi::ScanRunRequestDto {
+    ffi::ScanRunRequestDto {
+        yaml_dir_root: String::new(),
+        yaml_dir_data: String::new(),
+        game: "Fallout4".to_string(),
+        game_version: "auto".to_string(),
+        show_formid_values: false,
+        fcx_mode: false,
+        simplify_logs: false,
+        move_unsolved_logs,
+        unsolved_logs_destination: unsolved_logs_destination.to_string(),
+        targeted_mode,
+        max_concurrent: 0,
+        log_paths: Vec::new(),
+    }
+}
+
+#[test]
+fn test_scan_run_intent_targeted_wins_over_move_and_destination() {
+    let request = scan_run_request_dto(true, "C:/custom/unsolved", true);
+
+    let intent = scan_run_intent_from_request(&request);
+
+    assert!(matches!(intent, CrashLogScanRunIntent::Targeted));
+}
+
+#[test]
+fn test_scan_run_intent_ignores_destination_when_move_disabled() {
+    let request = scan_run_request_dto(false, "C:/custom/unsolved", false);
+
+    let intent = scan_run_intent_from_request(&request);
+
+    assert!(matches!(
+        intent,
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
+        })
+    ));
+}
+
+#[test]
+fn test_scan_run_intent_uses_custom_destination_when_standard_move_enabled() {
+    let request = scan_run_request_dto(true, "C:/custom/unsolved", false);
+
+    let intent = scan_run_intent_from_request(&request);
+
+    match intent {
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::MoveToCustom(destination),
+        }) => assert_eq!(destination, PathBuf::from("C:/custom/unsolved")),
+        _ => panic!("expected standard custom destination intent"),
+    }
+}
+
+#[test]
+fn test_scan_run_intent_uses_configured_or_default_when_move_enabled_without_destination() {
+    let request = scan_run_request_dto(true, "", false);
+
+    let intent = scan_run_intent_from_request(&request);
+
+    assert!(matches!(
+        intent,
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
+        })
+    ));
 }
 
 #[test]
@@ -121,6 +228,31 @@ fn test_build_full_scan_config_invalid_dirs() {
 }
 
 #[test]
+fn test_build_full_scan_config_valid_dirs_creates_orchestrator() {
+    let temp = tempdir().unwrap();
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_scan_yaml_tree(root, &data);
+
+    let config = build_full_scan_config(
+        &root.to_string_lossy(),
+        &data.to_string_lossy(),
+        "Fallout4",
+        "auto",
+        false,
+        true,
+        true,
+    )
+    .expect("scan config should be prepared");
+    let orchestrator = orchestrator_new(&config);
+
+    assert!(
+        orchestrator.is_ok(),
+        "prepared scan config should create an orchestrator"
+    );
+}
+
+#[test]
 fn test_resolve_formid_db_paths_includes_main_and_hardcoded_folon() {
     let temp = tempdir().unwrap();
     let root = temp.path();
@@ -200,7 +332,7 @@ fn test_load_exclude_log_records_reads_main_yaml_setting() {
 #[test]
 fn test_apply_short_scan_db_profile_sets_pool_knobs() {
     let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "Fallout4".to_string());
-    apply_short_scan_db_profile(&pool);
+    apply_short_scan_db_profile(&pool, SHORT_SCAN_CACHE_PROFILE);
 
     assert_eq!(pool.get_cache_capacity(), SHORT_SCAN_CACHE_CAPACITY);
     assert_eq!(

@@ -151,25 +151,24 @@ pub fn render_results_tab(
     ])
     .areas(right_panel);
 
-    if let Some(selected) = data.selected_filtered {
-        if let Some(report_index) = data.filtered_indices.get(selected)
-            && let Some(report) = data.reports.get(*report_index)
-        {
-            let metadata = format!(
-                "{}\nDate: {}\nSize: {}",
-                report.filename,
-                if report.timestamp.is_empty() {
-                    "Unknown"
-                } else {
-                    &report.timestamp
-                },
-                report.size_label
-            );
-            frame.render_widget(
-                Paragraph::new(metadata).style(Style::default().fg(theme::TEXT_PRIMARY)),
-                metadata_area,
-            );
-        }
+    if let Some(selected) = data.selected_filtered
+        && let Some(report_index) = data.filtered_indices.get(selected)
+        && let Some(report) = data.reports.get(*report_index)
+    {
+        let metadata = format!(
+            "{}\nDate: {}\nSize: {}",
+            report.filename,
+            if report.timestamp.is_empty() {
+                "Unknown"
+            } else {
+                &report.timestamp
+            },
+            report.size_label
+        );
+        frame.render_widget(
+            Paragraph::new(metadata).style(Style::default().fg(theme::TEXT_PRIMARY)),
+            metadata_area,
+        );
     }
 
     let [link_info_area, copy_area] =

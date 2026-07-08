@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-06-29T05:31:26.736529+00:00",
+  "generated_at_utc": "2026-07-01T05:59:29.002418+00:00",
   "summary": {
-    "tier1_contract_total": 704,
-    "tier1_matched": 704,
+    "tier1_contract_total": 703,
+    "tier1_matched": 703,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -3396,19 +3396,6 @@
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "AnalysisResult@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "scanlog.settings_validator.CheckId@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "CheckId@rust",
       "node_export": null,
       "status": "matched",
       "expected_node_kind": null,

@@ -3,7 +3,7 @@
 # File schema version (MAJOR.MINOR). See docs/api/yaml-update-delivery.md.
 # - MAJOR bumps are breaking (renamed/removed keys, changed value shapes)
 # - MINOR bumps are additive (new optional keys older clients ignore)
-schema_version: "2.0"
+schema_version: "2.1"
 
 CLASSIC_Info:
   # ========================================================================================
@@ -45,6 +45,9 @@ CLASSIC_Info:
     # Set to true if you want CLASSIC to move all unsolved crash logs and their autoscans to CLASSIC UNSOLVED folder.
     # Unsolved logs are all crash logs that are incomplete or in the wrong format.
       Move Unsolved Logs: true
+
+    # Optional absolute folder for Unsolved Logs relocation. Leave empty to use CLASSIC Backup/Unsolved Logs.
+      Unsolved Logs Destination:
 
     # Copy-paste your INI folder path below, where your main game INI files are located (Documents\My Games\*game*)
     # If you are using MO2, I recommend disabling Profile Specific Game INI Files, located in Tools > Profiles

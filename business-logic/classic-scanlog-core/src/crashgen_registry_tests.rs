@@ -7,12 +7,6 @@ fn make_buffout_entry() -> CrashgenEntry {
             .iter()
             .map(|s| s.to_string())
             .collect(),
-        checks: vec![
-            CheckId::Achievements,
-            CheckId::MemoryManagement,
-            CheckId::ArchiveLimit,
-            CheckId::LooksMenu,
-        ],
         settings_rules: None,
     }
 }
@@ -21,7 +15,6 @@ fn make_addictol_entry() -> CrashgenEntry {
     CrashgenEntry {
         display_section: "[Patches]".to_string(),
         ignore_keys: HashSet::new(),
-        checks: vec![],
         settings_rules: None,
     }
 }
@@ -38,20 +31,17 @@ fn test_known_crashgen_returns_its_entry() {
     let registry = make_registry();
     let entry = registry.lookup("Buffout 4");
     assert_eq!(entry.display_section, "[Compatibility]");
-    assert!(entry.checks.contains(&CheckId::Achievements));
-    assert!(entry.checks.contains(&CheckId::MemoryManagement));
-    assert!(entry.checks.contains(&CheckId::ArchiveLimit));
-    assert!(entry.checks.contains(&CheckId::LooksMenu));
-    assert_eq!(entry.checks.len(), 4);
+    assert!(entry.ignore_keys.contains("F4EE"));
+    assert!(entry.settings_rules.is_none());
 }
 
 #[test]
 fn test_unknown_crashgen_falls_back_to_default() {
     let registry = make_registry();
     let entry = registry.lookup("SomethingUnknown");
-    assert!(entry.checks.is_empty());
     assert!(entry.ignore_keys.is_empty());
     assert!(entry.display_section.is_empty());
+    assert!(entry.settings_rules.is_none());
 }
 
 #[test]
@@ -88,27 +78,9 @@ fn test_lookup_matches_pre_normalized_keys() {
 }
 
 #[test]
-fn test_addictol_returns_empty_checks() {
+fn test_addictol_returns_display_metadata() {
     let registry = make_registry();
     let entry = registry.lookup("Addictol");
-    assert!(entry.checks.is_empty());
     assert!(entry.ignore_keys.is_empty());
     assert_eq!(entry.display_section, "[Patches]");
-}
-
-#[test]
-fn test_check_id_from_str() {
-    assert_eq!(CheckId::parse("achievements"), Some(CheckId::Achievements));
-    assert_eq!(
-        CheckId::parse("memory_management"),
-        Some(CheckId::MemoryManagement)
-    );
-    assert_eq!(
-        CheckId::parse("MemoryManagement"),
-        Some(CheckId::MemoryManagement)
-    );
-    assert_eq!(CheckId::parse("archive_limit"), Some(CheckId::ArchiveLimit));
-    assert_eq!(CheckId::parse("looksmenu"), Some(CheckId::LooksMenu));
-    assert_eq!(CheckId::parse("looks_menu"), Some(CheckId::LooksMenu));
-    assert_eq!(CheckId::parse("unknown_check"), None);
 }

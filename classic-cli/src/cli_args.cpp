@@ -2,7 +2,10 @@
 #include <algorithm>
 #include <CLI/CLI.hpp>
 #include <fmt/core.h>
+#include <filesystem>
 #include <thread>
+
+namespace fs = std::filesystem;
 
 uint32_t auto_concurrency_for_cpu_count(uint32_t cpu_count) {
     auto recommended = std::max(cpu_count, 4u) - 2u;
@@ -34,6 +37,10 @@ CliArgs parse_args(int argc, char* argv[]) {
     app.add_flag("--simplify-logs", args.simplify_logs, "Remove specified strings from logs");
 
     app.add_option("--scan-path", args.scan_path, "Custom crash log directory");
+    app.add_option("--unsolved-logs-destination", args.unsolved_logs_destination,
+                   "Persist an absolute folder for Unsolved Logs relocation");
+    app.add_flag("--reset-unsolved-logs-destination", args.reset_unsolved_logs_destination,
+                 "Reset Unsolved Logs relocation to the canonical CLASSIC backup folder");
 
     auto cpu_count = std::thread::hardware_concurrency();
     auto recommended = auto_concurrency_for_cpu_count(cpu_count);
@@ -63,6 +70,17 @@ CliArgs parse_args(int argc, char* argv[]) {
     if (!args.input_paths.empty() && !args.scan_path.empty()) {
         fmt::print(stderr, "Error: cannot combine --scan-path with positional input paths.\n"
                            "Use --scan-path OR positional paths, not both.\n");
+        std::exit(1);
+    }
+
+    if (!args.unsolved_logs_destination.empty() && args.reset_unsolved_logs_destination) {
+        fmt::print(stderr, "Error: cannot combine --unsolved-logs-destination with "
+                           "--reset-unsolved-logs-destination.\n");
+        std::exit(1);
+    }
+
+    if (!args.unsolved_logs_destination.empty() && !fs::path(args.unsolved_logs_destination).is_absolute()) {
+        fmt::print(stderr, "Error: --unsolved-logs-destination must be an absolute path.\n");
         std::exit(1);
     }
 

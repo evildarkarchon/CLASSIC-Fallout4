@@ -69,15 +69,15 @@ impl RustFormIDAnalyzer {
         }
 
         for line in segment_callstack {
-            if let Some(captures) = FORMID_EXTRACTION_PATTERN.captures(line) {
-                if let Some(formid_hex) = captures.get(1) {
-                    let formid_id = formid_hex.as_str().to_uppercase();
+            if let Some(captures) = FORMID_EXTRACTION_PATTERN.captures(line)
+                && let Some(formid_hex) = captures.get(1)
+            {
+                let formid_id = formid_hex.as_str().to_uppercase();
 
-                    // Skip if it starts with FF (plugin limit)
-                    // Note: NULL FormIDs (00000000) are intentionally kept as they indicate errors
-                    if !formid_id.starts_with("FF") {
-                        formids_matches.push(format!("Form ID: {}", formid_id));
-                    }
+                // Skip if it starts with FF (plugin limit)
+                // Note: NULL FormIDs (00000000) are intentionally kept as they indicate errors
+                if !formid_id.starts_with("FF") {
+                    formids_matches.push(format!("Form ID: {}", formid_id));
                 }
             }
         }

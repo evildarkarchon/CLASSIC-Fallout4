@@ -23,7 +23,10 @@
 //! }
 //! ```
 
+use classic_path_core::DocsPathFinder;
+use classic_settings_core::YamlOperations;
 use classic_shared_core::GameId;
+use classic_version_registry_core::{Fallout4Version, VersionInfo};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -400,18 +403,19 @@ pub fn detect_xse_version(loader_path: &Path, xse_type: XseType) -> XseResult<Ve
         if let Ok(entries) = std::fs::read_dir(parent) {
             for entry in entries.flatten() {
                 let path = entry.path();
-                if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
-                    if filename.starts_with(dll_prefix) && filename.ends_with(".dll") {
-                        // Extract version from filename
-                        if let Some(version_str) = filename
-                            .strip_prefix(dll_prefix)
-                            .and_then(|s| s.strip_suffix(".dll"))
-                        {
-                            // Replace underscores with dots for version parsing
-                            let version_dotted = version_str.replace('_', ".");
-                            if let Ok(version) = parse_version(&version_dotted) {
-                                return Ok(version);
-                            }
+                if let Some(filename) = path.file_name().and_then(|n| n.to_str())
+                    && filename.starts_with(dll_prefix)
+                    && filename.ends_with(".dll")
+                {
+                    // Extract version from filename
+                    if let Some(version_str) = filename
+                        .strip_prefix(dll_prefix)
+                        .and_then(|s| s.strip_suffix(".dll"))
+                    {
+                        // Replace underscores with dots for version parsing
+                        let version_dotted = version_str.replace('_', ".");
+                        if let Ok(version) = parse_version(&version_dotted) {
+                            return Ok(version);
                         }
                     }
                 }
@@ -480,13 +484,129 @@ pub fn get_xse_info(game_path: &Path, xse_type: XseType) -> XseInfo {
 
     info.installed = info.check_installed();
 
-    if info.installed {
-        if let Ok(version) = detect_xse_version(&info.loader_path(), xse_type) {
-            info.version = Some(version);
-        }
+    if info.installed
+        && let Ok(version) = detect_xse_version(&info.loader_path(), xse_type)
+    {
+        info.version = Some(version);
     }
 
     info
+}
+
+/// Resolve the XSE Folder used for Crash Log collection.
+///
+/// The resolver is fail-soft: missing Local.yaml files, blank settings, unreadable
+/// YAML, and platform discovery failures return `None` rather than blocking scans.
+#[must_use]
+pub fn resolve_xse_folder_for_scan(
+    yaml_dir_data: impl AsRef<Path>,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: Option<&Path>,
+) -> Option<PathBuf> {
+    let version_info = resolve_version_info(game, selected_game_version);
+    let local_yaml_path = yaml_dir_data
+        .as_ref()
+        .join(format!("CLASSIC {game} Local.yaml"));
+
+    let yaml_ops = YamlOperations::new();
+    let local_yaml = yaml_ops.load_yaml_file(&local_yaml_path).ok();
+
+    if let Some(yaml) = local_yaml.as_ref() {
+        if let Some(path) =
+            clean_path_value(&yaml_ops.get_string_value(yaml, "Game_Info.Docs_Folder_XSE", ""))
+        {
+            return Some(path);
+        }
+
+        if let Some(docs_root) =
+            clean_path_value(&yaml_ops.get_string_value(yaml, "Game_Info.Root_Folder_Docs", ""))
+            && let Some(path) = xse_folder_from_docs_root(&docs_root, version_info)
+        {
+            return Some(path);
+        }
+    }
+
+    if let Some(docs_root) = configured_docs_root.and_then(non_empty_path)
+        && let Some(path) = xse_folder_from_docs_root(docs_root, version_info)
+    {
+        return Some(path);
+    }
+
+    discover_xse_folder(version_info)
+}
+
+fn resolve_version_info(game: &str, selected_game_version: &str) -> Option<&'static VersionInfo> {
+    if !matches!(game, "Fallout4" | "Fallout4VR") {
+        return None;
+    }
+
+    let normalized = selected_game_version.trim();
+    let version_key = if normalized.is_empty() {
+        "auto"
+    } else {
+        normalized
+    };
+    let selected = if game == "Fallout4VR" && version_key == "auto" {
+        Fallout4Version::Vr
+    } else {
+        version_key.parse::<Fallout4Version>().ok()?
+    };
+
+    selected.get_version_info()
+}
+
+fn clean_path_value(value: &str) -> Option<PathBuf> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(PathBuf::from(trimmed))
+    }
+}
+
+fn non_empty_path(path: &Path) -> Option<&Path> {
+    if path.as_os_str().is_empty() {
+        None
+    } else {
+        Some(path)
+    }
+}
+
+fn xse_folder_from_docs_root(
+    docs_root: &Path,
+    version_info: Option<&'static VersionInfo>,
+) -> Option<PathBuf> {
+    let folder = version_info
+        .and_then(|info| info.xse.as_ref())
+        .map(|xse| xse_docs_folder_name(&xse.acronym))
+        .filter(|acronym| !acronym.is_empty())?;
+
+    Some(docs_root.join(folder))
+}
+
+fn xse_docs_folder_name(acronym: &str) -> &str {
+    match acronym.trim() {
+        // F4SEVR keeps the F4SEVR identity/loader, but writes crash logs under F4SE.
+        "F4SEVR" => "F4SE",
+        folder => folder,
+    }
+}
+
+fn discover_xse_folder(version_info: Option<&'static VersionInfo>) -> Option<PathBuf> {
+    let info = version_info?;
+    if info.docs_name.trim().is_empty() {
+        return None;
+    }
+
+    let relative_docs = format!(r"My Games\{}", info.docs_name);
+    let mut finder = DocsPathFinder::new(relative_docs);
+    if info.steam_id != 0 {
+        finder = finder.with_steam_app_id(info.steam_id);
+    }
+
+    let docs_root = finder.find_docs_path(None).ok()?;
+    xse_folder_from_docs_root(&docs_root, Some(info))
 }
 
 #[cfg(test)]

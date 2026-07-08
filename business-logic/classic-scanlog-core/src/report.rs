@@ -3,16 +3,455 @@
 //! This module implements Phase 5 of the Rust migration plan, providing:
 //! - Immutable report fragments for functional composition
 //! - String interning/pooling for memory efficiency
-//! - Parallel fragment processing for speed
+//! - Deterministic final report composition
 //! - Efficient string building strategies
 
 // Error types not needed in pure Rust - using standard Result
+use crate::error::{Result, ScanLogError};
 use crate::version::CrashgenVersionStatus;
+use classic_config_core::{AutoscanReportPlacement, OutcomeKind, RuleSeverity};
+use classic_file_io_core::FileIOCore;
 use dashmap::DashMap;
 use parking_lot::RwLock;
 use rayon::prelude::*;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock};
 use string_cache::DefaultAtom;
+
+/// Build the Autoscan Report path for a Crash Log path.
+pub(crate) fn autoscan_report_path(log_path: &Path) -> PathBuf {
+    let stem = log_path
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .unwrap_or("unknown");
+    log_path.with_file_name(format!("{stem}-AUTOSCAN.md"))
+}
+
+/// Write an Autoscan Report using the shared file I/O contract.
+pub(crate) async fn write_autoscan_report(
+    file_io: &FileIOCore,
+    log_path: &Path,
+    report_lines: &[String],
+) -> Result<PathBuf> {
+    let autoscan_path = autoscan_report_path(log_path);
+    let content = report_lines.join("");
+    file_io
+        .write_file(&autoscan_path, &content)
+        .await
+        .map_err(|error| {
+            ScanLogError::ReportError(format!(
+                "Failed to write report {}: {}",
+                autoscan_path.display(),
+                error
+            ))
+        })?;
+    Ok(autoscan_path)
+}
+
+/// Per-log facts that affect Autoscan Report rendering.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct AutoscanReportFacts {
+    pub classic_version: String,
+    pub crashlog_filename: String,
+    pub main_error: String,
+    pub crashgen_name: String,
+    pub crashgen_version: String,
+    pub crashgen_status: Option<CrashgenVersionStatus>,
+    pub fake_bot_compatible_mode: bool,
+    pub fcx_mode_enabled: bool,
+}
+
+/// Typed contribution from scan-time collectors into Autoscan Report Assembly.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum AutoscanReportContribution {
+    CrashgenExpectation(CrashgenExpectationContribution),
+    DisabledSettingNotice {
+        setting_name: String,
+        crashgen_name: String,
+    },
+    CrashSuspectFinding {
+        lines: Vec<String>,
+    },
+    ModGuidance {
+        group: ModGuidanceGroup,
+        lines: Vec<String>,
+    },
+    PluginEvidence {
+        lines: Vec<String>,
+    },
+    FormIdFinding {
+        lines: Vec<String>,
+    },
+    NamedRecordFinding {
+        lines: Vec<String>,
+    },
+}
+
+/// Structured Crashgen Expectation result ready for report placement.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct CrashgenExpectationContribution {
+    pub kind: OutcomeKind,
+    pub severity: RuleSeverity,
+    pub message: String,
+    pub fix: Option<String>,
+    pub placement: AutoscanReportPlacement,
+}
+
+/// Semantic Mod Guidance groups rendered in the canonical Autoscan Report order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ModGuidanceGroup {
+    MayConflict,
+    FrequentCrashes,
+    HasSolutions,
+    ImportantMods,
+}
+
+/// Deep module for canonical Autoscan Report assembly.
+pub(crate) struct AutoscanReportAssembler;
+
+impl Default for AutoscanReportAssembler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl AutoscanReportAssembler {
+    pub(crate) fn new() -> Self {
+        Self
+    }
+
+    pub(crate) fn assemble(
+        &self,
+        facts: &AutoscanReportFacts,
+        contributions: Vec<AutoscanReportContribution>,
+    ) -> Vec<String> {
+        let report_gen = ReportGenerator::with_config(
+            facts.classic_version.clone(),
+            facts.crashgen_name.clone(),
+        );
+        let mut composer = ReportComposer::new();
+
+        composer.add(report_gen.generate_header(&facts.crashlog_filename));
+        composer.add(Self::append_error_information_fragments(
+            report_gen.generate_error_section_with_status_and_fake_mode(
+                &facts.main_error,
+                &facts.crashgen_version,
+                facts.crashgen_status,
+                facts.fake_bot_compatible_mode,
+            ),
+            Self::error_information_fragments(&contributions),
+        ));
+
+        let suspect_fragments = Self::line_fragments(&contributions, |contribution| {
+            if let AutoscanReportContribution::CrashSuspectFinding { lines } = contribution {
+                Some(lines)
+            } else {
+                None
+            }
+        });
+        let found_suspect = !suspect_fragments.is_empty();
+        composer.add(report_gen.generate_suspect_section_header());
+        composer.add_many(suspect_fragments);
+        composer.add(report_gen.generate_suspect_found_footer(found_suspect));
+
+        if facts.fcx_mode_enabled {
+            composer.add(Self::fcx_mode_notice_fragment());
+        }
+
+        let settings_fragments = Self::settings_fragments(&contributions);
+        if !settings_fragments.is_empty() {
+            composer.add(report_gen.generate_settings_section_header());
+            composer.add_many(settings_fragments);
+        }
+
+        for group in [
+            ModGuidanceGroup::MayConflict,
+            ModGuidanceGroup::FrequentCrashes,
+            ModGuidanceGroup::HasSolutions,
+            ModGuidanceGroup::ImportantMods,
+        ] {
+            let fragments = Self::mod_guidance_fragments(&contributions, group);
+            if !fragments.is_empty() {
+                composer.add(Self::mod_guidance_header(&report_gen, group));
+                composer.add_many(fragments);
+            }
+        }
+
+        Self::add_section_with_header(
+            &mut composer,
+            report_gen.generate_plugin_suspect_header(),
+            Self::line_fragments(&contributions, |contribution| {
+                if let AutoscanReportContribution::PluginEvidence { lines } = contribution {
+                    Some(lines)
+                } else {
+                    None
+                }
+            }),
+        );
+        Self::add_section_with_header(
+            &mut composer,
+            report_gen.generate_formid_section_header(),
+            Self::line_fragments(&contributions, |contribution| {
+                if let AutoscanReportContribution::FormIdFinding { lines } = contribution {
+                    Some(lines)
+                } else {
+                    None
+                }
+            }),
+        );
+        Self::add_section_with_header(
+            &mut composer,
+            report_gen.generate_record_section_header(),
+            Self::line_fragments(&contributions, |contribution| {
+                if let AutoscanReportContribution::NamedRecordFinding { lines } = contribution {
+                    Some(lines)
+                } else {
+                    None
+                }
+            }),
+        );
+
+        composer.add(report_gen.generate_footer());
+        composer.compose().to_list()
+    }
+
+    fn add_section_with_header(
+        composer: &mut ReportComposer,
+        header: ReportFragment,
+        fragments: Vec<ReportFragment>,
+    ) {
+        if fragments.is_empty() {
+            return;
+        }
+        composer.add(header);
+        composer.add_many(fragments);
+    }
+
+    fn line_fragments<F>(
+        contributions: &[AutoscanReportContribution],
+        select_lines: F,
+    ) -> Vec<ReportFragment>
+    where
+        F: Fn(&AutoscanReportContribution) -> Option<&Vec<String>>,
+    {
+        contributions
+            .iter()
+            .filter_map(|contribution| {
+                let lines = select_lines(contribution)?;
+                (!lines.is_empty()).then(|| ReportFragment::from_lines(lines.clone()))
+            })
+            .collect()
+    }
+
+    fn error_information_fragments(
+        contributions: &[AutoscanReportContribution],
+    ) -> Vec<ReportFragment> {
+        contributions
+            .iter()
+            .filter_map(|contribution| match contribution {
+                AutoscanReportContribution::CrashgenExpectation(outcome)
+                    if outcome.placement == AutoscanReportPlacement::ErrorInformation =>
+                {
+                    Some(ReportFragment::from_lines(
+                        outcome.render_error_information_lines(),
+                    ))
+                }
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn settings_fragments(contributions: &[AutoscanReportContribution]) -> Vec<ReportFragment> {
+        contributions
+            .iter()
+            .filter_map(|contribution| match contribution {
+                AutoscanReportContribution::CrashgenExpectation(outcome)
+                    if outcome.placement == AutoscanReportPlacement::Settings =>
+                {
+                    Some(ReportFragment::from_lines(outcome.render_settings_lines()))
+                }
+                AutoscanReportContribution::DisabledSettingNotice {
+                    setting_name,
+                    crashgen_name,
+                } => Some(ReportFragment::from_lines(disabled_setting_notice_lines(
+                    setting_name,
+                    crashgen_name,
+                ))),
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn mod_guidance_fragments(
+        contributions: &[AutoscanReportContribution],
+        group: ModGuidanceGroup,
+    ) -> Vec<ReportFragment> {
+        contributions
+            .iter()
+            .filter_map(|contribution| match contribution {
+                AutoscanReportContribution::ModGuidance {
+                    group: contribution_group,
+                    lines,
+                } if *contribution_group == group && !lines.is_empty() => {
+                    Some(ReportFragment::from_lines(lines.clone()))
+                }
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn mod_guidance_header(
+        report_gen: &ReportGenerator,
+        group: ModGuidanceGroup,
+    ) -> ReportFragment {
+        match group {
+            ModGuidanceGroup::MayConflict => {
+                report_gen.generate_mod_check_header("May Conflict With Each Other")
+            }
+            ModGuidanceGroup::FrequentCrashes => {
+                report_gen.generate_mod_check_header("Can Cause Frequent Crashes")
+            }
+            ModGuidanceGroup::HasSolutions => {
+                report_gen.generate_mod_check_header("HAVE SOLUTIONS")
+            }
+            ModGuidanceGroup::ImportantMods => {
+                ReportFragment::from_lines(vec!["### Checking for Important Mods\n\n".to_string()])
+            }
+        }
+    }
+
+    fn append_error_information_fragments(
+        error_section: ReportFragment,
+        extra_fragments: Vec<ReportFragment>,
+    ) -> ReportFragment {
+        if extra_fragments.is_empty() {
+            return error_section;
+        }
+
+        let mut lines = error_section.to_list();
+        let separator = if matches!(lines.last(), Some(line) if line == "---\n\n") {
+            lines.pop().unwrap_or_default()
+        } else {
+            "---\n\n".to_string()
+        };
+
+        for fragment in extra_fragments {
+            lines.extend(fragment.to_list());
+        }
+        lines.push(separator);
+
+        ReportFragment::from_lines(lines)
+    }
+
+    fn fcx_mode_notice_fragment() -> ReportFragment {
+        ReportFragment::from_lines(vec![
+            "* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION * \n\n".to_string(),
+            "[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ] \n\n".to_string(),
+        ])
+    }
+}
+
+impl CrashgenExpectationContribution {
+    pub(crate) fn render_settings_lines(&self) -> Vec<String> {
+        let mut lines = Vec::new();
+        match self.kind {
+            OutcomeKind::Issue => {
+                lines.push(format!("# ❌ CAUTION : {} # \n", self.message));
+                if let Some(fix) = self.fix.as_deref() {
+                    lines.push(format!(" FIX: {}\n\n-----\n", fix));
+                } else {
+                    lines.push("\n-----\n".to_string());
+                }
+            }
+            OutcomeKind::Notice => {
+                lines.push(format!(
+                    "# {} NOTICE : {} # \n",
+                    notice_icon(self.severity),
+                    self.message
+                ));
+                if let Some(fix) = self.fix.as_deref() {
+                    lines.push(format!(" {}\n\n-----\n", fix));
+                } else {
+                    lines.push("\n-----\n".to_string());
+                }
+            }
+            OutcomeKind::Success => {
+                lines.push(format!("✔️ {}\n\n-----\n", self.message));
+            }
+        }
+        lines
+    }
+
+    pub(crate) fn render_error_information_lines(&self) -> Vec<String> {
+        let mut lines = Vec::new();
+        match self.kind {
+            OutcomeKind::Issue => {
+                lines.push(format!("**# ❌ CAUTION : {} #**\n\n", self.message));
+                if let Some(fix) = self.fix.as_deref() {
+                    lines.push(format!("FIX: {}\n\n", fix));
+                }
+            }
+            OutcomeKind::Notice => {
+                lines.push(format!(
+                    "**# {} NOTICE : {} #**\n\n",
+                    notice_icon(self.severity),
+                    self.message
+                ));
+                if let Some(fix) = self.fix.as_deref() {
+                    lines.push(format!("{}\n\n", fix));
+                }
+            }
+            OutcomeKind::Success => {
+                lines.push(format!("**✔️ {}**\n\n", self.message));
+            }
+        }
+        lines
+    }
+}
+
+impl AutoscanReportContribution {
+    pub(crate) fn legacy_settings_fragment(
+        &self,
+    ) -> Option<(AutoscanReportPlacement, ReportFragment)> {
+        match self {
+            Self::CrashgenExpectation(outcome) => {
+                let lines = match outcome.placement {
+                    AutoscanReportPlacement::Settings => outcome.render_settings_lines(),
+                    AutoscanReportPlacement::ErrorInformation => {
+                        outcome.render_error_information_lines()
+                    }
+                };
+                Some((outcome.placement, ReportFragment::from_lines(lines)))
+            }
+            Self::DisabledSettingNotice {
+                setting_name,
+                crashgen_name,
+            } => Some((
+                AutoscanReportPlacement::Settings,
+                ReportFragment::from_lines(disabled_setting_notice_lines(
+                    setting_name,
+                    crashgen_name,
+                )),
+            )),
+            _ => None,
+        }
+    }
+}
+
+fn disabled_setting_notice_lines(setting_name: &str, crashgen_name: &str) -> Vec<String> {
+    vec![format!(
+        "* NOTICE : {} is disabled in your {} settings, is this intentional? * \n\n-----\n",
+        setting_name, crashgen_name
+    )]
+}
+
+fn notice_icon(severity: RuleSeverity) -> &'static str {
+    match severity {
+        RuleSeverity::Error => "❌",
+        RuleSeverity::Warning => "⚠️",
+        RuleSeverity::Info => "[!]",
+    }
+}
 
 /// Global string pool for interning frequently used strings
 static STRING_POOL: LazyLock<StringPool> = LazyLock::new(StringPool::new);
@@ -171,11 +610,10 @@ impl ReportFragment {
     }
 }
 
-/// High-performance report composer with parallel fragment processing
+/// Report composer with deterministic final fragment ordering.
 pub struct ReportComposer {
     fragments: Vec<ReportFragment>,
     pool: StringPool,
-    parallel_threshold: usize,
 }
 
 impl Default for ReportComposer {
@@ -190,7 +628,6 @@ impl ReportComposer {
         Self {
             fragments: Vec::new(),
             pool: STRING_POOL.clone(),
-            parallel_threshold: 10, // Use parallel processing for 10+ fragments
         }
     }
 
@@ -214,12 +651,7 @@ impl ReportComposer {
             return self.fragments[0].clone();
         }
 
-        // Use parallel composition for many fragments
-        if self.fragments.len() >= self.parallel_threshold {
-            self.compose_parallel()
-        } else {
-            self.compose_sequential()
-        }
+        self.compose_sequential()
     }
 
     /// Sequential composition for small numbers of fragments
@@ -229,15 +661,6 @@ impl ReportComposer {
             result = result.combine(fragment);
         }
         result
-    }
-
-    /// Parallel composition for large numbers of fragments
-    fn compose_parallel(&self) -> ReportFragment {
-        // Use divide-and-conquer parallel reduction
-        self.fragments
-            .par_iter()
-            .cloned()
-            .reduce(ReportFragment::empty, |a, b| a.combine(&b))
     }
 
     /// Compose fragments and optimize memory usage

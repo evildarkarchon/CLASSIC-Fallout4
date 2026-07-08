@@ -277,10 +277,10 @@ pub fn is_known_f4se_version(version: &Version) -> bool {
     for info in registry.get_all_for_game("Fallout4", Some(false)) {
         if let Some(xse) = &info.xse {
             // compatible_version is a String like "0.6.23", parse it
-            if let Some(parsed) = try_parse_version(&xse.compatible_version) {
-                if &parsed == version {
-                    return true;
-                }
+            if let Some(parsed) = try_parse_version(&xse.compatible_version)
+                && &parsed == version
+            {
+                return true;
             }
         }
     }
@@ -328,17 +328,17 @@ pub fn extract_version_from_filename(filename: &str) -> Option<Version> {
     ];
 
     for pattern in &patterns {
-        if let Ok(re) = Regex::new(pattern) {
-            if let Some(captures) = re.captures(filename) {
-                let major = captures.get(1)?.as_str().parse::<u64>().ok()?;
-                let minor = captures.get(2)?.as_str().parse::<u64>().ok()?;
-                let patch = captures
-                    .get(3)
-                    .and_then(|m| m.as_str().parse::<u64>().ok())
-                    .unwrap_or(0);
+        if let Ok(re) = Regex::new(pattern)
+            && let Some(captures) = re.captures(filename)
+        {
+            let major = captures.get(1)?.as_str().parse::<u64>().ok()?;
+            let minor = captures.get(2)?.as_str().parse::<u64>().ok()?;
+            let patch = captures
+                .get(3)
+                .and_then(|m| m.as_str().parse::<u64>().ok())
+                .unwrap_or(0);
 
-                return Some(Version::new(major, minor, patch));
-            }
+            return Some(Version::new(major, minor, patch));
         }
     }
 
@@ -375,17 +375,17 @@ pub fn extract_version_from_log(log_content: &str) -> Option<Version> {
     // Pattern for version in logs (more flexible)
     let pattern = r"(?i)version[:\s]+v?(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?";
 
-    if let Ok(re) = Regex::new(pattern) {
-        if let Some(captures) = re.captures(log_content) {
-            let major = captures.get(1)?.as_str().parse::<u64>().ok()?;
-            let minor = captures.get(2)?.as_str().parse::<u64>().ok()?;
-            let patch = captures
-                .get(3)
-                .and_then(|m| m.as_str().parse::<u64>().ok())
-                .unwrap_or(0);
+    if let Ok(re) = Regex::new(pattern)
+        && let Some(captures) = re.captures(log_content)
+    {
+        let major = captures.get(1)?.as_str().parse::<u64>().ok()?;
+        let minor = captures.get(2)?.as_str().parse::<u64>().ok()?;
+        let patch = captures
+            .get(3)
+            .and_then(|m| m.as_str().parse::<u64>().ok())
+            .unwrap_or(0);
 
-            return Some(Version::new(major, minor, patch));
-        }
+        return Some(Version::new(major, minor, patch));
     }
 
     // Fallback: Try to extract any version-like pattern
@@ -419,15 +419,15 @@ pub fn extract_all_versions(content: &str) -> Vec<Version> {
 
     if let Ok(re) = Regex::new(pattern) {
         for captures in re.captures_iter(content) {
-            if let Some(major) = captures.get(1).and_then(|m| m.as_str().parse::<u64>().ok()) {
-                if let Some(minor) = captures.get(2).and_then(|m| m.as_str().parse::<u64>().ok()) {
-                    let patch = captures
-                        .get(3)
-                        .and_then(|m| m.as_str().parse::<u64>().ok())
-                        .unwrap_or(0);
+            if let Some(major) = captures.get(1).and_then(|m| m.as_str().parse::<u64>().ok())
+                && let Some(minor) = captures.get(2).and_then(|m| m.as_str().parse::<u64>().ok())
+            {
+                let patch = captures
+                    .get(3)
+                    .and_then(|m| m.as_str().parse::<u64>().ok())
+                    .unwrap_or(0);
 
-                    versions.push(Version::new(major, minor, patch));
-                }
+                versions.push(Version::new(major, minor, patch));
             }
         }
     }

@@ -1,75 +1,40 @@
 //! Per-crashgen settings configuration registry.
 //!
 //! Provides a YAML-driven registry that maps crashgen names to their
-//! per-crashgen settings: display section, ignore key list, and named check set.
+//! per-crashgen settings: display section, ignore key list, and Crashgen Expectations.
 //!
 //! # Registry lookup
 //!
 //! Lookup is case-insensitive and whitespace-normalized (all whitespace stripped).
 //! An unknown crashgen falls back to the `default` entry, which has an empty
-//! ignore list and no named checks.
+//! ignore list and no Crashgen Expectations.
 
 use std::collections::{HashMap, HashSet};
 
 use classic_config_core::CrashgenSettingsRules;
 
-/// Named check identifiers for crash generator settings validation.
-///
-/// Each variant corresponds to one of the four named settings checks that
-/// are conditionally run based on the crashgen registry entry.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum CheckId {
-    /// Achievements mod compatibility check
-    Achievements,
-    /// Memory manager / X-Cell / ScrapHeap compatibility check
-    MemoryManagement,
-    /// ArchiveLimit stability check
-    ArchiveLimit,
-    /// LooksMenu (F4EE) compatibility check
-    LooksMenu,
-}
-
-impl CheckId {
-    /// Parse a check identifier string (case-insensitive, underscore/space agnostic).
-    ///
-    /// Returns `None` for unrecognized names.
-    pub fn parse(s: &str) -> Option<Self> {
-        let normalized: String = s.chars().filter(|c| *c != '_' && *c != ' ').collect();
-        match normalized.to_lowercase().as_str() {
-            "achievements" => Some(Self::Achievements),
-            "memorymanagement" => Some(Self::MemoryManagement),
-            "archivelimit" => Some(Self::ArchiveLimit),
-            "looksmenu" => Some(Self::LooksMenu),
-            _ => None,
-        }
-    }
-}
-
 /// Per-crashgen settings configuration entry.
 ///
 /// Holds the display section header name, the list of settings keys to skip
-/// during disabled-settings checks, and the set of named checks to run.
+/// during disabled-settings checks, and the YAML-backed Crashgen Expectations.
 #[derive(Debug, Clone)]
 pub struct CrashgenEntry {
     /// Bracket header used by this crashgen (e.g., `"[Compatibility]"`), for display only.
     pub display_section: String,
     /// Settings keys to skip in `check_disabled_settings()`.
     pub ignore_keys: HashSet<String>,
-    /// Named checks to run for this crashgen.
-    pub checks: Vec<CheckId>,
-    /// Optional full settings rules block.
+    /// Optional YAML-backed Crashgen Expectations.
     pub settings_rules: Option<CrashgenSettingsRules>,
 }
 
 impl CrashgenEntry {
-    /// Creates a default entry with an empty ignore list and no named checks.
+    /// Creates a default entry with an empty ignore list and no Crashgen Expectations.
     ///
     /// Used as the fallback for unregistered crashgens.
     pub fn default_entry() -> Self {
         Self {
             display_section: String::new(),
             ignore_keys: HashSet::new(),
-            checks: Vec::new(),
             settings_rules: None,
         }
     }

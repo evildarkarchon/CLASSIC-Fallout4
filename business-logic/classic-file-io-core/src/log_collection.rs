@@ -9,6 +9,8 @@ use std::path::{Path, PathBuf};
 use tokio::fs;
 use tracing::debug;
 
+use classic_xse_core::resolve_xse_folder_for_scan;
+
 use crate::error::{FileIOError, Result};
 
 /// File pattern for standard crash log files
@@ -79,6 +81,29 @@ impl LogCollector {
             xse_folder,
             custom_folder,
         }
+    }
+
+    /// Create a new LogCollector for the standard crash-scan workflow.
+    ///
+    /// This resolves the configured game XSE folder in Rust and keeps any
+    /// custom scan folder additive instead of treating it as an XSE replacement.
+    #[must_use]
+    pub fn new_for_scan(
+        base_folder: PathBuf,
+        yaml_dir_data: impl AsRef<Path>,
+        game: &str,
+        selected_game_version: &str,
+        configured_docs_root: Option<&Path>,
+        custom_folder: Option<PathBuf>,
+    ) -> Self {
+        let xse_folder = resolve_xse_folder_for_scan(
+            yaml_dir_data,
+            game,
+            selected_game_version,
+            configured_docs_root,
+        );
+
+        Self::new(base_folder, xse_folder, custom_folder)
     }
 
     /// Create a new LogCollector using the current directory as base
@@ -322,19 +347,19 @@ impl LogCollector {
         }
 
         // Collect from custom folder if configured
-        if let Some(custom_folder) = &self.custom_folder {
-            if custom_folder.exists() && custom_folder.is_dir() {
-                let pattern = custom_folder.join(CRASH_LOG_PATTERN);
-                let pattern_str = pattern.to_string_lossy();
+        if let Some(custom_folder) = &self.custom_folder
+            && custom_folder.exists()
+            && custom_folder.is_dir()
+        {
+            let pattern = custom_folder.join(CRASH_LOG_PATTERN);
+            let pattern_str = pattern.to_string_lossy();
 
-                for entry in glob::glob(&pattern_str)
-                    .map_err(|e| FileIOError::Io(format!("Invalid glob pattern: {}", e)))?
-                {
-                    let path = entry.map_err(|e| {
-                        FileIOError::Io(format!("Failed to read glob entry: {}", e))
-                    })?;
-                    crash_files.push(path);
-                }
+            for entry in glob::glob(&pattern_str)
+                .map_err(|e| FileIOError::Io(format!("Invalid glob pattern: {}", e)))?
+            {
+                let path = entry
+                    .map_err(|e| FileIOError::Io(format!("Failed to read glob entry: {}", e)))?;
+                crash_files.push(path);
             }
         }
 

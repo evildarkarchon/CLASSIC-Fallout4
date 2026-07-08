@@ -14,14 +14,19 @@
 use classic_config_core::{ClassicConfig, YamlDataCore};
 use classic_scangame_core::integrity::IntegrityConfig;
 use classic_scangame_core::{SetupCheckConfig, detect_config_issues, run_combined_checks};
-use classic_scanlog_core::OrchestratorCore;
-use classic_scanlog_core::crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};
+use classic_scanlog_core::crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 use classic_scanlog_core::orchestrator;
 use classic_scanlog_core::parser::LogParser;
 use classic_scanlog_core::segment_key;
 use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};
+use classic_scanlog_core::{
+    CrashLogScanIntake, CrashLogScanOptions, CrashLogScanOutcome, CrashLogScanRun,
+    CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, OrchestratorCore,
+    StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent,
+};
 use classic_shared_core::GameId;
 use std::collections::{HashMap, HashSet};
+use std::path::PathBuf;
 
 use crate::crashgen_rules::{JsCrashgenRegistryEntry, core_rules_to_js, js_rules_to_core};
 
@@ -222,6 +227,62 @@ pub struct JsAnalysisResult {
     /// Number of plugins detected
     pub plugin_count: u32,
     /// Number of suspect patterns matched
+    pub suspect_count: u32,
+}
+
+/// Options for a full Crash Log Scan Run.
+#[napi(object)]
+pub struct JsScanRunOptions {
+    /// Root directory that contains CLASSIC Data and CLASSIC Ignore.yaml.
+    pub yaml_dir_root: String,
+    /// CLASSIC Data directory.
+    pub yaml_dir_data: String,
+    /// Game identifier, e.g. Fallout4.
+    pub game: String,
+    /// Selected game-version mode.
+    pub game_version: String,
+    /// Whether to include FormID value lookups in reports.
+    pub show_formid_values: Option<bool>,
+    /// Whether FCX mode is enabled.
+    pub fcx_mode: Option<bool>,
+    /// Whether to simplify logs by removing configured strings.
+    pub simplify_logs: Option<bool>,
+    /// Whether failed Standard runs move logs and reports to Unsolved Logs.
+    pub move_unsolved_logs: Option<bool>,
+    /// Optional custom destination for moved Unsolved Logs.
+    pub unsolved_logs_destination: Option<String>,
+    /// Whether this is a Targeted Crash Log Scan Run.
+    pub targeted_mode: Option<bool>,
+    /// Optional maximum number of concurrent scans. Zero and undefined use core defaults.
+    pub max_concurrent: Option<u32>,
+    /// Whether results should preserve input order instead of completion order.
+    pub preserve_order: Option<bool>,
+}
+
+/// JavaScript-compatible full scan-run per-log result.
+#[napi(object)]
+pub struct JsScanRunLogResult {
+    /// Stable index from the input log path list.
+    pub input_index: u32,
+    /// Crash Log path selected for this entry.
+    pub log_path: String,
+    /// Autoscan Report path when one was written successfully.
+    pub autoscan_report_path: Option<String>,
+    /// Whether analysis and run-owned side effects succeeded.
+    pub success: bool,
+    /// Whether this entry was cancelled before analysis started.
+    pub cancelled: bool,
+    /// Whether the Crash Log or Autoscan Report moved to Unsolved Logs.
+    pub moved_to_unsolved_logs: bool,
+    /// Error message for failed or cancelled outcomes.
+    pub error: Option<String>,
+    /// Processing time in milliseconds.
+    pub processing_time_ms: u32,
+    /// Number of FormIDs found.
+    pub formid_count: u32,
+    /// Number of plugins detected.
+    pub plugin_count: u32,
+    /// Number of suspect patterns matched.
     pub suspect_count: u32,
 }
 
@@ -482,6 +543,88 @@ pub async fn process_logs_batch_with_yaml_content(
     Ok(results.iter().map(_core_result_to_js).collect())
 }
 
+/// Execute a full Crash Log Scan Run for selected logs.
+///
+/// This is the adapter-facing scan-run seam: Rust writes Autoscan Reports and
+/// owns Standard versus Targeted Unsolved Logs behavior before returning each
+/// per-log outcome. Use the lower-level process* functions only when callers
+/// explicitly need analysis results with report lines.
+#[napi]
+pub async fn scan_run_execute(
+    log_paths: Vec<String>,
+    options: JsScanRunOptions,
+) -> napi::Result<Vec<JsScanRunLogResult>> {
+    let handle = classic_shared_core::get_runtime().handle().clone();
+    let max_concurrent = normalize_max_concurrent(options.max_concurrent);
+    let show_formid_values = options.show_formid_values.unwrap_or(false);
+    let fcx_mode = options.fcx_mode.unwrap_or(false);
+    let simplify_logs = options.simplify_logs.unwrap_or(false);
+    let targeted_mode = options.targeted_mode.unwrap_or(false);
+    let move_unsolved_logs = options.move_unsolved_logs.unwrap_or(false);
+    let unsolved_logs_destination = options.unsolved_logs_destination.clone();
+    let preserve_order = options.preserve_order.unwrap_or(false);
+    let yaml_dir_root = PathBuf::from(&options.yaml_dir_root);
+    let yaml_dir_data = PathBuf::from(&options.yaml_dir_data);
+
+    let results = handle
+        .spawn(async move {
+            let prepared = CrashLogScanIntake::from_yaml_paths(
+                yaml_dir_root.clone(),
+                yaml_dir_data,
+                options.game,
+                options.game_version,
+                CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs),
+            )
+            .prepare()
+            .await
+            .map_err(|error| format!("Failed to prepare scan run: {error}"))?;
+
+            let intent = if targeted_mode {
+                CrashLogScanRunIntent::Targeted
+            } else {
+                let unsolved_logs = if move_unsolved_logs {
+                    match unsolved_logs_destination.as_deref().map(str::trim) {
+                        Some(destination) if !destination.is_empty() => {
+                            StandardUnsolvedLogsIntent::MoveToCustom(PathBuf::from(destination))
+                        }
+                        _ => StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
+                    }
+                } else {
+                    StandardUnsolvedLogsIntent::LeaveInPlace
+                };
+                CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs })
+            };
+
+            let run = CrashLogScanRun::new(prepared);
+            let result = run
+                .run(
+                    CrashLogScanRunRequest {
+                        logs: log_paths.into_iter().map(PathBuf::from).collect(),
+                        intent,
+                        max_concurrent,
+                        cancellation: None,
+                        preserve_order,
+                    },
+                    |_| {},
+                )
+                .await
+                .map_err(|error| format!("Failed to execute scan run: {error}"))?;
+
+            Ok::<_, String>(
+                result
+                    .logs
+                    .into_iter()
+                    .map(scan_run_outcome_to_js)
+                    .collect(),
+            )
+        })
+        .await
+        .map_err(|error| to_napi_err(format!("Runtime error: {error}")))?
+        .map_err(to_napi_err)?;
+
+    Ok(results)
+}
+
 // ============================================================================
 // Async Analysis Functions
 // ============================================================================
@@ -715,11 +858,6 @@ pub(crate) fn _js_config_to_core(config: &JsAnalysisConfig) -> orchestrator::Ana
             let mapped = CrashgenEntry {
                 display_section: entry.display_section.clone(),
                 ignore_keys: entry.ignore_keys.iter().cloned().collect::<HashSet<_>>(),
-                checks: entry
-                    .checks
-                    .iter()
-                    .filter_map(|check| CheckId::parse(check))
-                    .collect(),
                 settings_rules: js_rules_to_core(entry.settings_rules.clone()),
             };
 
@@ -745,6 +883,24 @@ pub(crate) fn _core_result_to_js(result: &orchestrator::AnalysisResult) -> JsAna
         formid_count: result.formid_count as u32,
         plugin_count: result.plugin_count as u32,
         suspect_count: result.suspect_count as u32,
+    }
+}
+
+fn scan_run_outcome_to_js(outcome: CrashLogScanRunLogOutcome) -> JsScanRunLogResult {
+    JsScanRunLogResult {
+        input_index: outcome.input_index as u32,
+        log_path: outcome.crash_log.to_string_lossy().to_string(),
+        autoscan_report_path: outcome
+            .autoscan_report
+            .map(|path| path.to_string_lossy().to_string()),
+        success: outcome.outcome == CrashLogScanOutcome::Succeeded,
+        cancelled: outcome.outcome == CrashLogScanOutcome::CancelledBeforeStart,
+        moved_to_unsolved_logs: outcome.moved_to_unsolved_logs,
+        error: outcome.error,
+        processing_time_ms: outcome.processing_time_ms as u32,
+        formid_count: outcome.formid_count as u32,
+        plugin_count: outcome.plugin_count as u32,
+        suspect_count: outcome.suspect_count as u32,
     }
 }
 

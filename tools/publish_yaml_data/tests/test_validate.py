@@ -13,7 +13,29 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
 from tools.publish_yaml_data.generate_manifest import load_ranges  # noqa: E402
-from tools.publish_yaml_data.validate import load_shippable_names  # noqa: E402
+from tools.publish_yaml_data.validate import (  # noqa: E402
+    load_shippable_names,
+    validate_file,
+)
+
+
+def _write_registry_yaml(tmp_path: Path, action_body: str) -> Path:
+    """Write a minimal registry-shaped YAML with one preflight action."""
+    text = (
+        'schema_version: "1.1"\n'
+        "Crashgen_Registry:\n"
+        "  Buffout4:\n"
+        "    settings_rules:\n"
+        "      preflight:\n"
+        "        - id: sample\n"
+        "          when:\n"
+        "            plugin_any: [buffout4.dll]\n"
+        "          action:\n"
+        f"{action_body}"
+    )
+    path = tmp_path / "CLASSIC Fallout4.yaml"
+    path.write_text(text, encoding="utf-8")
+    return path
 
 
 def _write_schema_ranges(tmp_path: Path, names: list[str]) -> Path:
@@ -110,6 +132,57 @@ def test_range_loaders_allow_near_miss_device_names(
             "max_client_schema": "1.0",
         }
     ]
+
+
+def test_validate_file_rejects_placement_bucket_disagreement(tmp_path: Path) -> None:
+    path = _write_registry_yaml(
+        tmp_path,
+        "            kind: notice\n"
+        "            placement: error_information\n"
+        "            bucket: settings\n"
+        "            severity: error\n"
+        '            message: "disagreement"\n',
+    )
+
+    errors = validate_file(path)
+
+    assert any("both keys must resolve to the same value" in e for e in errors)
+    assert any("placement='error_information'" in e for e in errors)
+    assert any("bucket='settings'" in e for e in errors)
+
+
+@pytest.mark.parametrize(
+    ("placement", "bucket"),
+    [
+        ("error_information", "error_information"),
+        ("Error_Information", "error_information "),
+    ],
+)
+def test_validate_file_allows_agreeing_placement_bucket(
+    tmp_path: Path, placement: str, bucket: str
+) -> None:
+    path = _write_registry_yaml(
+        tmp_path,
+        "            kind: notice\n"
+        f'            placement: "{placement}"\n'
+        f'            bucket: "{bucket}"\n'
+        "            severity: error\n"
+        '            message: "agreement"\n',
+    )
+
+    assert validate_file(path) == []
+
+
+def test_validate_file_allows_single_placement_key(tmp_path: Path) -> None:
+    path = _write_registry_yaml(
+        tmp_path,
+        "            kind: notice\n"
+        "            placement: error_information\n"
+        "            severity: error\n"
+        '            message: "single key"\n',
+    )
+
+    assert validate_file(path) == []
 
 
 def test_validate_script_reports_invalid_cache_basename(tmp_path: Path) -> None:

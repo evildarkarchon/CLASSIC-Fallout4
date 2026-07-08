@@ -1,6 +1,6 @@
 use crate::{
-    CheckRule, ConfigLayout, CrashgenEntryRaw, CrashgenSettingsRules, ExpectedValue, Predicate,
-    PreflightAction, PreflightActionKind, PreflightRule, RuleMessages, RuleReportBucket,
+    AutoscanReportPlacement, CheckRule, ConfigLayout, CrashgenEntryRaw, CrashgenSettingsRules,
+    ExpectedValue, Predicate, PreflightAction, PreflightActionKind, PreflightRule, RuleMessages,
     RuleSeverity, RuleTarget, TargetValueType,
 };
 use std::collections::HashMap;
@@ -180,6 +180,18 @@ fn parse_severity(yaml: &Yaml, default: RuleSeverity) -> RuleSeverity {
         .unwrap_or(default)
 }
 
+fn parse_autoscan_report_placement(action_yaml: &Yaml) -> AutoscanReportPlacement {
+    get_hash_value(action_yaml, "placement")
+        .and_then(Yaml::as_str)
+        .and_then(AutoscanReportPlacement::parse)
+        .or_else(|| {
+            get_hash_value(action_yaml, "bucket")
+                .and_then(Yaml::as_str)
+                .and_then(AutoscanReportPlacement::parse)
+        })
+        .unwrap_or_default()
+}
+
 fn parse_preflight_rule(yaml: &Yaml) -> Option<PreflightRule> {
     let id = get_hash_value(yaml, "id")?.as_str()?.to_string();
     let when = get_hash_value(yaml, "when")
@@ -191,10 +203,7 @@ fn parse_preflight_rule(yaml: &Yaml) -> Option<PreflightRule> {
         .and_then(Yaml::as_str)
         .and_then(PreflightActionKind::parse)
         .unwrap_or(PreflightActionKind::Notice);
-    let bucket = get_hash_value(action_yaml, "bucket")
-        .and_then(Yaml::as_str)
-        .and_then(RuleReportBucket::parse)
-        .unwrap_or_default();
+    let bucket = parse_autoscan_report_placement(action_yaml);
     let severity = get_hash_value(action_yaml, "severity")
         .map(|value| parse_severity(value, RuleSeverity::Info))
         .unwrap_or(RuleSeverity::Info);

@@ -1,0 +1,38 @@
+CLASSIC_Info:
+  version: "fixture"
+  version_date: "2026-02-16"
+CLASSIC_Interface:
+  autoscan_text_Fallout4: "Fixture Autoscan"
+catch_log_records: []
+Version_Registry:
+  versions:
+    - id: FO4_AE_FIXTURE
+      game: Fallout4
+      is_vr: false
+      version: "1.11.191.0"
+      display_name: Fallout 4 Fixture
+      short_name: AE
+      description: Fixture registry entry for Python CLI smoke tests
+      docs_name: Fallout4
+      steam_id: 377160
+      crashgen_versions:
+        - version: "1.3.0"
+          name: "Addictol"
+          acronym: "Addictol"
+          dll_file: "addictol.dll"
+          description: Fixture Addictol floor
+          download_url: "https://example.invalid/addictol"
+          compatible_range:
+            min: "1.11.137.0"
+            max: "1.11.999.999"
+      compatible_range:
+        min: "1.11.137.0"
+        max: "1.11.999.999"
+      priority: 1000
+      deprecated: false
+  unknown_version_handling:
+    strategy: nearest_match
+    log_level: warning
+    defaults:
+      Fallout4: FO4_AE_FIXTURE
+      Fallout 4: FO4_AE_FIXTURE

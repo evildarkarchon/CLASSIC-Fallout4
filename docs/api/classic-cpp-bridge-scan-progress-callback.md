@@ -49,12 +49,23 @@ The header forward-declares `BatchProgressEvent`; the concrete shared DTO and en
 
 The bridge-local batch callback contract is defined inside the `#[cxx::bridge(namespace = "classic::scanner")]` module in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs).
 
-The main consumer is `orchestrator_process_logs_batch_with_progress(...)`, which:
+The main consumers are `orchestrator_process_logs_batch_with_progress(...)` and `scan_run_execute(...)`.
+
+`orchestrator_process_logs_batch_with_progress(...)`:
 
 - calls `OrchestratorCore::process_logs_batch_with_events(...)`
 - converts core `BatchScanEventKind` and `ScanProgressPhase` values into bridge event DTOs
 - emits bridge-level terminal `Completed` or `Failed` events
 - returns `Vec<BatchScanResult>` in completion order after callback emission finishes
+
+`scan_run_execute(request, callback, cancellation_token)`:
+
+- calls `classic_scanlog_core::CrashLogScanRun::run(...)`
+- reads selected logs and scan settings from the bridge `ScanRunRequestDto`
+- maps `CrashLogScanRunEvent` values into the same `BatchProgressEvent` DTO
+- emits terminal `Completed` or `Failed` events after Rust has finalized per-log Crash Log Scan Run work such as Autoscan Report writing and Unsolved Logs movement
+- returns `Vec<ScanRunLogResult>` in completion order after callback emission finishes
+- observes the caller-provided `ScanCancellationToken` so C++ frontends can cancel queued logs without owning scan-run internals
 
 One active frontend consumer is [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp), which forwards callback updates into Qt signals and uses [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp) to keep visible progress monotonic. That consumer path is documented in [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md).
 
@@ -134,7 +145,7 @@ The bridge tests explicitly verify monotonic ordering for both successful and fa
 
 ## Batch-level ordering rules visible in source
 
-Current behavior across `OrchestratorCore::process_logs_batch_with_events(...)` and `orchestrator_process_logs_batch_with_progress(...)`:
+Current behavior across `OrchestratorCore::process_logs_batch_with_events(...)`, `orchestrator_process_logs_batch_with_progress(...)`, and `scan_run_execute(...)`:
 
 - all `Queued` events are emitted first, one per input log, before tasks are started
 - `Queued` events use `completed = 0`, `phase = Setup`, and `success = false`
@@ -142,6 +153,7 @@ Current behavior across `OrchestratorCore::process_logs_batch_with_events(...)` 
 - the C++ bridge forwards mapped core events directly through the callback
 - terminal results and callback events are therefore not globally input-ordered
 - returned `BatchScanResult` items are also in completion order, not input order
+- `scan_run_execute(...)` returns `ScanRunLogResult` items in completion order and uses the same `input_index` correlation rule
 
 Important distinction:
 
@@ -252,12 +264,12 @@ This is the main source-backed debugging aid for callback sequencing issues.
 
 ## Source-Backed Limits And Caveats
 
-- `ScanBatchProgressCallback` is only used by `orchestrator_process_logs_batch_with_progress(...)`; single-log `orchestrator_process_log(...)` has no callback surface.
+- `ScanBatchProgressCallback` is used by `orchestrator_process_logs_batch_with_progress(...)` and `scan_run_execute(...)`; single-log `orchestrator_process_log(...)` has no callback surface.
 - The batch callback contract is bridge-local coordination over `OrchestratorCore::process_log_with_progress(...)`, not a direct lower-level batch API contract from `classic-scanlog-core`.
 - `Queued` is a bridge-only event kind; lower layers expose phase progress, not queued-batch bookkeeping.
 - The bridge currently sets `success = false` on `Queued`, `Started`, and `Phase` events and sets the actual result on terminal events only.
-- The bridge computes adaptive concurrency locally when `max_concurrent == 0`; callback interleaving therefore depends partly on bridge policy, not just crate behavior.
-- `BatchScanResult` and callback events both use completion order at the batch level; callers must use `input_index` when stable original ordering matters.
+- `orchestrator_process_logs_batch_with_progress(...)` computes adaptive concurrency locally when `max_concurrent == 0`; `scan_run_execute(...)` delegates that default to `classic-scanlog-core` through `CrashLogScanRun`.
+- `BatchScanResult`, `ScanRunLogResult`, and callback events use completion order at the batch level; callers must use `input_index` when stable original ordering matters.
 - The bridge uses an unbounded progress channel, so the current contract does not expose backpressure semantics to C++ callers.
 - The ready-event drain is bounded to two empty yields; it improves same-log ordering but is not a proof of globally strict ordering under every scheduler timing.
 - The source comments explicitly allow leftover non-terminal events to be emitted in abnormal shutdown paths after the main loop.

@@ -220,17 +220,17 @@ impl FcxModeHandler {
             lines.push("[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ] \n\n".to_string());
 
             // Add main files check if available
-            if let Some(ref main_check) = self.main_files_check {
-                if !main_check.is_empty() {
-                    lines.push(main_check.clone());
-                }
+            if let Some(ref main_check) = self.main_files_check
+                && !main_check.is_empty()
+            {
+                lines.push(main_check.clone());
             }
 
             // Add game files check if available
-            if let Some(ref game_check) = self.game_files_check {
-                if !game_check.is_empty() {
-                    lines.push(game_check.clone());
-                }
+            if let Some(ref game_check) = self.game_files_check
+                && !game_check.is_empty()
+            {
+                lines.push(game_check.clone());
             }
 
             // Add detected configuration issues section if any issues were found

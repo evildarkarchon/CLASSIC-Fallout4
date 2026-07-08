@@ -6191,16 +6191,6 @@
       "pythonArity": 1
     },
     {
-      "id": "scanlog.crashgen_registry.CheckId@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "CheckId",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "CrashgenVersion",
-      "pythonKind": "class"
-    },
-    {
       "id": "scanlog.crashgen_registry.CrashgenEntry@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -8448,50 +8438,6 @@
       "rustSymbol": "SettingsValidator",
       "pythonModule": "classic_scanlog",
       "pythonExportPath": "SettingsValidator.scan_all_settings",
-      "pythonKind": "method",
-      "pythonArity": 4
-    },
-    {
-      "id": "scanlog.settings_validator.SettingsValidator.scan_archivelimit_setting",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "SettingsValidator",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "SettingsValidator.scan_archivelimit_setting",
-      "pythonKind": "method",
-      "pythonArity": 2
-    },
-    {
-      "id": "scanlog.settings_validator.SettingsValidator.scan_buffout_achievements_setting",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "SettingsValidator",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "SettingsValidator.scan_buffout_achievements_setting",
-      "pythonKind": "method",
-      "pythonArity": 2
-    },
-    {
-      "id": "scanlog.settings_validator.SettingsValidator.scan_buffout_looksmenu_setting",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "SettingsValidator",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "SettingsValidator.scan_buffout_looksmenu_setting",
-      "pythonKind": "method",
-      "pythonArity": 2
-    },
-    {
-      "id": "scanlog.settings_validator.SettingsValidator.scan_buffout_memorymanagement_settings",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "SettingsValidator",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "SettingsValidator.scan_buffout_memorymanagement_settings",
       "pythonKind": "method",
       "pythonArity": 4
     },

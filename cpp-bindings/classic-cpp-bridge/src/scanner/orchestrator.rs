@@ -1,21 +1,23 @@
 use crate::runtime_support::{block_on, block_on_result};
-use classic_config_core::YamlDataCore;
-use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
+use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
-    AnalysisConfig, BatchScanEventKind, BatchScanOptions, FcxModeHandler, FcxResetError,
-    GLOBAL_FCX_HANDLER, OrchestratorCore, build_analysis_config_from_yaml,
+    AnalysisConfig, BatchScanEventKind, BatchScanOptions, CrashLogScanIntake, CrashLogScanOptions,
+    CrashLogScanRun, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunRequest,
+    FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER, OrchestratorCore, SHORT_SCAN_CACHE_PROFILE,
+    ScanReadyAnalysis, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent,
+    load_simplify_remove_list as core_load_simplify_remove_list,
+    resolve_formid_database_paths as core_resolve_formid_database_paths,
+    resolve_user_formid_database_paths as core_resolve_user_formid_database_paths,
 };
-use classic_settings_core::YamlOperations;
 use log::info;
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::Duration;
 
 use super::dto::{
     analysis_result_to_batch_dto, analysis_result_to_dto, batch_progress_reset_failure_result,
-    batch_reset_failure_result, fcx_issue_to_dto,
+    batch_reset_failure_result, fcx_issue_to_dto, scan_run_log_outcome_to_dto,
 };
 use super::ffi;
 use super::progress::{
@@ -24,8 +26,7 @@ use super::progress::{
 
 /// Opaque wrapper holding a fully-loaded AnalysisConfig (from YAML).
 pub(crate) struct FullScanConfig {
-    inner: AnalysisConfig,
-    db_paths: Vec<PathBuf>,
+    prepared: ScanReadyAnalysis,
 }
 
 /// Opaque wrapper around OrchestratorCore.
@@ -35,10 +36,14 @@ pub(crate) struct Orchestrator {
     db_counter_interval: u64,
 }
 
-const SHORT_SCAN_CACHE_CAPACITY: usize = 30_000;
-const SHORT_SCAN_CLEANUP_THRESHOLD: u64 = 4_096;
-const SHORT_SCAN_CLEANUP_INTERVAL_SECS: u64 = 300;
-const SHORT_SCAN_CACHE_TTL_SECS: u64 = BATCH_CACHE_TTL_SECS;
+pub(crate) struct ScanCancellationToken {
+    cancelled: Arc<AtomicBool>,
+}
+
+const SHORT_SCAN_CACHE_CAPACITY: usize = SHORT_SCAN_CACHE_PROFILE.cache_capacity;
+const SHORT_SCAN_CLEANUP_THRESHOLD: u64 = SHORT_SCAN_CACHE_PROFILE.cleanup_threshold;
+const SHORT_SCAN_CLEANUP_INTERVAL_SECS: u64 = SHORT_SCAN_CACHE_PROFILE.cleanup_interval_secs;
+const SHORT_SCAN_CACHE_TTL_SECS: u64 = SHORT_SCAN_CACHE_PROFILE.cache_ttl_secs;
 const DB_COUNTER_LOG_INTERVAL_DEFAULT: u64 = 25;
 
 fn diagnostics_enabled() -> bool {
@@ -55,18 +60,32 @@ fn resolve_db_counter_interval() -> u64 {
     parse_db_counter_interval(std::env::var("CLASSIC_DB_COUNTER_INTERVAL").ok().as_deref())
 }
 
-fn apply_short_scan_db_profile(pool: &DatabasePool) {
-    pool.set_cache_ttl(Duration::from_secs(SHORT_SCAN_CACHE_TTL_SECS));
-    pool.set_cache_capacity(SHORT_SCAN_CACHE_CAPACITY);
-    pool.set_cache_cleanup_threshold(SHORT_SCAN_CLEANUP_THRESHOLD);
-    pool.set_cache_cleanup_interval(Duration::from_secs(SHORT_SCAN_CLEANUP_INTERVAL_SECS));
+pub(crate) fn scan_cancellation_token_new() -> Box<ScanCancellationToken> {
+    Box::new(ScanCancellationToken {
+        cancelled: Arc::new(AtomicBool::new(false)),
+    })
+}
+
+pub(crate) fn scan_cancellation_token_cancel(token: &ScanCancellationToken) {
+    token.cancelled.store(true, Ordering::Relaxed);
+}
+
+pub(crate) fn scan_cancellation_token_reset(token: &ScanCancellationToken) {
+    token.cancelled.store(false, Ordering::Relaxed);
+}
+
+fn apply_short_scan_db_profile(
+    pool: &DatabasePool,
+    profile: classic_scanlog_core::ShortScanCacheProfile,
+) {
+    profile.apply_to_pool(pool);
 }
 
 fn maybe_log_db_perf_counters(orch: &Orchestrator, scanned_path: &str) {
     let completed = orch.completed_logs.fetch_add(1, Ordering::Relaxed) + 1;
     let interval = orch.db_counter_interval;
 
-    if completed % interval != 0 {
+    if !completed.is_multiple_of(interval) {
         return;
     }
 
@@ -152,46 +171,41 @@ pub(crate) fn build_full_scan_config(
     fcx_mode: bool,
     simplify_logs: bool,
 ) -> Result<Box<FullScanConfig>, String> {
-    let dirs = vec![PathBuf::from(yaml_dir_root), PathBuf::from(yaml_dir_data)];
-    let yaml = block_on_result(YamlDataCore::load_from_yaml_files(
-        dirs,
-        game.to_string(),
-        game_version.to_string(),
-    ))?;
+    let options = CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs);
+    let prepared = block_on_result(
+        CrashLogScanIntake::from_yaml_paths(
+            yaml_dir_root,
+            yaml_dir_data,
+            game,
+            game_version,
+            options,
+        )
+        .prepare(),
+    )?;
 
-    let remove_list = load_exclude_log_records(yaml_dir_data);
-    let config = build_analysis_config_from_yaml(
-        &yaml,
-        game,
-        game_version,
-        show_formid_values,
-        fcx_mode,
-        simplify_logs,
-        remove_list,
-    );
-    let db_paths = resolve_formid_db_paths(yaml_dir_root, yaml_dir_data, game);
-    Ok(Box::new(FullScanConfig {
-        inner: config,
-        db_paths,
-    }))
+    Ok(Box::new(FullScanConfig { prepared }))
 }
 
 // ── Orchestrator ────────────────────────────────────────────────────
 
 pub(crate) fn orchestrator_new(config: &FullScanConfig) -> Result<Box<Orchestrator>, String> {
-    let mut orch = OrchestratorCore::new(config.inner.clone()).map_err(|e| format!("{e}"))?;
+    let mut orch = OrchestratorCore::new(config.prepared.analysis_config().clone())
+        .map_err(|e| format!("{e}"))?;
 
     // Match Python behavior: when FormID values are enabled, initialize DB pool
-    // with Main + hardcoded + user-configured database paths.
-    if config.inner.show_formid_values {
+    // with intake-selected Main + hardcoded + user-configured database paths.
+    if config.prepared.should_initialize_formid_database() {
+        let cache_profile = config.prepared.cache_profile();
         let pool = Arc::new(DatabasePool::new(
             None,
-            Duration::from_secs(SHORT_SCAN_CACHE_TTL_SECS),
-            config.inner.game.clone(),
+            Duration::from_secs(cache_profile.cache_ttl_secs),
+            config.prepared.analysis_config().game.clone(),
         ));
-        apply_short_scan_db_profile(&pool);
+        apply_short_scan_db_profile(&pool, cache_profile);
 
-        block_on_result(pool.initialize(config.db_paths.clone()))?;
+        block_on_result(
+            pool.initialize(config.prepared.formid_readiness().database_paths().to_vec()),
+        )?;
 
         orch.attach_database_pool(pool)
             .map_err(|e| format!("{e}"))?;
@@ -345,95 +359,104 @@ pub(crate) fn orchestrator_process_logs_batch_with_progress(
     })
 }
 
-// ── FormID database path resolution ─────────────────────────────────
+pub(crate) fn scan_run_execute(
+    request: &ffi::ScanRunRequestDto,
+    callback: &ffi::ScanBatchProgressCallback,
+    cancellation_token: &ScanCancellationToken,
+) -> Result<Vec<ffi::ScanRunLogResult>, String> {
+    let options = CrashLogScanOptions::new(
+        request.show_formid_values,
+        request.fcx_mode,
+        request.simplify_logs,
+    );
+    let prepared = block_on_result(
+        CrashLogScanIntake::from_yaml_paths(
+            request.yaml_dir_root.as_str(),
+            request.yaml_dir_data.as_str(),
+            request.game.as_str(),
+            request.game_version.as_str(),
+            options,
+        )
+        .prepare(),
+    )?;
 
-fn hardcoded_formid_db_relpaths(game: &str) -> &'static [&'static str] {
-    match game {
-        "Fallout4" | "Fallout4VR" => &["databases/FOLON FormIDs.db"],
-        _ => &[],
-    }
-}
+    let intent = scan_run_intent_from_request(request);
 
-fn normalize_path(path: PathBuf) -> PathBuf {
-    path.components().collect()
-}
-
-fn dedupe_paths(paths: Vec<PathBuf>) -> Vec<PathBuf> {
-    let mut seen = HashSet::new();
-    let mut deduped = Vec::with_capacity(paths.len());
-    for path in paths {
-        let normalized = normalize_path(path);
-        if seen.insert(normalized.clone()) {
-            deduped.push(normalized);
-        }
-    }
-    deduped
-}
-
-fn load_user_formid_db_paths(yaml_dir_root: &str, yaml_dir_data: &str, game: &str) -> Vec<PathBuf> {
-    let settings_path = PathBuf::from(yaml_dir_root).join("CLASSIC Settings.yaml");
-
-    if !settings_path.exists() {
-        return Vec::new();
-    }
-
-    let ops = YamlOperations::new();
-    let doc = match ops.load_yaml_file(Path::new(&settings_path)) {
-        Ok(doc) => doc,
-        Err(_) => return Vec::new(),
+    let max_parallel = if request.max_concurrent == 0 {
+        None
+    } else {
+        Some(request.max_concurrent as usize)
+    };
+    let run = CrashLogScanRun::new(prepared);
+    let run_request = CrashLogScanRunRequest {
+        logs: request
+            .log_paths
+            .iter()
+            .map(|path| PathBuf::from(path.as_str()))
+            .collect(),
+        intent,
+        max_concurrent: max_parallel,
+        cancellation: Some(Arc::clone(&cancellation_token.cancelled)),
+        preserve_order: false,
     };
 
-    let key_path = format!("CLASSIC_Settings.FormID Databases.{game}");
-    let raw_paths = ops.get_vec_value(&doc, &key_path);
-    raw_paths
+    let result = block_on_result(run.run(run_request, |event| {
+        let log_path = event.crash_log.to_string_lossy();
+        callback.on_batch_progress(&make_progress_event(
+            match event.kind {
+                CrashLogScanRunEventKind::Queued => ffi::BatchProgressEventKind::Queued,
+                CrashLogScanRunEventKind::Started => ffi::BatchProgressEventKind::Started,
+                CrashLogScanRunEventKind::Phase => ffi::BatchProgressEventKind::Phase,
+                CrashLogScanRunEventKind::Completed => ffi::BatchProgressEventKind::Completed,
+                CrashLogScanRunEventKind::Failed => ffi::BatchProgressEventKind::Failed,
+            },
+            map_progress_phase(event.phase),
+            event.completed as u32,
+            event.total as u32,
+            event.input_index as u32,
+            log_path.as_ref(),
+            event.success,
+        ));
+    }))?;
+
+    Ok(result
+        .logs
         .into_iter()
-        .map(PathBuf::from)
-        .map(|p| {
-            if p.is_absolute() {
-                normalize_path(p)
-            } else {
-                normalize_path(PathBuf::from(yaml_dir_data).join(p))
-            }
-        })
-        .collect()
+        .map(scan_run_log_outcome_to_dto)
+        .collect())
+}
+
+fn scan_run_intent_from_request(request: &ffi::ScanRunRequestDto) -> CrashLogScanRunIntent {
+    if request.targeted_mode {
+        return CrashLogScanRunIntent::Targeted;
+    }
+
+    let unsolved_logs = if !request.move_unsolved_logs {
+        StandardUnsolvedLogsIntent::LeaveInPlace
+    } else {
+        let destination = request.unsolved_logs_destination.trim();
+        if destination.is_empty() {
+            StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
+        } else {
+            StandardUnsolvedLogsIntent::MoveToCustom(PathBuf::from(destination))
+        }
+    };
+
+    CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs })
+}
+
+// ── FormID database path resolution ─────────────────────────────────
+
+fn load_user_formid_db_paths(yaml_dir_root: &str, yaml_dir_data: &str, game: &str) -> Vec<PathBuf> {
+    core_resolve_user_formid_database_paths(yaml_dir_root, yaml_dir_data, game)
 }
 
 fn load_exclude_log_records(yaml_dir_data: &str) -> Vec<String> {
-    let main_yaml = PathBuf::from(yaml_dir_data)
-        .join("databases")
-        .join("CLASSIC Main.yaml");
-
-    if !main_yaml.exists() {
-        return Vec::new();
-    }
-
-    let ops = YamlOperations::new();
-    let doc = match ops.load_yaml_file(Path::new(&main_yaml)) {
-        Ok(doc) => doc,
-        Err(_) => return Vec::new(),
-    };
-
-    ops.get_vec_value(&doc, "exclude_log_records")
+    core_load_simplify_remove_list(yaml_dir_data)
 }
 
 fn resolve_formid_db_paths(yaml_dir_root: &str, yaml_dir_data: &str, game: &str) -> Vec<PathBuf> {
-    let data_dir = PathBuf::from(yaml_dir_data);
-    let main_db = data_dir
-        .join("databases")
-        .join(format!("{game} FormIDs Main.db"));
-
-    let hardcoded = hardcoded_formid_db_relpaths(game)
-        .iter()
-        .map(|rel| data_dir.join(rel))
-        .collect::<Vec<_>>();
-
-    let user_paths = load_user_formid_db_paths(yaml_dir_root, yaml_dir_data, game);
-
-    let mut all_paths = Vec::with_capacity(1 + hardcoded.len() + user_paths.len());
-    all_paths.push(main_db);
-    all_paths.extend(hardcoded);
-    all_paths.extend(user_paths);
-    dedupe_paths(all_paths)
+    core_resolve_formid_database_paths(yaml_dir_root, yaml_dir_data, game)
 }
 
 #[cfg(test)]

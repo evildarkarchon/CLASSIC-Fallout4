@@ -32,13 +32,15 @@ dist/
 _internal/
 
 # CLASSIC Runtime-Created Files
-*.log
 !Crash Logs/*.log
+!sample_logs/*.log
+*.log
 *.db
 *Local.yaml
 CLASSIC Backup/
 CLASSIC GFS Report.md
 CLASSIC Ignore.yaml
+!python-bindings/tests/fixtures/CLASSIC Ignore.yaml
 CLASSIC Settings.yaml
 Fallout4 FID*.txt
 FormID_List*
@@ -350,7 +352,7 @@ build-debug/
 !.opencode/skills/**
 build-*/
 # CocoIndex Code (ccc)
-/.cocoindex_code/
+.cocoindex_code/
 !.agents/skills/
 opencode.json
 .claude/worktrees
@@ -358,3 +360,7 @@ opencode.json
 .kilocode/package-lock.json
 .pi-lens/
 /qt.conf
+
+# Intentially unignored as part of transition from submodule to regular directory.
+# Since worktrees and submodules don't work well together, it's easier to just use a normal directory.
+!sample_logs/**

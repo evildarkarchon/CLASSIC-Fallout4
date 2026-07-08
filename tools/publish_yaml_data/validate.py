@@ -43,6 +43,55 @@ _YAML = YAML(typ="safe", pure=True)
 
 SCHEMA_VERSION_RE = re.compile(r"^\d+\.\d+$")
 
+# The two keys an action may use to declare its Autoscan Report destination.
+# `placement` is the canonical key; `bucket` is the retained compatibility
+# name for one transition. The runtime rule parsers (Rust
+# `parse_autoscan_report_placement`, Node `parse_action_placement`, Python
+# `parse_settings_rules`) read `placement` first and fall back to `bucket`.
+_PLACEMENT_KEYS = ("placement", "bucket")
+
+
+def _normalize_placement(value: object) -> object:
+    """Normalize a placement/bucket scalar the way the runtime parsers do.
+
+    Rust `AutoscanReportPlacement::parse` trims and lowercases before matching,
+    so ``"Settings "`` and ``"settings"`` resolve to the same enum. Non-string
+    values are returned unchanged so a malformed (non-scalar) value never
+    compares equal to a valid one.
+    """
+    if isinstance(value, str):
+        return value.strip().lower()
+    return value
+
+
+def _check_placement_bucket_agreement(path: Path, node: object) -> list[str]:
+    """Return violations for any mapping whose `placement`/`bucket` disagree.
+
+    The runtime rule parsers prefer `placement` and silently fall back to
+    `bucket`, so an action that carries both keys with disagreeing values
+    would route the rendered outcome to different Autoscan Report sections
+    depending on client version. Keeping both keys is allowed during the
+    transition, but they must resolve to the same value; this guard prevents
+    the two hand-maintained literals from drifting apart.
+    """
+    errors: list[str] = []
+    if isinstance(node, dict):
+        if all(key in node for key in _PLACEMENT_KEYS):
+            placement = _normalize_placement(node["placement"])
+            bucket = _normalize_placement(node["bucket"])
+            if placement != bucket:
+                errors.append(
+                    f"FAIL: {path}: action declares placement="
+                    f"{node['placement']!r} and bucket={node['bucket']!r}; "
+                    "both keys must resolve to the same value"
+                )
+        for value in node.values():
+            errors.extend(_check_placement_bucket_agreement(path, value))
+    elif isinstance(node, list):
+        for item in node:
+            errors.extend(_check_placement_bucket_agreement(path, item))
+    return errors
+
 
 def _parse_schema_point(value: str) -> tuple[int, int]:
     """Convert a MAJOR.MINOR string to a comparable tuple.
@@ -153,6 +202,11 @@ def validate_file(path: Path) -> list[str]:
 
     if not isinstance(doc, dict):
         return [f"FAIL: {path}: root document is not a mapping"]
+
+    # Reject placement/bucket drift wherever both keys are authored, so a
+    # mis-edit that touches only one key fails here rather than silently
+    # rendering to different report sections across client versions.
+    errors.extend(_check_placement_bucket_agreement(path, doc))
 
     if "schema_version" not in doc:
         errors.append(f"FAIL: {path}: missing root-level schema_version")

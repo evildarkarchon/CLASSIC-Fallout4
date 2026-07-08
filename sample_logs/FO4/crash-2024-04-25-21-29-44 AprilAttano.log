@@ -1,0 +1,391 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.28.6
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x000000000000
+
+	[Compatibility]
+		F4EE: true
+	[Crashlog]
+		AutoOpen: true
+		PromptUpload: true
+	[Fixes]
+		ActorIsHostileToActor: true
+		CellInit: true
+		CreateD3DAndSwapChain: true
+		EncounterZoneReset: true
+		GreyMovies: true
+		MagicEffectApplyEvent: true
+		MovementPlanner: true
+		PackageAllocateLocation: true
+		SafeExit: true
+		TESObjectREFRGetEncounterZone: true
+		UnalignedLoad: true
+		UtilityShader: true
+	[Patches]
+		Achievements: true
+		ArchiveLimit: false
+		BSMTAManager: true
+		BSPreCulledObjects: true
+		BSTextureStreamerLocalHeap: false
+		HavokMemorySystem: true
+		INISettingCollection: true
+		InputSwitch: false
+		MaxStdIO: -1
+		MemoryManager: false
+		MemoryManagerDebug: false
+		ScaleformAllocator: true
+		SmallBlockAllocator: true
+		WorkshopMenu: true
+	[Warnings]
+		CreateTexture2D: true
+		ImageSpaceAdapter: true
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 10 Pro v10.0.19045
+	CPU: AuthenticAMD AMD Ryzen 5 5600X 6-Core Processor             
+	GPU #1: Nvidia GA104 [GeForce0RTX03060]
+	PHYSICAL MEMORY: 14.20 GB/31.91 GB
+
+PROBABLE CALL STACK:
+	[0] 0x7FFB383C5CE2   Buffout4.dll+0085CE2
+	[1] 0x7FFB383B9E7F   Buffout4.dll+0079E7F
+	[2] 0x7FFB383C34F5   Buffout4.dll+00834F5
+	[3] 0x7FFBCAE6DE47 KERNELBASE.dll+012DE47
+	[4] 0x7FFBCD4354B0      ntdll.dll+00A54B0
+	[5] 0x7FFBCD41CA06      ntdll.dll+008CA06
+	[6] 0x7FFBCD4323AF      ntdll.dll+00A23AF
+	[7] 0x7FFBCD3E14B4      ntdll.dll+00514B4
+	[8] 0x7FFBCD430EBE      ntdll.dll+00A0EBE
+
+REGISTERS:
+	RBX 0x1E661805880      (BSFadeNode*)
+		Name: "DandyBoyApples"
+	RDI 0x1E661805880      (BSFadeNode*)
+		Name: "DandyBoyApples"
+	R10 0x1E6617F9740      (BSSkin::Instance*)
+
+STACK:
+	[RSP+000] 0x7FF62ACE9277     (void* -> Fallout4.exe+1B99277)
+	[RSP+800] 0x1E6600803C0      (BSLeafAnimNode*)
+		Name: "Sapling01"
+	[RSP+100] 0x1E660707040      (NiNode*)
+		Name: "##LightOn"
+	[RSP+400] 0x7FF62B921AC5     (void* -> Fallout4.exe+27D1AC5)
+	[RSP+580] 0x1E661805880      (BSFadeNode*)
+		Name: "DandyBoyApples"
+	[RSP+680] 0x1E661805880      (BSFadeNode*)
+		Name: "DandyBoyApples"
+	[RSP+700] 0x7FF62ACE9362     (void* -> Fallout4.exe+1B99362)
+	[RSP+780] 0x1E65E449680      (NiNode*)
+		Name: ""
+	[RSP+880] 0x1E661122140      (NiNode*)
+		Name: ""
+	[RSP+A80] 0x1E6625037A0      (BSMultiBoundNode*)
+		Name: ""
+	[RSP+B00] 0x7FF62ACE9362     (void* -> Fallout4.exe+1B99362)
+	[RSP+C80] 0x1E65E449680      (NiNode*)
+		Name: ""
+	[RSP+E00] 0x7FF62EBBBDC0     (JobListManager::ServingThread*)
+	[RSP+E80] 0x1E6625037A0      (BSMultiBoundNode*)
+		Name: ""
+	[RSP+F00] 0x7FF62AE28C58     (void* -> Fallout4.exe+1CD8C58)
+	[RSP+168] 0x1E6625037A0      (BSMultiBoundNode*)
+		Name: ""
+	[RSP+170] 0x7FF62ACF3C05     (void* -> Fallout4.exe+1BA3C05)
+	[RSP+178] 0x1E65EC40000      (TESObjectCELL*)
+		File: "CleanMySettlement.esm"
+		Flags: 0x0004000B
+		Form ID: 0x0000DF27
+		Form Type: 63
+		Full Name: ""
+	[RSP+188] 0x1E65EC40000      (TESObjectCELL*)
+		File: "CleanMySettlement.esm"
+		Flags: 0x0004000B
+		Form ID: 0x0000DF27
+		Form Type: 63
+		Full Name: ""
+	[RSP+1A0] 0x7FF629509A60     (void* -> Fallout4.exe+03B9A60)
+	[RSP+1A8] 0x1E6625037A0      (BSMultiBoundNode*)
+		Name: ""
+	[RSP+1F8] 0x1E65343B790      (GridCellArray*)
+	[RSP+210] 0x7FF629323A98     (void* -> Fallout4.exe+01D3A98)
+	[RSP+218] 0x1E65EC40000      (TESObjectCELL*)
+		File: "CleanMySettlement.esm"
+		Flags: 0x0004000B
+		Form ID: 0x0000DF27
+		Form Type: 63
+		Full Name: ""
+	[RSP+220] 0x1E663128B01      (char*) "RemoteF"
+	[RSP+230] 0x7FF62EBBBDC0     (JobListManager::ServingThread*)
+	[RSP+238] 0x7FF62EBBBDC0     (JobListManager::ServingThread*)
+	[RSP+248] 0x1E6533B8750      (TES*)
+	[RSP+250] 0x7FF629245DA8     (void* -> Fallout4.exe+00F5DA8)
+	[RSP+258] 0x1E6533B8750      (TES*)
+	[RSP+268] 0x1E650747E30      (SceneGraph*)
+		Name: "WorldRoot Node"
+	[RSP+270] 0x7FFBCADAE53B     (void* -> KERNELBASE.dll+006E53B)
+	[RSP+280] 0x7FF62EBBBDC0     (JobListManager::ServingThread*)
+	[RSP+290] 0x7FF62EBBBDC0     (JobListManager::ServingThread*)
+	[RSP+2A0] 0x7FFBCAD630CE     (void* -> KERNELBASE.dll+00230CE)
+	[RSP+2B8] 0x1E660F23680      (TESObjectCELL*)
+		File: "CleanMySettlement.esm"
+		Flags: 0x0004000B
+		Form ID: 0x0000DEE5
+		Form Type: 63
+		Full Name: ""
+	[RSP+2C0] 0x7FF629E8C080     (void* -> Fallout4.exe+0D3C080)
+	[RSP+310] 0x7FF629E0E5B0     (void* -> Fallout4.exe+0CBE5B0)
+	[RSP+328] 0x7FF62EBBBDC0     (JobListManager::ServingThread*)
+	[RSP+340] 0x7FF629E0D20D     (void* -> Fallout4.exe+0CBD20D)
+	[RSP+378] 0x7FF62EBBBDC0     (JobListManager::ServingThread*)
+	[RSP+380] 0x7FF629E107A7     (void* -> Fallout4.exe+0CC07A7)
+	[RSP+3A8] 0x7FF62EBBBDC0     (JobListManager::ServingThread*)
+	[RSP+3B0] 0x7FF62AC6CFED     (void* -> Fallout4.exe+1B1CFED)
+	[RSP+3D8] 0x7FF62EBBBDC0     (JobListManager::ServingThread*)
+	[RSP+3F0] 0x7FFBCC327344     (void* -> KERNEL32.DLL+0017344)
+	[RSP+420] 0x7FFBCD3E26B1     (void* -> ntdll.dll+00526B1)
+	[RSP+470] 0x7FFBCAE6DC60     (void* -> KERNELBASE.dll+012DC60)
+	[RSP+570] 0x0                (size_t)
+	[RSP+670] 0x0                (size_t)
+	[RSP+770] 0x0                (size_t)
+	[RSP+870] 0x0                (size_t)
+	[RSP+970] 0x0                (size_t)
+	[RSP+A70] 0x0                (size_t)
+
+MODULES:
+	XINPUT1_3.dll                      0x000000400000
+	X3DAudio1_7.dll                    0x000070990000
+	steam_api64.dll                    0x0000709A0000
+	d3d11.dll                          0x000180000000
+	PowerGridTools.dll                 0x01E5AEB70000
+	Fallout4.exe                       0x7FF629150000
+	XAudio2_7.dll                      0x7FFB2FF50000
+	xinput1_4.dll                      0x7FFB32900000
+	d3dcompiler_46e.dll                0x7FFB32BA0000
+	gameoverlayrenderer64.dll          0x7FFB32F60000
+	wsfw_identifier.dll                0x7FFB33100000
+	SideAimAni.dll                     0x7FFB33200000
+	PRKF.dll                           0x7FFB332A0000
+	steamclient64.dll                  0x7FFB33330000
+	po3_SpellPerkItemDistributorF4.dll 0x7FFB37AC0000
+	EscapeFreeze.dll                   0x7FFB380C0000
+	BakaScrapHeap.dll                  0x7FFB38180000
+	BakaFramework.dll                  0x7FFB38250000
+	Buffout4.dll                       0x7FFB38340000
+	tier0_s64.dll                      0x7FFB386A0000
+	D3DCOMPILER_43.dll                 0x7FFB38840000
+	IPHLPAPI.DLL                       0x7FFB38AB0000
+	f4se_1_10_163.dll                  0x7FFB39C70000
+	mcm.dll                            0x7FFB3A480000
+	HighFPSPhysicsFix.dll              0x7FFB3DCD0000
+	vstdlib_s64.dll                    0x7FFB3DD60000
+	nvspcap64.dll                      0x7FFB3E260000
+	GLXRM_UnleveledWorld.dll           0x7FFB44070000
+	GLXRM_ScalingFlagRemover.dll       0x7FFB440C0000
+	d3dx11_43.dll                      0x7FFB44110000
+	cudart64_75.dll                    0x7FFB44160000
+	GFSDK_SSAO_D3D11.win64.dll         0x7FFB441C0000
+	flexRelease_x64.dll                0x7FFB44250000
+	GFSDK_GodraysLib.x64.dll           0x7FFB46B50000
+	PriorityMod.dll                    0x7FFBA3440000
+	flexExtRelease_x64.dll             0x7FFBA9D30000
+	MSVCR110.dll                       0x7FFBA9D90000
+	MSVCP110.dll                       0x7FFBA9E70000
+	bink2w64.dll                       0x7FFBA9F20000
+	f4se_steam_loader.dll              0x7FFBA9FD0000
+	DSOUND.DLL                         0x7FFBAA1B0000
+	usvfs_x64.dll                      0x7FFBAA8E0000
+	inputhost.dll                      0x7FFBAEAB0000
+	webio.dll                          0x7FFBAFA70000
+	winmmbase.dll                      0x7FFBB06D0000
+	MSVCP140.dll                       0x7FFBB09B0000
+	VCRUNTIME140.dll                   0x7FFBB0A40000
+	VCRUNTIME140_1.dll                 0x7FFBB0A60000
+	Windows.UI.dll                     0x7FFBB32A0000
+	textinputframework.dll             0x7FFBB3870000
+	mskeyprotect.dll                   0x7FFBB6CC0000
+	nvwgf2umx.dll                      0x7FFBB7080000
+	ncryptsslp.dll                     0x7FFBBB660000
+	fwpuclnt.dll                       0x7FFBBB8D0000
+	rasadhlp.dll                       0x7FFBBB9E0000
+	Secur32.dll                        0x7FFBBBB10000
+	WINSPOOL.DRV                       0x7FFBBC5F0000
+	COMCTL32.dll                       0x7FFBBC6A0000
+	MpOav.dll                          0x7FFBBCF30000
+	nvToolsExt64_1.dll                 0x7FFBBD0D0000
+	fastprox.dll                       0x7FFBBD4A0000
+	NvMessageBus.dll                   0x7FFBBD7A0000
+	nvgpucomp64.dll                    0x7FFBBDCA0000
+	WINHTTP.dll                        0x7FFBBFF30000
+	amsi.dll                           0x7FFBC0370000
+	wbemsvc.dll                        0x7FFBC03C0000
+	wbemcomn.dll                       0x7FFBC04F0000
+	wbemprox.dll                       0x7FFBC0580000
+	nvapi64.dll                        0x7FFBC05A0000
+	WINMM.dll                          0x7FFBC1ED0000
+	MMDevApi.dll                       0x7FFBC2570000
+	AUDIOSES.DLL                       0x7FFBC2600000
+	dhcpcsvc.DLL                       0x7FFBC2AE0000
+	drvstore.dll                       0x7FFBC2B00000
+	dhcpcsvc6.DLL                      0x7FFBC2CB0000
+	cryptnet.dll                       0x7FFBC2CD0000
+	WINNSI.DLL                         0x7FFBC2D10000
+	nvldumdx.dll                       0x7FFBC2D40000
+	VERSION.dll                        0x7FFBC31D0000
+	dxcore.dll                         0x7FFBC3220000
+	twinapi.appcore.dll                0x7FFBC5350000
+	WindowManagementAPI.dll            0x7FFBC55F0000
+	avrt.dll                           0x7FFBC5DC0000
+	PROPSYS.dll                        0x7FFBC60F0000
+	DbgHelp.dll                        0x7FFBC6230000
+	MSIMG32.dll                        0x7FFBC6470000
+	d3d11.dll                          0x7FFBC64F0000
+	D3DCOMPILER_47.dll                 0x7FFBC6760000
+	wintypes.dll                       0x7FFBC72D0000
+	dcomp.dll                          0x7FFBC7430000
+	CoreUIComponents.dll               0x7FFBC79A0000
+	CoreMessaging.dll                  0x7FFBC7E00000
+	apphelp.dll                        0x7FFBC8020000
+	UxTheme.dll                        0x7FFBC83A0000
+	resourcepolicyclient.dll           0x7FFBC8520000
+	dwmapi.dll                         0x7FFBC8620000
+	kernel.appcore.dll                 0x7FFBC8910000
+	windows.storage.dll                0x7FFBC8B10000
+	HID.DLL                            0x7FFBC92B0000
+	dxgi.dll                           0x7FFBC92F0000
+	schannel.DLL                       0x7FFBC99A0000
+	rsaenh.dll                         0x7FFBC9A90000
+	ntmarta.dll                        0x7FFBC9BB0000
+	UMPDC.dll                          0x7FFBC9E50000
+	IpHlpAPI.dll                       0x7FFBC9E70000
+	DNSAPI.dll                         0x7FFBC9EB0000
+	POWRPROF.dll                       0x7FFBC9FE0000
+	MSWSOCK.dll                        0x7FFBCA1D0000
+	CRYPTBASE.DLL                      0x7FFBCA3C0000
+	CRYPTSP.dll                        0x7FFBCA3D0000
+	Wldp.dll                           0x7FFBCA470000
+	NTASN1.dll                         0x7FFBCA4A0000
+	ncrypt.dll                         0x7FFBCA4E0000
+	msasn1.dll                         0x7FFBCA600000
+	devobj.dll                         0x7FFBCA7D0000
+	DPAPI.DLL                          0x7FFBCA830000
+	USERENV.dll                        0x7FFBCA8F0000
+	SSPICLI.DLL                        0x7FFBCA920000
+	profapi.dll                        0x7FFBCA970000
+	bcryptPrimitives.dll               0x7FFBCAA40000
+	wintrust.dll                       0x7FFBCAAD0000
+	cfgmgr32.dll                       0x7FFBCAB40000
+	ucrtbase.dll                       0x7FFBCAC40000
+	KERNELBASE.dll                     0x7FFBCAD40000
+	msvcp_win.dll                      0x7FFBCB040000
+	gdi32full.dll                      0x7FFBCB0E0000
+	bcrypt.dll                         0x7FFBCB200000
+	win32u.dll                         0x7FFBCB230000
+	CRYPT32.dll                        0x7FFBCB260000
+	IMM32.DLL                          0x7FFBCB3C0000
+	clbcatq.dll                        0x7FFBCB400000
+	OLEAUT32.dll                       0x7FFBCB4B0000
+	imagehlp.dll                       0x7FFBCB5F0000
+	shcore.dll                         0x7FFBCB6F0000
+	sechost.dll                        0x7FFBCB7A0000
+	SETUPAPI.dll                       0x7FFBCB8A0000
+	NSI.dll                            0x7FFBCBD10000
+	combase.dll                        0x7FFBCBD20000
+	USER32.dll                         0x7FFBCC080000
+	SHLWAPI.dll                        0x7FFBCC2B0000
+	KERNEL32.DLL                       0x7FFBCC310000
+	SHELL32.dll                        0x7FFBCC3D0000
+	ADVAPI32.dll                       0x7FFBCCB40000
+	WS2_32.dll                         0x7FFBCCBF0000
+	MSCTF.dll                          0x7FFBCCE10000
+	ole32.dll                          0x7FFBCCF30000
+	COMDLG32.dll                       0x7FFBCD060000
+	PSAPI.DLL                          0x7FFBCD140000
+	msvcrt.dll                         0x7FFBCD150000
+	GDI32.dll                          0x7FFBCD1F0000
+	RPCRT4.dll                         0x7FFBCD220000
+	ntdll.dll                          0x7FFBCD390000
+
+F4SE PLUGINS:
+	BakaFramework.dll v1.10
+	BakaScrapHeap.dll v1.3
+	Buffout4.dll v1.28.6
+	EscapeFreeze.dll v1
+	GLXRM_ScalingFlagRemover.dll v1
+	GLXRM_UnleveledWorld.dll v1
+	HighFPSPhysicsFix.dll
+	mcm.dll
+	po3_SpellPerkItemDistributorF4.dll v2
+	PowerGridTools.dll
+	PriorityMod.dll
+	PRKF.dll
+	SideAimAni.dll v1.6.1
+	wsfw_identifier.dll
+
+PLUGINS:
+	[00]     Fallout4.esm
+	[01]     DLCRobot.esm
+	[02]     DLCworkshop01.esm
+	[03]     DLCCoast.esm
+	[04]     DLCworkshop02.esm
+	[05]     DLCworkshop03.esm
+	[06]     DLCNukaWorld.esm
+	[07]     Unofficial Fallout 4 Patch.esp
+	[08]     ArmorKeywords.esm
+	[09]     WorkshopFramework.esm
+	[0A]     SettlementKeywords.esm
+	[0B]     EthreonMasterPlan.esm
+	[0C]     Snap'n Build.esm
+	[0D]     CleanMySettlement.esm
+	[0E]     ImmersiveAnimationFramework.esp
+	[0F]     SideAim.esp
+	[10]     RealAI.esp
+	[11]     NPC Accuracy Revised.esp
+	[12]     FHLeveledListIntegration.esp
+	[13]     AES_Renovated Furniture.esp
+	[14]     aes_rendeco.esp
+	[15]     LadyKillerBed.esp
+	[16]     Friffy_Fixed Rugs.esp
+	[17]     Eli_PlantPots.esp
+	[18]     SettlementMenuManager.esp
+	[19]     Eli_Pride.esp
+	[1A]     EroticArt.esp
+	[1B]     Plywood.esp
+	[1C]     WDP-PC.esp
+	[1D]     Generator Fusebox - More realistic version.esp
+	[1E]     ZerasPaintings.esp
+	[1F]     LooksMirror.esp
+	[20]     FunctionalDisplays-Collectibles.esp
+	[21]     FunctionalDisplays.esp
+	[22]     FunctionalDisplays-Patch-DLC-ALL.esp
+	[23]     FunctionalDisplays-MISC-Vanilla.esp
+	[24]     FunctionalDisplays-AID-Vanilla.esp
+	[25]     KURO.esp
+	[26]     OCDecorator.esp
+	[27]     OCDecoratorDLC.esp
+	[28]     OCDispenser.esp
+	[29]     Friffy_Fixed Curtains.esp
+	[2A]     Snappy_HouseK.esp
+	[2B]     SMH.esp
+	[2C]     OSHA_Signs.esp
+	[2D]     WorkshopRearranged.esp
+	[2E]     WorkshopRearranged_FriffyCurtains_Patch.esp
+	[2F]     WorkshopRearranged_FriffyRugs_Patch.esp
+	[30]     WorkshopRearranged_MasterPlan_Patch.esp
+	[31]     WorkshopRearranged_RenovatedDecorations_Patch.esp
+	[32]     WorkshopRearranged_RenovatedFurniture_Patch.esp
+	[33]     WorkshopRearranged_SnB_Patch.esp
+	[FE:000] BakaFramework.esm
+	[FE:001] IAF - Far Harbor & Nuka World.esp
+	[FE:002] LSR - Automatron DLC.esp
+	[FE:003] LSR - Fallout 4 - Main.esp
+	[FE:004] Unofficial Fallout 4 Patch - LSR Patch.esp
+	[FE:005] LSR - Far Harbor DLC.esp
+	[FE:006] LSR - Mods Patch - No Sound Effects.esp
+	[FE:007] LSR - Nuka-World DLC.esp
+	[FE:008] LSR - Vault-Tec Workshop DLC.esp
+	[FE:009] SCOURGE - Vanilla.esp
+	[FE:00A] SCOURGE - Nuka World.esp
+	[FE:00B] SCOURGE - Far Harbor.esp
+	[FE:00C] SCOURGE - Automatron.esp
+	[FE:00D] Workshop_Planters.esp

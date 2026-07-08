@@ -146,19 +146,6 @@
       ]
     },
     {
-      "coverageId": "python-deferred-scanlog-012",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "CheckId"
-      ]
-    },
-    {
       "coverageId": "python-deferred-scanlog-013",
       "classification": "deferred",
       "ownerModule": "scanlog",
@@ -3002,58 +2989,6 @@
       "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [
         "classic_scanlog.SettingsValidator.scan_all_settings"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-244",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.SettingsValidator.scan_archivelimit_setting"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-245",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.SettingsValidator.scan_buffout_achievements_setting"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-246",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.SettingsValidator.scan_buffout_looksmenu_setting"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-247",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.SettingsValidator.scan_buffout_memorymanagement_settings"
       ],
       "rustSymbols": []
     },

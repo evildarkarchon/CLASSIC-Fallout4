@@ -2,7 +2,7 @@
 name = "classic-path-core"
 version = "9.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
 description = "Core path management for CLASSIC (game paths, documents, validation, backups)"
 license = "MIT"

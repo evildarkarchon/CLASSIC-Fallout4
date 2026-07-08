@@ -159,6 +159,8 @@ fn preflight_rule_to_pydict(py: Python<'_>, rule: &PreflightRule) -> PyResult<Py
         classic_config_core::PreflightActionKind::Issue => "issue",
     };
     action.set_item("kind", kind)?;
+    action.set_item("placement", rule.action.bucket.as_str())?;
+    action.set_item("bucket", rule.action.bucket.as_str())?;
     action.set_item("severity", severity_to_str(rule.action.severity))?;
     action.set_item("message", &rule.action.message)?;
     action.set_item("fix", &rule.action.fix)?;
@@ -1084,10 +1086,10 @@ pub fn clear_yaml_cache() {
 /// Auto-register the application directory so settings resolve relative to the
 /// executed Python file rather than the interpreter's install path.
 fn auto_init_application_dir(py: Python<'_>) {
-    if classic_registry_core::get_application_dir().is_none() {
-        if let Some(app_dir) = classic_shared::resolve_python_entry_dir(py) {
-            classic_registry_core::set_application_dir(app_dir);
-        }
+    if classic_registry_core::get_application_dir().is_none()
+        && let Some(app_dir) = classic_shared::resolve_python_entry_dir(py)
+    {
+        classic_registry_core::set_application_dir(app_dir);
     }
 }
 

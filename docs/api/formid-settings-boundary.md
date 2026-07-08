@@ -1,6 +1,6 @@
 # FormID Settings Boundary
 
-Contributor-facing notes for the current FormID database settings split between [`classic-config-core`](../../business-logic/classic-config-core) and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
+Contributor-facing notes for the current FormID database settings split between [`classic-config-core`](../../business-logic/classic-config-core) and scan-time intake in [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), consumed by [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 This page is intentionally narrow. It documents the active source-backed boundary contributors hit when tracing why configured FormID database paths do or do not affect scan startup.
 
@@ -13,7 +13,7 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 Use this page when you need to:
 
 - understand which settings shape `classic-config-core` persists today
-- understand which settings shape active scan startup in `classic-cpp-bridge` consumes today
+- understand which settings shape active scan startup consumes through Crash Log Scan Intake today
 - trace how GUI or binding surfaces fit into that split
 - debug why a FormID database path saved through one surface does not show up during scanning
 
@@ -33,9 +33,9 @@ There are two different active representations for per-game FormID database path
 - YAML key: top-level `formid_databases`
 - shape: snake_case map from game name to zero or more paths
 
-## `classic-cpp-bridge` scan-startup representation
+## Scan-startup intake representation
 
-[`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) reads:
+[`business-logic/classic-scanlog-core/src/scan_intake.rs`](../../business-logic/classic-scanlog-core/src/scan_intake.rs) reads:
 
 - YAML key path: `CLASSIC_Settings.FormID Databases.{game}`
 - source file path: `CLASSIC Settings.yaml` next to the executable / root install directory
@@ -46,6 +46,7 @@ Important contributor takeaway:
 - these are not the same YAML key
 - active scan startup does not currently read `ClassicConfig.formid_databases`
 - `ClassicConfig::load_from_yaml()` does not currently read `CLASSIC_Settings.FormID Databases.{game}` into `formid_databases`
+- `classic-cpp-bridge` keeps the public scan config call shape, but delegates this path selection to scanlog-core intake
 
 ---
 
@@ -85,9 +86,9 @@ Practical limit:
 
 ---
 
-## What `classic-cpp-bridge` Reads At Scan Startup Today
+## What Crash Log Scan Intake Reads At Scan Startup Today
 
-Active scan startup goes through `build_full_scan_config()` and `resolve_formid_db_paths()` in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs).
+Active scan startup goes through `build_full_scan_config()` in the C++ bridge, then `CrashLogScanIntake::from_yaml_paths(...).prepare()` in [`business-logic/classic-scanlog-core/src/scan_intake.rs`](../../business-logic/classic-scanlog-core/src/scan_intake.rs).
 
 Current path assembly order is:
 
@@ -104,7 +105,7 @@ Current hardcoded extras:
 
 Current settings-read details:
 
-- the bridge reads only `CLASSIC Settings.yaml`
+- intake reads only `CLASSIC Settings.yaml` for user FormID DB paths
 - it loads the file with `YamlOperations`, not `ClassicConfig`
 - relative user paths are resolved against `yaml_dir_data` (`CLASSIC Data`)
 - absolute user paths are used as-is after normalization
@@ -126,10 +127,11 @@ With `yaml_dir_data = <root>/CLASSIC Data`, the bridge resolves that to:
 - `<root>/CLASSIC Data/databases/FOLON FormIDs.db`
 - `<root>/CLASSIC Data/databases/custom.db`
 
-Bridge tests currently cover two contributor-relevant cases:
+Intake and bridge adapter tests currently cover contributor-relevant cases:
 
 - an explicit empty `CLASSIC_Settings.FormID Databases.Fallout4: []` still yields main DB plus hardcoded `FOLON FormIDs.db`
 - a user entry that duplicates the hardcoded FOLON path is removed by de-duplication
+- the preserved bridge `build_full_scan_config()` shape can still prepare config and create an orchestrator
 
 ---
 
@@ -164,7 +166,7 @@ Contributor-visible GUI details:
 - helper text says the built-in database is always included
 - load and save both use `yaml_ops_get_vec()` / `yaml_ops_set_vec_setting()` against the legacy nested key
 
-That means the GUI is currently aligned with active scan startup in `classic-cpp-bridge`, not with `ClassicConfig` YAML serialization.
+That means the GUI is currently aligned with active scan startup through Crash Log Scan Intake, not with `ClassicConfig` YAML serialization.
 
 ---
 
@@ -174,7 +176,7 @@ This split is the main source-backed reason a contributor can see "saved" FormID
 
 Common failure patterns:
 
-- a path saved through `ClassicConfig::save_to_yaml()` appears under top-level `formid_databases`, but active scan startup ignores it because the bridge only reads `CLASSIC_Settings.FormID Databases.{game}`
+- a path saved through `ClassicConfig::save_to_yaml()` appears under top-level `formid_databases`, but active scan startup ignores it because intake only reads `CLASSIC_Settings.FormID Databases.{game}`
 - a path saved through the GUI appears under `CLASSIC_Settings.FormID Databases.{game}` and affects scanning, but `ClassicConfig::load_from_yaml()` still shows an empty `formid_databases` map if no top-level key exists
 - a relative path may look correct in YAML but resolves under `yaml_dir_data` (`CLASSIC Data`), not relative to the settings file itself
 - a missing DB file may not fail scan startup loudly because `DatabasePool::initialize()` later skips nonexistent files with a warning instead of a hard error
@@ -190,7 +192,7 @@ Practical debugging rule:
 
 These details are source-backed today and matter for contributors, but they should not be treated as an implied future design.
 
-- `classic-cpp-bridge` currently reads settings YAML directly instead of loading `ClassicConfig`
+- `classic-scanlog-core` intake currently reads settings YAML directly instead of loading `ClassicConfig`
 - `classic-config-core` currently ignores the legacy nested `CLASSIC_Settings.FormID Databases.{game}` path
 - `classic-config-core` path validation does not validate FormID database files
 - bridge path normalization uses `path.components().collect()`; it does not canonicalize case or resolve symlinks
@@ -203,5 +205,6 @@ These details are source-backed today and matter for contributors, but they shou
 ## Related Docs
 
 - [`classic-config-core.md`](classic-config-core.md) - full Rust config API and runtime settings model
+- [`classic-scanlog-core.md`](classic-scanlog-core.md) - Crash Log Scan Intake and downstream analysis
 - [`classic-database-core.md`](classic-database-core.md) - database pool initialization and missing-file behavior
 - [`formid-sqlite-conventions.md`](formid-sqlite-conventions.md) - broader fixture, schema, lookup, and path rules for FormID DB work

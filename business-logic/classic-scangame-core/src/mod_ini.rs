@@ -221,35 +221,35 @@ impl ModIniScanner {
 
         // Check dxvk.conf separately (uses game-specific section)
         let dxvk_section = format!("{game_name}.exe");
-        if let Some(true) = cache.get_bool("dxvk.conf", &dxvk_section, "dxgi.syncInterval") {
-            if let Some(path) = cache.get_path("dxvk.conf") {
-                entries.push(VsyncEntry {
-                    file_path: path.to_path_buf(),
-                    setting: "dxgi.syncInterval".to_string(),
-                });
-            }
+        if let Some(true) = cache.get_bool("dxvk.conf", &dxvk_section, "dxgi.syncInterval")
+            && let Some(path) = cache.get_path("dxvk.conf")
+        {
+            entries.push(VsyncEntry {
+                file_path: path.to_path_buf(),
+                setting: "dxgi.syncInterval".to_string(),
+            });
         }
 
         // Check standard VSync settings
         for vs in VSYNC_SETTINGS {
-            if let Some(true) = cache.get_bool(vs.file_name, vs.section, vs.setting) {
-                if let Some(path) = cache.get_path(vs.file_name) {
-                    entries.push(VsyncEntry {
-                        file_path: path.to_path_buf(),
-                        setting: vs.setting.to_string(),
-                    });
-                }
+            if let Some(true) = cache.get_bool(vs.file_name, vs.section, vs.setting)
+                && let Some(path) = cache.get_path(vs.file_name)
+            {
+                entries.push(VsyncEntry {
+                    file_path: path.to_path_buf(),
+                    setting: vs.setting.to_string(),
+                });
             }
         }
 
         // Check highfpsphysicsfix.ini separately (different section)
-        if let Some(true) = cache.get_bool("highfpsphysicsfix.ini", "Main", "EnableVSync") {
-            if let Some(path) = cache.get_path("highfpsphysicsfix.ini") {
-                entries.push(VsyncEntry {
-                    file_path: path.to_path_buf(),
-                    setting: "EnableVSync".to_string(),
-                });
-            }
+        if let Some(true) = cache.get_bool("highfpsphysicsfix.ini", "Main", "EnableVSync")
+            && let Some(path) = cache.get_path("highfpsphysicsfix.ini")
+        {
+            entries.push(VsyncEntry {
+                file_path: path.to_path_buf(),
+                setting: "EnableVSync".to_string(),
+            });
         }
 
         entries
@@ -260,8 +260,8 @@ impl ModIniScanner {
         let mut issues = Vec::new();
 
         // ESPExplorer hotkey check
-        if cache.contains("espexplorer.ini") {
-            if let Some(issue) = cache.detect_issue(
+        if cache.contains("espexplorer.ini")
+            && let Some(issue) = cache.detect_issue(
                 "espexplorer.ini",
                 "General",
                 "HotKey",
@@ -269,14 +269,14 @@ impl ModIniScanner {
                 "Hotkey is commented out and won't work. Change to hex code 0x79 for F10.",
                 |val| val.contains("; F10"),
                 IssueSeverity::Warning,
-            ) {
-                issues.push(issue);
-            }
+            )
+        {
+            issues.push(issue);
         }
 
         // EPO particle count check
-        if cache.contains("epo.ini") {
-            if let Some(issue) = cache.detect_issue(
+        if cache.contains("epo.ini")
+            && let Some(issue) = cache.detect_issue(
                 "epo.ini",
                 "Particles",
                 "iMaxDesired",
@@ -284,9 +284,9 @@ impl ModIniScanner {
                 "High particle count can cause performance issues and crashes.",
                 |val| val.trim().parse::<i64>().is_ok_and(|v| v > 5000),
                 IssueSeverity::Warning,
-            ) {
-                issues.push(issue);
-            }
+            )
+        {
+            issues.push(issue);
         }
 
         // F4EE settings checks
@@ -317,8 +317,8 @@ impl ModIniScanner {
         }
 
         // High FPS Physics Fix loading screen FPS check
-        if cache.contains("highfpsphysicsfix.ini") {
-            if let Some(issue) = cache.detect_issue(
+        if cache.contains("highfpsphysicsfix.ini")
+            && let Some(issue) = cache.detect_issue(
                 "highfpsphysicsfix.ini",
                 "Limiter",
                 "LoadingScreenFPS",
@@ -326,9 +326,9 @@ impl ModIniScanner {
                 "Loading screen FPS is too low. Increase to 600.0 to prevent physics issues.",
                 |val| val.trim().parse::<f64>().is_ok_and(|v| v < 600.0),
                 IssueSeverity::Warning,
-            ) {
-                issues.push(issue);
-            }
+            )
+        {
+            issues.push(issue);
         }
 
         issues

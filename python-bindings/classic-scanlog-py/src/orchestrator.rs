@@ -5,8 +5,10 @@ use classic_config_core::{
 };
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
-    AnalysisConfig, AnalysisResult, BatchScanEventKind, BatchScanOptions, OrchestratorCore,
-    build_analysis_config_from_yaml,
+    AnalysisConfig, AnalysisResult, BatchScanEventKind, BatchScanOptions, CrashLogScanIntake,
+    CrashLogScanOptions, CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunIntent,
+    CrashLogScanRunLogOutcome, CrashLogScanRunRequest, OrchestratorCore,
+    StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, build_analysis_config_from_yaml,
 };
 use classic_shared::without_gil_block_on;
 use pyo3::exceptions::{PyTypeError, PyValueError};
@@ -790,6 +792,207 @@ impl PyAnalysisResult {
     pub fn trigger_scan_failed(&self) -> bool {
         self.inner.trigger_scan_failed
     }
+}
+
+/// Python wrapper for a full Crash Log Scan Run per-log result.
+#[pyclass(name = "ScanRunLogResult", from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunLogResult {
+    input_index: usize,
+    log_path: String,
+    autoscan_report_path: Option<String>,
+    success: bool,
+    cancelled: bool,
+    moved_to_unsolved_logs: bool,
+    error: Option<String>,
+    processing_time_ms: u64,
+    formid_count: usize,
+    plugin_count: usize,
+    suspect_count: usize,
+}
+
+#[pymethods]
+impl PyScanRunLogResult {
+    /// Stable index from the input log path list.
+    #[getter]
+    pub fn input_index(&self) -> usize {
+        self.input_index
+    }
+
+    /// Crash Log path selected for this entry.
+    #[getter]
+    pub fn log_path(&self) -> String {
+        self.log_path.clone()
+    }
+
+    /// Autoscan Report path when one was written successfully.
+    #[getter]
+    pub fn autoscan_report_path(&self) -> Option<String> {
+        self.autoscan_report_path.clone()
+    }
+
+    /// Whether analysis and run-owned side effects succeeded.
+    #[getter]
+    pub fn success(&self) -> bool {
+        self.success
+    }
+
+    /// Whether this entry was cancelled before analysis started.
+    #[getter]
+    pub fn cancelled(&self) -> bool {
+        self.cancelled
+    }
+
+    /// Whether the Crash Log or Autoscan Report moved to Unsolved Logs.
+    #[getter]
+    pub fn moved_to_unsolved_logs(&self) -> bool {
+        self.moved_to_unsolved_logs
+    }
+
+    /// Error message for failed or cancelled outcomes.
+    #[getter]
+    pub fn error(&self) -> Option<String> {
+        self.error.clone()
+    }
+
+    /// Processing time in milliseconds.
+    #[getter]
+    pub fn processing_time_ms(&self) -> u64 {
+        self.processing_time_ms
+    }
+
+    /// Number of FormIDs found.
+    #[getter]
+    pub fn formid_count(&self) -> usize {
+        self.formid_count
+    }
+
+    /// Number of plugins detected.
+    #[getter]
+    pub fn plugin_count(&self) -> usize {
+        self.plugin_count
+    }
+
+    /// Number of suspect patterns matched.
+    #[getter]
+    pub fn suspect_count(&self) -> usize {
+        self.suspect_count
+    }
+
+    /// Convert to a dictionary for JSON-friendly callers.
+    pub fn to_dict(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
+        let dict = PyDict::new(py);
+        dict.set_item("input_index", self.input_index)?;
+        dict.set_item("log_path", &self.log_path)?;
+        dict.set_item("autoscan_report_path", &self.autoscan_report_path)?;
+        dict.set_item("success", self.success)?;
+        dict.set_item("cancelled", self.cancelled)?;
+        dict.set_item("moved_to_unsolved_logs", self.moved_to_unsolved_logs)?;
+        dict.set_item("error", &self.error)?;
+        dict.set_item("processing_time_ms", self.processing_time_ms)?;
+        dict.set_item("formid_count", self.formid_count)?;
+        dict.set_item("plugin_count", self.plugin_count)?;
+        dict.set_item("suspect_count", self.suspect_count)?;
+        Ok(dict.into())
+    }
+}
+
+fn scan_run_log_outcome_to_py(outcome: CrashLogScanRunLogOutcome) -> PyScanRunLogResult {
+    PyScanRunLogResult {
+        input_index: outcome.input_index,
+        log_path: outcome.crash_log.to_string_lossy().to_string(),
+        autoscan_report_path: outcome
+            .autoscan_report
+            .map(|path| path.to_string_lossy().to_string()),
+        success: outcome.outcome == CrashLogScanOutcome::Succeeded,
+        cancelled: outcome.outcome == CrashLogScanOutcome::CancelledBeforeStart,
+        moved_to_unsolved_logs: outcome.moved_to_unsolved_logs,
+        error: outcome.error,
+        processing_time_ms: outcome.processing_time_ms,
+        formid_count: outcome.formid_count,
+        plugin_count: outcome.plugin_count,
+        suspect_count: outcome.suspect_count,
+    }
+}
+
+/// Execute a full Crash Log Scan Run for selected logs.
+///
+/// Rust writes Autoscan Reports and owns Standard versus Targeted Unsolved Logs
+/// behavior before returning each per-log outcome. Use `Orchestrator` methods
+/// only when callers explicitly need lower-level analysis results with report lines.
+#[pyfunction]
+#[pyo3(signature = (yaml_dir_root, yaml_dir_data, game, game_version, log_paths, show_formid_values=false, fcx_mode=false, simplify_logs=false, move_unsolved_logs=false, targeted_mode=false, max_concurrent=None, preserve_order=false, cancellation_token=None, unsolved_logs_destination=None))]
+#[allow(clippy::too_many_arguments)]
+pub fn scan_run_execute(
+    py: Python<'_>,
+    yaml_dir_root: String,
+    yaml_dir_data: String,
+    game: String,
+    game_version: String,
+    log_paths: Vec<String>,
+    show_formid_values: bool,
+    fcx_mode: bool,
+    simplify_logs: bool,
+    move_unsolved_logs: bool,
+    targeted_mode: bool,
+    max_concurrent: Option<usize>,
+    preserve_order: bool,
+    cancellation_token: Option<PyCancellationToken>,
+    unsolved_logs_destination: Option<String>,
+) -> PyResult<Vec<PyScanRunLogResult>> {
+    let yaml_dir_root = PathBuf::from(yaml_dir_root);
+    let yaml_dir_data = PathBuf::from(yaml_dir_data);
+    let cancellation = cancellation_token.map(|token| token.inner.clone());
+    let unsolved_logs_destination = unsolved_logs_destination
+        .map(|destination| destination.trim().to_string())
+        .filter(|destination| !destination.is_empty());
+
+    let result = without_gil_block_on(py, || async move {
+        let prepared = CrashLogScanIntake::from_yaml_paths(
+            yaml_dir_root.clone(),
+            yaml_dir_data,
+            game,
+            game_version,
+            CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs),
+        )
+        .prepare()
+        .await?;
+
+        let intent = if targeted_mode {
+            CrashLogScanRunIntent::Targeted
+        } else {
+            let unsolved_logs = if move_unsolved_logs {
+                if let Some(destination) = unsolved_logs_destination {
+                    StandardUnsolvedLogsIntent::MoveToCustom(PathBuf::from(destination))
+                } else {
+                    StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
+                }
+            } else {
+                StandardUnsolvedLogsIntent::LeaveInPlace
+            };
+            CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs })
+        };
+
+        CrashLogScanRun::new(prepared)
+            .run(
+                CrashLogScanRunRequest {
+                    logs: log_paths.into_iter().map(PathBuf::from).collect(),
+                    intent,
+                    max_concurrent,
+                    cancellation,
+                    preserve_order,
+                },
+                |_| {},
+            )
+            .await
+    })
+    .map_err(crate::to_pyerr)?;
+
+    Ok(result
+        .logs
+        .into_iter()
+        .map(scan_run_log_outcome_to_py)
+        .collect())
 }
 
 /// Python wrapper for OrchestratorCore

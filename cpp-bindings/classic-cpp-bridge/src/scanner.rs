@@ -13,9 +13,11 @@ mod progress;
 mod util;
 
 pub(crate) use orchestrator::{
-    FullScanConfig, Orchestrator, build_full_scan_config, fcx_reset_global_state,
-    get_fcx_config_issues, orchestrator_new, orchestrator_new_minimal, orchestrator_process_log,
-    orchestrator_process_logs_batch, orchestrator_process_logs_batch_with_progress,
+    FullScanConfig, Orchestrator, ScanCancellationToken, build_full_scan_config,
+    fcx_reset_global_state, get_fcx_config_issues, orchestrator_new, orchestrator_new_minimal,
+    orchestrator_process_log, orchestrator_process_logs_batch,
+    orchestrator_process_logs_batch_with_progress, scan_cancellation_token_cancel,
+    scan_cancellation_token_new, scan_cancellation_token_reset, scan_run_execute,
 };
 pub(crate) use papyrus::{
     CxxPapyrusAnalyzer, papyrus_analyze_full, papyrus_analyzer_new, papyrus_check_updates,
@@ -79,6 +81,37 @@ mod ffi {
         suspect_count: u32,
     }
 
+    /// Per-log result from a full Crash Log Scan Run.
+    struct ScanRunLogResult {
+        input_index: u32,
+        log_path: String,
+        autoscan_report_path: String,
+        success: bool,
+        cancelled: bool,
+        moved_to_unsolved_logs: bool,
+        error_message: String,
+        processing_time_ms: u64,
+        formid_count: u32,
+        plugin_count: u32,
+        suspect_count: u32,
+    }
+
+    /// Structured input to `scan_run_execute`.
+    struct ScanRunRequestDto {
+        yaml_dir_root: String,
+        yaml_dir_data: String,
+        game: String,
+        game_version: String,
+        show_formid_values: bool,
+        fcx_mode: bool,
+        simplify_logs: bool,
+        move_unsolved_logs: bool,
+        unsolved_logs_destination: String,
+        targeted_mode: bool,
+        max_concurrent: u32,
+        log_paths: Vec<String>,
+    }
+
     /// Papyrus log statistics transferred across the FFI boundary.
     struct PapyrusStatsDto {
         dumps: u32,
@@ -125,6 +158,7 @@ mod ffi {
     extern "Rust" {
         type FullScanConfig;
         type Orchestrator;
+        type ScanCancellationToken;
 
         // Config construction
         fn build_full_scan_config(
@@ -149,6 +183,9 @@ mod ffi {
         /// Return a snapshot of all FCX configuration issues from the global handler (CXXS-03).
         /// Empty Vec when no scan has run, after a reset, or when no issues were detected.
         fn get_fcx_config_issues() -> Vec<FcxIssueDto>;
+        fn scan_cancellation_token_new() -> Box<ScanCancellationToken>;
+        fn scan_cancellation_token_cancel(token: &ScanCancellationToken);
+        fn scan_cancellation_token_reset(token: &ScanCancellationToken);
         fn orchestrator_process_log(orch: &Orchestrator, log_path: &str) -> Result<ScanResult>;
         fn orchestrator_process_logs_batch(
             orch: &Orchestrator,
@@ -161,6 +198,11 @@ mod ffi {
             max_concurrent: u32,
             callback: &ScanBatchProgressCallback,
         ) -> Vec<BatchScanResult>;
+        fn scan_run_execute(
+            request: &ScanRunRequestDto,
+            callback: &ScanBatchProgressCallback,
+            cancellation_token: &ScanCancellationToken,
+        ) -> Result<Vec<ScanRunLogResult>>;
 
         // Utilities
         fn detect_vr_log(content: &str) -> bool;

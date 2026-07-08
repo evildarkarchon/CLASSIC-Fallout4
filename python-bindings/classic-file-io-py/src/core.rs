@@ -284,15 +284,15 @@ impl PyFileIOCore {
         match std::fs::metadata(&path_buf) {
             Ok(metadata) => {
                 dict.set_item("size", metadata.len())?;
-                if let Ok(created) = metadata.created() {
-                    if let Ok(duration) = created.duration_since(std::time::UNIX_EPOCH) {
-                        dict.set_item("created", duration.as_secs_f64())?;
-                    }
+                if let Ok(created) = metadata.created()
+                    && let Ok(duration) = created.duration_since(std::time::UNIX_EPOCH)
+                {
+                    dict.set_item("created", duration.as_secs_f64())?;
                 }
-                if let Ok(modified) = metadata.modified() {
-                    if let Ok(duration) = modified.duration_since(std::time::UNIX_EPOCH) {
-                        dict.set_item("modified", duration.as_secs_f64())?;
-                    }
+                if let Ok(modified) = metadata.modified()
+                    && let Ok(duration) = modified.duration_since(std::time::UNIX_EPOCH)
+                {
+                    dict.set_item("modified", duration.as_secs_f64())?;
                 }
             }
             Err(e) => {

@@ -1,0 +1,17 @@
+Game_Info:
+  XSE_Acronym: "F4SE"
+  GameVersion: "1.11.191"
+  CRASHGEN_LatestVer: "1.3.0"
+  CRASHGEN_LogName: "Addictol"
+  Main_Root_Name: "Fallout4"
+Warnings_CRASHGEN:
+  Warn_NOPlugins: "No plugins found"
+  Warn_Outdated: "Outdated"
+Crashlog_Plugins_Exclude: []
+Crashlog_Records_Exclude: []
+Crashlog_Error_Check: []
+Crashlog_Stack_Check: []
+Mods_CONF: []
+Mods_CORE: []
+Mods_FREQ: []
+Mods_SOLU: []

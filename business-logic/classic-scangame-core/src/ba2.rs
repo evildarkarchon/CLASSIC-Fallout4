@@ -270,7 +270,7 @@ impl BA2Scanner {
         let width = header.width as u32;
         let height = header.height as u32;
 
-        if width % 2 != 0 || height % 2 != 0 {
+        if !width.is_multiple_of(2) || !height.is_multiple_of(2) {
             issues.tex_dims.push(format!(
                 "  - {}x{} : {} > {}",
                 width, height, archive_name, file_name

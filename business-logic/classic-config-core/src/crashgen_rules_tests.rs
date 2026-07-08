@@ -1,17 +1,24 @@
 use super::*;
 
 #[test]
-fn rule_report_bucket_parses_known_values_and_defaults_to_settings() {
+fn autoscan_report_placement_parses_known_values_and_defaults_to_settings() {
     assert_eq!(
-        RuleReportBucket::parse("settings"),
-        Some(RuleReportBucket::Settings)
+        AutoscanReportPlacement::parse("settings"),
+        Some(AutoscanReportPlacement::Settings)
     );
     assert_eq!(
-        RuleReportBucket::parse("error_information"),
-        Some(RuleReportBucket::ErrorInformation)
+        AutoscanReportPlacement::parse("error_information"),
+        Some(AutoscanReportPlacement::ErrorInformation)
     );
-    assert_eq!(RuleReportBucket::parse("unknown"), None);
-    assert_eq!(RuleReportBucket::default(), RuleReportBucket::Settings);
+    assert_eq!(AutoscanReportPlacement::parse("unknown"), None);
+    assert_eq!(
+        AutoscanReportPlacement::default(),
+        AutoscanReportPlacement::Settings
+    );
+    assert_eq!(
+        AutoscanReportPlacement::ErrorInformation.as_str(),
+        "error_information"
+    );
 }
 
 fn base_context() -> EvaluationContext {
@@ -34,7 +41,7 @@ fn evaluate_preflight_skip_remaining() {
             when: Predicate::PluginAny(vec!["addictol.dll".to_string()]),
             action: PreflightAction {
                 kind: PreflightActionKind::NoticeAndSkipRemaining,
-                bucket: RuleReportBucket::ErrorInformation,
+                bucket: AutoscanReportPlacement::ErrorInformation,
                 severity: RuleSeverity::Info,
                 message: "Addictol detected - skipping {crashgen_name} checks".to_string(),
                 fix: None,
@@ -70,7 +77,7 @@ fn evaluate_preflight_skip_remaining() {
     assert_eq!(result.outcomes[0].kind, OutcomeKind::Notice);
     assert_eq!(
         result.outcomes[0].bucket,
-        RuleReportBucket::ErrorInformation
+        AutoscanReportPlacement::ErrorInformation
     );
 }
 
@@ -107,7 +114,10 @@ fn evaluate_check_fail_and_pass() {
     let fail_result = evaluate_rules(&rules, &fail_context);
     assert_eq!(fail_result.outcomes.len(), 1);
     assert_eq!(fail_result.outcomes[0].kind, OutcomeKind::Issue);
-    assert_eq!(fail_result.outcomes[0].bucket, RuleReportBucket::Settings);
+    assert_eq!(
+        fail_result.outcomes[0].bucket,
+        AutoscanReportPlacement::Settings
+    );
 
     let mut pass_context = base_context();
     pass_context
@@ -119,5 +129,8 @@ fn evaluate_check_fail_and_pass() {
     let pass_result = evaluate_rules(&rules, &pass_context);
     assert_eq!(pass_result.outcomes.len(), 1);
     assert_eq!(pass_result.outcomes[0].kind, OutcomeKind::Success);
-    assert_eq!(pass_result.outcomes[0].bucket, RuleReportBucket::Settings);
+    assert_eq!(
+        pass_result.outcomes[0].bucket,
+        AutoscanReportPlacement::Settings
+    );
 }

@@ -1,0 +1,3 @@
+# YAML Data owns Crashgen Expectation report placement
+
+Autoscan Report Assembly owns the canonical report structure, section order, and human-facing report text, but YAML Data owns the Autoscan Report Placement of Crashgen Expectation outcomes. New YAML Data should prefer `placement`, while legacy `bucket` remains accepted as a compatibility alias; parsers prefer valid `placement`, then fall back to valid `bucket`, then use the default settings placement. This keeps compatibility guidance movable through data updates without hardcoding today's placement choices into Rust, while preserving old-client behavior by dual-writing `placement` and `bucket` during the transition.

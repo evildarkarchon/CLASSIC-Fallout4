@@ -1,0 +1,2155 @@
+Skyrim SSE v1.6.1170
+CrashLoggerSSE v1-12-1-0 Dec 22 2023 02:20:56
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF7A6B81FF1 SkyrimSE.exe+0D21FF1	call [rax+0xD0]
+
+SYSTEM SPECS:
+	OS: Microsoft Windows 11 Pro v10.0.22631
+	CPU: AuthenticAMD AMD Ryzen 7 7800X3D 8-Core Processor           
+	GPU #1: Nvidia AD104 [GeForce RTX 4070]
+	GPU #2: AMD Raphael
+	GPU #3: Microsoft Basic Render Driver
+	PHYSICAL MEMORY: 21.48 GB/63.15 GB
+	GPU MEMORY: 7.93/10.52 GB
+
+PROBABLE CALL STACK:
+	[ 0] 0x7FF7A6B81FF1 SkyrimSE.exe+0D21FF1 -> 70383+0x31	call [rax+0xD0]
+	[ 1] 0x7FF7A6B81C8C SkyrimSE.exe+0D21C8C -> 70382+0x1C	mov edx, [rbx+0x22C]
+	[ 2] 0x7FF7A6B7F969 SkyrimSE.exe+0D1F969 -> 70334+0x19	
+	[ 3] 0x7FF7A6B7F8BB SkyrimSE.exe+0D1F8BB -> 70332+0x3B	movzx ebx, al
+	[ 4] 0x7FF7A6B780E8 SkyrimSE.exe+0D180E8 -> 70191+0x68	mov r8d, [rsp+0x678]
+	[ 5] 0x7FFDA2AEBE76   skee64.dll+001BE76
+	[ 6] 0x7FFDA2B02CF0   skee64.dll+0032CF0
+	[ 7] 0x7FFDA2B923C7   skee64.dll+00C23C7
+	[ 8] 0x7FFDA2B92385   skee64.dll+00C2385
+	[ 9] 0x7FFDA2AEBC73   skee64.dll+001BC73
+	[10] 0x7FFDA2B06673   skee64.dll+0036673
+	[11] 0x7FFDA2B060E5   skee64.dll+00360E5
+	[12] 0x7FFDA2B05F4F   skee64.dll+0035F4F
+	[13] 0x7FFDA2AE7054   skee64.dll+0017054
+	[14] 0x7FFDA2AE6968   skee64.dll+0016968
+	[15] 0x7FFDA2C283DF   skee64.dll+01583DF
+	[16] 0x7FFEB30923CA    ntdll.dll+00623CA
+	[17] 0x7FFEB3065986    ntdll.dll+0035986
+	[18] 0x7FFEB241257D KERNEL32.DLL+001257D
+	[19] 0x7FFEB308AA58    ntdll.dll+005AA58
+
+REGISTERS:
+	RAX 0x2A80AD1CBB0      (void*)
+	RCX 0x2A80AD1CC10      (void*)
+	RDX 0xF84BF6E5E0       (`anonymous namespace'::DeepCopyStream*)
+		Header: author:  version: 100 processScript:  exportScript: 
+	RBX 0x0                (size_t) [0]
+	RSP 0xF84BF6E480       (void*)
+	RBP 0xF84BF6ED20       (void*)
+	RSI 0xF84BF6EC38       (void*)
+	RDI 0xF84BF6E5E0       (`anonymous namespace'::DeepCopyStream*)
+		Header: author:  version: 100 processScript:  exportScript: 
+	R8  0xE0               (size_t) [224]
+	R9  0xE0               (size_t) [224]
+	R10 0x7FFE96B10000     (void*)
+	R11 0x7FFE96B21901     (void* -> VCRUNTIME140.dll+0011901	)
+	R12 0x2A7F0DD5C00      (BSTriShape*)
+		Name: "HIMBO - Body"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "BODYTRI"
+		ExtraData[1] Name: "SHAPEDATA"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Outlaw Scout"
+		Checking User Data: -----
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking Parent: 0
+			Name: " (000179AE)[0]/ (00013952) [25%]"
+			RTTIName: "NiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Outlaw Scout"
+			Checking User Data: -----
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking Parent: 3
+				Name: "skeleton.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Outlaw Scout"
+				Checking User Data: -----
+					Object Reference: 
+					Flags: 0x00000008 kInitialized
+					Name: "Outlaw Scout"
+					FormID: 0xFF001740
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					Flags: 0x00000008 kInitialized
+					Name: "Outlaw Scout"
+					FormID: 0xFF001740
+					FormType: NPC (43)
+				Checking Parent: 2
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 0
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 7
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "HIMBO - Body"
+	R13 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
+	R14 0x1                (size_t) [1]
+	R15 0xF84BF6F0F8       (void*)
+
+STACK:
+	[RSP+0   ] 0xF84BF6F0F8       (void*)
+	[RSP+8   ] 0x1                (size_t) [1]
+	[RSP+10  ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
+	[RSP+18  ] 0x7FF7A739B759     (void* -> SkyrimSE.exe+153B759	add rdi, rsi)
+	[RSP+20  ] 0xF84BF6EC28       (void*)
+	[RSP+28  ] 0x7FF7A6B81C8C     (void* -> SkyrimSE.exe+0D21C8C	mov edx, [rbx+0x22C])
+	[RSP+30  ] 0xF84BF6E5E0       (`anonymous namespace'::DeepCopyStream*)
+		Header: author:  version: 100 processScript:  exportScript: 
+	[RSP+38  ] 0x2A4377BD85B      (void* -> tbbmalloc.dll+000D85B	mov rbx, rax)
+	[RSP+40  ] 0xF84BF6E801       (void*)
+	[RSP+48  ] 0x1                (size_t) [1]
+	[RSP+50  ] 0xFFFFFFFFFFFFFF00 (size_t) [uint: 18446744073709551360 int: -256]
+	[RSP+58  ] 0x0                (size_t) [0]
+	[RSP+60  ] 0xF84BF6F0F8       (void*)
+	[RSP+68  ] 0x1                (size_t) [1]
+	[RSP+70  ] 0xF84BF6EC28       (void*)
+	[RSP+78  ] 0xF84BF6EC38       (void*)
+	[RSP+80  ] 0xF84BF6ED20       (void*)
+	[RSP+88  ] 0x7FF7A6B7F969     (void* -> SkyrimSE.exe+0D1F969	)
+	[RSP+90  ] 0x7FF7A5FF5910     (void* -> SkyrimSE.exe+0195910	sub rsp, 0x38)
+	[RSP+98  ] 0x30               (size_t) [48]
+	[RSP+A0  ] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+A8  ] 0xF84BF6E5E0       (`anonymous namespace'::DeepCopyStream*)
+		Header: author:  version: 100 processScript:  exportScript: 
+	[RSP+B0  ] 0xF84BF6E5E0       (`anonymous namespace'::DeepCopyStream*)
+		Header: author:  version: 100 processScript:  exportScript: 
+	[RSP+B8  ] 0x7FF7A6B7F8BB     (void* -> SkyrimSE.exe+0D1F8BB	movzx ebx, al)
+	[RSP+C0  ] 0xF84BF6E568       (NiMemStream*)
+	[RSP+C8  ] 0xF84BF6E838       (NiTLargeObjectArray<NiPointer<NiObject> >*)
+	[RSP+D0  ] 0x0                (size_t) [0]
+	[RSP+D8  ] 0xF84BF6ED20       (void*)
+	[RSP+E0  ] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+E8  ] 0x7FF7A7921FA8     (void* -> SkyrimSE.exe+1AC1FA8	out 0x35, al)
+	[RSP+F0  ] 0x2A400000000      (void*)
+	[RSP+F8  ] 0x7FF7A735E1A0     (void* -> SkyrimSE.exe+14FE1A0	mov [rsp+0x08], rbx)
+	[RSP+100 ] 0x7FF7A735E1F0     (void* -> SkyrimSE.exe+14FE1F0	jmp 0x00007FF7A735E570)
+	[RSP+108 ] 0x2A83EC3A000      (void*)
+	[RSP+110 ] 0x0                (size_t) [0]
+	[RSP+118 ] 0x400              (size_t) [1024]
+	[RSP+120 ] 0x2A80AD1CDF0      (NiBinaryExtraData*)
+	[RSP+128 ] 0x7FF7A6B780E8     (void* -> SkyrimSE.exe+0D180E8	mov r8d, [rsp+0x678])
+	[RSP+130 ] 0x2A80AD1CC10      (void*)
+	[RSP+138 ] 0xF84BF6EC40       (void*)
+	[RSP+140 ] 0x2A80AD1CC10      (void*)
+	[RSP+148 ] 0xF84BF6EC40       (void*)
+	[RSP+150 ] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+158 ] 0x3                (size_t) [3]
+	[RSP+160 ] 0x7FF7A780AA88     (void* -> SkyrimSE.exe+19AAA88	add byte ptr [rsi+0x7FF7A6B7], 0x00)
+	[RSP+168 ] 0x64               (size_t) [100]
+	[RSP+170 ] 0x2A425180000      (void*)
+	[RSP+178 ] 0x7FFEB306BE70     (void* -> ntdll.dll+003BE70	test eax, eax)
+	[RSP+180 ] 0x2A80BC86F3F      (void*)
+	[RSP+188 ] 0x59F              (size_t) [1439]
+	[RSP+190 ] 0x20               (size_t) [32]
+	[RSP+198 ] 0x2A7F089F760      (void*)
+	[RSP+1A0 ] 0x2A80BC76070      (void*)
+	[RSP+1A8 ] 0x7F00B306BE70     (size_t) [139640980291184]
+	[RSP+1B0 ] 0x2A80BC7616F      (void*)
+	[RSP+1B8 ] 0x0                (size_t) [0]
+	[RSP+1C0 ] 0x20               (size_t) [32]
+	[RSP+1C8 ] 0x2A7F089F760      (void*)
+	[RSP+1D0 ] 0x2A80BC76070      (void*)
+	[RSP+1D8 ] 0x7FFEB306BE70     (void* -> ntdll.dll+003BE70	test eax, eax)
+	[RSP+1E0 ] 0x2A80BC76D3F      (void*)
+	[RSP+1E8 ] 0x2000000003F      (size_t) [2199023255615]
+	[RSP+1F0 ] 0x2A80BC83550      (char*) "CoreUIComponents.dll"
+	[RSP+1F8 ] 0x2A7F089F760      (void*)
+	[RSP+200 ] 0x2A80BC76070      (void*)
+	[RSP+208 ] 0x7FFEB306BE70     (void* -> ntdll.dll+003BE70	test eax, eax)
+	[RSP+210 ] 0x2A80BC76A0F      (void*)
+	[RSP+218 ] 0x2A50000002E      (void*)
+	[RSP+220 ] 0x2A80BC83550      (char*) "CoreUIComponents.dll"
+	[RSP+228 ] 0x2A7F089F760      (void*)
+	[RSP+230 ] 0x2A880000000      (size_t) [2922725244928]
+	[RSP+238 ] 0x7FFEB306BE70     (void* -> ntdll.dll+003BE70	test eax, eax)
+	[RSP+240 ] 0x2A80BC8513F      (void*)
+	[RSP+248 ] 0x2A5000004FF      (void*)
+	[RSP+250 ] 0x2A80BC83550      (char*) "CoreUIComponents.dll"
+	[RSP+258 ] 0x2A700000000      (void*)
+	[RSP+260 ] 0xC14020007        (size_t) [51875282951]
+	[RSP+268 ] 0x7FFEB306BE00     (void* -> ntdll.dll+003BE00	and al, 0xC0)
+	[RSP+270 ] 0x2A80BC8564F      (void*)
+	[RSP+278 ] 0x2A50000051A      (void*)
+	[RSP+280 ] 0x2A80BC83550      (char*) "CoreUIComponents.dll"
+	[RSP+288 ] 0x2A7F089F760      (void*)
+	[RSP+290 ] 0x2A80BC76070      (void*)
+	[RSP+298 ] 0x7FFEB306BE70     (void* -> ntdll.dll+003BE70	test eax, eax)
+	[RSP+2A0 ] 0x2A80BC8531F      (void*)
+	[RSP+2A8 ] 0x2A500000509      (void*)
+	[RSP+2B0 ] 0x2A80BC83550      (char*) "CoreUIComponents.dll"
+	[RSP+2B8 ] 0x2A7F089F760      (void*)
+	[RSP+2C0 ] 0x2A80BC76070      (void*)
+	[RSP+2C8 ] 0x7FFEB306BE70     (void* -> ntdll.dll+003BE70	test eax, eax)
+	[RSP+2D0 ] 0x2A80BC8582F      (void*)
+	[RSP+2D8 ] 0x2A500000524      (void*)
+	[RSP+2E0 ] 0x2A80BC83550      (char*) "CoreUIComponents.dll"
+	[RSP+2E8 ] 0x2A7F089F760      (void*)
+	[RSP+2F0 ] 0x2A80BC76070      (void*)
+	[RSP+2F8 ] 0x7FFEB306BE70     (void* -> ntdll.dll+003BE70	test eax, eax)
+	[RSP+300 ] 0x2A80BC84B3F      (void*)
+	[RSP+308 ] 0x2A5000004DF      (void*)
+	[RSP+310 ] 0x2A80BC83550      (char*) "CoreUIComponents.dll"
+	[RSP+318 ] 0x7FFEB306D1AA     (void* -> ntdll.dll+003D1AA	mov r14, [rsp+0x38])
+	[RSP+320 ] 0x10000A           (size_t) [1048586]
+	[RSP+328 ] 0x10               (size_t) [16]
+	[RSP+330 ] 0x2A61F76E950      (void*)
+	[RSP+338 ] 0x2A5000004F1      (void*)
+	[RSP+340 ] 0x2A80BC83550      (char*) "CoreUIComponents.dll"
+	[RSP+348 ] 0x2A7F089F760      (void*)
+	[RSP+350 ] 0x2A800000000      (void*)
+	[RSP+358 ] 0x2A424FCAB00      (void*)
+	[RSP+360 ] 0x2A80BC84B6F      (void*)
+	[RSP+368 ] 0x101000004E0      (size_t) [1103806596320]
+	[RSP+370 ] 0x0                (size_t) [0]
+	[RSP+378 ] 0x7FF7A780BCC8     (void* -> SkyrimSE.exe+19ABCC8	loopne 0x00007FF7A780BD0F)
+	[RSP+380 ] 0x0                (size_t) [0]
+	[RSP+388 ] 0x0                (size_t) [0]
+	[RSP+390 ] 0x40000000000      (size_t) [4398046511104]
+	[RSP+398 ] 0x7FF7A780BCE8     (void* -> SkyrimSE.exe+19ABCE8	add [rdi-0x48], al)
+	[RSP+3A0 ] 0x0                (size_t) [0]
+	[RSP+3A8 ] 0x0                (size_t) [0]
+	[RSP+3B0 ] 0x100000000        (size_t) [4294967296]
+	[RSP+3B8 ] 0x7FF7A780BCC8     (void* -> SkyrimSE.exe+19ABCC8	loopne 0x00007FF7A780BD0F)
+	[RSP+3C0 ] 0x2A80AED3FF8      (void*)
+	[RSP+3C8 ] 0x100000001        (size_t) [4294967297]
+	[RSP+3D0 ] 0x100000001        (size_t) [4294967297]
+	[RSP+3D8 ] 0x7FF7A780BD08     (void* -> SkyrimSE.exe+19ABD08	jo 0x00007FF7A780BD50)
+	[RSP+3E0 ] 0x0                (size_t) [0]
+	[RSP+3E8 ] 0x0                (size_t) [0]
+	[RSP+3F0 ] 0x8000000000       (size_t) [549755813888]
+	[RSP+3F8 ] 0x0                (size_t) [0]
+	[RSP+400 ] 0xF84BF6E568       (NiMemStream*)
+	[RSP+408 ] 0x0                (size_t) [0]
+	[RSP+410 ] 0x7FF7A780BD58     (void* -> SkyrimSE.exe+19ABD58	push rax)
+	[RSP+418 ] 0x2A400000025      (void*)
+	[RSP+420 ] 0x2A83EC37EC0      (void*)
+	[RSP+428 ] 0x7FFE00000000     (size_t) [140728898420736]
+	[RSP+430 ] 0x0                (size_t) [0]
+	[RSP+438 ] 0x0                (size_t) [0]
+	[RSP+440 ] 0x0                (size_t) [0]
+	[RSP+448 ] 0x0                (size_t) [0]
+	[RSP+450 ] 0x0                (size_t) [0]
+	[RSP+458 ] 0x0                (size_t) [0]
+	[RSP+460 ] 0xFFFFFFFF00000002 (size_t) [uint: 18446744069414584322 int: -4294967294]
+	[RSP+468 ] 0xFFFFFFFF         (size_t) [4294967295]
+	[RSP+470 ] 0x0                (size_t) [0]
+	[RSP+478 ] 0x0                (size_t) [0]
+	[RSP+480 ] 0x0                (size_t) [0]
+	[RSP+488 ] 0x0                (size_t) [0]
+	[RSP+490 ] 0x0                (size_t) [0]
+	[RSP+498 ] 0x0                (size_t) [0]
+	[RSP+4A0 ] 0x0                (size_t) [0]
+	[RSP+4A8 ] 0x0                (size_t) [0]
+	[RSP+4B0 ] 0x0                (size_t) [0]
+	[RSP+4B8 ] 0x0                (size_t) [0]
+	[RSP+4C0 ] 0x0                (size_t) [0]
+	[RSP+4C8 ] 0x0                (size_t) [0]
+	[RSP+4D0 ] 0x0                (size_t) [0]
+	[RSP+4D8 ] 0x0                (size_t) [0]
+	[RSP+4E0 ] 0x0                (size_t) [0]
+	[RSP+4E8 ] 0x0                (size_t) [0]
+	[RSP+4F0 ] 0x0                (size_t) [0]
+	[RSP+4F8 ] 0x0                (size_t) [0]
+	[RSP+500 ] 0x0                (size_t) [0]
+	[RSP+508 ] 0x0                (size_t) [0]
+	[RSP+510 ] 0x0                (size_t) [0]
+	[RSP+518 ] 0x0                (size_t) [0]
+	[RSP+520 ] 0x0                (size_t) [0]
+	[RSP+528 ] 0x0                (size_t) [0]
+	[RSP+530 ] 0x0                (size_t) [0]
+	[RSP+538 ] 0x0                (size_t) [0]
+	[RSP+540 ] 0x0                (size_t) [0]
+	[RSP+548 ] 0x0                (size_t) [0]
+	[RSP+550 ] 0x0                (size_t) [0]
+	[RSP+558 ] 0x0                (size_t) [0]
+	[RSP+560 ] 0x0                (size_t) [0]
+	[RSP+568 ] 0x0                (size_t) [0]
+	[RSP+570 ] 0xFFFFFF0000000000 (size_t) [uint: 18446742974197923840 int: -1099511627776]
+	[RSP+578 ] 0x2A57129EC70      (void*)
+	[RSP+580 ] 0x2A80B9E2050      (void*)
+	[RSP+588 ] 0x2A80BC83550      (char*) "CoreUIComponents.dll"
+	[RSP+590 ] 0xF84BF6EC88       (void*)
+	[RSP+598 ] 0x7FFDA2C4B30C     (void* -> skee64.dll+017B30C	test rax, rax)
+	[RSP+5A0 ] 0x0                (size_t) [0]
+	[RSP+5A8 ] 0x7FFEB306BE70     (void* -> ntdll.dll+003BE70	test eax, eax)
+	[RSP+5B0 ] 0x2A5E8D21F60      (void*)
+	[RSP+5B8 ] 0x2A8427B0000      (void*)
+	[RSP+5C0 ] 0x2                (size_t) [2]
+	[RSP+5C8 ] 0x2A80BC83580      (char*) "NPC R Foot [Rft ]"
+	[RSP+5D0 ] 0xFFFFFFFFFFFFFFFF (size_t) [uint: 18446744073709551615 int: -1]
+	[RSP+5D8 ] 0x0                (size_t) [0]
+	[RSP+5E0 ] 0x2A80BC8357F      (void*)
+	[RSP+5E8 ] 0x7FFE0000046B     (size_t) [140728898421867]
+	[RSP+5F0 ] 0x2A80B9FAFD0      (void*)
+	[RSP+5F8 ] 0x2A7F089F760      (void*)
+	[RSP+600 ] 0x2A80BC76070      (void*)
+	[RSP+608 ] 0x0                (size_t) [0]
+	[RSP+610 ] 0x0                (size_t) [0]
+	[RSP+618 ] 0x7FFEB3060000     (void* -> ntdll.dll+0030000	call 0x00007FFE47914F09)
+	[RSP+620 ] 0x2A587AD7F60      (void*)
+	[RSP+628 ] 0x7FFDA2C0588A     (void* -> skee64.dll+013588A	test eax, eax)
+	[RSP+630 ] 0x2A80B9FAFE0      (void*)
+	[RSP+638 ] 0x2A7F02EC1D0      (void*)
+	[RSP+640 ] 0xF84BF6EC88       (void*)
+	[RSP+648 ] 0x2A80BC83580      (char*) "NPC R Foot [Rft ]"
+	[RSP+650 ] 0x7FFDA2D1F3A0     (BodyMorphInterface*)
+	[RSP+658 ] 0x7FFDA2C04550     (void* -> skee64.dll+0134550	mov rax, rbx)
+	[RSP+660 ] 0xF84BF6EBB8       (void*)
+	[RSP+668 ] 0xF84BF6EC88       (void*)
+	[RSP+670 ] 0xF84BF6EBB8       (void*)
+	[RSP+678 ] 0x0                (size_t) [0]
+	[RSP+680 ] 0x0                (size_t) [0]
+	[RSP+688 ] 0x0                (size_t) [0]
+	[RSP+690 ] 0x0                (size_t) [0]
+	[RSP+698 ] 0x0                (size_t) [0]
+	[RSP+6A0 ] 0x0                (size_t) [0]
+	[RSP+6A8 ] 0x0                (size_t) [0]
+	[RSP+6B0 ] 0x0                (size_t) [0]
+	[RSP+6B8 ] 0x0                (size_t) [0]
+	[RSP+6C0 ] 0x0                (size_t) [0]
+	[RSP+6C8 ] 0x0                (size_t) [0]
+	[RSP+6D0 ] 0x0                (size_t) [0]
+	[RSP+6D8 ] 0x0                (size_t) [0]
+	[RSP+6E0 ] 0x0                (size_t) [0]
+	[RSP+6E8 ] 0x0                (size_t) [0]
+	[RSP+6F0 ] 0x0                (size_t) [0]
+	[RSP+6F8 ] 0x0                (size_t) [0]
+	[RSP+700 ] 0x0                (size_t) [0]
+	[RSP+708 ] 0x0                (size_t) [0]
+	[RSP+710 ] 0x0                (size_t) [0]
+	[RSP+718 ] 0x0                (size_t) [0]
+	[RSP+720 ] 0x0                (size_t) [0]
+	[RSP+728 ] 0x0                (size_t) [0]
+	[RSP+730 ] 0x0                (size_t) [0]
+	[RSP+738 ] 0x0                (size_t) [0]
+	[RSP+740 ] 0x0                (size_t) [0]
+	[RSP+748 ] 0x0                (size_t) [0]
+	[RSP+750 ] 0x0                (size_t) [0]
+	[RSP+758 ] 0x0                (size_t) [0]
+	[RSP+760 ] 0x0                (size_t) [0]
+	[RSP+768 ] 0x0                (size_t) [0]
+	[RSP+770 ] 0x0                (size_t) [0]
+	[RSP+778 ] 0x0                (size_t) [0]
+	[RSP+780 ] 0x2A80AD1CDF0      (NiBinaryExtraData*)
+	[RSP+788 ] 0x0                (size_t) [0]
+	[RSP+790 ] 0x2A7F046FAF0      (void*)
+	[RSP+798 ] 0x7FFDA2AEBE76     (void* -> skee64.dll+001BE76	mov rdx, [rsp+0x20])
+	[RSP+7A0 ] 0x2A7F046FAF0      (void*)
+	[RSP+7A8 ] 0xF800000000       (size_t) [1065151889408]
+	[RSP+7B0 ] 0xF84BF6ED20       (void*)
+	[RSP+7B8 ] 0x0                (size_t) [0]
+	[RSP+7C0 ] 0x0                (size_t) [0]
+	[RSP+7C8 ] 0x2A500000000      (void*)
+	[RSP+7D0 ] 0x2A5BD604400      (Character*)
+		File: "NPC Improvements.esp"
+		Flags: 0x00020408 
+		Name: "Outlaw Scout"
+		FormID: 0x0001EBF6
+		FormType: ActorCharacter (62)
+		Object Reference: 
+		Flags: 0x00000008 kInitialized
+		Name: "Outlaw Scout"
+		FormID: 0xFF001740
+		FormType: NPC (43)
+		File: "NPC Improvements.esp"
+		Flags: 0x00020408 kInitialized
+		FormID: 0x0001EBF6
+		FormType: ActorCharacter (62)
+	[RSP+7D8 ] 0xF84BF6F0F8       (void*)
+	[RSP+7E0 ] 0x2A80AD1CC10      (void*)
+	[RSP+7E8 ] 0x7FFEB306BE70     (void* -> ntdll.dll+003BE70	test eax, eax)
+	[RSP+7F0 ] 0x2A5E8D21FEF      (void*)
+	[RSP+7F8 ] 0x2A7F0E71260      (BSDismemberSkinInstance*)
+	[RSP+800 ] 0x2A57929D980      (void*)
+	[RSP+808 ] 0x796262756800     (size_t) [133463465617408]
+	[RSP+810 ] 0x0                (size_t) [0]
+	[RSP+818 ] 0x0                (size_t) [0]
+	[RSP+820 ] 0xF                (size_t) [15]
+	[RSP+828 ] 0x305667679066B6A8 (size_t) [3483085056319600296]
+	[RSP+830 ] 0x2A80AD87FE8      (char*) "SHAPEDATA"
+	[RSP+838 ] 0x2A7F0DD5C00      (BSTriShape*)
+		Name: "HIMBO - Body"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "BODYTRI"
+		ExtraData[1] Name: "SHAPEDATA"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Outlaw Scout"
+		Checking User Data: -----
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking Parent: 0
+			Name: " (000179AE)[0]/ (00013952) [25%]"
+			RTTIName: "NiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Outlaw Scout"
+			Checking User Data: -----
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking Parent: 3
+				Name: "skeleton.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Outlaw Scout"
+				Checking User Data: -----
+					Object Reference: 
+					Flags: 0x00000008 kInitialized
+					Name: "Outlaw Scout"
+					FormID: 0xFF001740
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					Flags: 0x00000008 kInitialized
+					Name: "Outlaw Scout"
+					FormID: 0xFF001740
+					FormType: NPC (43)
+				Checking Parent: 2
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 0
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 7
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "HIMBO - Body"
+	[RSP+840 ] 0x2A5567DB660      (void*)
+	[RSP+848 ] 0x2A425180000      (void*)
+	[RSP+850 ] 0x2A57107F28F      (void*)
+	[RSP+858 ] 0x2A500000097      (void*)
+	[RSP+860 ] 0x0                (size_t) [0]
+	[RSP+868 ] 0x2A832D16680      (void*)
+	[RSP+870 ] 0x2A57107CB80      (void*)
+	[RSP+878 ] 0x7FFEB306AB11     (void* -> ntdll.dll+003AB11	mov r9d, eax)
+	[RSP+880 ] 0x2A8427B4BF0      (Concurrency::details::_Task_impl_base*)
+	[RSP+888 ] 0x2A5E8D22310      (char*) "338"
+	[RSP+890 ] 0x0                (size_t) [0]
+	[RSP+898 ] 0x2A5E3533C00      (Concurrency::details::_Task_impl_base*)
+	[RSP+8A0 ] 0x2A5567F5110      (char*) "D"
+	[RSP+8A8 ] 0x7FFEB306AB11     (void* -> ntdll.dll+003AB11	mov r9d, eax)
+	[RSP+8B0 ] 0x2A8427B4BF0      (Concurrency::details::_Task_impl_base*)
+	[RSP+8B8 ] 0x2A5E8D22310      (char*) "338"
+	[RSP+8C0 ] 0x0                (size_t) [0]
+	[RSP+8C8 ] 0x2A5E3533C00      (Concurrency::details::_Task_impl_base*)
+	[RSP+8D0 ] 0x2A57107F290      (char*) "AMD Ryzen 7 7800X3D 8-Core Processor           "
+	[RSP+8D8 ] 0x7FFEB306AB11     (void* -> ntdll.dll+003AB11	mov r9d, eax)
+	[RSP+8E0 ] 0x2A57107F280      (void*)
+	[RSP+8E8 ] 0x2A425180000      (void*)
+	[RSP+8F0 ] 0x2A570574480      (void*)
+	[RSP+8F8 ] 0x0                (size_t) [0]
+	[RSP+900 ] 0x0                (size_t) [0]
+	[RSP+908 ] 0x7FFDA2AFCEC9     (void* -> skee64.dll+002CEC9	mov rcx, [rdi+0x10])
+	[RSP+910 ] 0x2A57107F290      (char*) "AMD Ryzen 7 7800X3D 8-Core Processor           "
+	[RSP+918 ] 0x7FFDA2C4B2A8     (void* -> skee64.dll+017B2A8	test eax, eax)
+	[RSP+920 ] 0x2A5567F5110      (char*) "D"
+	[RSP+928 ] 0x2A57107F290      (char*) "AMD Ryzen 7 7800X3D 8-Core Processor           "
+	[RSP+930 ] 0x0                (size_t) [0]
+	[RSP+938 ] 0x7FFDA2B028E6     (void* -> skee64.dll+00328E6	lea rax, [rbx+rdi*1])
+	[RSP+940 ] 0x2A5567F5110      (char*) "D"
+	[RSP+948 ] 0x7FFDA2AFDC32     (void* -> skee64.dll+002DC32	mov rbx, [rsp+0x38])
+	[RSP+950 ] 0x2A5567F5110      (char*) "D"
+	[RSP+958 ] 0x0                (size_t) [0]
+	[RSP+960 ] 0x2A8427B4BF0      (Concurrency::details::_Task_impl_base*)
+	[RSP+968 ] 0x2A5E8D22310      (char*) "338"
+	[RSP+970 ] 0x8                (size_t) [8]
+	[RSP+978 ] 0x7FFDA2B023DE     (void* -> skee64.dll+00323DE	mov rbx, [rsp+0xB0])
+	[RSP+980 ] 0x2A57107F290      (char*) "AMD Ryzen 7 7800X3D 8-Core Processor           "
+	[RSP+988 ] 0x1                (size_t) [1]
+	[RSP+990 ] 0x2A57107F290      (char*) "AMD Ryzen 7 7800X3D 8-Core Processor           "
+	[RSP+998 ] 0x7FFEB306BE70     (void* -> ntdll.dll+003BE70	test eax, eax)
+	[RSP+9A0 ] 0x2A424FC0000      (void*)
+	[RSP+9A8 ] 0x8D080DF50000000C (size_t) [uint: 10162387905079672844 int: -8284356168629878772]
+	[RSP+9B0 ] 0x48               (size_t) [72]
+	[RSP+9B8 ] 0xF800000000       (size_t) [1065151889408]
+	[RSP+9C0 ] 0x2A5E8D22310      (char*) "338"
+	[RSP+9C8 ] 0x7FFEB306D1AA     (void* -> ntdll.dll+003D1AA	mov r14, [rsp+0x38])
+	[RSP+9D0 ] 0x4580319          (size_t) [72876825]
+	[RSP+9D8 ] 0x30               (size_t) [48]
+	[RSP+9E0 ] 0x2A7F089F760      (void*)
+	[RSP+9E8 ] 0x2A57129EC70      (void*)
+	[RSP+9F0 ] 0x2A80B9E2050      (void*)
+	[RSP+9F8 ] 0x0                (size_t) [0]
+	[RSP+A00 ] 0x2A800000000      (void*)
+	[RSP+A08 ] 0x2A424FC2700      (void*)
+	[RSP+A10 ] 0x2A80B9FA4A8      (void*)
+	[RSP+A18 ] 0x2A80B9FA4A0      (void*)
+	[RSP+A20 ] 0x2A424FC02AC      (void*)
+	[RSP+A28 ] 0x7FFEB306D1AA     (void* -> ntdll.dll+003D1AA	mov r14, [rsp+0x38])
+	[RSP+A30 ] 0x7404F8           (size_t) [7603448]
+	[RSP+A38 ] 0x60               (size_t) [96]
+	[RSP+A40 ] 0x2A7F00BDE90      (void*)
+	[RSP+A48 ] 0x20               (size_t) [32]
+	[RSP+A50 ] 0x0                (size_t) [0]
+	[RSP+A58 ] 0x30               (size_t) [48]
+	[RSP+A60 ] 0x0                (size_t) [0]
+	[RSP+A68 ] 0x2A424FCCE40      (void*)
+	[RSP+A70 ] 0x0                (size_t) [0]
+	[RSP+A78 ] 0xF84BF6EFA9       (void*)
+	[RSP+A80 ] 0x2A424FC02B8      (void*)
+	[RSP+A88 ] 0x60               (size_t) [96]
+	[RSP+A90 ] 0x2A424FC0F00      (void*)
+	[RSP+A98 ] 0x7FFE0000000C     (size_t) [140728898420748]
+	[RSP+AA0 ] 0x20               (size_t) [32]
+	[RSP+AA8 ] 0x58               (size_t) [88]
+	[RSP+AB0 ] 0x8A4910205E7E     (size_t) [152046407802494]
+	[RSP+AB8 ] 0x60               (size_t) [96]
+	[RSP+AC0 ] 0x0                (size_t) [0]
+	[RSP+AC8 ] 0x0                (size_t) [0]
+	[RSP+AD0 ] 0x0                (size_t) [0]
+	[RSP+AD8 ] 0x0                (size_t) [0]
+	[RSP+AE0 ] 0x22C              (size_t) [556]
+	[RSP+AE8 ] 0x7FFE03B0         (void*)
+	[RSP+AF0 ] 0x2A7F0DD5C00      (BSTriShape*)
+		Name: "HIMBO - Body"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "BODYTRI"
+		ExtraData[1] Name: "SHAPEDATA"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Outlaw Scout"
+		Checking User Data: -----
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking Parent: 0
+			Name: " (000179AE)[0]/ (00013952) [25%]"
+			RTTIName: "NiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Outlaw Scout"
+			Checking User Data: -----
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking Parent: 3
+				Name: "skeleton.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Outlaw Scout"
+				Checking User Data: -----
+					Object Reference: 
+					Flags: 0x00000008 kInitialized
+					Name: "Outlaw Scout"
+					FormID: 0xFF001740
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					Flags: 0x00000008 kInitialized
+					Name: "Outlaw Scout"
+					FormID: 0xFF001740
+					FormType: NPC (43)
+				Checking Parent: 2
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 0
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 7
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "HIMBO - Body"
+	[RSP+AF8 ] 0x0                (size_t) [0]
+	[RSP+B00 ] 0x2A7F0DD5C00      (BSTriShape*)
+		Name: "HIMBO - Body"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "BODYTRI"
+		ExtraData[1] Name: "SHAPEDATA"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Outlaw Scout"
+		Checking User Data: -----
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking Parent: 0
+			Name: " (000179AE)[0]/ (00013952) [25%]"
+			RTTIName: "NiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Outlaw Scout"
+			Checking User Data: -----
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking Parent: 3
+				Name: "skeleton.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Outlaw Scout"
+				Checking User Data: -----
+					Object Reference: 
+					Flags: 0x00000008 kInitialized
+					Name: "Outlaw Scout"
+					FormID: 0xFF001740
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					Flags: 0x00000008 kInitialized
+					Name: "Outlaw Scout"
+					FormID: 0xFF001740
+					FormType: NPC (43)
+				Checking Parent: 2
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 0
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 7
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "HIMBO - Body"
+	[RSP+B08 ] 0x7FFDA2B02CF0     (void* -> skee64.dll+0032CF0	xor al, al)
+	[RSP+B10 ] 0x0                (size_t) [0]
+	[RSP+B18 ] 0xF84BF6F049       (void*)
+	[RSP+B20 ] 0xF84BF6F060       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorph'::`7'::<lambda_2>,bool,NiAVObject *>*)
+	[RSP+B28 ] 0x7FFEB306C7BA     (void* -> ntdll.dll+003C7BA	mov rsi, rax)
+	[RSP+B30 ] 0xF84BF6F060       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorph'::`7'::<lambda_2>,bool,NiAVObject *>*)
+	[RSP+B38 ] 0x7FFDA2B923C7     (void* -> skee64.dll+00C23C7	test al, al)
+	[RSP+B40 ] 0x2027             (size_t) [8231]
+	[RSP+B48 ] 0x0                (size_t) [0]
+	[RSP+B50 ] 0x2A7F0470270      (void*)
+	[RSP+B58 ] 0x2A80BC4EFC0      (char*) "TorsoBackDefinition"
+	[RSP+B60 ] 0xF84BF6F160       (void*)
+	[RSP+B68 ] 0x9C44BEE240552B42 (size_t) [uint: 11260334847284292418 int: -7186409226425259198]
+	[RSP+B70 ] 0x1F               (size_t) [31]
+	[RSP+B78 ] 0x7FF7A5FF49CE     (void* -> SkyrimSE.exe+01949CE	mov ebp, eax)
+	[RSP+B80 ] 0x2A7F0470270      (void*)
+	[RSP+B88 ] 0x7FFDA2B02CD2     (void* -> skee64.dll+0032CD2	test rax, rax)
+	[RSP+B90 ] 0xFFFFFFFFFFFFFFFE (size_t) [uint: 18446744073709551614 int: -2]
+	[RSP+B98 ] 0x20               (size_t) [32]
+	[RSP+BA0 ] 0x2A7F0D87EC0      (NiNode*)
+		Name: " (000179AE)[0]/ (00013952) [25%]"
+		RTTIName: "NiNode"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Outlaw Scout"
+		Checking User Data: -----
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking Parent: 3
+			Name: "skeleton.nif"
+			RTTIName: "BSFadeNode"
+			ExtraData[0] Name: "BSBoneLOD"
+			ExtraData[1] Name: "BOM"
+			ExtraData[2] Name: "BBX"
+			ExtraData[3] Name: "BSX"
+			ExtraData[4] Name: "SkeletonID"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Outlaw Scout"
+			Checking User Data: -----
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking Parent: 2
+				RTTIName: "NiNode"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Checking Parent: 0
+					RTTIName: "BSMultiBoundNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 7
+						Name: "ObjectLODRoot"
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 3
+							Name: "shadow scene node"
+							RTTIName: "ShadowSceneNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 1
+								Name: "WorldRoot Node"
+								RTTIName: "SceneGraph"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: " (000179AE)[0]/ (00013952) [25%]"
+	[RSP+BA8 ] 0x0                (size_t) [0]
+	[RSP+BB0 ] 0x0                (size_t) [0]
+	[RSP+BB8 ] 0x7FFDA2B92385     (void* -> skee64.dll+00C2385	test al, al)
+	[RSP+BC0 ] 0x2A7F0DD5C00      (BSTriShape*)
+		Name: "HIMBO - Body"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "BODYTRI"
+		ExtraData[1] Name: "SHAPEDATA"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Outlaw Scout"
+		Checking User Data: -----
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking Parent: 0
+			Name: " (000179AE)[0]/ (00013952) [25%]"
+			RTTIName: "NiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Outlaw Scout"
+			Checking User Data: -----
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking Parent: 3
+				Name: "skeleton.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Outlaw Scout"
+				Checking User Data: -----
+					Object Reference: 
+					Flags: 0x00000008 kInitialized
+					Name: "Outlaw Scout"
+					FormID: 0xFF001740
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					Flags: 0x00000008 kInitialized
+					Name: "Outlaw Scout"
+					FormID: 0xFF001740
+					FormType: NPC (43)
+				Checking Parent: 2
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 0
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 7
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "HIMBO - Body"
+	[RSP+BC8 ] 0xF84BF6F060       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorph'::`7'::<lambda_2>,bool,NiAVObject *>*)
+	[RSP+BD0 ] 0xF84BF6F118       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorph'::`7'::<lambda_2>,bool,NiAVObject *>*)
+	[RSP+BD8 ] 0x2A7F0DD5C00      (BSTriShape*)
+		Name: "HIMBO - Body"
+		RTTIName: "BSTriShape"
+		ExtraData[0] Name: "BODYTRI"
+		ExtraData[1] Name: "SHAPEDATA"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Outlaw Scout"
+		Checking User Data: -----
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking Parent: 0
+			Name: " (000179AE)[0]/ (00013952) [25%]"
+			RTTIName: "NiNode"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Outlaw Scout"
+			Checking User Data: -----
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking Parent: 3
+				Name: "skeleton.nif"
+				RTTIName: "BSFadeNode"
+				ExtraData[0] Name: "BSBoneLOD"
+				ExtraData[1] Name: "BOM"
+				ExtraData[2] Name: "BBX"
+				ExtraData[3] Name: "BSX"
+				ExtraData[4] Name: "SkeletonID"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Full Name: "Outlaw Scout"
+				Checking User Data: -----
+					Object Reference: 
+					Flags: 0x00000008 kInitialized
+					Name: "Outlaw Scout"
+					FormID: 0xFF001740
+					FormType: NPC (43)
+				Checking TESObjectREFR: {}
+					Object Reference: 
+					Flags: 0x00000008 kInitialized
+					Name: "Outlaw Scout"
+					FormID: 0xFF001740
+					FormType: NPC (43)
+				Checking Parent: 2
+					RTTIName: "NiNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 0
+						RTTIName: "BSMultiBoundNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 7
+							Name: "ObjectLODRoot"
+							RTTIName: "NiNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 3
+								Name: "shadow scene node"
+								RTTIName: "ShadowSceneNode"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+								Checking Parent: 1
+									Name: "WorldRoot Node"
+									RTTIName: "SceneGraph"
+									Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: "HIMBO - Body"
+	[RSP+BE0 ] 0x7FFDA2CA4B70     (void* -> skee64.dll+01D4B70	add [0x00007FFE22C7EE26], ch)
+	[RSP+BE8 ] 0xF84BF6F180       (void*)
+	[RSP+BF0 ] 0xF84BF6F0F8       (void*)
+	[RSP+BF8 ] 0xF84BF6F310       (void*)
+	[RSP+C00 ] 0x2A7F0D87EC0      (NiNode*)
+		Name: " (000179AE)[0]/ (00013952) [25%]"
+		RTTIName: "NiNode"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Outlaw Scout"
+		Checking User Data: -----
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking Parent: 3
+			Name: "skeleton.nif"
+			RTTIName: "BSFadeNode"
+			ExtraData[0] Name: "BSBoneLOD"
+			ExtraData[1] Name: "BOM"
+			ExtraData[2] Name: "BBX"
+			ExtraData[3] Name: "BSX"
+			ExtraData[4] Name: "SkeletonID"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Outlaw Scout"
+			Checking User Data: -----
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking Parent: 2
+				RTTIName: "NiNode"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Checking Parent: 0
+					RTTIName: "BSMultiBoundNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 7
+						Name: "ObjectLODRoot"
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 3
+							Name: "shadow scene node"
+							RTTIName: "ShadowSceneNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 1
+								Name: "WorldRoot Node"
+								RTTIName: "SceneGraph"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: " (000179AE)[0]/ (00013952) [25%]"
+	[RSP+C08 ] 0x7FF7A6B4C65E     (void* -> SkyrimSE.exe+0CEC65E	mov rax, [rsp+0x30])
+	[RSP+C10 ] 0x2A5959A3340      (void*)
+	[RSP+C18 ] 0xF84BF6F060       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorph'::`7'::<lambda_2>,bool,NiAVObject *>*)
+	[RSP+C20 ] 0xF84BF6F5C8       (void*)
+	[RSP+C28 ] 0xF84BF6F310       (void*)
+	[RSP+C30 ] 0x2A7F0D87EC0      (NiNode*)
+		Name: " (000179AE)[0]/ (00013952) [25%]"
+		RTTIName: "NiNode"
+		Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Full Name: "Outlaw Scout"
+		Checking User Data: -----
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking TESObjectREFR: {}
+			Object Reference: 
+			Flags: 0x00000008 kInitialized
+			Name: "Outlaw Scout"
+			FormID: 0xFF001740
+			FormType: NPC (43)
+		Checking Parent: 3
+			Name: "skeleton.nif"
+			RTTIName: "BSFadeNode"
+			ExtraData[0] Name: "BSBoneLOD"
+			ExtraData[1] Name: "BOM"
+			ExtraData[2] Name: "BBX"
+			ExtraData[3] Name: "BSX"
+			ExtraData[4] Name: "SkeletonID"
+			Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+			Full Name: "Outlaw Scout"
+			Checking User Data: -----
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking TESObjectREFR: {}
+				Object Reference: 
+				Flags: 0x00000008 kInitialized
+				Name: "Outlaw Scout"
+				FormID: 0xFF001740
+				FormType: NPC (43)
+			Checking Parent: 2
+				RTTIName: "NiNode"
+				Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+				Checking Parent: 0
+					RTTIName: "BSMultiBoundNode"
+					Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+					Checking Parent: 7
+						Name: "ObjectLODRoot"
+						RTTIName: "NiNode"
+						Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+						Checking Parent: 3
+							Name: "shadow scene node"
+							RTTIName: "ShadowSceneNode"
+							Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+							Checking Parent: 1
+								Name: "WorldRoot Node"
+								RTTIName: "SceneGraph"
+								Flags: kSelectiveUpdate | kSelectiveUpdateTransforms | kSelectiveUpdateController
+		Name: " (000179AE)[0]/ (00013952) [25%]"
+	[RSP+C38 ] 0x7FFDA2AEBC73     (void* -> skee64.dll+001BC73	mov rax, rdi)
+	[RSP+C40 ] 0xF84BF6F060       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorph'::`7'::<lambda_2>,bool,NiAVObject *>*)
+	[RSP+C48 ] 0xF84BF6F118       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorph'::`7'::<lambda_2>,bool,NiAVObject *>*)
+	[RSP+C50 ] 0xF84BF6F1C0       (char*) "HIMBO - Body"
+	[RSP+C58 ] 0x2A56C327A38      (void*)
+	[RSP+C60 ] 0x1                (size_t) [1]
+	[RSP+C68 ] 0xF84BF6F180       (void*)
+	[RSP+C70 ] 0xF84BF6F0F8       (void*)
+	[RSP+C78 ] 0xF84BF6F1A0       (void*)
+	[RSP+C80 ] 0xF84BF6F1C0       (char*) "HIMBO - Body"
+	[RSP+C88 ] 0xF84BF6F190       (void*)
+	[RSP+C90 ] 0xF84BF6F310       (void*)
+	[RSP+C98 ] 0x7FFDA2CA4B70     (void* -> skee64.dll+01D4B70	add [0x00007FFE22C7EE26], ch)
+	[RSP+CA0 ] 0xF84BF6F180       (void*)
+	[RSP+CA8 ] 0xF84BF6F0F8       (void*)
+	[RSP+CB0 ] 0x2A56C327A38      (void*)
+	[RSP+CB8 ] 0x7FFDA2AEC672     (void* -> skee64.dll+001C672	mov rax, [rbx])
+	[RSP+CC0 ] 0xF84BF6F1E8       (void*)
+	[RSP+CC8 ] 0x2A818A9E490      (void*)
+	[RSP+CD0 ] 0xF84BF6F118       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorph'::`7'::<lambda_2>,bool,NiAVObject *>*)
+	[RSP+CD8 ] 0x0                (size_t) [0]
+	[RSP+CE0 ] 0xF84BF6F328       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorphs'::`9'::<lambda_1>,std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> > >*)
+	[RSP+CE8 ] 0xF84BF6F310       (void*)
+	[RSP+CF0 ] 0x2A80BCD74F0      (char*) "HIMBO - Body"
+	[RSP+CF8 ] 0x7FFDA2B06673     (void* -> skee64.dll+0036673	nop)
+	[RSP+D00 ] 0x2A5959A3358      (char*) "HIMBO - Body"
+	[RSP+D08 ] 0xF84BF6F310       (void*)
+	[RSP+D10 ] 0x2A5BD604400      (Character*)
+		File: "NPC Improvements.esp"
+		Flags: 0x00020408 
+		Name: "Outlaw Scout"
+		FormID: 0x0001EBF6
+		FormType: ActorCharacter (62)
+		Object Reference: 
+		Flags: 0x00000008 kInitialized
+		Name: "Outlaw Scout"
+		FormID: 0xFF001740
+		FormType: NPC (43)
+		File: "NPC Improvements.esp"
+		Flags: 0x00020408 kInitialized
+		FormID: 0x0001EBF6
+		FormType: ActorCharacter (62)
+	[RSP+D18 ] 0xF84BF6F328       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorphs'::`9'::<lambda_1>,std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> > >*)
+	[RSP+D20 ] 0x0                (size_t) [0]
+	[RSP+D28 ] 0xF84BF6F1C0       (char*) "HIMBO - Body"
+	[RSP+D30 ] 0x2A5E3533BF0      (std::_Ref_count_obj2<Concurrency::details::_Task_impl<unsigned char> >*)
+	[RSP+D38 ] 0xF84BF6F310       (void*)
+	[RSP+D40 ] 0x202D204F424D4948 (size_t) [2318544907952539976]
+	[RSP+D48 ] 0x79646F42         (size_t) [2036625218]
+	[RSP+D50 ] 0xC                (size_t) [12]
+	[RSP+D58 ] 0xF                (size_t) [15]
+	[RSP+D60 ] 0x3E5AA5394A81E4B7 (size_t) [4493085243737236663]
+	[RSP+D68 ] 0x7FFE3F800000     (size_t) [140729963773952]
+	[RSP+D70 ] 0x2A7F0470270      (void*)
+	[RSP+D78 ] 0x46               (size_t) [70]
+	[RSP+D80 ] 0x2A80BB95300      (void*)
+	[RSP+D88 ] 0x2A80BB97300      (void*)
+	[RSP+D90 ] 0x2A80BB97300      (void*)
+	[RSP+D98 ] 0x1FF              (size_t) [511]
+	[RSP+DA0 ] 0x200              (size_t) [512]
+	[RSP+DA8 ] 0x7FFDA2C27B01     (void* -> skee64.dll+0157B01	and eax, [rbx+0x167401E9])
+	[RSP+DB0 ] 0x8A49102043DE     (size_t) [152046407795678]
+	[RSP+DB8 ] 0x7FFEB306608E     (void* -> ntdll.dll+003608E	lea r11, [rsp+0x110])
+	[RSP+DC0 ] 0xF84BF6F328       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorphs'::`9'::<lambda_1>,std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> > >*)
+	[RSP+DC8 ] 0x7FFDA2B060E5     (void* -> skee64.dll+00360E5	nop)
+	[RSP+DD0 ] 0xF84BF6F310       (void*)
+	[RSP+DD8 ] 0x7FFDA2C27E2B     (void* -> skee64.dll+0157E2B	xor eax, eax)
+	[RSP+DE0 ] 0x2A8427B47B0      (void*)
+	[RSP+DE8 ] 0xF84BF6F310       (void*)
+	[RSP+DF0 ] 0x0                (size_t) [0]
+	[RSP+DF8 ] 0xF84BF6F5C8       (void*)
+	[RSP+E00 ] 0x2A832A83660      (Concurrency::task<std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> > >::_InitialTaskHandle<std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> >,`MorphFileCache::ApplyMorphs'::`9'::<lambda_1>,Concurrency::details::_TypeSelectorNoAsync>*)
+	[RSP+E08 ] 0x7FFDA2B05F4F     (void* -> skee64.dll+0035F4F	mov rdx, rax)
+	[RSP+E10 ] 0x2A8427B47B0      (void*)
+	[RSP+E18 ] 0x2A832A83668      (void*)
+	[RSP+E20 ] 0xF84BF6F328       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorphs'::`9'::<lambda_1>,std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> > >*)
+	[RSP+E28 ] 0x2A8427B4650      (Concurrency::details::_Task_impl<std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> > >*)
+	[RSP+E30 ] 0x2A832A7D0C0      (void*)
+	[RSP+E38 ] 0x7FFEB306BE70     (void* -> ntdll.dll+003BE70	test eax, eax)
+	[RSP+E40 ] 0x0                (size_t) [0]
+	[RSP+E48 ] 0x2A56C325070      (char*) "D"
+	[RSP+E50 ] 0x7FFDA2CA4D98     (void* -> skee64.dll+01D4D98	shl byte ptr [rsi-0x50], 0xA2)
+	[RSP+E58 ] 0x2A80BCCD0D8      (void*)
+	[RSP+E60 ] 0xF84E5FF7C8       (void*)
+	[RSP+E68 ] 0xF84E5FF4D8       (void*)
+	[RSP+E70 ] 0xF84E5FF7D8       (void*)
+	[RSP+E78 ] 0x2A80BCD74F0      (char*) "HIMBO - Body"
+	[RSP+E80 ] 0xF84BF6F409       (void*)
+	[RSP+E88 ] 0x0                (size_t) [0]
+	[RSP+E90 ] 0x0                (size_t) [0]
+	[RSP+E98 ] 0x0                (size_t) [0]
+	[RSP+EA0 ] 0x0                (size_t) [0]
+	[RSP+EA8 ] 0x7FFDA2CA4D98     (void* -> skee64.dll+01D4D98	shl byte ptr [rsi-0x50], 0xA2)
+	[RSP+EB0 ] 0x2A80BCCD0D8      (void*)
+	[RSP+EB8 ] 0xF84E5FF7C8       (void*)
+	[RSP+EC0 ] 0xF84E5FF4D8       (void*)
+	[RSP+EC8 ] 0xF84E5FF7D8       (void*)
+	[RSP+ED0 ] 0x2A80BCD74F0      (char*) "HIMBO - Body"
+	[RSP+ED8 ] 0x7FFEB30A65BF     (void* -> ntdll.dll+00765BF	mov rax, [rsp+0x28])
+	[RSP+EE0 ] 0xF84BF6F328       (std::_Func_impl_no_alloc<`MorphFileCache::ApplyMorphs'::`9'::<lambda_1>,std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> > >*)
+	[RSP+EE8 ] 0x7FFDA2D22000     (void* -> skee64.dll+0252000	and [rdx], dl)
+	[RSP+EF0 ] 0xF84BF6F5C8       (void*)
+	[RSP+EF8 ] 0xF84BF6F5C8       (void*)
+	[RSP+F00 ] 0x2A5E32944B0      (void*)
+	[RSP+F08 ] 0x7FFDA2AE7054     (void* -> skee64.dll+0017054	nop)
+	[RSP+F10 ] 0x2A832A83660      (Concurrency::task<std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> > >::_InitialTaskHandle<std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> >,`MorphFileCache::ApplyMorphs'::`9'::<lambda_1>,Concurrency::details::_TypeSelectorNoAsync>*)
+	[RSP+F18 ] 0x2A832A83668      (void*)
+	[RSP+F20 ] 0x0                (size_t) [0]
+	[RSP+F28 ] 0x2A832A83660      (Concurrency::task<std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> > >::_InitialTaskHandle<std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> >,`MorphFileCache::ApplyMorphs'::`9'::<lambda_1>,Concurrency::details::_TypeSelectorNoAsync>*)
+	[RSP+F30 ] 0x2A83817AD80      (void*)
+	[RSP+F38 ] 0x7FFDA2AE6968     (void* -> skee64.dll+0016968	nop)
+	[RSP+F40 ] 0x2A832A83660      (Concurrency::task<std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> > >::_InitialTaskHandle<std::vector<NIOVTaskUpdateSkinPartition *,std::allocator<NIOVTaskUpdateSkinPartition *> >,`MorphFileCache::ApplyMorphs'::`9'::<lambda_1>,Concurrency::details::_TypeSelectorNoAsync>*)
+	[RSP+F48 ] 0x2A5E32944B0      (void*)
+	[RSP+F50 ] 0xFFA0FFA0         (size_t) [4288741280]
+	[RSP+F58 ] 0xF84BF6F5C8       (void*)
+	[RSP+F60 ] 0x2A83817AD80      (void*)
+	[RSP+F68 ] 0x7FFDA2C283DF     (void* -> skee64.dll+01583DF	call 0x00007FFDA2C28280)
+	[RSP+F70 ] 0x2A83817AD80      (void*)
+	[RSP+F78 ] 0x2A5E32944B0      (void*)
+	[RSP+F80 ] 0x7FFDA2AD0000     (void*)
+	[RSP+F88 ] 0xF84BF6F5C8       (void*)
+	[RSP+F90 ] 0x7FFE0386         (void*)
+	[RSP+F98 ] 0x7FFEB30923CA     (void* -> ntdll.dll+00623CA	)
+	[RSP+FA0 ] 0x2A56C327970      (void*)
+	[RSP+FA8 ] 0x0                (size_t) [0]
+	[RSP+FB0 ] 0x2A56C327A38      (void*)
+	[RSP+FB8 ] 0x7FFDA2AD0000     (void*)
+	[RSP+FC0 ] 0x0                (size_t) [0]
+	[RSP+FC8 ] 0x0                (size_t) [0]
+	[RSP+FD0 ] 0xFFFF             (size_t) [65535]
+	[RSP+FD8 ] 0x0                (size_t) [0]
+	[RSP+FE0 ] 0x0                (size_t) [0]
+	[RSP+FE8 ] 0x7FFEB3065986     (void* -> ntdll.dll+0035986	jmp 0x00007FFEB30659A7)
+	[RSP+FF0 ] 0x2A425180C50      (void*)
+	[RSP+FF8 ] 0x0                (size_t) [0]
+	[RSP+1000] 0x1                (size_t) [1]
+	[RSP+1008] 0x2A5E29BBBE0      (void*)
+	[RSP+1010] 0x2A425180C50      (void*)
+	[RSP+1018] 0xF84BF6F4A2       (void*)
+	[RSP+1020] 0x10101000001      (size_t) [1103823372289]
+	[RSP+1028] 0x0                (size_t) [0]
+	[RSP+1030] 0x1000000000       (size_t) [68719476736]
+	[RSP+1038] 0x1                (size_t) [1]
+	[RSP+1040] 0x2A425180C50      (void*)
+	[RSP+1048] 0xF842928000       (void*)
+	[RSP+1050] 0x2A425180C50      (void*)
+	[RSP+1058] 0x2A5E29BB860      (void*)
+	[RSP+1060] 0xF                (size_t) [15]
+	[RSP+1068] 0x2A5E3294490      (void*)
+	[RSP+1070] 0x0                (size_t) [0]
+	[RSP+1078] 0x0                (size_t) [0]
+	[RSP+1080] 0x2A425180DF8      (void*)
+	[RSP+1088] 0x2A56C327A38      (void*)
+	[RSP+1090] 0x300000           (size_t) [3145728]
+	[RSP+1098] 0x0                (size_t) [0]
+	[RSP+10A0] 0x0                (size_t) [0]
+	[RSP+10A8] 0x0                (size_t) [0]
+	[RSP+10B0] 0x0                (size_t) [0]
+	[RSP+10B8] 0x0                (size_t) [0]
+	[RSP+10C0] 0x0                (size_t) [0]
+	[RSP+10C8] 0x0                (size_t) [0]
+	[RSP+10D0] 0x0                (size_t) [0]
+	[RSP+10D8] 0x0                (size_t) [0]
+	[RSP+10E0] 0xF842904000       (void*)
+	[RSP+10E8] 0xF842904000       (void*)
+	[RSP+10F0] 0xF842904000       (void*)
+	[RSP+10F8] 0xF84BF6CF50       (void*)
+	[RSP+1100] 0x0                (size_t) [0]
+	[RSP+1108] 0x0                (size_t) [0]
+	[RSP+1110] 0xF84C06F6E0       (void*)
+	[RSP+1118] 0xF84BE6F680       (void*)
+	[RSP+1120] 0xF84C06F6F0       (void*)
+	[RSP+1128] 0xF84BE6F690       (void*)
+	[RSP+1130] 0x2A56C327A38      (void*)
+	[RSP+1138] 0x104E8            (size_t) [66792]
+	[RSP+1140] 0x2A425180C50      (void*)
+	[RSP+1148] 0x0                (size_t) [0]
+	[RSP+1150] 0x0                (size_t) [0]
+	[RSP+1158] 0x0                (size_t) [0]
+	[RSP+1160] 0x0                (size_t) [0]
+	[RSP+1168] 0x0                (size_t) [0]
+	[RSP+1170] 0x0                (size_t) [0]
+	[RSP+1178] 0x0                (size_t) [0]
+	[RSP+1180] 0x0                (size_t) [0]
+	[RSP+1188] 0x0                (size_t) [0]
+	[RSP+1190] 0x0                (size_t) [0]
+	[RSP+1198] 0x0                (size_t) [0]
+	[RSP+11A0] 0x7FFDA2C2835C     (void* -> skee64.dll+015835C	mov [rsp+0x08], rbx)
+	[RSP+11A8] 0x2A83817AD80      (void*)
+	[RSP+11B0] 0x8                (size_t) [8]
+	[RSP+11B8] 0x0                (size_t) [0]
+	[RSP+11C0] 0x0                (size_t) [0]
+	[RSP+11C8] 0x2A425180C50      (void*)
+	[RSP+11D0] 0x0                (size_t) [0]
+	[RSP+11D8] 0x2C0              (size_t) [704]
+	[RSP+11E0] 0x0                (size_t) [0]
+	[RSP+11E8] 0x0                (size_t) [0]
+	[RSP+11F0] 0x0                (size_t) [0]
+	[RSP+11F8] 0x0                (size_t) [0]
+	[RSP+1200] 0x2A56C327970      (void*)
+	[RSP+1208] 0x0                (size_t) [0]
+	[RSP+1210] 0x7FFDA2AD0000     (void*)
+	[RSP+1218] 0x0                (size_t) [0]
+	[RSP+1220] 0x0                (size_t) [0]
+	[RSP+1228] 0x200000000        (size_t) [8589934592]
+	[RSP+1230] 0x0                (size_t) [0]
+	[RSP+1238] 0x0                (size_t) [0]
+	[RSP+1240] 0x0                (size_t) [0]
+	[RSP+1248] 0x0                (size_t) [0]
+	[RSP+1250] 0x0                (size_t) [0]
+	[RSP+1258] 0x0                (size_t) [0]
+	[RSP+1260] 0x0                (size_t) [0]
+	[RSP+1268] 0x2A5E29BBBE0      (void*)
+	[RSP+1270] 0x1000000000       (size_t) [68719476736]
+	[RSP+1278] 0x0                (size_t) [0]
+	[RSP+1280] 0x0                (size_t) [0]
+	[RSP+1288] 0x0                (size_t) [0]
+	[RSP+1290] 0xB1D519A95A1C     (size_t) [195528816679452]
+	[RSP+1298] 0x0                (size_t) [0]
+	[RSP+12A0] 0x0                (size_t) [0]
+	[RSP+12A8] 0x0                (size_t) [0]
+	[RSP+12B0] 0x0                (size_t) [0]
+	[RSP+12B8] 0x0                (size_t) [0]
+	[RSP+12C0] 0x0                (size_t) [0]
+	[RSP+12C8] 0x7FFEB241257D     (void* -> KERNEL32.DLL+001257D	mov ecx, eax)
+	[RSP+12D0] 0x0                (size_t) [0]
+	[RSP+12D8] 0x0                (size_t) [0]
+	[RSP+12E0] 0x0                (size_t) [0]
+	[RSP+12E8] 0x0                (size_t) [0]
+	[RSP+12F0] 0x0                (size_t) [0]
+	[RSP+12F8] 0x7FFEB308AA58     (void* -> ntdll.dll+005AA58	jmp 0x00007FFEB308AA79)
+	[RSP+1300] 0x0                (size_t) [0]
+	[RSP+1308] 0x0                (size_t) [0]
+	[RSP+1310] 0x0                (size_t) [0]
+	[RSP+1318] 0x0                (size_t) [0]
+	[RSP+1320] 0x0                (size_t) [0]
+	[RSP+1328] 0x0                (size_t) [0]
+	[RSP+1330] 0x0                (size_t) [0]
+	[RSP+1338] 0x0                (size_t) [0]
+	[RSP+1340] 0x4F0FFFFFB30      (size_t) [5433133628208]
+	[RSP+1348] 0x4D0FFFFFB30      (size_t) [5295694674736]
+	[RSP+1350] 0x21               (size_t) [33]
+	[RSP+1358] 0x0                (size_t) [0]
+	[RSP+1360] 0x0                (size_t) [0]
+	[RSP+1368] 0x0                (size_t) [0]
+	[RSP+1370] 0x0                (size_t) [0]
+	[RSP+1378] 0x0                (size_t) [0]
+	[RSP+1380] 0x0                (size_t) [0]
+	[RSP+1388] 0x0                (size_t) [0]
+	[RSP+1390] 0x0                (size_t) [0]
+	[RSP+1398] 0x0                (size_t) [0]
+	[RSP+13A0] 0x0                (size_t) [0]
+	[RSP+13A8] 0x0                (size_t) [0]
+	[RSP+13B0] 0x0                (size_t) [0]
+	[RSP+13B8] 0x0                (size_t) [0]
+	[RSP+13C0] 0x0                (size_t) [0]
+	[RSP+13C8] 0x0                (size_t) [0]
+	[RSP+13D0] 0x0                (size_t) [0]
+	[RSP+13D8] 0x0                (size_t) [0]
+	[RSP+13E0] 0x0                (size_t) [0]
+	[RSP+13E8] 0x0                (size_t) [0]
+	[RSP+13F0] 0x0                (size_t) [0]
+	[RSP+13F8] 0x0                (size_t) [0]
+	[RSP+1400] 0x0                (size_t) [0]
+	[RSP+1408] 0x0                (size_t) [0]
+	[RSP+1410] 0x0                (size_t) [0]
+	[RSP+1418] 0x0                (size_t) [0]
+	[RSP+1420] 0x0                (size_t) [0]
+	[RSP+1428] 0x0                (size_t) [0]
+	[RSP+1430] 0x0                (size_t) [0]
+	[RSP+1438] 0x0                (size_t) [0]
+	[RSP+1440] 0x0                (size_t) [0]
+	[RSP+1448] 0x0                (size_t) [0]
+	[RSP+1450] 0x0                (size_t) [0]
+	[RSP+1458] 0x0                (size_t) [0]
+	[RSP+1460] 0x0                (size_t) [0]
+	[RSP+1468] 0x0                (size_t) [0]
+	[RSP+1470] 0x0                (size_t) [0]
+	[RSP+1478] 0x0                (size_t) [0]
+	[RSP+1480] 0x0                (size_t) [0]
+	[RSP+1488] 0x0                (size_t) [0]
+	[RSP+1490] 0x0                (size_t) [0]
+	[RSP+1498] 0x0                (size_t) [0]
+	[RSP+14A0] 0x0                (size_t) [0]
+	[RSP+14A8] 0x0                (size_t) [0]
+	[RSP+14B0] 0x0                (size_t) [0]
+	[RSP+14B8] 0x0                (size_t) [0]
+	[RSP+14C0] 0x0                (size_t) [0]
+	[RSP+14C8] 0x0                (size_t) [0]
+	[RSP+14D0] 0x0                (size_t) [0]
+	[RSP+14D8] 0x0                (size_t) [0]
+	[RSP+14E0] 0x0                (size_t) [0]
+	[RSP+14E8] 0x0                (size_t) [0]
+	[RSP+14F0] 0x0                (size_t) [0]
+	[RSP+14F8] 0x0                (size_t) [0]
+	[RSP+1500] 0x0                (size_t) [0]
+	[RSP+1508] 0x0                (size_t) [0]
+	[RSP+1510] 0x0                (size_t) [0]
+	[RSP+1518] 0x0                (size_t) [0]
+	[RSP+1520] 0x0                (size_t) [0]
+	[RSP+1528] 0x0                (size_t) [0]
+	[RSP+1530] 0x0                (size_t) [0]
+	[RSP+1538] 0x0                (size_t) [0]
+	[RSP+1540] 0x0                (size_t) [0]
+	[RSP+1548] 0x0                (size_t) [0]
+	[RSP+1550] 0x0                (size_t) [0]
+	[RSP+1558] 0x0                (size_t) [0]
+	[RSP+1560] 0x0                (size_t) [0]
+	[RSP+1568] 0x0                (size_t) [0]
+	[RSP+1570] 0x0                (size_t) [0]
+	[RSP+1578] 0x0                (size_t) [0]
+	[RSP+1580] 0x0                (size_t) [0]
+	[RSP+1588] 0x0                (size_t) [0]
+	[RSP+1590] 0x0                (size_t) [0]
+	[RSP+1598] 0x0                (size_t) [0]
+	[RSP+15A0] 0x0                (size_t) [0]
+	[RSP+15A8] 0x0                (size_t) [0]
+	[RSP+15B0] 0x0                (size_t) [0]
+	[RSP+15B8] 0x0                (size_t) [0]
+	[RSP+15C0] 0x0                (size_t) [0]
+	[RSP+15C8] 0x0                (size_t) [0]
+	[RSP+15D0] 0x0                (size_t) [0]
+	[RSP+15D8] 0x0                (size_t) [0]
+	[RSP+15E0] 0x0                (size_t) [0]
+	[RSP+15E8] 0x0                (size_t) [0]
+	[RSP+15F0] 0x0                (size_t) [0]
+	[RSP+15F8] 0x0                (size_t) [0]
+	[RSP+1600] 0x0                (size_t) [0]
+	[RSP+1608] 0x0                (size_t) [0]
+	[RSP+1610] 0x0                (size_t) [0]
+	[RSP+1618] 0x0                (size_t) [0]
+	[RSP+1620] 0x0                (size_t) [0]
+	[RSP+1628] 0x0                (size_t) [0]
+	[RSP+1630] 0x0                (size_t) [0]
+	[RSP+1638] 0x0                (size_t) [0]
+	[RSP+1640] 0x0                (size_t) [0]
+	[RSP+1648] 0x0                (size_t) [0]
+	[RSP+1650] 0x0                (size_t) [0]
+	[RSP+1658] 0x0                (size_t) [0]
+	[RSP+1660] 0x0                (size_t) [0]
+	[RSP+1668] 0x0                (size_t) [0]
+	[RSP+1670] 0x0                (size_t) [0]
+	[RSP+1678] 0x0                (size_t) [0]
+	[RSP+1680] 0x0                (size_t) [0]
+	[RSP+1688] 0x0                (size_t) [0]
+	[RSP+1690] 0x0                (size_t) [0]
+	[RSP+1698] 0x0                (size_t) [0]
+	[RSP+16A0] 0x0                (size_t) [0]
+	[RSP+16A8] 0x0                (size_t) [0]
+	[RSP+16B0] 0x0                (size_t) [0]
+	[RSP+16B8] 0x0                (size_t) [0]
+	[RSP+16C0] 0x0                (size_t) [0]
+	[RSP+16C8] 0x0                (size_t) [0]
+	[RSP+16D0] 0x0                (size_t) [0]
+	[RSP+16D8] 0x0                (size_t) [0]
+	[RSP+16E0] 0x0                (size_t) [0]
+	[RSP+16E8] 0x0                (size_t) [0]
+	[RSP+16F0] 0x0                (size_t) [0]
+	[RSP+16F8] 0x0                (size_t) [0]
+	[RSP+1700] 0x0                (size_t) [0]
+	[RSP+1708] 0x0                (size_t) [0]
+	[RSP+1710] 0x0                (size_t) [0]
+	[RSP+1718] 0x0                (size_t) [0]
+	[RSP+1720] 0x0                (size_t) [0]
+	[RSP+1728] 0x0                (size_t) [0]
+	[RSP+1730] 0x0                (size_t) [0]
+	[RSP+1738] 0x0                (size_t) [0]
+	[RSP+1740] 0x0                (size_t) [0]
+	[RSP+1748] 0x0                (size_t) [0]
+	[RSP+1750] 0x0                (size_t) [0]
+	[RSP+1758] 0x0                (size_t) [0]
+	[RSP+1760] 0x0                (size_t) [0]
+	[RSP+1768] 0x0                (size_t) [0]
+	[RSP+1770] 0x0                (size_t) [0]
+	[RSP+1778] 0x0                (size_t) [0]
+	[RSP+1780] 0x0                (size_t) [0]
+	[RSP+1788] 0x0                (size_t) [0]
+	[RSP+1790] 0x0                (size_t) [0]
+	[RSP+1798] 0x0                (size_t) [0]
+	[RSP+17A0] 0x0                (size_t) [0]
+	[RSP+17A8] 0x0                (size_t) [0]
+	[RSP+17B0] 0x0                (size_t) [0]
+	[RSP+17B8] 0x0                (size_t) [0]
+	[RSP+17C0] 0x0                (size_t) [0]
+	[RSP+17C8] 0x0                (size_t) [0]
+	[RSP+17D0] 0x0                (size_t) [0]
+	[RSP+17D8] 0x0                (size_t) [0]
+	[RSP+17E0] 0x0                (size_t) [0]
+	[RSP+17E8] 0x0                (size_t) [0]
+	[RSP+17F0] 0x0                (size_t) [0]
+	[RSP+17F8] 0x0                (size_t) [0]
+	[RSP+1800] 0x0                (size_t) [0]
+	[RSP+1808] 0x0                (size_t) [0]
+	[RSP+1810] 0x0                (size_t) [0]
+	[RSP+1818] 0x0                (size_t) [0]
+	[RSP+1820] 0x0                (size_t) [0]
+	[RSP+1828] 0x0                (size_t) [0]
+	[RSP+1830] 0x0                (size_t) [0]
+	[RSP+1838] 0x0                (size_t) [0]
+	[RSP+1840] 0x0                (size_t) [0]
+	[RSP+1848] 0x0                (size_t) [0]
+	[RSP+1850] 0x0                (size_t) [0]
+	[RSP+1858] 0x0                (size_t) [0]
+	[RSP+1860] 0x0                (size_t) [0]
+	[RSP+1868] 0x0                (size_t) [0]
+	[RSP+1870] 0x0                (size_t) [0]
+	[RSP+1878] 0x0                (size_t) [0]
+	[RSP+1880] 0x0                (size_t) [0]
+	[RSP+1888] 0x0                (size_t) [0]
+	[RSP+1890] 0x0                (size_t) [0]
+	[RSP+1898] 0x0                (size_t) [0]
+	[RSP+18A0] 0x0                (size_t) [0]
+	[RSP+18A8] 0x0                (size_t) [0]
+	[RSP+18B0] 0x0                (size_t) [0]
+	[RSP+18B8] 0x0                (size_t) [0]
+	[RSP+18C0] 0x0                (size_t) [0]
+	[RSP+18C8] 0x0                (size_t) [0]
+	[RSP+18D0] 0x0                (size_t) [0]
+	[RSP+18D8] 0x0                (size_t) [0]
+	[RSP+18E0] 0x0                (size_t) [0]
+	[RSP+18E8] 0x0                (size_t) [0]
+	[RSP+18F0] 0x0                (size_t) [0]
+	[RSP+18F8] 0x0                (size_t) [0]
+	[RSP+1900] 0x0                (size_t) [0]
+	[RSP+1908] 0x0                (size_t) [0]
+	[RSP+1910] 0x0                (size_t) [0]
+	[RSP+1918] 0x0                (size_t) [0]
+	[RSP+1920] 0x0                (size_t) [0]
+	[RSP+1928] 0x0                (size_t) [0]
+	[RSP+1930] 0x0                (size_t) [0]
+	[RSP+1938] 0x0                (size_t) [0]
+	[RSP+1940] 0x0                (size_t) [0]
+	[RSP+1948] 0x0                (size_t) [0]
+	[RSP+1950] 0x0                (size_t) [0]
+	[RSP+1958] 0x0                (size_t) [0]
+	[RSP+1960] 0x0                (size_t) [0]
+	[RSP+1968] 0x0                (size_t) [0]
+	[RSP+1970] 0x0                (size_t) [0]
+	[RSP+1978] 0x0                (size_t) [0]
+	[RSP+1980] 0x0                (size_t) [0]
+	[RSP+1988] 0x0                (size_t) [0]
+	[RSP+1990] 0x0                (size_t) [0]
+	[RSP+1998] 0x0                (size_t) [0]
+	[RSP+19A0] 0x0                (size_t) [0]
+	[RSP+19A8] 0x0                (size_t) [0]
+	[RSP+19B0] 0x0                (size_t) [0]
+	[RSP+19B8] 0x0                (size_t) [0]
+	[RSP+19C0] 0x0                (size_t) [0]
+	[RSP+19C8] 0x0                (size_t) [0]
+	[RSP+19D0] 0x0                (size_t) [0]
+	[RSP+19D8] 0x0                (size_t) [0]
+	[RSP+19E0] 0x0                (size_t) [0]
+	[RSP+19E8] 0x0                (size_t) [0]
+	[RSP+19F0] 0x0                (size_t) [0]
+	[RSP+19F8] 0x0                (size_t) [0]
+	[RSP+1A00] 0x0                (size_t) [0]
+	[RSP+1A08] 0x0                (size_t) [0]
+	[RSP+1A10] 0x0                (size_t) [0]
+	[RSP+1A18] 0x0                (size_t) [0]
+	[RSP+1A20] 0x0                (size_t) [0]
+	[RSP+1A28] 0x0                (size_t) [0]
+	[RSP+1A30] 0x0                (size_t) [0]
+	[RSP+1A38] 0x0                (size_t) [0]
+	[RSP+1A40] 0x0                (size_t) [0]
+	[RSP+1A48] 0x0                (size_t) [0]
+	[RSP+1A50] 0x0                (size_t) [0]
+	[RSP+1A58] 0x0                (size_t) [0]
+	[RSP+1A60] 0x0                (size_t) [0]
+	[RSP+1A68] 0x0                (size_t) [0]
+	[RSP+1A70] 0x0                (size_t) [0]
+	[RSP+1A78] 0x0                (size_t) [0]
+	[RSP+1A80] 0x0                (size_t) [0]
+	[RSP+1A88] 0x0                (size_t) [0]
+	[RSP+1A90] 0x0                (size_t) [0]
+	[RSP+1A98] 0x0                (size_t) [0]
+	[RSP+1AA0] 0x0                (size_t) [0]
+	[RSP+1AA8] 0x0                (size_t) [0]
+	[RSP+1AB0] 0x0                (size_t) [0]
+	[RSP+1AB8] 0x0                (size_t) [0]
+	[RSP+1AC0] 0x0                (size_t) [0]
+	[RSP+1AC8] 0x0                (size_t) [0]
+	[RSP+1AD0] 0x0                (size_t) [0]
+	[RSP+1AD8] 0x0                (size_t) [0]
+	[RSP+1AE0] 0x0                (size_t) [0]
+	[RSP+1AE8] 0x0                (size_t) [0]
+	[RSP+1AF0] 0x0                (size_t) [0]
+	[RSP+1AF8] 0x0                (size_t) [0]
+	[RSP+1B00] 0x0                (size_t) [0]
+	[RSP+1B08] 0x0                (size_t) [0]
+	[RSP+1B10] 0x0                (size_t) [0]
+	[RSP+1B18] 0x0                (size_t) [0]
+	[RSP+1B20] 0x0                (size_t) [0]
+	[RSP+1B28] 0x0                (size_t) [0]
+	[RSP+1B30] 0x0                (size_t) [0]
+	[RSP+1B38] 0x0                (size_t) [0]
+	[RSP+1B40] 0x0                (size_t) [0]
+	[RSP+1B48] 0x0                (size_t) [0]
+	[RSP+1B50] 0x0                (size_t) [0]
+	[RSP+1B58] 0x0                (size_t) [0]
+	[RSP+1B60] 0x0                (size_t) [0]
+	[RSP+1B68] 0x0                (size_t) [0]
+	[RSP+1B70] 0x0                (size_t) [0]
+	[RSP+1B78] 0x0                (size_t) [0]
+
+MODULES:
+	XINPUT1_3.dll                                    0x000000400000
+	X3DAudio1_7.dll                                  0x000056530000
+	tbb.dll                                          0x000180000000
+	tbbmalloc.dll                                    0x02A4377B0000
+	PassiveWeaponEnchantmentRecharging.dll           0x02A456AC0000
+	ShadowBoost.dll                                  0x02A461760000
+	DSOUND.DLL                                       0x02A52FC40000
+	SkyrimSE.exe                                     0x7FF7A5E60000
+	libxess.dll                                      0x7FFD96940000
+	nvngx_dlss.dll                                   0x7FFD9A9F0000
+	nvcuda64.dll                                     0x7FFD9EEE0000
+	XAudio2_7.dll                                    0x7FFD9FA40000
+	_nvngx.dll                                       0x7FFDA01C0000
+	d3dcompiler_47_64.dll                            0x7FFDA0530000
+	NvCamera64.dll                                   0x7FFDA0940000
+	gameoverlayrenderer64.dll                        0x7FFDA11B0000
+	YesImSure.dll                                    0x7FFDA1350000
+	WhichKey-NG.dll                                  0x7FFDA13E0000
+	Weightless.dll                                   0x7FFDA1570000
+	UnlimitedFastTravel.dll                          0x7FFDA1690000
+	TrueDirectionalMovement.dll                      0x7FFDA1700000
+	TheNewGentleman.dll                              0x7FFDA17D0000
+	SureOfStealing.dll                               0x7FFDA18A0000
+	SSEDisplayTweaks.dll                             0x7FFDA1910000
+	SoundRecordDistributor.dll                       0x7FFDA19B0000
+	SoftShadows.dll                                  0x7FFDA1A90000
+	PDPerfPlugin.dll                                 0x7FFDA1B40000
+	ffx_fsr2_api_dx11_x64.dll                        0x7FFDA1D40000
+	SkyrimUpscaler.dll                               0x7FFDA1F10000
+	SkyPatcher.dll                                   0x7FFDA28B0000
+	SkillOfSneaking.dll                              0x7FFDA2A60000
+	skee64.dll                                       0x7FFDA2AD0000
+	SexLabUtil.dll                                   0x7FFDA2E00000
+	ScrambledBugs.dll                                0x7FFDA2ED0000
+	RemoveAllItemsFix.dll                            0x7FFDA2F70000
+	RecursionFPSFix.dll                              0x7FFDA3000000
+	QuickLootEE.dll                                  0x7FFDA30E0000
+	po3_UseOrTake.dll                                0x7FFDA31F0000
+	po3_Tweaks.dll                                   0x7FFDA32A0000
+	po3_SpellPerkItemDistributor.dll                 0x7FFDA33A0000
+	po3_SimpleOffenceSuppression.dll                 0x7FFDA3520000
+	po3_SimpleActivateSKSE.dll                       0x7FFDA35C0000
+	po3_SaveUnbaker.dll                              0x7FFDA3670000
+	po3_ReadOrTakeBooks.dll                          0x7FFDA3710000
+	po3_PapyrusExtender.dll                          0x7FFDA37B0000
+	po3_MoonMod.dll                                  0x7FFDA3A30000
+	po3_MagicSneakAttacks.dll                        0x7FFDA3AE0000
+	po3_KeywordItemDistributor.dll                   0x7FFDA3BC0000
+	po3_EnhancedInvisibility.dll                     0x7FFDA3D60000
+	po3_ENBLightForEffectShaders.dll                 0x7FFDA3E10000
+	po3_DualCastingFix.dll                           0x7FFDA3ED0000
+	po3_CraftingRecipeDistributor.dll                0x7FFDA3F70000
+	po3_ConsolePlusPlus.dll                          0x7FFDA4020000
+	po3_BaseObjectSwapper.dll                        0x7FFDA40D0000
+	po3_AnimObjectSwapper.dll                        0x7FFDA41F0000
+	PlayerPayCrimeGoldTweak.dll                      0x7FFDA42A0000
+	PerkEntryPointExtender.dll                       0x7FFDA4390000
+	PayloadInterpreter.dll                           0x7FFDA4510000
+	PapyrusUtil.dll                                  0x7FFDA45E0000
+	PapyrusTweaks.dll                                0x7FFDA4750000
+	PapyrusIniManipulator.dll                        0x7FFDA4850000
+	PAPER.dll                                        0x7FFDA4940000
+	PairedAnimationImprovements.dll                  0x7FFDA49C0000
+	OSLAroused.dll                                   0x7FFDA4A30000
+	OpenAnimationReplacer.dll                        0x7FFDA4AD0000
+	OpenAnimationReplacer-IEDConditionExtensions.dll 0x7FFDA4D90000
+	OBody.dll                                        0x7FFDA4EB0000
+	NotificationFilter.dll                           0x7FFDA4F60000
+	NoOppositeGenderAnims.dll                        0x7FFDA4FD0000
+	NoEnchantmentRestrictionRemake.dll               0x7FFDA50C0000
+	NativeEditorIDFix.dll                            0x7FFDA5170000
+	MuSkeletonEditor.dll                             0x7FFDA51D0000
+	MumsTheWord.dll                                  0x7FFDA52B0000
+	CONCRT140.dll                                    0x7FFDA5330000
+	MuJointFix.dll                                   0x7FFDA5380000
+	MoreInformativeConsole.dll                       0x7FFDA5420000
+	mfgfix.dll                                       0x7FFDA5500000
+	MenuMaid2.dll                                    0x7FFDA55C0000
+	MCMHelper.dll                                    0x7FFDA56D0000
+	MaxsuCombatEscape.dll                            0x7FFDA57B0000
+	loki_DynamicAnimationCasting.dll                 0x7FFDA5810000
+	LocationalEncounterZones.dll                     0x7FFDA59B0000
+	kxWhereAreYou.dll                                0x7FFDA5A90000
+	KillCapsLockNG.dll                               0x7FFDA5B40000
+	JContainers64.dll                                0x7FFDA5BD0000
+	IWantWidgetsNative.dll                           0x7FFDA5EB0000
+	ItemPropertyManipulator.dll                      0x7FFDA5FD0000
+	InventoryInjector.dll                            0x7FFDA6120000
+	ImWalkinHere.dll                                 0x7FFDA61C0000
+	IdrinthBuffsWorkOnNPCs.dll                       0x7FFDA6290000
+	HelpExtender.dll                                 0x7FFDA6330000
+	htfq_se.dll                                      0x7FFDA6400000
+	hdtSMP64.dll                                     0x7FFDA6460000
+	HDLocalMap.dll                                   0x7FFDA6C90000
+	GrassSamplerFix.dll                              0x7FFDA6CF0000
+	Fuz Ro D'oh.dll                                  0x7FFDA6D80000
+	FormListManipulator.dll                          0x7FFDA6DE0000
+	FixNotesForSkyUI.dll                             0x7FFDA6F00000
+	FISS.dll                                         0x7FFDA6F60000
+	FaceGenFixes.dll                                 0x7FFDA6FD0000
+	EquipSpellsAsShouts.dll                          0x7FFDA7040000
+	EnemiesRespectEncounterZones.dll                 0x7FFDA7150000
+	encounter_zones_unlocked.dll                     0x7FFDA71D0000
+	DynDOLOD.DLL                                     0x7FFDA7230000
+	DynamicCollisionAdjustment.dll                   0x7FFDA72F0000
+	DeviousDevices.dll                               0x7FFDA7360000
+	DescriptionFramework.dll                         0x7FFDA7430000
+	CrashLogger.dll                                  0x7FFDA74F0000
+	CraftingCategories.dll                           0x7FFDA7790000
+	ConsoleUtilSSE.dll                               0x7FFDA7870000
+	ComprehensiveAttackRatePatch.dll                 0x7FFDA79D0000
+	D3DCOMPILER_47.dll                               0x7FFDA7B80000
+	steamclient64.dll                                0x7FFDA7FE0000
+	WINHTTP.dll                                      0x7FFDA9650000
+	CommunityShaders.dll                             0x7FFDA9B00000
+	CCExtender.dll                                   0x7FFDA9EB0000
+	cbp.dll                                          0x7FFDA9F80000
+	Arcane-Disenchanter-NG.dll                       0x7FFDAA0A0000
+	AnimationMotionRevolution.dll                    0x7FFDAA1A0000
+	CombatMusicFixNG.dll                             0x7FFDAA430000
+	ActorValueExtension.dll                          0x7FFDAA4D0000
+	ContainerItemDistributor.dll                     0x7FFDAC0F0000
+	skse64_1_6_1170.dll                              0x7FFDB1BE0000
+	CaptureWarmer.dll                                0x7FFDB2260000
+	BugFixesSSE.dll                                  0x7FFDB2A80000
+	AddItemMenuSE.dll                                0x7FFDBC670000
+	AnimationQueueFix.dll                            0x7FFDBD340000
+	AHZmoreHUDPlugin.dll                             0x7FFDBD520000
+	ActorLimitFix.dll                                0x7FFDBD5B0000
+	EngineFixes.dll                                  0x7FFDBD650000
+	tier0_s64.dll                                    0x7FFDBD760000
+	usvfs_x64.dll                                    0x7FFDD39E0000
+	ResampleDmo.DLL                                  0x7FFE0B260000
+	d3d12.dll                                        0x7FFE0B3D0000
+	xinput1_4.dll                                    0x7FFE3F4B0000
+	SkyrimUncapper.dll                               0x7FFE40830000
+	EVLaS.dll                                        0x7FFE40910000
+	diskCacheEnabler.dll                             0x7FFE40940000
+	vmm-x64.dll                                      0x7FFE40970000
+	MSVCP140_ATOMIC_WAIT.dll                         0x7FFE40A60000
+	bink2w64.dll                                     0x7FFE40A80000
+	steam_api64.dll                                  0x7FFE40B00000
+	d3dx9_42.dll                                     0x7FFE40B90000
+	BarterLimitFix.dll                               0x7FFE40BB0000
+	vstdlib_s64.dll                                  0x7FFE40BF0000
+	nvspcap64.dll                                    0x7FFE52360000
+	AHZmoreHUDInventory.dll                          0x7FFE591F0000
+	DINPUT8.dll                                      0x7FFE67C10000
+	MessageBus.dll                                   0x7FFE74230000
+	NvTelemetryBridge64.dll                          0x7FFE74970000
+	XINPUT9_1_0.dll                                  0x7FFE7DE50000
+	PrivateProfileRedirector.dll                     0x7FFE7DE60000
+	UIAutomationCore.DLL                             0x7FFE80040000
+	msdmo.dll                                        0x7FFE84010000
+	SMP-NPC crash fix.dll                            0x7FFE85690000
+	threadpoolwinrt.dll                              0x7FFE875B0000
+	inputhost.dll                                    0x7FFE8FD00000
+	textinputframework.dll                           0x7FFE91C20000
+	Windows.UI.dll                                   0x7FFE952E0000
+	webio.dll                                        0x7FFE95AD0000
+	MSVCP140.dll                                     0x7FFE96A80000
+	VCRUNTIME140.dll                                 0x7FFE96B10000
+	VCRUNTIME140_1.dll                               0x7FFE96B30000
+	winmmbase.dll                                    0x7FFE96B40000
+	nvwgf2umx.dll                                    0x7FFE98100000
+	NvMessageBus.dll                                 0x7FFE9CF60000
+	AUDIOSES.DLL                                     0x7FFE9E540000
+	nvgpucomp64.dll                                  0x7FFE9F1C0000
+	nvapi64.dll                                      0x7FFEA13E0000
+	WINMM.dll                                        0x7FFEA1B40000
+	ncryptsslp.dll                                   0x7FFEA2CB0000
+	SPINF.dll                                        0x7FFEA2F80000
+	NvTelemetryAPI64.dll                             0x7FFEA33F0000
+	COMCTL32.dll                                     0x7FFEA3760000
+	OLEACC.dll                                       0x7FFEA3900000
+	gdiplus.dll                                      0x7FFEA3CC0000
+	MSIMG32.dll                                      0x7FFEA3E80000
+	MMDevApi.dll                                     0x7FFEA4170000
+	nvldumdx.dll                                     0x7FFEA47E0000
+	dbghelp.dll                                      0x7FFEA66E0000
+	drvstore.dll                                     0x7FFEA72C0000
+	cryptnet.dll                                     0x7FFEA7560000
+	VERSION.dll                                      0x7FFEA75B0000
+	DEVRTL.dll                                       0x7FFEA79C0000
+	CoreUIComponents.dll                             0x7FFEA8880000
+	avrt.dll                                         0x7FFEA8F10000
+	directxdatabasehelper.dll                        0x7FFEA91F0000
+	fwpuclnt.dll                                     0x7FFEA92E0000
+	dhcpcsvc.DLL                                     0x7FFEAA1B0000
+	WINHTTP.DLL                                      0x7FFEAA1F0000
+	rasadhlp.dll                                     0x7FFEAA500000
+	WindowsCodecs.dll                                0x7FFEAAB30000
+	d3d11.dll                                        0x7FFEAB350000
+	dcomp.dll                                        0x7FFEABC00000
+	CoreMessaging.dll                                0x7FFEAC3C0000
+	ffx_fsr2_api_x64.dll                             0x7FFEAD660000
+	UxTheme.dll                                      0x7FFEAD6D0000
+	dxgi.dll                                         0x7FFEAD940000
+	dwmapi.dll                                       0x7FFEADA50000
+	WINNSI.DLL                                       0x7FFEADA80000
+	dxcore.dll                                       0x7FFEADAC0000
+	resourcepolicyclient.dll                         0x7FFEADE40000
+	wintypes.dll                                     0x7FFEAE150000
+	windows.storage.dll                              0x7FFEAE290000
+	HID.DLL                                          0x7FFEAEB90000
+	IPHLPAPI.DLL                                     0x7FFEAEEA0000
+	DNSAPI.dll                                       0x7FFEAEED0000
+	UMPDC.dll                                        0x7FFEAF1A0000
+	POWRPROF.dll                                     0x7FFEAF1C0000
+	Secur32.dll                                      0x7FFEAF230000
+	schannel.DLL                                     0x7FFEAF2B0000
+	rsaenh.dll                                       0x7FFEAF3C0000
+	kernel.appcore.dll                               0x7FFEAF400000
+	ntmarta.dll                                      0x7FFEAF480000
+	SSPICLI.DLL                                      0x7FFEAF6C0000
+	MSWSOCK.dll                                      0x7FFEAF8D0000
+	gpapi.dll                                        0x7FFEAF940000
+	wldp.dll                                         0x7FFEAFB50000
+	CRYPTBASE.DLL                                    0x7FFEAFC00000
+	CRYPTSP.dll                                      0x7FFEAFC20000
+	msasn1.dll                                       0x7FFEAFC70000
+	NTASN1.dll                                       0x7FFEAFCF0000
+	ncrypt.dll                                       0x7FFEAFD30000
+	devobj.dll                                       0x7FFEB0030000
+	CFGMGR32.dll                                     0x7FFEB0080000
+	DPAPI.DLL                                        0x7FFEB00D0000
+	profapi.dll                                      0x7FFEB02A0000
+	ucrtbase.dll                                     0x7FFEB0370000
+	bcrypt.dll                                       0x7FFEB0490000
+	msvcp_win.dll                                    0x7FFEB04C0000
+	KERNELBASE.dll                                   0x7FFEB0560000
+	bcryptPrimitives.dll                             0x7FFEB0910000
+	CRYPT32.dll                                      0x7FFEB0A50000
+	wintrust.dll                                     0x7FFEB0BC0000
+	gdi32full.dll                                    0x7FFEB0C30000
+	win32u.dll                                       0x7FFEB0D50000
+	sechost.dll                                      0x7FFEB0D80000
+	imagehlp.dll                                     0x7FFEB0E30000
+	RPCRT4.dll                                       0x7FFEB0E50000
+	IMM32.DLL                                        0x7FFEB0F70000
+	shcore.dll                                       0x7FFEB0FB0000
+	SHELL32.dll                                      0x7FFEB1110000
+	SHLWAPI.dll                                      0x7FFEB19D0000
+	MSCTF.dll                                        0x7FFEB1D00000
+	msvcrt.dll                                       0x7FFEB1E60000
+	ADVAPI32.dll                                     0x7FFEB1F10000
+	combase.dll                                      0x7FFEB1FD0000
+	GDI32.dll                                        0x7FFEB2360000
+	KERNEL32.DLL                                     0x7FFEB2400000
+	SETUPAPI.dll                                     0x7FFEB24D0000
+	PSAPI.DLL                                        0x7FFEB2970000
+	COMDLG32.dll                                     0x7FFEB2980000
+	clbcatq.dll                                      0x7FFEB2A80000
+	NSI.dll                                          0x7FFEB2B30000
+	ole32.dll                                        0x7FFEB2B40000
+	WS2_32.dll                                       0x7FFEB2CE0000
+	USER32.dll                                       0x7FFEB2D60000
+	OLEAUT32.dll                                     0x7FFEB2F10000
+	ntdll.dll                                        0x7FFEB3030000
+
+SKSE PLUGINS:
+	ActorLimitFix.dll
+	ActorValueExtension.dll v1.9.5.4
+	AddItemMenuSE.dll
+	AHZmoreHUDInventory.dll v2.1.3
+	AHZmoreHUDPlugin.dll v5.2.2
+	AnimationMotionRevolution.dll
+	AnimationQueueFix.dll v1.0.1
+	Arcane-Disenchanter-NG.dll v1.1
+	BarterLimitFix.dll
+	BugFixesSSE.dll
+	CaptureWarmer.dll v1.1
+	cbp.dll
+	CCExtender.dll v1.11.0.1
+	CombatMusicFixNG.dll v1.1
+	CommunityShaders.dll v0.8.6
+	ComprehensiveAttackRatePatch.dll v1.1.2.8
+	ConsoleUtilSSE.dll v1.5.1
+	ContainerItemDistributor.dll v1.1.4
+	CraftingCategories.dll v1.1
+	CrashLogger.dll v1.12.1
+	DescriptionFramework.dll v1.3
+	DeviousDevices.dll v0.0.0.1
+	diskCacheEnabler.dll
+	DynamicCollisionAdjustment.dll v1.1
+	DynDOLOD.DLL v3.0.17.1130
+	encounter_zones_unlocked.dll
+	EnemiesRespectEncounterZones.dll v1.4.2
+	EngineFixes.dll v6.1.1
+	EquipSpellsAsShouts.dll
+	EVLaS.dll v1.3.1
+	FaceGenFixes.dll v1.0.3
+	FISS.dll
+	FixNotesForSkyUI.dll v1.2.6
+	FormListManipulator.dll v1.7
+	Fuz Ro D'oh.dll v2.5.8.123
+	GrassSamplerFix.dll v1.0.1
+	HDLocalMap.dll v1.0.2
+	hdtSMP64.dll
+	HelpExtender.dll v1.2.1.1
+	htfq_se.dll v2
+	IdrinthBuffsWorkOnNPCs.dll v1
+	ImWalkinHere.dll v1.7
+	InventoryInjector.dll v1.0.2
+	ItemPropertyManipulator.dll v0.5.1
+	IWantWidgetsNative.dll
+	JContainers64.dll v4.2.9
+	KillCapsLockNG.dll v1
+	kxWhereAreYou.dll
+	LocationalEncounterZones.dll v1.0.2
+	loki_DynamicAnimationCasting.dll v3.2.3
+	MaxsuCombatEscape.dll v1
+	MCMHelper.dll v1.4
+	MenuMaid2.dll v2.2.2
+	mfgfix.dll v0.1
+	MoreInformativeConsole.dll v1.1
+	MuJointFix.dll v2.0.17
+	MumsTheWord.dll v2.1
+	MuSkeletonEditor.dll v0.6
+	NativeEditorIDFix.dll v1.2
+	NoEnchantmentRestrictionRemake.dll v3.0.1
+	NoOppositeGenderAnims.dll v1.1
+	NotificationFilter.dll v1.2.1
+	OBody.dll v1
+	OpenAnimationReplacer-IEDConditionExtensions.dll v1.0.2
+	OpenAnimationReplacer.dll v2.2.2
+	OSLAroused.dll v2.5
+	PairedAnimationImprovements.dll v1.0.2
+	PAPER.dll v2.2.4
+	PapyrusIniManipulator.dll v1.9.6
+	PapyrusTweaks.dll v4.1
+	PapyrusUtil.dll
+	PassiveWeaponEnchantmentRecharging.dll v1
+	PayloadInterpreter.dll v1
+	PerkEntryPointExtender.dll v1
+	PlayerPayCrimeGoldTweak.dll v1.0.6
+	po3_AnimObjectSwapper.dll v1.1.0.1
+	po3_BaseObjectSwapper.dll v2.6.1.1
+	po3_ConsolePlusPlus.dll v1.4.0.1
+	po3_CraftingRecipeDistributor.dll v2.1.0.1
+	po3_DualCastingFix.dll v1.0.0.1
+	po3_ENBLightForEffectShaders.dll v2.1.0.1
+	po3_EnhancedInvisibility.dll v1.3.0.1
+	po3_KeywordItemDistributor.dll v3.4.0.1
+	po3_MagicSneakAttacks.dll v1.3.0.1
+	po3_MoonMod.dll v2.0.2.1
+	po3_PapyrusExtender.dll v5.6.2.1
+	po3_ReadOrTakeBooks.dll v1.3.0.1
+	po3_SaveUnbaker.dll v1.0.3.1
+	po3_SimpleActivateSKSE.dll v1.4.1.1
+	po3_SimpleOffenceSuppression.dll v2.2.1.1
+	po3_SpellPerkItemDistributor.dll v6.8.5.1
+	po3_Tweaks.dll v1.9.2.1
+	po3_UseOrTake.dll v1.2.0.1
+	PrivateProfileRedirector.dll
+	QuickLootEE.dll v1.2
+	RecursionFPSFix.dll v1.1
+	RemoveAllItemsFix.dll v1.1
+	ScrambledBugs.dll
+	SexLabUtil.dll
+	ShadowBoost.dll
+	skee64.dll
+	SkillOfSneaking.dll v1.1
+	SkyPatcher.dll v1.0.0.1
+	SkyrimUncapper.dll
+	SkyrimUpscaler.dll v1
+	SMP-NPC crash fix.dll
+	SoftShadows.dll v2
+	SoundRecordDistributor.dll v1.5
+	SSEDisplayTweaks.dll v0.5.16
+	SureOfStealing.dll v1.1.3
+	TheNewGentleman.dll v2.2.2
+	TrueDirectionalMovement.dll v2.2.5
+	UnlimitedFastTravel.dll v1.4.1
+	Weightless.dll v1
+	WhichKey-NG.dll v1.1
+	YesImSure.dll v1.7
+
+PLUGINS:
+	Light: 8	Regular: 170	Total: 178
+	[ 0]     Skyrim.esm
+	[ 1]     Update.esm
+	[ 2]     Dawnguard.esm
+	[ 3]     HearthFires.esm
+	[ 4]     Dragonborn.esm
+	[ 5]     ccasvsse001-almsivi.esm
+	[ 6]     ccBGSSSE001-Fish.esm
+	[ 7]     cctwbsse001-puzzledungeon.esm
+	[ 8]     ccbgssse016-umbra.esm
+	[ 9]     ccbgssse031-advcyrus.esm
+	[ A]     ccbgssse067-daedinv.esm
+	[ B]     ccBGSSSE025-AdvDSGS.esm
+	[ C]     cceejsse005-cave.esm
+	[ D]     ccafdsse001-dwesanctuary.esm
+	[ E]     Unofficial Skyrim Special Edition Patch.esp
+	[ F]     Unofficial Skyrim Modders Patch.esp
+	[10]     Immersive Wenches.esp
+	[11]     Audio Overhaul Skyrim.esp
+	[12]     CollegeOfWinterholdImmersive.esp
+	[13]     OCW_Obscure's_CollegeofWinterhold.esp
+	[14]     Lux Via.esp
+	[15]     IcyFixes.esm
+	[16]     Skyrim Extended Cut - Saints and Seducers.esp
+	[17]     YurianaWench.esp
+	[18]     SexLab.esm
+	[19]     SexLabAroused.esm
+	[1A]     Devious Devices - Assets.esm
+	[1B]     Devious Devices - Integration.esm
+	[1C]     Devious Devices - Expansion.esm
+	[1D]     Devious Devices - Contraptions.esm
+	[1E]     SGEyebrows.esp
+	[1F]     Better Vampire NPCs.esp
+	[20]     Water for ENB.esm
+	[21]     Lonewolf's Manor.esp
+	[22]     BBLuxurySuite.esm
+	[23]     ZaZAnimationPack.esm
+	[24]     FilthyHeritage.esp
+	[25]     SkystoneCastle.esp
+	[26]     KnightsRest.esp
+	[27]     Stormwatch.esp
+	[28]     Triple Triad Skyrim.esp
+	[29]     ShadeHall.esp
+	[2A]     myrwatchhomefixer.esp
+	[2B]     ApachiiHair.esm
+	[2C]     Heels Sound.esm
+	[2D]     AyleidSanctuary.esp
+	[2E]     SkyfallEstateRevampedMain.esp
+	[2F]     MorthalHome.esp
+	[30]     Monolith.esp
+	[31]     WhiterunSafehold.esp
+	[32]     AyleidCitadel.esp
+	[33]     wraithguardvaultfixer.esp
+	[34]     FISS.esp
+	[35]     paradise_halls.esm
+	[36]     DynDOLOD.esm
+	[37]     Immersive Sounds - Compendium.esp
+	[38]     Obsidian Weathers.esp
+	[39]     TrueStormsSE.esp
+	[3A]     SMIM-SE-Merged-All.esp
+	[3B]     DLCIntegration.esp
+	[3C]     Weapons Armor Clothing & Clutter Fixes.esp
+	[3D]     Relationship Dialogue Overhaul.esp
+	[3E]     Castle Volkihar Rebuilt.esp
+	[3F]     Landscape Fixes For Grass Mods.esp
+	[40]     paradise_halls_SLExtension.esp
+	[41]     Book Covers Skyrim.esp
+	[42]     MysticismMagic.esp
+	[43]     HappyLittleTrees.esp
+	[44]     Bandit War.esp
+	[45]     SeranaDialogAddon.esp
+	[46]     WACCF_Armor and Clothing Extension.esp
+	[47]     CFTO.esp
+	[48]     Lit Road Signs.esp
+	[49]     Mists of Tamriel.esp
+	[4A]     Wheres Your Smelter.esp
+	[4B]     HearthfireMultiKid.esp
+	[4C]     Embers XD.esp
+	[4D]     PAH_HomeSweetHome.esp
+	[4E]     PAH_AndYouGetASlave.esp
+	[4F]     The Amazing World of Bikini Armors REMASTERED.esp
+	[50]     ThaneFailSafe.esp
+	[51]     paradise_halls_fellglow_slave_camp.esp
+	[52]     DiaryOfMine.esp
+	[53]     Summermyst - Enchantments of Skyrim.esp
+	[54]     Adamant.esp
+	[55]     pahe_lakeview_manor_cell.esp
+	[56]     TES Arena Bikini.esp
+	[57]     My Home Is Your Home.esp
+	[58]     Apocalypse - Magic of Skyrim.esp
+	[59]     Emfy Cleric Robes.esp
+	[5A]     nwsFollowerFramework.esp
+	[5B]     UIExtensions.esp
+	[5C]     ArenaHarderSpawns.esp
+	[5D]     Crimson Blood Armor.esp
+	[5E]     AHZmoreHUD.esp
+	[5F]     Take All Loose Gold and Arrows.esp
+	[60]     Mining For Mages Redux.esp
+	[61]     FixVampireLord - Revert Form.esp
+	[62]     Dress Up Lovers.esp
+	[63]     AllEnchantmentsUnlocked.esp
+	[64]     AdamantSmithing.esp
+	[65]     Teach Followers Spells.esp
+	[66]     ShowRaceMenuAlternative.esp
+	[67]     Resurrect.esp
+	[68]     NPC Death Alerts.esp
+	[69]     DGPlayerIsVampire.esp
+	[6A]     RaceMenu.esp
+	[6B]     XPMSE.esp
+	[6C]     RaceMenuPlugin.esp
+	[6D]     WildHuntress.esp
+	[6E]     Stella Mithril Armor.esp
+	[6F]     Faction Crossbows.esp
+	[70]     Tembtra Thief Armor.esp
+	[71]     Spartan Bard Outfit.esp
+	[72]     Sotteta Necromancer Outfit.esp
+	[73]     Merta Black Rose Armor.esp
+	[74]     Merta Assassin Armor.esp
+	[75]     HQEyes-2k.esp
+	[76]     Gwelda Witch.esp
+	[77]     Gwelda Vampire.esp
+	[78]     Gwelda Dawnguard Armor.esp
+	[79]     DX Witcher Armor.esp
+	[7A]     DX Witch Hunter Armor.esp
+	[7B]     DX Morenn Outfit.esp
+	[7C]     DX Druid Armor.esp
+	[7D]     DX Daughter of the Sea.esp
+	[7E]     DX Christmas Bunny Outfit.esp
+	[7F]     Demon Armor.esp
+	[80]     Daedric Reaper Armor.esp
+	[81]     Celes Tarot Outfit Cloth UNP.esp
+	[82]     Celes Rogue Armor UNP.esp
+	[83]     Celes Nightingale Armor.esp
+	[84]     Celes Mercy.esp
+	[85]     Cassandra Frost Witch.esp
+	[86]     Cassandra Apocrypha UNP.esp
+	[87]     AncientDraugr.esp
+	[88]     Daily-Wear.esp
+	[89]     Fashions of the Banditry.esp
+	[8A]     KS Hairdo's.esp
+	[8B]     Lacy Teddy [SE].esp
+	[8C]     BDE_Armor.esp
+	[8D]     Ritual - Unofficial Mysticism Addon.esp
+	[8E]     DoMHSH.esp
+	[8F]     Pahe_Dwarven_Devious_suits.esp
+	[90]     Cathedral - 3D Pine Grass.esp
+	[91]     NPCProtectionTweaks.esp
+	[92]     SLAnimLoader.esp
+	[93]     SLALAnimObjBillyy.esp
+	[94]     AnubAnimObj.esp
+	[95]     SLAL_AnimationsByLeito.esp
+	[96]     NewmCBBELO1.esp
+	[97]     ENB Light.esp
+	[98]     Better Vampires.esp
+	[99]     Better Vampire Lords.esp
+	[9A]     Alternate Start - Live Another Life.esp
+	[9B]     BBLS-ASLAL.esp
+	[9C]     Pahe_AltStartLAL.esp
+	[9D]     Water for ENB (Shades of Skyrim).esp
+	[9E]     Lux.esp
+	[9F]     Summermyst - WACCF Patch.esp
+	[A0]     UD_Serana.esp
+	[A1]     Buxom Tweaks.esp
+	[A2]     BBLS_SKSE64_Patch.esp
+	[A3]     BBLuxurySuiteENM.esp
+	[A4]     AOS-ISC Patcher.esp
+	[A5]     NPC Improvements.esp
+	[A6]     Enhanced Books.esp
+	[A7]     Synthesis.esp
+	[A8]     Heels Sound Patch.esp
+	[A9]     DynDOLOD.esp
+	[FE:  0] ccbgssse002-exoticarrows.esl
+	[FE:  1] ccbgssse003-zombies.esl
+	[FE:  2] ccbgssse004-ruinsedge.esl
+	[FE:  3] ccbgssse005-goldbrand.esl
+	[FE:  4] ccbgssse006-stendarshammer.esl
+	[FE:  5] ccbgssse007-chrysamere.esl
+	[FE:  6] ccbgssse010-petdwarvenarmoredmudcrab.esl
+	[FE:  7] ccbgssse011-hrsarmrelvn.esl

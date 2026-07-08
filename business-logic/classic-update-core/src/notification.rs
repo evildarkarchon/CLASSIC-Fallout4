@@ -332,10 +332,10 @@ pub fn classify(installed_version: &str, manifest: &AppNotificationManifest) -> 
                     .strip_prefix('v')
                     .or_else(|| min_str.strip_prefix('V'))
                     .unwrap_or(min_str);
-                if let Ok(min_version) = Version::parse(min_stripped) {
-                    if installed < min_version {
-                        return status_from(Classification::DeprecatedClient, manifest, None);
-                    }
+                if let Ok(min_version) = Version::parse(min_stripped)
+                    && installed < min_version
+                {
+                    return status_from(Classification::DeprecatedClient, manifest, None);
                 }
             }
 
@@ -893,12 +893,12 @@ fn validate_notification_manifest(manifest: &AppNotificationManifest) -> Result<
     // "no-op" in `classify`, which is exactly how a mis-typed
     // `min_supported_version` would let deprecated clients keep running
     // without warning.
-    if let Some(min) = manifest.min_supported_version.as_deref() {
-        if !is_semver_with_optional_v(min) {
-            return Err(UpdateError::NotificationDecode {
-                field: "min_supported_version".into(),
-            });
-        }
+    if let Some(min) = manifest.min_supported_version.as_deref()
+        && !is_semver_with_optional_v(min)
+    {
+        return Err(UpdateError::NotificationDecode {
+            field: "min_supported_version".into(),
+        });
     }
 
     // Cross-field invariant: `min_supported_version` MUST NOT exceed
@@ -909,20 +909,19 @@ fn validate_notification_manifest(manifest: &AppNotificationManifest) -> Result<
     // advertised latest build as `DeprecatedClient`. Rejecting at
     // validate-time also keeps the bad body out of the cache, so a
     // future `304` path cannot return it either.
-    if let Some(min) = manifest.min_supported_version.as_deref() {
-        if let (Some(min_v), Some(latest_v)) = (
+    if let Some(min) = manifest.min_supported_version.as_deref()
+        && let (Some(min_v), Some(latest_v)) = (
             parse_semver_with_optional_v(min),
             parse_semver_with_optional_v(&manifest.latest_version),
-        ) {
-            if min_v > latest_v {
-                return Err(UpdateError::ManifestInvalid {
-                    reason: format!(
-                        "min_supported_version `{}` exceeds latest_version `{}`",
-                        min, manifest.latest_version,
-                    ),
-                });
-            }
-        }
+        )
+        && min_v > latest_v
+    {
+        return Err(UpdateError::ManifestInvalid {
+            reason: format!(
+                "min_supported_version `{}` exceeds latest_version `{}`",
+                min, manifest.latest_version,
+            ),
+        });
     }
 
     // `published_at` must be an RFC 3339 timestamp (shape-only — we do not
@@ -943,14 +942,13 @@ fn validate_notification_manifest(manifest: &AppNotificationManifest) -> Result<
     // — rejecting at runtime ALSO protects clients against a tampered
     // Pages or Releases asset that bypassed the publish workflow
     // entirely.
-    if let Some(display) = manifest.display.as_ref() {
-        if let Some(cta) = display.cta_url.as_deref() {
-            if !is_https_cta_url(cta) {
-                return Err(UpdateError::NotificationDecode {
-                    field: "display.cta_url".into(),
-                });
-            }
-        }
+    if let Some(display) = manifest.display.as_ref()
+        && let Some(cta) = display.cta_url.as_deref()
+        && !is_https_cta_url(cta)
+    {
+        return Err(UpdateError::NotificationDecode {
+            field: "display.cta_url".into(),
+        });
     }
 
     Ok(())

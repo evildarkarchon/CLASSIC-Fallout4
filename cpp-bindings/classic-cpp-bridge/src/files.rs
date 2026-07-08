@@ -138,6 +138,37 @@ fn log_collector_new(
     })
 }
 
+fn log_collector_new_for_scan(
+    base_folder: &str,
+    yaml_dir_data: &str,
+    game: &str,
+    selected_game_version: &str,
+    configured_docs_root: &str,
+    custom_folder: &str,
+) -> Box<CxxLogCollector> {
+    let configured_docs_root = if configured_docs_root.trim().is_empty() {
+        None
+    } else {
+        Some(Path::new(configured_docs_root))
+    };
+    let custom = if custom_folder.is_empty() {
+        None
+    } else {
+        Some(PathBuf::from(custom_folder))
+    };
+
+    Box::new(CxxLogCollector {
+        inner: LogCollector::new_for_scan(
+            PathBuf::from(base_folder),
+            Path::new(yaml_dir_data),
+            game,
+            selected_game_version,
+            configured_docs_root,
+            custom,
+        ),
+    })
+}
+
 fn log_collector_collect_all(collector: &CxxLogCollector) -> Result<Vec<String>, String> {
     let paths = block_on_result(collector.inner.collect_all())?;
     Ok(paths
@@ -327,6 +358,14 @@ mod ffi {
         fn log_collector_new(
             crash_logs_dir: &str,
             xse_folder: &str,
+            custom_folder: &str,
+        ) -> Box<CxxLogCollector>;
+        fn log_collector_new_for_scan(
+            base_folder: &str,
+            yaml_dir_data: &str,
+            game: &str,
+            selected_game_version: &str,
+            configured_docs_root: &str,
             custom_folder: &str,
         ) -> Box<CxxLogCollector>;
         fn log_collector_collect_all(collector: &CxxLogCollector) -> Result<Vec<String>>;

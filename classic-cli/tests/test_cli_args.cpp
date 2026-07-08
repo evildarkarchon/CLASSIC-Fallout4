@@ -33,6 +33,8 @@ TEST_CASE("CliArgs defaults", "[cli_args]") {
     REQUIRE(args.show_fid_values == false);
     REQUIRE(args.simplify_logs == false);
     REQUIRE(args.scan_path.empty());
+    REQUIRE(args.unsolved_logs_destination.empty());
+    REQUIRE(args.reset_unsolved_logs_destination == false);
     REQUIRE(args.max_concurrent == 0);
     REQUIRE(args.version_flag == false);
 }
@@ -111,6 +113,20 @@ TEST_CASE("CliArgs scan-path and max-concurrent", "[cli_args]") {
         ArgvBuilder ab({"classic-cli", "--max-concurrent", "8"});
         CliArgs args = parse_args(ab.argc(), ab.argv());
         REQUIRE(args.max_concurrent == 8);
+    }
+
+    SECTION("--unsolved-logs-destination sets persistent destination") {
+        ArgvBuilder ab({"classic-cli", "--unsolved-logs-destination", "C:/CLASSIC/Unsolved"});
+        CliArgs args = parse_args(ab.argc(), ab.argv());
+        REQUIRE(args.unsolved_logs_destination == "C:/CLASSIC/Unsolved");
+        REQUIRE(args.reset_unsolved_logs_destination == false);
+    }
+
+    SECTION("--reset-unsolved-logs-destination requests canonical reset") {
+        ArgvBuilder ab({"classic-cli", "--reset-unsolved-logs-destination"});
+        CliArgs args = parse_args(ab.argc(), ab.argv());
+        REQUIRE(args.reset_unsolved_logs_destination == true);
+        REQUIRE(args.unsolved_logs_destination.empty());
     }
 }
 

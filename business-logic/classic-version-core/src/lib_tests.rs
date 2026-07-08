@@ -71,21 +71,19 @@ fn test_is_known_f4se_version() {
     let registry = get_version_registry();
 
     // Get OG F4SE version from registry
-    if let Some(og_info) = registry.get_by_id("FO4_OG") {
-        if let Some(xse) = &og_info.xse {
-            if let Some(parsed) = try_parse_version(&xse.compatible_version) {
-                assert!(is_known_f4se_version(&parsed));
-            }
-        }
+    if let Some(og_info) = registry.get_by_id("FO4_OG")
+        && let Some(xse) = &og_info.xse
+        && let Some(parsed) = try_parse_version(&xse.compatible_version)
+    {
+        assert!(is_known_f4se_version(&parsed));
     }
 
     // Get NG F4SE version from registry
-    if let Some(ng_info) = registry.get_by_id("FO4_NG") {
-        if let Some(xse) = &ng_info.xse {
-            if let Some(parsed) = try_parse_version(&xse.compatible_version) {
-                assert!(is_known_f4se_version(&parsed));
-            }
-        }
+    if let Some(ng_info) = registry.get_by_id("FO4_NG")
+        && let Some(xse) = &ng_info.xse
+        && let Some(parsed) = try_parse_version(&xse.compatible_version)
+    {
+        assert!(is_known_f4se_version(&parsed));
     }
 
     // Unknown version should not be known

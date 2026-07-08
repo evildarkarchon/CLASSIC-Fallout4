@@ -136,10 +136,10 @@ impl GamePathFinder {
         xse_log_path: Option<&Path>,
     ) -> GamePathResult<PathBuf> {
         // Strategy 1: Try cached path
-        if let Some(path) = cached_path {
-            if let Ok(()) = self.validate_game_path(path) {
-                return Ok(path.to_path_buf());
-            }
+        if let Some(path) = cached_path
+            && let Ok(()) = self.validate_game_path(path)
+        {
+            return Ok(path.to_path_buf());
         }
 
         // Strategy 2: Try registry (Windows only)
@@ -151,10 +151,10 @@ impl GamePathFinder {
         }
 
         // Strategy 3: Try XSE log parsing
-        if let Some(log_path) = xse_log_path {
-            if let Ok(path) = self.find_via_xse_log(log_path) {
-                return Ok(path);
-            }
+        if let Some(log_path) = xse_log_path
+            && let Ok(path) = self.find_via_xse_log(log_path)
+        {
+            return Ok(path);
         }
 
         // All strategies failed

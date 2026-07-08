@@ -791,6 +791,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "classic-shared-core",
+ "classic-xse-core",
  "criterion 0.6.0",
  "dashmap",
  "ddsfile",
@@ -1040,6 +1041,7 @@ dependencies = [
  "classic-config-core",
  "classic-database-core",
  "classic-file-io-core",
+ "classic-settings-core",
  "classic-shared-core",
  "classic-version-registry-core",
  "criterion 0.6.0",
@@ -1174,7 +1176,6 @@ dependencies = [
  "classic-scanlog-core",
  "classic-shared-core",
  "classic-update-core",
- "classic-version-registry-core",
  "color-eyre",
  "crossterm 0.28.1",
  "directories",
@@ -1189,7 +1190,6 @@ dependencies = [
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
- "yaml-rust2",
 ]
 
 [[package]]
@@ -1302,8 +1302,10 @@ version = "9.1.0"
 dependencies = [
  "anyhow",
  "classic-path-core",
+ "classic-settings-core",
  "classic-shared-core",
  "classic-version-core",
+ "classic-version-registry-core",
  "semver",
  "serde",
  "tempfile",

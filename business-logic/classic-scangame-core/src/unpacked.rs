@@ -192,14 +192,13 @@ impl UnpackedScanner {
         // Check if this is a directory
         if path.is_dir() {
             // Check for AnimationFileData directory
-            if let Some(dir_name) = path.file_name() {
-                if dir_name.to_string_lossy().to_lowercase() == "animationfiledata" {
-                    if let Some(parent) = relative_path.parent() {
-                        issues
-                            .animdata
-                            .insert(format!("  - {}\n", parent.display()));
-                    }
-                }
+            if let Some(dir_name) = path.file_name()
+                && dir_name.to_string_lossy().to_lowercase() == "animationfiledata"
+                && let Some(parent) = relative_path.parent()
+            {
+                issues
+                    .animdata
+                    .insert(format!("  - {}\n", parent.display()));
             }
             return Some(issues);
         }

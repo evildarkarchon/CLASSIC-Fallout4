@@ -2,7 +2,7 @@
 name = "classic-cpp-bridge"
 version = "9.1.0"
 edition = "2024"
-rust-version = "1.85.0"
+rust-version = "1.96.0"
 authors = ["CLASSIC Development Team"]
 description = "C++ FFI bindings for CLASSIC via CXX"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"

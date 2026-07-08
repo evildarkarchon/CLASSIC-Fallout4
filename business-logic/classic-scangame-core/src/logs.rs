@@ -282,10 +282,10 @@ impl LogProcessor {
             }
 
             // Check if line should be excluded
-            if let Some(ref exclude_matcher) = self.exclude_matcher {
-                if exclude_matcher.is_match(line) {
-                    continue;
-                }
+            if let Some(ref exclude_matcher) = self.exclude_matcher
+                && exclude_matcher.is_match(line)
+            {
+                continue;
             }
 
             // Add error line

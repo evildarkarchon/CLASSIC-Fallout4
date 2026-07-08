@@ -1075,10 +1075,10 @@ impl LogParser {
             }
 
             // System info patterns
-            if normalized.contains("at address") {
-                if let Some(caps) = COMMON_PATTERNS["address"].captures(normalized) {
-                    header_info.insert("crash_address".to_string(), caps[0].to_string());
-                }
+            if normalized.contains("at address")
+                && let Some(caps) = COMMON_PATTERNS["address"].captures(normalized)
+            {
+                header_info.insert("crash_address".to_string(), caps[0].to_string());
             }
 
             if header_info.contains_key("game_version")
@@ -1275,15 +1275,15 @@ impl StreamingLogParser {
         // Check if this line is a section boundary
         if self.is_boundary_marker(line) {
             // If we're in a section and hit an end boundary, return the buffered lines
-            if let Some(ref end_marker) = self.section_end {
-                if line.contains(end_marker) {
-                    let completed_section = self.line_buffer.clone();
-                    self.line_buffer.clear();
-                    self.current_section = None;
-                    self.section_start = None;
-                    self.section_end = None;
-                    return Some(completed_section);
-                }
+            if let Some(ref end_marker) = self.section_end
+                && line.contains(end_marker)
+            {
+                let completed_section = self.line_buffer.clone();
+                self.line_buffer.clear();
+                self.current_section = None;
+                self.section_start = None;
+                self.section_end = None;
+                return Some(completed_section);
             }
 
             // Check if this is a start boundary

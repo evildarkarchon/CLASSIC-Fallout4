@@ -1381,10 +1381,10 @@ impl FileIOCore {
                     };
 
                     // Ensure parent directory exists
-                    if let Some(parent) = path.parent() {
-                        if let Err(e) = fs::create_dir_all(parent).await {
-                            return (path, Err(e.into()));
-                        }
+                    if let Some(parent) = path.parent()
+                        && let Err(e) = fs::create_dir_all(parent).await
+                    {
+                        return (path, Err(e.into()));
                     }
 
                     let result = fs::write(&path, content.as_bytes())

@@ -1,5 +1,6 @@
 use super::*;
-use classic_scanlog_core::{AnalysisResult, ConfigIssue};
+use classic_scanlog_core::{AnalysisResult, ConfigIssue, CrashLogScanOutcome};
+use std::path::PathBuf;
 
 #[test]
 fn test_scan_result_dto() {
@@ -71,4 +72,32 @@ fn test_fcx_issue_to_dto_round_trips_section_some() {
     assert_eq!(dto.recommended_value, "1920");
     assert_eq!(dto.description, "resolution too low");
     assert_eq!(dto.severity, "info");
+}
+
+#[test]
+fn test_scan_run_log_outcome_to_dto_flattens_optional_report_path() {
+    let dto = scan_run_log_outcome_to_dto(classic_scanlog_core::CrashLogScanRunLogOutcome {
+        input_index: 7,
+        crash_log: PathBuf::from("crash.log"),
+        autoscan_report: Some(PathBuf::from("crash-AUTOSCAN.md")),
+        outcome: CrashLogScanOutcome::Succeeded,
+        moved_to_unsolved_logs: false,
+        error: None,
+        processing_time_us: 2_000,
+        processing_time_ms: 2,
+        formid_count: 3,
+        plugin_count: 4,
+        suspect_count: 5,
+    });
+
+    assert_eq!(dto.input_index, 7);
+    assert_eq!(dto.log_path, "crash.log");
+    assert_eq!(dto.autoscan_report_path, "crash-AUTOSCAN.md");
+    assert!(dto.success);
+    assert!(!dto.cancelled);
+    assert!(!dto.moved_to_unsolved_logs);
+    assert_eq!(dto.processing_time_ms, 2);
+    assert_eq!(dto.formid_count, 3);
+    assert_eq!(dto.plugin_count, 4);
+    assert_eq!(dto.suspect_count, 5);
 }

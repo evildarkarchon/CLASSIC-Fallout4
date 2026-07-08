@@ -20,6 +20,8 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 Use this crate when you need to:
 
 - parse Bethesda-style crash logs into named sections
+- prepare an existing Crash Log for analysis from path-backed or in-memory YAML Data
+- execute a Crash Log Scan Run for selected Crash Logs after intake
 - build an analysis pipeline from loaded YAML/config data
 - analyze plugins, FormIDs, named records, suspects, GPU hints, and crashgen settings
 - generate Python-parity-style autoscan report fragments or full reports
@@ -27,7 +29,7 @@ Use this crate when you need to:
 
 Do not use this crate for:
 
-- loading CLASSIC YAML files directly
+- general-purpose YAML editing or settings-cache operations
 - owning a shared runtime or creating a new Tokio runtime per caller
 - exposing FFI or binding-specific wrapper types
 - front-end presentation logic
@@ -37,6 +39,18 @@ Those concerns live in related crates such as [`classic-config-core`](../../busi
 ---
 
 ## Module Map
+
+### `scan_intake`
+
+Crash Log Scan Intake prepares an existing Crash Log for analysis before orchestration starts.
+
+- `CrashLogScanIntake` - path-backed or in-memory intake builder
+- `CrashLogScanOptions` - caller scan flags for FormID values, FCX mode, and simplify logs
+- `CrashLogScanIntakePaths` - root/data paths used for path-backed YAML Data and sidecar settings
+- `ScanReadyAnalysis` - scan-ready payload containing `AnalysisConfig`, FormID readiness, and cache profile choice
+- `FormIdReadiness` - whether FormID databases should initialize and which paths to use
+- `ShortScanCacheProfile`, `SHORT_SCAN_CACHE_PROFILE` - short native-scan DB cache profile selected by intake
+- `load_simplify_remove_list()`, `resolve_formid_database_paths()`, `resolve_user_formid_database_paths()` - characterization-friendly helpers for sidecar readiness rules
 
 ### `orchestrator`
 
@@ -49,6 +63,18 @@ Top-level scan pipeline and the main integration surface.
 - `ScanProgressPhase` - coarse phase callbacks for progress reporting
 - `build_analysis_config_from_yaml()` - canonical bridge from [`classic-config-core`](../../business-logic/classic-config-core)
 - `resolve_batch_concurrency()` - public helper for the same batch-concurrency policy used by `process_logs_batch()`
+
+### `scan_run`
+
+Crash Log Scan Run owns the post-intake transaction for selected existing Crash Logs.
+
+- `CrashLogScanRun` - deep module that executes selected Crash Logs after Crash Log Scan Intake
+- `CrashLogScanRunRequest` - selected Crash Logs, run intent, concurrency, optional cancellation, and ordering preference
+- `CrashLogScanRunIntent`, `StandardCrashLogScanRunIntent`, `StandardUnsolvedLogsIntent` - Standard versus Targeted Crash Log Scan Run behavior and Unsolved Logs intent
+- `CrashLogScanRunResult`, `CrashLogScanRunLogOutcome`, `CrashLogScanOutcome` - per-run and per-log observable outcomes
+- `CrashLogScanRunEvent`, `CrashLogScanRunEventKind` - progress events emitted through the module interface
+
+The module keeps `OrchestratorCore` as internal analysis implementation, writes Autoscan Reports itself, and applies Unsolved Logs rules in Rust.
 
 ### `parser`
 
@@ -63,9 +89,8 @@ Log segmentation, header parsing, pattern matching, and streaming helpers.
 Crashgen-specific settings validation.
 
 - `CrashgenRegistry` - normalized crashgen-name lookup table
-- `CrashgenEntry` - per-crashgen display/check/rules entry
-- `CheckId` - named built-in settings checks
-- `SettingsValidator` - applies YAML rule sets or legacy fallback checks
+- `CrashgenEntry` - per-crashgen display/ignore/rules entry
+- `SettingsValidator` - scanlog adapter over YAML-backed Crashgen Expectations and Disabled Setting Notices
 
 ### `plugin_analyzer`, `formid_analyzer`, `record_scanner`, `suspect_scanner`, `mod_detector`
 
@@ -112,6 +137,29 @@ Report composition primitives.
 
 ## Public API Surface
 
+## `CrashLogScanIntake`
+
+`CrashLogScanIntake` is the high-level seam for Crash Log Scan Intake. It turns selected game/version input, YAML Data, scan options, simplify-log removal rules, Crashgen metadata, and FormID readiness into a `ScanReadyAnalysis`.
+
+Important constructors/helpers:
+
+- `CrashLogScanIntake::from_yaml_paths(yaml_dir_root, yaml_dir_data, game, selected_game_version, options)`
+- `CrashLogScanIntake::from_yaml_data(yaml, paths, game, selected_game_version, options)`
+- `CrashLogScanIntake::prepare().await -> Result<ScanReadyAnalysis, ScanLogError>`
+- `CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs)`
+- `resolve_formid_database_paths(yaml_dir_root, yaml_dir_data, game)`
+- `load_simplify_remove_list(yaml_dir_data)`
+
+Behavior worth knowing:
+
+- Path-backed intake loads YAML Data through `classic-config-core::YamlDataCore::load_from_yaml_files()`.
+- In-memory intake accepts an already-loaded `YamlDataCore` so tests and later adapters can use the same readiness seam without unnecessary file setup.
+- Supplying paths to in-memory intake lets it resolve the same `CLASSIC Main.yaml` `exclude_log_records` and `CLASSIC Settings.yaml` FormID database sidecars as path-backed intake.
+- Missing or unreadable sidecar settings preserve existing fail-soft behavior: simplify-log removal and user FormID database lists become empty instead of new hard failures.
+- `ScanReadyAnalysis` stores path roots and the parsed `CLASSIC_Settings.Unsolved Logs Destination` for scan-run destination resolution. Missing or empty destination means canonical behavior; a non-empty relative destination is a setup error.
+- FormID database path order is main game DB, hardcoded Fallout 4/Fallout 4 VR FOLON DB, then user-configured paths, with normalized path de-duplication preserving first occurrence.
+- Intake chooses the short-scan cache profile, but `classic-database-core` still owns pool initialization, cache bounds, connection behavior, and lookup mechanics.
+
 ## `AnalysisConfig`
 
 `AnalysisConfig` is the main input model for `OrchestratorCore`.
@@ -134,6 +182,7 @@ Important constructors/helpers:
 
 Contributor notes:
 
+- Prefer `CrashLogScanIntake` when you need a complete scan-ready payload. `build_analysis_config_from_yaml()` remains the focused YAML-to-config conversion helper and compatibility seam.
 - `build_analysis_config_from_yaml()` is the canonical bridge from [`classic-config-core`](../../business-logic/classic-config-core).
 - Version Registry data is preferred when available; YAML values are used as compatibility fallback.
 - OG/VR selection is resolved before scan-time settings validation from `selected_game_version` plus Version Registry data.
@@ -177,6 +226,7 @@ Behavior worth knowing:
 - `process_logs_batch_with_events()` is the richer core batch primitive used by bindings that need stable input indices, optional input-order result restoration, cancellation checks before each log starts, and queued/started/phase/terminal events.
 - `resolve_batch_concurrency()` returns `1` for empty batches, clamps explicit overrides to a minimum of `1`, and otherwise uses the crate's adaptive CPU-aware default.
 - `write_reports_batch()` logs write failures and returns only successfully written paths.
+- New adapter code that needs the full Crash Log Scan Run transaction should prefer `CrashLogScanRun` over manually sequencing `OrchestratorCore`, report writing, and Unsolved Logs movement.
 - `check_crashgen_version_for_detected_game()` filters registry-backed crashgen floors by the detected or configured crashgen product before comparing versions.
 - `mods_solu` detection is no longer routed through the legacy single-map matcher; it evaluates grouped `any` / `all` criteria, suppresses matches through optional exceptions, and renders report titles/bodies from the structured `name` / `description` fields.
 - `is_feature_complete()` currently means plugin analyzer and suspect scanner are present; a database pool is optional.
@@ -198,6 +248,32 @@ Important constructors/mutators:
 - `AnalysisResult::failure(log_path, error)`
 - `mark_incomplete()`
 - `mark_failed()`
+
+## `CrashLogScanRun`
+
+`CrashLogScanRun` is the high-level seam for a full Crash Log Scan Run after intake. It accepts a `ScanReadyAnalysis`, selected Crash Logs, a Standard or Targeted intent, optional concurrency and cancellation settings, and a progress callback.
+
+Important types:
+
+- `CrashLogScanRun::new(scan_ready)`
+- `CrashLogScanRun::run(request, on_event).await -> Result<CrashLogScanRunResult, ScanLogError>`
+- `CrashLogScanRunRequest { logs, intent, max_concurrent, cancellation, preserve_order }`
+- `CrashLogScanRunIntent::Standard(...)` and `CrashLogScanRunIntent::Targeted`
+- `StandardUnsolvedLogsIntent::LeaveInPlace`, `MoveToConfiguredOrDefault`, and `MoveToCustom(path)`
+
+Behavior worth knowing:
+
+- Adapters own Crash Log selection; `CrashLogScanRun` owns execution after selection.
+- `Standard` runs may move failed Crash Logs and sibling Autoscan Reports to Unsolved Logs when their intent requests movement.
+- `Targeted` runs never move Crash Logs or Autoscan Reports to Unsolved Logs.
+- `MoveToConfiguredOrDefault` uses the prepared `CLASSIC_Settings.Unsolved Logs Destination` when non-empty, otherwise the canonical `CLASSIC Backup/Unsolved Logs` directory under path-backed intake roots.
+- `MoveToCustom(path)` requires an absolute path and fails setup before analysis when the path is relative. It does not create the directory during setup.
+- Missing path roots with `MoveToConfiguredOrDefault` and no configured destination are setup errors. Invalid or unwritable absolute destinations remain per-log movement failures.
+- Autoscan Report paths are derived as sibling `{stem}-AUTOSCAN.md` paths and written by this module when analysis succeeds and report lines are present.
+- Autoscan Report write failure is a per-log failure in `CrashLogScanRunLogOutcome`, not a run-level setup error.
+- `cancellation` is a cooperative shared atomic checked before queued Crash Logs start; binding adapters should pass their frontend cancellation token rather than polling locally only.
+- Progress events reuse `ScanProgressPhase` and carry stable input indices so adapters can correlate completion-order results to their selected Crash Log list.
+- Binding adapters expose this seam as `classic::scanner::scan_run_execute(request, callback, cancellation_token)` for C++, `scanRunExecute(...)` for Node, and `classic_scanlog.scan_run_execute(...)` for Python. Adapter scan flows should not duplicate Autoscan Report writing or Unsolved Logs movement around those calls.
 
 ## `LogParser`
 
@@ -229,40 +305,51 @@ Deprecated parser APIs still present:
 
 These are compatibility shims over `parse_all_sections_arc()` and are marked deprecated in source. The Python binding's `parse_segments_parallel` was migrated to delegate to `parse_all_sections_arc` with a dict return type matching `parse_all_sections`.
 
-## `CrashgenRegistry`, `CrashgenEntry`, and `CheckId`
+## `CrashgenRegistry` and `CrashgenEntry`
 
 These types model per-crashgen settings behavior.
 
-- `CheckId` variants: `Achievements`, `MemoryManagement`, `ArchiveLimit`, `LooksMenu`
-- `CrashgenEntry` fields: `display_section`, `ignore_keys`, `checks`, `settings_rules`
+- `CrashgenEntry` fields: `display_section`, `ignore_keys`, `settings_rules`
 - `CrashgenRegistry::new(entries, default)` normalizes keys for lookup
 - `CrashgenRegistry::lookup(name)` is case-insensitive and whitespace-normalized
 
-Unknown crashgen names fall back to the registry default entry.
+Unknown crashgen names fall back to the registry default entry. The YAML `checks` key may still be accepted by upstream loaders as deprecated inert compatibility metadata, but it is not part of `CrashgenEntry` and must not drive scan-time behavior.
 
 ## `SettingsValidator`
 
-`SettingsValidator` validates parsed crashgen settings against either YAML-defined rules or legacy built-in checks.
+`SettingsValidator` validates parsed crashgen settings against YAML-backed Crashgen Expectations and universal Disabled Setting Notices.
 
 Important methods:
 
 - `SettingsValidator::new(crashgen_name, entry)`
 - `scan_all_settings(crashgen, xse_modules, crashgen_version, config_layout)`
 - `check_disabled_settings(crashgen)`
-- `scan_buffout_achievements_setting(...)`
-- `scan_buffout_memorymanagement_settings(...)`
-- `scan_archivelimit_setting(...)`
-- `scan_buffout_looksmenu_setting(...)`
-- `scan_addictol_settings_scaffold(...)`
 
 Contributor notes:
 
-- If `CrashgenEntry.settings_rules` exists, the validator prefers those rules and only falls back to legacy checks for uncovered areas.
-- Rule-driven preflight outcomes can now carry a report bucket from the crashgen rule model in [`classic-config-core`](classic-config-core.md#crashgen-rule-model); `error_information` outcomes are promoted into the report's `Error Information` section while the default bucket still renders under settings-related issues.
-- `check_disabled_settings()` always runs and uses `ignore_keys` as its skip set.
+- `CrashgenEntry.settings_rules` is the only per-crashgen expectation source; there is no fallback to hardcoded Achievements, memory-management, ArchiveLimit, LooksMenu, or Addictol scaffold checks.
+- If `CrashgenEntry.settings_rules` is absent, no per-crashgen expectations run; `scan_all_settings()` still appends Disabled Setting Notices for non-ignored disabled settings.
+- Rule-driven preflight outcomes can now carry Autoscan Report Placement from the crashgen rule model in [`classic-config-core`](classic-config-core.md#crashgen-rule-model); `error_information` outcomes are promoted into the report's `Error Information` section while the default `settings` placement still renders under settings-related issues.
+- `check_disabled_settings()` is the focused utility for Disabled Setting Notices and uses `ignore_keys` as its skip set.
 - In `classic-scanlog-core`, `config_layout` is currently a coarse valid/invalid fact for settings evaluation: `derive_scanlog_config_layout()` returns `Og` for parseable detected versions and `Unknown` otherwise.
 - OG vs VR selection is handled earlier through `AnalysisConfig` construction and Version Registry data, not by `config_layout` in this crate.
-- The current Addictol path is explicitly a scaffold notice, not a full rule implementation.
+
+## Autoscan Report Assembly
+
+`AutoscanReportAssembler` owns the canonical per-log Autoscan Report order and turns scan facts plus typed `AutoscanReportContribution` values into final report lines.
+
+Canonical section ownership:
+
+- header and Error Information
+- Crashgen Expectation outcomes placed in Error Information before that section's separator
+- crash suspect section, always present, including the no-suspects footer
+- deprecated FCX Mode notice from per-log facts
+- settings-related guidance, including settings-placement Crashgen Expectation outcomes and Disabled Setting Notices
+- Mod Guidance groups in fixed order: conflicts, frequent crashes, solutions, important mods
+- Plugin Evidence, FormID Finding, and Named Record Finding sections
+- footer
+
+The assembler does not choose Autoscan Report paths, write files, move Unsolved Logs, or run analyzers. `process_log_with_progress()` collects contributions during `Analyze` and performs assembly during `Finalize`.
 
 ## `PluginAnalyzer`
 
@@ -349,14 +436,13 @@ Binding expectation:
 
 The main contributor-facing pipeline looks like this:
 
-1. Load YAML/config data with [`classic-config-core`](../../business-logic/classic-config-core).
-2. Convert `YamlDataCore` into `AnalysisConfig` with `build_analysis_config_from_yaml()`.
-3. Construct `OrchestratorCore::new(config)`.
-4. Optionally attach a [`classic-database-core`](../../business-logic/classic-database-core) `DatabasePool` for FormID value lookups.
-5. `process_log()` reads the file with [`classic-file-io-core`](../../business-logic/classic-file-io-core) and preprocesses lines with `reformat_crash_data_inline()`.
-6. `LogParser::parse_all_sections_arc()` builds named sections.
-7. The orchestrator extracts header metadata, resolves crashgen identity/version status, and builds report helpers.
-8. Analysis passes run over the prepared data:
+1. Prepare Crash Log Scan Intake with `CrashLogScanIntake::from_yaml_paths(...)` or `CrashLogScanIntake::from_yaml_data(...)`.
+2. Use `prepare().await` to produce `ScanReadyAnalysis`.
+3. For a full Crash Log Scan Run, construct `CrashLogScanRun::new(scan_ready)` and call `run(...)` with selected Crash Logs.
+4. Inside the module, `OrchestratorCore` reads each file with [`classic-file-io-core`](../../business-logic/classic-file-io-core) and preprocesses lines with `reformat_crash_data_inline()`.
+5. `LogParser::parse_all_sections_arc()` builds named sections.
+6. The orchestrator extracts header metadata, resolves crashgen identity/version status, and builds report helpers.
+7. Analysis passes run over the prepared data:
    - plugin extraction and plugin suspect matching
    - suspect/error scanning
    - crashgen settings validation
@@ -364,8 +450,8 @@ The main contributor-facing pipeline looks like this:
    - FormID extraction and optional DB value lookup
    - named-record scanning
    - FCX message inclusion
-9. `ReportComposer` combines fragments and produces `report_lines`.
-10. Callers can write report files with `write_reports_batch()` or handle `report_lines` directly.
+8. `ReportComposer` combines fragments and produces `report_lines`.
+9. `CrashLogScanRun` writes Autoscan Reports, accounts per-log outcomes, and applies Standard versus Targeted Unsolved Logs rules.
 
 One subtle integration rule from the source: the effective crashgen name used for settings and report text can switch to `Addictol` when the header or XSE modules indicate it, even if the base `AnalysisConfig` was built for another crashgen.
 
@@ -405,6 +491,7 @@ Important exceptions to that model:
 This crate exposes async APIs but does not create its own runtime.
 
 - Async entry points include `OrchestratorCore::async_enter()`, `async_exit()`, `process_log()`, `process_log_with_progress()`, `process_logs_batch()`, `load_loadorder_async()`, `write_reports_batch()`, and `FormIDAnalyzerCore::formid_match()`.
+- `CrashLogScanIntake::prepare()` is also async for path-backed YAML loading.
 - The crate depends on `tokio` and `futures`, but the source does not construct a Tokio runtime in production code.
 - In CLASSIC, higher layers are expected to use the shared runtime model from [`classic-shared-core`](../../foundation/classic-shared-core) rather than introducing a second runtime.
 
@@ -435,7 +522,8 @@ Notes:
 
 ## Related Crates And Integration Points
 
-- [`classic-config-core`](../../business-logic/classic-config-core) - provides `YamlDataCore` and crashgen registry source data used by `build_analysis_config_from_yaml()`, AND (since v9.1.0 Phase 2) the typed crashgen rule model and evaluator at `classic_config_core::crashgen_rules::*` used by `SettingsValidator`
+- [`classic-config-core`](../../business-logic/classic-config-core) - provides `YamlDataCore`, crashgen registry source data used by `build_analysis_config_from_yaml()`, and the typed Crashgen Expectation model/evaluator at `classic_config_core::crashgen_rules::*` used by `SettingsValidator`
+- [`classic-settings-core`](../../business-logic/classic-settings-core) - provides `YamlOperations` used by intake for small path-backed sidecar reads such as simplify-log removal rules and legacy FormID database settings
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - resolves game-version matches and valid crashgen versions
 - [`classic-database-core`](../../business-logic/classic-database-core) - optional FormID description lookups through `DatabasePool`
 - [`classic-file-io-core`](../../business-logic/classic-file-io-core) - async file reads and writes used by the orchestrator
@@ -448,63 +536,67 @@ In practice, `classic-scanlog-core` is the downstream analysis layer that turns 
 
 ## Usage Example
 
-This example follows the intended contributor flow: load YAML with [`classic-config-core`](../../business-logic/classic-config-core), build an `AnalysisConfig`, and process a log with `OrchestratorCore`.
+This example follows the intended contributor flow for a full Crash Log Scan Run: prepare scan intake, construct the run module, and execute selected Crash Logs.
 
 ```rust
-use classic_config_core::YamlDataCore;
 use classic_scanlog_core::{
-    OrchestratorCore,
-    build_analysis_config_from_yaml,
+    CrashLogScanRun,
+    CrashLogScanRunIntent,
+    CrashLogScanRunRequest,
+    CrashLogScanIntake,
+    CrashLogScanOptions,
+    StandardCrashLogScanRunIntent,
+    StandardUnsolvedLogsIntent,
 };
 use std::path::PathBuf;
 
 # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-let yaml_dirs = vec![
+let intake = CrashLogScanIntake::from_yaml_paths(
     PathBuf::from("C:/CLASSIC"),
     PathBuf::from("C:/CLASSIC/CLASSIC Data"),
-];
-
-let yaml = YamlDataCore::load_from_yaml_files(
-    yaml_dirs,
-    "Fallout4".to_string(),
-    "auto".to_string(),
-)
-.await?;
-
-let config = build_analysis_config_from_yaml(
-    &yaml,
     "Fallout4",
     "auto",
-    false,          // show_formid_values
-    false,          // fcx_mode
-    false,          // simplify_logs
-    Vec::new(),     // remove_list
+    CrashLogScanOptions::new(
+        false,      // show_formid_values
+        false,      // fcx_mode
+        false,      // simplify_logs
+    ),
 );
 
-let orchestrator = OrchestratorCore::new(config)?;
-let result = orchestrator
-    .process_log("C:/CLASSIC/crash-2026-03-09.log".to_string())
-    .await?;
+let scan_ready = intake.prepare().await?;
+let run = CrashLogScanRun::new(scan_ready);
+let result = run.run(
+    CrashLogScanRunRequest {
+        logs: vec![PathBuf::from("C:/CLASSIC/crash-2026-03-09.log")],
+        intent: CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
+        }),
+        max_concurrent: None,
+        cancellation: None,
+        preserve_order: true,
+    },
+    |_| {},
+).await?;
 
-if result.success {
-    println!("Processed {} in {} ms", result.log_path, result.processing_time_ms);
-    println!("Report lines: {}", result.report_lines.len());
+if let Some(log) = result.logs.first() {
+    println!("Processed {} in {} ms", log.crash_log.display(), log.processing_time_ms);
 }
 # Ok(())
 # }
 ```
 
-If you need FormID descriptions instead of raw IDs only, attach a `DatabasePool` before calling `process_log()`.
+If you need lower-level analysis-only behavior, `OrchestratorCore` remains public. New adapter code that wants Autoscan Report writing and Unsolved Logs behavior should prefer `CrashLogScanRun`.
 
 ---
 
 ## Contributor Notes And Known Limits
 
 - `classic-scanlog-core` is downstream of [`classic-config-core`](../../docs/api/classic-config-core.md); update both docs if the YAML-to-analysis contract changes.
+- Crash Log collection and XSE Folder discovery stay outside `CrashLogScanIntake`; Unsolved Logs movement belongs to `CrashLogScanRun` for full run execution.
 - `parse_segments()` and `parse_segments_parallel()` are still public but explicitly deprecated. The Python binding `parse_segments_parallel` now returns `dict[str, list[str]]` instead of `list[list[str]]`.
 - The source contains performance claims in comments and docs, but this page does not treat them as compatibility guarantees.
 - `process_logs_batch()` does not preserve input ordering.
-- `SettingsValidator::scan_addictol_settings_scaffold()` is intentionally a scaffold, not a complete Addictol rules implementation.
+- Addictol compatibility guidance is expressed through YAML `settings_rules.preflight`; there is no hardcoded Addictol scaffold path.
 - `derive_scanlog_config_layout()` is effectively a valid/invalid gate today: it returns `Og` for parseable detected versions and `Unknown` otherwise.
 - The crashgen rule model in `classic-config-core` still defines `ConfigLayout::Vr`, but this crate no longer uses `ConfigLayout` as the OG/VR selector; that decision now lives in Version Registry-backed config building.
 - Report output is designed for Python parity, so text shape matters to downstream consumers more than a stable structured schema does.
@@ -512,6 +604,7 @@ If you need FormID descriptions instead of raw IDs only, attach a `DatabasePool`
 If you extend this crate, update this document when you change:
 
 - re-exported types in `lib.rs`
+- Crash Log Scan Intake readiness rules
 - the named-section contract in `parser`
 - `AnalysisConfig` construction rules or Version Registry precedence
 - runtime/concurrency expectations
