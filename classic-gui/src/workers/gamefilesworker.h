@@ -16,7 +16,7 @@ public:
     explicit GameFilesWorker(QObject* parent = nullptr);
 
 public slots:
-    /// Run the game file setup checks via the CXX bridge.
+    /// Run Game Setup Intake via the CXX bridge.
     ///
     /// Called from the QThread once it starts. Emits progress/finished/error
     /// signals back to the controller on the main thread.
@@ -27,9 +27,9 @@ signals:
     void progress(float percent, const QString& status);
 
     /// Emitted when the scan completes successfully.
-    /// @param output The combined text output from all setup checks.
-    /// @param hasErrors Whether any checks reported errors.
-    /// @param totalChecks Number of checks that were executed.
+    /// @param output The Rust-rendered intake report.
+    /// @param hasErrors Whether any diagnostic checks failed.
+    /// @param totalChecks Number of intake checks that were executed.
     void finished(const QString& output, bool hasErrors, uint32_t totalChecks);
 
     /// Emitted when the scan fails with an unrecoverable error.

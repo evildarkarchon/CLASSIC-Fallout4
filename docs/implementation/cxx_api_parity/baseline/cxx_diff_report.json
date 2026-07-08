@@ -1497,6 +1497,22 @@
       "reason": "-"
     },
     {
+      "id": "88af8b8a16131319",
+      "rustSymbol": "game_setup_intake_checks",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b0197da00d8a6307",
+      "rustSymbol": "game_setup_needs_path_detection",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "67d52d0e3e5715b7",
       "rustSymbol": "ini_validator_detect_all_issues_for_root",
       "kind": "function",
@@ -1521,24 +1537,8 @@
       "reason": "-"
     },
     {
-      "id": "faed7cbf67f0de2e",
-      "rustSymbol": "needs_path_detection",
-      "kind": "function",
-      "bridgeModule": "scangame",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "28fe75685302909f",
-      "rustSymbol": "run_setup_checks",
-      "kind": "function",
-      "bridgeModule": "scangame",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "ee8ced5b5e4028bb",
-      "rustSymbol": "scangame_run_setup_structured",
+      "id": "c2c792f2bb44f4c3",
+      "rustSymbol": "run_game_setup_intake",
       "kind": "function",
       "bridgeModule": "scangame",
       "status": "matched",
@@ -1585,6 +1585,30 @@
       "reason": "-"
     },
     {
+      "id": "4fc6518f8ff3ec2f",
+      "rustSymbol": "GameSetupCheckDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "17ae6c60e6c3bbd6",
+      "rustSymbol": "GameSetupIntakeDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1b386a35f09c91ff",
+      "rustSymbol": "GameSetupPathDetectionNeeds",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "8fd138371890a42d",
       "rustSymbol": "IniConfigIssueDto",
       "kind": "struct",
@@ -1595,30 +1619,6 @@
     {
       "id": "ec3568d08ff543ed",
       "rustSymbol": "IntegrityCheckResultDto",
-      "kind": "struct",
-      "bridgeModule": "scangame",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "9affeedbb97074de",
-      "rustSymbol": "PathDetectionNeeds",
-      "kind": "struct",
-      "bridgeModule": "scangame",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "93d509b3d522de30",
-      "rustSymbol": "ScanGameSetupDto",
-      "kind": "struct",
-      "bridgeModule": "scangame",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "cf8a6ea758229521",
-      "rustSymbol": "SetupCheckResult",
       "kind": "struct",
       "bridgeModule": "scangame",
       "status": "matched",

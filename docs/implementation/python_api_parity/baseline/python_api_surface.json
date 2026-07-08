@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T03:11:48.254722+00:00",
+  "generated_at_utc": "2026-07-08T13:15:29.211764+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -3872,6 +3872,60 @@
     },
     {
       "module": "classic_scangame",
+      "export": "GameSetupCheck",
+      "export_path": "GameSetupCheck",
+      "kind": "class",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
+      "signature": "class GameSetupCheck:"
+    },
+    {
+      "module": "classic_scangame",
+      "export": "GameSetupIntake",
+      "export_path": "GameSetupIntake",
+      "kind": "class",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
+      "signature": "class GameSetupIntake:"
+    },
+    {
+      "module": "classic_scangame",
+      "export": "__init__",
+      "export_path": "GameSetupIntake.__init__",
+      "parent_class": "GameSetupIntake",
+      "kind": "method",
+      "arity": 5,
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
+      "signature": "def __init__( self, game_id: str, game_version: str = ..., game_root: Path | None = ..., docs_root: Path | None = ..., xse_log_path: Path | None = ..., ) -> None:"
+    },
+    {
+      "module": "classic_scangame",
+      "export": "GameSetupIntakeResult",
+      "export_path": "GameSetupIntakeResult",
+      "kind": "class",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
+      "signature": "class GameSetupIntakeResult:"
+    },
+    {
+      "module": "classic_scangame",
+      "export": "combined",
+      "export_path": "GameSetupIntakeResult.combined",
+      "parent_class": "GameSetupIntakeResult",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
+      "signature": "def combined(self) -> str:"
+    },
+    {
+      "module": "classic_scangame",
       "export": "GameVersion",
       "export_path": "GameVersion",
       "kind": "class",
@@ -4222,74 +4276,6 @@
     },
     {
       "module": "classic_scangame",
-      "export": "SetupCheckConfig",
-      "export_path": "SetupCheckConfig",
-      "kind": "class",
-      "owner_module": "scangame",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "class SetupCheckConfig:"
-    },
-    {
-      "module": "classic_scangame",
-      "export": "__init__",
-      "export_path": "SetupCheckConfig.__init__",
-      "parent_class": "SetupCheckConfig",
-      "kind": "method",
-      "arity": 6,
-      "owner_module": "scangame",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "def __init__( self, game_exe_path: Path, valid_exe_hashes: list[str], root_name: str, game_name: str, docs_path: str | None = ..., xse_hashes: list[tuple[str, str]] | None = ..., ) -> None:"
-    },
-    {
-      "module": "classic_scangame",
-      "export": "SetupCheckResults",
-      "export_path": "SetupCheckResults",
-      "kind": "class",
-      "owner_module": "scangame",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "class SetupCheckResults:"
-    },
-    {
-      "module": "classic_scangame",
-      "export": "combined",
-      "export_path": "SetupCheckResults.combined",
-      "parent_class": "SetupCheckResults",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "scangame",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "def combined(self) -> str:"
-    },
-    {
-      "module": "classic_scangame",
-      "export": "has_errors",
-      "export_path": "SetupCheckResults.has_errors",
-      "parent_class": "SetupCheckResults",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "scangame",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "def has_errors(self) -> bool:"
-    },
-    {
-      "module": "classic_scangame",
-      "export": "total_checks",
-      "export_path": "SetupCheckResults.total_checks",
-      "parent_class": "SetupCheckResults",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "scangame",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "def total_checks(self) -> int:"
-    },
-    {
-      "module": "classic_scangame",
       "export": "TomlConfigIssue",
       "export_path": "TomlConfigIssue",
       "kind": "class",
@@ -4598,6 +4584,17 @@
     },
     {
       "module": "classic_scangame",
+      "export": "game_setup_needs_path_detection",
+      "export_path": "game_setup_needs_path_detection",
+      "kind": "function",
+      "arity": 2,
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
+      "signature": "def game_setup_needs_path_detection( game_path: str | None = ..., docs_path: str | None = ... ) -> tuple[bool, bool]:"
+    },
+    {
+      "module": "classic_scangame",
       "export": "get_scan_issue_messages",
       "export_path": "get_scan_issue_messages",
       "kind": "function",
@@ -4609,25 +4606,14 @@
     },
     {
       "module": "classic_scangame",
-      "export": "migrate_game_version_setting",
-      "export_path": "migrate_game_version_setting",
+      "export": "normalize_game_setup_version_selection",
+      "export_path": "normalize_game_setup_version_selection",
       "kind": "function",
       "arity": 1,
       "owner_module": "scangame",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "def migrate_game_version_setting(game_version: str | None = ...) -> str | None:"
-    },
-    {
-      "module": "classic_scangame",
-      "export": "needs_path_detection",
-      "export_path": "needs_path_detection",
-      "kind": "function",
-      "arity": 2,
-      "owner_module": "scangame",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "def needs_path_detection( game_path: str | None = ..., docs_path: str | None = ... ) -> tuple[bool, bool]:"
+      "signature": "def normalize_game_setup_version_selection(game_version: str | None = ...) -> str:"
     },
     {
       "module": "classic_scangame",
@@ -4653,25 +4639,14 @@
     },
     {
       "module": "classic_scangame",
-      "export": "resolve_effective_game_version",
-      "export_path": "resolve_effective_game_version",
+      "export": "run_game_setup_intake",
+      "export_path": "run_game_setup_intake",
       "kind": "function",
       "arity": 1,
       "owner_module": "scangame",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "def resolve_effective_game_version(game_version: str | None = ...) -> str:"
-    },
-    {
-      "module": "classic_scangame",
-      "export": "run_setup_checks",
-      "export_path": "run_setup_checks",
-      "kind": "function",
-      "arity": 1,
-      "owner_module": "scangame",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "def run_setup_checks(config: SetupCheckConfig) -> SetupCheckResults:"
+      "signature": "def run_game_setup_intake(intake: GameSetupIntake) -> GameSetupIntakeResult:"
     },
     {
       "module": "classic_scangame",
@@ -6612,6 +6587,28 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "ScanRunLogResult",
+      "export_path": "ScanRunLogResult",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunLogResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "to_dict",
+      "export_path": "ScanRunLogResult.to_dict",
+      "parent_class": "ScanRunLogResult",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def to_dict(self) -> dict[str, Any]:"
+    },
+    {
+      "module": "classic_scanlog",
       "export": "SettingsValidator",
       "export_path": "SettingsValidator",
       "kind": "class",
@@ -6938,6 +6935,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def scan_records_batch( texts: list[list[str]], record_list: list[str], ignore_records: list[str] ) -> list[list[str]]:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "scan_run_execute",
+      "export_path": "scan_run_execute",
+      "kind": "function",
+      "arity": 14,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def scan_run_execute( yaml_dir_root: str, yaml_dir_data: str, game: str, game_version: str, log_paths: list[str], show_formid_values: bool = False, fcx_mode: bool = False, simplify_logs: bool = False, move_unsolved_logs: bool = False, targeted_mode: bool = False, max_concurrent: int | None = None, preserve_order: bool = False, cancellation_token: CancellationToken | None = None, unsolved_logs_destination: str | None = None, ) -> list[ScanRunLogResult]:"
     },
     {
       "module": "classic_scanlog",

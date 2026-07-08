@@ -1013,13 +1013,12 @@
       "nodeArity": 0
     },
     {
-      "id": "version-registry-promote-resolve-effective-game-version",
+      "id": "version_registry.MatchConfidence@rust",
       "tier": "tier1",
       "ownerModule": "version_registry",
-      "rustSymbol": "MatchConfidence",
-      "nodeExport": "resolveEffectiveGameVersion",
-      "nodeKind": "function",
-      "nodeArity": 1
+      "rustCrate": "classic-version-registry-core",
+      "rustSymbol": "MatchConfidence@rust",
+      "rustKind": "enum"
     },
     {
       "id": "version-registry-promote-try-parse-version",
@@ -2933,16 +2932,6 @@
       "nodeKind": "interface"
     },
     {
-      "id": "config.path.JsPathDetectionResult",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "needs_path_detection",
-      "rustKind": "function",
-      "nodeExport": "JsPathDetectionResult",
-      "nodeKind": "interface"
-    },
-    {
       "id": "config.scangame.JsTomlConfigIssue",
       "tier": "tier1",
       "ownerModule": "config",
@@ -3050,16 +3039,6 @@
       "rustSymbol": "FileHasher",
       "rustKind": "function",
       "nodeExport": "getHashCacheStats",
-      "nodeKind": "function"
-    },
-    {
-      "id": "config.path.needsPathDetection",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "needs_path_detection",
-      "rustKind": "function",
-      "nodeExport": "needsPathDetection",
       "nodeKind": "function"
     },
     {
@@ -4536,38 +4515,6 @@
       "rustKind": "reexport"
     },
     {
-      "id": "scangame.SetupCheckConfig@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupCheckConfig@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "scangame.SetupCheckResults@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupCheckResults@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "scangame.SetupError@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupError@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "scangame.SetupResult@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupResult@rust",
-      "rustKind": "reexport"
-    },
-    {
       "id": "scangame.TomlError@rust",
       "tier": "tier1",
       "ownerModule": "scangame",
@@ -4744,43 +4691,11 @@
       "rustKind": "module"
     },
     {
-      "id": "scangame.migrate_game_version_setting@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "migrate_game_version_setting@rust",
-      "rustKind": "reexport"
-    },
-    {
       "id": "scangame.mod_ini@rust",
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
       "rustSymbol": "mod_ini@rust",
-      "rustKind": "module"
-    },
-    {
-      "id": "scangame.resolve_effective_game_version@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "resolve_effective_game_version@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "scangame.run_combined_checks@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "run_combined_checks@rust",
-      "rustKind": "reexport"
-    },
-    {
-      "id": "scangame.setup@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "setup@rust",
       "rustKind": "module"
     },
     {
@@ -5809,15 +5724,6 @@
       "nodeKind": "function"
     },
     {
-      "id": "version_registry.migrateGameVersionSetting",
-      "tier": "tier1",
-      "ownerModule": "version_registry",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "migrate_game_version_setting",
-      "nodeExport": "migrateGameVersionSetting",
-      "nodeKind": "function"
-    },
-    {
       "id": "scanlog.processGameLogs",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -5852,6 +5758,117 @@
       "rustSymbol": "FileIOCore",
       "nodeExport": "writeAutoscanReport",
       "nodeKind": "function"
+    },
+    {
+      "id": "scangame.JsGameSetupCheck",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupCheck",
+      "nodeExport": "JsGameSetupCheck",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scangame.JsGameSetupIntakeOptions",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupIntake",
+      "nodeExport": "JsGameSetupIntakeOptions",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scangame.JsGameSetupIntakeResult",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupIntakeResult",
+      "nodeExport": "JsGameSetupIntakeResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scangame.JsPathDetectionResult",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "game_setup_needs_path_detection",
+      "nodeExport": "JsPathDetectionResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scangame.gameSetupNeedsPathDetection",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "game_setup_needs_path_detection",
+      "nodeExport": "gameSetupNeedsPathDetection",
+      "nodeKind": "function"
+    },
+    {
+      "id": "scangame.normalizeGameSetupVersionSelection",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "normalize_game_setup_version_selection",
+      "nodeExport": "normalizeGameSetupVersionSelection",
+      "nodeKind": "function"
+    },
+    {
+      "id": "scangame.runGameSetupIntake",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupIntake",
+      "nodeExport": "runGameSetupIntake",
+      "nodeKind": "function"
+    },
+    {
+      "id": "scangame.GameSetupIntake@rust",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupIntake@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "scangame.GameSetupIntakeResult@rust",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupIntakeResult@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "scangame.GameSetupCheck@rust",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupCheck@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "scangame.game_setup_intake@rust",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "game_setup_intake@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scangame.game_setup_needs_path_detection@rust",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "game_setup_needs_path_detection@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "scangame.normalize_game_setup_version_selection@rust",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "normalize_game_setup_version_selection@rust",
+      "rustKind": "reexport"
     }
   ]
 }

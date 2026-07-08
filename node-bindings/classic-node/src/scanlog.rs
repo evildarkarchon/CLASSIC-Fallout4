@@ -12,8 +12,7 @@
 //! `detectCrashPattern`) are synchronous and operate on string content directly.
 
 use classic_config_core::{ClassicConfig, YamlDataCore};
-use classic_scangame_core::integrity::IntegrityConfig;
-use classic_scangame_core::{SetupCheckConfig, detect_config_issues, run_combined_checks};
+use classic_scangame_core::{GameSetupIntake, detect_config_issues};
 use classic_scanlog_core::crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 use classic_scanlog_core::orchestrator;
 use classic_scanlog_core::parser::LogParser;
@@ -68,26 +67,23 @@ fn infer_game_id(config: &ClassicConfig) -> Option<GameId> {
     None
 }
 
-fn build_setup_check_config(config: &ClassicConfig, game_id: GameId) -> Option<SetupCheckConfig> {
+/// Build a read-only Game Setup Intake from saved CLASSIC configuration.
+fn build_game_setup_intake(config: &ClassicConfig, game_id: GameId) -> Option<GameSetupIntake> {
     if config.paths.game_root.as_os_str().is_empty() {
         return None;
     }
 
-    Some(SetupCheckConfig {
-        integrity: IntegrityConfig::new(
-            config.paths.game_root.join(game_id.exe_name()),
-            Vec::new(),
-            game_id.as_str().to_string(),
-        ),
-        game_name: game_id.as_str().to_string(),
-        docs_path: config
-            .paths
-            .docs_root
-            .as_ref()
-            .or(config.paths.ini_folder.as_ref())
-            .map(|path| path.to_string_lossy().into_owned()),
-        xse_hashes: Vec::new(),
-    })
+    let mut intake = GameSetupIntake::new(game_id, &config.game_version)
+        .with_game_root(config.paths.game_root.clone());
+    if let Some(docs_root) = config
+        .paths
+        .docs_root
+        .as_ref()
+        .or(config.paths.ini_folder.as_ref())
+    {
+        intake = intake.with_docs_root(docs_root.clone());
+    }
+    Some(intake)
 }
 
 fn to_scanlog_issue(issue: classic_scangame_core::ConfigIssue) -> ConfigIssue {
@@ -117,8 +113,8 @@ async fn run_fcx_scan_state_checks() -> napi::Result<()> {
         to_napi_err("failed to infer game id from configured game root; run path detection first")
     })?;
 
-    let main_result = build_setup_check_config(&config, game_id)
-        .map(|setup_config| run_combined_checks(&setup_config).combined())
+    let main_result = build_game_setup_intake(&config, game_id)
+        .map(|intake| intake.run().rendered_report)
         .unwrap_or_default();
 
     let rust_issues: Vec<ConfigIssue> = if config.paths.game_root.as_os_str().is_empty() {

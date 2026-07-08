@@ -5,7 +5,7 @@
 
 /// First-run dialog shown when game or documents paths are not detected.
 ///
-/// Uses classic::scangame::needs_path_detection() to determine which
+/// Uses classic::scangame::game_setup_needs_path_detection() to determine which
 /// paths are missing, then presents QLineEdit + Browse fields for the
 /// user to fill in. Results are saved to CLASSIC Settings.yaml on OK.
 class ManualPathDialog : public QDialog {

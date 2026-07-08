@@ -31,8 +31,8 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 107,
-      "contractIdsHash": "5979e7195066a913fd0e5e84f3eccd8fa335d994b09aa2c66d6a093f77a6e399",
+      "contractCount": 105,
+      "contractIdsHash": "ffbbe54e7462d2fd2e60ae4c9081e60d045c628f27cb7f9ef5e0be4a4d4de249",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "config-tier1-parity",
@@ -50,8 +50,8 @@
         "ownerModule": "version_registry",
         "tier": "tier1"
       },
-      "contractCount": 90,
-      "contractIdsHash": "c39fd2710c3a5600ae169d5431bf45c85f4e9bbd165c9bfe68dfa800d2562aed",
+      "contractCount": 89,
+      "contractIdsHash": "d1619a623e58bd32a9565c81ce283526baa61fcddc609c111453cada1ec7d9d6",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "version-registry-tier1-parity",
@@ -98,8 +98,8 @@
       "bindingIdentifiers": [
         "JsConfigDuplicateDetector",
         "detectConfigDuplicates",
-        "migrateGameVersionSetting",
-        "needsPathDetection"
+        "normalizeGameSetupVersionSelection",
+        "gameSetupNeedsPathDetection"
       ],
       "verificationMode": "direct_call",
       "testSuite": "node-bindings/classic-node/__test__/scangame.spec.ts",
@@ -295,8 +295,8 @@
         "ownerModule": "scangame",
         "tier": "tier1"
       },
-      "contractCount": 70,
-      "contractIdsHash": "6e8349a06890e6b347d949f0fbed5272bc48e19d0d8b118918ea215431b71b5e",
+      "contractCount": 75,
+      "contractIdsHash": "c8b40903c2015ff77f579831897f0c2461b0eaf4f9277f844ca619f3e72feb3c",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "scangame-tier1-parity",

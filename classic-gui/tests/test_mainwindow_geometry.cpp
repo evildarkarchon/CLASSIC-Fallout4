@@ -210,7 +210,7 @@ void MainWindowGeometryTests::first_run_bootstraps_and_updates_local_yaml()
     const QString firstRunBody = extractFunctionBody(QStringLiteral("checkFirstRunPaths()"));
     QVERIFY2(!firstRunBody.isEmpty(), "Could not locate MainWindow::checkFirstRunPaths()");
 
-    const qsizetype needsCheck = firstRunBody.indexOf(QStringLiteral("needs_path_detection"));
+    const qsizetype needsCheck = firstRunBody.indexOf(QStringLiteral("game_setup_needs_path_detection"));
     const qsizetype firstLocalYamlSync = firstRunBody.indexOf(QStringLiteral("saveLocalYamlPaths"));
     const qsizetype dialogExec = firstRunBody.indexOf(QStringLiteral("dlg.exec()"));
     const qsizetype finalLocalYamlSync = firstRunBody.lastIndexOf(QStringLiteral("saveLocalYamlPaths"));

@@ -2,25 +2,34 @@ use super::*;
 use std::fs;
 use tempfile::TempDir;
 
-// ── Existing tests (D-08 — PRESERVE) ─────────────────────────────────────
+// ── Game Setup Intake tests ───────────────────────────────────────────────
 
 #[test]
-fn test_run_setup_checks_nonexistent() {
-    let result = run_setup_checks("nonexistent_exe.exe", "nonexistent_root", "", "Fallout4");
-    // Should complete without panic
-    let _ = result.combined_output;
+fn test_run_game_setup_intake_invalid_game_returns_fatal_dto() {
+    let result = run_game_setup_intake("UnknownGame", "auto", "", "", "");
+    assert_eq!(result.status, "fatal_error");
+    assert!(result.has_errors);
+    assert!(result.rendered_report.contains("Game Setup Intake failed"));
 }
 
 #[test]
-fn test_needs_path_detection_empty() {
-    let result = needs_path_detection("", "");
+fn test_run_game_setup_intake_empty_paths_requests_action() {
+    let result = run_game_setup_intake("Fallout4", "auto", "", "", "");
+    assert!(!result.status.is_empty());
+    assert!(!result.rendered_report.is_empty());
+    assert!(result.action_count > 0 || result.total_checks > 0);
+}
+
+#[test]
+fn test_game_setup_needs_path_detection_empty() {
+    let result = game_setup_needs_path_detection("", "");
     assert!(result.needs_game_path);
     assert!(result.needs_docs_path);
 }
 
 #[test]
-fn test_needs_path_detection_with_paths() {
-    let result = needs_path_detection("C:\\Games\\Fallout4", "C:\\Users\\Docs");
+fn test_game_setup_needs_path_detection_with_paths() {
+    let result = game_setup_needs_path_detection("C:\\Games\\Fallout4", "C:\\Users\\Docs");
     assert!(!result.needs_game_path);
     assert!(!result.needs_docs_path);
 }
@@ -230,20 +239,14 @@ fn test_integrity_run_all_checks_empty_path_returns_empty() {
     assert!(r.is_empty());
 }
 
-// ── Setup orchestrator structured DTO tests ───────────────────────────────
+// ── Game Setup Intake structured check DTO tests ──────────────────────────
 
 #[test]
-fn test_scangame_run_setup_structured_empty_exe_returns_error_dto() {
-    let r = scangame_run_setup_structured("", &[], "", "", "");
-    assert!(r.has_errors);
-    assert!(r.error_count > 0);
-}
-
-#[test]
-fn test_scangame_run_setup_structured_empty_game_name_returns_error_dto() {
-    let r = scangame_run_setup_structured("nonexistent.exe", &[], "", "", "");
-    assert!(r.has_errors);
-    assert!(r.error_count > 0);
+fn test_game_setup_intake_checks_empty_paths_returns_diagnostics() {
+    let checks = game_setup_intake_checks("Fallout4", "auto", "", "", "");
+    assert!(!checks.is_empty());
+    assert!(checks.iter().any(|check| !check.kind.is_empty()));
+    assert!(checks.iter().any(|check| !check.state.is_empty()));
 }
 
 // ── CrashgenOrchestrator tests ────────────────────────────────────────────

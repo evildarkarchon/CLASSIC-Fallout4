@@ -348,8 +348,8 @@
         "ownerModule": "scangame",
         "tier": "tier1"
       },
-      "contractCount": 172,
-      "contractIdsHash": "9a2359a3aba879bf6d113ea41e89f369b399dcaf6211ef1eaebf656513af031c",
+      "contractCount": 164,
+      "contractIdsHash": "fa2524e8a6b450c6647843b35893bd5ac990d8552797ffa8aa65a454d2d99ae1",
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke"
     },

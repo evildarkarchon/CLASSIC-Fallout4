@@ -44,7 +44,7 @@ This crate exposes public modules directly and also re-exports most contributor-
 ### Orchestration modules
 
 - `orchestrator` - top-level async game/mod scan runner
-- `setup` - setup-time combined checks and settings/path migration helpers
+- `game_setup_intake` - setup-time path, version, registry, executable, documents, and XSE intake diagnostics
 - `crashgen_orchestrator` - crashgen config-path resolution, plugin detection, and report packaging
 - `game_report` - text report builders for loose-file and BA2 scan results
 
@@ -70,7 +70,7 @@ This crate exposes public modules directly and also re-exports most contributor-
 - `GameScanOrchestrator`, `GameScanConfig`, `GameScanResult`, `ModScanResult`
 - `detect_config_issues(game_path, game_name)`
 - `CrashgenCheckOrchestrator`, `CrashgenReport`
-- `SetupCheckConfig`, `SetupCheckResults`, `run_combined_checks()`
+- `GameSetupIntake`, `GameSetupIntakeResult`, `GameSetupCheck`, `game_setup_needs_path_detection()`
 - `GameIntegrityChecker`, `IntegrityConfig`
 - `XseChecker`, `GameVersion`, `ValidationResult`
 - `CrashgenChecker`, `TomlConfigIssue`
@@ -235,28 +235,36 @@ Behavior worth knowing:
 - installation-location validation is a string-contains check for `Program Files`, not a canonicalized Windows path policy
 - missing executables usually become invalid `IntegrityCheckResult` values instead of hard errors, except direct hashing failures in internal helpers
 
-## `SetupCheckConfig`, `SetupCheckResults`, and setup helpers
+## `GameSetupIntake`, `GameSetupIntakeResult`, and setup helpers
 
-This module packages setup-time checks and migration helpers.
+This module owns read-only setup intake for supported game installs.
 
 Important items:
 
-- `run_combined_checks(config) -> SetupCheckResults`
-- `migrate_game_version_setting(game_version, legacy_vr_mode)`
-- `resolve_effective_game_version(game_version)`
-- `needs_path_detection(game_path, docs_path)`
+- `GameSetupIntake::new(game_id, selected_game_version)`
+- `GameSetupIntake::with_game_root(path)`
+- `GameSetupIntake::with_docs_root(path)`
+- `GameSetupIntake::with_xse_log_path(path)`
+- `GameSetupIntake::run() -> GameSetupIntakeResult`
+- `normalize_game_setup_version_selection(value)`
+- `game_setup_needs_path_detection(game_path, docs_path)`
 
-`SetupCheckResults` offers:
+`GameSetupIntakeResult` offers:
 
-- `combined()`
 - `has_errors()`
 - `total_checks()`
+- `failed_checks()`
+- `rendered_report`
+- `checks: Vec<GameSetupCheck>`
+- `actions: Vec<GameSetupRequiredAction>`
+- `path_updates: Vec<GameSetupPathUpdate>`
 
 Behavior worth knowing:
 
-- `run_combined_checks()` currently runs game integrity and documents-folder checks; `SetupCheckConfig.xse_hashes` exists in the public struct but is not consumed by the current implementation
-- `resolve_effective_game_version()` canonicalizes to `Original`, `NextGen`, `AnniversaryEdition`, `VR`, or `auto`
-- `migrate_game_version_setting()` lets explicit non-`auto` game-version strings win over the legacy VR boolean
+- Game Setup Intake is read-only; detected paths are returned as proposed updates instead of being persisted.
+- `auto` mode reads executable PE version metadata and attempts a Version Registry match.
+- failed setup diagnostics are typed checks; the top-level status is `ActionRequired` only when user input is missing.
+- the module covers setup-only diagnostics, not ENB, crashgen TOML, Wrye, BA2, loose-file, or mod INI scans.
 
 ## Loose-file and archive scanning APIs
 
@@ -466,12 +474,12 @@ Crashgen TOML flow in more detail:
 5. Otherwise, the crate falls back to legacy hardcoded plugin/setting checks.
 6. Results are returned as formatted text plus `Vec<TomlConfigIssue>`.
 
-Setup-time flow:
+Game Setup Intake flow:
 
-1. Build `IntegrityConfig` and optional docs-path data inside `SetupCheckConfig`.
-2. Call `run_combined_checks()`.
-3. The crate runs executable/install-location validation and optional `classic-path-core` documents checks.
-4. Callers use `SetupCheckResults::combined()` if they need one concatenated text payload.
+1. Build `GameSetupIntake` with a `GameId`, selected version, and any saved paths.
+2. Call `run()`.
+3. The crate resolves paths, registry metadata, executable facts, documents diagnostics, and XSE setup diagnostics.
+4. Callers use `rendered_report` for text display and `checks` for structured UI/status handling.
 
 ---
 
@@ -542,8 +550,8 @@ Important direct dependencies:
 
 - `classic-file-io-core` - DDS validation helpers used during loose-file scans
 - `classic-config-core` - optional rule-evaluation path for crashgen TOML checks via the absorbed crashgen rule model (`classic_config_core::crashgen_rules::*`, formerly a separate crate)
-- `classic-path-core` - documents-folder checks in setup coordination
-- `classic-version-registry-core` - Address Library metadata and Fallout 4 version descriptions
+- `classic-path-core` - path resolution and documents-folder checks used by Game Setup Intake
+- `classic-version-registry-core` - setup expectation metadata, Address Library metadata, and Fallout 4 version descriptions
 - `tokio` - async orchestration only
 - `rayon` - parallel synchronous scanning work
 - `walkdir` - recursive file discovery
@@ -612,7 +620,7 @@ If the caller already has YAML-backed crashgen settings rules from [`classic-con
 - The crate has overlapping config/INI layers: `ini` and `config` are lower-level, while `config_cache` and `mod_ini` are the more integrated paths used by the orchestrator.
 - `ConfigFileCache` duplicate detection is simpler than `ConfigDuplicateDetector`; the two APIs do not currently implement identical duplicate semantics.
 - `ConfigDuplicateDetector::duplicate_groups` appears unused by the current implementation.
-- `SetupCheckConfig.xse_hashes` is public but not consumed by current `run_combined_checks()` logic.
+- `Game Setup Intake` is setup-only; broader game-file and crash-log-adjacent checks remain in the orchestrator and scanner modules.
 - `LogProcessor` scans only the top level of the target directory; it does not recurse.
 - `CrashgenChecker` flattens TOML settings by key name only for rule evaluation, so same-named keys in multiple sections would collide.
 - `detect_plugins()` and `CrashgenChecker` plugin discovery include any stringifiable entry names in the plugins directory, not just DLLs.

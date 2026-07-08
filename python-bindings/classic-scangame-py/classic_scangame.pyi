@@ -1155,57 +1155,77 @@ class GameScanOrchestrator:
         """Run full scan pipeline."""
 
 # ============================================================================
-# Setup Coordinator
+# Game Setup Intake
 # ============================================================================
 
-class SetupCheckConfig:
-    """Configuration for combined setup checks."""
+class GameSetupIntake:
+    """Read-only request for resolving and validating game setup inputs."""
 
     def __init__(
         self,
-        game_exe_path: Path,
-        valid_exe_hashes: list[str],
-        root_name: str,
-        game_name: str,
-        docs_path: str | None = ...,
-        xse_hashes: list[tuple[str, str]] | None = ...,
+        game_id: str,
+        game_version: str = ...,
+        game_root: Path | None = ...,
+        docs_root: Path | None = ...,
+        xse_log_path: Path | None = ...,
     ) -> None:
-        """Create a new setup check configuration."""
+        """Create a new Game Setup Intake request."""
 
     @property
-    def game_name(self) -> str:
-        """Get configured game name."""
+    def game_id(self) -> str:
+        """Stable game identifier."""
 
-class SetupCheckResults:
-    """Results from combined setup checks."""
+    @property
+    def game_version(self) -> str:
+        """Selected game version."""
 
-    integrity_results: list[str]
-    xse_results: list[str]
-    docs_results: list[str]
-    errors: list[str]
+    @property
+    def game_root(self) -> str | None:
+        """Saved or caller-provided game root."""
+
+    @property
+    def docs_root(self) -> str | None:
+        """Saved or caller-provided documents root."""
+
+    @property
+    def xse_log_path(self) -> str | None:
+        """Optional XSE log path used as a detection hint."""
+
+class GameSetupCheck:
+    """Typed Game Setup Check result."""
+
+    kind: str
+    state: str
+    message: str
+    details: list[str]
+
+class GameSetupIntakeResult:
+    """Rendered and typed result from Game Setup Intake."""
+
+    rendered_report: str
+    status: str
+    has_errors: bool
+    total_checks: int
+    failed_checks: int
+    action_count: int
+    path_update_count: int
+    game_root: str | None
+    docs_root: str | None
+    checks: list[GameSetupCheck]
 
     def combined(self) -> str:
-        """Combine all result sections."""
+        """Return the rendered report."""
 
-    def has_errors(self) -> bool:
-        """Check whether any non-fatal errors were recorded."""
+def run_game_setup_intake(intake: GameSetupIntake) -> GameSetupIntakeResult:
+    """Run Game Setup Intake."""
 
-    def total_checks(self) -> int:
-        """Get total count of check entries."""
+def normalize_game_setup_version_selection(game_version: str | None = ...) -> str:
+    """Normalize a raw Game Setup Intake version selection."""
 
-def run_setup_checks(config: SetupCheckConfig) -> SetupCheckResults:
-    """Run combined setup checks."""
-
-def migrate_game_version_setting(game_version: str | None = ...) -> str | None:
-    """Normalize Game Version to a canonical mode value."""
-
-def resolve_effective_game_version(game_version: str | None = ...) -> str:
-    """Resolve effective game version from raw setting."""
-
-def needs_path_detection(
+def game_setup_needs_path_detection(
     game_path: str | None = ..., docs_path: str | None = ...
 ) -> tuple[bool, bool]:
-    """Return whether game/docs paths require auto-detection."""
+    """Return whether game/docs paths require Game Setup Intake detection."""
 
 # ============================================================================
 # Game Report Builders

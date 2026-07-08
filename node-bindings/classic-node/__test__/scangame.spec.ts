@@ -20,9 +20,8 @@ import {
   checkCrashgenConfig,
   checkCrashgenFull,
   scanModInis,
-  migrateGameVersionSetting,
-  resolveEffectiveGameVersion,
-  needsPathDetection,
+  normalizeGameSetupVersionSelection,
+  gameSetupNeedsPathDetection,
   getAddressLibInfo,
   checkXsePlugins,
 } from "../index.js";
@@ -853,62 +852,62 @@ describe("scanModInis", () => {
 });
 
 // ============================================================================
-// Game Version Setting Migration
+// Game Setup Version Normalization
 // ============================================================================
 
-describe("migrateGameVersionSetting", () => {
+describe("normalizeGameSetupVersionSelection", () => {
   test("preserves explicit original mode", () => {
-    const result = migrateGameVersionSetting("Original");
+    const result = normalizeGameSetupVersionSelection("Original");
     expect(result).toBe("Original");
   });
 
-  test("returns null when no setting is provided", () => {
-    const result = migrateGameVersionSetting(null);
-    expect(result).toBeNull();
+  test("returns auto when no setting is provided", () => {
+    const result = normalizeGameSetupVersionSelection(null);
+    expect(result).toBe("auto");
   });
 
   test("preserves auto mode", () => {
-    const result = migrateGameVersionSetting("auto");
+    const result = normalizeGameSetupVersionSelection("auto");
     expect(result).toBe("auto");
   });
 
   test("normalizes AE alias to AnniversaryEdition", () => {
-    const result = migrateGameVersionSetting("AE");
+    const result = normalizeGameSetupVersionSelection("AE");
     expect(result).toBe("AnniversaryEdition");
   });
 });
 
 // ============================================================================
-// Game Version Resolution
+// Game Setup Version Resolution
 // ============================================================================
 
-describe("resolveEffectiveGameVersion", () => {
+describe("normalizeGameSetupVersionSelection", () => {
   test("returns VR for VR", () => {
-    expect(resolveEffectiveGameVersion("VR")).toBe("VR");
+    expect(normalizeGameSetupVersionSelection("VR")).toBe("VR");
   });
 
   test("returns Original for Original", () => {
-    expect(resolveEffectiveGameVersion("Original")).toBe("Original");
+    expect(normalizeGameSetupVersionSelection("Original")).toBe("Original");
   });
 
   test("returns NextGen for NextGen", () => {
-    expect(resolveEffectiveGameVersion("NextGen")).toBe("NextGen");
+    expect(normalizeGameSetupVersionSelection("NextGen")).toBe("NextGen");
   });
 
   test("returns AnniversaryEdition for AE alias", () => {
-    expect(resolveEffectiveGameVersion("AE")).toBe("AnniversaryEdition");
+    expect(normalizeGameSetupVersionSelection("AE")).toBe("AnniversaryEdition");
   });
 
   test("returns auto for unknown value", () => {
-    expect(resolveEffectiveGameVersion("invalid")).toBe("auto");
+    expect(normalizeGameSetupVersionSelection("invalid")).toBe("auto");
   });
 
   test("returns auto for null", () => {
-    expect(resolveEffectiveGameVersion(null)).toBe("auto");
+    expect(normalizeGameSetupVersionSelection(null)).toBe("auto");
   });
 
   test("returns auto for auto", () => {
-    expect(resolveEffectiveGameVersion("auto")).toBe("auto");
+    expect(normalizeGameSetupVersionSelection("auto")).toBe("auto");
   });
 });
 
@@ -916,33 +915,33 @@ describe("resolveEffectiveGameVersion", () => {
 // Path Detection
 // ============================================================================
 
-describe("needsPathDetection", () => {
+describe("gameSetupNeedsPathDetection", () => {
   test("both missing (null) returns both true", () => {
-    const result = needsPathDetection(null, null);
+    const result = gameSetupNeedsPathDetection(null, null);
     expect(result.needsGamePath).toBe(true);
     expect(result.needsDocsPath).toBe(true);
   });
 
   test("game path set returns only docs needed", () => {
-    const result = needsPathDetection("C:\\Games\\Fallout4", null);
+    const result = gameSetupNeedsPathDetection("C:\\Games\\Fallout4", null);
     expect(result.needsGamePath).toBe(false);
     expect(result.needsDocsPath).toBe(true);
   });
 
   test("both set returns both false", () => {
-    const result = needsPathDetection("C:\\Games", "C:\\Docs");
+    const result = gameSetupNeedsPathDetection("C:\\Games", "C:\\Docs");
     expect(result.needsGamePath).toBe(false);
     expect(result.needsDocsPath).toBe(false);
   });
 
   test("empty strings treated as missing", () => {
-    const result = needsPathDetection("", "");
+    const result = gameSetupNeedsPathDetection("", "");
     expect(result.needsGamePath).toBe(true);
     expect(result.needsDocsPath).toBe(true);
   });
 
   test("docs path set returns only game needed", () => {
-    const result = needsPathDetection(null, "C:\\Docs");
+    const result = gameSetupNeedsPathDetection(null, "C:\\Docs");
     expect(result.needsGamePath).toBe(true);
     expect(result.needsDocsPath).toBe(false);
   });

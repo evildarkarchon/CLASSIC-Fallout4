@@ -65,7 +65,7 @@ pub mod ini; // ScanModInis.py validation (Phase 3C) - IMPLEMENTED
 pub mod integrity;
 pub mod logs; // log_processor.py (Phase 3C) - IMPLEMENTED
 pub mod orchestrator; // GameScanOrchestrator (G-01/G-02) - IMPLEMENTED
-pub mod setup; // SetupCoordinator (G-18) - IMPLEMENTED
+pub mod setup; // Game Setup Intake - IMPLEMENTED
 pub mod toml_check; // CheckCrashgen.py TOML validation (Phase 3C) - IMPLEMENTED
 pub mod unpacked; // unpacked_scanner.py (Phase 3B) - IMPLEMENTED
 pub mod wrye; // WryeBashParser (G-05) - IMPLEMENTED
@@ -111,9 +111,9 @@ fn classic_scangame(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Phase 5 - Application Coordination
     integrity::register(m)?; // Game integrity checking
 
-    // Wave 4 - Orchestrator, Setup, Game Report
+    // Wave 4 - Orchestrator, Game Setup Intake, Game Report
     orchestrator::register_orchestrator(m)?; // GameScanOrchestrator (G-01/G-02)
-    setup::register_setup(m)?; // SetupCoordinator (G-18)
+    setup::register_setup(m)?; // Game Setup Intake
     game_report::register_game_report(m)?; // ScanReportBuilder + ScanValidators (G-09/G-10)
 
     Ok(())

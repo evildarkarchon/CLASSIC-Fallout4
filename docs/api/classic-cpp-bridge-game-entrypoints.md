@@ -63,12 +63,13 @@ This is currently the main bridge file where multiple crates meet.
 
 ## `src/scangame.rs` -> `classic::scangame`
 
-This file exposes only a narrow setup subset:
+This file exposes Game Setup Intake plus the broader scanner/checker bridge functions in this namespace.
 
-- `run_setup_checks(...) -> SetupCheckResult`
-- `needs_path_detection(game_path, docs_path) -> PathDetectionNeeds`
+- `run_game_setup_intake(...) -> GameSetupIntakeDto`
+- `game_setup_intake_checks(...) -> Vec<GameSetupCheckDto>`
+- `game_setup_needs_path_detection(game_path, docs_path) -> GameSetupPathDetectionNeeds`
 
-It does **not** expose full `classic-scangame-core` orchestration, Address Library checking, crashgen checks, mod scanning, or report assembly.
+Game Setup Intake is setup-only. ENB, crashgen, BA2, Wrye, INI, and mod-file checks remain separate bridge entry points.
 
 ---
 
@@ -340,37 +341,51 @@ Important boundary:
 
 ## `classic::scangame` entry points
 
-### `run_setup_checks(game_exe_path, game_root, docs_path, game_name) -> SetupCheckResult`
+### `run_game_setup_intake(game_id, game_version, game_root, docs_path, xse_log_path) -> GameSetupIntakeDto`
 
 Forwards to:
 
-- `classic_scangame_core::integrity::IntegrityConfig::new(...)`
-- `classic_scangame_core::setup::run_combined_checks(...)`
+- `classic_scangame_core::GameSetupIntake::new(...)`
+- `GameSetupIntake::with_game_root(...)`
+- `GameSetupIntake::with_docs_root(...)`
+- `GameSetupIntake::with_xse_log_path(...)`
+- `GameSetupIntake::run()`
 
 Bridge DTO shape:
 
-- `combined_output`
+- `rendered_report`
+- `status`
 - `has_errors`
 - `total_checks`
+- `failed_checks`
+- `action_count`
+- `path_update_count`
+- `game_root`
+- `docs_root`
 
 Current bridge behavior that matters:
 
-- `game_root` is currently unused in Rust; the parameter is accepted but ignored
-- `valid_exe_hashes` is always passed as `Vec::new()`
-- `xse_hashes` is always passed as `Vec::new()`
-- `docs_path` is optional only through the empty-string sentinel
-- the bridge returns the already-formatted combined text from `SetupCheckResults::combined()`
+- `game_id` must parse as a `classic_shared_core::GameId`
+- empty path strings are treated as absent optional paths
+- invalid `game_id` returns a fatal DTO rather than throwing across CXX
+- setup diagnostics come from Rust core and include registry-backed executable, documents, and XSE checks where metadata exists
 
-Practical effect:
+### `game_setup_intake_checks(game_id, game_version, game_root, docs_path, xse_log_path) -> Vec<GameSetupCheckDto>`
 
-- executable validation can only report `latest` when the empty hash list somehow matches, which it never does in normal source-backed behavior
-- for an existing executable, the integrity portion therefore trends toward the out-of-date warning path rather than a registry-backed known-good check
-- the bridge does not expose `IntegrityConfig::with_steam_ini()` or `with_root_warn()`
-- the bridge does not expose `XseChecker`, even though `classic-scangame-core` has separate Address Library validation APIs
+Returns the typed check list from the same intake run.
 
-### `needs_path_detection(game_path, docs_path) -> PathDetectionNeeds`
+Bridge DTO shape:
 
-Forwards to `classic_scangame_core::setup::needs_path_detection()`.
+- `kind`
+- `state`
+- `message`
+- `details`
+
+Use this when a C++ caller needs structured UI/status handling instead of only `rendered_report`.
+
+### `game_setup_needs_path_detection(game_path, docs_path) -> GameSetupPathDetectionNeeds`
+
+Forwards to `classic_scangame_core::game_setup_needs_path_detection()`.
 
 Bridge DTO shape:
 
@@ -408,11 +423,11 @@ Registry and parsing calls often return structs that keep a success bit alongsid
 
 Those DTOs still flatten the underlying Rust models heavily.
 
-## 3. Preformatted text payloads
+## 3. Rendered text plus typed setup DTOs
 
-`classic::scangame::run_setup_checks()` returns formatted report text, not structured per-check records.
+`classic::scangame::run_game_setup_intake()` returns Rust-rendered report text plus summary counts.
 
-That means current C++ consumers depend on Rust-side message text and check counting more than on a typed setup schema.
+`classic::scangame::game_setup_intake_checks()` exposes typed check records for callers that need structured state.
 
 ---
 
@@ -436,10 +451,9 @@ These are the main current narrowing points contributors should keep in mind.
 
 ## `src/scangame.rs`
 
-- exposes only `run_combined_checks()` and `needs_path_detection()` from the setup module
-- does not expose `resolve_effective_game_version()` or `migrate_game_version_setting()`
-- passes empty executable hashes and empty XSE hashes instead of feeding registry-backed expectations into `SetupCheckConfig`
-- does not expose `GameScanOrchestrator`, `CrashgenCheckOrchestrator`, `XseChecker`, `GameVersion`, or any mod-scan APIs
+- exposes Game Setup Intake as the setup-time bridge surface
+- keeps ENB, crashgen, BA2, Wrye, INI, and integrity helper entry points separate from intake
+- does not expose `GameScanOrchestrator` or full mod-scan orchestration through CXX
 
 ---
 
@@ -474,15 +488,15 @@ When XSE output looks inconsistent:
 4. remember that `detect_xse_version_string()` depends on sibling DLL filenames, not PE metadata or registry expectations
 5. if install is true but version is empty, that is source-backed behavior in lower layers; loader detection and version detection are separate
 
-## Setup flow
+## Game Setup Intake flow
 
-When `run_setup_checks()` output looks weaker than the Rust setup docs suggest:
+When `run_game_setup_intake()` output looks wrong:
 
-1. remember that the bridge ignores the `game_root` parameter today
-2. remember that the bridge passes no valid executable hashes
-3. remember that `run_combined_checks()` itself currently covers integrity plus docs checks only
-4. remember that `SetupCheckConfig.xse_hashes` is unused by current Rust implementation even before the bridge passes an empty list
-5. if you need Address Library validation, debug `classic-scangame-core::xse::XseChecker` separately; this bridge file does not call it
+1. check the `status`, `action_count`, and typed checks before reading the rendered report text
+2. confirm the frontend passed the expected `GameId` string and selected version
+3. confirm empty strings were intended to mean missing optional paths
+4. inspect whether the relevant typed check is `Failed`, `ActionRequired`, `Skipped`, or `Unsupported`
+5. debug `classic-scangame-core::game_setup_intake` before adding bridge-side setup logic
 
 ---
 
@@ -496,10 +510,9 @@ When `run_setup_checks()` output looks weaker than the Rust setup docs suggest:
 - `src/game.rs::detect_xse_version_string()` expects a loader path even though the parameter name is `exe_path`
 - `src/game.rs` stringifies many failures as `""`; C++ callers cannot recover typed causes without adding new bridge surface
 - `src/game.rs::version_registry_get_xse_config()` drops `script_hashes`, so callers cannot build script-hash validation from this DTO alone
-- `src/scangame.rs::run_setup_checks()` accepts `game_root` but does not use it
-- `src/scangame.rs::run_setup_checks()` does not feed registry-backed executable hashes, Steam INI paths, root warning text, or Address Library expectations into Rust setup checks
-- `classic-scangame-core::run_combined_checks()` currently runs integrity and documents checks only; it does not call `classic-xse-core`
-- `classic-scangame-core::SetupCheckConfig.xse_hashes` exists publicly but is not consumed by current `run_combined_checks()` logic
+- `src/scangame.rs::run_game_setup_intake()` collapses invalid `game_id` into a fatal DTO instead of exposing a typed Rust parse error
+- `src/scangame.rs::game_setup_intake_checks()` recomputes intake separately from `run_game_setup_intake()`; keep callers aware if they call both
+- Game Setup Intake is setup-only; ENB, crashgen, Wrye, BA2, loose-file, and mod INI checks remain separate bridge calls
 
 These are current behavior notes, not recommendations for future design.
 
@@ -509,5 +522,5 @@ These are current behavior notes, not recommendations for future design.
 
 - If you need Fallout 4-only auto-detection convenience, start in `src/path.rs`.
 - If you need registry metadata, generic path lookup, PE version reads, or XSE loader/version probing, start in `src/game.rs`.
-- If you need setup-time combined text output or a cheap missing-path gate, start in `src/scangame.rs`.
+- If you need setup-time intake diagnostics or a cheap missing-path gate, start in `src/scangame.rs`.
 - If you need richer Rust behavior than the bridge exposes, change the bridge intentionally and document the new boundary in this file and the crate-level docs in the same change.

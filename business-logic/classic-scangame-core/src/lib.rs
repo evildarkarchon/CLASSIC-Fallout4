@@ -30,9 +30,9 @@ pub mod config_cache; // ConfigFileCache with encoding detection (G-03) - IMPLEM
 pub mod crashgen_orchestrator; // CrashgenCheckOrchestrator (G-07) - IMPLEMENTED
 pub mod error;
 pub mod game_report; // ScanReportBuilder + ScanValidators (G-09/G-10) - IMPLEMENTED
+pub mod game_setup_intake;
 pub mod mod_ini; // ModIniScanner orchestrator (G-04) - IMPLEMENTED
 pub mod orchestrator; // GameScanOrchestrator (G-01/G-02) - IMPLEMENTED
-pub mod setup; // SetupCoordinator orchestration (G-18) - IMPLEMENTED
 pub mod wrye; // WryeBashParser (G-05) - IMPLEMENTED
 
 // Re-export key types for convenience
@@ -45,6 +45,12 @@ pub use crashgen_orchestrator::{
 pub use enb::{EnbChecker, EnbConfigResult, EnbError, EnbResult, EnbValidationResult};
 pub use error::ScanGameError;
 pub use game_report::{ScanReportBuilder, ScanValidators};
+pub use game_setup_intake::{
+    GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake,
+    GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction,
+    GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection,
+    normalize_game_setup_version_selection,
+};
 pub use ini::{ConfigIssue, IniError, IniValidator, IssueSeverity};
 pub use integrity::{
     CheckType, GameIntegrityChecker, IntegrityCheckResult, IntegrityConfig, IntegrityError,
@@ -54,10 +60,6 @@ pub use mod_ini::{DuplicateEntry, ModIniScanResult, ModIniScanner, VsyncEntry};
 pub use orchestrator::{
     CheckResult, GameScanConfig, GameScanOrchestrator, GameScanResult, ModScanResult,
     OrchestratorError, detect_config_issues,
-};
-pub use setup::{
-    SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting,
-    needs_path_detection, resolve_effective_game_version, run_combined_checks,
 };
 pub use toml::{CrashgenChecker, TomlConfigIssue, TomlError, TomlIssueSeverity};
 pub use unpacked::{UnpackedError, UnpackedIssues, UnpackedScanner};

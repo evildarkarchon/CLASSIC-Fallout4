@@ -547,8 +547,8 @@ if (activeTier1Owners.has("config")) {
     // clearHashCache is callable without throwing.
     classic.clearHashCache();
 
-    // needsPathDetection returns object with boolean fields.
-    const result = classic.needsPathDetection();
+    // gameSetupNeedsPathDetection returns object with boolean fields.
+    const result = classic.gameSetupNeedsPathDetection();
     assert.strictEqual(typeof result.needsGamePath, "boolean");
     assert.strictEqual(typeof result.needsDocsPath, "boolean");
   });
@@ -572,8 +572,8 @@ test("Plan-5: resetFcxGlobalState callable without throwing (cross-runtime)", ()
   classic.resetFcxGlobalState();
 });
 
-test("Plan-5: migrateGameVersionSetting returns string or null (cross-runtime)", () => {
-  const result = classic.migrateGameVersionSetting("Original");
-  assert.ok(typeof result === "string" || result === null,
-    `migrateGameVersionSetting must return string or null, got ${typeof result}`);
+test("Plan-5: normalizeGameSetupVersionSelection returns string (cross-runtime)", () => {
+  const result = classic.normalizeGameSetupVersionSelection("Original");
+  assert.strictEqual(typeof result, "string",
+    `normalizeGameSetupVersionSelection must return string, got ${typeof result}`);
 });

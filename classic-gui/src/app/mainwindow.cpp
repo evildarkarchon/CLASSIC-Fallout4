@@ -1158,10 +1158,10 @@ void MainWindow::checkFirstRunPaths()
         docsPath.clear();
     }
 
-    // Ask Rust whether path detection is needed
+    // Ask Rust whether Game Setup Intake path detection is needed.
     try {
-        auto needs =
-            classic::scangame::needs_path_detection(classic::toRustString(gamePath), classic::toRustString(docsPath));
+        auto needs = classic::scangame::game_setup_needs_path_detection(classic::toRustString(gamePath),
+                                                                        classic::toRustString(docsPath));
 
         if (!needs.needs_game_path && !needs.needs_docs_path) {
             if (resolvedFromFallbacks) {

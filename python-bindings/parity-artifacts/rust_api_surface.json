@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-02T03:20:26.487664+00:00",
+  "generated_at_utc": "2026-07-08T13:15:33.170816+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -5966,6 +5966,196 @@
       "tier": "tier1"
     },
     {
+      "symbol": "GameSetupCheck",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
+      "source_expr": "game_setup_intake::GameSetupCheck",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupCheck",
+      "kind": "struct",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub struct GameSetupCheck",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupCheckKind",
+      "kind": "enum",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub enum GameSetupCheckKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupCheckKind",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
+      "source_expr": "game_setup_intake::GameSetupCheckKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupCheckState",
+      "kind": "enum",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub enum GameSetupCheckState",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupCheckState",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
+      "source_expr": "game_setup_intake::GameSetupCheckState",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupIntake",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
+      "source_expr": "game_setup_intake::GameSetupIntake",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupIntake",
+      "kind": "struct",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub struct GameSetupIntake",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupIntakeResult",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
+      "source_expr": "game_setup_intake::GameSetupIntakeResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupIntakeResult",
+      "kind": "struct",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub struct GameSetupIntakeResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupIntakeStatus",
+      "kind": "enum",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub enum GameSetupIntakeStatus",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupIntakeStatus",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
+      "source_expr": "game_setup_intake::GameSetupIntakeStatus",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupPathUpdate",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
+      "source_expr": "game_setup_intake::GameSetupPathUpdate",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupPathUpdate",
+      "kind": "struct",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub struct GameSetupPathUpdate",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupRequiredAction",
+      "kind": "enum",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub enum GameSetupRequiredAction",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupRequiredAction",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
+      "source_expr": "game_setup_intake::GameSetupRequiredAction",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupResolvedPaths",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
+      "source_expr": "game_setup_intake::GameSetupResolvedPaths",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupResolvedPaths",
+      "kind": "struct",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub struct GameSetupResolvedPaths",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupVersionFacts",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
+      "source_expr": "game_setup_intake::GameSetupVersionFacts",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameSetupVersionFacts",
+      "kind": "struct",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub struct GameSetupVersionFacts",
+      "tier": "tier1"
+    },
+    {
       "symbol": "GameVersion",
       "kind": "enum",
       "crate": "classic-scangame-core",
@@ -6379,82 +6569,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "SetupCheckConfig",
-      "kind": "reexport",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
-      "source_expr": "setup::SetupCheckConfig",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SetupCheckConfig",
-      "kind": "struct",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/setup.rs",
-      "source_decl": "pub struct SetupCheckConfig",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SetupCheckResults",
-      "kind": "reexport",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
-      "source_expr": "setup::SetupCheckResults",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SetupCheckResults",
-      "kind": "struct",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/setup.rs",
-      "source_decl": "pub struct SetupCheckResults",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SetupError",
-      "kind": "enum",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/setup.rs",
-      "source_decl": "pub enum SetupError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SetupError",
-      "kind": "reexport",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
-      "source_expr": "setup::SetupError",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SetupResult",
-      "kind": "reexport",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
-      "source_expr": "setup::SetupResult",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SetupResult",
-      "kind": "type",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/setup.rs",
-      "source_decl": "pub type SetupResult",
-      "tier": "tier1"
-    },
-    {
       "symbol": "TomlConfigIssue",
       "kind": "reexport",
       "crate": "classic-scangame-core",
@@ -6819,16 +6933,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "combined",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/setup.rs",
-      "source_decl": "pub fn combined(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "config",
       "kind": "function",
       "arity": 1,
@@ -6974,6 +7078,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "failed_checks",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn failed_checks(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "find_ba2_files",
       "kind": "function",
       "arity": 2,
@@ -6981,6 +7095,42 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/ba2.rs",
       "source_decl": "pub fn find_ba2_files(&self, dir: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub const fn",
       "tier": "tier1"
     },
     {
@@ -7020,6 +7170,25 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod game_report;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game_setup_intake",
+      "kind": "module",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub mod game_setup_intake;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game_setup_needs_path_detection",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
+      "source_expr": "game_setup_intake::game_setup_needs_path_detection",
       "tier": "tier1"
     },
     {
@@ -7068,7 +7237,7 @@
       "arity": 1,
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/setup.rs",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
       "source_decl": "pub fn has_errors(&self)",
       "tier": "tier1"
     },
@@ -7200,42 +7369,12 @@
       "tier": "tier1"
     },
     {
-      "symbol": "migrate_game_version_setting",
-      "kind": "reexport",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
-      "source_expr": "setup::migrate_game_version_setting",
-      "tier": "tier1"
-    },
-    {
       "symbol": "mod_ini",
       "kind": "module",
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub mod mod_ini;",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "needs_path_detection",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/setup.rs",
-      "source_decl": "pub fn needs_path_detection(game_path: Option<&str>, docs_path: Option<&str>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "needs_path_detection",
-      "kind": "reexport",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
-      "source_expr": "setup::needs_path_detection",
       "tier": "tier1"
     },
     {
@@ -7381,6 +7520,26 @@
     {
       "symbol": "new",
       "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn new(kind: impl Into<String>, path: PathBuf)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn new(game_id: GameId, selected_game_version: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
       "arity": 1,
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
@@ -7406,6 +7565,26 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/xse.rs",
       "source_decl": "pub fn next_gen()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "normalize_game_setup_version_selection",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn normalize_game_setup_version_selection(value: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "normalize_game_setup_version_selection",
+      "kind": "reexport",
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
+      "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
+      "source_expr": "game_setup_intake::normalize_game_setup_version_selection",
       "tier": "tier1"
     },
     {
@@ -7448,6 +7627,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "render_report",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn render_report(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "resolve_config_path",
       "kind": "function",
       "arity": 1,
@@ -7458,23 +7647,13 @@
       "tier": "tier1"
     },
     {
-      "symbol": "resolve_effective_game_version",
+      "symbol": "run",
       "kind": "function",
       "arity": 1,
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/setup.rs",
-      "source_decl": "pub fn resolve_effective_game_version(game_version: Option<&str>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "resolve_effective_game_version",
-      "kind": "reexport",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
-      "source_expr": "setup::resolve_effective_game_version",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn run(&self)",
       "tier": "tier1"
     },
     {
@@ -7485,26 +7664,6 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/integrity.rs",
       "source_decl": "pub fn run_all_checks(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "run_combined_checks",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/setup.rs",
-      "source_decl": "pub fn run_combined_checks(config: &SetupCheckConfig)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "run_combined_checks",
-      "kind": "reexport",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub use setup::{ SetupCheckConfig, SetupCheckResults, SetupError, SetupResult, migrate_game_version_setting, needs_path_detection, resolve_effective_game_version, run_combined_checks, };",
-      "source_expr": "setup::run_combined_checks",
       "tier": "tier1"
     },
     {
@@ -7568,15 +7727,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "setup",
-      "kind": "module",
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/lib.rs",
-      "source_decl": "pub mod setup;",
-      "tier": "tier1"
-    },
-    {
       "symbol": "toml",
       "kind": "module",
       "crate": "classic-scangame-core",
@@ -7591,7 +7741,7 @@
       "arity": 1,
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/setup.rs",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
       "source_decl": "pub fn total_checks(&self)",
       "tier": "tier1"
     },
@@ -7665,6 +7815,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "with_docs_root",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn with_docs_root(mut self, path: impl Into<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_game_root",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn with_game_root(mut self, path: impl Into<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "with_root_warn",
       "kind": "function",
       "arity": 2,
@@ -7692,6 +7862,16 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/config.rs",
       "source_decl": "pub fn with_whitelist(whitelist: Vec<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_xse_log_path",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn with_xse_log_path(mut self, path: impl Into<PathBuf>)",
       "tier": "tier1"
     },
     {

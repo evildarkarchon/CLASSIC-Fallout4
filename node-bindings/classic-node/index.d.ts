@@ -1809,6 +1809,15 @@ export declare function formatMessage(message: JsMessage): string
 export declare function formatVersion(version: string): string
 
 /**
+ * Check if paths need Game Setup Intake auto-detection.
+ *
+ * @param gamePath - Current game path setting (empty or null means not configured).
+ * @param docsPath - Current documents path setting (empty or null means not configured).
+ * @returns Object indicating which paths need detection.
+ */
+export declare function gameSetupNeedsPathDetection(gamePath?: string | undefined | null, docsPath?: string | undefined | null): JsPathDetectionResult
+
+/**
  * Calculate the semantic distance between two game version strings.
  *
  * Uses a weighted formula: major x1,000,000 + minor x1,000 + patch x1.
@@ -2801,6 +2810,56 @@ export interface JsGameScanResult {
   errors: Array<string>
 }
 
+/** Typed Game Setup Check result. */
+export interface JsGameSetupCheck {
+  /** Stable check kind identifier. */
+  kind: string
+  /** Stable check state identifier. */
+  state: string
+  /** Human-readable summary. */
+  message: string
+  /** Additional detail lines. */
+  details: Array<string>
+}
+
+/** Options for running Game Setup Intake from JavaScript. */
+export interface JsGameSetupIntakeOptions {
+  /** Stable game identifier, such as "Fallout4". */
+  gameId: string
+  /** Selected setup version, or "auto" to detect from the executable. */
+  gameVersion?: string
+  /** Optional game installation root. */
+  gameRoot?: string
+  /** Optional documents root. */
+  docsRoot?: string
+  /** Optional XSE log path for loader version detection. */
+  xseLogPath?: string
+}
+
+/** Result of running Game Setup Intake. */
+export interface JsGameSetupIntakeResult {
+  /** Rust-rendered report for display surfaces. */
+  renderedReport: string
+  /** Top-level intake status. */
+  status: string
+  /** Whether any diagnostic checks failed. */
+  hasErrors: boolean
+  /** Number of intake checks. */
+  totalChecks: number
+  /** Number of failed intake checks. */
+  failedChecks: number
+  /** Number of user actions required before all checks can run. */
+  actionCount: number
+  /** Number of detected paths that callers may persist. */
+  pathUpdateCount: number
+  /** Resolved game root, when known. */
+  gameRoot?: string
+  /** Resolved documents root, when known. */
+  docsRoot?: string
+  /** Typed check results for structured consumers. */
+  checks: Array<JsGameSetupCheck>
+}
+
 /** Game version enum for XSE validation. */
 export declare const enum JsGameVersion {
   /** No version detected */
@@ -3152,7 +3211,7 @@ export interface JsPathConfig {
   docsRoot?: string
 }
 
-/** Result of checking if paths need auto-detection. */
+/** Result of checking if paths need Game Setup Intake detection. */
 export interface JsPathDetectionResult {
   /** Whether game path needs detection. */
   needsGamePath: boolean
@@ -3783,26 +3842,8 @@ export interface MetricsSummaryResult {
   timings: Record<string, TimingStats>
 }
 
-/**
- * Migrate legacy game-version settings to the canonical Game Version format.
- *
- * In CLASSIC v8.0+, the "VR Mode" boolean was replaced with a
- * "Game Version" string
- * ("Original", "NextGen", "AnniversaryEdition"/"AE", "VR", "auto").
- *
- * @param gameVersion - The new Game Version setting value.
- * @returns The resolved game version string, or null if neither setting is configured.
- */
-export declare function migrateGameVersionSetting(gameVersion?: string | undefined | null): string | null
-
-/**
- * Check if paths need auto-detection.
- *
- * @param gamePath - Current game path setting (empty or null means not configured).
- * @param docsPath - Current documents path setting (empty or null means not configured).
- * @returns Object indicating which paths need detection.
- */
-export declare function needsPathDetection(gamePath?: string | undefined | null, docsPath?: string | undefined | null): JsPathDetectionResult
+/** Normalize a raw Game Setup Intake version selection. */
+export declare function normalizeGameSetupVersionSelection(version?: string | undefined | null): string
 
 /**
  * Normalize a file path, resolving symlinks and cleaning redundant components.
@@ -4032,17 +4073,6 @@ export declare function resetHashCacheStats(): void
 /** Reset the cache hit/miss counters to zero. */
 export declare function resetSettingsCacheStats(): void
 
-/**
- * Resolve the effective game version from a raw setting.
- *
- * Maps the raw Game Version setting to one of the known values,
- * defaulting to "auto" for unknown or missing values.
- *
- * @param version - The raw Game Version setting value.
- * @returns One of: "Original", "NextGen", "AnniversaryEdition", "VR", or "auto".
- */
-export declare function resolveEffectiveGameVersion(version?: string | undefined | null): string
-
 /** Resource type count entry. */
 export interface ResourceCount {
   /** Resource type name (e.g. "texture", "plugin") */
@@ -4079,6 +4109,9 @@ export declare function rollbackYamlUpdate(fileName: string): JsYamlRollbackOutc
  * as concurrent tasks.
  */
 export declare function runGameChecks(config: JsGameScanConfig): Promise<JsGameScanResult>
+
+/** Run Game Setup Intake and return both rendered and typed diagnostics. */
+export declare function runGameSetupIntake(options: JsGameSetupIntakeOptions): JsGameSetupIntakeResult
 
 /**
  * Run mod file scans (unpacked + archived) concurrently.

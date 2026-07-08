@@ -76,6 +76,18 @@ _Avoid_: record fragment, FormID finding, named record output
 The script extender folder associated with the selected game's documents location.
 _Avoid_: script extender path, docs plugin folder
 
+**Game Setup Intake**:
+The preparation of a supported game installation for setup validation. It resolves saved or detected paths, selected game version, Version Registry expectations, and setup facts; it does not persist path updates or run Crash Log analysis.
+_Avoid_: setup checks, setup config, path setup
+
+**Game Setup Check**:
+A typed validation result produced by Game Setup Intake for one setup expectation, such as executable integrity, documents folder readiness, XSE installation, or Address Library state. It is distinct from the rendered setup report text.
+_Avoid_: setup message, check string, report line
+
+**Game Setup Path Update**:
+A game or documents path discovered during Game Setup Intake that a caller may persist after the run. It is not written automatically by Game Setup Intake.
+_Avoid_: auto-save, path mutation, detected path side effect
+
 **Unsolved Logs**:
 Crash Logs and related Autoscan Reports that could not be successfully analyzed and may be moved aside for later review.
 _Avoid_: failed scans, bad logs

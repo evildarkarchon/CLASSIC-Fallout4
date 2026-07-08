@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-01T05:59:29.002418+00:00`
-- Tier-1 contract rows: **703**
-- Tier-1 matched: **703**
+- Generated: `2026-07-08T13:13:59.339677+00:00`
+- Tier-1 contract rows: **705**
+- Tier-1 matched: **705**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -127,7 +127,7 @@
 | `version-registry-promote-is-known-fallout4-version` | `version_registry` | `GameVersion` | `isKnownFallout4Version` | `matched` |
 | `version-registry-promote-parse-version` | `version_registry` | `VersionRegistryError` | `parseVersion` | `matched` |
 | `version-registry-promote-registry-get-game-version` | `version_registry` | `VersionRegistry` | `registryGetGameVersion` | `matched` |
-| `version-registry-promote-resolve-effective-game-version` | `version_registry` | `MatchConfidence` | `resolveEffectiveGameVersion` | `matched` |
+| `version_registry.MatchConfidence@rust` | `version_registry` | `MatchConfidence@rust` | `None` | `matched` |
 | `version-registry-promote-try-parse-version` | `version_registry` | `GameVersion` | `tryParseVersion` | `matched` |
 | `aux-phase4a-backup-manager` | `aux` | `BackupManager` | `BackupManager` | `matched` |
 | `aux-phase4a-docs-path-finder` | `aux` | `DocsPathFinder` | `DocsPathFinder` | `matched` |
@@ -357,7 +357,6 @@
 | `config.fcx.JsFcxConfigIssue` | `config` | `ConfigIssue` | `JsFcxConfigIssue` | `matched` |
 | `config.scangame.JsGameScanConfig` | `config` | `GameScanConfig` | `JsGameScanConfig` | `matched` |
 | `config.scangame.JsIntegrityConfig` | `config` | `IntegrityConfig` | `JsIntegrityConfig` | `matched` |
-| `config.path.JsPathDetectionResult` | `config` | `needs_path_detection` | `JsPathDetectionResult` | `matched` |
 | `config.scangame.JsTomlConfigIssue` | `config` | `TomlConfigIssue` | `JsTomlConfigIssue` | `matched` |
 | `config.version_registry.JsXseConfig` | `config` | `XseConfig` | `JsXseConfig` | `matched` |
 | `config.scangame.JsEnbConfigResult` | `config` | `EnbConfigResult` | `JsEnbConfigResult` | `matched` |
@@ -369,7 +368,6 @@
 | `config.caches.getDefaultQueryCacheCapacity` | `config` | `DEFAULT_QUERY_CACHE_CAPACITY` | `getDefaultQueryCacheCapacity` | `matched` |
 | `config.fcx.getFcxConfigIssues` | `config` | `ConfigIssue` | `getFcxConfigIssues` | `matched` |
 | `config.hash_cache.getHashCacheStats` | `config` | `FileHasher` | `getHashCacheStats` | `matched` |
-| `config.path.needsPathDetection` | `config` | `needs_path_detection` | `needsPathDetection` | `matched` |
 | `config.hash_cache.resetHashCacheStats` | `config` | `FileHasher` | `resetHashCacheStats` | `matched` |
 | `version-pe-extract` | `version_registry` | `extract_pe_version` | `extractPeVersion` | `matched` |
 | `version-pe-is-valid-path` | `version_registry` | `is_valid_executable_path` | `isValidPePath` | `matched` |
@@ -553,10 +551,6 @@
 | `scangame.ScanGameError@rust` | `scangame` | `ScanGameError@rust` | `None` | `matched` |
 | `scangame.ScanReportBuilder@rust` | `scangame` | `ScanReportBuilder@rust` | `None` | `matched` |
 | `scangame.ScanValidators@rust` | `scangame` | `ScanValidators@rust` | `None` | `matched` |
-| `scangame.SetupCheckConfig@rust` | `scangame` | `SetupCheckConfig@rust` | `None` | `matched` |
-| `scangame.SetupCheckResults@rust` | `scangame` | `SetupCheckResults@rust` | `None` | `matched` |
-| `scangame.SetupError@rust` | `scangame` | `SetupError@rust` | `None` | `matched` |
-| `scangame.SetupResult@rust` | `scangame` | `SetupResult@rust` | `None` | `matched` |
 | `scangame.TomlError@rust` | `scangame` | `TomlError@rust` | `None` | `matched` |
 | `scangame.TomlIssueSeverity@rust` | `scangame` | `TomlIssueSeverity@rust` | `None` | `matched` |
 | `scangame.UnpackedError@rust` | `scangame` | `UnpackedError@rust` | `None` | `matched` |
@@ -579,11 +573,7 @@
 | `scangame.ini@rust` | `scangame` | `ini@rust` | `None` | `matched` |
 | `scangame.integrity@rust` | `scangame` | `integrity@rust` | `None` | `matched` |
 | `scangame.logs@rust` | `scangame` | `logs@rust` | `None` | `matched` |
-| `scangame.migrate_game_version_setting@rust` | `scangame` | `migrate_game_version_setting@rust` | `None` | `matched` |
 | `scangame.mod_ini@rust` | `scangame` | `mod_ini@rust` | `None` | `matched` |
-| `scangame.resolve_effective_game_version@rust` | `scangame` | `resolve_effective_game_version@rust` | `None` | `matched` |
-| `scangame.run_combined_checks@rust` | `scangame` | `run_combined_checks@rust` | `None` | `matched` |
-| `scangame.setup@rust` | `scangame` | `setup@rust` | `None` | `matched` |
 | `scangame.toml@rust` | `scangame` | `toml@rust` | `None` | `matched` |
 | `scangame.unpacked@rust` | `scangame` | `unpacked@rust` | `None` | `matched` |
 | `scangame.wrye@rust` | `scangame` | `wrye@rust` | `None` | `matched` |
@@ -710,11 +700,23 @@
 | `scanlog.JsLogger` | `scanlog` | `Logger` | `JsLogger` | `matched` |
 | `scanlog.createLogger` | `scanlog` | `Logger` | `createLogger` | `matched` |
 | `aux.getApplicationDir` | `aux` | `get_application_dir` | `getApplicationDir` | `matched` |
-| `version_registry.migrateGameVersionSetting` | `version_registry` | `migrate_game_version_setting` | `migrateGameVersionSetting` | `matched` |
 | `scanlog.processGameLogs` | `scanlog` | `LogProcessor` | `processGameLogs` | `matched` |
 | `aux.resetFcxGlobalState` | `aux` | `FcxModeHandler` | `resetFcxGlobalState` | `matched` |
 | `aux.setApplicationDir` | `aux` | `set_application_dir` | `setApplicationDir` | `matched` |
 | `aux.writeAutoscanReport` | `aux` | `FileIOCore` | `writeAutoscanReport` | `matched` |
+| `scangame.JsGameSetupCheck` | `scangame` | `GameSetupCheck` | `JsGameSetupCheck` | `matched` |
+| `scangame.JsGameSetupIntakeOptions` | `scangame` | `GameSetupIntake` | `JsGameSetupIntakeOptions` | `matched` |
+| `scangame.JsGameSetupIntakeResult` | `scangame` | `GameSetupIntakeResult` | `JsGameSetupIntakeResult` | `matched` |
+| `scangame.JsPathDetectionResult` | `scangame` | `game_setup_needs_path_detection` | `JsPathDetectionResult` | `matched` |
+| `scangame.gameSetupNeedsPathDetection` | `scangame` | `game_setup_needs_path_detection` | `gameSetupNeedsPathDetection` | `matched` |
+| `scangame.normalizeGameSetupVersionSelection` | `scangame` | `normalize_game_setup_version_selection` | `normalizeGameSetupVersionSelection` | `matched` |
+| `scangame.runGameSetupIntake` | `scangame` | `GameSetupIntake` | `runGameSetupIntake` | `matched` |
+| `scangame.GameSetupIntake@rust` | `scangame` | `GameSetupIntake@rust` | `None` | `matched` |
+| `scangame.GameSetupIntakeResult@rust` | `scangame` | `GameSetupIntakeResult@rust` | `None` | `matched` |
+| `scangame.GameSetupCheck@rust` | `scangame` | `GameSetupCheck@rust` | `None` | `matched` |
+| `scangame.game_setup_intake@rust` | `scangame` | `game_setup_intake@rust` | `None` | `matched` |
+| `scangame.game_setup_needs_path_detection@rust` | `scangame` | `game_setup_needs_path_detection@rust` | `None` | `matched` |
+| `scangame.normalize_game_setup_version_selection@rust` | `scangame` | `normalize_game_setup_version_selection@rust` | `None` | `matched` |
 
 ## Gap Counts By Owner/Tier
 

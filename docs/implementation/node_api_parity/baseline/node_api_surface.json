@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-01T03:13:40.254234+00:00",
+  "generated_at_utc": "2026-07-08T13:13:59.338406+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -517,6 +517,30 @@
       "signature": "export interface JsGameScanResult {"
     },
     {
+      "export": "JsGameSetupCheck",
+      "kind": "interface",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsGameSetupCheck {"
+    },
+    {
+      "export": "JsGameSetupIntakeOptions",
+      "kind": "interface",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsGameSetupIntakeOptions {"
+    },
+    {
+      "export": "JsGameSetupIntakeResult",
+      "kind": "interface",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsGameSetupIntakeResult {"
+    },
+    {
       "export": "JsGameVersion",
       "kind": "const_enum",
       "owner_module": "version_registry",
@@ -751,7 +775,7 @@
     {
       "export": "JsPathDetectionResult",
       "kind": "interface",
-      "owner_module": "config",
+      "owner_module": "scangame",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsPathDetectionResult {"
@@ -803,6 +827,22 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsRuleTarget {"
+    },
+    {
+      "export": "JsScanRunLogResult",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunLogResult {"
+    },
+    {
+      "export": "JsScanRunOptions",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunOptions {"
     },
     {
       "export": "JsSuspectErrorRule",
@@ -1566,6 +1606,15 @@
       "arity": 1
     },
     {
+      "export": "gameSetupNeedsPathDetection",
+      "kind": "function",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function gameSetupNeedsPathDetection(gamePath?: string | undefined | null, docsPath?: string | undefined | null): JsPathDetectionResult",
+      "arity": 2
+    },
+    {
       "export": "gameVersionDistance",
       "kind": "function",
       "owner_module": "version_registry",
@@ -2277,22 +2326,13 @@
       "arity": 3
     },
     {
-      "export": "migrateGameVersionSetting",
+      "export": "normalizeGameSetupVersionSelection",
       "kind": "function",
-      "owner_module": "version_registry",
+      "owner_module": "scangame",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function migrateGameVersionSetting(gameVersion?: string | undefined | null): string | null",
+      "signature": "export declare function normalizeGameSetupVersionSelection(version?: string | undefined | null): string",
       "arity": 1
-    },
-    {
-      "export": "needsPathDetection",
-      "kind": "function",
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function needsPathDetection(gamePath?: string | undefined | null, docsPath?: string | undefined | null): JsPathDetectionResult",
-      "arity": 2
     },
     {
       "export": "normalizePath",
@@ -2556,15 +2596,6 @@
       "arity": 0
     },
     {
-      "export": "resolveEffectiveGameVersion",
-      "kind": "function",
-      "owner_module": "version_registry",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function resolveEffectiveGameVersion(version?: string | undefined | null): string",
-      "arity": 1
-    },
-    {
       "export": "rollbackYamlUpdate",
       "kind": "function",
       "owner_module": "config",
@@ -2580,6 +2611,15 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function runGameChecks(config: JsGameScanConfig): Promise<JsGameScanResult>",
+      "arity": 1
+    },
+    {
+      "export": "runGameSetupIntake",
+      "kind": "function",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function runGameSetupIntake(options: JsGameSetupIntakeOptions): JsGameSetupIntakeResult",
       "arity": 1
     },
     {
@@ -2607,6 +2647,15 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function scanModInis(gameRoot: string, gameName: string): JsModIniScanResult",
+      "arity": 2
+    },
+    {
+      "export": "scanRunExecute",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanRunExecute(logPaths: Array<string>, options: JsScanRunOptions): Promise<Array<JsScanRunLogResult>>",
       "arity": 2
     },
     {

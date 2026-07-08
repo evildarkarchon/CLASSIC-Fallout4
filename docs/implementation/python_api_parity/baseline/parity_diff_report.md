@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-01T06:01:07.703097+00:00`
-- Tier-1 contract rows: **1092**
-- Tier-1 matched: **1092**
+- Generated: `2026-07-08T13:15:29.213770+00:00`
+- Tier-1 contract rows: **1084**
+- Tier-1 matched: **1084**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -501,7 +501,6 @@
 | `scangame.integrity.IntegrityConfig.__init__` | `scangame` | `IntegrityConfig` | `classic_scangame.IntegrityConfig.__init__` | `matched` |
 | `scangame.integrity.IntegrityConfig.with_root_warn` | `scangame` | `IntegrityConfig` | `classic_scangame.IntegrityConfig.with_root_warn` | `matched` |
 | `scangame.integrity.IntegrityConfig.with_steam_ini` | `scangame` | `IntegrityConfig` | `classic_scangame.IntegrityConfig.with_steam_ini` | `matched` |
-| `scangame.lib.needs_path_detection` | `scangame` | `needs_path_detection` | `classic_scangame.needs_path_detection` | `matched` |
 | `scangame.logs.LogErrorEntry` | `scangame` | `LogErrorEntry` | `classic_scangame.LogErrorEntry` | `matched` |
 | `scangame.logs.LogProcessor` | `scangame` | `LogProcessor` | `classic_scangame.LogProcessor` | `matched` |
 | `scangame.logs.LogProcessor.__init__` | `scangame` | `LogProcessor` | `classic_scangame.LogProcessor.__init__` | `matched` |
@@ -517,15 +516,6 @@
 | `scangame.orchestrator.GameScanOrchestrator.run_mod_scans` | `scangame` | `GameScanOrchestrator` | `classic_scangame.GameScanOrchestrator.run_mod_scans` | `matched` |
 | `scangame.orchestrator.GameScanResult` | `scangame` | `GameScanResult` | `classic_scangame.GameScanResult` | `matched` |
 | `scangame.orchestrator.ModScanResult` | `scangame` | `ModScanResult` | `classic_scangame.ModScanResult` | `matched` |
-| `scangame.setup.SetupCheckConfig` | `scangame` | `SetupCheckConfig` | `classic_scangame.SetupCheckConfig` | `matched` |
-| `scangame.setup.SetupCheckConfig.__init__` | `scangame` | `SetupCheckConfig` | `classic_scangame.SetupCheckConfig.__init__` | `matched` |
-| `scangame.setup.SetupCheckResults` | `scangame` | `SetupCheckResults` | `classic_scangame.SetupCheckResults` | `matched` |
-| `scangame.setup.SetupCheckResults.combined` | `scangame` | `SetupCheckResults` | `classic_scangame.SetupCheckResults.combined` | `matched` |
-| `scangame.setup.SetupCheckResults.has_errors` | `scangame` | `SetupCheckResults` | `classic_scangame.SetupCheckResults.has_errors` | `matched` |
-| `scangame.setup.SetupCheckResults.total_checks` | `scangame` | `SetupCheckResults` | `classic_scangame.SetupCheckResults.total_checks` | `matched` |
-| `scangame.setup.migrate_game_version_setting` | `scangame` | `SetupCheckConfig` | `classic_scangame.migrate_game_version_setting` | `matched` |
-| `scangame.setup.resolve_effective_game_version` | `scangame` | `SetupCheckConfig` | `classic_scangame.resolve_effective_game_version` | `matched` |
-| `scangame.setup.run_setup_checks` | `scangame` | `SetupCheckConfig` | `classic_scangame.run_setup_checks` | `matched` |
 | `scangame.toml_check.CrashgenChecker` | `scangame` | `CrashgenChecker` | `classic_scangame.CrashgenChecker` | `matched` |
 | `scangame.toml_check.CrashgenChecker.__init__` | `scangame` | `CrashgenChecker` | `classic_scangame.CrashgenChecker.__init__` | `matched` |
 | `scangame.toml_check.CrashgenChecker.check` | `scangame` | `CrashgenChecker` | `classic_scangame.CrashgenChecker.check` | `matched` |
@@ -565,8 +555,6 @@
 | `scangame.xse.ScanGameError@rust` | `scangame` | `ScanGameError` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.ScanReportBuilder@rust` | `scangame` | `ScanReportBuilder` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.ScanValidators@rust` | `scangame` | `ScanValidators` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.SetupError@rust` | `scangame` | `SetupError` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.SetupResult@rust` | `scangame` | `SetupResult` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.TomlError@rust` | `scangame` | `TomlError` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.UnpackedError@rust` | `scangame` | `UnpackedError` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.VERSION@rust` | `scangame` | `VERSION` | `classic_scangame.AddressLibInfo` | `matched` |
@@ -586,11 +574,7 @@
 | `scangame.xse.ini@rust` | `scangame` | `ini` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.integrity@rust` | `scangame` | `integrity` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.logs@rust` | `scangame` | `logs` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.migrate_game_version_setting@rust` | `scangame` | `migrate_game_version_setting` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.mod_ini@rust` | `scangame` | `mod_ini` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.resolve_effective_game_version@rust` | `scangame` | `resolve_effective_game_version` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.run_combined_checks@rust` | `scangame` | `run_combined_checks` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scangame.xse.setup@rust` | `scangame` | `setup` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.toml@rust` | `scangame` | `toml` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.unpacked@rust` | `scangame` | `unpacked` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.wrye@rust` | `scangame` | `wrye` | `classic_scangame.AddressLibInfo` | `matched` |
@@ -1104,6 +1088,14 @@
 | `yaml.lib.save_yaml_file@rust` | `settings` | `save_yaml_file` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.set_cache_enabled@rust` | `settings` | `set_cache_enabled` | `classic_settings.YamlCacheStats` | `matched` |
 | `yaml.lib.set_setting@rust` | `settings` | `set_setting` | `classic_settings.YamlCacheStats` | `matched` |
+| `scangame.setup.GameSetupIntake` | `scangame` | `GameSetupIntake` | `classic_scangame.GameSetupIntake` | `matched` |
+| `scangame.setup.GameSetupIntake.__init__` | `scangame` | `GameSetupIntake` | `classic_scangame.GameSetupIntake.__init__` | `matched` |
+| `scangame.setup.GameSetupCheck` | `scangame` | `GameSetupCheck` | `classic_scangame.GameSetupCheck` | `matched` |
+| `scangame.setup.GameSetupIntakeResult` | `scangame` | `GameSetupIntakeResult` | `classic_scangame.GameSetupIntakeResult` | `matched` |
+| `scangame.setup.GameSetupIntakeResult.combined` | `scangame` | `GameSetupIntakeResult` | `classic_scangame.GameSetupIntakeResult.combined` | `matched` |
+| `scangame.setup.run_game_setup_intake` | `scangame` | `GameSetupIntake` | `classic_scangame.run_game_setup_intake` | `matched` |
+| `scangame.setup.game_setup_needs_path_detection` | `scangame` | `game_setup_needs_path_detection` | `classic_scangame.game_setup_needs_path_detection` | `matched` |
+| `scangame.setup.normalize_game_setup_version_selection` | `scangame` | `normalize_game_setup_version_selection` | `classic_scangame.normalize_game_setup_version_selection` | `matched` |
 
 ## Gap Counts By Owner/Tier
 

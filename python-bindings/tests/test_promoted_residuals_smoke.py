@@ -896,9 +896,25 @@ def test_scangame_game_scan_orchestrator_construct() -> None:
     assert orch is not None
 
 
-def test_scangame_setup_check_results_is_a_type() -> None:
-    assert classic_scangame.SetupCheckResults is not None
-    assert isinstance(classic_scangame.SetupCheckResults, type)
+def test_scangame_game_setup_intake_result_is_a_type() -> None:
+    assert classic_scangame.GameSetupIntakeResult is not None
+    assert isinstance(classic_scangame.GameSetupIntakeResult, type)
+
+
+def test_scangame_game_setup_intake_helpers_smoke() -> None:
+    assert classic_scangame.normalize_game_setup_version_selection("AE") == (
+        "AnniversaryEdition"
+    )
+    assert classic_scangame.game_setup_needs_path_detection(None, None) == (True, True)
+
+    intake = classic_scangame.GameSetupIntake("Fallout4", "auto")
+    result = classic_scangame.run_game_setup_intake(intake)
+
+    assert isinstance(result, classic_scangame.GameSetupIntakeResult)
+    assert result.status == "action_required"
+    assert result.action_count >= 1
+    assert result.total_checks == len(result.checks)
+    assert result.combined() == result.rendered_report
 
 
 def test_scangame_toml_issue_severity_is_a_type() -> None:

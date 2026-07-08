@@ -5039,16 +5039,6 @@
       "pythonKind": "method"
     },
     {
-      "id": "scangame.lib.needs_path_detection",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "needs_path_detection",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "needs_path_detection",
-      "pythonKind": "function"
-    },
-    {
       "id": "scangame.logs.LogErrorEntry",
       "tier": "tier1",
       "ownerModule": "scangame",
@@ -5197,96 +5187,6 @@
       "pythonModule": "classic_scangame",
       "pythonExportPath": "ModScanResult",
       "pythonKind": "class"
-    },
-    {
-      "id": "scangame.setup.SetupCheckConfig",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupCheckConfig",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "SetupCheckConfig",
-      "pythonKind": "class"
-    },
-    {
-      "id": "scangame.setup.SetupCheckConfig.__init__",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupCheckConfig",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "SetupCheckConfig.__init__",
-      "pythonKind": "method"
-    },
-    {
-      "id": "scangame.setup.SetupCheckResults",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupCheckResults",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "SetupCheckResults",
-      "pythonKind": "class"
-    },
-    {
-      "id": "scangame.setup.SetupCheckResults.combined",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupCheckResults",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "SetupCheckResults.combined",
-      "pythonKind": "method"
-    },
-    {
-      "id": "scangame.setup.SetupCheckResults.has_errors",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupCheckResults",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "SetupCheckResults.has_errors",
-      "pythonKind": "method"
-    },
-    {
-      "id": "scangame.setup.SetupCheckResults.total_checks",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupCheckResults",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "SetupCheckResults.total_checks",
-      "pythonKind": "method"
-    },
-    {
-      "id": "scangame.setup.migrate_game_version_setting",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupCheckConfig",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "migrate_game_version_setting",
-      "pythonKind": "function"
-    },
-    {
-      "id": "scangame.setup.resolve_effective_game_version",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupCheckConfig",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "resolve_effective_game_version",
-      "pythonKind": "function"
-    },
-    {
-      "id": "scangame.setup.run_setup_checks",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupCheckConfig",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "run_setup_checks",
-      "pythonKind": "function"
     },
     {
       "id": "scangame.toml_check.CrashgenChecker",
@@ -5679,26 +5579,6 @@
       "pythonKind": "class"
     },
     {
-      "id": "scangame.xse.SetupError@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupError",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "AddressLibInfo",
-      "pythonKind": "class"
-    },
-    {
-      "id": "scangame.xse.SetupResult@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "SetupResult",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "AddressLibInfo",
-      "pythonKind": "class"
-    },
-    {
       "id": "scangame.xse.TomlError@rust",
       "tier": "tier1",
       "ownerModule": "scangame",
@@ -5889,51 +5769,11 @@
       "pythonKind": "class"
     },
     {
-      "id": "scangame.xse.migrate_game_version_setting@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "migrate_game_version_setting",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "AddressLibInfo",
-      "pythonKind": "class"
-    },
-    {
       "id": "scangame.xse.mod_ini@rust",
       "tier": "tier1",
       "ownerModule": "scangame",
       "rustCrate": "classic-scangame-core",
       "rustSymbol": "mod_ini",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "AddressLibInfo",
-      "pythonKind": "class"
-    },
-    {
-      "id": "scangame.xse.resolve_effective_game_version@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "resolve_effective_game_version",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "AddressLibInfo",
-      "pythonKind": "class"
-    },
-    {
-      "id": "scangame.xse.run_combined_checks@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "run_combined_checks",
-      "pythonModule": "classic_scangame",
-      "pythonExportPath": "AddressLibInfo",
-      "pythonKind": "class"
-    },
-    {
-      "id": "scangame.xse.setup@rust",
-      "tier": "tier1",
-      "ownerModule": "scangame",
-      "rustCrate": "classic-scangame-core",
-      "rustSymbol": "setup",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "AddressLibInfo",
       "pythonKind": "class"
@@ -11316,6 +11156,86 @@
       "pythonModule": "classic_settings",
       "pythonExportPath": "YamlCacheStats",
       "pythonKind": "class"
+    },
+    {
+      "id": "scangame.setup.GameSetupIntake",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupIntake",
+      "pythonModule": "classic_scangame",
+      "pythonExportPath": "GameSetupIntake",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scangame.setup.GameSetupIntake.__init__",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupIntake",
+      "pythonModule": "classic_scangame",
+      "pythonExportPath": "GameSetupIntake.__init__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scangame.setup.GameSetupCheck",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupCheck",
+      "pythonModule": "classic_scangame",
+      "pythonExportPath": "GameSetupCheck",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scangame.setup.GameSetupIntakeResult",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupIntakeResult",
+      "pythonModule": "classic_scangame",
+      "pythonExportPath": "GameSetupIntakeResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scangame.setup.GameSetupIntakeResult.combined",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupIntakeResult",
+      "pythonModule": "classic_scangame",
+      "pythonExportPath": "GameSetupIntakeResult.combined",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scangame.setup.run_game_setup_intake",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupIntake",
+      "pythonModule": "classic_scangame",
+      "pythonExportPath": "run_game_setup_intake",
+      "pythonKind": "function"
+    },
+    {
+      "id": "scangame.setup.game_setup_needs_path_detection",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "game_setup_needs_path_detection",
+      "pythonModule": "classic_scangame",
+      "pythonExportPath": "game_setup_needs_path_detection",
+      "pythonKind": "function"
+    },
+    {
+      "id": "scangame.setup.normalize_game_setup_version_selection",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "normalize_game_setup_version_selection",
+      "pythonModule": "classic_scangame",
+      "pythonExportPath": "normalize_game_setup_version_selection",
+      "pythonKind": "function"
     }
   ]
 }

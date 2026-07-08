@@ -1,15 +1,16 @@
 //! Game file scanning bridge for CXX FFI.
 //!
-//! Bridges `classic_scangame_core` for setup checks, path detection,
+//! Bridges `classic_scangame_core` for Game Setup Intake, path detection,
 //! and the BA2 / INI / ENB / TOML / Wrye / Integrity / Setup / Crashgen sub-domain checkers.
 
 use classic_scangame_core::integrity::IntegrityConfig;
-use classic_scangame_core::setup::{
-    SetupCheckConfig, SetupCheckResults, needs_path_detection as core_needs_path_detection,
-    run_combined_checks,
+use classic_scangame_core::{
+    GameSetupCheck, GameSetupIntake, GameSetupIntakeResult,
+    game_setup_needs_path_detection as core_game_setup_needs_path_detection,
 };
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 use classic_scangame_core::crashgen_orchestrator::{
     CrashgenCheckOrchestrator, CrashgenReport as CoreCrashgenReport,
@@ -31,41 +32,57 @@ use classic_scangame_core::{
     BA2Scanner, EnbChecker, EnbConfigResult as CoreEnbConfigResult, EnbResult as CoreEnbResult,
     IniValidator, IssueSeverity as CoreIniIssueSeverity,
 };
+use classic_shared_core::GameId;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EXISTING entry points (D-08 — UNCHANGED)
+// Game Setup Intake entry points
 // ─────────────────────────────────────────────────────────────────────────────
 
-fn run_setup_checks(
-    game_exe_path: &str,
-    _game_root: &str,
+fn run_game_setup_intake(
+    game_id: &str,
+    game_version: &str,
+    game_root: &str,
     docs_path: &str,
-    game_name: &str,
-) -> ffi::SetupCheckResult {
-    let integrity = IntegrityConfig::new(
-        PathBuf::from(game_exe_path),
-        Vec::new(),
-        game_name.to_string(),
-    );
-    let config = SetupCheckConfig {
-        integrity,
-        game_name: game_name.to_string(),
-        docs_path: if docs_path.is_empty() {
-            None
-        } else {
-            Some(docs_path.to_string())
+    xse_log_path: &str,
+) -> ffi::GameSetupIntakeDto {
+    match execute_game_setup_intake(game_id, game_version, game_root, docs_path, xse_log_path) {
+        Ok(result) => game_setup_result_to_dto(result),
+        Err(message) => ffi::GameSetupIntakeDto {
+            rendered_report: format!("Game Setup Intake failed: {message}\n"),
+            status: "fatal_error".to_string(),
+            has_errors: true,
+            total_checks: 0,
+            failed_checks: 0,
+            action_count: 0,
+            path_update_count: 0,
+            game_root: String::new(),
+            docs_root: String::new(),
         },
-        xse_hashes: Vec::new(),
-    };
-    let results = run_combined_checks(&config);
-    ffi::SetupCheckResult {
-        combined_output: results.combined(),
-        has_errors: results.has_errors(),
-        total_checks: results.total_checks() as u32,
     }
 }
 
-fn needs_path_detection(game_path: &str, docs_path: &str) -> ffi::PathDetectionNeeds {
+fn game_setup_intake_checks(
+    game_id: &str,
+    game_version: &str,
+    game_root: &str,
+    docs_path: &str,
+    xse_log_path: &str,
+) -> Vec<ffi::GameSetupCheckDto> {
+    execute_game_setup_intake(game_id, game_version, game_root, docs_path, xse_log_path)
+        .map(|result| {
+            result
+                .checks
+                .into_iter()
+                .map(game_setup_check_to_dto)
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn game_setup_needs_path_detection(
+    game_path: &str,
+    docs_path: &str,
+) -> ffi::GameSetupPathDetectionNeeds {
     let gp = if game_path.is_empty() {
         None
     } else {
@@ -76,10 +93,65 @@ fn needs_path_detection(game_path: &str, docs_path: &str) -> ffi::PathDetectionN
     } else {
         Some(docs_path)
     };
-    let (need_game, need_docs) = core_needs_path_detection(gp, dp);
-    ffi::PathDetectionNeeds {
+    let (need_game, need_docs) = core_game_setup_needs_path_detection(gp, dp);
+    ffi::GameSetupPathDetectionNeeds {
         needs_game_path: need_game,
         needs_docs_path: need_docs,
+    }
+}
+
+fn execute_game_setup_intake(
+    game_id: &str,
+    game_version: &str,
+    game_root: &str,
+    docs_path: &str,
+    xse_log_path: &str,
+) -> Result<GameSetupIntakeResult, String> {
+    let game_id = GameId::from_str(game_id).map_err(|error| error.to_string())?;
+    let mut intake = GameSetupIntake::new(game_id, game_version);
+    if !game_root.trim().is_empty() {
+        intake = intake.with_game_root(PathBuf::from(game_root));
+    }
+    if !docs_path.trim().is_empty() {
+        intake = intake.with_docs_root(PathBuf::from(docs_path));
+    }
+    if !xse_log_path.trim().is_empty() {
+        intake = intake.with_xse_log_path(PathBuf::from(xse_log_path));
+    }
+    Ok(intake.run())
+}
+
+fn game_setup_result_to_dto(result: GameSetupIntakeResult) -> ffi::GameSetupIntakeDto {
+    let has_errors = result.has_errors();
+    let total_checks = result.total_checks() as u32;
+    let failed_checks = result.failed_checks() as u32;
+    ffi::GameSetupIntakeDto {
+        rendered_report: result.rendered_report,
+        status: result.status.as_str().to_string(),
+        has_errors,
+        total_checks,
+        failed_checks,
+        action_count: result.actions.len() as u32,
+        path_update_count: result.path_updates.len() as u32,
+        game_root: result
+            .paths
+            .game_root
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        docs_root: result
+            .paths
+            .docs_root
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+    }
+}
+
+fn game_setup_check_to_dto(check: GameSetupCheck) -> ffi::GameSetupCheckDto {
+    ffi::GameSetupCheckDto {
+        kind: check.kind.as_str().to_string(),
+        state: check.state.as_str().to_string(),
+        message: check.message,
+        details: check.details.join("\n"),
     }
 }
 
@@ -443,55 +515,8 @@ fn integrity_run_all_checks(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Setup orchestrator structured DTO — REAL run_combined_checks (Codex HIGH)
-// Additive alongside existing run_setup_checks (D-08)
+// Setup orchestration now flows through Game Setup Intake above.
 // ─────────────────────────────────────────────────────────────────────────────
-
-/// Run combined setup checks and return a structured DTO with counts.
-///
-/// The counts come from REAL `SetupCheckResults` vector lengths (Codex HIGH correction).
-/// Returns error DTO if game_exe_path or game_name is empty.
-fn scangame_run_setup_structured(
-    game_exe_path: &str,
-    valid_hashes: &[String],
-    root_name: &str,
-    game_name: &str,
-    docs_path: &str,
-) -> ffi::ScanGameSetupDto {
-    if game_exe_path.is_empty() || game_name.is_empty() {
-        return ffi::ScanGameSetupDto {
-            check_count: 0,
-            error_count: 1,
-            has_errors: true,
-        };
-    }
-    let integrity = IntegrityConfig::new(
-        PathBuf::from(game_exe_path),
-        valid_hashes.to_vec(),
-        root_name.to_string(),
-    );
-    let docs = if docs_path.is_empty() {
-        None
-    } else {
-        Some(docs_path.to_string())
-    };
-    let config = SetupCheckConfig {
-        integrity,
-        game_name: game_name.to_string(),
-        docs_path: docs,
-        xse_hashes: Vec::new(),
-    };
-    let results: SetupCheckResults = run_combined_checks(&config);
-    // Counts from REAL Vec field lengths (Codex HIGH correction)
-    let total_checks = results.total_checks() as u32;
-    let error_count = results.errors.len() as u32;
-    let has_errors = results.has_errors();
-    ffi::ScanGameSetupDto {
-        check_count: total_checks,
-        error_count,
-        has_errors,
-    }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CrashgenOrchestrator — REAL CrashgenCheckOrchestrator + REAL CrashgenReport
@@ -571,14 +596,27 @@ fn crashgen_orchestrator_get_installed_plugins(
 
 #[cxx::bridge(namespace = "classic::scangame")]
 mod ffi {
-    // ── Existing shared structs (D-08 — KEEP UNCHANGED) ─────────────────────
-    struct SetupCheckResult {
-        combined_output: String,
+    // ── Game Setup Intake DTOs ───────────────────────────────────────────────
+    struct GameSetupIntakeDto {
+        rendered_report: String,
+        status: String,
         has_errors: bool,
         total_checks: u32,
+        failed_checks: u32,
+        action_count: u32,
+        path_update_count: u32,
+        game_root: String,
+        docs_root: String,
     }
 
-    struct PathDetectionNeeds {
+    struct GameSetupCheckDto {
+        kind: String,
+        state: String,
+        message: String,
+        details: String,
+    }
+
+    struct GameSetupPathDetectionNeeds {
         needs_game_path: bool,
         needs_docs_path: bool,
     }
@@ -705,13 +743,6 @@ mod ffi {
         check_type: CheckType,
     }
 
-    /// Setup orchestrator DTO — counts computed from REAL SetupCheckResults vec lengths.
-    struct ScanGameSetupDto {
-        check_count: u32,
-        error_count: u32,
-        has_errors: bool,
-    }
-
     /// CrashgenChecker.check() summary — (report_text, issue_count).
     /// Full issue list accessible via crashgen_checker_get_issues (Pitfall 6 separation).
     struct CrashgenCheckResultDto {
@@ -732,15 +763,27 @@ mod ffi {
     }
 
     extern "Rust" {
-        // ── Existing fns (D-08 — UNCHANGED) ─────────────────────────────────
-        fn run_setup_checks(
-            game_exe_path: &str,
+        // ── Game Setup Intake ───────────────────────────────────────────────
+        fn run_game_setup_intake(
+            game_id: &str,
+            game_version: &str,
             game_root: &str,
             docs_path: &str,
-            game_name: &str,
-        ) -> SetupCheckResult;
+            xse_log_path: &str,
+        ) -> GameSetupIntakeDto;
 
-        fn needs_path_detection(game_path: &str, docs_path: &str) -> PathDetectionNeeds;
+        fn game_setup_intake_checks(
+            game_id: &str,
+            game_version: &str,
+            game_root: &str,
+            docs_path: &str,
+            xse_log_path: &str,
+        ) -> Vec<GameSetupCheckDto>;
+
+        fn game_setup_needs_path_detection(
+            game_path: &str,
+            docs_path: &str,
+        ) -> GameSetupPathDetectionNeeds;
 
         // ── BA2 sub-domain (REAL BA2Scanner behind the scenes) ───────────────
         fn ba2_scan_archive_summary(archive_path: &str) -> Ba2IssuesSummaryDto;
@@ -782,15 +825,6 @@ mod ffi {
             valid_hashes: &[String],
             root_name: &str,
         ) -> Vec<IntegrityCheckResultDto>;
-
-        // ── Setup orchestrator structured DTO (alongside existing run_setup_checks) ─
-        fn scangame_run_setup_structured(
-            game_exe_path: &str,
-            valid_hashes: &[String],
-            root_name: &str,
-            game_name: &str,
-            docs_path: &str,
-        ) -> ScanGameSetupDto;
 
         // ── CrashgenOrchestrator (REAL CrashgenCheckOrchestrator) ─────────────
         fn crashgen_orchestrator_check_summary(

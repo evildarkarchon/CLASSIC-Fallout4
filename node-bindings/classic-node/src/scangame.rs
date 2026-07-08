@@ -5,6 +5,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 
 use classic_scangame_core::enb::{EnbChecker, EnbConfigResult, EnbResult};
 use classic_scangame_core::ini::IssueSeverity;
@@ -17,9 +18,10 @@ use classic_scangame_core::xse::{
     AddressLibInfo, GameVersion, ValidationResult, XseChecker as CoreXseChecker,
 };
 use classic_scangame_core::{
-    BA2Scanner, ConfigDuplicateDetector, CrashgenChecker, IniValidator, LogProcessor,
-    UnpackedScanner,
+    BA2Scanner, ConfigDuplicateDetector, CrashgenChecker, GameSetupCheck, GameSetupIntake,
+    GameSetupIntakeResult, IniValidator, LogProcessor, UnpackedScanner,
 };
+use classic_shared_core::GameId;
 use napi::bindgen_prelude::*;
 
 use crate::crashgen_rules::{JsCrashgenSettingsRules, js_rules_to_core};
@@ -1538,37 +1540,63 @@ pub fn scan_mod_inis(game_root: String, game_name: String) -> napi::Result<JsMod
 }
 
 // ============================================================================
-// 14. Setup Checking
+// 14. Game Setup Intake
 // ============================================================================
 
-/// Migrate legacy game-version settings to the canonical Game Version format.
-///
-/// In CLASSIC v8.0+, the "VR Mode" boolean was replaced with a
-/// "Game Version" string
-/// ("Original", "NextGen", "AnniversaryEdition"/"AE", "VR", "auto").
-///
-/// @param gameVersion - The new Game Version setting value.
-/// @returns The resolved game version string, or null if neither setting is configured.
-#[napi]
-pub fn migrate_game_version_setting(game_version: Option<String>) -> Option<String> {
-    game_version.map(|version| {
-        classic_scangame_core::setup::resolve_effective_game_version(Some(&version)).to_string()
-    })
+/// Options for running Game Setup Intake from JavaScript.
+#[napi(object)]
+pub struct JsGameSetupIntakeOptions {
+    /// Stable game identifier, such as "Fallout4".
+    pub game_id: String,
+    /// Selected setup version, or "auto" to detect from the executable.
+    pub game_version: Option<String>,
+    /// Optional game installation root.
+    pub game_root: Option<String>,
+    /// Optional documents root.
+    pub docs_root: Option<String>,
+    /// Optional XSE log path for loader version detection.
+    pub xse_log_path: Option<String>,
 }
 
-/// Resolve the effective game version from a raw setting.
-///
-/// Maps the raw Game Version setting to one of the known values,
-/// defaulting to "auto" for unknown or missing values.
-///
-/// @param version - The raw Game Version setting value.
-/// @returns One of: "Original", "NextGen", "AnniversaryEdition", "VR", or "auto".
-#[napi]
-pub fn resolve_effective_game_version(version: Option<String>) -> String {
-    classic_scangame_core::setup::resolve_effective_game_version(version.as_deref()).to_string()
+/// Typed Game Setup Check result.
+#[napi(object)]
+pub struct JsGameSetupCheck {
+    /// Stable check kind identifier.
+    pub kind: String,
+    /// Stable check state identifier.
+    pub state: String,
+    /// Human-readable summary.
+    pub message: String,
+    /// Additional detail lines.
+    pub details: Vec<String>,
 }
 
-/// Result of checking if paths need auto-detection.
+/// Result of running Game Setup Intake.
+#[napi(object)]
+pub struct JsGameSetupIntakeResult {
+    /// Rust-rendered report for display surfaces.
+    pub rendered_report: String,
+    /// Top-level intake status.
+    pub status: String,
+    /// Whether any diagnostic checks failed.
+    pub has_errors: bool,
+    /// Number of intake checks.
+    pub total_checks: u32,
+    /// Number of failed intake checks.
+    pub failed_checks: u32,
+    /// Number of user actions required before all checks can run.
+    pub action_count: u32,
+    /// Number of detected paths that callers may persist.
+    pub path_update_count: u32,
+    /// Resolved game root, when known.
+    pub game_root: Option<String>,
+    /// Resolved documents root, when known.
+    pub docs_root: Option<String>,
+    /// Typed check results for structured consumers.
+    pub checks: Vec<JsGameSetupCheck>,
+}
+
+/// Result of checking if paths need Game Setup Intake detection.
 #[napi(object)]
 pub struct JsPathDetectionResult {
     /// Whether game path needs detection.
@@ -1577,17 +1605,93 @@ pub struct JsPathDetectionResult {
     pub needs_docs_path: bool,
 }
 
-/// Check if paths need auto-detection.
+fn optional_path(value: Option<String>) -> Option<PathBuf> {
+    value.and_then(|path| {
+        if path.trim().is_empty() {
+            None
+        } else {
+            Some(PathBuf::from(path))
+        }
+    })
+}
+
+/// Build a Rust Game Setup Intake from JavaScript options.
+fn build_game_setup_intake(options: JsGameSetupIntakeOptions) -> Result<GameSetupIntake> {
+    let game_id = GameId::from_str(&options.game_id).map_err(to_napi_err)?;
+    let game_version = options.game_version.as_deref().unwrap_or("auto");
+    let mut intake = GameSetupIntake::new(game_id, game_version);
+    if let Some(game_root) = optional_path(options.game_root) {
+        intake = intake.with_game_root(game_root);
+    }
+    if let Some(docs_root) = optional_path(options.docs_root) {
+        intake = intake.with_docs_root(docs_root);
+    }
+    if let Some(xse_log_path) = optional_path(options.xse_log_path) {
+        intake = intake.with_xse_log_path(xse_log_path);
+    }
+    Ok(intake)
+}
+
+fn game_setup_check_to_js(check: GameSetupCheck) -> JsGameSetupCheck {
+    JsGameSetupCheck {
+        kind: check.kind.as_str().to_string(),
+        state: check.state.as_str().to_string(),
+        message: check.message,
+        details: check.details,
+    }
+}
+
+fn game_setup_result_to_js(result: GameSetupIntakeResult) -> JsGameSetupIntakeResult {
+    let has_errors = result.has_errors();
+    let total_checks = result.total_checks() as u32;
+    let failed_checks = result.failed_checks() as u32;
+    JsGameSetupIntakeResult {
+        rendered_report: result.rendered_report,
+        status: result.status.as_str().to_string(),
+        has_errors,
+        total_checks,
+        failed_checks,
+        action_count: result.actions.len() as u32,
+        path_update_count: result.path_updates.len() as u32,
+        game_root: result
+            .paths
+            .game_root
+            .map(|path| path.to_string_lossy().into_owned()),
+        docs_root: result
+            .paths
+            .docs_root
+            .map(|path| path.to_string_lossy().into_owned()),
+        checks: result
+            .checks
+            .into_iter()
+            .map(game_setup_check_to_js)
+            .collect(),
+    }
+}
+
+/// Run Game Setup Intake and return both rendered and typed diagnostics.
+#[napi]
+pub fn run_game_setup_intake(options: JsGameSetupIntakeOptions) -> Result<JsGameSetupIntakeResult> {
+    build_game_setup_intake(options).map(|intake| game_setup_result_to_js(intake.run()))
+}
+
+/// Normalize a raw Game Setup Intake version selection.
+#[napi]
+pub fn normalize_game_setup_version_selection(version: Option<String>) -> String {
+    classic_scangame_core::normalize_game_setup_version_selection(version.as_deref().unwrap_or(""))
+}
+
+/// Check if paths need Game Setup Intake auto-detection.
 ///
 /// @param gamePath - Current game path setting (empty or null means not configured).
 /// @param docsPath - Current documents path setting (empty or null means not configured).
 /// @returns Object indicating which paths need detection.
 #[napi]
-pub fn needs_path_detection(
+pub fn game_setup_needs_path_detection(
     game_path: Option<String>,
     docs_path: Option<String>,
 ) -> JsPathDetectionResult {
-    let (needs_game, needs_docs) = classic_scangame_core::setup::needs_path_detection(
+    let (needs_game, needs_docs) = classic_scangame_core::game_setup_needs_path_detection(
         game_path.as_deref(),
         docs_path.as_deref(),
     );

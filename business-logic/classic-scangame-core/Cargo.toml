@@ -16,7 +16,9 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-config-core = { path = "../classic-config-core" }
 classic-file-io-core = { path = "../classic-file-io-core" }
 classic-path-core = { path = "../classic-path-core" }
+classic-version-core = { path = "../classic-version-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }
+classic-xse-core = { path = "../classic-xse-core" }
 
 # Async runtime
 tokio = { workspace = true, features = ["full"] }
