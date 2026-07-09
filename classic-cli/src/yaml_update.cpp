@@ -94,8 +94,7 @@ bool read_update_check_setting(const std::string& settings_path) {
     try {
         auto ops = classic::settings::yaml_ops_new();
         classic::settings::yaml_ops_load_file(*ops, settings_path);
-        auto value =
-            classic::settings::yaml_ops_get_setting_value(*ops, "CLASSIC_Settings.Update Check");
+        auto value = classic::settings::yaml_ops_get_setting_value(*ops, "CLASSIC_Settings.Update Check");
         if (value.value_type == "bool") {
             return value.value == "true";
         }
@@ -144,13 +143,12 @@ int report_status(const classic::update::YamlUpdateStatusDto& status) {
                    "Enable it in CLASSIC Settings.yaml to receive data updates.\n");
         return 0;
     case kYamlTagUpdateAvailable: {
-        fmt::print("Data update available in release {}.\n",
-                   std::string(status.release_tag));
+        fmt::print("Data update available in release {}.\n", std::string(status.release_tag));
         fmt::print("Compatible files:\n");
         for (std::size_t i = 0; i < status.compatible_files.size(); ++i) {
             const auto& f = status.compatible_files[i];
-            fmt::print("  - {} ({} bytes, schema {})\n", std::string(f.name),
-                       f.size_bytes, std::string(f.schema_version));
+            fmt::print("  - {} ({} bytes, schema {})\n", std::string(f.name), f.size_bytes,
+                       std::string(f.schema_version));
         }
         if (!status.incompatible_files.empty()) {
             fmt::print("Incompatible files (skipped):\n");
@@ -171,14 +169,12 @@ int report_status(const classic::update::YamlUpdateStatusDto& status) {
         // CLASSIC upgrade (not a data refresh) is what unlocks the newer
         // data.
         if (status.incompatible_files.empty()) {
-            fmt::print("Your data files are up to date (release {}).\n",
-                       std::string(status.release_tag));
+            fmt::print("Your data files are up to date (release {}).\n", std::string(status.release_tag));
         } else {
             fmt::print("Your installed data files are current, but release {} advertises "
                        "{} file(s) this CLASSIC build cannot install. Upgrade CLASSIC to "
                        "consume the newer data.\n",
-                       std::string(status.release_tag),
-                       status.incompatible_files.size());
+                       std::string(status.release_tag), status.incompatible_files.size());
             fmt::print("Incompatible files (skipped):\n");
             for (std::size_t i = 0; i < status.incompatible_files.size(); ++i) {
                 const auto& f = status.incompatible_files[i];
@@ -190,16 +186,13 @@ int report_status(const classic::update::YamlUpdateStatusDto& status) {
         }
         return 0;
     case kYamlTagUnknown:
-        fmt::print("Data update status unknown: {}\n",
-                   std::string(status.unknown_reason));
+        fmt::print("Data update status unknown: {}\n", std::string(status.unknown_reason));
         return 1;
     case kYamlTagError:
-        fmt::print(stderr, "Data update check failed: {}\n",
-                   std::string(status.error_message));
+        fmt::print(stderr, "Data update check failed: {}\n", std::string(status.error_message));
         return 1;
     default:
-        fmt::print(stderr, "Data update check returned an unrecognised status (tag={}).\n",
-                   status.tag);
+        fmt::print(stderr, "Data update check returned an unrecognised status (tag={}).\n", status.tag);
         return 1;
     }
 }
@@ -214,9 +207,7 @@ int report_rollback(const classic::update::YamlRollbackReportDto& report) {
     for (std::size_t i = 0; i < report.failed_files.size(); ++i) {
         const std::string file_name = std::string(report.failed_files[i]);
         const std::string reason =
-            i < report.failure_reasons.size()
-                ? std::string(report.failure_reasons[i])
-                : std::string("unknown error");
+            i < report.failure_reasons.size() ? std::string(report.failure_reasons[i]) : std::string("unknown error");
         fmt::print(stderr, "Failed rollback: {} ({})\n", file_name, reason);
     }
 
@@ -325,14 +316,12 @@ int run_apply_yaml_updates(const CliArgs& /*args*/) {
 
         for (std::size_t i = 0; i < installed; ++i) {
             const auto& f = report.installed[i];
-            fmt::print("Installed: {} (schema {}{})\n", std::string(f.name),
-                       std::string(f.schema_version),
+            fmt::print("Installed: {} (schema {}{})\n", std::string(f.name), std::string(f.schema_version),
                        f.created_prev ? ", previous version retained" : "");
         }
         for (std::size_t i = 0; i < failed; ++i) {
             const auto& f = report.failed[i];
-            fmt::print(stderr, "Failed: {} ({})\n", std::string(f.name),
-                       std::string(f.failure_reason));
+            fmt::print(stderr, "Failed: {} ({})\n", std::string(f.name), std::string(f.failure_reason));
         }
 
         if (!std::string(report.error_message).empty()) {

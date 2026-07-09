@@ -78,9 +78,9 @@ ScanController::ScanController(SignalHub* signalHub, ThreadManager* threadManage
 }
 
 void ScanController::startScan(const QString& yamlRoot, const QString& yamlData, const QString& game,
-                                const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
-                                bool moveUnsolvedLogs, const QString& unsolvedLogsDestination,
-                                int maxConcurrentScans, const QString& customFolder, const QStringList& targetedInputs)
+                               const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
+                               bool moveUnsolvedLogs, const QString& unsolvedLogsDestination, int maxConcurrentScans,
+                               const QString& customFolder, const QStringList& targetedInputs)
 {
     if (m_scanning) {
         return;
@@ -194,10 +194,10 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
     connect(thread, &QThread::started, worker,
             [worker, logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode, simplifyLogs,
              moveUnsolvedLogs, unsolvedLogsDestination, maxConcurrentScans, targetedMode]() {
-                 worker->doScan(logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode,
-                                simplifyLogs, moveUnsolvedLogs, unsolvedLogsDestination, maxConcurrentScans,
-                                targetedMode);
-             });
+                worker->doScan(logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode,
+                               simplifyLogs, moveUnsolvedLogs, unsolvedLogsDestination, maxConcurrentScans,
+                               targetedMode);
+            });
 
     m_threadManager->startWorker(QStringLiteral("crash_scan"), thread, worker);
 }

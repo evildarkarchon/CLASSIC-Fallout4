@@ -1,10 +1,10 @@
 #pragma once
 
-#include <QWidget>
-#include <QTextBrowser>
-#include <QPushButton>
 #include <QLabel>
+#include <QPushButton>
 #include <QShortcut>
+#include <QTextBrowser>
+#include <QWidget>
 
 class MarkdownViewer : public QWidget {
     Q_OBJECT

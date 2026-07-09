@@ -1,8 +1,8 @@
 #include "cli_args.h"
 #include <algorithm>
 #include <CLI/CLI.hpp>
-#include <fmt/core.h>
 #include <filesystem>
+#include <fmt/core.h>
 #include <thread>
 
 namespace fs = std::filesystem;

@@ -85,8 +85,7 @@ public slots:
 
     /// Run `classic::update::yaml_data_apply_update` against a reviewed
     /// decision. Emits `applyFinished`.
-    void doApply(bool enabled, const QString& approvedReleaseTag,
-                 const QStringList& approvedFileNames,
+    void doApply(bool enabled, const QString& approvedReleaseTag, const QStringList& approvedFileNames,
                  const QStringList& approvedFileSha256);
 
     /// Run `classic::update::yaml_data_rollback_update`, letting Rust expand

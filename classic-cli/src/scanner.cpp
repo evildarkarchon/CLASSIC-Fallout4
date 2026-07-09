@@ -206,8 +206,8 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
         std::string base_dir = fs::current_path(ec).string();
         std::string custom_dir = args.scan_path;
 
-        auto collector = classic::files::log_collector_new_for_scan(base_dir, dirs.data, args.game, args.game_version, "",
-                                                                    custom_dir);
+        auto collector = classic::files::log_collector_new_for_scan(base_dir, dirs.data, args.game, args.game_version,
+                                                                    "", custom_dir);
         log_paths = classic::files::log_collector_collect_all(*collector);
 
         if (log_paths.empty()) {
@@ -266,8 +266,7 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
             request.targeted_mode = targeted_mode;
             request.max_concurrent = concurrency;
             request.log_paths = std::move(log_paths);
-            return classic::scanner::scan_run_execute(request, progress_callback,
-                                                      *cancellation_token);
+            return classic::scanner::scan_run_execute(request, progress_callback, *cancellation_token);
         } catch (...) {
             stop_renderer();
             progress.finish();

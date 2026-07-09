@@ -41,15 +41,13 @@ std::string or_unknown(const rust::String& value) {
 
 int report_notification(const classic::update::NotificationStatusDto& status) {
     if (is_classification(status.classification, kClassificationUpToDate)) {
-        fmt::print("You are up to date (latest v{}, published {}).\n",
-                   std::string(status.latest_version),
+        fmt::print("You are up to date (latest v{}, published {}).\n", std::string(status.latest_version),
                    or_unknown(status.published_at));
         return 0;
     }
 
     if (is_classification(status.classification, kClassificationUpdateAvailable)) {
-        fmt::print("Update available: v{} (published {}).\n",
-                   std::string(status.latest_version),
+        fmt::print("Update available: v{} (published {}).\n", std::string(status.latest_version),
                    or_unknown(status.published_at));
         // Optional display payload — present only when the publisher
         // attached a `display` block. Empty-string sentinels on every
@@ -74,8 +72,7 @@ int report_notification(const classic::update::NotificationStatusDto& status) {
                    "  minimum supported: v{}\n"
                    "  latest:            v{} (published {})\n"
                    "Upgrade to the latest release to continue receiving support.\n",
-                   or_unknown(status.min_supported_version),
-                   std::string(status.latest_version),
+                   or_unknown(status.min_supported_version), std::string(status.latest_version),
                    or_unknown(status.published_at));
         return 0;
     }
@@ -102,8 +99,7 @@ int report_notification(const classic::update::NotificationStatusDto& status) {
         return 1;
     }
 
-    fmt::print(stderr,
-               "Update check returned an unrecognised classification: {}\n",
+    fmt::print(stderr, "Update check returned an unrecognised classification: {}\n",
                std::string(status.classification));
     return 1;
 }
@@ -114,8 +110,7 @@ bool init_runtime_for_app_update() {
         classic::runtime::init_runtime();
         return true;
     } catch (const rust::Error& e) {
-        fmt::print(stderr, "Fatal: failed to initialize runtime: {}\n",
-                   std::string(e.what()));
+        fmt::print(stderr, "Fatal: failed to initialize runtime: {}\n", std::string(e.what()));
         return false;
     }
 }
@@ -136,16 +131,15 @@ int run_check_app_update(const CliArgs& /*args*/) {
     // YAML; the CMake build picks up the new value at configure time and
     // fails if the CMake `project(... VERSION ...)` ever drifts from it.
 #ifndef CLASSIC_CLI_VERSION
-#    error "CLASSIC_CLI_VERSION must be defined by the build system (see CMakeLists.txt)"
+#error "CLASSIC_CLI_VERSION must be defined by the build system (see CMakeLists.txt)"
 #endif
     const std::string current_version = CLASSIC_CLI_VERSION;
 
     int exit_code;
     try {
-        auto status = classic::update::check_app_notification(
-            rust::Str("evildarkarchon"),
-            rust::Str("CLASSIC-Fallout4"),
-            rust::Str(current_version.c_str(), current_version.size()));
+        auto status =
+            classic::update::check_app_notification(rust::Str("evildarkarchon"), rust::Str("CLASSIC-Fallout4"),
+                                                    rust::Str(current_version.c_str(), current_version.size()));
         exit_code = report_notification(status);
     } catch (const rust::Error& e) {
         fmt::print(stderr, "App update check failed: {}\n", std::string(e.what()));

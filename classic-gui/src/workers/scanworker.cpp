@@ -60,9 +60,9 @@ void ScanWorker::requestCancel()
 }
 
 void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, const QString& yamlData,
-                         const QString& game, const QString& gameVersion, bool showFormIdValues, bool fcxMode,
-                         bool simplifyLogs, bool moveUnsolvedLogs, const QString& unsolvedLogsDestination,
-                         int maxConcurrentScans, bool targetedMode)
+                        const QString& game, const QString& gameVersion, bool showFormIdValues, bool fcxMode,
+                        bool simplifyLogs, bool moveUnsolvedLogs, const QString& unsolvedLogsDestination,
+                        int maxConcurrentScans, bool targetedMode)
 {
     m_cancelled.store(false);
     classic::scanner::scan_cancellation_token_reset(*m_cancellationToken);
@@ -101,8 +101,7 @@ void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, co
         request.targeted_mode = targetedMode;
         request.max_concurrent = maxConcurrent;
         request.log_paths = std::move(rustPaths);
-        auto results = classic::scanner::scan_run_execute(request, progress_callback,
-                                                          *m_cancellationToken);
+        auto results = classic::scanner::scan_run_execute(request, progress_callback, *m_cancellationToken);
 
         for (const auto& result : results) {
             const int index = static_cast<int>(qMin(result.input_index, static_cast<uint32_t>(total - 1)));

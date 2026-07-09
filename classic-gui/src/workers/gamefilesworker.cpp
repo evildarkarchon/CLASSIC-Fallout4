@@ -17,13 +17,12 @@ void GameFilesWorker::doScan(const QString& gameExePath, const QString& gameRoot
     emit progress(-1.0f, QStringLiteral("Running game setup intake..."));
 
     try {
-        auto result =
-            classic::scangame::run_game_setup_intake(classic::toRustString(gameName), classic::toRustString(gameVersion),
-                                                     classic::toRustString(gameRoot), classic::toRustString(docsPath),
-                                                     ::rust::Str("", 0), classic::toRustString(gameExePath));
-        const bool requiresAttention = result.has_errors
-                                       || classic::toQString(result.status) != QStringLiteral("ready")
-                                       || result.action_count > 0;
+        auto result = classic::scangame::run_game_setup_intake(
+            classic::toRustString(gameName), classic::toRustString(gameVersion), classic::toRustString(gameRoot),
+            classic::toRustString(docsPath), ::rust::Str("", 0), classic::toRustString(gameExePath));
+        const bool requiresAttention = result.has_errors ||
+                                       classic::toQString(result.status) != QStringLiteral("ready") ||
+                                       result.action_count > 0;
 
         emit progress(100.0f, QStringLiteral("Complete"));
         emit finished(classic::toQString(result.rendered_report), requiresAttention, result.total_checks);

@@ -39,7 +39,7 @@ static void print_version() {
     // from the top-level `project(... VERSION ...)` call — the sole source of
     // truth for the CLI version string.
 #ifndef CLASSIC_CLI_VERSION
-#    error "CLASSIC_CLI_VERSION must be defined by the build system (see CMakeLists.txt)"
+#error "CLASSIC_CLI_VERSION must be defined by the build system (see CMakeLists.txt)"
 #endif
     fmt::print("CLASSIC CLI Scanner v{}\n", CLASSIC_CLI_VERSION);
     fmt::print("C++ native build using Rust CXX bindings\n");

@@ -26,9 +26,7 @@ void UpdateWorker::checkForUpdates(const QString& currentVersion)
                  << QString::fromUtf8(userAgent.data(), static_cast<int>(userAgent.size()));
 
         auto status = classic::update::check_app_notification(
-            rust::Str("evildarkarchon"),
-            rust::Str("CLASSIC-Fallout4"),
-            classic::toRustString(currentVersion));
+            rust::Str("evildarkarchon"), rust::Str("CLASSIC-Fallout4"), classic::toRustString(currentVersion));
 
         payload.insert(kKeyClassification, classic::toQString(status.classification));
         payload.insert(kKeyLatestVersion, classic::toQString(status.latest_version));

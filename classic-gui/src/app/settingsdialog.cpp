@@ -345,9 +345,9 @@ void SettingsDialog::setupUpdatesTab(QTabWidget* tabs)
         auto* group = new QGroupBox(QStringLiteral("Data File Updates"));
         auto* groupLayout = new QVBoxLayout(group);
 
-        auto* helpLabel = new QLabel(
-            QStringLiteral("CLASSIC's crash-signature and mod-conflict data evolves faster than the binary. "
-                           "Check for and apply data updates here, or roll back the last applied update."));
+        auto* helpLabel =
+            new QLabel(QStringLiteral("CLASSIC's crash-signature and mod-conflict data evolves faster than the binary. "
+                                      "Check for and apply data updates here, or roll back the last applied update."));
         helpLabel->setWordWrap(true);
         groupLayout->addWidget(helpLabel);
 
@@ -420,8 +420,8 @@ void SettingsDialog::loadSettings()
         m_chkMoveUnsolvedLogs->setChecked(getBool("CLASSIC_Settings.Move Unsolved Logs"));
         m_chkAutoSwitchAfterScan->setChecked(getBool("CLASSIC_Settings.Auto Switch After Scan"));
 
-        const auto unsolvedDestination = classic::settings::yaml_ops_get_string(
-            *ops, "CLASSIC_Settings.Unsolved Logs Destination", "");
+        const auto unsolvedDestination =
+            classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Unsolved Logs Destination", "");
         if (m_editUnsolvedLogsDestination) {
             m_editUnsolvedLogsDestination->setText(classic::toQString(unsolvedDestination));
         }
@@ -473,7 +473,8 @@ bool SettingsDialog::saveSettings()
 
     const QString rawUnsolvedDestination =
         m_editUnsolvedLogsDestination ? m_editUnsolvedLogsDestination->text().trimmed() : QString();
-    const QString unsolvedDestination = rawUnsolvedDestination.isEmpty() ? QString() : QDir::cleanPath(rawUnsolvedDestination);
+    const QString unsolvedDestination =
+        rawUnsolvedDestination.isEmpty() ? QString() : QDir::cleanPath(rawUnsolvedDestination);
     if (!unsolvedDestination.isEmpty() && !QDir::isAbsolutePath(unsolvedDestination)) {
         QMessageBox::warning(this, QStringLiteral("Settings Error"),
                              QStringLiteral("Unsolved Logs Destination must be an absolute path."));
@@ -502,10 +503,9 @@ bool SettingsDialog::saveSettings()
         classic::settings::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Move Unsolved Logs",
                                                      m_chkMoveUnsolvedLogs->isChecked());
         classic::settings::yaml_ops_set_bool_setting(*ops, "CLASSIC_Settings.Auto Switch After Scan",
-                                                      m_chkAutoSwitchAfterScan->isChecked());
-        classic::settings::yaml_ops_set_string_setting(
-            *ops, "CLASSIC_Settings.Unsolved Logs Destination",
-            std::string(unsolvedDestination.toUtf8().constData()));
+                                                     m_chkAutoSwitchAfterScan->isChecked());
+        classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Unsolved Logs Destination",
+                                                       std::string(unsolvedDestination.toUtf8().constData()));
 
         // Max Concurrent Scans
         classic::settings::yaml_ops_set_integer_setting(*ops, "CLASSIC_Settings.Max Concurrent Scans",
@@ -655,9 +655,9 @@ void SettingsDialog::onResetUnsolvedLogsDestination()
 
 void SettingsDialog::onAddFormIdDb()
 {
-    const QStringList files = QFileDialog::getOpenFileNames(
-        this, QStringLiteral("Select FormID Databases"), QString(),
-        QStringLiteral("Database Files (*.db *.sqlite);;All Files (*)"));
+    const QStringList files =
+        QFileDialog::getOpenFileNames(this, QStringLiteral("Select FormID Databases"), QString(),
+                                      QStringLiteral("Database Files (*.db *.sqlite);;All Files (*)"));
 
     QSet<QString> seen;
     for (int i = 0; i < m_listFormIdDbs->count(); ++i) {
@@ -691,16 +691,14 @@ void SettingsDialog::onCheckForUpdates()
     try {
         const QString currentVersion = QApplication::applicationVersion();
         auto status = classic::update::check_app_notification(
-            rust::Str("evildarkarchon"),
-            rust::Str("CLASSIC-Fallout4"),
-            classic::toRustString(currentVersion));
+            rust::Str("evildarkarchon"), rust::Str("CLASSIC-Fallout4"), classic::toRustString(currentVersion));
 
         const std::string classification(status.classification);
         if (classification == "error") {
             const std::string errorMessage(status.error_message);
-            m_lblUpdateStatus->setText(QStringLiteral("Error: ") +
-                                       (errorMessage.empty() ? QStringLiteral("unknown error")
-                                                             : QString::fromUtf8(errorMessage)));
+            m_lblUpdateStatus->setText(QStringLiteral("Error: ") + (errorMessage.empty()
+                                                                        ? QStringLiteral("unknown error")
+                                                                        : QString::fromUtf8(errorMessage)));
         } else if (classification == "update_available") {
             const std::string title(status.display_title);
             QString text = QStringLiteral("Update available: v") + classic::toQString(status.latest_version);
@@ -713,9 +711,9 @@ void SettingsDialog::onCheckForUpdates()
                                        classic::toQString(status.latest_version));
         } else if (classification == "unknown") {
             const std::string parseError(status.parse_error);
-            m_lblUpdateStatus->setText(QStringLiteral("Update check inconclusive: ") +
-                                       (parseError.empty() ? QStringLiteral("unknown reason")
-                                                           : QString::fromUtf8(parseError)));
+            m_lblUpdateStatus->setText(
+                QStringLiteral("Update check inconclusive: ") +
+                (parseError.empty() ? QStringLiteral("unknown reason") : QString::fromUtf8(parseError)));
         } else if (classification == "not_published") {
             m_lblUpdateStatus->setText(QStringLiteral("No update information available."));
         } else {
@@ -747,17 +745,13 @@ void SettingsDialog::ensureYamlUpdateWorker()
     // Parented to nullptr above so its lifetime is tied to the thread,
     // not to the QObject tree — otherwise we would race the parent
     // destructor with `moveToThread`.
-    connect(m_yamlUpdateThread, &QThread::finished, m_yamlUpdateWorker,
-            &QObject::deleteLater);
+    connect(m_yamlUpdateThread, &QThread::finished, m_yamlUpdateWorker, &QObject::deleteLater);
 
     // Queued connections (auto across threads) for the three result
     // signals. All UI mutations happen in the slots on the UI thread.
-    connect(m_yamlUpdateWorker, &YamlUpdateWorker::checkFinished, this,
-            &SettingsDialog::onYamlCheckFinished);
-    connect(m_yamlUpdateWorker, &YamlUpdateWorker::applyFinished, this,
-            &SettingsDialog::onYamlApplyFinished);
-    connect(m_yamlUpdateWorker, &YamlUpdateWorker::rollbackFinished, this,
-            &SettingsDialog::onYamlRollbackFinished);
+    connect(m_yamlUpdateWorker, &YamlUpdateWorker::checkFinished, this, &SettingsDialog::onYamlCheckFinished);
+    connect(m_yamlUpdateWorker, &YamlUpdateWorker::applyFinished, this, &SettingsDialog::onYamlApplyFinished);
+    connect(m_yamlUpdateWorker, &YamlUpdateWorker::rollbackFinished, this, &SettingsDialog::onYamlRollbackFinished);
 
     m_yamlUpdateThread->start();
 }
@@ -785,8 +779,7 @@ void SettingsDialog::onCheckForYamlUpdates()
     // its own thread. The UI stays responsive because control returns
     // here immediately. The result comes back via `checkFinished` ->
     // `onYamlCheckFinished` on the UI thread.
-    QMetaObject::invokeMethod(m_yamlUpdateWorker, "doCheck", Qt::QueuedConnection,
-                              Q_ARG(bool, enabled));
+    QMetaObject::invokeMethod(m_yamlUpdateWorker, "doCheck", Qt::QueuedConnection, Q_ARG(bool, enabled));
 }
 
 void SettingsDialog::onApplyYamlUpdates()
@@ -797,16 +790,16 @@ void SettingsDialog::onApplyYamlUpdates()
     // exact release tag and file list the install will target.
     if (m_approvedReleaseTag.isEmpty() || m_approvedFileNames.isEmpty() ||
         m_approvedFileSha256.size() != m_approvedFileNames.size()) {
-        m_lblYamlUpdateStatus->setText(QStringLiteral(
-            "Please run \"Check for Data Updates\" first to review the files that will be installed."));
+        m_lblYamlUpdateStatus->setText(
+            QStringLiteral("Please run \"Check for Data Updates\" first to review the files that will be installed."));
         return;
     }
 
-    const auto response = QMessageBox::question(
-        this, QStringLiteral("Apply Data Updates"),
-        QStringLiteral("This will download and install updated CLASSIC data files. "
-                       "The previously installed copy is retained for rollback. Proceed?"),
-        QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+    const auto response =
+        QMessageBox::question(this, QStringLiteral("Apply Data Updates"),
+                              QStringLiteral("This will download and install updated CLASSIC data files. "
+                                             "The previously installed copy is retained for rollback. Proceed?"),
+                              QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
     if (response != QMessageBox::Yes) {
         return;
     }
@@ -827,20 +820,18 @@ void SettingsDialog::onApplyYamlUpdates()
     // NOT clear `m_approved*` here — clearing happens only when the
     // apply result arrives, so a user cancelling mid-flight (closing the
     // dialog) does not leave the next session with a stale half-decision.
-    QMetaObject::invokeMethod(m_yamlUpdateWorker, "doApply", Qt::QueuedConnection,
-                              Q_ARG(bool, enabled),
-                              Q_ARG(QString, m_approvedReleaseTag),
-                              Q_ARG(QStringList, m_approvedFileNames),
+    QMetaObject::invokeMethod(m_yamlUpdateWorker, "doApply", Qt::QueuedConnection, Q_ARG(bool, enabled),
+                              Q_ARG(QString, m_approvedReleaseTag), Q_ARG(QStringList, m_approvedFileNames),
                               Q_ARG(QStringList, m_approvedFileSha256));
 }
 
 void SettingsDialog::onRollbackYamlUpdate()
 {
-    const auto response = QMessageBox::question(
-        this, QStringLiteral("Rollback Data Update"),
-        QStringLiteral("Restore the previously installed copy of each data file? "
-                       "The current (newer) copy will be swapped out."),
-        QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    const auto response =
+        QMessageBox::question(this, QStringLiteral("Rollback Data Update"),
+                              QStringLiteral("Restore the previously installed copy of each data file? "
+                                             "The current (newer) copy will be swapped out."),
+                              QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     if (response != QMessageBox::Yes) {
         return;
     }
@@ -881,15 +872,13 @@ void SettingsDialog::onYamlCheckFinished(YamlCheckResult result)
         // the user the wrong remediation signal.
         if (result.incompatibleFileNames.isEmpty()) {
             m_lblYamlUpdateStatus->setText(
-                QStringLiteral("Your data files are up to date (release %1).")
-                    .arg(result.releaseTag));
+                QStringLiteral("Your data files are up to date (release %1).").arg(result.releaseTag));
         } else {
             const auto incompatibleCount = result.incompatibleFileNames.size();
             m_lblYamlUpdateStatus->setText(
-                QStringLiteral(
-                    "Your installed data files are current, but release %1 advertises "
-                    "%2 file(s) this CLASSIC build cannot install. Upgrade CLASSIC to "
-                    "consume the newer data.")
+                QStringLiteral("Your installed data files are current, but release %1 advertises "
+                               "%2 file(s) this CLASSIC build cannot install. Upgrade CLASSIC to "
+                               "consume the newer data.")
                     .arg(result.releaseTag)
                     .arg(static_cast<qulonglong>(incompatibleCount)));
         }
@@ -917,23 +906,19 @@ void SettingsDialog::onYamlApplyFinished(YamlApplyResult result)
             QStringLiteral("Installed %1 data file(s). Previous versions are retained for rollback.")
                 .arg(static_cast<qulonglong>(installed)));
     } else if (installed > 0 && failed > 0) {
-        m_lblYamlUpdateStatus->setText(
-            QStringLiteral("Installed %1 file(s); %2 failed. Check logs for details.")
-                .arg(static_cast<qulonglong>(installed))
-                .arg(static_cast<qulonglong>(failed)));
+        m_lblYamlUpdateStatus->setText(QStringLiteral("Installed %1 file(s); %2 failed. Check logs for details.")
+                                           .arg(static_cast<qulonglong>(installed))
+                                           .arg(static_cast<qulonglong>(failed)));
     } else if (failed > 0) {
         QString detail = result.errorMessage.isEmpty() ? result.firstFailureReason : result.errorMessage;
-        m_lblYamlUpdateStatus->setText(
-            detail.isEmpty()
-                ? QStringLiteral("No data files were installed.")
-                : QStringLiteral("No data files were installed: ") + detail);
+        m_lblYamlUpdateStatus->setText(detail.isEmpty() ? QStringLiteral("No data files were installed.")
+                                                        : QStringLiteral("No data files were installed: ") + detail);
     } else {
         // Empty report: either nothing compatible to apply, or the bridge
         // surfaced a typed error (update check disabled, decision stale).
-        m_lblYamlUpdateStatus->setText(
-            result.errorMessage.isEmpty()
-                ? QStringLiteral("No compatible data updates to apply.")
-                : result.errorMessage);
+        m_lblYamlUpdateStatus->setText(result.errorMessage.isEmpty()
+                                           ? QStringLiteral("No compatible data updates to apply.")
+                                           : result.errorMessage);
     }
 
     m_btnCheckYamlUpdates->setEnabled(true);

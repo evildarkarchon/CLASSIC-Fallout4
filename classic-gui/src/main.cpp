@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
     // available for *data* decisions (cache promotion, schema gating)
     // but MUST NOT be the source of truth for binary identity.
 #ifndef CLASSIC_GUI_VERSION
-#    error "CLASSIC_GUI_VERSION must be defined by the build system (see classic-gui/CMakeLists.txt)"
+#error "CLASSIC_GUI_VERSION must be defined by the build system (see classic-gui/CMakeLists.txt)"
 #endif
     app.setApplicationVersion(QStringLiteral(CLASSIC_GUI_VERSION));
 
