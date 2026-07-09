@@ -34,8 +34,8 @@ use crate::version::{
     is_fake_bot_compatible_buffout_version,
 };
 use classic_config_core::{
-    ConfigLayout, CoreModEntry, ModConflictEntry, ModSolutionEntry, SuspectErrorRule,
-    SuspectStackRule,
+    ConfigLayout, CoreModEntry, CrashgenSettingsSnapshot, ModConflictEntry, ModSolutionEntry,
+    SuspectErrorRule, SuspectStackRule,
 };
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
@@ -153,7 +153,7 @@ struct ScanAnalysisContext {
     combined_crash_lower_lines: Vec<String>,
     plugin_lines: Vec<String>,
     xse_modules_for_settings: HashSet<String>,
-    crashgen_settings: HashMap<String, String>,
+    crashgen_settings: CrashgenSettingsSnapshot,
     system_segment_lines: Vec<String>,
 }
 
@@ -240,27 +240,12 @@ impl ScanAnalysisContext {
             extract_module_names(mods.iter().chain(xse.iter()))
         };
 
-        let crashgen_settings = segments
-            .get(segment_key::SETTINGS)
-            .map_or(&[][..], Vec::as_slice)
-            .iter()
-            .filter_map(|line| {
-                let line = line.trim();
-                if line.starts_with('[') {
-                    return None;
-                }
-
-                line.find(':').and_then(|colon_pos| {
-                    let key = line[..colon_pos].trim().to_string();
-                    let value = line[colon_pos + 1..].trim().to_string();
-                    if key.is_empty() {
-                        None
-                    } else {
-                        Some((key, value))
-                    }
-                })
-            })
-            .collect();
+        let crashgen_settings = parse_crashgen_settings_snapshot(
+            segments
+                .get(segment_key::SETTINGS)
+                .map(Vec::as_slice)
+                .unwrap_or_default(),
+        );
 
         let system_segment_lines = segments
             .get(segment_key::SYSTEM)
@@ -278,6 +263,31 @@ impl ScanAnalysisContext {
             system_segment_lines,
         }
     }
+}
+
+/// Parse crashgen setting lines into a section-aware snapshot for rule evaluation.
+fn parse_crashgen_settings_snapshot(lines: &[Arc<str>]) -> CrashgenSettingsSnapshot {
+    let mut snapshot = CrashgenSettingsSnapshot::new();
+    let mut current_section: Option<String> = None;
+
+    for line in lines {
+        let line = line.trim();
+        if line.starts_with('[') {
+            current_section = Some(line.to_string());
+            continue;
+        }
+
+        let Some((key, value)) = line.split_once(':') else {
+            continue;
+        };
+
+        match current_section.as_deref() {
+            Some(section) => snapshot.insert(section, key, value.trim().to_string()),
+            None => snapshot.insert_unscoped(key, value.trim().to_string()),
+        }
+    }
+
+    snapshot
 }
 
 /// Analysis configuration

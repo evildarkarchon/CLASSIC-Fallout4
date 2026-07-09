@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-08T13:15:33.170816+00:00",
+  "generated_at_utc": "2026-07-09T04:33:44.481608+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -205,12 +205,68 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CrashgenExpectationParseDiagnostic",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use crashgen_expectation_parser::{ CrashgenExpectationParseDiagnostic, CrashgenExpectationParseResult, parse_crashgen_expectations, };",
+      "source_expr": "crashgen_expectation_parser::CrashgenExpectationParseDiagnostic",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenExpectationParseDiagnostic",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_expectation_parser.rs",
+      "source_decl": "pub struct CrashgenExpectationParseDiagnostic",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenExpectationParseResult",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use crashgen_expectation_parser::{ CrashgenExpectationParseDiagnostic, CrashgenExpectationParseResult, parse_crashgen_expectations, };",
+      "source_expr": "crashgen_expectation_parser::CrashgenExpectationParseResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenExpectationParseResult",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_expectation_parser.rs",
+      "source_decl": "pub struct CrashgenExpectationParseResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenSettingRef",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub struct CrashgenSettingRef",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CrashgenSettingsRules",
       "kind": "struct",
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
       "source_decl": "pub struct CrashgenSettingsRules",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenSettingsSnapshot",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub struct CrashgenSettingsSnapshot",
       "tier": "tier1"
     },
     {
@@ -541,6 +597,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "ShippableSchemaEntry",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/client_schemas.rs",
+      "source_decl": "pub struct ShippableSchemaEntry",
+      "tier": "tier1"
+    },
+    {
       "symbol": "SuspectErrorRule",
       "kind": "reexport",
       "crate": "classic-config-core",
@@ -712,6 +777,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "crashgen_expectation_parser",
+      "kind": "module",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub mod crashgen_expectation_parser;",
+      "tier": "tier1"
+    },
+    {
       "symbol": "crashgen_rules",
       "kind": "module",
       "crate": "classic-config-core",
@@ -738,6 +812,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/config.rs",
       "source_decl": "pub fn display_name_with_game(&self, game: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "final_settings",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn final_settings(&self)",
       "tier": "tier1"
     },
     {
@@ -818,6 +902,36 @@
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use classic_shared_core::get_runtime;",
       "source_expr": "classic_shared_core::get_runtime",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "insert",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn insert(&mut self, section: &str, key: &str, value: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "insert_unscoped",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn insert_unscoped(&mut self, key: &str, value: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "is_empty",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn is_empty(&self)",
       "tier": "tier1"
     },
     {
@@ -931,13 +1045,13 @@
       "tier": "tier1"
     },
     {
-      "symbol": "parse",
+      "symbol": "new",
       "kind": "function",
-      "arity": 1,
+      "arity": 0,
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
-      "source_decl": "pub fn parse(value: &str)",
+      "source_decl": "pub fn new()",
       "tier": "tier1"
     },
     {
@@ -978,6 +1092,26 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
       "source_decl": "pub fn parse(value: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn parse(value: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse_crashgen_expectations",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use crashgen_expectation_parser::{ CrashgenExpectationParseDiagnostic, CrashgenExpectationParseResult, parse_crashgen_expectations, };",
+      "source_expr": "crashgen_expectation_parser::parse_crashgen_expectations",
       "tier": "tier1"
     },
     {
@@ -1010,6 +1144,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "shippable_schema_entries",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/client_schemas.rs",
+      "source_decl": "pub fn shippable_schema_entries()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "validate_paths",
       "kind": "function",
       "arity": 1,
@@ -1017,6 +1161,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/config.rs",
       "source_decl": "pub fn validate_paths(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "value_for",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn value_for(&self, section: &str, key: &str)",
       "tier": "tier1"
     },
     {

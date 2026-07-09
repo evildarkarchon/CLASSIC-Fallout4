@@ -324,11 +324,14 @@ Unknown crashgen names fall back to the registry default entry. The YAML `checks
 Important methods:
 
 - `SettingsValidator::new(crashgen_name, entry)`
-- `scan_all_settings(crashgen, xse_modules, crashgen_version, config_layout)`
-- `check_disabled_settings(crashgen)`
+- `scan_all_settings(crashgen_settings_snapshot, xse_modules, crashgen_version, config_layout)`
+- `check_disabled_settings(crashgen_settings_snapshot)`
 
 Contributor notes:
 
+- `scan_all_settings()` and `check_disabled_settings()` accept `classic_config_core::CrashgenSettingsSnapshot`, not a flattened key/value map.
+- Crashgen Expectations look up settings by `RuleTarget.section` and `RuleTarget.key`; unscoped settings do not satisfy sectioned rules.
+- Disabled Setting Notices still apply `ignore_keys` by setting key while iterating the snapshot's final setting values.
 - `CrashgenEntry.settings_rules` is the only per-crashgen expectation source; there is no fallback to hardcoded Achievements, memory-management, ArchiveLimit, LooksMenu, or Addictol scaffold checks.
 - If `CrashgenEntry.settings_rules` is absent, no per-crashgen expectations run; `scan_all_settings()` still appends Disabled Setting Notices for non-ignored disabled settings.
 - Rule-driven preflight outcomes can now carry Autoscan Report Placement from the crashgen rule model in [`classic-config-core`](classic-config-core.md#crashgen-rule-model); `error_information` outcomes are promoted into the report's `Error Information` section while the default `settings` placement still renders under settings-related issues.

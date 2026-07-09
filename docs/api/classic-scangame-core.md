@@ -182,7 +182,7 @@ Source-visible rules and limits:
 - if `settings_rules` is present, the crate uses `evaluate_rules()` from the crashgen rule model in [`classic-config-core`](classic-config-core.md#crashgen-rule-model) instead of the legacy hardcoded checks
 - without YAML-defined rules, the legacy path checks Achievements, X-Cell/Addictol-related memory settings, Archive Limit, `MaxStdIO`, and LooksMenu/F4EE compatibility
 - Addictol has a legacy short-circuit path only when `settings_rules` is absent; rule-based callers are expected to model that as preflight logic upstream
-- TOML settings are flattened by key name only before rule evaluation, so section names are descriptive output metadata rather than part of the lookup key
+- TOML settings are converted into `CrashgenSettingsSnapshot`; rule evaluation uses both `RuleTarget.section` and `RuleTarget.key`
 - both `Buffout4/config.toml` and `Buffout4.toml` present produces warning text, but validation still prefers the OG-style path
 
 ## `XseChecker`, `GameVersion`, `AddressLibInfo`, and `ValidationResult`

@@ -19,6 +19,8 @@ the ``GLOBAL_FCX_HANDLER`` singleton clean between tests so stateful
 
 from __future__ import annotations
 
+import pytest
+
 import classic_scanlog
 
 # =============================================================================
@@ -125,9 +127,56 @@ def test_settings_validator_scan_all_settings_empty() -> None:
 def test_settings_validator_scan_all_settings_includes_disabled_notices() -> None:
     """``scan_all_settings`` includes universal disabled-setting notices."""
     validator = classic_scanlog.SettingsValidator("Buffout 4", {})
-    result = validator.scan_all_settings({"SomeSetting": "false"}, set())
+    result = validator.scan_all_settings({"Compatibility": {"SomeSetting": "false"}}, set())
     assert isinstance(result, list)
     assert any("SomeSetting is disabled" in line for fragment in result for line in fragment)
+
+
+def test_settings_validator_scan_all_settings_rejects_flat_settings() -> None:
+    """``scan_all_settings`` rejects the obsolete flat settings shape."""
+    validator = classic_scanlog.SettingsValidator("Buffout 4", {})
+    with pytest.raises(TypeError):
+        validator.scan_all_settings({"SomeSetting": "false"}, set())
+
+
+def test_settings_validator_scan_all_settings_uses_target_section() -> None:
+    """``scan_all_settings`` evaluates rules against the targeted settings section."""
+    validator = classic_scanlog.SettingsValidator(
+        "Buffout 4",
+        {
+            "display_section": "[Compatibility]",
+            "ignore_keys": [],
+            "settings_rules": {
+                "checks": [
+                    {
+                        "id": "patches_achievements",
+                        "target": {
+                            "section": "Patches",
+                            "key": "Achievements",
+                            "type": "bool",
+                        },
+                        "expect": {"equals": False},
+                        "messages": {
+                            "fail": "Patches Achievements failed",
+                            "pass": "Patches Achievements passed",
+                        },
+                    }
+                ]
+            },
+        },
+    )
+
+    result = validator.scan_all_settings(
+        {
+            "Compatibility": {"Achievements": "true"},
+            "Patches": {"Achievements": "false"},
+        },
+        set(),
+    )
+
+    assert any(
+        "Patches Achievements passed" in line for fragment in result for line in fragment
+    )
 
 
 def test_settings_validator_check_disabled_settings_empty() -> None:
@@ -135,6 +184,13 @@ def test_settings_validator_check_disabled_settings_empty() -> None:
     validator = classic_scanlog.SettingsValidator("Buffout 4", {})
     result = validator.check_disabled_settings({})
     assert isinstance(result, list)
+
+
+def test_settings_validator_check_disabled_settings_rejects_flat_settings() -> None:
+    """``check_disabled_settings`` rejects the obsolete flat settings shape."""
+    validator = classic_scanlog.SettingsValidator("Buffout 4", {})
+    with pytest.raises(TypeError):
+        validator.check_disabled_settings({"SomeSetting": "false"})
 
 
 # =============================================================================

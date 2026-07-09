@@ -1645,21 +1645,21 @@ class SettingsValidator:
 
     def scan_all_settings(
         self,
-        crashgen: dict[str, str],
+        crashgen: dict[str, dict[str, str]],
         xsemodules: set[str],
         crashgen_version: tuple[int, int, int] | None = None,
         config_layout: str | None = None,
     ) -> list[list[str]]:
         """Run Crashgen Expectation evaluation and Disabled Setting Notices."""
 
-    def check_disabled_settings(self, crashgen: dict[str, str]) -> list[str]:
+    def check_disabled_settings(self, crashgen: dict[str, dict[str, str]]) -> list[str]:
         """Scan for disabled crash generator settings.
 
         Checks for settings that have been explicitly disabled and are not ignored
         by the resolved Crashgen registry entry.
 
         Args:
-            crashgen: Crashgen settings (all values as strings)
+            crashgen: Crashgen settings grouped by section, with all values as strings
 
         Returns:
             List of report lines for disabled settings issues

@@ -1,9 +1,9 @@
 use super::*;
 use crate::crashgen_registry::CrashgenEntry;
 use classic_config_core::{
-    AutoscanReportPlacement, CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue,
-    Predicate, PreflightAction, PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity,
-    RuleTarget, TargetValueType,
+    AutoscanReportPlacement, CheckRule, ConfigLayout, CrashgenSettingsRules,
+    CrashgenSettingsSnapshot, ExpectedValue, Predicate, PreflightAction, PreflightActionKind,
+    PreflightRule, RuleMessages, RuleSeverity, RuleTarget, TargetValueType,
 };
 
 fn make_entry(
@@ -67,6 +67,16 @@ fn collect_lines(fragments: Vec<ReportFragment>) -> Vec<String> {
     fragments.iter().flat_map(ReportFragment::to_list).collect()
 }
 
+fn snapshot(
+    settings: impl IntoIterator<Item = (&'static str, &'static str, &'static str)>,
+) -> CrashgenSettingsSnapshot {
+    let mut snapshot = CrashgenSettingsSnapshot::new();
+    for (section, key, value) in settings {
+        snapshot.insert(section, key, value.to_string());
+    }
+    snapshot
+}
+
 #[test]
 fn scan_all_settings_uses_yaml_rules() {
     let validator = SettingsValidator::new(
@@ -74,8 +84,7 @@ fn scan_all_settings_uses_yaml_rules() {
         make_entry([], Some(rules(vec![achievements_rule()]))),
     );
 
-    let mut crashgen = HashMap::new();
-    crashgen.insert("Achievements".to_string(), "true".to_string());
+    let crashgen = snapshot([("Patches", "Achievements", "true")]);
     let mut xse = HashSet::new();
     xse.insert("achievements.dll".to_string());
 
@@ -96,8 +105,7 @@ fn scan_all_settings_does_not_run_legacy_fallback_when_rules_do_not_cover_settin
     let validator =
         SettingsValidator::new("Buffout 4".to_string(), make_entry([], Some(rules(vec![]))));
 
-    let mut crashgen = HashMap::new();
-    crashgen.insert("Achievements".to_string(), "true".to_string());
+    let crashgen = snapshot([("Patches", "Achievements", "true")]);
     let mut xse = HashSet::new();
     xse.insert("achievements.dll".to_string());
 
@@ -116,9 +124,10 @@ fn scan_all_settings_appends_disabled_setting_notices() {
         make_entry([], Some(rules(vec![achievements_rule()]))),
     );
 
-    let mut crashgen = HashMap::new();
-    crashgen.insert("Achievements".to_string(), "true".to_string());
-    crashgen.insert("SomeSetting".to_string(), "false".to_string());
+    let crashgen = snapshot([
+        ("Patches", "Achievements", "true"),
+        ("Compatibility", "SomeSetting", "false"),
+    ]);
     let mut xse = HashSet::new();
     xse.insert("achievements.dll".to_string());
 
@@ -146,9 +155,10 @@ fn disabled_setting_notices_respect_ignore_keys() {
         make_entry(["F4EE"], Some(rules(vec![]))),
     );
 
-    let mut crashgen = HashMap::new();
-    crashgen.insert("F4EE".to_string(), "false".to_string());
-    crashgen.insert("SomeOtherKey".to_string(), "false".to_string());
+    let crashgen = snapshot([
+        ("Compatibility", "F4EE", "false"),
+        ("Patches", "SomeOtherKey", "false"),
+    ]);
 
     let result = validator.check_disabled_settings(&crashgen).unwrap();
     let lines = result.to_list();
@@ -161,9 +171,10 @@ fn disabled_setting_notices_respect_ignore_keys() {
 fn scan_all_settings_without_rules_returns_disabled_notices_only() {
     let validator = SettingsValidator::new("Buffout 4".to_string(), make_entry([], None));
 
-    let mut crashgen = HashMap::new();
-    crashgen.insert("Achievements".to_string(), "true".to_string());
-    crashgen.insert("SomeSetting".to_string(), "false".to_string());
+    let crashgen = snapshot([
+        ("Patches", "Achievements", "true"),
+        ("Compatibility", "SomeSetting", "false"),
+    ]);
     let mut xse = HashSet::new();
     xse.insert("achievements.dll".to_string());
 
@@ -206,9 +217,10 @@ fn preflight_skip_remaining_still_allows_disabled_setting_notices() {
     );
     let validator = SettingsValidator::new("Buffout 4".to_string(), entry);
 
-    let mut crashgen = HashMap::new();
-    crashgen.insert("Achievements".to_string(), "true".to_string());
-    crashgen.insert("SomeSetting".to_string(), "false".to_string());
+    let crashgen = snapshot([
+        ("Patches", "Achievements", "true"),
+        ("Compatibility", "SomeSetting", "false"),
+    ]);
     let mut xse = HashSet::new();
     xse.insert("achievements.dll".to_string());
 
@@ -237,8 +249,7 @@ fn archive_limit_rule_uses_crashgen_version_gate() {
         make_entry([], Some(rules(vec![archive_limit_rule()]))),
     );
 
-    let mut crashgen = HashMap::new();
-    crashgen.insert("ArchiveLimit".to_string(), "false".to_string());
+    let crashgen = snapshot([("Patches", "ArchiveLimit", "false")]);
     let xse = HashSet::new();
 
     let lt_boundary = validator

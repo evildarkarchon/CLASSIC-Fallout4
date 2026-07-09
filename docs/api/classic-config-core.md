@@ -396,7 +396,7 @@ Use the crashgen rule model when you need to:
 
 - represent crashgen settings rules as typed Rust data
 - parse Crashgen Expectation payloads from YAML Data or binding adapters into typed Rust data
-- evaluate those rules against installed plugins, flattened settings, config layout facts, and optional crashgen version data
+- evaluate those rules against installed plugins, section-aware settings, config layout facts, and optional crashgen version data
 - share one rule model across config loading, scanlog analysis, TOML/config validation, and bindings
 - build or transform `CrashgenSettingsRules` values in tests, registry builders, or binding adapters
 
@@ -405,6 +405,7 @@ Do not use this module for parsing TOML settings files, formatting final autosca
 ### Rule model types
 
 - `CrashgenSettingsRules` - top-level rules block with `version`, `preflight`, and `checks`
+- `CrashgenSettingsSnapshot` - section-aware setting values used by rule evaluation
 - `PreflightRule` and `PreflightAction` - early rules that emit notices/issues before setting checks run
 - `CheckRule` - one setting expectation with target metadata, predicate, and messages
 - `RuleTarget` - section/key/value-type metadata for a setting check
@@ -482,15 +483,17 @@ The only input to the evaluator besides the rules. Fields:
 - `crashgen_name: String`
 - `display_section: String`
 - `installed_plugins: HashSet<String>`
-- `settings: HashMap<String, String>`
+- `settings: CrashgenSettingsSnapshot`
 - `config_layout: ConfigLayout`
 - `crashgen_version: Option<(u32, u32, u32)>`
 
 Contributor notes:
 
 - `installed_plugins` is expected to contain lowercase DLL/plugin names; downstream callers such as scanlog build it that way
-- `settings` is a flattened key-to-value map; `evaluate_rules()` looks up by `RuleTarget.key` only
-- `RuleTarget.section` is reported back in outcomes but is not used to look up the current value (matters if a caller ever flattens two different sections that share the same key name)
+- `settings` is section-aware; `evaluate_rules()` looks up by `RuleTarget.section` and `RuleTarget.key`
+- `CrashgenSettingsSnapshot` normalizes section names by trimming whitespace, accepting either `Compatibility` or `[Compatibility]`, and comparing case-insensitively after removing one bracket pair
+- setting keys are trimmed but otherwise exact and case-sensitive
+- unscoped settings do not satisfy sectioned Crashgen Expectations; missing targeted sections or settings produce no outcome
 
 ### `PreflightRule` and `PreflightAction`
 
@@ -607,11 +610,11 @@ Keep `Vr` support intact unless the downstream callers and rule schema are chang
 ```rust
 use classic_config_core::{
     AutoscanReportPlacement,
-    CheckRule, ConfigLayout, CrashgenSettingsRules, EvaluationContext, ExpectedValue,
-    Predicate, PreflightAction, PreflightActionKind, PreflightRule, RuleMessages,
-    RuleSeverity, RuleTarget, TargetValueType, evaluate_rules,
+    CheckRule, ConfigLayout, CrashgenSettingsRules, CrashgenSettingsSnapshot,
+    EvaluationContext, ExpectedValue, Predicate, PreflightAction, PreflightActionKind,
+    PreflightRule, RuleMessages, RuleSeverity, RuleTarget, TargetValueType, evaluate_rules,
 };
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 let rules = CrashgenSettingsRules {
     version: 1,
@@ -647,8 +650,8 @@ let rules = CrashgenSettingsRules {
 let mut installed_plugins = HashSet::new();
 installed_plugins.insert("f4ee.dll".to_string());
 
-let mut settings = HashMap::new();
-settings.insert("F4EE".to_string(), "false".to_string());
+let mut settings = CrashgenSettingsSnapshot::new();
+settings.insert("Compatibility", "F4EE", "false".to_string());
 
 let context = EvaluationContext {
     crashgen_name: "Buffout 4".to_string(),

@@ -607,6 +607,8 @@ fn scan_analysis_context_builds_from_arc_sections() {
     let processed_lines = vec![
         "[Compatibility]".to_string(),
         "Achievements: true".to_string(),
+        "[Patches]".to_string(),
+        "Achievements: false".to_string(),
         "SYSTEM SPECS:".to_string(),
         "GPU #1: NVIDIA GeForce RTX 4090".to_string(),
         "PROBABLE CALL STACK:".to_string(),
@@ -645,8 +647,16 @@ fn scan_analysis_context_builds_from_arc_sections() {
         vec!["GPU #1: NVIDIA GeForce RTX 4090".to_string()]
     );
     assert_eq!(
-        context.crashgen_settings.get("Achievements"),
-        Some(&"true".to_string())
+        context
+            .crashgen_settings
+            .value_for("Compatibility", "Achievements"),
+        Some("true")
+    );
+    assert_eq!(
+        context
+            .crashgen_settings
+            .value_for("Patches", "Achievements"),
+        Some("false")
     );
     assert!(context.xse_modules_for_settings.contains("kernel32.dll"));
     assert!(context.xse_modules_for_settings.contains("addictol.dll"));
@@ -763,7 +773,7 @@ fn settings_validator_routes_to_addictol_rules_and_avoids_scaffold() {
         OrchestratorCore::settings_validator_for_crashgen(&orchestrator.config, &effective_name);
     let fragments = validator
         .scan_all_settings(
-            &HashMap::new(),
+            &classic_config_core::CrashgenSettingsSnapshot::new(),
             &xse_modules,
             None,
             classic_config_core::ConfigLayout::Unknown,

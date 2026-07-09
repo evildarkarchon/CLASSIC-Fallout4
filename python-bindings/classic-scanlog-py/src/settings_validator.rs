@@ -1,11 +1,35 @@
 //! Python bindings for SettingsValidator - Thin wrapper over classic-scanlog-core
 
+use classic_config_core::CrashgenSettingsSnapshot;
 use classic_scanlog_core::settings_validator::SettingsValidator;
+use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
-use pyo3::types::PyAny;
-use std::collections::{HashMap, HashSet};
+use pyo3::types::{PyAny, PyDict};
+use std::collections::HashSet;
 
 use crate::py_adapters::crashgen_entry_from_py;
+
+/// Convert a Python section-to-settings mapping into the Rust settings snapshot.
+fn crashgen_snapshot_from_py_sections(
+    crashgen: &Bound<'_, PyDict>,
+) -> PyResult<CrashgenSettingsSnapshot> {
+    let mut snapshot = CrashgenSettingsSnapshot::new();
+    for (section, settings) in crashgen.iter() {
+        let section: String = section.extract()?;
+        let settings = settings.cast::<PyDict>().map_err(|_| {
+            PyTypeError::new_err(
+                "crashgen settings must be a dict[str, dict[str, str]] grouped by section",
+            )
+        })?;
+        for (key, value) in settings.iter() {
+            let key: String = key.extract()?;
+            let value: String = value.extract()?;
+            snapshot.insert(&section, &key, value);
+        }
+    }
+
+    Ok(snapshot)
+}
 
 /// Python wrapper for SettingsValidator
 #[pyclass(name = "SettingsValidator")]
@@ -33,7 +57,7 @@ impl PySettingsValidator {
     /// apply version-gated and layout-specific YAML rules during validation.
     pub fn scan_all_settings(
         &self,
-        crashgen: HashMap<String, String>,
+        crashgen: &Bound<'_, PyDict>,
         xse_modules: HashSet<String>,
         crashgen_version: Option<(u32, u32, u32)>,
         config_layout: Option<String>,
@@ -42,6 +66,7 @@ impl PySettingsValidator {
             .as_deref()
             .and_then(classic_config_core::ConfigLayout::parse)
             .unwrap_or(classic_config_core::ConfigLayout::Unknown);
+        let crashgen = crashgen_snapshot_from_py_sections(crashgen)?;
 
         let fragments = self
             .inner
@@ -52,10 +77,8 @@ impl PySettingsValidator {
     }
 
     /// Scan for disabled crash generator settings
-    pub fn check_disabled_settings(
-        &self,
-        crashgen: HashMap<String, String>,
-    ) -> PyResult<Vec<String>> {
+    pub fn check_disabled_settings(&self, crashgen: &Bound<'_, PyDict>) -> PyResult<Vec<String>> {
+        let crashgen = crashgen_snapshot_from_py_sections(crashgen)?;
         let fragment = self
             .inner
             .check_disabled_settings(&crashgen)

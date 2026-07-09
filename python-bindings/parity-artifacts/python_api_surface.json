@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-08T13:15:33.181633+00:00",
+  "generated_at_utc": "2026-07-09T04:33:44.491845+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -6639,7 +6639,7 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def check_disabled_settings(self, crashgen: dict[str, str]) -> list[str]:"
+      "signature": "def check_disabled_settings(self, crashgen: dict[str, dict[str, str]]) -> list[str]:"
     },
     {
       "module": "classic_scanlog",
@@ -6651,7 +6651,7 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def scan_all_settings( self, crashgen: dict[str, str], xsemodules: set[str], crashgen_version: tuple[int, int, int] | None = None, config_layout: str | None = None, ) -> list[list[str]]:"
+      "signature": "def scan_all_settings( self, crashgen: dict[str, dict[str, str]], xsemodules: set[str], crashgen_version: tuple[int, int, int] | None = None, config_layout: str | None = None, ) -> list[list[str]]:"
     },
     {
       "module": "classic_scanlog",

@@ -23,7 +23,8 @@ use thiserror::Error;
 use toml::Value;
 
 use classic_config_core::{
-    ConfigLayout, EvaluationContext, OutcomeKind, RuleSeverity, evaluate_rules,
+    ConfigLayout, CrashgenSettingsSnapshot, EvaluationContext, OutcomeKind, RuleSeverity,
+    evaluate_rules,
 };
 
 /// Errors that can occur during TOML validation
@@ -347,13 +348,14 @@ impl CrashgenChecker {
             .unwrap_or(ConfigLayout::Unknown)
     }
 
-    fn flattened_settings(&self) -> HashMap<String, String> {
-        let mut result = HashMap::new();
+    /// Build the section-aware settings snapshot used by Crashgen Expectations.
+    fn settings_snapshot(&self) -> CrashgenSettingsSnapshot {
+        let mut result = CrashgenSettingsSnapshot::new();
         if let Some(data) = self.toml_data.as_ref() {
-            for value in data.values() {
+            for (section, value) in data {
                 if let Some(table) = value.as_table() {
                     for (key, item) in table {
-                        result.insert(key.clone(), item.to_string());
+                        result.insert(section, key, item.to_string());
                     }
                 }
             }
@@ -375,7 +377,7 @@ impl CrashgenChecker {
             crashgen_name: self.crashgen_name.clone(),
             display_section: "[Compatibility]".to_string(),
             installed_plugins: self.installed_plugins.iter().cloned().collect(),
-            settings: self.flattened_settings(),
+            settings: self.settings_snapshot(),
             config_layout: self.infer_config_layout(),
             crashgen_version: None,
         };

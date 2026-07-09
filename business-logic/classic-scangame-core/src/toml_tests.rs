@@ -204,3 +204,61 @@ fn test_yaml_rules_path_detects_issue() {
     assert!(!issues.is_empty());
     assert!(report.contains("Achievements should be false"));
 }
+
+#[test]
+fn test_yaml_rules_use_target_toml_section() {
+    let temp_dir = TempDir::new().unwrap();
+    let buffout_dir = temp_dir.path().join("Buffout4");
+    fs::create_dir(&buffout_dir).unwrap();
+
+    let config_file = buffout_dir.join("config.toml");
+    fs::write(
+        &config_file,
+        "[Compatibility]\nAchievements = true\n[Patches]\nAchievements = false\n",
+    )
+    .unwrap();
+
+    let rules = CrashgenSettingsRules {
+        version: 1,
+        preflight: vec![],
+        checks: vec![
+            CheckRule {
+                id: "compatibility_achievements".to_string(),
+                target: RuleTarget {
+                    section: "Compatibility".to_string(),
+                    key: "Achievements".to_string(),
+                    value_type: TargetValueType::Bool,
+                },
+                when: Predicate::Always,
+                expect: ExpectedValue::Bool(true),
+                messages: RuleMessages {
+                    fail: "Compatibility Achievements should be true".to_string(),
+                    fix: None,
+                    pass: None,
+                },
+                severity: RuleSeverity::Warning,
+            },
+            CheckRule {
+                id: "patches_achievements".to_string(),
+                target: RuleTarget {
+                    section: "Patches".to_string(),
+                    key: "Achievements".to_string(),
+                    value_type: TargetValueType::Bool,
+                },
+                when: Predicate::Always,
+                expect: ExpectedValue::Bool(false),
+                messages: RuleMessages {
+                    fail: "Patches Achievements should be false".to_string(),
+                    fix: None,
+                    pass: None,
+                },
+                severity: RuleSeverity::Warning,
+            },
+        ],
+    };
+
+    let mut checker = CrashgenChecker::new_with_rules(temp_dir.path(), "Buffout4", Some(rules));
+    let (_report, issues) = checker.check().unwrap();
+
+    assert!(issues.is_empty());
+}

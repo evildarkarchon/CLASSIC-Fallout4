@@ -11,9 +11,10 @@ use crate::crashgen_registry::CrashgenEntry;
 use crate::error::Result;
 use crate::report::{AutoscanReportContribution, CrashgenExpectationContribution, ReportFragment};
 use classic_config_core::{
-    AutoscanReportPlacement, ConfigLayout, EvaluationContext, evaluate_rules,
+    AutoscanReportPlacement, ConfigLayout, CrashgenSettingsSnapshot, EvaluationContext,
+    evaluate_rules,
 };
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 #[derive(Clone, Debug)]
 pub(crate) struct BucketedSettingsFragment {
@@ -58,7 +59,7 @@ impl SettingsValidator {
     /// Run all YAML-backed Crashgen Expectations and Disabled Setting Notices.
     pub fn scan_all_settings(
         &self,
-        crashgen: &HashMap<String, String>,
+        crashgen: &CrashgenSettingsSnapshot,
         xse_modules: &HashSet<String>,
         crashgen_version: Option<(u32, u32, u32)>,
         config_layout: ConfigLayout,
@@ -72,7 +73,7 @@ impl SettingsValidator {
 
     pub(crate) fn scan_all_settings_bucketed(
         &self,
-        crashgen: &HashMap<String, String>,
+        crashgen: &CrashgenSettingsSnapshot,
         xse_modules: &HashSet<String>,
         crashgen_version: Option<(u32, u32, u32)>,
         config_layout: ConfigLayout,
@@ -95,7 +96,7 @@ impl SettingsValidator {
 
     pub(crate) fn scan_all_settings_contributions(
         &self,
-        crashgen: &HashMap<String, String>,
+        crashgen: &CrashgenSettingsSnapshot,
         xse_modules: &HashSet<String>,
         crashgen_version: Option<(u32, u32, u32)>,
         config_layout: ConfigLayout,
@@ -138,7 +139,7 @@ impl SettingsValidator {
     /// is empty, so all disabled settings are flagged.
     pub fn check_disabled_settings(
         &self,
-        crashgen: &HashMap<String, String>,
+        crashgen: &CrashgenSettingsSnapshot,
     ) -> Result<ReportFragment> {
         let lines = self
             .disabled_setting_notice_contributions(crashgen)
@@ -156,13 +157,13 @@ impl SettingsValidator {
 
     fn disabled_setting_notice_contributions(
         &self,
-        crashgen: &HashMap<String, String>,
+        crashgen: &CrashgenSettingsSnapshot,
     ) -> Vec<AutoscanReportContribution> {
         let mut contributions = Vec::new();
-        for (key, value) in crashgen.iter() {
-            let setting_name = key.clone();
+        for setting in crashgen.final_settings() {
+            let setting_name = setting.key.to_string();
 
-            if let Ok(false) = value.parse::<bool>()
+            if let Ok(false) = setting.value.parse::<bool>()
                 && !self.entry.ignore_keys.contains(&setting_name)
             {
                 contributions.push(AutoscanReportContribution::DisabledSettingNotice {
