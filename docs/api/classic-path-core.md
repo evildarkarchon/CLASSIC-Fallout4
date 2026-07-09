@@ -62,8 +62,8 @@ All contributor-facing APIs are re-exported from `src/lib.rs`; the internal modu
 
 - `IniFile` - parsed INI wrapper with case-insensitive section/key lookup
 - `DocumentsChecker` - read-only documents-folder checker
-- `DocumentsCheckResult` / `DocumentsCheckState` - rendered documents messages with structured state
-- `IniCheckResult` - structured result for one INI check
+- `DocumentsCheckResult` / `DocumentsCheckState` - Rust-only rendered documents messages with structured state
+- `IniCheckResult` - structured result for one INI check, also exposed by the Python binding
 
 ### Backup APIs
 
@@ -198,7 +198,7 @@ Construction:
 
 - `DocumentsChecker::new(game_name)`
 
-Important methods:
+Important Rust methods:
 
 - `check_onedrive_in_path(docs_path) -> Option<String>`
 - `check_onedrive_in_path_result(docs_path) -> Option<DocumentsCheckResult>`
@@ -206,6 +206,13 @@ Important methods:
 - `run_all_check_results(docs_path) -> DocsPathResult<Vec<DocumentsCheckResult>>`
 - `run_all_checks(docs_path) -> DocsPathResult<Vec<String>>`
 - `game_name()`
+
+Python `classic_path.DocumentsChecker` exposes the string-oriented surface only:
+
+- `check_onedrive_in_path(docs_path) -> str | None`
+- `validate_ini_file(docs_path, ini_name) -> IniCheckResult`
+- `run_all_checks(docs_path) -> list[str]`
+- `game_name`
 
 `DocumentsCheckResult` fields:
 

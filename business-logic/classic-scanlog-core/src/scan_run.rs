@@ -62,6 +62,11 @@ impl CrashLogScanRun {
             preserve_order,
         } = request;
 
+        // Scan-run sentinel: `Some(0)` means "adaptive default" here, identical to
+        // `None`. This fold lives at the scan-run seam only; `resolve_batch_concurrency`
+        // keeps `Some(0) -> 1` (serial) for the other batch callers and their tests.
+        let max_concurrent = normalize_scan_run_concurrency(max_concurrent);
+
         let unsolved_logs_destination = resolve_unsolved_logs_destination(&self.ready, &intent)?;
 
         let mut orchestrator = self.build_orchestrator().await?;
@@ -144,6 +149,68 @@ pub enum CrashLogScanRunIntent {
     Standard(StandardCrashLogScanRunIntent),
     /// A Targeted Crash Log Scan Run never moves failed logs to Unsolved Logs.
     Targeted,
+}
+
+impl CrashLogScanRunIntent {
+    /// Builds a Crash Log Scan Run intent from already-parsed caller flags.
+    ///
+    /// This is the request-normalization seam adapters build against: they pass
+    /// the user's intent facts (Targeted mode, whether to move Unsolved Logs, and
+    /// an optional already-parsed destination path) and the core derives the
+    /// Standard/Targeted intent. Behavioral rules stay in the run itself:
+    ///
+    /// - Targeted mode always wins over any movement flags.
+    /// - `move_unsolved_logs == false` means [`StandardUnsolvedLogsIntent::LeaveInPlace`]
+    ///   and the destination is ignored.
+    /// - Move with an explicit destination means [`StandardUnsolvedLogsIntent::MoveToCustom`].
+    /// - Move without a destination means [`StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault`].
+    ///
+    /// Absolute-path validation of a custom destination stays in
+    /// [`CrashLogScanRun::run`]; this constructor is infallible. TUI-style callers
+    /// that already hold an `Option<PathBuf>` should use this to avoid a lossy
+    /// path -> string -> path round trip; string-based adapters should use
+    /// [`CrashLogScanRunIntent::from_adapter_flags`].
+    #[must_use]
+    pub fn from_configured_flags(
+        targeted_mode: bool,
+        move_unsolved_logs: bool,
+        unsolved_logs_destination: Option<PathBuf>,
+    ) -> Self {
+        if targeted_mode {
+            return CrashLogScanRunIntent::Targeted;
+        }
+
+        let unsolved_logs = if !move_unsolved_logs {
+            StandardUnsolvedLogsIntent::LeaveInPlace
+        } else if let Some(destination) = unsolved_logs_destination {
+            StandardUnsolvedLogsIntent::MoveToCustom(destination)
+        } else {
+            StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
+        };
+
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs })
+    }
+
+    /// Builds a Crash Log Scan Run intent from raw adapter flags.
+    ///
+    /// The string-based binding surfaces (CXX, Node, Python) share the destination
+    /// sentinel convention where an absent, empty, or whitespace-only destination
+    /// means "not supplied". This constructor owns that normalization — trimming
+    /// the destination and treating an empty result as absent — then delegates to
+    /// [`CrashLogScanRunIntent::from_configured_flags`] so both variants share a
+    /// single derivation path.
+    #[must_use]
+    pub fn from_adapter_flags(
+        targeted_mode: bool,
+        move_unsolved_logs: bool,
+        unsolved_logs_destination: Option<&str>,
+    ) -> Self {
+        let destination = unsolved_logs_destination
+            .map(str::trim)
+            .filter(|destination| !destination.is_empty())
+            .map(PathBuf::from);
+        Self::from_configured_flags(targeted_mode, move_unsolved_logs, destination)
+    }
 }
 
 /// Intent for a Standard Crash Log Scan Run.
@@ -376,6 +443,12 @@ async fn finalize_log_outcome(
         plugin_count: result.plugin_count,
         suspect_count: result.suspect_count,
     }
+}
+
+/// Folds the scan-run `max_concurrent` sentinel: `Some(0)` becomes `None`
+/// (adaptive default), matching `None`. Any other value is preserved.
+fn normalize_scan_run_concurrency(max_concurrent: Option<usize>) -> Option<usize> {
+    max_concurrent.filter(|value| *value != 0)
 }
 
 fn outcome_from_analysis(result: &AnalysisResult) -> CrashLogScanOutcome {

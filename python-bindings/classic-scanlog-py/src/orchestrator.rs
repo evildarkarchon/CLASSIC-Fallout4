@@ -8,7 +8,7 @@ use classic_scanlog_core::{
     AnalysisConfig, AnalysisResult, BatchScanEventKind, BatchScanOptions, CrashLogScanIntake,
     CrashLogScanOptions, CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunIntent,
     CrashLogScanRunLogOutcome, CrashLogScanRunRequest, OrchestratorCore,
-    StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, build_analysis_config_from_yaml,
+    build_analysis_config_from_yaml,
 };
 use classic_shared::without_gil_block_on;
 use pyo3::exceptions::{PyTypeError, PyValueError};
@@ -952,9 +952,6 @@ pub fn scan_run_execute(
     let yaml_dir_root = PathBuf::from(yaml_dir_root);
     let yaml_dir_data = PathBuf::from(yaml_dir_data);
     let cancellation = cancellation_token.map(|token| token.inner.clone());
-    let unsolved_logs_destination = unsolved_logs_destination
-        .map(|destination| destination.trim().to_string())
-        .filter(|destination| !destination.is_empty());
 
     let result = without_gil_block_on(py, || async move {
         let prepared = CrashLogScanIntake::from_yaml_paths(
@@ -967,26 +964,18 @@ pub fn scan_run_execute(
         .prepare()
         .await?;
 
-        let intent = if targeted_mode {
-            CrashLogScanRunIntent::Targeted
-        } else {
-            let unsolved_logs = if move_unsolved_logs {
-                if let Some(destination) = unsolved_logs_destination {
-                    StandardUnsolvedLogsIntent::MoveToCustom(PathBuf::from(destination))
-                } else {
-                    StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
-                }
-            } else {
-                StandardUnsolvedLogsIntent::LeaveInPlace
-            };
-            CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs })
-        };
+        let intent = CrashLogScanRunIntent::from_adapter_flags(
+            targeted_mode,
+            move_unsolved_logs,
+            unsolved_logs_destination.as_deref(),
+        );
 
         CrashLogScanRun::new(prepared)
             .run(
                 CrashLogScanRunRequest {
                     logs: log_paths.into_iter().map(PathBuf::from).collect(),
                     intent,
+                    // Core folds the `Some(0)` sentinel to the adaptive default.
                     max_concurrent,
                     cancellation,
                     preserve_order,

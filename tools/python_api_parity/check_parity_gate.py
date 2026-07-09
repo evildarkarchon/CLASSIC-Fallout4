@@ -135,9 +135,7 @@ def artifacts_match(expected: Path, actual: Path) -> bool:
     if expected.suffix == ".json":
         expected_payload = json.loads(expected.read_text(encoding="utf-8"))
         actual_payload = json.loads(actual.read_text(encoding="utf-8"))
-        expected_payload.pop("generated_at_utc", None)
-        actual_payload.pop("generated_at_utc", None)
-        return expected_payload == actual_payload
+        return payloads_match_ignoring_generated_at(expected_payload, actual_payload)
 
     expected_lines = [
         line
@@ -150,6 +148,33 @@ def artifacts_match(expected: Path, actual: Path) -> bool:
         if not line.startswith("- Generated:")
     ]
     return expected_lines == actual_lines
+
+
+def payloads_match_ignoring_generated_at(
+    expected_payload: dict[str, Any], actual_payload: dict[str, Any]
+) -> bool:
+    """Return whether two JSON artifact payloads differ only by timestamp."""
+    expected = dict(expected_payload)
+    actual = dict(actual_payload)
+    expected.pop("generated_at_utc", None)
+    actual.pop("generated_at_utc", None)
+    return expected == actual
+
+
+def preserve_baseline_generated_at(
+    baseline_path: Path, generated_payload: dict[str, Any]
+) -> None:
+    """Reuse the baseline timestamp when regenerated content is unchanged."""
+    if not baseline_path.exists():
+        return
+
+    baseline_payload = json.loads(baseline_path.read_text(encoding="utf-8"))
+    if not payloads_match_ignoring_generated_at(baseline_payload, generated_payload):
+        return
+
+    generated_at = baseline_payload.get("generated_at_utc")
+    if isinstance(generated_at, str):
+        generated_payload["generated_at_utc"] = generated_at
 
 
 def sync_baseline_artifacts(
@@ -232,6 +257,13 @@ def main() -> int:
             "contract": args.contract,
             "runtime_registry": args.runtime_registry,
         },
+    )
+
+    preserve_baseline_generated_at(
+        baseline_output_dir / "parity_diff_report.json", diff_report
+    )
+    preserve_baseline_generated_at(
+        baseline_output_dir / "runtime_coverage_summary.json", coverage_summary
     )
 
     write_json(output_dir / "rust_api_surface.json", rust_manifest)

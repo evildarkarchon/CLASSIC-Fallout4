@@ -403,3 +403,109 @@ fn cancellation_before_start_is_counted_separately() {
         CrashLogScanOutcome::CancelledBeforeStart
     );
 }
+
+#[test]
+fn from_adapter_flags_targeted_wins_over_move_and_destination() {
+    let intent = CrashLogScanRunIntent::from_adapter_flags(true, true, Some("C:/custom/unsolved"));
+
+    assert!(matches!(intent, CrashLogScanRunIntent::Targeted));
+}
+
+#[test]
+fn from_adapter_flags_move_disabled_leaves_in_place_and_ignores_destination() {
+    let intent =
+        CrashLogScanRunIntent::from_adapter_flags(false, false, Some("C:/custom/unsolved"));
+
+    assert!(matches!(
+        intent,
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
+        })
+    ));
+}
+
+#[test]
+fn from_adapter_flags_move_with_destination_trims_to_custom() {
+    let intent =
+        CrashLogScanRunIntent::from_adapter_flags(false, true, Some("  C:/custom/unsolved  "));
+
+    match intent {
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::MoveToCustom(destination),
+        }) => assert_eq!(destination, std::path::PathBuf::from("C:/custom/unsolved")),
+        _ => panic!("expected standard custom destination intent"),
+    }
+}
+
+#[test]
+fn from_adapter_flags_move_with_whitespace_destination_uses_configured_or_default() {
+    let intent = CrashLogScanRunIntent::from_adapter_flags(false, true, Some("   "));
+
+    assert!(matches!(
+        intent,
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
+        })
+    ));
+}
+
+#[test]
+fn from_adapter_flags_move_without_destination_uses_configured_or_default() {
+    let intent = CrashLogScanRunIntent::from_adapter_flags(false, true, None);
+
+    assert!(matches!(
+        intent,
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
+        })
+    ));
+}
+
+#[test]
+fn from_configured_flags_move_with_path_uses_custom_destination() {
+    let destination = std::path::PathBuf::from("C:/custom/unsolved");
+
+    let intent =
+        CrashLogScanRunIntent::from_configured_flags(false, true, Some(destination.clone()));
+
+    match intent {
+        CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+            unsolved_logs: StandardUnsolvedLogsIntent::MoveToCustom(custom),
+        }) => assert_eq!(custom, destination),
+        _ => panic!("expected standard custom destination intent"),
+    }
+}
+
+#[test]
+fn normalize_scan_run_concurrency_folds_zero_to_adaptive() {
+    assert_eq!(normalize_scan_run_concurrency(None), None);
+    assert_eq!(normalize_scan_run_concurrency(Some(0)), None);
+    assert_eq!(normalize_scan_run_concurrency(Some(1)), Some(1));
+    assert_eq!(normalize_scan_run_concurrency(Some(8)), Some(8));
+}
+
+#[test]
+fn scan_run_treats_zero_max_concurrent_as_adaptive_default() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let log_path = write_fixture_log(&temp, "crash-zero-concurrency.log");
+    let run = CrashLogScanRun::new(make_ready_analysis());
+
+    let result = get_runtime()
+        .block_on(run.run(
+            CrashLogScanRunRequest {
+                logs: vec![log_path.clone()],
+                intent: CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
+                    unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
+                }),
+                max_concurrent: Some(0),
+                cancellation: None,
+                preserve_order: true,
+            },
+            |_| {},
+        ))
+        .expect("scan run should succeed with adaptive concurrency");
+
+    assert_eq!(result.total, 1);
+    assert_eq!(result.succeeded, 1);
+    assert_eq!(result.logs[0].outcome, CrashLogScanOutcome::Succeeded);
+}

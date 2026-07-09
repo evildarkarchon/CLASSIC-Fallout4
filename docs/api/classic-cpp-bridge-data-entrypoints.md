@@ -617,11 +617,12 @@ C++ callers populate `ScanRunRequestDto` and pass it by reference. Request field
 Current bridge behavior:
 
 - accepts selected Crash Log paths from C++ callers; it does not collect logs
-- `request.max_concurrent == 0` becomes the core adaptive concurrency default
+- the bridge forwards the raw request facts unchanged; request normalization is core-owned. It passes `targeted_mode`, `move_unsolved_logs`, and the raw `unsolved_logs_destination` string to `CrashLogScanRunIntent::from_adapter_flags(...)`, and passes `max_concurrent` straight through as `Some(request.max_concurrent as usize)`. The core owns the resulting behavior:
+- `request.max_concurrent == 0` is folded to the core adaptive concurrency default at the scan-run seam (equivalent to `None`)
 - `request.targeted_mode = true` creates a Targeted Crash Log Scan Run and ignores `move_unsolved_logs` plus `unsolved_logs_destination`
 - `request.targeted_mode = false` creates a Standard Crash Log Scan Run
 - Standard requests with `move_unsolved_logs = false` leave failed logs in place and ignore `unsolved_logs_destination`
-- Standard requests with `move_unsolved_logs = true` and non-empty `unsolved_logs_destination` request that custom destination; Rust rejects relative paths as setup errors
+- Standard requests with `move_unsolved_logs = true` and non-empty `unsolved_logs_destination` request that custom destination (the core trims the string and treats empty/whitespace as not supplied); Rust rejects relative paths as setup errors
 - Standard requests with `move_unsolved_logs = true` and empty `unsolved_logs_destination` use Rust destination resolution from `CLASSIC_Settings.Unsolved Logs Destination`, falling back to canonical `CLASSIC Backup/Unsolved Logs` under path-backed intake roots
 - Rust writes Autoscan Reports before returning per-log results; C++ callers no longer receive `report_lines` from this entry point
 - setup failures return a CXX `Result` error; per-log analysis, Autoscan Report write, and invalid or unwritable absolute Unsolved Logs movement failures are represented in `ScanRunLogResult`

@@ -130,21 +130,29 @@ TEST_CASE("yaml_rollback_update on unknown file does not error",
 
 TEST_CASE("yaml_data_rollback_update covers first-party shippable files",
           "[bridge][update][yaml]") {
-    const auto report = classic::update::yaml_data_rollback_update();
-    std::vector<std::string> names;
-    for (const auto& fileName : report.rolled_back) {
-        names.emplace_back(fileName);
-    }
-    for (const auto& fileName : report.no_previous_version) {
-        names.emplace_back(fileName);
-    }
-    for (const auto& fileName : report.failed_files) {
-        names.emplace_back(fileName);
+    const fs::path root = make_disabled_settings_root();
+    {
+        const ScopedCurrentPath cwd(root);
+        const auto report = classic::update::yaml_data_rollback_update();
+
+        std::vector<std::string> names;
+        for (const auto& fileName : report.rolled_back) {
+            names.emplace_back(fileName);
+        }
+        for (const auto& fileName : report.no_previous_version) {
+            names.emplace_back(fileName);
+        }
+        for (const auto& fileName : report.failed_files) {
+            names.emplace_back(fileName);
+        }
+
+        REQUIRE(std::find(names.begin(), names.end(), "CLASSIC Main.yaml") != names.end());
+        REQUIRE(std::find(names.begin(), names.end(), "CLASSIC Fallout4.yaml") != names.end());
+        REQUIRE(report.failed_files.size() == report.failure_reasons.size());
     }
 
-    REQUIRE(std::find(names.begin(), names.end(), "CLASSIC Main.yaml") != names.end());
-    REQUIRE(std::find(names.begin(), names.end(), "CLASSIC Fallout4.yaml") != names.end());
-    REQUIRE(report.failed_files.size() == report.failure_reasons.size());
+    std::error_code ec;
+    fs::remove_all(root, ec);
 }
 
 TEST_CASE("run_check_yaml_updates reports disabled setting without failing",

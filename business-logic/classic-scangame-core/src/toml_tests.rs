@@ -206,6 +206,42 @@ fn test_yaml_rules_path_detects_issue() {
 }
 
 #[test]
+fn test_yaml_rules_match_string_toml_values_without_quotes() {
+    let temp_dir = TempDir::new().unwrap();
+    let buffout_dir = temp_dir.path().join("Buffout4");
+    fs::create_dir(&buffout_dir).unwrap();
+
+    let config_file = buffout_dir.join("config.toml");
+    fs::write(&config_file, "[Compatibility]\nMode = \"Enabled\"\n").unwrap();
+
+    let rules = CrashgenSettingsRules {
+        version: 1,
+        preflight: vec![],
+        checks: vec![CheckRule {
+            id: "mode_enabled".to_string(),
+            target: RuleTarget {
+                section: "Compatibility".to_string(),
+                key: "Mode".to_string(),
+                value_type: TargetValueType::String,
+            },
+            when: Predicate::Always,
+            expect: ExpectedValue::String("Enabled".to_string()),
+            messages: RuleMessages {
+                fail: "Mode should be Enabled".to_string(),
+                fix: None,
+                pass: None,
+            },
+            severity: RuleSeverity::Warning,
+        }],
+    };
+
+    let mut checker = CrashgenChecker::new_with_rules(temp_dir.path(), "Buffout4", Some(rules));
+    let (_report, issues) = checker.check().unwrap();
+
+    assert!(issues.is_empty());
+}
+
+#[test]
 fn test_yaml_rules_use_target_toml_section() {
     let temp_dir = TempDir::new().unwrap();
     let buffout_dir = temp_dir.path().join("Buffout4");

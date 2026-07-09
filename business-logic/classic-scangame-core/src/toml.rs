@@ -355,7 +355,11 @@ impl CrashgenChecker {
             for (section, value) in data {
                 if let Some(table) = value.as_table() {
                     for (key, item) in table {
-                        result.insert(section, key, item.to_string());
+                        let value = match item {
+                            Value::String(text) => text.clone(),
+                            _ => item.to_string(),
+                        };
+                        result.insert(section, key, value);
                     }
                 }
             }

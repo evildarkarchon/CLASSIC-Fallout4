@@ -265,6 +265,10 @@ fn yaml_report_error_dto(message: String) -> ffi::YamlUpdateReportDto {
     }
 }
 
+fn yaml_github_client_report_error_dto(error: UpdateError) -> ffi::YamlUpdateReportDto {
+    yaml_report_error_dto(format!("github client init failed: {error}"))
+}
+
 fn yaml_report_to_dto(
     result: Result<classic_update_core::YamlUpdateReport, UpdateError>,
 ) -> ffi::YamlUpdateReportDto {
@@ -313,7 +317,7 @@ fn yaml_apply_update(request: &ffi::YamlApplyRequestDto) -> ffi::YamlUpdateRepor
     // user toggled it mid-review.
     let client = match GithubClient::new("evildarkarchon", "CLASSIC-Fallout4") {
         Ok(c) => c,
-        Err(e) => return yaml_report_error_dto(format!("github client init failed: {e}")),
+        Err(e) => return yaml_github_client_report_error_dto(e),
     };
 
     let set = build_client_schema_set(&request.entries);
@@ -338,7 +342,7 @@ fn yaml_data_apply_update(
 ) -> ffi::YamlUpdateReportDto {
     let client = match GithubClient::new("evildarkarchon", "CLASSIC-Fallout4") {
         Ok(c) => c,
-        Err(e) => return yaml_report_error_dto(format!("github client init failed: {e}")),
+        Err(e) => return yaml_github_client_report_error_dto(e),
     };
 
     let config = build_yaml_config(enabled, "");

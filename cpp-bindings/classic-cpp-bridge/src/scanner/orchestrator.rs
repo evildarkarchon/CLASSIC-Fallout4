@@ -4,8 +4,7 @@ use classic_scanlog_core::{
     AnalysisConfig, BatchScanEventKind, BatchScanOptions, CrashLogScanIntake, CrashLogScanOptions,
     CrashLogScanRun, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunRequest,
     FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER, OrchestratorCore, SHORT_SCAN_CACHE_PROFILE,
-    ScanReadyAnalysis, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent,
-    load_simplify_remove_list as core_load_simplify_remove_list,
+    ScanReadyAnalysis, load_simplify_remove_list as core_load_simplify_remove_list,
     resolve_formid_database_paths as core_resolve_formid_database_paths,
     resolve_user_formid_database_paths as core_resolve_user_formid_database_paths,
 };
@@ -380,13 +379,12 @@ pub(crate) fn scan_run_execute(
         .prepare(),
     )?;
 
-    let intent = scan_run_intent_from_request(request);
+    let intent = CrashLogScanRunIntent::from_adapter_flags(
+        request.targeted_mode,
+        request.move_unsolved_logs,
+        Some(request.unsolved_logs_destination.as_str()),
+    );
 
-    let max_parallel = if request.max_concurrent == 0 {
-        None
-    } else {
-        Some(request.max_concurrent as usize)
-    };
     let run = CrashLogScanRun::new(prepared);
     let run_request = CrashLogScanRunRequest {
         logs: request
@@ -395,7 +393,8 @@ pub(crate) fn scan_run_execute(
             .map(|path| PathBuf::from(path.as_str()))
             .collect(),
         intent,
-        max_concurrent: max_parallel,
+        // Core folds the `Some(0)` sentinel to the adaptive default.
+        max_concurrent: Some(request.max_concurrent as usize),
         cancellation: Some(Arc::clone(&cancellation_token.cancelled)),
         preserve_order: false,
     };
@@ -424,25 +423,6 @@ pub(crate) fn scan_run_execute(
         .into_iter()
         .map(scan_run_log_outcome_to_dto)
         .collect())
-}
-
-fn scan_run_intent_from_request(request: &ffi::ScanRunRequestDto) -> CrashLogScanRunIntent {
-    if request.targeted_mode {
-        return CrashLogScanRunIntent::Targeted;
-    }
-
-    let unsolved_logs = if !request.move_unsolved_logs {
-        StandardUnsolvedLogsIntent::LeaveInPlace
-    } else {
-        let destination = request.unsolved_logs_destination.trim();
-        if destination.is_empty() {
-            StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
-        } else {
-            StandardUnsolvedLogsIntent::MoveToCustom(PathBuf::from(destination))
-        }
-    };
-
-    CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs })
 }
 
 // ── FormID database path resolution ─────────────────────────────────

@@ -10,7 +10,6 @@ use classic_path_core::validate_custom_scan_path;
 use classic_scanlog_core::{
     CrashLogScanIntake, CrashLogScanOptions, CrashLogScanRun, CrashLogScanRunEvent,
     CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunRequest,
-    StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent,
 };
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
@@ -667,17 +666,11 @@ impl App {
                 })
             };
 
-            let unsolved_logs = if move_unsolved_logs {
-                if let Some(destination) = unsolved_logs_destination {
-                    StandardUnsolvedLogsIntent::MoveToCustom(destination)
-                } else {
-                    StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
-                }
-            } else {
-                StandardUnsolvedLogsIntent::LeaveInPlace
-            };
-            let intent =
-                CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs });
+            let intent = CrashLogScanRunIntent::from_configured_flags(
+                false,
+                move_unsolved_logs,
+                unsolved_logs_destination,
+            );
             let request = CrashLogScanRunRequest {
                 logs: log_paths,
                 intent,

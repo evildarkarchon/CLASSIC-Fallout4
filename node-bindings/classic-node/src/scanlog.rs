@@ -21,7 +21,6 @@ use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FC
 use classic_scanlog_core::{
     CrashLogScanIntake, CrashLogScanOptions, CrashLogScanOutcome, CrashLogScanRun,
     CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, OrchestratorCore,
-    StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent,
 };
 use classic_shared_core::GameId;
 use std::collections::{HashMap, HashSet};
@@ -539,7 +538,8 @@ pub async fn scan_run_execute(
     options: JsScanRunOptions,
 ) -> napi::Result<Vec<JsScanRunLogResult>> {
     let handle = classic_shared_core::get_runtime().handle().clone();
-    let max_concurrent = normalize_max_concurrent(options.max_concurrent);
+    // Core folds the `Some(0)` sentinel to the adaptive default at the scan-run seam.
+    let max_concurrent = options.max_concurrent.map(|value| value as usize);
     let show_formid_values = options.show_formid_values.unwrap_or(false);
     let fcx_mode = options.fcx_mode.unwrap_or(false);
     let simplify_logs = options.simplify_logs.unwrap_or(false);
@@ -563,21 +563,11 @@ pub async fn scan_run_execute(
             .await
             .map_err(|error| format!("Failed to prepare scan run: {error}"))?;
 
-            let intent = if targeted_mode {
-                CrashLogScanRunIntent::Targeted
-            } else {
-                let unsolved_logs = if move_unsolved_logs {
-                    match unsolved_logs_destination.as_deref().map(str::trim) {
-                        Some(destination) if !destination.is_empty() => {
-                            StandardUnsolvedLogsIntent::MoveToCustom(PathBuf::from(destination))
-                        }
-                        _ => StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault,
-                    }
-                } else {
-                    StandardUnsolvedLogsIntent::LeaveInPlace
-                };
-                CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs })
-            };
+            let intent = CrashLogScanRunIntent::from_adapter_flags(
+                targeted_mode,
+                move_unsolved_logs,
+                unsolved_logs_destination.as_deref(),
+            );
 
             let run = CrashLogScanRun::new(prepared);
             let result = run

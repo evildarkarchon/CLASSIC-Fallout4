@@ -675,7 +675,7 @@ Note the import path: the types come from `classic_config_core::`, not the forme
 
 - The rule-model public surface is whatever stays `pub` in `src/crashgen_rules.rs` and is re-exported from `lib.rs`; there are no facade modules or selective re-exports.
 - The evaluator is synchronous and runtime-agnostic.
-- `RuleTarget.section` is descriptive output metadata today, not part of the lookup key.
+- Rule lookup uses both `RuleTarget.section` and `RuleTarget.key`; section-scoped settings with the same key name do not collide.
 - `CrashgenVersionLt` treats a missing crashgen version as matching; if you change that, update downstream callers and docs together.
 - Only `{crashgen_name}`, `{display_section}`, and `{setting}` are recognized in message templates.
 - There is no built-in loader validation API; schema validation currently happens upstream inside the same crate.

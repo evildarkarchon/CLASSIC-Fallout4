@@ -261,11 +261,21 @@ Important types:
 - `CrashLogScanRun::run(request, on_event).await -> Result<CrashLogScanRunResult, ScanLogError>`
 - `CrashLogScanRunRequest { logs, intent, max_concurrent, cancellation, preserve_order }`
 - `CrashLogScanRunIntent::Standard(...)` and `CrashLogScanRunIntent::Targeted`
+- `CrashLogScanRunIntent::from_adapter_flags(targeted_mode, move_unsolved_logs, unsolved_logs_destination: Option<&str>)`
+- `CrashLogScanRunIntent::from_configured_flags(targeted_mode, move_unsolved_logs, unsolved_logs_destination: Option<PathBuf>)`
 - `StandardUnsolvedLogsIntent::LeaveInPlace`, `MoveToConfiguredOrDefault`, and `MoveToCustom(path)`
+
+Request normalization seam:
+
+- `from_adapter_flags` and `from_configured_flags` are the infallible request-normalization constructors adapters build against. Callers pass user intent facts — Targeted mode, whether to move Unsolved Logs, and an optional destination — and the core derives the Standard/Targeted intent so every binding shares one rule set instead of re-deriving it.
+- Derivation rules: Targeted mode always wins over movement; `move_unsolved_logs == false` maps to `LeaveInPlace` and ignores the destination; move with a destination maps to `MoveToCustom`; move without a destination maps to `MoveToConfiguredOrDefault`.
+- `from_adapter_flags` takes the raw string destination used by the CXX, Node, and Python surfaces and owns the sentinel convention: it trims the destination and treats an empty or whitespace-only result as absent. `from_configured_flags` takes an already-parsed `Option<PathBuf>` (used by the TUI) so callers that already hold a path avoid a lossy path -> string -> path round trip. `from_adapter_flags` delegates to `from_configured_flags` after trimming.
+- Absolute-path validation of a custom destination stays in `run` (see below); the constructors themselves are infallible.
 
 Behavior worth knowing:
 
 - Adapters own Crash Log selection; `CrashLogScanRun` owns execution after selection.
+- `CrashLogScanRunRequest.max_concurrent = Some(0)` is treated as the adaptive default at the scan-run seam, identical to `None`. `run` folds `Some(0) -> None` before building batch options; only positive values pin the concurrency. This fold lives at the scan-run seam only and does not change `resolve_batch_concurrency`, which keeps `Some(0) -> 1` (serial) for the analysis-batch callers.
 - `Standard` runs may move failed Crash Logs and sibling Autoscan Reports to Unsolved Logs when their intent requests movement.
 - `Targeted` runs never move Crash Logs or Autoscan Reports to Unsolved Logs.
 - `MoveToConfiguredOrDefault` uses the prepared `CLASSIC_Settings.Unsolved Logs Destination` when non-empty, otherwise the canonical `CLASSIC Backup/Unsolved Logs` directory under path-backed intake roots.

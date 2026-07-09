@@ -1,4 +1,34 @@
 use super::*;
+use serial_test::serial;
+use std::ffi::{OsStr, OsString};
+
+struct EnvVarGuard {
+    key: &'static str,
+    previous: Option<OsString>,
+}
+
+impl EnvVarGuard {
+    fn set(key: &'static str, value: impl AsRef<OsStr>) -> Self {
+        let previous = std::env::var_os(key);
+        // SAFETY: tests that use this guard are serial and the rollback path
+        // reads these variables synchronously before the guard is dropped.
+        unsafe { std::env::set_var(key, value) };
+        Self { key, previous }
+    }
+}
+
+impl Drop for EnvVarGuard {
+    fn drop(&mut self) {
+        // SAFETY: see EnvVarGuard::set; this restores the serialized test's
+        // process environment before other serialized rollback tests run.
+        unsafe {
+            match &self.previous {
+                Some(value) => std::env::set_var(self.key, value),
+                None => std::env::remove_var(self.key),
+            }
+        }
+    }
+}
 
 #[test]
 fn test_has_update_older() {
@@ -282,7 +312,14 @@ fn yaml_data_apply_update_short_circuits_when_disabled() {
 }
 
 #[test]
+#[serial]
 fn yaml_data_rollback_update_reports_first_party_targets() {
+    let cache_root = tempfile::TempDir::new().unwrap();
+    let _local_app_data = EnvVarGuard::set("LOCALAPPDATA", cache_root.path());
+    let _app_data = EnvVarGuard::set("APPDATA", cache_root.path());
+    let _xdg_cache_home = EnvVarGuard::set("XDG_CACHE_HOME", cache_root.path());
+    let _home = EnvVarGuard::set("HOME", cache_root.path());
+
     let dto = yaml_data_rollback_update();
     let mut names = Vec::new();
     names.extend(dto.rolled_back.iter().cloned());
