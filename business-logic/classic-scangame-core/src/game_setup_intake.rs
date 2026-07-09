@@ -586,10 +586,7 @@ fn resolve_paths(
         .map(|root| root.join(intake.game_id.exe_name()));
     let plugins_path = game_root
         .as_ref()
-        .and_then(|root| {
-            info.and_then(|info| info.xse.as_ref())
-                .map(|xse| (root, xse))
-        })
+        .zip(info.and_then(|info| info.xse.as_ref()))
         .map(|(root, xse)| {
             root.join("Data")
                 .join(xse_runtime_folder_name(&xse.acronym))
