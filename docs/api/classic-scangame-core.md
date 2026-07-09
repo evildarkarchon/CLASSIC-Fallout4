@@ -244,6 +244,7 @@ Important items:
 - `GameSetupIntake::new(game_id, selected_game_version)`
 - `GameSetupIntake::from_config(config, game_id)`
 - `GameSetupIntake::with_game_root(path)`
+- `GameSetupIntake::with_game_exe_path(path)`
 - `GameSetupIntake::with_docs_root(path)`
 - `GameSetupIntake::with_xse_log_path(path)`
 - `GameSetupIntake::run() -> GameSetupIntakeResult`
@@ -264,6 +265,7 @@ Behavior worth knowing:
 
 - Game Setup Intake is read-only; detected paths are returned as proposed updates instead of being persisted.
 - `auto` mode reads executable PE version metadata and attempts a Version Registry match.
+- a caller-provided executable path is used for root fallback, auto-version detection, executable version checks, hash checks, and installation-location checks.
 - `from_config(config, game_id)` returns `None` when no saved game root exists and uses `docs_root` before falling back to legacy `ini_folder`.
 - failed setup diagnostics are typed checks; the top-level status is `ActionRequired` only when user input is missing.
 - documents-folder state is mapped from `classic-path-core`'s structured `DocumentsCheckState`, not rendered message text.

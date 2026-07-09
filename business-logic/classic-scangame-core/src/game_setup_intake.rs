@@ -246,6 +246,8 @@ pub struct GameSetupIntake {
     pub game_id: GameId,
     /// Selected game version, usually `auto` or a canonical Fallout 4 mode.
     pub selected_game_version: String,
+    /// Saved or caller-provided game executable path.
+    pub game_exe_path: Option<PathBuf>,
     /// Saved or caller-provided game root.
     pub game_root: Option<PathBuf>,
     /// Saved or caller-provided documents root.
@@ -264,6 +266,7 @@ impl GameSetupIntake {
         Self {
             game_id,
             selected_game_version: selected_game_version.into(),
+            game_exe_path: None,
             game_root: None,
             docs_root: None,
             xse_log_path: None,
@@ -302,6 +305,13 @@ impl GameSetupIntake {
         self
     }
 
+    /// Set a saved or caller-provided game executable path.
+    #[must_use]
+    pub fn with_game_exe_path(mut self, path: impl Into<PathBuf>) -> Self {
+        self.game_exe_path = non_empty_pathbuf(path.into());
+        self
+    }
+
     /// Set a saved or caller-provided documents root.
     #[must_use]
     pub fn with_docs_root(mut self, path: impl Into<PathBuf>) -> Self {
@@ -329,18 +339,16 @@ impl GameSetupIntake {
 
         let selected = normalize_game_setup_version_selection(&self.selected_game_version);
         let game_root = resolve_game_root(self, &selected, &mut checks, &mut actions);
-        let auto_detection_exe_path = game_root
-            .as_ref()
-            .map(|root| root.join(selected_version_exe_name(self.game_id, &selected)));
+        let auto_detection_exe_path = self.game_exe_path.clone().or_else(|| {
+            game_root
+                .as_ref()
+                .map(|root| root.join(selected_version_exe_name(self.game_id, &selected)))
+        });
         let version_context = resolve_version_context(self, auto_detection_exe_path.as_deref());
         let mut version_facts = version_context.facts;
         checks.extend(version_context.checks);
-        let game_exe_path = game_root.as_ref().map(|root| {
-            root.join(version_info_exe_name(
-                self.game_id,
-                version_context.info.as_ref(),
-            ))
-        });
+        let game_exe_path =
+            resolve_game_exe_path(self, game_root.as_deref(), version_context.info.as_ref());
 
         let paths = resolve_version_dependent_paths(
             self,
@@ -656,12 +664,39 @@ fn resolve_version_dependent_paths(
     }
 }
 
+/// Resolve the executable path that executable-version and hash checks should inspect.
+fn resolve_game_exe_path(
+    intake: &GameSetupIntake,
+    game_root: Option<&Path>,
+    info: Option<&VersionInfo>,
+) -> Option<PathBuf> {
+    intake
+        .game_exe_path
+        .clone()
+        .or_else(|| game_root.map(|root| root.join(version_info_exe_name(intake.game_id, info))))
+}
+
 fn resolve_game_root(
     intake: &GameSetupIntake,
     selected_version: &str,
     checks: &mut Vec<GameSetupCheck>,
     actions: &mut Vec<GameSetupRequiredAction>,
 ) -> Option<PathBuf> {
+    if let Some(path) = resolve_game_root_from_configured_exe(
+        intake.game_root.as_deref(),
+        intake.game_exe_path.as_deref(),
+    ) {
+        checks.push(GameSetupCheck::new(
+            GameSetupCheckKind::GamePath,
+            GameSetupCheckState::Passed,
+            format!(
+                "Resolved game root from configured executable at {}.",
+                path.display()
+            ),
+        ));
+        return Some(path);
+    }
+
     let path_game_id = game_id_for_selected_version(intake.game_id, selected_version);
     let finder = GamePathFinder::new(
         path_game_id.exe_name(),
@@ -688,6 +723,36 @@ fn resolve_game_root(
             ));
             None
         }
+    }
+}
+
+/// Resolve a root from a caller-provided executable without accepting unrelated paths.
+fn resolve_game_root_from_configured_exe(
+    game_root: Option<&Path>,
+    game_exe_path: Option<&Path>,
+) -> Option<PathBuf> {
+    let exe_path = game_exe_path?;
+    if !exe_path.exists() {
+        return None;
+    }
+
+    let exe_parent = exe_path.parent()?;
+    match game_root {
+        Some(root) if paths_refer_to_same_location(exe_parent, root) => Some(root.to_path_buf()),
+        None => Some(exe_parent.to_path_buf()),
+        _ => None,
+    }
+}
+
+/// Return whether two paths identify the same existing location.
+fn paths_refer_to_same_location(left: &Path, right: &Path) -> bool {
+    if left == right {
+        return true;
+    }
+
+    match (left.canonicalize(), right.canonicalize()) {
+        (Ok(left), Ok(right)) => left == right,
+        _ => false,
     }
 }
 

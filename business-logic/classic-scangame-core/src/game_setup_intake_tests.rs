@@ -1,5 +1,6 @@
 use super::*;
 use std::fs;
+use std::path::Path;
 use tempfile::TempDir;
 
 fn setup_roots() -> (TempDir, PathBuf, PathBuf) {
@@ -10,6 +11,12 @@ fn setup_roots() -> (TempDir, PathBuf, PathBuf) {
     fs::create_dir_all(&docs_root).expect("docs root");
     fs::write(game_root.join("Fallout4.exe"), b"not a real pe").expect("fake exe");
     (temp, game_root, docs_root)
+}
+
+fn write_valid_docs_inis(docs_root: &Path) {
+    fs::write(docs_root.join("Fallout4.ini"), "[General]\n").expect("main ini");
+    fs::write(docs_root.join("Fallout4Custom.ini"), "[Archive]\n").expect("custom ini");
+    fs::write(docs_root.join("Fallout4Prefs.ini"), "[General]\n").expect("prefs ini");
 }
 
 #[test]
@@ -233,6 +240,43 @@ fn auto_without_registry_match_requests_version_choice() {
         .run();
 
     assert_eq!(result.status, GameSetupIntakeStatus::ActionRequired);
+    assert!(
+        result
+            .actions
+            .contains(&GameSetupRequiredAction::ChooseGameVersion)
+    );
+}
+
+#[test]
+fn configured_game_exe_path_allows_non_default_executable_under_root() {
+    let temp = TempDir::new().expect("temp dir");
+    let game_root = temp.path().join("Fallout4");
+    let docs_root = temp.path().join("Docs");
+    fs::create_dir_all(&game_root).expect("game root");
+    fs::create_dir_all(&docs_root).expect("docs root");
+    write_valid_docs_inis(&docs_root);
+    let configured_exe = game_root.join("Fallout4Custom.exe");
+    fs::write(&configured_exe, b"not a real pe").expect("configured exe");
+    fs::write(game_root.join("f4se_loader.exe"), b"loader").expect("loader");
+
+    let result = GameSetupIntake::new(GameId::Fallout4, "auto")
+        .with_game_root(&game_root)
+        .with_game_exe_path(&configured_exe)
+        .with_docs_root(&docs_root)
+        .run();
+
+    assert_eq!(result.status, GameSetupIntakeStatus::ActionRequired);
+    assert!(!result.has_errors());
+    assert_eq!(result.paths.game_root.as_deref(), Some(game_root.as_path()));
+    assert_eq!(
+        result.paths.game_exe_path.as_deref(),
+        Some(configured_exe.as_path())
+    );
+    assert!(
+        !result
+            .actions
+            .contains(&GameSetupRequiredAction::ChooseGamePath)
+    );
     assert!(
         result
             .actions

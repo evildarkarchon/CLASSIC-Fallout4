@@ -48,6 +48,7 @@ Important public items:
 - `GameSetupIntake::new(game_id, selected_game_version)`
 - `GameSetupIntake::from_config(config, game_id)`
 - `with_game_root(path)`
+- `with_game_exe_path(path)`
 - `with_docs_root(path)`
 - `with_xse_log_path(path)`
 - `run() -> GameSetupIntakeResult`
@@ -90,6 +91,7 @@ use classic_shared_core::GameId;
 
 let intake = GameSetupIntake::new(GameId::Fallout4, "auto")
     .with_game_root(r"C:\Games\Fallout 4")
+    .with_game_exe_path(r"C:\Games\Fallout 4\Fallout4.exe")
     .with_docs_root(r"C:\Users\Name\Documents\My Games\Fallout4");
 ```
 
@@ -103,6 +105,8 @@ Game Setup Intake delegates path discovery to `classic-path-core`:
 - `DocsPathFinder` resolves the documents root.
 
 The intake uses game-root detection without requiring the XSE loader. Missing loaders are reported as XSE diagnostics, not as path detection failures.
+
+If the caller provides a game executable path, intake preserves that path for executable checks and may use its parent as the resolved game root when the executable lives under the supplied root but does not use the default game executable basename.
 
 ## 4. Resolve Version Context
 
@@ -199,7 +203,7 @@ Adapters should not rebuild executable-hash, XSE, Address Library, or documents 
 When setup validation behaves unexpectedly, debug in this order:
 
 1. confirm the caller is using Game Setup Intake rather than a broader game-file scan
-2. inspect the intake inputs: `GameId`, selected version, game root, docs root, and XSE log path
+2. inspect the intake inputs: `GameId`, selected version, game executable path, game root, docs root, and XSE log path
 3. check whether the issue is missing user input (`actions`) or a failed diagnostic (`checks`)
 4. inspect `version` facts to see whether registry matching selected the expected entry
 5. verify whether a check is `Unsupported` because curated registry metadata is not available for that game

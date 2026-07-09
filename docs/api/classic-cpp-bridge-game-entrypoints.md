@@ -341,12 +341,13 @@ Important boundary:
 
 ## `classic::scangame` entry points
 
-### `run_game_setup_intake(game_id, game_version, game_root, docs_path, xse_log_path) -> GameSetupIntakeDto`
+### `run_game_setup_intake(game_id, game_version, game_root, docs_path, xse_log_path, game_exe_path) -> GameSetupIntakeDto`
 
 Forwards to:
 
 - `classic_scangame_core::GameSetupIntake::new(...)`
 - `GameSetupIntake::with_game_root(...)`
+- `GameSetupIntake::with_game_exe_path(...)`
 - `GameSetupIntake::with_docs_root(...)`
 - `GameSetupIntake::with_xse_log_path(...)`
 - `GameSetupIntake::run()`
@@ -367,10 +368,11 @@ Current bridge behavior that matters:
 
 - `game_id` must parse as a `classic_shared_core::GameId`
 - empty path strings are treated as absent optional paths
+- non-empty `game_exe_path` is forwarded to intake for root fallback, auto-version detection, executable checks, and install-location checks
 - invalid `game_id` returns a fatal DTO rather than throwing across CXX
 - setup diagnostics come from Rust core and include registry-backed executable, documents, and XSE checks where metadata exists
 
-### `game_setup_intake_checks(game_id, game_version, game_root, docs_path, xse_log_path) -> Result<Vec<GameSetupCheckDto>>`
+### `game_setup_intake_checks(game_id, game_version, game_root, docs_path, xse_log_path, game_exe_path) -> Result<Vec<GameSetupCheckDto>>`
 
 Returns the typed check list from the same intake run. Invalid intake inputs, such as an unknown `game_id`, are returned as CXX `Result` errors rather than being collapsed to an empty check list.
 

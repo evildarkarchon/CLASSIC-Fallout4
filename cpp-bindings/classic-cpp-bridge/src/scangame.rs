@@ -44,8 +44,16 @@ fn run_game_setup_intake(
     game_root: &str,
     docs_path: &str,
     xse_log_path: &str,
+    game_exe_path: &str,
 ) -> ffi::GameSetupIntakeDto {
-    match execute_game_setup_intake(game_id, game_version, game_root, docs_path, xse_log_path) {
+    match execute_game_setup_intake(
+        game_id,
+        game_version,
+        game_root,
+        docs_path,
+        xse_log_path,
+        game_exe_path,
+    ) {
         Ok(result) => game_setup_result_to_dto(result),
         Err(message) => ffi::GameSetupIntakeDto {
             rendered_report: format!("Game Setup Intake failed: {message}\n"),
@@ -67,16 +75,23 @@ fn game_setup_intake_checks(
     game_root: &str,
     docs_path: &str,
     xse_log_path: &str,
+    game_exe_path: &str,
 ) -> Result<Vec<ffi::GameSetupCheckDto>, String> {
-    execute_game_setup_intake(game_id, game_version, game_root, docs_path, xse_log_path).map(
-        |result| {
-            result
-                .checks
-                .into_iter()
-                .map(game_setup_check_to_dto)
-                .collect()
-        },
+    execute_game_setup_intake(
+        game_id,
+        game_version,
+        game_root,
+        docs_path,
+        xse_log_path,
+        game_exe_path,
     )
+    .map(|result| {
+        result
+            .checks
+            .into_iter()
+            .map(game_setup_check_to_dto)
+            .collect()
+    })
 }
 
 fn game_setup_needs_path_detection(
@@ -106,11 +121,15 @@ fn execute_game_setup_intake(
     game_root: &str,
     docs_path: &str,
     xse_log_path: &str,
+    game_exe_path: &str,
 ) -> Result<GameSetupIntakeResult, String> {
     let game_id = GameId::from_str(game_id).map_err(|error| error.to_string())?;
     let mut intake = GameSetupIntake::new(game_id, game_version);
     if !game_root.trim().is_empty() {
         intake = intake.with_game_root(PathBuf::from(game_root));
+    }
+    if !game_exe_path.trim().is_empty() {
+        intake = intake.with_game_exe_path(PathBuf::from(game_exe_path));
     }
     if !docs_path.trim().is_empty() {
         intake = intake.with_docs_root(PathBuf::from(docs_path));
@@ -770,6 +789,7 @@ mod ffi {
             game_root: &str,
             docs_path: &str,
             xse_log_path: &str,
+            game_exe_path: &str,
         ) -> GameSetupIntakeDto;
 
         fn game_setup_intake_checks(
@@ -778,6 +798,7 @@ mod ffi {
             game_root: &str,
             docs_path: &str,
             xse_log_path: &str,
+            game_exe_path: &str,
         ) -> Result<Vec<GameSetupCheckDto>>;
 
         fn game_setup_needs_path_detection(

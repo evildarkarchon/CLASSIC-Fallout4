@@ -13,6 +13,7 @@ private slots:
     void mainwindow_forwards_game_version_to_game_files_controller();
     void game_files_controller_forwards_game_version_to_worker();
     void game_files_worker_forwards_game_version_to_setup_intake();
+    void game_files_worker_marks_required_actions_as_attention();
     void scan_worker_handles_move_unsolved_and_max_concurrent_settings();
     void scan_worker_uses_progress_enabled_batch_api();
     void scan_worker_forwards_batch_counts_in_progress_updates();
@@ -165,10 +166,33 @@ void ScanSettingsWiringTests::game_files_worker_forwards_game_version_to_setup_i
 
     QVERIFY2(sourceText.contains(QStringLiteral("const QString& gameVersion")),
              "GameFilesWorker::doScan() should receive the selected game version");
+    QVERIFY2(!sourceText.contains(QStringLiteral("Q_UNUSED(gameExePath)")),
+             "GameFilesWorker should not discard the configured executable path");
     QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(gameVersion)")),
              "GameFilesWorker should forward gameVersion to run_game_setup_intake()");
+    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(gameExePath)")),
+             "GameFilesWorker should forward the configured executable path to setup intake");
     QVERIFY2(!sourceText.contains(QStringLiteral("::rust::Str(\"auto\", 4)")),
              "GameFilesWorker should not force setup intake back to auto detection");
+}
+
+void ScanSettingsWiringTests::game_files_worker_marks_required_actions_as_attention()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/gamefilesworker.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+
+    QVERIFY2(sourceText.contains(QStringLiteral("result.has_errors")),
+             "GameFilesWorker should preserve failed-check status from setup intake");
+    QVERIFY2(sourceText.contains(QStringLiteral("result.status")),
+             "GameFilesWorker should inspect setup intake status before reporting success");
+    QVERIFY2(sourceText.contains(QStringLiteral("result.action_count > 0")),
+             "GameFilesWorker should treat required setup actions as needing user attention");
+    QVERIFY2(sourceText.contains(QStringLiteral("requiresAttention")),
+             "GameFilesWorker should forward the combined attention state to the GUI");
 }
 
 void ScanSettingsWiringTests::scan_worker_handles_move_unsolved_and_max_concurrent_settings()
