@@ -48,6 +48,7 @@ Current shape notes:
 - the Rust files in `src/` are the authored adapter layer that drive that generated contract
 - full Crash Log Scan Run adapter work should use `scanRunExecute(logPaths, options)`; lower-level `processLog*` and `processLogsBatch*` functions remain analysis/report-line entry points for callers that explicitly need that shape
 - `scanRunExecute` accepts `JsScanRunOptions.unsolvedLogsDestination?: string`; Targeted runs and Standard runs with `moveUnsolvedLogs` false ignore it, while Standard movement uses it as a custom destination when non-empty
+- `scanRunExecute` per-log results include `reportWriteFailed` so CLI and API callers can count AUTOSCAN write failures separately from scan analysis failures
 
 ## Python
 
@@ -66,6 +67,7 @@ Current shape notes:
 - some Python modules are support-oriented rather than one-to-one mirrors of a single business-logic crate, so check the binding crate before assuming ownership
 - full Crash Log Scan Run adapter work should use `classic_scanlog.scan_run_execute(...)`; lower-level `Orchestrator` methods remain analysis/report-line entry points for callers that explicitly need that shape
 - `classic_scanlog.scan_run_execute(...)` accepts optional `unsolved_logs_destination: str | None = None`; Targeted runs and Standard runs with `move_unsolved_logs=False` ignore it, while Standard movement uses it as a custom destination when non-empty
+- `classic_scanlog.scan_run_execute(...)` per-log results include `report_write_failed` so report-write failures stay distinct from scan analysis failures
 
 ---
 

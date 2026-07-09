@@ -3313,6 +3313,8 @@ export interface JsScanRunLogResult {
   autoscanReportPath?: string
   /** Whether analysis and run-owned side effects succeeded. */
   success: boolean
+  /** Whether analysis succeeded but Autoscan Report writing failed. */
+  reportWriteFailed: boolean
   /** Whether this entry was cancelled before analysis started. */
   cancelled: boolean
   /** Whether the Crash Log or Autoscan Report moved to Unsolved Logs. */

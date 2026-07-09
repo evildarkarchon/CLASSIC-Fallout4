@@ -74,6 +74,7 @@ fn standard_scan_run_writes_autoscan_report() {
     assert_eq!(result.succeeded, 1);
     assert_eq!(result.failed, 0);
     assert_eq!(result.logs[0].outcome, CrashLogScanOutcome::Succeeded);
+    assert!(!result.logs[0].report_write_failed);
     assert_eq!(result.logs[0].autoscan_report, Some(autoscan_path.clone()));
     assert!(autoscan_path.exists());
     assert!(
@@ -101,6 +102,7 @@ fn standard_scan_run_leave_in_place_does_not_move_failed_log() {
     assert_eq!(result.succeeded, 0);
     assert_eq!(result.failed, 1);
     assert_eq!(result.logs[0].outcome, CrashLogScanOutcome::Failed);
+    assert!(result.logs[0].report_write_failed);
     assert!(!result.logs[0].moved_to_unsolved_logs);
     assert!(log_path.exists());
 }

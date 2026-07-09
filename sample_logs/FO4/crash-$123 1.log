@@ -235,7 +235,7 @@ STACK:
 	[RSP+468 ] 0x7FF8D3630712     (void* -> Buffout4.dll+00B0712)
 	[RSP+470 ] 0x1                (size_t)
 	[RSP+478 ] 0x5482BEECF8       (void*)
-	[RSP+480 ] 0x17FA050FF01      (char*) ":\Users\zombi\Documents\My Games\Fallout4\__MO_Saves\\Quicksave0_CC34E90DS436C61697265_Commonwealth_002150_20220805015142_65_2.f4se"
+	[RSP+480 ] 0x17FA050FF01      (char*) ":\Users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Quicksave0_CC34E90DS436C61697265_Commonwealth_002150_20220805015142_65_2.f4se"
 	[RSP+488 ] 0x7FF8D6D9F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+490 ] 0x7FF8D6DD1A70     (char*) "%s
 "

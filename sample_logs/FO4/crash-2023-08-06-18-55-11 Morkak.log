@@ -1201,7 +1201,7 @@ ull save path: C:\Users\<USER>\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\
 	[RSP+2108] 0x6E6F697372655620 (size_t)
 	[RSP+2110] 0x38362E353120     (size_t)
 	[RSP+2118] 0x7FF8F1645DD3     (void* -> Interior-NavCut-Fix.dll+0005DD3)
-	[RSP+2120] 0x1EB33CE2801      (char*) ":\Users\******\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Save72_445A81CES41757274686572_Commonwealth_001623_20230806054403_18_2.f4se"
+	[RSP+2120] 0x1EB33CE2801      (char*) ":\Users\<USER>\OneDrive\Documents\My Games\Fallout4\__MO_Saves\\Save72_445A81CES41757274686572_Commonwealth_001623_20230806054403_18_2.f4se"
 	[RSP+2128] 0x7FF8F5A8F16C     (void* -> F4z Ro D'oh.dll+000F16C)
 	[RSP+2130] 0x7FF955EC1A70     (char*) "%s
 "

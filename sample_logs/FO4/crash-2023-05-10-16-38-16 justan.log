@@ -282,7 +282,7 @@ STACK:
 		Form ID: 0x000A7FF4
 		Form Type: 74
 		Full Name: "Sanctuary Hills"
-	[RSP+410 ] 0x1FE0C7FA644      (char*) "sers\ADMIN\Documents\My Games\Fallout4\Saves\\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.f4se"
+	[RSP+410 ] 0x1FE0C7FA644      (char*) "sers\<USER>\Documents\My Games\Fallout4\Saves\\Autosave1_A87A29D6M_SanctuaryHillsWorld_000011_20230510163816_1_2.f4se"
 	[RSP+418 ] 0x0                (size_t)
 	[RSP+420 ] 0x1FE00040002      (void*)
 	[RSP+428 ] 0x0                (size_t)

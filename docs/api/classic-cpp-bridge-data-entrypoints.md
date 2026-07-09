@@ -613,6 +613,7 @@ Bridge DTO shape for `ScanRunLogResult`:
 - `log_path`
 - `autoscan_report_path` (empty when no report was written)
 - `success`
+- `report_write_failed`
 - `cancelled`
 - `moved_to_unsolved_logs`
 - `error_message`

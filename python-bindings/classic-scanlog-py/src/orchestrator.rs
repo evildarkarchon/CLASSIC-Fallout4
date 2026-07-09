@@ -802,6 +802,7 @@ pub struct PyScanRunLogResult {
     log_path: String,
     autoscan_report_path: Option<String>,
     success: bool,
+    report_write_failed: bool,
     cancelled: bool,
     moved_to_unsolved_logs: bool,
     error: Option<String>,
@@ -835,6 +836,12 @@ impl PyScanRunLogResult {
     #[getter]
     pub fn success(&self) -> bool {
         self.success
+    }
+
+    /// Whether analysis succeeded but Autoscan Report writing failed.
+    #[getter]
+    pub fn report_write_failed(&self) -> bool {
+        self.report_write_failed
     }
 
     /// Whether this entry was cancelled before analysis started.
@@ -886,6 +893,7 @@ impl PyScanRunLogResult {
         dict.set_item("log_path", &self.log_path)?;
         dict.set_item("autoscan_report_path", &self.autoscan_report_path)?;
         dict.set_item("success", self.success)?;
+        dict.set_item("report_write_failed", self.report_write_failed)?;
         dict.set_item("cancelled", self.cancelled)?;
         dict.set_item("moved_to_unsolved_logs", self.moved_to_unsolved_logs)?;
         dict.set_item("error", &self.error)?;
@@ -905,6 +913,7 @@ fn scan_run_log_outcome_to_py(outcome: CrashLogScanRunLogOutcome) -> PyScanRunLo
             .autoscan_report
             .map(|path| path.to_string_lossy().to_string()),
         success: outcome.outcome == CrashLogScanOutcome::Succeeded,
+        report_write_failed: outcome.report_write_failed,
         cancelled: outcome.outcome == CrashLogScanOutcome::CancelledBeforeStart,
         moved_to_unsolved_logs: outcome.moved_to_unsolved_logs,
         error: outcome.error,

@@ -987,6 +987,7 @@ class ScanRunLogResult:
     log_path: str
     autoscan_report_path: str | None
     success: bool
+    report_write_failed: bool
     cancelled: bool
     moved_to_unsolved_logs: bool
     error: str | None

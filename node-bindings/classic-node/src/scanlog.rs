@@ -266,6 +266,8 @@ pub struct JsScanRunLogResult {
     pub autoscan_report_path: Option<String>,
     /// Whether analysis and run-owned side effects succeeded.
     pub success: bool,
+    /// Whether analysis succeeded but Autoscan Report writing failed.
+    pub report_write_failed: bool,
     /// Whether this entry was cancelled before analysis started.
     pub cancelled: bool,
     /// Whether the Crash Log or Autoscan Report moved to Unsolved Logs.
@@ -890,6 +892,7 @@ fn scan_run_outcome_to_js(outcome: CrashLogScanRunLogOutcome) -> JsScanRunLogRes
             .autoscan_report
             .map(|path| path.to_string_lossy().to_string()),
         success: outcome.outcome == CrashLogScanOutcome::Succeeded,
+        report_write_failed: outcome.report_write_failed,
         cancelled: outcome.outcome == CrashLogScanOutcome::CancelledBeforeStart,
         moved_to_unsolved_logs: outcome.moved_to_unsolved_logs,
         error: outcome.error,

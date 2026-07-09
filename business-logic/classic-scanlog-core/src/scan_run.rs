@@ -219,6 +219,8 @@ pub struct CrashLogScanRunLogOutcome {
     pub autoscan_report: Option<PathBuf>,
     /// Outcome kind.
     pub outcome: CrashLogScanOutcome,
+    /// Whether analysis succeeded but Autoscan Report writing failed.
+    pub report_write_failed: bool,
     /// Whether the Crash Log or Autoscan Report was moved to Unsolved Logs.
     pub moved_to_unsolved_logs: bool,
     /// Error message for failed or cancelled outcomes.
@@ -329,6 +331,7 @@ async fn finalize_log_outcome(
     let mut outcome = outcome_from_analysis(&result);
     let mut error = result.error.clone();
     let mut autoscan_report = None;
+    let mut report_write_failed = false;
 
     if result.success && !result.report_lines.is_empty() {
         match orchestrator
@@ -338,6 +341,7 @@ async fn finalize_log_outcome(
             Ok(path) => autoscan_report = Some(path),
             Err(write_error) => {
                 outcome = CrashLogScanOutcome::Failed;
+                report_write_failed = true;
                 error = Some(write_error.to_string());
             }
         }
@@ -363,6 +367,7 @@ async fn finalize_log_outcome(
         crash_log,
         autoscan_report,
         outcome,
+        report_write_failed,
         moved_to_unsolved_logs,
         error,
         processing_time_us: result.processing_time_us,

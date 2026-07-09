@@ -193,6 +193,56 @@ describe("classic-node CLI", () => {
 		expect(readFileSync(reportPath, "utf8")).toContain("AUTOSCAN REPORT");
 	});
 
+	test("emits structured report failure counts when AUTOSCAN writing fails", () => {
+		const workspace = rememberTempDir("classic-node-cli-report-failure-json-");
+		const scanDir = join(workspace, "incoming");
+		const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
+		const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
+
+		writeWorkspaceDataRoot(workspace);
+		mkdirSync(scanDir, { recursive: true });
+		writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
+		mkdirSync(reportPath);
+
+		const result = runCli(
+			["--json", "--scan-path", scanDir, "--game-version", "auto"],
+			workspace,
+		);
+		const summary = JSON.parse(result.stdout);
+
+		expect(result.exitCode).toBe(1);
+		expect(summary).toMatchObject({
+			mode: "scan",
+			exitCode: 1,
+			logsFound: 1,
+			reportsWritten: 0,
+			reportFailures: 1,
+			scanErrors: 0,
+		});
+	});
+
+	test("prints report failures separately from scan errors", () => {
+		const workspace = rememberTempDir("classic-node-cli-report-failure-human-");
+		const scanDir = join(workspace, "incoming");
+		const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
+		const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
+
+		writeWorkspaceDataRoot(workspace);
+		mkdirSync(scanDir, { recursive: true });
+		writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
+		mkdirSync(reportPath);
+
+		const result = runCli(
+			["--scan-path", scanDir, "--game-version", "auto"],
+			workspace,
+		);
+
+		expect(result.exitCode).toBe(1);
+		expect(result.output).toContain("Reports:  0 written");
+		expect(result.output).toContain("Failed:   1 report");
+		expect(result.output).not.toContain("Errors:");
+	});
+
 	test("returns nonfatal exit code when one discovered log fails", () => {
 		const workspace = rememberTempDir("classic-node-cli-nonfatal-");
 		const scanDir = join(workspace, "incoming");

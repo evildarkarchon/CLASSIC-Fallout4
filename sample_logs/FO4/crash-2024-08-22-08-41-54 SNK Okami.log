@@ -278,7 +278,7 @@ STACK:
 	[RSP+3F80] 0x0                (size_t)
 	[RSP+4000] 0x40000            (size_t)
 	[RSP+4080] 0x154EF326600      (void*)
-	[RSP+4100] 0x1545603FA44      (char*) "sers\Okami\Documents\My Games\Fallout4\Saves\CNug5Lwl\\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.f4serectlylyorrectlyrectly"
+	[RSP+4100] 0x1545603FA44      (char*) "sers\<USER>\Documents\My Games\Fallout4\Saves\CNug5Lwl\\Autosave1_7505493B__SanctuaryHillsWorld_000001_20240822084154_1_2.f4serectlylyorrectlyrectly"
 	[RSP+4180] 0x0                (size_t)
 	[RSP+4200] 0x15400040000      (void*)
 	[RSP+4280] 0x0                (size_t)

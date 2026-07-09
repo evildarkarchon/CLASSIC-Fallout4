@@ -272,7 +272,7 @@ Behavior worth knowing:
 - `MoveToCustom(path)` requires an absolute path and fails setup before analysis when the path is relative. It does not create the directory during setup.
 - Missing path roots with `MoveToConfiguredOrDefault` and no configured destination are setup errors. Invalid or unwritable absolute destinations remain per-log movement failures.
 - Autoscan Report paths are derived as sibling `{stem}-AUTOSCAN.md` paths and written by this module when analysis succeeds and report lines are present.
-- Autoscan Report write failure is a per-log failure in `CrashLogScanRunLogOutcome`, not a run-level setup error.
+- Autoscan Report write failure is a per-log failure in `CrashLogScanRunLogOutcome`, not a run-level setup error. These outcomes set `report_write_failed = true` so adapters can separate report failures from analysis failures.
 - `cancellation` is a cooperative shared atomic checked before queued Crash Logs start; binding adapters should pass their frontend cancellation token rather than polling locally only.
 - Progress events reuse `ScanProgressPhase` and carry stable input indices so adapters can correlate completion-order results to their selected Crash Log list.
 - Binding adapters expose this seam as `classic::scanner::scan_run_execute(request, callback, cancellation_token)` for C++, `scanRunExecute(...)` for Node, and `classic_scanlog.scan_run_execute(...)` for Python. Adapter scan flows should not duplicate Autoscan Report writing or Unsolved Logs movement around those calls.

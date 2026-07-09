@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-08T13:04:16Z",
+  "generated_at_utc": "2026-07-09T02:08:33Z",
   "schema_version": 1,
   "entries": [
     {
@@ -4738,6 +4738,10 @@
         },
         {
           "name": "success",
+          "type": "bool"
+        },
+        {
+          "name": "report_write_failed",
           "type": "bool"
         },
         {

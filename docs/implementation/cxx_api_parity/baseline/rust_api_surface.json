@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-08T13:09:07Z",
+  "generated_at_utc": "2026-07-09T02:08:44Z",
   "entries": [
     {
       "id": "b0d609f9ed78e468",
@@ -4737,6 +4737,10 @@
         },
         {
           "name": "success",
+          "type": "bool"
+        },
+        {
+          "name": "report_write_failed",
           "type": "bool"
         },
         {

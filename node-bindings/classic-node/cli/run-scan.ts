@@ -21,6 +21,7 @@ type BindingScanResult = {
   autoscanReportPath?: string;
   cancelled: boolean;
   movedToUnsolvedLogs: boolean;
+  reportWriteFailed?: boolean;
   error?: string;
 };
 
@@ -451,13 +452,17 @@ export async function runCli(
     const reportsWritten = results.filter(
       (result) => result.success && result.autoscanReportPath,
     ).length;
-    const reportFailures = 0;
+    const reportFailures = results.filter(
+      (result) => result.reportWriteFailed,
+    ).length;
 
-		const scanErrors = results.filter((result) => !result.success).length;
+		const scanErrors = results.filter(
+			(result) => !result.success && !result.reportWriteFailed,
+		).length;
 		const durationSeconds = (performance.now() - startedAt) / 1000;
 		const summary: JsonSummary = {
 			mode: "scan",
-			exitCode: scanErrors > 0 ? 1 : 0,
+			exitCode: scanErrors > 0 || reportFailures > 0 ? 1 : 0,
 			game: options.game,
 			gameVersion: normalizedGameVersion,
 			dataRoot: paths.root,

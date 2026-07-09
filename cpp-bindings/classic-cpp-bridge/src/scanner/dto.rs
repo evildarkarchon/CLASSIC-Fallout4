@@ -103,6 +103,7 @@ pub(super) fn scan_run_log_outcome_to_dto(
             .map(|path| path.to_string_lossy().to_string())
             .unwrap_or_default(),
         success,
+        report_write_failed: outcome.report_write_failed,
         cancelled,
         moved_to_unsolved_logs: outcome.moved_to_unsolved_logs,
         error_message: outcome.error.unwrap_or_default(),

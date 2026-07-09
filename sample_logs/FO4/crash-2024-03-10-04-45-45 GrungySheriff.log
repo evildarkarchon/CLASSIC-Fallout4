@@ -358,7 +358,7 @@ ull save path: C:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_654A
 	[RSP+5580] 0x206E6F6973726556 (size_t)
 	[RSP+5600] 0x38362E3531       (size_t)
 	[RSP+5680] 0x359562F268       (void*)
-	[RSP+5700] 0x157C46AD001      (char*) ":\Users\user\Documents\My Games\Fallout4\Saves\\Exitsave0_654A833CS43697269_Commonwealth_010225_20240309054520_30_2.f4se"
+	[RSP+5700] 0x157C46AD001      (char*) ":\Users\<USER>\Documents\My Games\Fallout4\Saves\\Exitsave0_654A833CS43697269_Commonwealth_010225_20240309054520_30_2.f4se"
 	[RSP+5780] 0x7FFDB738F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+5800] 0x7FFDB73C1A70     (char*) "%s
 "

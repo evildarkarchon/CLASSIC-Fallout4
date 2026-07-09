@@ -87,6 +87,7 @@ mod ffi {
         log_path: String,
         autoscan_report_path: String,
         success: bool,
+        report_write_failed: bool,
         cancelled: bool,
         moved_to_unsolved_logs: bool,
         error_message: String,

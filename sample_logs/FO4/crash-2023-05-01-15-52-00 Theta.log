@@ -1191,7 +1191,7 @@ STACK:
 	[RSP+11D8] 0x11A1B0000884E    (size_t)
 	[RSP+11E0] 0x7FF7EA06DAD4     (void* -> Fallout4.exe+36CDAD4)
 	[RSP+11E8] 0x2B9193F9110      (char*) "
-ull save path: D:\Users\joshs\Documents\My Games\Fallout4\Saves\\Autosave3_4AB20BB3_5468657461_Commonwealth_041111_20230501154927_63_2.f4seetly01) loaded correctly"
+ull save path: D:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave3_4AB20BB3_5468657461_Commonwealth_041111_20230501154927_63_2.f4seetly01) loaded correctly"
 	[RSP+11F0] 0x2BA2E951440      (void*)
 	[RSP+11F8] 0x3                (size_t)
 	[RSP+1200] 0x20000ECF8DABE    (size_t)
@@ -1250,14 +1250,14 @@ ull save path: D:\Users\joshs\Documents\My Games\Fallout4\Saves\\Autosave3_4AB20
 	[RSP+13A0] 0x7FFDECF6F551     (void* -> f4se_1_10_163.dll+005F551)
 	[RSP+13A8] 0x7FFDECFA1A70     (char*) "%s
 "
-	[RSP+13B0] 0x7FFDECFDB770     (char*) "full save path: D:\Users\joshs\Documents\My Games\Fallout4\Saves\\Autosave3_4AB20BB3_5468657461_Commonwealth_041111_20230501154927_63_2.f4se"
+	[RSP+13B0] 0x7FFDECFDB770     (char*) "full save path: D:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave3_4AB20BB3_5468657461_Commonwealth_041111_20230501154927_63_2.f4se"
 	[RSP+13B8] 0xFFFFFFFFFFFFFFFE (size_t)
-	[RSP+13C0] 0x2B9193F9111      (char*) "ull save path: D:\Users\joshs\Documents\My Games\Fallout4\Saves\\Autosave3_4AB20BB3_5468657461_Commonwealth_041111_20230501154927_63_2.f4seetly01) loaded correctly"
+	[RSP+13C0] 0x2B9193F9111      (char*) "ull save path: D:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave3_4AB20BB3_5468657461_Commonwealth_041111_20230501154927_63_2.f4seetly01) loaded correctly"
 	[RSP+13C8] 0x0                (size_t)
 	[RSP+13D0] 0xEF827BF368       (void*)
 	[RSP+13D8] 0x0                (size_t)
 	[RSP+13E0] 0x7FFDECF144EA     (void* -> f4se_1_10_163.dll+00044EA)
-	[RSP+13E8] 0x2BB33505F10      (char*) "D:\Users\joshs\Documents\My Games\Fallout4\Saves\\Autosave3_4AB20BB3_5468657461_Commonwealth_041111_20230501154927_63_2.f4se"
+	[RSP+13E8] 0x2BB33505F10      (char*) "D:\Users\<USER>\Documents\My Games\Fallout4\Saves\\Autosave3_4AB20BB3_5468657461_Commonwealth_041111_20230501154927_63_2.f4se"
 	[RSP+13F0] 0x9484713CEB1D     (size_t)
 	[RSP+13F8] 0x45               (size_t)
 	[RSP+1400] 0x0                (size_t)

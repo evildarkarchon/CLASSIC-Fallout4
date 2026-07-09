@@ -425,6 +425,31 @@ describe("scanRunExecute", () => {
     }
   });
 
+  test("marks report write failures separately from analysis failures", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-report-failure");
+    const logDir = join(root, "incoming");
+    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
+    const reportPath = join(logDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
+
+    try {
+      mkdirSync(logDir, { recursive: true });
+      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
+      mkdirSync(reportPath);
+
+      const results = await scanRunExecute([logPath], {
+        ...scanRunOptions(root),
+      });
+
+      expect(results).toHaveLength(1);
+      expect(results[0].success).toBe(false);
+      expect(results[0].reportWriteFailed).toBe(true);
+      expect(results[0].autoscanReportPath).toBeUndefined();
+      expect(results[0].error).toBeDefined();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("targeted mode ignores move and destination options", async () => {
     const root = writeScanRunDataRoot("classic-node-scan-run-targeted-policy");
 

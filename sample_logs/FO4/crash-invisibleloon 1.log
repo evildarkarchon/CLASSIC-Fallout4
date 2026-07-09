@@ -301,7 +301,7 @@ STACK:
 	[RSP+4F0] 0x800000005        (size_t) [34359738373]
 	[RSP+4F8] 0x142C677F8        (void* -> Fallout4.exe+2C677F8	fisubr st0, word ptr [rbp-0x52211042] |  FUN_14229e738_2C677F8)
 	[RSP+500] 0x3E4030           (char*) "
-ull save path: C:\users\steamuser\Documents\My Games\Fallout4\__MO_Saves\\Exitsave0_61CACF14_4D69737472657373204C696C697468_Commonwealth_000016_20250120210100_1_2.f4seandle 5)"
+ull save path: C:\users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Exitsave0_61CACF14_4D69737472657373204C696C697468_Commonwealth_000016_20250120210100_1_2.f4seandle 5)"
 	[RSP+508] 0x1DC2A04F0        (void*)
 	[RSP+510] 0x17E39F600        (void*)
 	[RSP+518] 0x8EE14F55E        (size_t) [38354089310]
@@ -360,7 +360,7 @@ ull save path: C:\users\steamuser\Documents\My Games\Fallout4\__MO_Saves\\Exitsa
 	[RSP+6B8] 0x6FFFEC17ED0C     (void* -> F4z Ro D'oh.dll+000ED0C	add rsp, 0x78)
 	[RSP+6C0] 0x6FFFEE162A80     (char*) "%s
 "
-	[RSP+6C8] 0x6FFFEE19C6C0     (char*) "full save path: C:\users\steamuser\Documents\My Games\Fallout4\__MO_Saves\\Exitsave0_61CACF14_4D69737472657373204C696C697468_Commonwealth_000016_20250120210100_1_2.f4se"
+	[RSP+6C8] 0x6FFFEE19C6C0     (char*) "full save path: C:\users\<USER>\Documents\My Games\Fallout4\__MO_Saves\\Exitsave0_61CACF14_4D69737472657373204C696C697468_Commonwealth_000016_20250120210100_1_2.f4se"
 	[RSP+6D0] 0x6FFFEE19F720     (void* -> f4se_1_10_984.dll+00CF720	lock xor [rax+rax*1], edi)
 	[RSP+6D8] 0x13FF7E51C        (char*) "`"
 	[RSP+6E0] 0x0                (size_t) [0]

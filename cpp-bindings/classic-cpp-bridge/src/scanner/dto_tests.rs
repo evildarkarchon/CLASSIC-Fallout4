@@ -81,6 +81,7 @@ fn test_scan_run_log_outcome_to_dto_flattens_optional_report_path() {
         crash_log: PathBuf::from("crash.log"),
         autoscan_report: Some(PathBuf::from("crash-AUTOSCAN.md")),
         outcome: CrashLogScanOutcome::Succeeded,
+        report_write_failed: false,
         moved_to_unsolved_logs: false,
         error: None,
         processing_time_us: 2_000,
@@ -94,6 +95,7 @@ fn test_scan_run_log_outcome_to_dto_flattens_optional_report_path() {
     assert_eq!(dto.log_path, "crash.log");
     assert_eq!(dto.autoscan_report_path, "crash-AUTOSCAN.md");
     assert!(dto.success);
+    assert!(!dto.report_write_failed);
     assert!(!dto.cancelled);
     assert!(!dto.moved_to_unsolved_logs);
     assert_eq!(dto.processing_time_ms, 2);

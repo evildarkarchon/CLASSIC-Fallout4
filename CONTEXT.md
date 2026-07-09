@@ -48,6 +48,10 @@ _Avoid_: report bucket, hardcoded section, Rust placement rule
 The curated CLASSIC data files that describe game-specific scan rules, ignore lists, Crashgen expectations, and report guidance.
 _Avoid_: config files, databases
 
+**YAML Data Update Channel**:
+The first-party distribution channel through which CLASSIC clients discover, review, install, and roll back newer YAML Data. It is the maintained update path for curated YAML Data, not a generic arbitrary data feed.
+_Avoid_: YAML updater, data update constants, update feed
+
 **Mod Guidance**:
 An Autoscan Report Contribution based on YAML Data about installed mods, mod combinations, or mod-related remediation. It is distinct from crash evidence that mentions a plugin.
 _Avoid_: mod finding, plugin finding, load-order output

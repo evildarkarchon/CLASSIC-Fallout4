@@ -5806,7 +5806,7 @@ STACK:
 	[RSP+92480] 0x1                (size_t)
 	[RSP+92500] 0x1557C830000      (void*)
 	[RSP+92580] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+92600] 0x156C57F5F70      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+92600] 0x156C57F5F70      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+92680] 0x7FFBEDD147B1     (void* -> ntdll.dll+00247B1)
 	[RSP+92700] 0x500000043        (size_t)
 	[RSP+92780] 0x1557C720000      (void*)
@@ -5816,7 +5816,7 @@ STACK:
 	[RSP+92980] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+92A00] 0x155F7DDC140      (void*)
 	[RSP+92A80] 0x7FFBEDD147B1     (void* -> ntdll.dll+00247B1)
-	[RSP+92B00] 0x156C57F5F70      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+92B00] 0x156C57F5F70      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+92B80] 0x1557C720000      (void*)
 	[RSP+92C00] 0xB4B95DD80        (void*)
 	[RSP+92C80] 0x0                (size_t)
@@ -5826,7 +5826,7 @@ STACK:
 	[RSP+92E80] 0x7FFB6D08D163     (void* -> Buffout4.dll+015D163)
 	[RSP+92F00] 0x155F7DDC658      (void*)
 	[RSP+92F80] 0x155F7DDC658      (void*)
-	[RSP+93000] 0x156C57F5F70      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+93000] 0x156C57F5F70      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+93080] 0x155FF47B6D0      (char*) "i"
 	[RSP+93100] 0x155F7DDC658      (void*)
 	[RSP+93180] 0x7FFB6CF9C2FC     (void* -> Buffout4.dll+006C2FC)
@@ -9796,7 +9796,7 @@ STACK:
 	[RSP+10EC8] 0x1                (size_t)
 	[RSP+10ED0] 0x1557C830000      (void*)
 	[RSP+10ED8] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+10EE0] 0x156C57F5F70      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+10EE0] 0x156C57F5F70      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+10EE8] 0x7FFBEDD147B1     (void* -> ntdll.dll+00247B1)
 	[RSP+10EF0] 0x60000005D        (size_t)
 	[RSP+10EF8] 0x1557C720000      (void*)
@@ -9806,7 +9806,7 @@ STACK:
 	[RSP+10F18] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+10F20] 0x156E6FBE1E0      (void*)
 	[RSP+10F28] 0x7FFBEDD147B1     (void* -> ntdll.dll+00247B1)
-	[RSP+10F30] 0x156C57F5F70      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+10F30] 0x156C57F5F70      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+10F38] 0x1557C720000      (void*)
 	[RSP+10F40] 0xB4B965A00        (void*)
 	[RSP+10F48] 0x0                (size_t)
@@ -9816,7 +9816,7 @@ STACK:
 	[RSP+10F68] 0x7FFB6D08D163     (void* -> Buffout4.dll+015D163)
 	[RSP+10F70] 0x156E6FBE6F8      (void*)
 	[RSP+10F78] 0x156E6FBE6F8      (void*)
-	[RSP+10F80] 0x156C57F5F70      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+10F80] 0x156C57F5F70      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+10F88] 0x1570B89C7B0      (void*)
 	[RSP+10F90] 0x156E6FBE6F8      (void*)
 	[RSP+10F98] 0x7FFB6CF9C2FC     (void* -> Buffout4.dll+006C2FC)
@@ -13786,7 +13786,7 @@ STACK:
 	[RSP+18B48] 0x1                (size_t)
 	[RSP+18B50] 0x1557C830000      (void*)
 	[RSP+18B58] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+18B60] 0x156C57F5F70      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+18B60] 0x156C57F5F70      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+18B68] 0x7FFBEDD147B1     (void* -> ntdll.dll+00247B1)
 	[RSP+18B70] 0x60000005D        (size_t)
 	[RSP+18B78] 0x1557C720000      (void*)
@@ -13796,7 +13796,7 @@ STACK:
 	[RSP+18B98] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+18BA0] 0x156DACE8090      (void*)
 	[RSP+18BA8] 0x7FFBEDD147B1     (void* -> ntdll.dll+00247B1)
-	[RSP+18BB0] 0x156C57F5F70      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+18BB0] 0x156C57F5F70      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+18BB8] 0x1557C720000      (void*)
 	[RSP+18BC0] 0xB4B96D680        (void*)
 	[RSP+18BC8] 0x0                (size_t)
@@ -13806,7 +13806,7 @@ STACK:
 	[RSP+18BE8] 0x7FFB6D08D163     (void* -> Buffout4.dll+015D163)
 	[RSP+18BF0] 0x156DACE85A8      (void*)
 	[RSP+18BF8] 0x156DACE85A8      (void*)
-	[RSP+18C00] 0x156C57F5F70      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+18C00] 0x156C57F5F70      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+18C08] 0x156F871B020      (void*)
 	[RSP+18C10] 0x156DACE85A8      (void*)
 	[RSP+18C18] 0x7FFB6CF9C2FC     (void* -> Buffout4.dll+006C2FC)
@@ -35066,7 +35066,7 @@ STACK:
 	[RSP+42348] 0x1                (size_t)
 	[RSP+42350] 0x1557C830000      (void*)
 	[RSP+42358] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+42360] 0x156C57F5F70      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+42360] 0x156C57F5F70      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+42368] 0x7FFBEDD147B1     (void* -> ntdll.dll+00247B1)
 	[RSP+42370] 0x500000043        (size_t)
 	[RSP+42378] 0x1557C720000      (void*)
@@ -35076,7 +35076,7 @@ STACK:
 	[RSP+42398] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+423A0] 0x1570B81D050      (void*)
 	[RSP+423A8] 0x7FFBEDD147B1     (void* -> ntdll.dll+00247B1)
-	[RSP+423B0] 0x156C57F5F70      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+423B0] 0x156C57F5F70      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+423B8] 0x1557C720000      (void*)
 	[RSP+423C0] 0xB4B996E80        (void*)
 	[RSP+423C8] 0x0                (size_t)
@@ -35086,7 +35086,7 @@ STACK:
 	[RSP+423E8] 0x7FFB6D08D163     (void* -> Buffout4.dll+015D163)
 	[RSP+423F0] 0x1570B81D568      (void*)
 	[RSP+423F8] 0x1570B81D568      (void*)
-	[RSP+42400] 0x156C57F5F70      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+42400] 0x156C57F5F70      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+42408] 0x1570B89BD30      (void*)
 	[RSP+42410] 0x1570B81D568      (void*)
 	[RSP+42418] 0x7FFB6CF9C2FC     (void* -> Buffout4.dll+006C2FC)
@@ -37726,7 +37726,7 @@ STACK:
 	[RSP+47648] 0x1                (size_t)
 	[RSP+47650] 0x1557C830000      (void*)
 	[RSP+47658] 0xFFFFFFFFFFFFFFFF (size_t)
-	[RSP+47660] 0x156C5D994E0      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+47660] 0x156C5D994E0      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+47668] 0x7FFBEDD147B1     (void* -> ntdll.dll+00247B1)
 	[RSP+47670] 0x60000005D        (size_t)
 	[RSP+47678] 0x1557C720000      (void*)
@@ -37736,7 +37736,7 @@ STACK:
 	[RSP+47698] 0xFFFFFFFFFFFFFFFF (size_t)
 	[RSP+476A0] 0x156DACE8090      (void*)
 	[RSP+476A8] 0x7FFBEDD147B1     (void* -> ntdll.dll+00247B1)
-	[RSP+476B0] 0x156C5D994E0      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+476B0] 0x156C5D994E0      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+476B8] 0x1557C720000      (void*)
 	[RSP+476C0] 0xB4B99C180        (void*)
 	[RSP+476C8] 0x0                (size_t)
@@ -37746,7 +37746,7 @@ STACK:
 	[RSP+476E8] 0x7FFB6D08D163     (void* -> Buffout4.dll+015D163)
 	[RSP+476F0] 0x156DACE85A8      (void*)
 	[RSP+476F8] 0x156DACE85A8      (void*)
-	[RSP+47700] 0x156C5D994E0      (char*) "F:\360MoveData\Users\admin\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
+	[RSP+47700] 0x156C5D994E0      (char*) "F:\360MoveData\Users\<USER>\Documents\My Games/Fallout4/F4SE\crash-2023-10-03-13-47-03.log"
 	[RSP+47708] 0x156F871B2A0      (void*)
 	[RSP+47710] 0x156DACE85A8      (void*)
 	[RSP+47718] 0x7FFB6CF9C2FC     (void* -> Buffout4.dll+006C2FC)
