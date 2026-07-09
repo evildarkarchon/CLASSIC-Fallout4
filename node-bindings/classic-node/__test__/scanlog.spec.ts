@@ -376,28 +376,29 @@ describe("scanRunExecute", () => {
     yamlDirData: join(root, "CLASSIC Data"),
     game: "Fallout4",
     gameVersion: "auto",
+    configuredDocumentsRoot: join(root, "Docs"),
     maxConcurrent: 1,
     ...options,
   });
 
-  test("returns per-log failures without exposing report lines", async () => {
+  test("returns targeted rejections as discovery data", async () => {
     const root = writeScanRunDataRoot("classic-node-scan-run-failure");
 
     try {
-      const results = await scanRunExecute([MISSING_LOG_PATH], {
-        ...scanRunOptions(root),
+      const scanResult = await scanRunExecute([MISSING_LOG_PATH], {
+        ...scanRunOptions(root, { targetedMode: true }),
       });
+      const results = scanResult.logs;
 
-      expect(results).toHaveLength(1);
-      expect(results[0]).toMatchObject({
-        inputIndex: 0,
-        logPath: MISSING_LOG_PATH,
-        success: false,
-        cancelled: false,
-        movedToUnsolvedLogs: false,
+      expect(scanResult.status).toBe("no_crash_logs_found");
+      expect(scanResult.discovery).toMatchObject({
+        source: "targeted",
+        acceptedLogs: [],
       });
-      expect(results[0].error).toBeDefined();
-      expect("reportLines" in results[0]).toBe(false);
+      expect(scanResult.discovery?.rejectedInputs[0]).toMatchObject({
+        path: MISSING_LOG_PATH,
+      });
+      expect(results).toHaveLength(0);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -405,17 +406,19 @@ describe("scanRunExecute", () => {
 
   test("writes Autoscan Reports in Rust for successful scan runs", async () => {
     const root = writeScanRunDataRoot("classic-node-scan-run-success");
-    const logDir = join(root, "incoming");
+    const logDir = join(root, "Crash Logs");
     const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
 
     try {
       mkdirSync(logDir, { recursive: true });
       writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
 
-      const results = await scanRunExecute([logPath], {
+      const scanResult = await scanRunExecute([logPath], {
         ...scanRunOptions(root),
       });
+      const results = scanResult.logs;
 
+      expect(scanResult.total).toBe(1);
       expect(results).toHaveLength(1);
       expect(results[0].success).toBe(true);
       expect(results[0].autoscanReportPath).toContain("-AUTOSCAN.md");
@@ -427,7 +430,7 @@ describe("scanRunExecute", () => {
 
   test("marks report write failures separately from analysis failures", async () => {
     const root = writeScanRunDataRoot("classic-node-scan-run-report-failure");
-    const logDir = join(root, "incoming");
+    const logDir = join(root, "Crash Logs");
     const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
     const reportPath = join(logDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
 
@@ -436,10 +439,12 @@ describe("scanRunExecute", () => {
       writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
       mkdirSync(reportPath);
 
-      const results = await scanRunExecute([logPath], {
+      const scanResult = await scanRunExecute([logPath], {
         ...scanRunOptions(root),
       });
+      const results = scanResult.logs;
 
+      expect(scanResult.total).toBe(1);
       expect(results).toHaveLength(1);
       expect(results[0].success).toBe(false);
       expect(results[0].reportWriteFailed).toBe(true);
@@ -452,19 +457,26 @@ describe("scanRunExecute", () => {
 
   test("targeted mode ignores move and destination options", async () => {
     const root = writeScanRunDataRoot("classic-node-scan-run-targeted-policy");
+    const logDir = join(root, "incoming");
+    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
 
     try {
-      const results = await scanRunExecute(
-        [MISSING_LOG_PATH],
+      mkdirSync(logDir, { recursive: true });
+      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
+
+      const scanResult = await scanRunExecute(
+        [logPath],
         scanRunOptions(root, {
           targetedMode: true,
           moveUnsolvedLogs: true,
           unsolvedLogsDestination: "relative-destination",
         }),
       );
+      const results = scanResult.logs;
 
+      expect(scanResult.discovery?.source).toBe("targeted");
       expect(results).toHaveLength(1);
-      expect(results[0].success).toBe(false);
+      expect(results[0].success).toBe(true);
       expect(results[0].movedToUnsolvedLogs).toBe(false);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -473,18 +485,25 @@ describe("scanRunExecute", () => {
 
   test("destination is ignored when moveUnsolvedLogs is false", async () => {
     const root = writeScanRunDataRoot("classic-node-scan-run-ignore-destination");
+    const logDir = join(root, "Crash Logs");
+    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
 
     try {
-      const results = await scanRunExecute(
-        [MISSING_LOG_PATH],
+      mkdirSync(logDir, { recursive: true });
+      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
+
+      const scanResult = await scanRunExecute(
+        [],
         scanRunOptions(root, {
           moveUnsolvedLogs: false,
           unsolvedLogsDestination: "relative-destination",
         }),
       );
+      const results = scanResult.logs;
 
+      expect(scanResult.status).toBe("completed");
       expect(results).toHaveLength(1);
-      expect(results[0].success).toBe(false);
+      expect(results[0].success).toBe(true);
       expect(results[0].movedToUnsolvedLogs).toBe(false);
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -493,11 +512,16 @@ describe("scanRunExecute", () => {
 
   test("relative destination fails setup when standard movement is enabled", async () => {
     const root = writeScanRunDataRoot("classic-node-scan-run-relative-destination");
+    const logDir = join(root, "Crash Logs");
+    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
 
     try {
+      mkdirSync(logDir, { recursive: true });
+      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
+
       await expect(
         scanRunExecute(
-          [MISSING_LOG_PATH],
+          [],
           scanRunOptions(root, {
             moveUnsolvedLogs: true,
             unsolvedLogsDestination: "relative-destination",

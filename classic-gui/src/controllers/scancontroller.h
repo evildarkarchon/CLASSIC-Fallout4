@@ -17,7 +17,8 @@ public:
     void startScan(const QString& yamlRoot, const QString& yamlData, const QString& game, const QString& gameVersion,
                    bool showFormIdValues, bool fcxMode, bool simplifyLogs, bool moveUnsolvedLogs,
                    const QString& unsolvedLogsDestination, int maxConcurrentScans, const QString& customFolder,
-                   const QStringList& targetedInputs = {});
+                   const QString& setupGameRoot = {}, const QString& setupDocsRoot = {},
+                   const QString& setupGameExePath = {}, const QStringList& targetedInputs = {});
     void cancelScan();
     bool isScanning() const;
 

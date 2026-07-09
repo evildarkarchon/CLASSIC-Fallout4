@@ -5,11 +5,11 @@ use std::time::{Duration, Instant};
 
 use classic_config_core::ClassicConfig;
 use classic_file_io_core::BackupType;
-use classic_file_io_core::LogCollector;
 use classic_path_core::validate_custom_scan_path;
 use classic_scanlog_core::{
-    CrashLogScanIntake, CrashLogScanOptions, CrashLogScanRun, CrashLogScanRunEvent,
-    CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunRequest,
+    CrashLogScanOptions, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunService,
+    CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupContext,
+    CrashLogScanSource, StandardCrashLogScanSource,
 };
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
@@ -595,6 +595,7 @@ impl App {
         let tx = self.async_tx.clone();
         let custom_folder = self.config.paths.scan_custom.clone();
         let selected_game_version = self.config.game_version.clone();
+        let setup_game_root = self.config.paths.game_root.clone();
         let configured_docs_root = self.config.paths.docs_root.clone();
         let show_formid_values = self.config.show_formid_values;
         let fcx_mode = self.config.fcx_mode;
@@ -606,56 +607,6 @@ impl App {
         let base_folder = yaml_dir_root.clone();
 
         get_runtime().spawn(async move {
-            let collector = LogCollector::new_for_scan(
-                base_folder,
-                yaml_dir_data.clone(),
-                "Fallout4",
-                &selected_game_version,
-                configured_docs_root.as_deref(),
-                custom_folder,
-            );
-            let log_paths = match collector.collect_all().await {
-                Ok(paths) => paths,
-                Err(error) => {
-                    let _ = tx.send(AsyncMessage::ScanError(format!(
-                        "Failed to collect logs: {error}"
-                    )));
-                    return;
-                }
-            };
-
-            if log_paths.is_empty() {
-                let _ = tx.send(AsyncMessage::ScanComplete {
-                    processed: 0,
-                    total: 0,
-                    errors: 0,
-                    cancelled: false,
-                });
-                return;
-            }
-
-            let total = log_paths.len();
-
-            let options = CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs);
-            let ready = match CrashLogScanIntake::from_yaml_paths(
-                yaml_dir_root.clone(),
-                yaml_dir_data.clone(),
-                "Fallout4",
-                selected_game_version,
-                options,
-            )
-            .prepare()
-            .await
-            {
-                Ok(ready) => ready,
-                Err(error) => {
-                    let _ = tx.send(AsyncMessage::ScanError(format!(
-                        "Failed to initialize scanner: {error}"
-                    )));
-                    return;
-                }
-            };
-
             let cancellation = Arc::new(AtomicBool::new(cancel_token.is_cancelled()));
             let cancellation_watcher = {
                 let cancellation = Arc::clone(&cancellation);
@@ -666,25 +617,36 @@ impl App {
                 })
             };
 
-            let intent = CrashLogScanRunIntent::from_configured_flags(
-                false,
+            let setup_context = fcx_mode.then(|| CrashLogScanSetupContext {
+                game_root: (!setup_game_root.as_os_str().is_empty()).then_some(setup_game_root),
+                docs_root: configured_docs_root.clone(),
+                game_exe_path: None,
+                xse_log_path: None,
+            });
+            let request = CrashLogScanRunServiceRequest {
+                yaml_dir_root: yaml_dir_root.clone(),
+                yaml_dir_data: yaml_dir_data.clone(),
+                game: "Fallout4".to_string(),
+                game_version: selected_game_version,
+                options: CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs),
+                source: CrashLogScanSource::Standard(StandardCrashLogScanSource {
+                    base_directory: base_folder,
+                    custom_scan_directory: custom_folder,
+                    configured_documents_root: configured_docs_root,
+                }),
+                setup_context,
                 move_unsolved_logs,
                 unsolved_logs_destination,
-            );
-            let request = CrashLogScanRunRequest {
-                logs: log_paths,
-                intent,
                 max_concurrent: None,
                 cancellation: Some(cancellation),
                 preserve_order: false,
             };
-            let run = CrashLogScanRun::new(ready);
-            let result = run
-                .run(request, |event| {
-                    let (percent, status) = format_scan_run_progress(&event);
-                    let _ = tx.send(AsyncMessage::ScanProgress { percent, status });
-                })
-                .await;
+
+            let result = CrashLogScanRunService::execute(request, |event| {
+                let (percent, status) = format_scan_run_progress(&event);
+                let _ = tx.send(AsyncMessage::ScanProgress { percent, status });
+            })
+            .await;
 
             cancellation_watcher.abort();
 
@@ -698,13 +660,24 @@ impl App {
                 }
             };
 
+            if result.status == CrashLogScanRunStatus::SetupFailed {
+                let message = result
+                    .message
+                    .unwrap_or_else(|| "Crash Log Scan setup failed".to_string());
+                let _ = tx.send(AsyncMessage::ScanError(message));
+                return;
+            }
+
             let processed = result.succeeded + result.failed;
             let errors = result.failed;
-            let cancelled = result.cancelled > 0;
+            let cancelled = matches!(
+                result.status,
+                CrashLogScanRunStatus::Cancelled | CrashLogScanRunStatus::CancelledBeforeDiscovery
+            );
 
             let _ = tx.send(AsyncMessage::ScanComplete {
                 processed,
-                total,
+                total: result.total,
                 errors,
                 cancelled,
             });

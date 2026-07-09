@@ -62,6 +62,25 @@ IGNORE_YAML = """
 CLASSIC_Ignore_Fallout4: []
 """
 
+SAMPLE_CRASH_LOG = """Fallout 4 v1.10.163
+Buffout 4 v1.28.6
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+0733512
+
+SYSTEM SPECS:
+    OS: Microsoft Windows 11 Pro
+    GPU #1: Nvidia RTX
+
+PROBABLE CALL STACK:
+    [0] Fallout4.exe+0733512
+
+MODULES:
+    Fallout4.exe v1.10.163.0
+
+PLUGINS:
+    [00] Fallout4.esm
+"""
+
 
 def _write_scan_run_data_root(root) -> None:
     database_dir = root / "CLASSIC Data" / "databases"
@@ -194,80 +213,89 @@ def test_orchestrator_process_logs_parallel_is_declared_if_present() -> None:
     # Else: known stub-vs-runtime divergence, documented in Plan 04 inventory
 
 
-def test_scan_run_execute_returns_per_log_outcomes_without_report_lines(tmp_path) -> None:
-    """``scan_run_execute`` exposes Rust-owned scan-run outcomes, not report lines."""
+def test_scan_run_execute_returns_targeted_rejections_as_discovery_data(tmp_path) -> None:
+    """``scan_run_execute`` exposes rejected Targeted inputs as run-level data."""
     _write_scan_run_data_root(tmp_path)
     missing_log = tmp_path / "missing.log"
 
-    results = classic_scanlog.scan_run_execute(
+    scan_result = classic_scanlog.scan_run_execute(
         str(tmp_path),
         str(tmp_path / "CLASSIC Data"),
         "Fallout4",
         "auto",
         [str(missing_log)],
+        targeted_mode=True,
         max_concurrent=1,
     )
 
-    assert len(results) == 1
-    result = results[0]
-    assert isinstance(result, classic_scanlog.ScanRunLogResult)
-    assert result.input_index == 0
-    assert result.log_path == str(missing_log)
-    assert result.success is False
-    assert result.cancelled is False
-    assert result.autoscan_report_path is None
-    assert result.error is not None
-    assert not hasattr(result, "report_lines")
-    assert result.to_dict()["success"] is False
+    assert isinstance(scan_result, classic_scanlog.ScanRunResult)
+    assert scan_result.status == "no_crash_logs_found"
+    assert scan_result.discovery.source == "targeted"
+    assert scan_result.discovery.accepted_logs == []
+    assert scan_result.discovery.rejected_inputs[0].path == str(missing_log)
+    assert scan_result.logs == []
+    assert scan_result.to_dict()["status"] == "no_crash_logs_found"
 
 
 def test_scan_run_execute_targeted_ignores_move_and_destination(tmp_path) -> None:
     """Targeted scan-run intent wins over move and destination inputs."""
     _write_scan_run_data_root(tmp_path)
-    missing_log = tmp_path / "missing-targeted.log"
+    log_dir = tmp_path / "incoming"
+    log_dir.mkdir()
+    crash_log = log_dir / "crash-2026-03-06-12-00-00.log"
+    crash_log.write_text(SAMPLE_CRASH_LOG, encoding="utf-8")
 
-    results = classic_scanlog.scan_run_execute(
+    scan_result = classic_scanlog.scan_run_execute(
         str(tmp_path),
         str(tmp_path / "CLASSIC Data"),
         "Fallout4",
         "auto",
-        [str(missing_log)],
+        [str(crash_log)],
         move_unsolved_logs=True,
         targeted_mode=True,
         max_concurrent=1,
         unsolved_logs_destination="relative-destination",
     )
+    results = scan_result.logs
 
     assert len(results) == 1
-    assert results[0].success is False
+    assert results[0].success is True
     assert results[0].moved_to_unsolved_logs is False
 
 
 def test_scan_run_execute_ignores_destination_when_movement_disabled(tmp_path) -> None:
     """A custom destination does not imply movement for Standard runs."""
     _write_scan_run_data_root(tmp_path)
-    missing_log = tmp_path / "missing-leave.log"
+    log_dir = tmp_path / "Crash Logs"
+    log_dir.mkdir()
+    crash_log = log_dir / "crash-2026-03-06-12-00-00.log"
+    crash_log.write_text(SAMPLE_CRASH_LOG, encoding="utf-8")
 
-    results = classic_scanlog.scan_run_execute(
+    scan_result = classic_scanlog.scan_run_execute(
         str(tmp_path),
         str(tmp_path / "CLASSIC Data"),
         "Fallout4",
         "auto",
-        [str(missing_log)],
+        [],
         move_unsolved_logs=False,
         max_concurrent=1,
         unsolved_logs_destination="relative-destination",
+        configured_documents_root=str(tmp_path / "Docs"),
     )
+    results = scan_result.logs
 
     assert len(results) == 1
-    assert results[0].success is False
+    assert results[0].success is True
     assert results[0].moved_to_unsolved_logs is False
 
 
 def test_scan_run_execute_relative_destination_fails_when_movement_enabled(tmp_path) -> None:
     """Relative custom destinations are setup errors only when movement is requested."""
     _write_scan_run_data_root(tmp_path)
-    missing_log = tmp_path / "missing-relative.log"
+    log_dir = tmp_path / "Crash Logs"
+    log_dir.mkdir()
+    crash_log = log_dir / "crash-2026-03-06-12-00-00.log"
+    crash_log.write_text(SAMPLE_CRASH_LOG, encoding="utf-8")
 
     try:
         classic_scanlog.scan_run_execute(
@@ -275,10 +303,11 @@ def test_scan_run_execute_relative_destination_fails_when_movement_enabled(tmp_p
             str(tmp_path / "CLASSIC Data"),
             "Fallout4",
             "auto",
-            [str(missing_log)],
+            [],
             move_unsolved_logs=True,
             max_concurrent=1,
             unsolved_logs_destination="relative-destination",
+            configured_documents_root=str(tmp_path / "Docs"),
         )
     except Exception as exc:  # noqa: BLE001 - binding maps through project-specific PyErr types.
         assert "absolute path" in str(exc).lower()

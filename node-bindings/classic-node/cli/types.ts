@@ -19,10 +19,6 @@ export type CliPaths = {
   data: string;
 };
 
-export type ScanInputs = {
-  xsePath?: string;
-};
-
 export type CliResult = {
   exitCode: number;
   fatal?: string;

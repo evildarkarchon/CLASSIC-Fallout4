@@ -40,6 +40,70 @@ fn write_fixture_log(temp: &tempfile::TempDir, filename: &str) -> std::path::Pat
     log_path
 }
 
+fn write_minimal_yaml_tree(root: &std::path::Path, data: &std::path::Path) {
+    std::fs::create_dir_all(data.join("databases")).expect("database dir should be created");
+    std::fs::write(
+        data.join("databases").join("CLASSIC Main.yaml"),
+        concat!(
+            "CLASSIC_Info:\n",
+            "  version: \"v9.1.0\"\n",
+            "  version_date: \"2026-06-30\"\n",
+            "CLASSIC_Interface:\n",
+            "  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n",
+            "catch_log_records:\n",
+            "  - TESObjectREFR\n",
+            "exclude_log_records:\n",
+            "  - '(void*)'\n",
+        ),
+    )
+    .expect("main YAML should be written");
+    std::fs::write(
+        data.join("databases").join("CLASSIC Fallout4.yaml"),
+        concat!(
+            "Game_Info:\n",
+            "  XSE_Acronym: \"F4SE\"\n",
+            "  GameVersion: \"1.10.163\"\n",
+            "  CRASHGEN_LatestVer: \"1.28.6\"\n",
+            "  CRASHGEN_LogName: \"Buffout 4\"\n",
+            "  Main_Root_Name: \"Fallout4\"\n",
+            "Crashlog_Plugins_Exclude: []\n",
+            "Crashlog_Records_Exclude: []\n",
+            "Crashgen_Registry:\n",
+            "  default:\n",
+            "    display_section: \"\"\n",
+            "    ignore_keys: []\n",
+            "    checks: []\n",
+        ),
+    )
+    .expect("game YAML should be written");
+    std::fs::write(
+        root.join("CLASSIC Ignore.yaml"),
+        "CLASSIC_Ignore_Fallout4:\n  - IgnoreThis.dll\n",
+    )
+    .expect("ignore YAML should be written");
+}
+
+fn service_request(
+    root: &std::path::Path,
+    source: CrashLogScanSource,
+    options: CrashLogScanOptions,
+) -> CrashLogScanRunServiceRequest {
+    CrashLogScanRunServiceRequest {
+        yaml_dir_root: root.to_path_buf(),
+        yaml_dir_data: root.join("CLASSIC Data"),
+        game: "Fallout4".to_string(),
+        game_version: "auto".to_string(),
+        options,
+        source,
+        setup_context: None,
+        move_unsolved_logs: false,
+        unsolved_logs_destination: None,
+        max_concurrent: Some(1),
+        cancellation: None,
+        preserve_order: true,
+    }
+}
+
 fn standard_request(
     log_path: std::path::PathBuf,
     unsolved_logs: StandardUnsolvedLogsIntent,
@@ -51,6 +115,141 @@ fn standard_request(
         cancellation: None,
         preserve_order: true,
     }
+}
+
+#[test]
+fn service_standard_discovery_no_logs_returns_status_and_discovery_data() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let source = CrashLogScanSource::Standard(StandardCrashLogScanSource {
+        base_directory: temp.path().to_path_buf(),
+        custom_scan_directory: None,
+        configured_documents_root: Some(temp.path().join("Docs")),
+    });
+
+    let result = get_runtime()
+        .block_on(CrashLogScanRunService::execute(
+            service_request(temp.path(), source, CrashLogScanOptions::default()),
+            |_| {},
+        ))
+        .expect("no-log discovery should be an expected result");
+
+    assert_eq!(result.status, CrashLogScanRunStatus::NoCrashLogsFound);
+    let discovery = result.discovery.expect("discovery data should be present");
+    assert_eq!(discovery.source, CrashLogScanDiscoverySource::Standard);
+    assert!(discovery.accepted_logs.is_empty());
+    assert!(discovery.rejected_inputs.is_empty());
+    assert!(temp.path().join("Crash Logs").exists());
+    assert!(temp.path().join("Crash Logs").join("Pastebin").exists());
+}
+
+#[test]
+fn service_targeted_rejections_are_discovery_data() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let missing = temp.path().join("missing.log");
+    let source = CrashLogScanSource::Targeted(TargetedCrashLogScanSource {
+        inputs: vec![missing.clone()],
+    });
+
+    let result = get_runtime()
+        .block_on(CrashLogScanRunService::execute(
+            service_request(temp.path(), source, CrashLogScanOptions::default()),
+            |_| {},
+        ))
+        .expect("targeted rejection should not be an infrastructure error");
+
+    assert_eq!(result.status, CrashLogScanRunStatus::NoCrashLogsFound);
+    let discovery = result.discovery.expect("discovery data should be present");
+    assert_eq!(discovery.source, CrashLogScanDiscoverySource::Targeted);
+    assert!(discovery.accepted_logs.is_empty());
+    assert_eq!(discovery.rejected_inputs.len(), 1);
+    assert_eq!(discovery.rejected_inputs[0].path, missing);
+    assert!(
+        discovery.rejected_inputs[0]
+            .reason
+            .contains("does not exist")
+    );
+}
+
+#[test]
+fn service_fcx_mode_without_setup_context_returns_setup_failed_result() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let log_path = write_fixture_log(&temp, "manual-selection.txt");
+    let source = CrashLogScanSource::Targeted(TargetedCrashLogScanSource {
+        inputs: vec![log_path.clone()],
+    });
+
+    let result = get_runtime()
+        .block_on(CrashLogScanRunService::execute(
+            service_request(
+                temp.path(),
+                source,
+                CrashLogScanOptions::new(false, true, false),
+            ),
+            |_| {},
+        ))
+        .expect("missing setup facts should be result data");
+
+    assert_eq!(result.status, CrashLogScanRunStatus::SetupFailed);
+    assert_eq!(
+        result
+            .discovery
+            .as_ref()
+            .expect("discovery should be present")
+            .accepted_logs,
+        vec![log_path]
+    );
+    let setup = result.setup.expect("setup result should be present");
+    assert_eq!(setup.status, "action_required");
+    assert!(setup.actions.contains(&"provide_setup_context".to_string()));
+    assert!(
+        setup
+            .message
+            .as_deref()
+            .is_some_and(|message| message.contains("Setup Context"))
+    );
+}
+
+#[test]
+fn service_standard_discovery_runs_analysis_and_attaches_discovery() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let source_log = root.join("crash-service-success.log");
+    std::fs::write(&source_log, FIXTURE_LOG_SMALL).expect("source log should be written");
+    let source = CrashLogScanSource::Standard(StandardCrashLogScanSource {
+        base_directory: root.to_path_buf(),
+        custom_scan_directory: None,
+        configured_documents_root: Some(root.join("Docs")),
+    });
+    let mut events = Vec::new();
+
+    let result = get_runtime()
+        .block_on(CrashLogScanRunService::execute(
+            service_request(root, source, CrashLogScanOptions::default()),
+            |event| events.push(event),
+        ))
+        .expect("standard service run should succeed");
+
+    let accepted_log = root.join("Crash Logs").join("crash-service-success.log");
+    assert_eq!(result.status, CrashLogScanRunStatus::Completed);
+    assert_eq!(result.total, 1);
+    assert_eq!(result.succeeded, 1);
+    assert!(!source_log.exists());
+    assert_eq!(
+        result
+            .discovery
+            .as_ref()
+            .expect("discovery should be present")
+            .accepted_logs,
+        vec![accepted_log.clone()]
+    );
+    assert_eq!(result.logs[0].crash_log, accepted_log);
+    assert!(
+        events
+            .iter()
+            .any(|event| event.kind == CrashLogScanRunEventKind::Started)
+    );
 }
 
 #[test]

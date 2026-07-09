@@ -542,7 +542,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         return failure("scan logs", "classic_scanlog does not expose scan_run_execute", int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("scan logs", "classic_scanlog", exc)
-    results = list(result)
+    results = list(getattr(result, "logs", result))
     failures = [_scan_failure_summary(item) for item in results if not _scan_result_success(item)]
     report_evidence = [_scan_report_evidence(item) for item in results if _scan_result_success(item)]
     successful_logs = len(results) - len(failures)

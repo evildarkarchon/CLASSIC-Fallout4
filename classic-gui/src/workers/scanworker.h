@@ -19,7 +19,9 @@ public slots:
     void doScan(const QStringList& logPaths, const QString& yamlRoot, const QString& yamlData, const QString& game,
                 const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
                 bool moveUnsolvedLogs, const QString& unsolvedLogsDestination, int maxConcurrentScans,
-                bool targetedMode);
+                const QString& baseDirectory, const QString& customFolder, const QString& setupGameRoot,
+                const QString& setupDocsRoot, const QString& setupGameExePath, bool targetedMode,
+                const QStringList& targetedInputs);
     void requestCancel();
 
 signals:

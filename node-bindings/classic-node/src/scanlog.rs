@@ -19,8 +19,10 @@ use classic_scanlog_core::parser::LogParser;
 use classic_scanlog_core::segment_key;
 use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};
 use classic_scanlog_core::{
-    CrashLogScanIntake, CrashLogScanOptions, CrashLogScanOutcome, CrashLogScanRun,
-    CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, OrchestratorCore,
+    CrashLogScanDiscoveryResult, CrashLogScanOptions, CrashLogScanOutcome,
+    CrashLogScanRunLogOutcome, CrashLogScanRunResult, CrashLogScanRunService,
+    CrashLogScanRunServiceRequest, CrashLogScanSetupContext, CrashLogScanSetupResult,
+    CrashLogScanSource, OrchestratorCore, StandardCrashLogScanSource, TargetedCrashLogScanSource,
 };
 use classic_shared_core::GameId;
 use std::collections::{HashMap, HashSet};
@@ -222,6 +224,12 @@ pub struct JsScanRunOptions {
     pub game: String,
     /// Selected game-version mode.
     pub game_version: String,
+    /// Standard discovery base directory.
+    pub base_directory: Option<String>,
+    /// Optional custom scan directory for Standard discovery.
+    pub custom_scan_directory: Option<String>,
+    /// Optional configured documents root for Standard discovery.
+    pub configured_documents_root: Option<String>,
     /// Whether to include FormID value lookups in reports.
     pub show_formid_values: Option<bool>,
     /// Whether FCX mode is enabled.
@@ -234,6 +242,10 @@ pub struct JsScanRunOptions {
     pub unsolved_logs_destination: Option<String>,
     /// Whether this is a Targeted Crash Log Scan Run.
     pub targeted_mode: Option<bool>,
+    /// User-selected Targeted inputs. Falls back to the first positional argument when omitted.
+    pub targeted_inputs: Option<Vec<String>>,
+    /// Explicit FCX setup context when FCX Mode is enabled.
+    pub setup_context: Option<JsScanRunSetupContext>,
     /// Optional maximum number of concurrent scans. Zero and undefined use core defaults.
     pub max_concurrent: Option<u32>,
     /// Whether results should preserve input order instead of completion order.
@@ -267,6 +279,74 @@ pub struct JsScanRunLogResult {
     pub plugin_count: u32,
     /// Number of suspect patterns matched.
     pub suspect_count: u32,
+}
+
+/// JavaScript-compatible Targeted input rejection.
+#[napi(object)]
+pub struct JsScanRunRejectedInput {
+    pub path: String,
+    pub reason: String,
+}
+
+/// JavaScript-compatible Crash Log Scan Discovery Result.
+#[napi(object)]
+pub struct JsScanRunDiscoveryResult {
+    pub source: String,
+    pub accepted_logs: Vec<String>,
+    pub rejected_inputs: Vec<JsScanRunRejectedInput>,
+    pub searched_locations: Vec<String>,
+}
+
+/// JavaScript-compatible FCX setup context.
+#[napi(object)]
+pub struct JsScanRunSetupContext {
+    pub game_root: Option<String>,
+    pub docs_root: Option<String>,
+    pub game_exe_path: Option<String>,
+    pub xse_log_path: Option<String>,
+}
+
+/// JavaScript-compatible setup check.
+#[napi(object)]
+pub struct JsScanRunSetupCheck {
+    pub kind: String,
+    pub state: String,
+    pub message: String,
+    pub details: Vec<String>,
+}
+
+/// JavaScript-compatible setup path update.
+#[napi(object)]
+pub struct JsScanRunSetupPathUpdate {
+    pub kind: String,
+    pub path: String,
+}
+
+/// JavaScript-compatible Crash Log Scan Setup Result.
+#[napi(object)]
+pub struct JsScanRunSetupResult {
+    pub status: String,
+    pub message: Option<String>,
+    pub rendered_report: String,
+    pub checks: Vec<JsScanRunSetupCheck>,
+    pub path_updates: Vec<JsScanRunSetupPathUpdate>,
+    pub configuration_issues: Vec<JsFcxConfigIssue>,
+    pub actions: Vec<String>,
+    pub fatal_errors: Vec<String>,
+}
+
+/// JavaScript-compatible top-level Crash Log Scan Run Result.
+#[napi(object)]
+pub struct JsScanRunResult {
+    pub status: String,
+    pub message: Option<String>,
+    pub total: u32,
+    pub succeeded: u32,
+    pub failed: u32,
+    pub cancelled: u32,
+    pub discovery: Option<JsScanRunDiscoveryResult>,
+    pub setup: Option<JsScanRunSetupResult>,
+    pub logs: Vec<JsScanRunLogResult>,
 }
 
 #[napi(object)]
@@ -526,19 +606,19 @@ pub async fn process_logs_batch_with_yaml_content(
     Ok(results.iter().map(_core_result_to_js).collect())
 }
 
-/// Execute a full Crash Log Scan Run for selected logs.
+/// Execute a high-level Crash Log Scan Run.
 ///
-/// This is the adapter-facing scan-run seam: Rust writes Autoscan Reports and
-/// owns Standard versus Targeted Unsolved Logs behavior before returning each
-/// per-log outcome. Use the lower-level process* functions only when callers
-/// explicitly need analysis results with report lines.
+/// Rust owns discovery, FCX setup validation, Autoscan Report writing, and
+/// Standard versus Targeted Unsolved Logs behavior before returning a top-level
+/// run result with nested per-log outcomes. Use the lower-level process*
+/// functions only when callers explicitly need analysis results with report lines.
 #[napi]
 pub async fn scan_run_execute(
     log_paths: Vec<String>,
     options: JsScanRunOptions,
-) -> napi::Result<Vec<JsScanRunLogResult>> {
+) -> napi::Result<JsScanRunResult> {
     let handle = classic_shared_core::get_runtime().handle().clone();
-    // Core folds the `Some(0)` sentinel to the adaptive default at the scan-run seam.
+    // Core folds the `Some(0)` sentinel to the adaptive default at the service boundary.
     let max_concurrent = options.max_concurrent.map(|value| value as usize);
     let show_formid_values = options.show_formid_values.unwrap_or(false);
     let fcx_mode = options.fcx_mode.unwrap_or(false);
@@ -550,53 +630,48 @@ pub async fn scan_run_execute(
     let yaml_dir_root = PathBuf::from(&options.yaml_dir_root);
     let yaml_dir_data = PathBuf::from(&options.yaml_dir_data);
 
-    let results = handle
+    let result = handle
         .spawn(async move {
-            let prepared = CrashLogScanIntake::from_yaml_paths(
-                yaml_dir_root.clone(),
+            let source = if targeted_mode {
+                let inputs = options.targeted_inputs.unwrap_or(log_paths);
+                CrashLogScanSource::Targeted(TargetedCrashLogScanSource {
+                    inputs: inputs.into_iter().map(PathBuf::from).collect(),
+                })
+            } else {
+                CrashLogScanSource::Standard(StandardCrashLogScanSource {
+                    base_directory: options
+                        .base_directory
+                        .map(PathBuf::from)
+                        .unwrap_or_else(|| yaml_dir_root.clone()),
+                    custom_scan_directory: options.custom_scan_directory.map(PathBuf::from),
+                    configured_documents_root: options.configured_documents_root.map(PathBuf::from),
+                })
+            };
+            let setup_context = options.setup_context.map(js_setup_context_to_core);
+            let request = CrashLogScanRunServiceRequest {
+                yaml_dir_root,
                 yaml_dir_data,
-                options.game,
-                options.game_version,
-                CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs),
-            )
-            .prepare()
-            .await
-            .map_err(|error| format!("Failed to prepare scan run: {error}"))?;
-
-            let intent = CrashLogScanRunIntent::from_adapter_flags(
-                targeted_mode,
+                game: options.game,
+                game_version: options.game_version,
+                options: CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs),
+                source,
+                setup_context,
                 move_unsolved_logs,
-                unsolved_logs_destination.as_deref(),
-            );
+                unsolved_logs_destination: unsolved_logs_destination.map(PathBuf::from),
+                max_concurrent,
+                cancellation: None,
+                preserve_order,
+            };
 
-            let run = CrashLogScanRun::new(prepared);
-            let result = run
-                .run(
-                    CrashLogScanRunRequest {
-                        logs: log_paths.into_iter().map(PathBuf::from).collect(),
-                        intent,
-                        max_concurrent,
-                        cancellation: None,
-                        preserve_order,
-                    },
-                    |_| {},
-                )
+            CrashLogScanRunService::execute(request, |_| {})
                 .await
-                .map_err(|error| format!("Failed to execute scan run: {error}"))?;
-
-            Ok::<_, String>(
-                result
-                    .logs
-                    .into_iter()
-                    .map(scan_run_outcome_to_js)
-                    .collect(),
-            )
+                .map_err(|error| format!("Failed to execute scan run: {error}"))
         })
         .await
         .map_err(|error| to_napi_err(format!("Runtime error: {error}")))?
         .map_err(to_napi_err)?;
 
-    Ok(results)
+    Ok(scan_run_result_to_js(result))
 }
 
 // ============================================================================
@@ -857,6 +932,94 @@ pub(crate) fn _core_result_to_js(result: &orchestrator::AnalysisResult) -> JsAna
         formid_count: result.formid_count as u32,
         plugin_count: result.plugin_count as u32,
         suspect_count: result.suspect_count as u32,
+    }
+}
+
+fn js_setup_context_to_core(context: JsScanRunSetupContext) -> CrashLogScanSetupContext {
+    CrashLogScanSetupContext {
+        game_root: context.game_root.map(PathBuf::from),
+        docs_root: context.docs_root.map(PathBuf::from),
+        game_exe_path: context.game_exe_path.map(PathBuf::from),
+        xse_log_path: context.xse_log_path.map(PathBuf::from),
+    }
+}
+
+fn path_to_string(path: PathBuf) -> String {
+    path.to_string_lossy().to_string()
+}
+
+fn scan_run_discovery_to_js(discovery: CrashLogScanDiscoveryResult) -> JsScanRunDiscoveryResult {
+    JsScanRunDiscoveryResult {
+        source: discovery.source.as_str().to_string(),
+        accepted_logs: discovery
+            .accepted_logs
+            .into_iter()
+            .map(path_to_string)
+            .collect(),
+        rejected_inputs: discovery
+            .rejected_inputs
+            .into_iter()
+            .map(|rejected| JsScanRunRejectedInput {
+                path: path_to_string(rejected.path),
+                reason: rejected.reason,
+            })
+            .collect(),
+        searched_locations: discovery
+            .searched_locations
+            .into_iter()
+            .map(path_to_string)
+            .collect(),
+    }
+}
+
+fn scan_run_setup_to_js(setup: CrashLogScanSetupResult) -> JsScanRunSetupResult {
+    JsScanRunSetupResult {
+        status: setup.status,
+        message: setup.message,
+        rendered_report: setup.rendered_report,
+        checks: setup
+            .checks
+            .into_iter()
+            .map(|check| JsScanRunSetupCheck {
+                kind: check.kind,
+                state: check.state,
+                message: check.message,
+                details: check.details,
+            })
+            .collect(),
+        path_updates: setup
+            .path_updates
+            .into_iter()
+            .map(|update| JsScanRunSetupPathUpdate {
+                kind: update.kind,
+                path: path_to_string(update.path),
+            })
+            .collect(),
+        configuration_issues: setup
+            .configuration_issues
+            .iter()
+            .map(JsFcxConfigIssue::from)
+            .collect(),
+        actions: setup.actions,
+        fatal_errors: setup.fatal_errors,
+    }
+}
+
+fn scan_run_result_to_js(result: CrashLogScanRunResult) -> JsScanRunResult {
+    JsScanRunResult {
+        status: result.status.as_str().to_string(),
+        message: result.message,
+        total: result.total as u32,
+        succeeded: result.succeeded as u32,
+        failed: result.failed as u32,
+        cancelled: result.cancelled as u32,
+        discovery: result.discovery.map(scan_run_discovery_to_js),
+        setup: result.setup.map(scan_run_setup_to_js),
+        logs: result
+            .logs
+            .into_iter()
+            .map(scan_run_outcome_to_js)
+            .collect(),
     }
 }
 

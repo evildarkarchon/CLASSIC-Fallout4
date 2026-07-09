@@ -76,9 +76,14 @@ pub use scan_intake::{
     resolve_formid_database_paths, resolve_user_formid_database_paths,
 };
 pub use scan_run::{
-    CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind,
+    CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome,
+    CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind,
     CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest,
-    CrashLogScanRunResult, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent,
+    CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest,
+    CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext,
+    CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource,
+    StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent,
+    TargetedCrashLogScanSource,
 };
 pub use settings_validator::SettingsValidator;
 pub use suspect_scanner::SuspectScanner;

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T07:10:00Z",
+  "generated_at_utc": "2026-07-09T10:43:45Z",
   "entries": [
     {
       "id": "b0d609f9ed78e468",
@@ -4470,7 +4470,7 @@
             "type": "&ScanCancellationToken"
           }
         ],
-        "returnType": "Result<Vec<ScanRunLogResult>>"
+        "returnType": "Result<ScanRunResult>"
       }
     },
     {
@@ -4724,6 +4724,36 @@
       ]
     },
     {
+      "id": "15b6b387978da336",
+      "rustSymbol": "ScanRunDiscoveryResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "source",
+          "type": "String"
+        },
+        {
+          "name": "accepted_logs",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "rejected_paths",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "rejected_reasons",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "searched_locations",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
       "id": "b88124b36f1347e2",
       "rustSymbol": "ScanRunLogResult",
       "kind": "struct",
@@ -4806,6 +4836,18 @@
           "type": "String"
         },
         {
+          "name": "base_directory",
+          "type": "String"
+        },
+        {
+          "name": "custom_scan_directory",
+          "type": "String"
+        },
+        {
+          "name": "configured_documents_root",
+          "type": "String"
+        },
+        {
           "name": "show_formid_values",
           "type": "bool"
         },
@@ -4830,11 +4872,167 @@
           "type": "bool"
         },
         {
+          "name": "setup_game_root",
+          "type": "String"
+        },
+        {
+          "name": "setup_docs_root",
+          "type": "String"
+        },
+        {
+          "name": "setup_game_exe_path",
+          "type": "String"
+        },
+        {
+          "name": "setup_xse_log_path",
+          "type": "String"
+        },
+        {
           "name": "max_concurrent",
           "type": "u32"
         },
         {
+          "name": "targeted_inputs",
+          "type": "Vec<String>"
+        },
+        {
           "name": "log_paths",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "b062184064994c9e",
+      "rustSymbol": "ScanRunResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        },
+        {
+          "name": "total",
+          "type": "u32"
+        },
+        {
+          "name": "succeeded",
+          "type": "u32"
+        },
+        {
+          "name": "failed",
+          "type": "u32"
+        },
+        {
+          "name": "cancelled",
+          "type": "u32"
+        },
+        {
+          "name": "discovery",
+          "type": "ScanRunDiscoveryResult"
+        },
+        {
+          "name": "has_setup",
+          "type": "bool"
+        },
+        {
+          "name": "setup",
+          "type": "ScanRunSetupResultDto"
+        },
+        {
+          "name": "logs",
+          "type": "Vec<ScanRunLogResult>"
+        }
+      ]
+    },
+    {
+      "id": "9b28bab3cd0970b5",
+      "rustSymbol": "ScanRunSetupCheckDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "state",
+          "type": "String"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        },
+        {
+          "name": "details",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "8ce956fd6e9c6003",
+      "rustSymbol": "ScanRunSetupPathUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "path",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "153273fead0cfe26",
+      "rustSymbol": "ScanRunSetupResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        },
+        {
+          "name": "rendered_report",
+          "type": "String"
+        },
+        {
+          "name": "checks",
+          "type": "Vec<ScanRunSetupCheckDto>"
+        },
+        {
+          "name": "path_updates",
+          "type": "Vec<ScanRunSetupPathUpdateDto>"
+        },
+        {
+          "name": "configuration_issues",
+          "type": "Vec<FcxIssueDto>"
+        },
+        {
+          "name": "actions",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "fatal_errors",
           "type": "Vec<String>"
         }
       ]

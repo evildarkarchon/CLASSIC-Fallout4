@@ -1044,6 +1044,7 @@ dependencies = [
  "classic-config-core",
  "classic-database-core",
  "classic-file-io-core",
+ "classic-scangame-core",
  "classic-settings-core",
  "classic-shared-core",
  "classic-version-registry-core",

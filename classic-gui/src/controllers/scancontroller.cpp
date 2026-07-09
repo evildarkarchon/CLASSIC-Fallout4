@@ -80,7 +80,9 @@ ScanController::ScanController(SignalHub* signalHub, ThreadManager* threadManage
 void ScanController::startScan(const QString& yamlRoot, const QString& yamlData, const QString& game,
                                const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
                                bool moveUnsolvedLogs, const QString& unsolvedLogsDestination, int maxConcurrentScans,
-                               const QString& customFolder, const QStringList& targetedInputs)
+                               const QString& customFolder, const QString& setupGameRoot,
+                               const QString& setupDocsRoot, const QString& setupGameExePath,
+                               const QStringList& targetedInputs)
 {
     if (m_scanning) {
         return;
@@ -97,6 +99,7 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
     // Collect crash logs -- targeted mode or standard discovery
     QStringList logPathsList;
     QString targetedRejectionMessage;
+    const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
     try {
         if (targetedMode) {
             rust::Vec<rust::String> rustInputs;
@@ -127,7 +130,6 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
             // Intentionally collect under the portable app root. CLASSIC is distributed as a
             // portable app, so the application directory is expected to be writable and we do
             // not use a separate per-user/AppData fallback here.
-            const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
             auto collector = classic::files::log_collector_new_for_scan(
                 classic::toRustString(baseDir), classic::toRustString(yamlData), classic::toRustString(game),
                 classic::toRustString(gameVersion), "", classic::toRustString(customFolder));
@@ -146,21 +148,6 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
         emit scanError(QString::fromUtf8(e.what()));
         if (m_signalHub) {
             emit m_signalHub->scanError(QString::fromUtf8(e.what()));
-        }
-        return;
-    }
-
-    if (logPathsList.isEmpty()) {
-        m_scanning = false;
-        const QString errorMessage = targetedMode
-                                         ? (targetedRejectionMessage.isEmpty()
-                                                ? QStringLiteral("No crash logs resolved from targeted inputs.")
-                                                : QStringLiteral("No crash logs resolved from targeted inputs.\n\n%1")
-                                                      .arg(targetedRejectionMessage))
-                                         : QStringLiteral("No crash logs found");
-        emit scanError(errorMessage);
-        if (m_signalHub) {
-            emit m_signalHub->scanError(errorMessage);
         }
         return;
     }
@@ -193,10 +180,12 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
     // Start the worker thread and invoke doScan once the thread is running
     connect(thread, &QThread::started, worker,
             [worker, logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode, simplifyLogs,
-             moveUnsolvedLogs, unsolvedLogsDestination, maxConcurrentScans, targetedMode]() {
+             moveUnsolvedLogs, unsolvedLogsDestination, maxConcurrentScans, baseDir, customFolder, targetedMode,
+             setupGameRoot, setupDocsRoot, setupGameExePath, targetedInputs]() {
                 worker->doScan(logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode,
                                simplifyLogs, moveUnsolvedLogs, unsolvedLogsDestination, maxConcurrentScans,
-                               targetedMode);
+                               baseDir, customFolder, setupGameRoot, setupDocsRoot, setupGameExePath, targetedMode,
+                               targetedInputs);
             });
 
     m_threadManager->startWorker(QStringLiteral("crash_scan"), thread, worker);

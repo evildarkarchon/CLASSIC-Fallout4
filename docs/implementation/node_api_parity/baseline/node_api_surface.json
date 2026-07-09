@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-08T13:13:59.338406+00:00",
+  "generated_at_utc": "2026-07-09T10:44:45.648163+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -829,6 +829,14 @@
       "signature": "export interface JsRuleTarget {"
     },
     {
+      "export": "JsScanRunDiscoveryResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunDiscoveryResult {"
+    },
+    {
       "export": "JsScanRunLogResult",
       "kind": "interface",
       "owner_module": "scanlog",
@@ -843,6 +851,54 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunOptions {"
+    },
+    {
+      "export": "JsScanRunRejectedInput",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunRejectedInput {"
+    },
+    {
+      "export": "JsScanRunResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunResult {"
+    },
+    {
+      "export": "JsScanRunSetupCheck",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunSetupCheck {"
+    },
+    {
+      "export": "JsScanRunSetupContext",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunSetupContext {"
+    },
+    {
+      "export": "JsScanRunSetupPathUpdate",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunSetupPathUpdate {"
+    },
+    {
+      "export": "JsScanRunSetupResult",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunSetupResult {"
     },
     {
       "export": "JsSuspectErrorRule",
@@ -2655,7 +2711,7 @@
       "owner_module": "aux",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function scanRunExecute(logPaths: Array<string>, options: JsScanRunOptions): Promise<Array<JsScanRunLogResult>>",
+      "signature": "export declare function scanRunExecute(logPaths: Array<string>, options: JsScanRunOptions): Promise<JsScanRunResult>",
       "arity": 2
     },
     {

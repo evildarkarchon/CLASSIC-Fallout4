@@ -5,9 +5,11 @@ use classic_config_core::{
 };
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
-    AnalysisConfig, AnalysisResult, BatchScanEventKind, BatchScanOptions, CrashLogScanIntake,
-    CrashLogScanOptions, CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunIntent,
-    CrashLogScanRunLogOutcome, CrashLogScanRunRequest, OrchestratorCore,
+    AnalysisConfig, AnalysisResult, BatchScanEventKind, BatchScanOptions,
+    CrashLogScanDiscoveryResult, CrashLogScanOptions, CrashLogScanOutcome,
+    CrashLogScanRunLogOutcome, CrashLogScanRunResult, CrashLogScanRunService,
+    CrashLogScanRunServiceRequest, CrashLogScanSetupContext, CrashLogScanSetupResult,
+    CrashLogScanSource, OrchestratorCore, StandardCrashLogScanSource, TargetedCrashLogScanSource,
     build_analysis_config_from_yaml,
 };
 use classic_shared::without_gil_block_on;
@@ -20,6 +22,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use crate::core_mod_convert::exclude_when_to_pydict;
+use crate::fcx_handler::PyConfigIssue;
 use crate::py_adapters::{
     core_mod_entries_from_attr, core_mod_entries_from_py, mod_conflict_entries_from_attr,
     mod_conflict_entries_from_py, mod_solution_entries_from_attr, mod_solution_entries_from_py,
@@ -905,6 +908,429 @@ impl PyScanRunLogResult {
     }
 }
 
+/// Python wrapper for a targeted input rejected during Crash Log discovery.
+#[pyclass(name = "ScanRunRejectedInput", from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunRejectedInput {
+    path: String,
+    reason: String,
+}
+
+#[pymethods]
+impl PyScanRunRejectedInput {
+    /// Original user-provided input path.
+    #[getter]
+    pub fn path(&self) -> String {
+        self.path.clone()
+    }
+
+    /// Human-readable reason this input was not accepted for scanning.
+    #[getter]
+    pub fn reason(&self) -> String {
+        self.reason.clone()
+    }
+
+    /// Convert to a dictionary for JSON-friendly callers.
+    pub fn to_dict(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
+        let dict = PyDict::new(py);
+        dict.set_item("path", &self.path)?;
+        dict.set_item("reason", &self.reason)?;
+        Ok(dict.into())
+    }
+}
+
+/// Python wrapper for high-level Crash Log discovery data.
+#[pyclass(name = "ScanRunDiscoveryResult", from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunDiscoveryResult {
+    source: String,
+    accepted_logs: Vec<String>,
+    rejected_inputs: Vec<PyScanRunRejectedInput>,
+    searched_locations: Vec<String>,
+}
+
+#[pymethods]
+impl PyScanRunDiscoveryResult {
+    /// Stable source identifier: "standard" or "targeted".
+    #[getter]
+    pub fn source(&self) -> String {
+        self.source.clone()
+    }
+
+    /// Accepted Crash Logs in discovery order.
+    #[getter]
+    pub fn accepted_logs(&self) -> Vec<String> {
+        self.accepted_logs.clone()
+    }
+
+    /// Targeted inputs rejected during discovery.
+    #[getter]
+    pub fn rejected_inputs(&self) -> Vec<PyScanRunRejectedInput> {
+        self.rejected_inputs.clone()
+    }
+
+    /// Locations or inputs searched during discovery.
+    #[getter]
+    pub fn searched_locations(&self) -> Vec<String> {
+        self.searched_locations.clone()
+    }
+
+    /// Convert to a dictionary for JSON-friendly callers.
+    pub fn to_dict(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
+        let dict = PyDict::new(py);
+        let rejected_inputs = self
+            .rejected_inputs
+            .iter()
+            .map(|input| input.to_dict(py))
+            .collect::<PyResult<Vec<_>>>()?;
+        dict.set_item("source", &self.source)?;
+        dict.set_item("accepted_logs", &self.accepted_logs)?;
+        dict.set_item("rejected_inputs", rejected_inputs)?;
+        dict.set_item("searched_locations", &self.searched_locations)?;
+        Ok(dict.into())
+    }
+}
+
+/// Python input object for FCX setup facts supplied by callers.
+#[pyclass(name = "ScanRunSetupContext", from_py_object)]
+#[derive(Clone, Default)]
+pub struct PyScanRunSetupContext {
+    game_root: Option<String>,
+    docs_root: Option<String>,
+    game_exe_path: Option<String>,
+    xse_log_path: Option<String>,
+}
+
+#[pymethods]
+impl PyScanRunSetupContext {
+    /// Create setup context for high-level scan-run FCX validation.
+    #[new]
+    #[pyo3(signature = (game_root=None, docs_root=None, game_exe_path=None, xse_log_path=None))]
+    pub fn new(
+        game_root: Option<String>,
+        docs_root: Option<String>,
+        game_exe_path: Option<String>,
+        xse_log_path: Option<String>,
+    ) -> Self {
+        Self {
+            game_root,
+            docs_root,
+            game_exe_path,
+            xse_log_path,
+        }
+    }
+
+    /// Saved or caller-provided game installation root.
+    #[getter]
+    pub fn game_root(&self) -> Option<String> {
+        self.game_root.clone()
+    }
+
+    /// Saved or caller-provided documents root.
+    #[getter]
+    pub fn docs_root(&self) -> Option<String> {
+        self.docs_root.clone()
+    }
+
+    /// Saved or caller-provided game executable path.
+    #[getter]
+    pub fn game_exe_path(&self) -> Option<String> {
+        self.game_exe_path.clone()
+    }
+
+    /// Optional XSE log path used as a game-root detection hint.
+    #[getter]
+    pub fn xse_log_path(&self) -> Option<String> {
+        self.xse_log_path.clone()
+    }
+
+    /// Convert to a dictionary for JSON-friendly callers.
+    pub fn to_dict(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
+        let dict = PyDict::new(py);
+        dict.set_item("game_root", &self.game_root)?;
+        dict.set_item("docs_root", &self.docs_root)?;
+        dict.set_item("game_exe_path", &self.game_exe_path)?;
+        dict.set_item("xse_log_path", &self.xse_log_path)?;
+        Ok(dict.into())
+    }
+}
+
+/// Python wrapper for a typed FCX setup validation check.
+#[pyclass(name = "ScanRunSetupCheck", from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunSetupCheck {
+    kind: String,
+    state: String,
+    message: String,
+    details: Vec<String>,
+}
+
+#[pymethods]
+impl PyScanRunSetupCheck {
+    /// Stable check kind identifier.
+    #[getter]
+    pub fn kind(&self) -> String {
+        self.kind.clone()
+    }
+
+    /// Stable check state identifier.
+    #[getter]
+    pub fn state(&self) -> String {
+        self.state.clone()
+    }
+
+    /// Short human-readable summary.
+    #[getter]
+    pub fn message(&self) -> String {
+        self.message.clone()
+    }
+
+    /// Optional detail lines for this setup check.
+    #[getter]
+    pub fn details(&self) -> Vec<String> {
+        self.details.clone()
+    }
+
+    /// Convert to a dictionary for JSON-friendly callers.
+    pub fn to_dict(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
+        let dict = PyDict::new(py);
+        dict.set_item("kind", &self.kind)?;
+        dict.set_item("state", &self.state)?;
+        dict.set_item("message", &self.message)?;
+        dict.set_item("details", &self.details)?;
+        Ok(dict.into())
+    }
+}
+
+/// Python wrapper for a proposed setup path update.
+#[pyclass(name = "ScanRunSetupPathUpdate", from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunSetupPathUpdate {
+    kind: String,
+    path: String,
+}
+
+#[pymethods]
+impl PyScanRunSetupPathUpdate {
+    /// Stable path kind, currently "game_root" or "docs_root".
+    #[getter]
+    pub fn kind(&self) -> String {
+        self.kind.clone()
+    }
+
+    /// Proposed path value.
+    #[getter]
+    pub fn path(&self) -> String {
+        self.path.clone()
+    }
+
+    /// Convert to a dictionary for JSON-friendly callers.
+    pub fn to_dict(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
+        let dict = PyDict::new(py);
+        dict.set_item("kind", &self.kind)?;
+        dict.set_item("path", &self.path)?;
+        Ok(dict.into())
+    }
+}
+
+/// Python wrapper for high-level FCX setup validation data.
+#[pyclass(name = "ScanRunSetupResult", from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunSetupResult {
+    status: String,
+    message: Option<String>,
+    rendered_report: String,
+    checks: Vec<PyScanRunSetupCheck>,
+    path_updates: Vec<PyScanRunSetupPathUpdate>,
+    configuration_issues: Vec<PyConfigIssue>,
+    actions: Vec<String>,
+    fatal_errors: Vec<String>,
+}
+
+#[pymethods]
+impl PyScanRunSetupResult {
+    /// Adapter-facing setup status identifier.
+    #[getter]
+    pub fn status(&self) -> String {
+        self.status.clone()
+    }
+
+    /// Optional concise setup message.
+    #[getter]
+    pub fn message(&self) -> Option<String> {
+        self.message.clone()
+    }
+
+    /// Canonical setup report text.
+    #[getter]
+    pub fn rendered_report(&self) -> String {
+        self.rendered_report.clone()
+    }
+
+    /// Typed setup checks.
+    #[getter]
+    pub fn checks(&self) -> Vec<PyScanRunSetupCheck> {
+        self.checks.clone()
+    }
+
+    /// Proposed path updates that callers may persist.
+    #[getter]
+    pub fn path_updates(&self) -> Vec<PyScanRunSetupPathUpdate> {
+        self.path_updates.clone()
+    }
+
+    /// Read-only FCX configuration issues detected from game files.
+    #[getter]
+    pub fn configuration_issues(&self) -> Vec<PyConfigIssue> {
+        self.configuration_issues.clone()
+    }
+
+    /// User actions required before setup can complete.
+    #[getter]
+    pub fn actions(&self) -> Vec<String> {
+        self.actions.clone()
+    }
+
+    /// Fatal setup errors.
+    #[getter]
+    pub fn fatal_errors(&self) -> Vec<String> {
+        self.fatal_errors.clone()
+    }
+
+    /// Convert to a dictionary for JSON-friendly callers.
+    pub fn to_dict(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
+        let dict = PyDict::new(py);
+        let checks = self
+            .checks
+            .iter()
+            .map(|check| check.to_dict(py))
+            .collect::<PyResult<Vec<_>>>()?;
+        let path_updates = self
+            .path_updates
+            .iter()
+            .map(|update| update.to_dict(py))
+            .collect::<PyResult<Vec<_>>>()?;
+        let configuration_issues = self
+            .configuration_issues
+            .iter()
+            .map(|issue| config_issue_to_dict(py, issue))
+            .collect::<PyResult<Vec<_>>>()?;
+
+        dict.set_item("status", &self.status)?;
+        dict.set_item("message", &self.message)?;
+        dict.set_item("rendered_report", &self.rendered_report)?;
+        dict.set_item("checks", checks)?;
+        dict.set_item("path_updates", path_updates)?;
+        dict.set_item("configuration_issues", configuration_issues)?;
+        dict.set_item("actions", &self.actions)?;
+        dict.set_item("fatal_errors", &self.fatal_errors)?;
+        Ok(dict.into())
+    }
+}
+
+/// Python wrapper for a complete Crash Log Scan Run result.
+#[pyclass(name = "ScanRunResult", from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunResult {
+    status: String,
+    message: Option<String>,
+    total: usize,
+    succeeded: usize,
+    failed: usize,
+    cancelled: usize,
+    discovery: Option<PyScanRunDiscoveryResult>,
+    setup: Option<PyScanRunSetupResult>,
+    logs: Vec<PyScanRunLogResult>,
+}
+
+#[pymethods]
+impl PyScanRunResult {
+    /// Stable lifecycle status for the run as a whole.
+    #[getter]
+    pub fn status(&self) -> String {
+        self.status.clone()
+    }
+
+    /// Optional concise run-level message.
+    #[getter]
+    pub fn message(&self) -> Option<String> {
+        self.message.clone()
+    }
+
+    /// Total selected Crash Logs.
+    #[getter]
+    pub fn total(&self) -> usize {
+        self.total
+    }
+
+    /// Number of successfully scanned Crash Logs.
+    #[getter]
+    pub fn succeeded(&self) -> usize {
+        self.succeeded
+    }
+
+    /// Number of failed Crash Logs, excluding cancelled entries.
+    #[getter]
+    pub fn failed(&self) -> usize {
+        self.failed
+    }
+
+    /// Number of Crash Logs cancelled before analysis started.
+    #[getter]
+    pub fn cancelled(&self) -> usize {
+        self.cancelled
+    }
+
+    /// Discovery details when high-level scan-run discovery was used.
+    #[getter]
+    pub fn discovery(&self) -> Option<PyScanRunDiscoveryResult> {
+        self.discovery.clone()
+    }
+
+    /// Setup details when FCX setup validation was requested.
+    #[getter]
+    pub fn setup(&self) -> Option<PyScanRunSetupResult> {
+        self.setup.clone()
+    }
+
+    /// Per-log outcomes.
+    #[getter]
+    pub fn logs(&self) -> Vec<PyScanRunLogResult> {
+        self.logs.clone()
+    }
+
+    /// Convert to a dictionary for JSON-friendly callers.
+    pub fn to_dict(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
+        let dict = PyDict::new(py);
+        let discovery = self
+            .discovery
+            .as_ref()
+            .map(|discovery| discovery.to_dict(py))
+            .transpose()?;
+        let setup = self
+            .setup
+            .as_ref()
+            .map(|setup| setup.to_dict(py))
+            .transpose()?;
+        let logs = self
+            .logs
+            .iter()
+            .map(|log| log.to_dict(py))
+            .collect::<PyResult<Vec<_>>>()?;
+
+        dict.set_item("status", &self.status)?;
+        dict.set_item("message", &self.message)?;
+        dict.set_item("total", self.total)?;
+        dict.set_item("succeeded", self.succeeded)?;
+        dict.set_item("failed", self.failed)?;
+        dict.set_item("cancelled", self.cancelled)?;
+        dict.set_item("discovery", discovery)?;
+        dict.set_item("setup", setup)?;
+        dict.set_item("logs", logs)?;
+        Ok(dict.into())
+    }
+}
+
 fn scan_run_log_outcome_to_py(outcome: CrashLogScanRunLogOutcome) -> PyScanRunLogResult {
     PyScanRunLogResult {
         input_index: outcome.input_index,
@@ -924,13 +1350,117 @@ fn scan_run_log_outcome_to_py(outcome: CrashLogScanRunLogOutcome) -> PyScanRunLo
     }
 }
 
-/// Execute a full Crash Log Scan Run for selected logs.
+fn path_to_string(path: PathBuf) -> String {
+    path.to_string_lossy().to_string()
+}
+
+fn optional_string_to_path(value: Option<String>) -> Option<PathBuf> {
+    value.filter(|path| !path.is_empty()).map(PathBuf::from)
+}
+
+fn scan_run_setup_context_to_core(context: PyScanRunSetupContext) -> CrashLogScanSetupContext {
+    CrashLogScanSetupContext {
+        game_root: optional_string_to_path(context.game_root),
+        docs_root: optional_string_to_path(context.docs_root),
+        game_exe_path: optional_string_to_path(context.game_exe_path),
+        xse_log_path: optional_string_to_path(context.xse_log_path),
+    }
+}
+
+fn config_issue_to_dict(py: Python<'_>, issue: &PyConfigIssue) -> PyResult<Py<PyDict>> {
+    let dict = PyDict::new(py);
+    dict.set_item("file_path", issue.file_path())?;
+    dict.set_item("section", issue.section())?;
+    dict.set_item("setting", issue.setting())?;
+    dict.set_item("current_value", issue.current_value())?;
+    dict.set_item("recommended_value", issue.recommended_value())?;
+    dict.set_item("description", issue.description())?;
+    dict.set_item("severity", issue.severity())?;
+    Ok(dict.into())
+}
+
+fn scan_run_discovery_to_py(discovery: CrashLogScanDiscoveryResult) -> PyScanRunDiscoveryResult {
+    PyScanRunDiscoveryResult {
+        source: discovery.source.as_str().to_string(),
+        accepted_logs: discovery
+            .accepted_logs
+            .into_iter()
+            .map(path_to_string)
+            .collect(),
+        rejected_inputs: discovery
+            .rejected_inputs
+            .into_iter()
+            .map(|input| PyScanRunRejectedInput {
+                path: path_to_string(input.path),
+                reason: input.reason,
+            })
+            .collect(),
+        searched_locations: discovery
+            .searched_locations
+            .into_iter()
+            .map(path_to_string)
+            .collect(),
+    }
+}
+
+fn scan_run_setup_to_py(setup: CrashLogScanSetupResult) -> PyScanRunSetupResult {
+    PyScanRunSetupResult {
+        status: setup.status,
+        message: setup.message,
+        rendered_report: setup.rendered_report,
+        checks: setup
+            .checks
+            .into_iter()
+            .map(|check| PyScanRunSetupCheck {
+                kind: check.kind,
+                state: check.state,
+                message: check.message,
+                details: check.details,
+            })
+            .collect(),
+        path_updates: setup
+            .path_updates
+            .into_iter()
+            .map(|update| PyScanRunSetupPathUpdate {
+                kind: update.kind,
+                path: path_to_string(update.path),
+            })
+            .collect(),
+        configuration_issues: setup
+            .configuration_issues
+            .into_iter()
+            .map(PyConfigIssue::from)
+            .collect(),
+        actions: setup.actions,
+        fatal_errors: setup.fatal_errors,
+    }
+}
+
+fn scan_run_result_to_py(result: CrashLogScanRunResult) -> PyScanRunResult {
+    PyScanRunResult {
+        status: result.status.as_str().to_string(),
+        message: result.message,
+        total: result.total,
+        succeeded: result.succeeded,
+        failed: result.failed,
+        cancelled: result.cancelled,
+        discovery: result.discovery.map(scan_run_discovery_to_py),
+        setup: result.setup.map(scan_run_setup_to_py),
+        logs: result
+            .logs
+            .into_iter()
+            .map(scan_run_log_outcome_to_py)
+            .collect(),
+    }
+}
+
+/// Execute a high-level Crash Log Scan Run.
 ///
-/// Rust writes Autoscan Reports and owns Standard versus Targeted Unsolved Logs
-/// behavior before returning each per-log outcome. Use `Orchestrator` methods
+/// Rust owns discovery, FCX setup validation, Autoscan Report writing, and
+/// Standard versus Targeted Unsolved Logs behavior. Use `Orchestrator` methods
 /// only when callers explicitly need lower-level analysis results with report lines.
 #[pyfunction]
-#[pyo3(signature = (yaml_dir_root, yaml_dir_data, game, game_version, log_paths, show_formid_values=false, fcx_mode=false, simplify_logs=false, move_unsolved_logs=false, targeted_mode=false, max_concurrent=None, preserve_order=false, cancellation_token=None, unsolved_logs_destination=None))]
+#[pyo3(signature = (yaml_dir_root, yaml_dir_data, game, game_version, log_paths, show_formid_values=false, fcx_mode=false, simplify_logs=false, move_unsolved_logs=false, targeted_mode=false, max_concurrent=None, preserve_order=false, cancellation_token=None, unsolved_logs_destination=None, base_directory=None, custom_scan_directory=None, configured_documents_root=None, targeted_inputs=None, setup_context=None))]
 #[allow(clippy::too_many_arguments)]
 pub fn scan_run_execute(
     py: Python<'_>,
@@ -948,49 +1478,53 @@ pub fn scan_run_execute(
     preserve_order: bool,
     cancellation_token: Option<PyCancellationToken>,
     unsolved_logs_destination: Option<String>,
-) -> PyResult<Vec<PyScanRunLogResult>> {
+    base_directory: Option<String>,
+    custom_scan_directory: Option<String>,
+    configured_documents_root: Option<String>,
+    targeted_inputs: Option<Vec<String>>,
+    setup_context: Option<PyScanRunSetupContext>,
+) -> PyResult<PyScanRunResult> {
     let yaml_dir_root = PathBuf::from(yaml_dir_root);
     let yaml_dir_data = PathBuf::from(yaml_dir_data);
     let cancellation = cancellation_token.map(|token| token.inner.clone());
+    let source = if targeted_mode {
+        let inputs = targeted_inputs.unwrap_or(log_paths);
+        CrashLogScanSource::Targeted(TargetedCrashLogScanSource {
+            inputs: inputs.into_iter().map(PathBuf::from).collect(),
+        })
+    } else {
+        CrashLogScanSource::Standard(StandardCrashLogScanSource {
+            base_directory: optional_string_to_path(base_directory)
+                .unwrap_or_else(|| yaml_dir_root.clone()),
+            custom_scan_directory: optional_string_to_path(custom_scan_directory),
+            configured_documents_root: optional_string_to_path(configured_documents_root),
+        })
+    };
+    let setup_context = setup_context.map(scan_run_setup_context_to_core);
 
     let result = without_gil_block_on(py, || async move {
-        let prepared = CrashLogScanIntake::from_yaml_paths(
-            yaml_dir_root.clone(),
-            yaml_dir_data,
-            game,
-            game_version,
-            CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs),
+        CrashLogScanRunService::execute(
+            CrashLogScanRunServiceRequest {
+                yaml_dir_root,
+                yaml_dir_data,
+                game,
+                game_version,
+                options: CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs),
+                source,
+                setup_context,
+                move_unsolved_logs,
+                unsolved_logs_destination: optional_string_to_path(unsolved_logs_destination),
+                max_concurrent,
+                cancellation,
+                preserve_order,
+            },
+            |_| {},
         )
-        .prepare()
-        .await?;
-
-        let intent = CrashLogScanRunIntent::from_adapter_flags(
-            targeted_mode,
-            move_unsolved_logs,
-            unsolved_logs_destination.as_deref(),
-        );
-
-        CrashLogScanRun::new(prepared)
-            .run(
-                CrashLogScanRunRequest {
-                    logs: log_paths.into_iter().map(PathBuf::from).collect(),
-                    intent,
-                    // Core folds the `Some(0)` sentinel to the adaptive default.
-                    max_concurrent,
-                    cancellation,
-                    preserve_order,
-                },
-                |_| {},
-            )
-            .await
+        .await
     })
     .map_err(crate::to_pyerr)?;
 
-    Ok(result
-        .logs
-        .into_iter()
-        .map(scan_run_log_outcome_to_py)
-        .collect())
+    Ok(scan_run_result_to_py(result))
 }
 
 /// Python wrapper for OrchestratorCore

@@ -1563,14 +1563,44 @@ void MainWindow::onScanCrashLogs()
         return;
     }
 
+    QString setupGameRoot;
+    QString setupDocsPath;
+    QString setupGameExePath;
     if (m_fcxMode) {
-        QString gamePath;
-        QString docsPath;
-        if (!loadValidatedGameAndDocsPaths(&gamePath, &docsPath)) {
+        if (!loadValidatedGameAndDocsPaths(&setupGameRoot, &setupDocsPath)) {
             QMessageBox::warning(this, QStringLiteral("FCX Mode Requires Paths"),
                                  QStringLiteral("FCX mode requires valid game and INI folder paths.\n\n"
                                                 "Open Settings and configure both paths before scanning crash logs."));
             return;
+        }
+
+        const QString settingsPath = settingsFilePath(m_dataRoot);
+        try {
+            auto ops = classic::settings::yaml_ops_new();
+            classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+
+            auto exePath = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
+            if (!exePath.empty()) {
+                setupGameExePath = QDir::cleanPath(classic::toQString(exePath).trimmed());
+            }
+        } catch (const std::exception&) {
+            // Fall through -- default exe path below.
+        }
+
+        if (!setupGameExePath.isEmpty()) {
+            const QFileInfo exeInfo(setupGameExePath);
+            if (!exeInfo.exists()) {
+                setupGameExePath.clear();
+            } else {
+                const QString exeParent = QDir::cleanPath(exeInfo.absolutePath());
+                if (exeParent.compare(setupGameRoot, Qt::CaseInsensitive) != 0) {
+                    setupGameExePath.clear();
+                }
+            }
+        }
+
+        if (setupGameExePath.isEmpty() || !QFile::exists(setupGameExePath)) {
+            setupGameExePath = setupGameRoot + QStringLiteral("/Fallout4.exe");
         }
     }
 
@@ -1585,8 +1615,9 @@ void MainWindow::onScanCrashLogs()
                          .arg(format_elapsed_seconds(m_crashScanTimer)));
 
     m_scanController->startScan(m_dataRoot, m_dataDir, QStringLiteral("Fallout4"), m_gameVersion, m_showFormIdValues,
-                                m_fcxMode, m_simplifyLogs, m_moveUnsolvedLogs, m_unsolvedLogsDestination,
-                                m_maxConcurrentScans, m_editCustomFolder->text(), m_targetedInputPaths);
+                                 m_fcxMode, m_simplifyLogs, m_moveUnsolvedLogs, m_unsolvedLogsDestination,
+                                 m_maxConcurrentScans, m_editCustomFolder->text(), setupGameRoot, setupDocsPath,
+                                 setupGameExePath, m_targetedInputPaths);
 }
 
 void MainWindow::onScanGameFiles()

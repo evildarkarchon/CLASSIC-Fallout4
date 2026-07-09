@@ -19,6 +19,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <fmt/core.h>
@@ -179,6 +180,9 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
     // Discover crash logs -- targeted mode or standard discovery
     rust::Vec<rust::String> log_paths;
     const bool targeted_mode = !args.input_paths.empty();
+    std::error_code ec;
+    const std::string base_dir = fs::current_path(ec).string();
+    const std::string custom_dir = args.scan_path;
 
     if (targeted_mode) {
         // Targeted mode: resolve explicit user-supplied paths
@@ -202,31 +206,16 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
             fmt::print("\n");
         }
     } else {
-        std::error_code ec;
-        std::string base_dir = fs::current_path(ec).string();
-        std::string custom_dir = args.scan_path;
-
         auto collector = classic::files::log_collector_new_for_scan(base_dir, dirs.data, args.game, args.game_version,
                                                                     "", custom_dir);
         log_paths = classic::files::log_collector_collect_all(*collector);
 
-        if (log_paths.empty()) {
-            if (custom_dir.empty()) {
-                fmt::print("No crash logs found in: {}\n", base_dir);
-            } else {
-                fmt::print("No crash logs found in: {} or {}\n", base_dir, custom_dir);
-            }
-            return 0;
-        }
-    }
-
-    if (log_paths.empty()) {
-        fmt::print("No crash logs resolved from targeted inputs.\n");
-        return 0;
     }
 
     auto total_logs = static_cast<uint32_t>(log_paths.size());
-    fmt::print("Found {} crash log{}\n\n", total_logs, total_logs == 1 ? "" : "s");
+    if (total_logs > 0) {
+        fmt::print("Found {} crash log{}\n\n", total_logs, total_logs == 1 ? "" : "s");
+    }
 
     // Scan all logs through the Rust Crash Log Scan Run seam.
     auto concurrency = effective_concurrency(args.max_concurrent, std::thread::hardware_concurrency());
@@ -251,20 +240,30 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
         }
     };
 
-    auto results = [&] {
+    auto scan_result = [&] {
         try {
             classic::scanner::ScanRunRequestDto request{};
             request.yaml_dir_root = rust::String(dirs.root);
             request.yaml_dir_data = rust::String(dirs.data);
             request.game = rust::String(args.game);
             request.game_version = rust::String(args.game_version);
+            request.base_directory = rust::String(base_dir);
+            request.custom_scan_directory = rust::String(custom_dir);
+            request.configured_documents_root = rust::String("");
             request.show_formid_values = args.show_fid_values;
             request.fcx_mode = args.fcx_mode;
             request.simplify_logs = args.simplify_logs;
             request.move_unsolved_logs = move_unsolved_logs;
             request.unsolved_logs_destination = rust::String(args.unsolved_logs_destination);
             request.targeted_mode = targeted_mode;
+            request.setup_game_root = rust::String("");
+            request.setup_docs_root = rust::String("");
+            request.setup_game_exe_path = rust::String("");
+            request.setup_xse_log_path = rust::String("");
             request.max_concurrent = concurrency;
+            for (const auto& input : args.input_paths) {
+                request.targeted_inputs.push_back(rust::String(input));
+            }
             request.log_paths = std::move(log_paths);
             return classic::scanner::scan_run_execute(request, progress_callback, *cancellation_token);
         } catch (...) {
@@ -273,10 +272,28 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
             throw;
         }
     }();
+    const auto& results = scan_result.logs;
 
     stop_renderer();
     progress.render();
     progress.finish();
+
+    const std::string run_status(scan_result.status.data(), scan_result.status.size());
+    if (run_status == "no_crash_logs_found") {
+        const std::string message = scan_result.message.empty()
+                                        ? (custom_dir.empty() ? fmt::format("No crash logs found in: {}", base_dir)
+                                                              : fmt::format("No crash logs found in: {} or {}", base_dir, custom_dir))
+                                        : std::string(scan_result.message.data(), scan_result.message.size());
+        fmt::print("{}\n", message);
+        return 0;
+    }
+    if (run_status == "setup_failed") {
+        const std::string message = scan_result.message.empty()
+                                        ? "Crash Log Scan setup failed"
+                                        : std::string(scan_result.message.data(), scan_result.message.size());
+        fmt::print(stderr, "{}\n", message);
+        return 1;
+    }
 
     uint32_t reports_written = 0;
     uint32_t error_count = 0;
@@ -327,6 +344,7 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
     // Print summary
     auto total_end = std::chrono::steady_clock::now();
     double duration = std::chrono::duration<double>(total_end - total_start).count();
+    total_logs = scan_result.total;
     double speed = (duration > 0.0) ? (total_logs / duration) : 0.0;
 
     fmt::print("\nScan Complete\n");

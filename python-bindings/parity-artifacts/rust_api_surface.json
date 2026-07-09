@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T09:07:31.225309+00:00",
+  "generated_at_utc": "2026-07-09T10:44:55.731321+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -8286,6 +8286,44 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CrashLogScanDiscoveryResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::CrashLogScanDiscoveryResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanDiscoveryResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanDiscoveryResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanDiscoverySource",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub enum CrashLogScanDiscoverySource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanDiscoverySource",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::CrashLogScanDiscoverySource",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CrashLogScanIntake",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -8357,8 +8395,27 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, };",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
       "source_expr": "scan_run::CrashLogScanOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRejectedInput",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::CrashLogScanRejectedInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRejectedInput",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanRejectedInput",
       "tier": "tier1"
     },
     {
@@ -8367,7 +8424,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, };",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
       "source_expr": "scan_run::CrashLogScanRun",
       "tier": "tier1"
     },
@@ -8386,7 +8443,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, };",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
       "source_expr": "scan_run::CrashLogScanRunEvent",
       "tier": "tier1"
     },
@@ -8414,7 +8471,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, };",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
       "source_expr": "scan_run::CrashLogScanRunEventKind",
       "tier": "tier1"
     },
@@ -8433,7 +8490,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, };",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
       "source_expr": "scan_run::CrashLogScanRunIntent",
       "tier": "tier1"
     },
@@ -8443,7 +8500,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, };",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
       "source_expr": "scan_run::CrashLogScanRunLogOutcome",
       "tier": "tier1"
     },
@@ -8462,7 +8519,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, };",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
       "source_expr": "scan_run::CrashLogScanRunRequest",
       "tier": "tier1"
     },
@@ -8481,7 +8538,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, };",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
       "source_expr": "scan_run::CrashLogScanRunResult",
       "tier": "tier1"
     },
@@ -8492,6 +8549,158 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
       "source_decl": "pub struct CrashLogScanRunResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunService",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::CrashLogScanRunService",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunService",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanRunService",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunServiceRequest",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::CrashLogScanRunServiceRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunServiceRequest",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanRunServiceRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunStatus",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub enum CrashLogScanRunStatus",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanRunStatus",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::CrashLogScanRunStatus",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanSetupCheck",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::CrashLogScanSetupCheck",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanSetupCheck",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanSetupCheck",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanSetupContext",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::CrashLogScanSetupContext",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanSetupContext",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanSetupContext",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanSetupPathUpdate",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::CrashLogScanSetupPathUpdate",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanSetupPathUpdate",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanSetupPathUpdate",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanSetupResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::CrashLogScanSetupResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanSetupResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct CrashLogScanSetupResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanSource",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub enum CrashLogScanSource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanSource",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::CrashLogScanSource",
       "tier": "tier1"
     },
     {
@@ -9171,7 +9380,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, };",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
       "source_expr": "scan_run::StandardCrashLogScanRunIntent",
       "tier": "tier1"
     },
@@ -9182,6 +9391,25 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
       "source_decl": "pub struct StandardCrashLogScanRunIntent",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "StandardCrashLogScanSource",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::StandardCrashLogScanSource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "StandardCrashLogScanSource",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct StandardCrashLogScanSource",
       "tier": "tier1"
     },
     {
@@ -9199,7 +9427,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_run::{ CrashLogScanOutcome, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, StandardCrashLogScanRunIntent, StandardUnsolvedLogsIntent, };",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
       "source_expr": "scan_run::StandardUnsolvedLogsIntent",
       "tier": "tier1"
     },
@@ -9277,6 +9505,25 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/suspect_scanner.rs",
       "source_decl": "pub struct SuspectScanner",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "TargetedCrashLogScanSource",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_run::{ CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest, CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext, CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, };",
+      "source_expr": "scan_run::TargetedCrashLogScanSource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "TargetedCrashLogScanSource",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub struct TargetedCrashLogScanSource",
       "tier": "tier1"
     },
     {
@@ -10089,6 +10336,24 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_intake.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
       "source_decl": "pub const fn",
       "tier": "tier1"
     },

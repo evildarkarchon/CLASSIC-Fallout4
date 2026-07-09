@@ -97,19 +97,76 @@ mod ffi {
         suspect_count: u32,
     }
 
+    /// Discovery details from a full Crash Log Scan Run.
+    struct ScanRunDiscoveryResult {
+        source: String,
+        accepted_logs: Vec<String>,
+        rejected_paths: Vec<String>,
+        rejected_reasons: Vec<String>,
+        searched_locations: Vec<String>,
+    }
+
+    /// One setup check in a Crash Log Scan Setup Result.
+    struct ScanRunSetupCheckDto {
+        kind: String,
+        state: String,
+        message: String,
+        details: Vec<String>,
+    }
+
+    /// Proposed setup path update.
+    struct ScanRunSetupPathUpdateDto {
+        kind: String,
+        path: String,
+    }
+
+    /// Setup details from a full Crash Log Scan Run.
+    struct ScanRunSetupResultDto {
+        status: String,
+        message: String,
+        rendered_report: String,
+        checks: Vec<ScanRunSetupCheckDto>,
+        path_updates: Vec<ScanRunSetupPathUpdateDto>,
+        configuration_issues: Vec<FcxIssueDto>,
+        actions: Vec<String>,
+        fatal_errors: Vec<String>,
+    }
+
+    /// Top-level result from a full Crash Log Scan Run.
+    struct ScanRunResult {
+        status: String,
+        message: String,
+        total: u32,
+        succeeded: u32,
+        failed: u32,
+        cancelled: u32,
+        discovery: ScanRunDiscoveryResult,
+        has_setup: bool,
+        setup: ScanRunSetupResultDto,
+        logs: Vec<ScanRunLogResult>,
+    }
+
     /// Structured input to `scan_run_execute`.
     struct ScanRunRequestDto {
         yaml_dir_root: String,
         yaml_dir_data: String,
         game: String,
         game_version: String,
+        base_directory: String,
+        custom_scan_directory: String,
+        configured_documents_root: String,
         show_formid_values: bool,
         fcx_mode: bool,
         simplify_logs: bool,
         move_unsolved_logs: bool,
         unsolved_logs_destination: String,
         targeted_mode: bool,
+        setup_game_root: String,
+        setup_docs_root: String,
+        setup_game_exe_path: String,
+        setup_xse_log_path: String,
         max_concurrent: u32,
+        targeted_inputs: Vec<String>,
         log_paths: Vec<String>,
     }
 
@@ -203,7 +260,7 @@ mod ffi {
             request: &ScanRunRequestDto,
             callback: &ScanBatchProgressCallback,
             cancellation_token: &ScanCancellationToken,
-        ) -> Result<Vec<ScanRunLogResult>>;
+        ) -> Result<ScanRunResult>;
 
         // Utilities
         fn detect_vr_log(content: &str) -> bool;

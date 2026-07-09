@@ -2,9 +2,11 @@ use crate::runtime_support::{block_on, block_on_result};
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
     AnalysisConfig, BatchScanEventKind, BatchScanOptions, CrashLogScanIntake, CrashLogScanOptions,
-    CrashLogScanRun, CrashLogScanRunEventKind, CrashLogScanRunIntent, CrashLogScanRunRequest,
-    FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER, OrchestratorCore, SHORT_SCAN_CACHE_PROFILE,
-    ScanReadyAnalysis, load_simplify_remove_list as core_load_simplify_remove_list,
+    CrashLogScanRunEventKind, CrashLogScanRunService, CrashLogScanRunServiceRequest,
+    CrashLogScanSetupContext, CrashLogScanSource, FcxModeHandler, FcxResetError,
+    GLOBAL_FCX_HANDLER, OrchestratorCore, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis,
+    StandardCrashLogScanSource, TargetedCrashLogScanSource,
+    load_simplify_remove_list as core_load_simplify_remove_list,
     resolve_formid_database_paths as core_resolve_formid_database_paths,
     resolve_user_formid_database_paths as core_resolve_user_formid_database_paths,
 };
@@ -16,7 +18,7 @@ use std::time::Duration;
 
 use super::dto::{
     analysis_result_to_batch_dto, analysis_result_to_dto, batch_progress_reset_failure_result,
-    batch_reset_failure_result, fcx_issue_to_dto, scan_run_log_outcome_to_dto,
+    batch_reset_failure_result, fcx_issue_to_dto, scan_run_result_to_dto,
 };
 use super::ffi;
 use super::progress::{
@@ -362,44 +364,47 @@ pub(crate) fn scan_run_execute(
     request: &ffi::ScanRunRequestDto,
     callback: &ffi::ScanBatchProgressCallback,
     cancellation_token: &ScanCancellationToken,
-) -> Result<Vec<ffi::ScanRunLogResult>, String> {
+) -> Result<ffi::ScanRunResult, String> {
     let options = CrashLogScanOptions::new(
         request.show_formid_values,
         request.fcx_mode,
         request.simplify_logs,
     );
-    let prepared = block_on_result(
-        CrashLogScanIntake::from_yaml_paths(
-            request.yaml_dir_root.as_str(),
-            request.yaml_dir_data.as_str(),
-            request.game.as_str(),
-            request.game_version.as_str(),
-            options,
-        )
-        .prepare(),
-    )?;
-
-    let intent = CrashLogScanRunIntent::from_adapter_flags(
-        request.targeted_mode,
-        request.move_unsolved_logs,
-        Some(request.unsolved_logs_destination.as_str()),
-    );
-
-    let run = CrashLogScanRun::new(prepared);
-    let run_request = CrashLogScanRunRequest {
-        logs: request
-            .log_paths
-            .iter()
-            .map(|path| PathBuf::from(path.as_str()))
-            .collect(),
-        intent,
+    let source = if request.targeted_mode {
+        let inputs = if request.targeted_inputs.is_empty() {
+            request.log_paths.clone()
+        } else {
+            request.targeted_inputs.clone()
+        };
+        CrashLogScanSource::Targeted(TargetedCrashLogScanSource {
+            inputs: inputs.into_iter().map(PathBuf::from).collect(),
+        })
+    } else {
+        CrashLogScanSource::Standard(StandardCrashLogScanSource {
+            base_directory: optional_path(&request.base_directory)
+                .unwrap_or_else(|| PathBuf::from(request.yaml_dir_root.as_str())),
+            custom_scan_directory: optional_path(&request.custom_scan_directory),
+            configured_documents_root: optional_path(&request.configured_documents_root),
+        })
+    };
+    let setup_context = scan_setup_context_from_request(request);
+    let service_request = CrashLogScanRunServiceRequest {
+        yaml_dir_root: PathBuf::from(request.yaml_dir_root.as_str()),
+        yaml_dir_data: PathBuf::from(request.yaml_dir_data.as_str()),
+        game: request.game.clone(),
+        game_version: request.game_version.clone(),
+        options,
+        source,
+        setup_context,
+        move_unsolved_logs: request.move_unsolved_logs,
+        unsolved_logs_destination: optional_path(&request.unsolved_logs_destination),
         // Core folds the `Some(0)` sentinel to the adaptive default.
         max_concurrent: Some(request.max_concurrent as usize),
         cancellation: Some(Arc::clone(&cancellation_token.cancelled)),
         preserve_order: false,
     };
 
-    let result = block_on_result(run.run(run_request, |event| {
+    let result = block_on_result(CrashLogScanRunService::execute(service_request, |event| {
         let log_path = event.crash_log.to_string_lossy();
         callback.on_batch_progress(&make_progress_event(
             match event.kind {
@@ -418,11 +423,37 @@ pub(crate) fn scan_run_execute(
         ));
     }))?;
 
-    Ok(result
-        .logs
-        .into_iter()
-        .map(scan_run_log_outcome_to_dto)
-        .collect())
+    Ok(scan_run_result_to_dto(result))
+}
+
+fn optional_path(raw: &str) -> Option<PathBuf> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(PathBuf::from(trimmed))
+    }
+}
+
+fn scan_setup_context_from_request(
+    request: &ffi::ScanRunRequestDto,
+) -> Option<CrashLogScanSetupContext> {
+    let context = CrashLogScanSetupContext {
+        game_root: optional_path(&request.setup_game_root),
+        docs_root: optional_path(&request.setup_docs_root),
+        game_exe_path: optional_path(&request.setup_game_exe_path),
+        xse_log_path: optional_path(&request.setup_xse_log_path),
+    };
+
+    if context.game_root.is_none()
+        && context.docs_root.is_none()
+        && context.game_exe_path.is_none()
+        && context.xse_log_path.is_none()
+    {
+        None
+    } else {
+        Some(context)
+    }
 }
 
 // ── FormID database path resolution ─────────────────────────────────

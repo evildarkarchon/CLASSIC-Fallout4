@@ -999,6 +999,97 @@ class ScanRunLogResult:
     def to_dict(self) -> dict[str, Any]:
         """Convert to a dictionary."""
 
+class ScanRunRejectedInput:
+    """Targeted input rejected during Crash Log discovery."""
+
+    path: str
+    reason: str
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to a dictionary."""
+
+class ScanRunDiscoveryResult:
+    """High-level Crash Log discovery data."""
+
+    source: str
+    accepted_logs: list[str]
+    rejected_inputs: list[ScanRunRejectedInput]
+    searched_locations: list[str]
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to a dictionary."""
+
+class ScanRunSetupContext:
+    """FCX setup facts supplied to high-level scan-run execution."""
+
+    game_root: str | None
+    docs_root: str | None
+    game_exe_path: str | None
+    xse_log_path: str | None
+
+    def __init__(
+        self,
+        game_root: str | None = None,
+        docs_root: str | None = None,
+        game_exe_path: str | None = None,
+        xse_log_path: str | None = None,
+    ) -> None:
+        """Create setup context for high-level scan-run FCX validation."""
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to a dictionary."""
+
+class ScanRunSetupCheck:
+    """Typed FCX setup validation check."""
+
+    kind: str
+    state: str
+    message: str
+    details: list[str]
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to a dictionary."""
+
+class ScanRunSetupPathUpdate:
+    """Proposed setup path update."""
+
+    kind: str
+    path: str
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to a dictionary."""
+
+class ScanRunSetupResult:
+    """High-level FCX setup validation data."""
+
+    status: str
+    message: str | None
+    rendered_report: str
+    checks: list[ScanRunSetupCheck]
+    path_updates: list[ScanRunSetupPathUpdate]
+    configuration_issues: list[ConfigIssue]
+    actions: list[str]
+    fatal_errors: list[str]
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to a dictionary."""
+
+class ScanRunResult:
+    """Top-level result from a high-level Crash Log Scan Run."""
+
+    status: str
+    message: str | None
+    total: int
+    succeeded: int
+    failed: int
+    cancelled: int
+    discovery: ScanRunDiscoveryResult | None
+    setup: ScanRunSetupResult | None
+    logs: list[ScanRunLogResult]
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to a dictionary."""
+
 def scan_run_execute(
     yaml_dir_root: str,
     yaml_dir_data: str,
@@ -1014,12 +1105,16 @@ def scan_run_execute(
     preserve_order: bool = False,
     cancellation_token: CancellationToken | None = None,
     unsolved_logs_destination: str | None = None,
-) -> list[ScanRunLogResult]:
-    """Execute a full Crash Log Scan Run for selected logs.
+    base_directory: str | None = None,
+    custom_scan_directory: str | None = None,
+    configured_documents_root: str | None = None,
+    targeted_inputs: list[str] | None = None,
+    setup_context: ScanRunSetupContext | None = None,
+) -> ScanRunResult:
+    """Execute a high-level Crash Log Scan Run.
 
-    Rust writes Autoscan Reports and applies Standard versus Targeted Unsolved
-    Logs behavior. Use ``Orchestrator`` only for lower-level analysis results
-    with report lines.
+    Rust owns discovery, FCX setup validation, Autoscan Report writing, and
+    Standard versus Targeted Unsolved Logs behavior.
     """
 
 # =============================================================================

@@ -6,10 +6,7 @@ import type {
 	CliPaths,
 	CliResult,
 	JsonSummary,
-	ScanInputs,
 } from "./types";
-
-type YamlDoc = Record<string, unknown>;
 
 type BindingVersionInfo = {
 	shortName: string;
@@ -25,44 +22,43 @@ type BindingScanResult = {
   error?: string;
 };
 
-type DocsPathFinderInstance = {
-	findDocsPath(cachedPath?: string | null): string | null;
-};
-
-type LogCollectorInstance = {
-	collectAll(): Promise<string[]>;
+type BindingScanRunResult = {
+	status: string;
+	message?: string;
+	total: number;
+	succeeded: number;
+	failed: number;
+	cancelled: number;
+	logs: BindingScanResult[];
 };
 
 type ClassicNodeModule = {
-	DocsPathFinder: new (relativePath: string) => DocsPathFinderInstance;
-	JsLogCollector: new (
-		baseFolder: string,
-		xseFolder?: string | null,
-		customFolder?: string | null,
-	) => LogCollectorInstance;
 	getAllVersionsForGame: (
 		game: string,
 		isVr?: boolean | null,
 	) => BindingVersionInfo[];
 	getVersion: () => string;
-  scanRunExecute: (
-    logPaths: string[],
-    options: {
-      yamlDirRoot: string;
-      yamlDirData: string;
-      game: string;
-      gameVersion: string;
-      showFormidValues?: boolean;
-      fcxMode?: boolean;
-      simplifyLogs?: boolean;
-      moveUnsolvedLogs?: boolean;
-      targetedMode?: boolean;
-      maxConcurrent?: number | null;
-      preserveOrder?: boolean;
-    },
-  ) => Promise<BindingScanResult[]>;
+	scanRunExecute: (
+		logPaths: string[],
+		options: {
+			yamlDirRoot: string;
+			yamlDirData: string;
+			game: string;
+			gameVersion: string;
+			baseDirectory?: string;
+			customScanDirectory?: string;
+			configuredDocumentsRoot?: string;
+			showFormidValues?: boolean;
+			fcxMode?: boolean;
+			simplifyLogs?: boolean;
+			moveUnsolvedLogs?: boolean;
+			targetedMode?: boolean;
+			targetedInputs?: string[];
+			maxConcurrent?: number | null;
+			preserveOrder?: boolean;
+		},
+	) => Promise<BindingScanRunResult>;
   registrySetGame: (game: string) => void;
-  yamlParse: (content: string) => unknown;
 };
 
 function loadClassicNode(cliDir: string): ClassicNodeModule {
@@ -123,74 +119,6 @@ function readRequiredFile(path: string, label: string): string {
 	return readFileSync(path, "utf8");
 }
 
-function readYamlDocument(path: string): YamlDoc | undefined {
-	if (!existsSync(path)) {
-		return undefined;
-	}
-	const classicNode = loadClassicNode(__dirname);
-	return classicNode.yamlParse(readFileSync(path, "utf8")) as YamlDoc;
-}
-
-function readNestedString(
-	document: YamlDoc | undefined,
-	...keys: string[]
-): string | undefined {
-	let current: unknown = document;
-	for (const key of keys) {
-		const isObjectValue = current !== null && typeof current === "object";
-		if (!isObjectValue) {
-			return undefined;
-		}
-
-		const currentRecord = current as Record<string, unknown>;
-		const hasRequestedKey = key in currentRecord;
-		if (!hasRequestedKey) {
-			return undefined;
-		}
-
-		current = currentRecord[key];
-	}
-
-	const isStringValue = typeof current === "string";
-	if (!isStringValue) {
-		return undefined;
-	}
-
-	const stringValue = current as string;
-	const hasContent = stringValue.length > 0;
-	return hasContent ? stringValue : undefined;
-}
-
-function resolveXsePath(
-	gameYamlPath: string,
-	localYamlPath: string,
-): string | undefined {
-	const gameDoc = readYamlDocument(gameYamlPath);
-	const localDoc = readYamlDocument(localYamlPath);
-
-	const localXsePath = readNestedString(
-		localDoc,
-		"Game_Info",
-		"Docs_Folder_XSE",
-	);
-	if (localXsePath) {
-		return localXsePath;
-	}
-
-	const mainRootName = readNestedString(gameDoc, "Game_Info", "Main_Root_Name");
-	const xseAcronym = readNestedString(gameDoc, "Game_Info", "XSE_Acronym");
-	if (!mainRootName || !xseAcronym) {
-		return undefined;
-	}
-
-	const classicNode = loadClassicNode(__dirname);
-	const docsFinder = new classicNode.DocsPathFinder(
-		`My Games\\${mainRootName}`,
-	);
-	const docsRoot = docsFinder.findDocsPath(null);
-	return docsRoot ? join(docsRoot, xseAcronym) : undefined;
-}
-
 function toCliGameVersion(shortName: string): string | undefined {
 	switch (shortName) {
 		case "OG":
@@ -248,19 +176,16 @@ export function normalizeSupportedGameVersion(
 	return normalized;
 }
 
-function loadScanInputs(paths: CliPaths, options: CliOptions): ScanInputs {
+function validateScanData(paths: CliPaths, options: CliOptions): void {
 	const mainYamlPath = join(paths.data, "databases", "CLASSIC Main.yaml");
 	const gameYamlPath = join(
 		paths.data,
 		"databases",
 		`CLASSIC ${options.game}.yaml`,
 	);
-	const localYamlPath = join(paths.data, `CLASSIC ${options.game} Local.yaml`);
 
 	readRequiredFile(mainYamlPath, "CLASSIC Main.yaml");
 	readRequiredFile(gameYamlPath, `CLASSIC ${options.game}.yaml`);
-
-	return { xsePath: resolveXsePath(gameYamlPath, localYamlPath) };
 }
 
 function countOrZero(count: number | undefined): number {
@@ -367,7 +292,7 @@ export async function runCli(
 			cliDir,
 		);
 		const paths = findDataRoot(process.cwd(), cliDir);
-		const scanInputs = loadScanInputs(paths, options);
+		validateScanData(paths, options);
 
 		classicNode.registrySetGame(options.game);
 
@@ -389,17 +314,62 @@ export async function runCli(
 			console.log(`Data dir:  ${paths.data}\n`);
 		}
 
-		const collector = new classicNode.JsLogCollector(
-			process.cwd(),
-			scanInputs.xsePath,
-			options.scanPath ?? null,
-		);
-		const logPaths = await collector.collectAll();
+		const concurrency = effectiveConcurrency(options.maxConcurrent);
+    if (!options.json) {
+			console.log(
+				`Scanning with ${concurrency} worker thread${concurrency === 1 ? "" : "s"}\n`,
+			);
+		}
 
-		if (logPaths.length === 0) {
-			const noLogsMessage = options.scanPath
-				? `No crash logs found in: ${process.cwd()} or ${options.scanPath}`
-				: `No crash logs found in: ${process.cwd()}`;
+		const scanResult = await classicNode.scanRunExecute(
+      [],
+      {
+        yamlDirRoot: paths.root,
+        yamlDirData: paths.data,
+        game: options.game,
+        gameVersion: normalizedGameVersion,
+				baseDirectory: process.cwd(),
+				customScanDirectory: options.scanPath,
+        showFormidValues: options.showFidValues,
+        fcxMode: options.fcxMode,
+        simplifyLogs: options.simplifyLogs,
+        moveUnsolvedLogs: false,
+        targetedMode: false,
+        maxConcurrent: concurrency,
+        preserveOrder: false,
+      },
+    );
+		const results = scanResult.logs;
+		if (scanResult.status === "setup_failed") {
+			const setupMessage = scanResult.message ?? "Crash Log Scan setup failed";
+			const summary: JsonSummary = {
+				mode: "scan",
+				exitCode: 1,
+				game: options.game,
+				gameVersion: normalizedGameVersion,
+				dataRoot: paths.root,
+				dataDir: paths.data,
+				logsFound: scanResult.total,
+				reportsWritten: 0,
+				reportFailures: 0,
+				scanErrors: 0,
+				durationSeconds: (performance.now() - startedAt) / 1000,
+				message: setupMessage,
+			};
+
+			if (options.json) {
+				emitJson(summary);
+			} else {
+				console.error(setupMessage);
+			}
+			return { exitCode: summary.exitCode, fatal: setupMessage };
+		}
+
+		if (scanResult.status === "no_crash_logs_found") {
+			const noLogsMessage = scanResult.message ??
+				(options.scanPath
+					? `No crash logs found in: ${process.cwd()} or ${options.scanPath}`
+					: `No crash logs found in: ${process.cwd()}`);
 			const summary: JsonSummary = {
 				mode: "scan",
 				exitCode: 0,
@@ -411,7 +381,7 @@ export async function runCli(
 				reportsWritten: 0,
 				reportFailures: 0,
 				scanErrors: 0,
-				durationSeconds: 0,
+				durationSeconds: (performance.now() - startedAt) / 1000,
 				message: noLogsMessage,
 			};
 
@@ -423,32 +393,6 @@ export async function runCli(
 			return { exitCode: 0 };
 		}
 
-		const concurrency = effectiveConcurrency(options.maxConcurrent);
-    if (!options.json) {
-			console.log(
-				`Found ${logPaths.length} crash log${logPaths.length === 1 ? "" : "s"}\n`,
-			);
-			console.log(
-				`Scanning with ${concurrency} worker thread${concurrency === 1 ? "" : "s"}\n`,
-			);
-		}
-
-    const results: BindingScanResult[] = await classicNode.scanRunExecute(
-      logPaths,
-      {
-        yamlDirRoot: paths.root,
-        yamlDirData: paths.data,
-        game: options.game,
-        gameVersion: normalizedGameVersion,
-        showFormidValues: options.showFidValues,
-        fcxMode: options.fcxMode,
-        simplifyLogs: options.simplifyLogs,
-        moveUnsolvedLogs: false,
-        targetedMode: false,
-        maxConcurrent: concurrency,
-        preserveOrder: false,
-      },
-    );
     const reportsWritten = results.filter(
       (result) => result.success && result.autoscanReportPath,
     ).length;
@@ -467,7 +411,7 @@ export async function runCli(
 			gameVersion: normalizedGameVersion,
 			dataRoot: paths.root,
 			dataDir: paths.data,
-			logsFound: logPaths.length,
+			logsFound: scanResult.total,
 			reportsWritten,
 			reportFailures,
 			scanErrors,

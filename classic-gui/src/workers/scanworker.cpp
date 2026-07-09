@@ -62,7 +62,9 @@ void ScanWorker::requestCancel()
 void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, const QString& yamlData,
                         const QString& game, const QString& gameVersion, bool showFormIdValues, bool fcxMode,
                         bool simplifyLogs, bool moveUnsolvedLogs, const QString& unsolvedLogsDestination,
-                        int maxConcurrentScans, bool targetedMode)
+                        int maxConcurrentScans, const QString& baseDirectory, const QString& customFolder,
+                        const QString& setupGameRoot, const QString& setupDocsRoot,
+                        const QString& setupGameExePath, bool targetedMode, const QStringList& targetedInputs)
 {
     m_cancelled.store(false);
     classic::scanner::scan_cancellation_token_reset(*m_cancellationToken);
@@ -85,6 +87,10 @@ void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, co
         for (int i = 0; i < total; ++i) {
             rustPaths.push_back(classic::toRustString(logPaths[i]));
         }
+        rust::Vec<rust::String> rustTargetedInputs;
+        for (const auto& input : targetedInputs) {
+            rustTargetedInputs.push_back(classic::toRustString(input));
+        }
 
         const uint32_t maxConcurrent = maxConcurrentScans > 0 ? static_cast<uint32_t>(maxConcurrentScans) : 0U;
         BatchProgressCallback progress_callback(*this, total);
@@ -93,19 +99,46 @@ void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, co
         request.yaml_dir_data = classic::toRustString(yamlData);
         request.game = classic::toRustString(game);
         request.game_version = classic::toRustString(gameVersion);
+        request.base_directory = classic::toRustString(baseDirectory.isEmpty() ? yamlRoot : baseDirectory);
+        request.custom_scan_directory = classic::toRustString(customFolder);
+        request.configured_documents_root = classic::toRustString(QString{});
         request.show_formid_values = showFormIdValues;
         request.fcx_mode = fcxMode;
         request.simplify_logs = simplifyLogs;
         request.move_unsolved_logs = moveUnsolvedLogs;
         request.unsolved_logs_destination = classic::toRustString(unsolvedLogsDestination);
         request.targeted_mode = targetedMode;
+        request.setup_game_root = classic::toRustString(setupGameRoot);
+        request.setup_docs_root = classic::toRustString(setupDocsRoot);
+        request.setup_game_exe_path = classic::toRustString(setupGameExePath);
+        request.setup_xse_log_path = classic::toRustString(QString{});
         request.max_concurrent = maxConcurrent;
+        request.targeted_inputs = std::move(rustTargetedInputs);
         request.log_paths = std::move(rustPaths);
-        auto results = classic::scanner::scan_run_execute(request, progress_callback, *m_cancellationToken);
+        auto scanResult = classic::scanner::scan_run_execute(request, progress_callback, *m_cancellationToken);
+        const auto& results = scanResult.logs;
+
+        const QString runStatus = QString::fromUtf8(scanResult.status.data(), static_cast<int>(scanResult.status.size()));
+        if (runStatus == QStringLiteral("setup_failed")) {
+            const QString message =
+                scanResult.message.empty()
+                    ? QStringLiteral("Crash Log Scan setup failed")
+                    : QString::fromUtf8(scanResult.message.data(), static_cast<int>(scanResult.message.size()));
+            emit error(message);
+            return;
+        }
+        if (runStatus == QStringLiteral("no_crash_logs_found")) {
+            emit error(QStringLiteral("No crash logs found"));
+            return;
+        }
+
+        total = static_cast<int>(scanResult.total);
 
         for (const auto& result : results) {
-            const int index = static_cast<int>(qMin(result.input_index, static_cast<uint32_t>(total - 1)));
-            const QString fallbackPath = logPaths[index];
+            const bool hasFallbackPath = result.input_index < static_cast<uint32_t>(logPaths.size());
+            const int resultIndex = static_cast<int>(result.input_index);
+            const QString fallbackPath =
+                hasFallbackPath ? logPaths[resultIndex] : QString{};
             const std::string reportLogPath = resolve_log_path(result.log_path, fallbackPath);
             const QString resolvedPath = QString::fromStdString(reportLogPath);
 
@@ -115,7 +148,7 @@ void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, co
                 ++errorCount;
             }
 
-            emit logScanned(index, result.success, resolvedPath);
+            emit logScanned(resultIndex, result.success, resolvedPath);
         }
 
         qDebug() << "ScanWorker: scan complete -" << successCount << "success," << errorCount << "errors of" << total;

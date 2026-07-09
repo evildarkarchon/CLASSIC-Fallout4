@@ -595,9 +595,9 @@ FCX reset failure mapping:
 - `FcxResetError::Unnecessary` remains non-fatal
 - a real reset failure aborts the scan session before callback activity begins and returns a single failed `BatchScanResult` with the reset error text
 
-### `scan_run_execute(request, callback, cancellation_token) -> Result<Vec<ScanRunLogResult>>`
+### `scan_run_execute(request, callback, cancellation_token) -> Result<ScanRunResult>`
 
-Forwards to the Rust `classic_scanlog_core::CrashLogScanRun` module after building Crash Log Scan Intake from the same YAML path and scan-option inputs as `build_full_scan_config(...)`.
+Forwards to the Rust `classic_scanlog_core::CrashLogScanRunService` facade. Rust owns Standard/Targeted discovery, optional FCX setup result shaping, Crash Log Scan Intake preparation, Autoscan Report writing, and Unsolved Logs policy.
 
 C++ callers populate `ScanRunRequestDto` and pass it by reference. Request fields:
 
@@ -608,26 +608,47 @@ C++ callers populate `ScanRunRequestDto` and pass it by reference. Request field
 - `show_formid_values`
 - `fcx_mode`
 - `simplify_logs`
+- `base_directory`
+- `custom_scan_directory`
+- `configured_documents_root`
+- `setup_game_root`
+- `setup_docs_root`
+- `setup_game_exe_path`
+- `setup_xse_log_path`
 - `move_unsolved_logs`
 - `unsolved_logs_destination` (empty string means not supplied)
 - `targeted_mode`
+- `targeted_inputs`
 - `max_concurrent`
-- `log_paths`
+- `log_paths` (fallback Targeted input list for older callers)
 
 Current bridge behavior:
 
-- accepts selected Crash Log paths from C++ callers; it does not collect logs
-- the bridge forwards the raw request facts unchanged; request normalization is core-owned. It passes `targeted_mode`, `move_unsolved_logs`, and the raw `unsolved_logs_destination` string to `CrashLogScanRunIntent::from_adapter_flags(...)`, and passes `max_concurrent` straight through as `Some(request.max_concurrent as usize)`. The core owns the resulting behavior:
+- builds a typed `CrashLogScanSource::Standard` from `base_directory`, `custom_scan_directory`, and `configured_documents_root` when `targeted_mode = false`
+- builds a typed `CrashLogScanSource::Targeted` from `targeted_inputs` when present, falling back to `log_paths` for older callers when `targeted_mode = true`
+- forwards optional FCX setup facts through `CrashLogScanSetupContext`; FCX setup failures are returned as `ScanRunResult.status = "setup_failed"` with `setup` data rather than as per-log failures
+- the bridge forwards movement and concurrency facts unchanged; request normalization is core-owned. It passes `move_unsolved_logs`, `unsolved_logs_destination`, and `max_concurrent` through to the service. The core owns the resulting behavior:
 - `request.max_concurrent == 0` is folded to the core adaptive concurrency default at the scan-run seam (equivalent to `None`)
 - `request.targeted_mode = true` creates a Targeted Crash Log Scan Run and ignores `move_unsolved_logs` plus `unsolved_logs_destination`
 - `request.targeted_mode = false` creates a Standard Crash Log Scan Run
+- Standard discovery preserves `LogCollector` behavior; no accepted logs return `ScanRunResult.status = "no_crash_logs_found"` with discovery data and an empty `logs` vector
+- Targeted discovery returns rejected inputs under `ScanRunResult.discovery.rejected_paths` and `rejected_reasons`; rejected Targeted inputs are not per-log analysis failures
 - Standard requests with `move_unsolved_logs = false` leave failed logs in place and ignore `unsolved_logs_destination`
 - Standard requests with `move_unsolved_logs = true` and non-empty `unsolved_logs_destination` request that custom destination (the core trims the string and treats empty/whitespace as not supplied); Rust rejects relative paths as setup errors
 - Standard requests with `move_unsolved_logs = true` and empty `unsolved_logs_destination` use Rust destination resolution from `CLASSIC_Settings.Unsolved Logs Destination`, falling back to canonical `CLASSIC Backup/Unsolved Logs` under path-backed intake roots
 - Rust writes Autoscan Reports before returning per-log results; C++ callers no longer receive `report_lines` from this entry point
-- setup failures return a CXX `Result` error; per-log analysis, Autoscan Report write, and invalid or unwritable absolute Unsolved Logs movement failures are represented in `ScanRunLogResult`
+- infrastructure failures and prepared-run setup errors such as a relative custom Unsolved Logs destination return a CXX `Result` error; per-log analysis, Autoscan Report write, and invalid or unwritable absolute Unsolved Logs movement failures are represented in nested `ScanRunLogResult` values
 - progress uses the existing `ScanBatchProgressCallback` and `BatchProgressEvent` DTO shape
 - cooperative cancellation uses a Rust-owned `ScanCancellationToken`; callers create/reset the token, pass it alongside the request to `scan_run_execute(...)`, and call `scan_cancellation_token_cancel(...)` to stop queued logs before they start
+
+Bridge DTO shape for `ScanRunResult`:
+
+- `status`
+- `message`
+- `total`, `succeeded`, `failed`, `cancelled`
+- `discovery` (`source`, `accepted_logs`, `rejected_paths`, `rejected_reasons`, `searched_locations`)
+- `setup` (`status`, `message`, `rendered_report`, `checks`, `path_updates`, `configuration_issues`, `actions`, `fatal_errors`)
+- `logs`
 
 Bridge DTO shape for `ScanRunLogResult`:
 

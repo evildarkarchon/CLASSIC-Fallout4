@@ -3305,6 +3305,14 @@ export interface JsRuleTarget {
   valueType: string
 }
 
+/** JavaScript-compatible Crash Log Scan Discovery Result. */
+export interface JsScanRunDiscoveryResult {
+  source: string
+  acceptedLogs: Array<string>
+  rejectedInputs: Array<JsScanRunRejectedInput>
+  searchedLocations: Array<string>
+}
+
 /** JavaScript-compatible full scan-run per-log result. */
 export interface JsScanRunLogResult {
   /** Stable index from the input log path list. */
@@ -3343,6 +3351,12 @@ export interface JsScanRunOptions {
   game: string
   /** Selected game-version mode. */
   gameVersion: string
+  /** Standard discovery base directory. */
+  baseDirectory?: string
+  /** Optional custom scan directory for Standard discovery. */
+  customScanDirectory?: string
+  /** Optional configured documents root for Standard discovery. */
+  configuredDocumentsRoot?: string
   /** Whether to include FormID value lookups in reports. */
   showFormidValues?: boolean
   /** Whether FCX mode is enabled. */
@@ -3355,10 +3369,67 @@ export interface JsScanRunOptions {
   unsolvedLogsDestination?: string
   /** Whether this is a Targeted Crash Log Scan Run. */
   targetedMode?: boolean
+  /** User-selected Targeted inputs. Falls back to the first positional argument when omitted. */
+  targetedInputs?: Array<string>
+  /** Explicit FCX setup context when FCX Mode is enabled. */
+  setupContext?: JsScanRunSetupContext
   /** Optional maximum number of concurrent scans. Zero and undefined use core defaults. */
   maxConcurrent?: number
   /** Whether results should preserve input order instead of completion order. */
   preserveOrder?: boolean
+}
+
+/** JavaScript-compatible Targeted input rejection. */
+export interface JsScanRunRejectedInput {
+  path: string
+  reason: string
+}
+
+/** JavaScript-compatible top-level Crash Log Scan Run Result. */
+export interface JsScanRunResult {
+  status: string
+  message?: string
+  total: number
+  succeeded: number
+  failed: number
+  cancelled: number
+  discovery?: JsScanRunDiscoveryResult
+  setup?: JsScanRunSetupResult
+  logs: Array<JsScanRunLogResult>
+}
+
+/** JavaScript-compatible setup check. */
+export interface JsScanRunSetupCheck {
+  kind: string
+  state: string
+  message: string
+  details: Array<string>
+}
+
+/** JavaScript-compatible FCX setup context. */
+export interface JsScanRunSetupContext {
+  gameRoot?: string
+  docsRoot?: string
+  gameExePath?: string
+  xseLogPath?: string
+}
+
+/** JavaScript-compatible setup path update. */
+export interface JsScanRunSetupPathUpdate {
+  kind: string
+  path: string
+}
+
+/** JavaScript-compatible Crash Log Scan Setup Result. */
+export interface JsScanRunSetupResult {
+  status: string
+  message?: string
+  renderedReport: string
+  checks: Array<JsScanRunSetupCheck>
+  pathUpdates: Array<JsScanRunSetupPathUpdate>
+  configurationIssues: Array<JsFcxConfigIssue>
+  actions: Array<string>
+  fatalErrors: Array<string>
 }
 
 export interface JsSuspectErrorRule {
@@ -4152,14 +4223,14 @@ export declare function scanAllBa2Archives(rootPath: string): Array<JsBa2ScanRes
 export declare function scanModInis(gameRoot: string, gameName: string): JsModIniScanResult
 
 /**
- * Execute a full Crash Log Scan Run for selected logs.
+ * Execute a high-level Crash Log Scan Run.
  *
- * This is the adapter-facing scan-run seam: Rust writes Autoscan Reports and
- * owns Standard versus Targeted Unsolved Logs behavior before returning each
- * per-log outcome. Use the lower-level process* functions only when callers
- * explicitly need analysis results with report lines.
+ * Rust owns discovery, FCX setup validation, Autoscan Report writing, and
+ * Standard versus Targeted Unsolved Logs behavior before returning a top-level
+ * run result with nested per-log outcomes. Use the lower-level process*
+ * functions only when callers explicitly need analysis results with report lines.
  */
-export declare function scanRunExecute(logPaths: Array<string>, options: JsScanRunOptions): Promise<Array<JsScanRunLogResult>>
+export declare function scanRunExecute(logPaths: Array<string>, options: JsScanRunOptions): Promise<JsScanRunResult>
 
 /**
  * Convenience function to scan for unpacked files.

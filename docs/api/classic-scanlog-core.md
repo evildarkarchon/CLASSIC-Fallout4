@@ -21,7 +21,7 @@ Use this crate when you need to:
 
 - parse Bethesda-style crash logs into named sections
 - prepare an existing Crash Log for analysis from path-backed or in-memory YAML Data
-- execute a Crash Log Scan Run for selected Crash Logs after intake
+- execute a high-level Crash Log Scan Run with Rust-owned discovery, setup validation, intake, reporting, and Unsolved Logs policy
 - build an analysis pipeline from loaded YAML/config data
 - analyze plugins, FormIDs, named records, suspects, GPU hints, and crashgen settings
 - generate Python-parity-style autoscan report fragments or full reports
@@ -67,8 +67,14 @@ Top-level scan pipeline and the main integration surface.
 
 ### `scan_run`
 
-Crash Log Scan Run owns the post-intake transaction for selected existing Crash Logs.
+Crash Log Scan Run owns discovery, optional FCX setup validation, and the post-intake transaction for accepted Crash Logs.
 
+- `CrashLogScanRunService` - high-level facade that owns Standard/Targeted discovery, FCX setup validation, intake preparation, and scan-run execution
+- `CrashLogScanRunServiceRequest` - YAML roots, game/version, scan options, source, setup context, movement, concurrency, cancellation, and ordering preference
+- `CrashLogScanSource`, `StandardCrashLogScanSource`, `TargetedCrashLogScanSource` - typed Standard versus Targeted discovery requests
+- `CrashLogScanDiscoveryResult`, `CrashLogScanRejectedInput` - accepted logs, rejected Targeted inputs, and searched locations
+- `CrashLogScanSetupContext`, `CrashLogScanSetupResult`, `CrashLogScanSetupCheck`, `CrashLogScanSetupPathUpdate` - typed FCX setup inputs/results
+- `CrashLogScanRunStatus` - top-level lifecycle status returned by the high-level service
 - `CrashLogScanRun` - deep module that executes selected Crash Logs after Crash Log Scan Intake
 - `CrashLogScanRunRequest` - selected Crash Logs, run intent, concurrency, optional cancellation, and ordering preference
 - `CrashLogScanRunIntent`, `StandardCrashLogScanRunIntent`, `StandardUnsolvedLogsIntent` - Standard versus Targeted Crash Log Scan Run behavior and Unsolved Logs intent
@@ -253,7 +259,25 @@ Important constructors/mutators:
 
 ## `CrashLogScanRun`
 
-`CrashLogScanRun` is the high-level seam for a full Crash Log Scan Run after intake. It accepts a `ScanReadyAnalysis`, selected Crash Logs, a Standard or Targeted intent, optional concurrency and cancellation settings, and a progress callback.
+`CrashLogScanRunService` is the public high-level facade for a full Crash Log Scan Run. It accepts typed Standard or Targeted source facts, optionally validates FCX setup, prepares intake, and executes accepted Crash Logs. `CrashLogScanRun` remains the lower prepared-run module for callers that already have `ScanReadyAnalysis` and an accepted log list.
+
+Important service types:
+
+- `CrashLogScanRunService::execute(request, on_event).await -> Result<CrashLogScanRunResult, ScanLogError>`
+- `CrashLogScanRunServiceRequest { yaml_dir_root, yaml_dir_data, game, game_version, options, source, setup_context, move_unsolved_logs, unsolved_logs_destination, max_concurrent, cancellation, preserve_order }`
+- `CrashLogScanSource::Standard(StandardCrashLogScanSource { base_directory, custom_scan_directory, configured_documents_root })`
+- `CrashLogScanSource::Targeted(TargetedCrashLogScanSource { inputs })`
+- `CrashLogScanRunResult { status, discovery, setup, message, total, succeeded, failed, cancelled, logs }`
+
+High-level behavior worth knowing:
+
+- Standard discovery uses the existing `LogCollector::new_for_scan(...)` behavior: it creates/uses `Crash Logs/` and `Crash Logs/Pastebin/`, copies XSE Folder logs when resolvable, includes the optional custom scan directory non-recursively, and returns accepted logs in collector order.
+- Targeted discovery canonicalizes and de-duplicates explicit file or directory inputs while preserving first accepted order. Inputs that do not resolve to accepted Crash Logs are returned in `discovery.rejected_inputs`; they are not per-log analysis failures.
+- If discovery accepts no logs, the service returns `status = NoCrashLogsFound` with discovery data and no per-log outcomes. This is result data, not an infrastructure error.
+- If FCX setup is requested but setup facts are missing, action-required, or fatal, the service returns `status = SetupFailed` with `setup` data and no per-log outcomes. Infrastructure failures such as YAML loading or unexpected analysis setup still return `Err`.
+- Progress events begin only after discovery has accepted logs, so progress totals match the accepted scan set.
+
+`CrashLogScanRun` is the prepared-run layer for executing a full Crash Log Scan Run after intake. It accepts a `ScanReadyAnalysis`, selected Crash Logs, a Standard or Targeted intent, optional concurrency and cancellation settings, and a progress callback.
 
 Important types:
 
@@ -274,7 +298,8 @@ Request normalization seam:
 
 Behavior worth knowing:
 
-- Adapters own Crash Log selection; `CrashLogScanRun` owns execution after selection.
+- High-level adapters should prefer `CrashLogScanRunService` so discovery, no-log results, setup results, intake, report writing, and Unsolved Logs policy stay in Rust.
+- Prepared-run callers that already have accepted Crash Logs may still use `CrashLogScanRun`; in that layer callers own selection and `CrashLogScanRun` owns execution after selection.
 - `CrashLogScanRunRequest.max_concurrent = Some(0)` is treated as the adaptive default at the scan-run seam, identical to `None`. `run` folds `Some(0) -> None` before building batch options; only positive values pin the concurrency. This fold lives at the scan-run seam only and does not change `resolve_batch_concurrency`, which keeps `Some(0) -> 1` (serial) for the analysis-batch callers.
 - `Standard` runs may move failed Crash Logs and sibling Autoscan Reports to Unsolved Logs when their intent requests movement.
 - `Targeted` runs never move Crash Logs or Autoscan Reports to Unsolved Logs.
@@ -285,7 +310,7 @@ Behavior worth knowing:
 - Autoscan Report write failure is a per-log failure in `CrashLogScanRunLogOutcome`, not a run-level setup error. These outcomes set `report_write_failed = true` so adapters can separate report failures from analysis failures.
 - `cancellation` is a cooperative shared atomic checked before queued Crash Logs start; binding adapters should pass their frontend cancellation token rather than polling locally only.
 - Progress events reuse `ScanProgressPhase` and carry stable input indices so adapters can correlate completion-order results to their selected Crash Log list.
-- Binding adapters expose this seam as `classic::scanner::scan_run_execute(request, callback, cancellation_token)` for C++, `scanRunExecute(...)` for Node, and `classic_scanlog.scan_run_execute(...)` for Python. Adapter scan flows should not duplicate Autoscan Report writing or Unsolved Logs movement around those calls.
+- Binding adapters expose the high-level service as `classic::scanner::scan_run_execute(request, callback, cancellation_token)` for C++, `scanRunExecute(...)` for Node, and `classic_scanlog.scan_run_execute(...)` for Python. Adapter scan flows should not duplicate discovery policy, FCX setup result shaping, Autoscan Report writing, or Unsolved Logs movement around those calls.
 
 ## `LogParser`
 

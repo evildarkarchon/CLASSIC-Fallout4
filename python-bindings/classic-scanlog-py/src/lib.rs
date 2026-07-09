@@ -137,7 +137,9 @@ pub use mod_detector::{
 };
 pub use orchestrator::{
     PyAnalysisConfig, PyAnalysisResult, PyCancellationToken, PyRustOrchestrator,
-    PyScanRunLogResult, scan_run_execute,
+    PyScanRunDiscoveryResult, PyScanRunLogResult, PyScanRunRejectedInput, PyScanRunResult,
+    PyScanRunSetupCheck, PyScanRunSetupContext, PyScanRunSetupPathUpdate, PyScanRunSetupResult,
+    scan_run_execute,
 };
 pub use papyrus::{PyPapyrusAnalyzer, PyPapyrusStats, papyrus_logging};
 pub use parser::PyLogParser;
@@ -236,7 +238,14 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyAnalysisConfig>()?;
     m.add_class::<PyAnalysisResult>()?;
     m.add_class::<PyCancellationToken>()?;
+    m.add_class::<PyScanRunRejectedInput>()?;
+    m.add_class::<PyScanRunDiscoveryResult>()?;
+    m.add_class::<PyScanRunSetupContext>()?;
+    m.add_class::<PyScanRunSetupCheck>()?;
+    m.add_class::<PyScanRunSetupPathUpdate>()?;
+    m.add_class::<PyScanRunSetupResult>()?;
     m.add_class::<PyScanRunLogResult>()?;
+    m.add_class::<PyScanRunResult>()?;
     m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;
 
     // Report generation
@@ -312,7 +321,14 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyAnalysisConfig>()?;
     m.add_class::<PyAnalysisResult>()?;
     m.add_class::<PyCancellationToken>()?;
+    m.add_class::<PyScanRunRejectedInput>()?;
+    m.add_class::<PyScanRunDiscoveryResult>()?;
+    m.add_class::<PyScanRunSetupContext>()?;
+    m.add_class::<PyScanRunSetupCheck>()?;
+    m.add_class::<PyScanRunSetupPathUpdate>()?;
+    m.add_class::<PyScanRunSetupResult>()?;
     m.add_class::<PyScanRunLogResult>()?;
+    m.add_class::<PyScanRunResult>()?;
     m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;
 
     // Report generation

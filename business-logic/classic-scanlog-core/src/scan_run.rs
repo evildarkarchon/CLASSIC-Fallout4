@@ -7,16 +7,289 @@
 use crate::error::{Result, ScanLogError};
 use crate::report::autoscan_report_path;
 use crate::{
-    AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, FcxModeHandler,
-    FcxResetError, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, ScanReadyAnalysis,
+    AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, ConfigIssue,
+    CrashLogScanIntake, CrashLogScanOptions, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER,
+    IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, ScanReadyAnalysis,
 };
 use classic_database_core::DatabasePool;
+use classic_file_io_core::{LogCollector, RejectedInput, resolve_targeted_inputs};
+use classic_scangame_core::{
+    GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, detect_config_issues,
+};
+use classic_shared_core::GameId;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::time::Duration;
 
 const CANCELLED_BY_USER_MESSAGE: &str = "Cancelled by user";
+
+/// High-level facade for complete Crash Log Scan Runs.
+///
+/// This boundary owns source discovery, optional FCX setup validation, intake
+/// preparation, execution, and result assembly. Lower-level tests and internal
+/// callers can still use [`CrashLogScanRun`] when they already have prepared
+/// intake and accepted Crash Logs.
+pub struct CrashLogScanRunService;
+
+impl CrashLogScanRunService {
+    /// Executes a complete Crash Log Scan Run from typed request data.
+    ///
+    /// Expected lifecycle outcomes such as no logs, setup failure, and
+    /// cancellation before discovery are returned as structured result data.
+    ///
+    /// # Errors
+    ///
+    /// Returns errors for infrastructure failures such as YAML loading, log
+    /// discovery I/O failures, orchestrator setup, or unexpected analysis setup.
+    pub async fn execute<F>(
+        request: CrashLogScanRunServiceRequest,
+        on_event: F,
+    ) -> Result<CrashLogScanRunResult>
+    where
+        F: FnMut(CrashLogScanRunEvent),
+    {
+        reset_fcx_state()?;
+
+        if cancellation_requested(request.cancellation.as_ref()) {
+            return Ok(CrashLogScanRunResult::cancelled_before_discovery());
+        }
+
+        let discovery = discover_scan_source(&request).await?;
+        if discovery.accepted_logs.is_empty() {
+            return Ok(CrashLogScanRunResult::no_logs_found(discovery));
+        }
+
+        let (setup, setup_failed) = evaluate_setup_for_scan(&request);
+        if setup_failed {
+            let message = setup
+                .as_ref()
+                .and_then(|setup| setup.message.clone())
+                .unwrap_or_else(|| "Crash Log Scan setup failed".to_string());
+            return Ok(CrashLogScanRunResult::setup_failed(
+                discovery, setup, message,
+            ));
+        }
+
+        let ready = CrashLogScanIntake::from_yaml_paths(
+            request.yaml_dir_root.clone(),
+            request.yaml_dir_data.clone(),
+            request.game.clone(),
+            request.game_version.clone(),
+            request.options,
+        )
+        .prepare()
+        .await?;
+
+        let intent = CrashLogScanRunIntent::from_configured_flags(
+            matches!(request.source, CrashLogScanSource::Targeted(_)),
+            request.move_unsolved_logs,
+            request.unsolved_logs_destination.clone(),
+        );
+        let run_request = CrashLogScanRunRequest {
+            logs: discovery.accepted_logs.clone(),
+            intent,
+            max_concurrent: request.max_concurrent,
+            cancellation: request.cancellation.clone(),
+            preserve_order: request.preserve_order,
+        };
+
+        let mut result = CrashLogScanRun::new(ready)
+            .run_inner(run_request, on_event, false)
+            .await?;
+        result.discovery = Some(discovery);
+        result.setup = setup;
+        Ok(result)
+    }
+}
+
+/// Request for a complete Crash Log Scan Run.
+pub struct CrashLogScanRunServiceRequest {
+    /// Root directory containing settings and ignore YAML.
+    pub yaml_dir_root: PathBuf,
+    /// `CLASSIC Data` directory containing shippable YAML databases.
+    pub yaml_dir_data: PathBuf,
+    /// Game identifier, e.g. `Fallout4`.
+    pub game: String,
+    /// Selected game-version mode.
+    pub game_version: String,
+    /// Scan options used by Crash Log Scan Intake.
+    pub options: CrashLogScanOptions,
+    /// Typed source to discover accepted Crash Logs from.
+    pub source: CrashLogScanSource,
+    /// Explicit setup facts supplied by adapters when FCX Mode is enabled.
+    pub setup_context: Option<CrashLogScanSetupContext>,
+    /// Whether failed Standard runs move logs and reports to Unsolved Logs.
+    pub move_unsolved_logs: bool,
+    /// Optional absolute custom Unsolved Logs destination.
+    pub unsolved_logs_destination: Option<PathBuf>,
+    /// Optional maximum number of concurrently processed Crash Logs.
+    pub max_concurrent: Option<usize>,
+    /// Optional cooperative cancellation flag.
+    pub cancellation: Option<Arc<AtomicBool>>,
+    /// Return log outcomes in input order instead of completion order.
+    pub preserve_order: bool,
+}
+
+/// Source to discover Crash Logs for a complete scan run.
+pub enum CrashLogScanSource {
+    /// Standard discovery from CLASSIC's normal scan locations.
+    Standard(StandardCrashLogScanSource),
+    /// Targeted discovery from explicit user-selected paths.
+    Targeted(TargetedCrashLogScanSource),
+}
+
+/// Standard Crash Log Scan Run discovery request.
+pub struct StandardCrashLogScanSource {
+    /// Base directory where `Crash Logs/` and `Crash Logs/Pastebin/` are managed.
+    pub base_directory: PathBuf,
+    /// Optional custom scan directory. It is additive and non-recursive.
+    pub custom_scan_directory: Option<PathBuf>,
+    /// Optional configured documents root used to resolve the game XSE folder.
+    pub configured_documents_root: Option<PathBuf>,
+}
+
+/// Targeted Crash Log Scan Run discovery request.
+pub struct TargetedCrashLogScanSource {
+    /// User-selected file or directory inputs.
+    pub inputs: Vec<PathBuf>,
+}
+
+/// Explicit setup facts supplied to a Crash Log Scan Run when FCX Mode is enabled.
+#[derive(Clone, Debug, Default)]
+pub struct CrashLogScanSetupContext {
+    /// Saved or caller-provided game installation root.
+    pub game_root: Option<PathBuf>,
+    /// Saved or caller-provided documents root.
+    pub docs_root: Option<PathBuf>,
+    /// Saved or caller-provided game executable path.
+    pub game_exe_path: Option<PathBuf>,
+    /// Optional XSE log path used as a game-root detection hint.
+    pub xse_log_path: Option<PathBuf>,
+}
+
+/// Lifecycle status for a complete Crash Log Scan Run.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CrashLogScanRunStatus {
+    /// The run reached the end, even if one or more per-log outcomes failed.
+    Completed,
+    /// Discovery completed and found no accepted Crash Logs.
+    NoCrashLogsFound,
+    /// FCX setup validation required caller action before analysis could start.
+    SetupFailed,
+    /// Cancellation was requested before discovery began.
+    CancelledBeforeDiscovery,
+    /// Cancellation was requested after accepted Crash Logs were known.
+    Cancelled,
+}
+
+impl CrashLogScanRunStatus {
+    /// Returns the stable adapter-facing status identifier.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Completed => "completed",
+            Self::NoCrashLogsFound => "no_crash_logs_found",
+            Self::SetupFailed => "setup_failed",
+            Self::CancelledBeforeDiscovery => "cancelled_before_discovery",
+            Self::Cancelled => "cancelled",
+        }
+    }
+}
+
+/// Source kind recorded by Crash Log Scan Discovery Result.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CrashLogScanDiscoverySource {
+    /// Standard discovery from normal scan locations.
+    Standard,
+    /// Targeted discovery from explicit user-selected paths.
+    Targeted,
+}
+
+impl CrashLogScanDiscoverySource {
+    /// Returns the stable adapter-facing source identifier.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Standard => "standard",
+            Self::Targeted => "targeted",
+        }
+    }
+}
+
+/// Structured discovery data for a Crash Log Scan Run.
+#[derive(Clone, Debug)]
+pub struct CrashLogScanDiscoveryResult {
+    /// Source kind that produced the discovery result.
+    pub source: CrashLogScanDiscoverySource,
+    /// Accepted Crash Logs in discovery order.
+    pub accepted_logs: Vec<PathBuf>,
+    /// Targeted inputs rejected during discovery.
+    pub rejected_inputs: Vec<CrashLogScanRejectedInput>,
+    /// Locations or inputs searched during discovery.
+    pub searched_locations: Vec<PathBuf>,
+}
+
+/// Targeted input that did not resolve to an accepted Crash Log.
+#[derive(Clone, Debug)]
+pub struct CrashLogScanRejectedInput {
+    /// Original path supplied by the user.
+    pub path: PathBuf,
+    /// Human-readable rejection reason.
+    pub reason: String,
+}
+
+impl From<RejectedInput> for CrashLogScanRejectedInput {
+    fn from(value: RejectedInput) -> Self {
+        Self {
+            path: value.path,
+            reason: value.reason,
+        }
+    }
+}
+
+/// Structured setup validation data attached to a Crash Log Scan Run Result.
+#[derive(Clone, Debug)]
+pub struct CrashLogScanSetupResult {
+    /// Adapter-facing setup status identifier.
+    pub status: String,
+    /// Typed setup checks.
+    pub checks: Vec<CrashLogScanSetupCheck>,
+    /// Proposed path updates that callers may persist.
+    pub path_updates: Vec<CrashLogScanSetupPathUpdate>,
+    /// Read-only FCX configuration issues detected from game files.
+    pub configuration_issues: Vec<ConfigIssue>,
+    /// User actions required before setup can complete.
+    pub actions: Vec<String>,
+    /// Fatal setup errors.
+    pub fatal_errors: Vec<String>,
+    /// Optional concise message for adapters.
+    pub message: Option<String>,
+    /// Canonical setup report text.
+    pub rendered_report: String,
+}
+
+/// One typed setup check attached to a Crash Log Scan Setup Result.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CrashLogScanSetupCheck {
+    /// Stable check kind identifier.
+    pub kind: String,
+    /// Stable check state identifier.
+    pub state: String,
+    /// Short human-readable summary.
+    pub message: String,
+    /// Optional detail lines.
+    pub details: Vec<String>,
+}
+
+/// Proposed setup path update.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CrashLogScanSetupPathUpdate {
+    /// Stable path kind, currently `game_root` or `docs_root`.
+    pub kind: String,
+    /// Proposed path value.
+    pub path: PathBuf,
+}
 
 /// Executes a Crash Log Scan Run after Crash Log Scan Intake.
 #[derive(Clone)]
@@ -47,7 +320,21 @@ impl CrashLogScanRun {
     where
         F: FnMut(CrashLogScanRunEvent),
     {
-        reset_fcx_state()?;
+        self.run_inner(request, &mut on_event, true).await
+    }
+
+    async fn run_inner<F>(
+        &self,
+        request: CrashLogScanRunRequest,
+        mut on_event: F,
+        reset_state: bool,
+    ) -> Result<CrashLogScanRunResult>
+    where
+        F: FnMut(CrashLogScanRunEvent),
+    {
+        if reset_state {
+            reset_fcx_state()?;
+        }
 
         let total = request.logs.len();
         if total == 0 {
@@ -231,6 +518,14 @@ pub enum StandardUnsolvedLogsIntent {
 
 /// Result of a completed Crash Log Scan Run.
 pub struct CrashLogScanRunResult {
+    /// Lifecycle status for the run as a whole.
+    pub status: CrashLogScanRunStatus,
+    /// Discovery details when the high-level facade owns discovery.
+    pub discovery: Option<CrashLogScanDiscoveryResult>,
+    /// Setup details when FCX setup validation was requested.
+    pub setup: Option<CrashLogScanSetupResult>,
+    /// Optional concise run-level message.
+    pub message: Option<String>,
     /// Total selected Crash Logs.
     pub total: usize,
     /// Number of successfully scanned Crash Logs with written Autoscan Reports when present.
@@ -246,6 +541,10 @@ pub struct CrashLogScanRunResult {
 impl CrashLogScanRunResult {
     fn empty() -> Self {
         Self {
+            status: CrashLogScanRunStatus::NoCrashLogsFound,
+            discovery: None,
+            setup: None,
+            message: Some("No crash logs found".to_string()),
             total: 0,
             succeeded: 0,
             failed: 0,
@@ -267,11 +566,66 @@ impl CrashLogScanRunResult {
         let failed = total.saturating_sub(succeeded + cancelled);
 
         Self {
+            status: if cancelled > 0 {
+                CrashLogScanRunStatus::Cancelled
+            } else {
+                CrashLogScanRunStatus::Completed
+            },
+            discovery: None,
+            setup: None,
+            message: None,
             total,
             succeeded,
             failed,
             cancelled,
             logs,
+        }
+    }
+
+    fn cancelled_before_discovery() -> Self {
+        Self {
+            status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
+            discovery: None,
+            setup: None,
+            message: Some("Cancelled before crash log discovery".to_string()),
+            total: 0,
+            succeeded: 0,
+            failed: 0,
+            cancelled: 0,
+            logs: Vec::new(),
+        }
+    }
+
+    fn no_logs_found(discovery: CrashLogScanDiscoveryResult) -> Self {
+        Self {
+            status: CrashLogScanRunStatus::NoCrashLogsFound,
+            discovery: Some(discovery),
+            setup: None,
+            message: Some("No crash logs found".to_string()),
+            total: 0,
+            succeeded: 0,
+            failed: 0,
+            cancelled: 0,
+            logs: Vec::new(),
+        }
+    }
+
+    fn setup_failed(
+        discovery: CrashLogScanDiscoveryResult,
+        setup: Option<CrashLogScanSetupResult>,
+        message: String,
+    ) -> Self {
+        let total = discovery.accepted_logs.len();
+        Self {
+            status: CrashLogScanRunStatus::SetupFailed,
+            discovery: Some(discovery),
+            setup,
+            message: Some(message),
+            total,
+            succeeded: 0,
+            failed: 0,
+            cancelled: 0,
+            logs: Vec::new(),
         }
     }
 }
@@ -459,6 +813,223 @@ fn outcome_from_analysis(result: &AnalysisResult) -> CrashLogScanOutcome {
     } else {
         CrashLogScanOutcome::Failed
     }
+}
+
+async fn discover_scan_source(
+    request: &CrashLogScanRunServiceRequest,
+) -> Result<CrashLogScanDiscoveryResult> {
+    match &request.source {
+        CrashLogScanSource::Standard(source) => {
+            let collector = LogCollector::new_for_scan(
+                source.base_directory.clone(),
+                &request.yaml_dir_data,
+                &request.game,
+                &request.game_version,
+                source.configured_documents_root.as_deref(),
+                source.custom_scan_directory.clone(),
+            );
+            let logs = collector.collect_all().await?;
+            let mut searched_locations = vec![
+                source.base_directory.clone(),
+                source.base_directory.join("Crash Logs"),
+            ];
+            if let Some(custom) = &source.custom_scan_directory {
+                searched_locations.push(custom.clone());
+            }
+            if let Some(docs) = &source.configured_documents_root {
+                searched_locations.push(docs.clone());
+            }
+
+            Ok(CrashLogScanDiscoveryResult {
+                source: CrashLogScanDiscoverySource::Standard,
+                accepted_logs: logs,
+                rejected_inputs: Vec::new(),
+                searched_locations,
+            })
+        }
+        CrashLogScanSource::Targeted(source) => {
+            let resolution = resolve_targeted_inputs(source.inputs.clone()).await;
+            Ok(CrashLogScanDiscoveryResult {
+                source: CrashLogScanDiscoverySource::Targeted,
+                accepted_logs: resolution.logs,
+                rejected_inputs: resolution
+                    .rejected
+                    .into_iter()
+                    .map(CrashLogScanRejectedInput::from)
+                    .collect(),
+                searched_locations: source.inputs.clone(),
+            })
+        }
+    }
+}
+
+fn evaluate_setup_for_scan(
+    request: &CrashLogScanRunServiceRequest,
+) -> (Option<CrashLogScanSetupResult>, bool) {
+    if !request.options.fcx_mode {
+        return (None, false);
+    }
+
+    let Some(context) = request.setup_context.as_ref() else {
+        let setup = CrashLogScanSetupResult::missing_context(
+            "FCX Mode requires Crash Log Scan Setup Context",
+        );
+        seed_global_fcx_state(&setup);
+        return (Some(setup), true);
+    };
+
+    let game_id = match request.game.parse::<GameId>() {
+        Ok(game_id) => game_id,
+        Err(error) => {
+            let setup = CrashLogScanSetupResult::fatal(error);
+            seed_global_fcx_state(&setup);
+            return (Some(setup), true);
+        }
+    };
+
+    let mut intake = GameSetupIntake::new(game_id, &request.game_version);
+    if let Some(path) = &context.game_root {
+        intake = intake.with_game_root(path);
+    }
+    if let Some(path) = &context.docs_root {
+        intake = intake.with_docs_root(path);
+    }
+    if let Some(path) = &context.game_exe_path {
+        intake = intake.with_game_exe_path(path);
+    }
+    if let Some(path) = &context.xse_log_path {
+        intake = intake.with_xse_log_path(path);
+    }
+
+    let game_setup = intake.run();
+    let configuration_issues = context
+        .game_root
+        .as_deref()
+        .map(|game_root| {
+            detect_config_issues(game_root, game_id.as_str())
+                .into_iter()
+                .map(scangame_issue_to_scanlog_issue)
+                .collect()
+        })
+        .unwrap_or_default();
+    let setup = CrashLogScanSetupResult::from_game_setup(game_setup, configuration_issues);
+    let setup_failed = setup
+        .checks
+        .iter()
+        .any(|check| check.state == GameSetupCheckState::ActionRequired.as_str())
+        || !setup.actions.is_empty()
+        || !setup.fatal_errors.is_empty();
+
+    seed_global_fcx_state(&setup);
+    (Some(setup), setup_failed)
+}
+
+impl CrashLogScanSetupResult {
+    fn missing_context(message: impl Into<String>) -> Self {
+        let message = message.into();
+        Self {
+            status: "action_required".to_string(),
+            checks: Vec::new(),
+            path_updates: Vec::new(),
+            configuration_issues: Vec::new(),
+            actions: vec!["provide_setup_context".to_string()],
+            fatal_errors: Vec::new(),
+            message: Some(message.clone()),
+            rendered_report: message,
+        }
+    }
+
+    fn fatal(message: impl Into<String>) -> Self {
+        let message = message.into();
+        Self {
+            status: "fatal_error".to_string(),
+            checks: Vec::new(),
+            path_updates: Vec::new(),
+            configuration_issues: Vec::new(),
+            actions: Vec::new(),
+            fatal_errors: vec![message.clone()],
+            message: Some(message.clone()),
+            rendered_report: message,
+        }
+    }
+
+    fn from_game_setup(
+        value: GameSetupIntakeResult,
+        configuration_issues: Vec<ConfigIssue>,
+    ) -> Self {
+        let message = if value.actions.is_empty() && value.fatal_errors.is_empty() {
+            None
+        } else if !value.fatal_errors.is_empty() {
+            Some("Game setup validation failed".to_string())
+        } else {
+            Some("Game setup requires additional input".to_string())
+        };
+
+        Self {
+            status: value.status.as_str().to_string(),
+            checks: value
+                .checks
+                .into_iter()
+                .map(|check| CrashLogScanSetupCheck {
+                    kind: check.kind.as_str().to_string(),
+                    state: check.state.as_str().to_string(),
+                    message: check.message,
+                    details: check.details,
+                })
+                .collect(),
+            path_updates: value
+                .path_updates
+                .into_iter()
+                .map(|update| CrashLogScanSetupPathUpdate {
+                    kind: update.kind,
+                    path: update.path,
+                })
+                .collect(),
+            configuration_issues,
+            actions: value
+                .actions
+                .into_iter()
+                .map(|action| action.as_str().to_string())
+                .collect(),
+            fatal_errors: value.fatal_errors,
+            message,
+            rendered_report: value.rendered_report,
+        }
+    }
+}
+
+fn scangame_issue_to_scanlog_issue(issue: classic_scangame_core::ConfigIssue) -> ConfigIssue {
+    ConfigIssue::new(
+        issue.file_path.display().to_string(),
+        Some(issue.section),
+        issue.setting,
+        issue.current_value,
+        issue.recommended_value,
+        issue.description,
+        match issue.severity {
+            classic_scangame_core::IssueSeverity::Error => "error",
+            classic_scangame_core::IssueSeverity::Warning => "warning",
+            classic_scangame_core::IssueSeverity::Info => "info",
+        }
+        .to_string(),
+    )
+}
+
+fn seed_global_fcx_state(setup: &CrashLogScanSetupResult) {
+    let mut handler = GLOBAL_FCX_HANDLER.lock();
+    handler.fcx_mode = true;
+    handler.checks_run = true;
+    handler.set_main_files_result(setup.rendered_report.clone());
+    handler.set_game_files_result(format_detected_issues(&setup.configuration_issues));
+    handler.set_detected_issues(setup.configuration_issues.clone());
+}
+
+fn format_detected_issues(issues: &[ConfigIssue]) -> String {
+    issues.iter().map(ConfigIssue::format_report).collect()
+}
+
+fn cancellation_requested(cancellation: Option<&Arc<AtomicBool>>) -> bool {
+    cancellation.is_some_and(|flag| flag.load(std::sync::atomic::Ordering::Relaxed))
 }
 
 fn resolve_unsolved_logs_destination(

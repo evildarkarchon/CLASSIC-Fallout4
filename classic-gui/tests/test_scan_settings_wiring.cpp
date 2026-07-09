@@ -87,10 +87,21 @@ void ScanSettingsWiringTests::scan_controller_forwards_flags_to_worker()
 
     const QString sourceText = QString::fromUtf8(file.readAll());
 
-    const QRegularExpression lambdaRegex(QStringLiteral(
-        R"(worker->doScan\((?:.|\n)*?gameVersion,\s*showFormIdValues,\s*fcxMode,\s*simplifyLogs,\s*moveUnsolvedLogs,\s*unsolvedLogsDestination,\s*maxConcurrentScans(?:,\s*targetedMode)?\s*\))"));
-    QVERIFY2(lambdaRegex.match(sourceText).hasMatch(),
-             "ScanController should pass scan settings through to ScanWorker::doScan()");
+    const qsizetype callStart = sourceText.indexOf(QStringLiteral("worker->doScan("));
+    QVERIFY2(callStart >= 0, "ScanController should call ScanWorker::doScan()");
+    const qsizetype callEnd = sourceText.indexOf(QStringLiteral(");"), callStart);
+    QVERIFY2(callEnd > callStart, "ScanController should have a complete ScanWorker::doScan() call");
+    const QString call = sourceText.mid(callStart, callEnd - callStart);
+    for (const QString& expected : {QStringLiteral("gameVersion"), QStringLiteral("showFormIdValues"),
+                                    QStringLiteral("fcxMode"), QStringLiteral("simplifyLogs"),
+                                    QStringLiteral("moveUnsolvedLogs"), QStringLiteral("unsolvedLogsDestination"),
+                                    QStringLiteral("maxConcurrentScans"), QStringLiteral("baseDir"),
+                                    QStringLiteral("customFolder"), QStringLiteral("setupGameRoot"),
+                                    QStringLiteral("setupDocsRoot"), QStringLiteral("setupGameExePath"),
+                                    QStringLiteral("targetedMode"), QStringLiteral("targetedInputs")}) {
+        QVERIFY2(call.contains(expected),
+                 qPrintable(QStringLiteral("ScanController should pass %1 to ScanWorker::doScan()").arg(expected)));
+    }
 }
 
 void ScanSettingsWiringTests::mainwindow_forwards_scan_flags_to_controller()
@@ -448,7 +459,7 @@ void ScanSettingsWiringTests::mainwindow_blocks_crash_logs_scan_when_fcx_enabled
     QVERIFY2(!body.isEmpty(), "MainWindow crash-log scan slot should exist");
 
     const QRegularExpression guardRegex(QStringLiteral(
-        R"(if\s*\(m_fcxMode\)\s*\{(?:.|\n)*?loadValidatedGameAndDocsPaths\(&gamePath,\s*&docsPath\)(?:.|\n)*?FCX mode requires valid game and INI folder paths(?:.|\n)*?return;)"));
+        R"(if\s*\(m_fcxMode\)\s*\{(?:.|\n)*?loadValidatedGameAndDocsPaths\(&setupGameRoot,\s*&setupDocsPath\)(?:.|\n)*?FCX mode requires valid game and INI folder paths(?:.|\n)*?return;)"));
     QVERIFY2(
         guardRegex.match(body).hasMatch(),
         "MainWindow crash-log scan should gate FCX mode on validated paths inside onScanCrashLogs() and return early");
@@ -1019,10 +1030,15 @@ void ScanSettingsWiringTests::scan_controller_disables_unsolved_relocation_for_t
     QVERIFY2(sourceText.contains(QStringLiteral("const bool targetedMode = !targetedInputs.isEmpty();")),
              "ScanController should detect targeted mode before dispatching work to ScanWorker");
 
-    const QRegularExpression lambdaRegex(
-        QStringLiteral(R"(worker->doScan\((?:.|\n)*?moveUnsolvedLogs,\s*unsolvedLogsDestination,\s*maxConcurrentScans,\s*targetedMode\s*\))"));
-    QVERIFY2(lambdaRegex.match(sourceText).hasMatch(),
+    const qsizetype callStart = sourceText.indexOf(QStringLiteral("worker->doScan("));
+    QVERIFY2(callStart >= 0, "ScanController should call ScanWorker::doScan()");
+    const qsizetype callEnd = sourceText.indexOf(QStringLiteral(");"), callStart);
+    QVERIFY2(callEnd > callStart, "ScanController should have a complete ScanWorker::doScan() call");
+    const QString call = sourceText.mid(callStart, callEnd - callStart);
+    QVERIFY2(call.contains(QStringLiteral("targetedMode")),
              "ScanController should pass targetedMode to ScanWorker::doScan()");
+    QVERIFY2(call.contains(QStringLiteral("targetedInputs")),
+             "ScanController should pass targeted inputs to ScanWorker::doScan()");
 }
 
 void ScanSettingsWiringTests::scan_worker_skips_unsolved_relocation_for_targeted_runs()
@@ -1067,7 +1083,7 @@ void ScanSettingsWiringTests::scan_worker_counts_per_log_failures_without_scan_l
 
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
     const QRegularExpression resultLoopRegex(QStringLiteral(
-        R"(for\s*\(\s*const\s+auto&\s+result\s*:\s*results\s*\)(?:.|\n)*?if\s*\(\s*result\.success\s*\)(?:.|\n)*?\+\+successCount;(?:.|\n)*?else(?:.|\n)*?\+\+errorCount;(?:.|\n)*?emit\s+logScanned\(index,\s*result\.success)"));
+        R"(for\s*\(\s*const\s+auto&\s+result\s*:\s*results\s*\)(?:.|\n)*?if\s*\(\s*result\.success\s*\)(?:.|\n)*?\+\+successCount;(?:.|\n)*?else(?:.|\n)*?\+\+errorCount;(?:.|\n)*?emit\s+logScanned\(resultIndex,\s*result\.success)"));
     QVERIFY2(resultLoopRegex.match(sourceText).hasMatch(),
              "ScanWorker should treat Rust scan_run per-log outcomes as per-log success/failure signals");
 
