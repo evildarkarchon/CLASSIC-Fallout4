@@ -907,8 +907,23 @@ def test_scangame_game_setup_intake_helpers_smoke() -> None:
     )
     assert classic_scangame.game_setup_needs_path_detection(None, None) == (True, True)
 
-    intake = classic_scangame.GameSetupIntake("Fallout4", "auto")
-    result = classic_scangame.run_game_setup_intake(intake)
+    # Keep the smoke test independent of any real Fallout 4 install discovered
+    # through the registry or Documents folder on a developer machine.
+    with tempfile.TemporaryDirectory() as temp_dir:
+        fixture_root = Path(temp_dir)
+        game_root = fixture_root / "Fallout4"
+        docs_root = fixture_root / "Docs"
+        game_root.mkdir()
+        docs_root.mkdir()
+        (game_root / "Fallout4.exe").write_bytes(b"not a real pe")
+
+        intake = classic_scangame.GameSetupIntake(
+            "Fallout4",
+            "auto",
+            str(game_root),
+            str(docs_root),
+        )
+        result = classic_scangame.run_game_setup_intake(intake)
 
     assert isinstance(result, classic_scangame.GameSetupIntakeResult)
     assert result.status == "action_required"
