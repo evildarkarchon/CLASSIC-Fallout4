@@ -24,17 +24,11 @@ namespace fs = std::filesystem;
 
 // ── Constants ─────────────────────────────────────────────────────────
 //
-// Pages URL / tag prefix come from `docs/api/yaml-update-delivery.md`. The
-// owner segment of the Pages URL matches the hard-coded owner/repo the Rust
-// bridge passes to `GithubClient::new` (`cpp-bindings/classic-cpp-bridge/
-// src/update.rs` line ~138). If the repo is ever renamed, update both
-// places in the same change.
+// Channel coordinates, accepted schema ranges, and the shippable file set
+// are owned by the first-party YAML Data Update Channel in Rust. The CLI
+// keeps only bridge DTO discriminator constants for user-facing reporting.
 
 namespace {
-
-constexpr const char* kYamlPagesUrl =
-    "https://evildarkarchon.github.io/CLASSIC-Fallout4/yaml-data/manifest-latest.json";
-constexpr const char* kYamlTagPrefix = "yaml-data-v";
 
 // Tag discriminator constants — mirror `TAG_*` in
 // `cpp-bindings/classic-cpp-bridge/src/update.rs`.
@@ -125,39 +119,6 @@ bool read_update_check_setting(const std::string& settings_path) {
     }
 }
 
-// ── Schema-entry builder ──────────────────────────────────────────────
-//
-// Keep in sync with `business-logic/classic-config-core/src/client_schemas.rs`:
-// `MAIN_YAML` is `SchemaCompat::new(2, 0)` and `GAME_FALLOUT4_YAML` is
-// `SchemaCompat::new(1, 0)`. The schema-version gate in
-// tools/schema_version_gate.py enforces that the bundled YAML matches Rust.
-//
-// `has_installed` is intentionally left at `false`. The Rust orchestrator
-// (`check_yaml_update`) reads each installed file from the yaml-cache
-// directory and extracts its `schema_version` header, so sending `false`
-// here delegates that detection to Rust and guarantees all three bindings
-// (C++ CLI, C++ GUI, Node, Python) converge on the same behavior.
-
-rust::Vec<classic::update::YamlClientSchemaEntryDto> build_yaml_schema_entries() {
-    rust::Vec<classic::update::YamlClientSchemaEntryDto> entries;
-
-    classic::update::YamlClientSchemaEntryDto main{};
-    main.name = "CLASSIC Main.yaml";
-    main.accepted_major = 2u;
-    main.accepted_minimum_minor = 0u;
-    main.has_installed = false;
-    entries.push_back(std::move(main));
-
-    classic::update::YamlClientSchemaEntryDto fallout4{};
-    fallout4.name = "CLASSIC Fallout4.yaml";
-    fallout4.accepted_major = 1u;
-    fallout4.accepted_minimum_minor = 0u;
-    fallout4.has_installed = false;
-    entries.push_back(std::move(fallout4));
-
-    return entries;
-}
-
 // ── Runtime bootstrap ─────────────────────────────────────────────────
 //
 // Smaller than `run_scan`'s bootstrap: we don't need the registry wiring or
@@ -243,6 +204,30 @@ int report_status(const classic::update::YamlUpdateStatusDto& status) {
     }
 }
 
+int report_rollback(const classic::update::YamlRollbackReportDto& report) {
+    for (const auto& file_name : report.rolled_back) {
+        fmt::print("Rolled back: {}\n", std::string(file_name));
+    }
+    for (const auto& file_name : report.no_previous_version) {
+        fmt::print("No previous version: {}\n", std::string(file_name));
+    }
+    for (std::size_t i = 0; i < report.failed_files.size(); ++i) {
+        const std::string file_name = std::string(report.failed_files[i]);
+        const std::string reason =
+            i < report.failure_reasons.size()
+                ? std::string(report.failure_reasons[i])
+                : std::string("unknown error");
+        fmt::print(stderr, "Failed rollback: {} ({})\n", file_name, reason);
+    }
+
+    fmt::print("\nRollback Complete\n");
+    fmt::print("  Restored:            {}\n", report.rolled_back.size());
+    fmt::print("  No previous version: {}\n", report.no_previous_version.size());
+    fmt::print("  Failed:              {}\n", report.failed_files.size());
+
+    return report.failed_files.empty() ? 0 : 1;
+}
+
 // ── User prompt (interactive apply) ───────────────────────────────────
 
 bool confirm_apply_prompt() {
@@ -268,12 +253,7 @@ int run_check_yaml_updates(const CliArgs& /*args*/) {
 
     int exit_code;
     try {
-        auto entries = build_yaml_schema_entries();
-        // Empty `bundled_yaml_dir` keeps the bridge's `current_exe()`
-        // fallback — correct for the native CLI binary that lives next to
-        // `CLASSIC Data/`. See the bridge header for non-native cases.
-        auto status = classic::update::yaml_check_update(
-            kYamlPagesUrl, kYamlTagPrefix, entries, enabled, rust::Str(""));
+        auto status = classic::update::yaml_data_check_update(enabled);
         exit_code = report_status(status);
     } catch (const rust::Error& e) {
         fmt::print(stderr, "Data update check failed: {}\n", std::string(e.what()));
@@ -297,11 +277,9 @@ int run_apply_yaml_updates(const CliArgs& /*args*/) {
 
     int exit_code = 0;
     try {
-        auto entries = build_yaml_schema_entries();
-
-        // Step 1: check (gated by enabled). Empty bundled dir = native-exe fallback.
-        auto status = classic::update::yaml_check_update(
-            kYamlPagesUrl, kYamlTagPrefix, entries, enabled, rust::Str(""));
+        // Step 1: check (gated by enabled). Rust owns the first-party
+        // channel recipe and installed-file enrichment.
+        auto status = classic::update::yaml_data_check_update(enabled);
         const int status_exit_code = report_status(status);
 
         if (status.tag != kYamlTagUpdateAvailable) {
@@ -340,15 +318,7 @@ int run_apply_yaml_updates(const CliArgs& /*args*/) {
         approved.file_names = std::move(approved_file_names);
         approved.file_sha256 = std::move(approved_file_sha256);
 
-        classic::update::YamlApplyRequestDto request{};
-        request.pages_url = kYamlPagesUrl;
-        request.tag_prefix = kYamlTagPrefix;
-        request.entries = std::move(entries);
-        request.enabled = enabled;
-        request.approved = std::move(approved);
-        request.bundled_yaml_dir = rust::String("");
-
-        auto report = classic::update::yaml_apply_update(request);
+        auto report = classic::update::yaml_data_apply_update(enabled, approved);
 
         const auto installed = report.installed.size();
         const auto failed = report.failed.size();
@@ -379,6 +349,27 @@ int run_apply_yaml_updates(const CliArgs& /*args*/) {
         exit_code = 1;
     } catch (const std::exception& e) {
         fmt::print(stderr, "Apply failed: {}\n", e.what());
+        exit_code = 1;
+    }
+
+    classic::runtime::shutdown_runtime();
+    return exit_code;
+}
+
+int run_rollback_yaml_updates(const CliArgs& /*args*/) {
+    if (!init_runtime_for_yaml_update()) {
+        return 2;
+    }
+
+    int exit_code = 0;
+    try {
+        auto report = classic::update::yaml_data_rollback_update();
+        exit_code = report_rollback(report);
+    } catch (const rust::Error& e) {
+        fmt::print(stderr, "Rollback failed: {}\n", std::string(e.what()));
+        exit_code = 1;
+    } catch (const std::exception& e) {
+        fmt::print(stderr, "Rollback failed: {}\n", e.what());
         exit_code = 1;
     }
 

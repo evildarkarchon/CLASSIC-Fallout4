@@ -37,6 +37,9 @@ TEST_CASE("CliArgs defaults", "[cli_args]") {
     REQUIRE(args.reset_unsolved_logs_destination == false);
     REQUIRE(args.max_concurrent == 0);
     REQUIRE(args.version_flag == false);
+    REQUIRE(args.check_yaml_updates == false);
+    REQUIRE(args.apply_yaml_updates == false);
+    REQUIRE(args.rollback_yaml_updates == false);
 }
 
 TEST_CASE("Auto concurrency helper preserves floor and cap", "[cli_args]") {
@@ -99,6 +102,24 @@ TEST_CASE("CliArgs boolean flags", "[cli_args]") {
         ArgvBuilder ab({"classic-cli", "--version"});
         CliArgs args = parse_args(ab.argc(), ab.argv());
         REQUIRE(args.version_flag == true);
+    }
+
+    SECTION("--check-yaml-updates sets YAML check flag") {
+        ArgvBuilder ab({"classic-cli", "--check-yaml-updates"});
+        CliArgs args = parse_args(ab.argc(), ab.argv());
+        REQUIRE(args.check_yaml_updates == true);
+    }
+
+    SECTION("--apply-yaml-updates sets YAML apply flag") {
+        ArgvBuilder ab({"classic-cli", "--apply-yaml-updates"});
+        CliArgs args = parse_args(ab.argc(), ab.argv());
+        REQUIRE(args.apply_yaml_updates == true);
+    }
+
+    SECTION("--rollback-yaml-updates sets YAML rollback flag") {
+        ArgvBuilder ab({"classic-cli", "--rollback-yaml-updates"});
+        CliArgs args = parse_args(ab.argc(), ab.argv());
+        REQUIRE(args.rollback_yaml_updates == true);
     }
 }
 

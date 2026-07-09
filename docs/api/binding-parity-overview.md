@@ -46,6 +46,16 @@ Each shared Rust crate and its corresponding binding module across all three sur
 
 Full cross-crate flow: [`app-update-notification-delivery.md`](app-update-notification-delivery.md). Error shapes: [`error-contract.md`](error-contract.md). The legacy `github_check_for_updates` / `GithubClient::get_latest_release` surface is retained as compat-only and is no longer called from user-facing update checks.
 
+**Note on YAML Data update surface (`classic-update-core`):** native C++ now has first-party helpers for the product YAML Data Update Channel, while Node/Python intentionally keep the lower-level generic manifest interface for compatibility.
+
+| Binding | Preferred first-party/native API | Generic compatibility API |
+| --- | --- | --- |
+| C++ (CXX) | `classic::update::yaml_data_check_update(enabled)`, `yaml_data_apply_update(enabled, approved)`, `yaml_data_rollback_update()` | `yaml_check_update(pages_url, tag_prefix, entries, enabled, bundled_yaml_dir)`, `yaml_apply_update(request)`, `yaml_rollback_update(file_name)` |
+| Node (NAPI-RS) | Not exposed in this scope | `checkYamlUpdate(...)`, `applyYamlUpdate(request)`, `rollbackYamlUpdate(fileName)` |
+| Python (PyO3) | Not exposed in this scope | `check_yaml_update(...)`, `apply_yaml_update(request)`, `rollback_yaml_update(file_name)` |
+
+The first-party C++ helpers centralize the Pages URL, `yaml-data-v*` tag namespace, first-party shippable file set, accepted schema ranges, installed-file enrichment, and rollback target list in Rust. Full cross-crate flow: [`yaml-update-delivery.md`](yaml-update-delivery.md).
+
 **Note on `classic-resource-core`**: This crate provides lightweight resource classification helpers used by `classic-file-io-core`. It has no dedicated C++ bridge module. C++ frontends access resource classification functionality transitively through the `classic-file-io-core` bridge surface (`files.rs`) where needed.
 
 ---

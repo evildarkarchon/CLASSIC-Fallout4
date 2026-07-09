@@ -8,7 +8,7 @@ This page describes the cross-crate flow introduced by the `yaml-update-delivery
 - [`classic-config-core`](classic-config-core.md) — `client_schemas::*`, `shippable::load_shippable_yaml`
 - [`classic-path-core`](classic-path-core.md) — `yaml_cache_dir`, `ensure_yaml_cache_dir`
 - [`classic-file-io-core`](classic-file-io-core.md) — `install_atomic`, `rollback`
-- [`classic-update-core`](classic-update-core.md) — `yaml_update` module, `check_yaml_update`, `apply_yaml_update`, `apply_yaml_update_with_decision`, `rollback_yaml_update`, `ApprovedUpdate`
+- [`classic-update-core`](classic-update-core.md) — `yaml_update` module, first-party `check_yaml_data_update`, `apply_yaml_data_update_with_decision`, `rollback_yaml_data_update`, plus lower-level generic `check_yaml_update`, `apply_yaml_update_with_decision`, `rollback_yaml_update`, and `ApprovedUpdate`
 
 ---
 
@@ -47,12 +47,13 @@ The drift guard (`tools/schema_version_gate.py`, wired into `ci-python-bindings.
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ 1. check_yaml_update(client, pages_url, tag_prefix, current,    │
-│    config):                                                      │
+│ 1. check_yaml_data_update(client, config):                       │
 │      - honors `Update Check: false` (short-circuits to Disabled) │
-│      - GET <pages_url>/manifest-latest.json (If-None-Match ETag) │
+│      - derives the first-party Pages URL from client owner/repo   │
+│      - owns the `yaml-data-v*` tag namespace and schema entries   │
+│      - GET canonical Pages manifest URL (If-None-Match ETag)     │
 │      - fallback: GET /repos/<owner>/<repo>/releases,             │
-│        filter tag prefix `yaml-data-`, pick highest-sorted tag,  │
+│        filter tag prefix `yaml-data-v`, pick highest-sorted tag, │
 │        download that release's manifest.json asset.              │
 │      - enrich_installed reads on-disk bytes from                 │
 │        config.bundled_yaml_dir (or current_exe() fallback) and   │
@@ -61,11 +62,10 @@ The drift guard (`tools/schema_version_gate.py`, wired into `ci-python-bindings.
 │        "Freshness model" and §2c "Bundled-directory resolution". │
 │      - returns UpdateAvailable | UpToDate | Disabled | Unknown.  │
 ├──────────────────────────────────────────────────────────────────┤
-│ 2. apply_yaml_update_with_decision(client, pages_url, tag_prefix,│
-│     current, config, approved):                                  │
+│ 2. apply_yaml_data_update_with_decision(client, config, approved):│
 │      - refuses if config.enabled == false                        │
 │        → UpdateError::UpdateCheckDisabled (no HTTP).             │
-│      - runs a fresh check_yaml_update to reclassify.             │
+│      - runs a fresh first-party check to reclassify.             │
 │      - compares manifest.release_tag vs approved.release_tag.    │
 │        Mismatch → UpdateError::DecisionStale (no install).       │
 │      - installs only files whose name appears in                 │
@@ -76,11 +76,19 @@ The drift guard (`tools/schema_version_gate.py`, wired into `ci-python-bindings.
 │           to review-then-apply UI flows — it has no staleness    │
 │           check.                                                 │
 ├──────────────────────────────────────────────────────────────────┤
-│ 3. rollback_yaml_update(file_name):                              │
-│      - swaps <cache>/<file> ↔ <cache>/<file>.prev                │
-│      - returns RolledBack or NoPreviousVersion.                  │
+│ 3. rollback_yaml_data_update():                                  │
+│      - expands the Rust-owned first-party shippable target list   │
+│      - swaps <cache>/<file> ↔ <cache>/<file>.prev per target     │
+│      - groups RolledBack, NoPreviousVersion, and failures.       │
 └──────────────────────────────────────────────────────────────────┘
 ```
+
+The lower-level generic interface remains available for tests, unusual hosts,
+and Node/Python compatibility consumers. Generic callers pass `pages_url`,
+`tag_prefix`, and a caller-built `ClientSchemaSet` to `check_yaml_update` /
+`apply_yaml_update_with_decision`, or a single `file_name` to
+`rollback_yaml_update`. Native first-party callers should use the
+`yaml_data_*` helpers instead so channel policy stays in Rust.
 
 ### 2a. Freshness model (content identity, not `schema_version`)
 
@@ -113,7 +121,9 @@ Review-and-apply is two logical steps separated by an unbounded amount of time (
 
 Binding-layer contract:
 
-- C++ bridge `yaml_apply_update(request)` takes `YamlApplyRequestDto { pages_url, tag_prefix, entries, enabled, approved, bundled_yaml_dir }`, where `approved` is `ApprovedUpdateDto { release_tag, file_names, file_sha256 }`. It returns `YamlUpdateReportDto`. Typed errors map to stable `error_message` prefixes: `"update check disabled: ..."` and `"decision stale: ..."`. GUI / CLI consumers parse the prefix. `bundled_yaml_dir` is an empty string for the native CLI / GUI (which relies on the `current_exe()` fallback).
+- Native C++ bridge callers use `yaml_data_check_update(enabled)`, `yaml_data_apply_update(enabled, approved)`, and `yaml_data_rollback_update()`. The bridge returns the same status/apply DTO shapes as the generic functions; rollback returns an aggregate `YamlRollbackReportDto`. Typed apply errors map to stable `error_message` prefixes: `"update check disabled: ..."` and `"decision stale: ..."`. GUI / CLI consumers parse the prefix.
+- The native CLI exposes those first-party operations as `--check-yaml-updates`, `--apply-yaml-updates`, and `--rollback-yaml-updates`. Check/apply honor `CLASSIC_Settings.Update Check`; rollback is local-only and does not perform a network check.
+- Lower-level C++ bridge compatibility callers may still use `yaml_check_update(pages_url, tag_prefix, entries, enabled, bundled_yaml_dir)`, `yaml_apply_update(request)`, and `yaml_rollback_update(file_name)`.
 - Node `applyYamlUpdate(request)` takes `JsYamlApplyRequest { pagesUrl, tagPrefix, entries, enabled, approved, bundledYamlDir? }`, where `approved` is `JsApprovedUpdate { releaseTag, fileNames, fileSha256 }`. It throws on disabled / stale (propagated as NAPI `Error` with the message body). Node callers should pass the package-local install path because `current_exe()` resolves to `node.exe`.
 - Python `apply_yaml_update(request)` takes `YamlApplyRequest(pages_url, tag_prefix, entries, enabled, approved, bundled_yaml_dir=None)`, where `approved` is `ApprovedUpdate(release_tag, file_names, file_sha256)`. It raises `RuntimeError` on disabled / stale. Python callers should pass a package-local install path because `current_exe()` resolves to `python.exe`.
 
@@ -224,7 +234,8 @@ No repository-level secret (`COSIGN_KEY`, `MINISIGN_KEY`, or similar) is referen
 
 ## 5. Rollback and recovery
 
-- **User-initiated rollback** — `rollback_yaml_update(file_name)` swaps `<cache>/<file>` ↔ `<cache>/<file>.prev` and returns `RolledBack` or `NoPreviousVersion`. There is exactly one `.prev` generation; successive rollbacks return `NoPreviousVersion` after the first.
+- **User-initiated first-party rollback** — `rollback_yaml_data_update()` expands the current first-party shippable YAML Data target list in Rust, swaps `<cache>/<file>` ↔ `<cache>/<file>.prev` per target, and groups `rolled_back`, `no_previous_version`, and `failed` outcomes. There is exactly one `.prev` generation per file; successive rollbacks return `NoPreviousVersion` after the first.
+- **Lower-level rollback** — `rollback_yaml_update(file_name)` remains available for compatibility callers that intentionally name one cache file.
 - **Interrupted install** — if power is lost between the two renames in `install_atomic`, startup self-heal promotes `.prev` → canonical so the client never observes a missing shippable file.
 - **Checksum failure** — on sha256 mismatch during `install_atomic`, the temp file is deleted; the target and any existing `.prev` are untouched.
 - **Rollback to bundled** — removing `<cache>/<file>` AND `<cache>/<file>.prev` forces the loader to fall back to the bundled copy on next load. Contributors generally should not recommend this to users since manual cache mutation is outside the atomic-install contract.
@@ -241,8 +252,8 @@ No repository-level secret (`COSIGN_KEY`, `MINISIGN_KEY`, or similar) is referen
 | `shippable::load_shippable_yaml` | [`business-logic/classic-config-core/src/shippable.rs`](../../business-logic/classic-config-core/src/shippable.rs) |
 | `yaml_cache_dir`, `ensure_yaml_cache_dir` | [`business-logic/classic-path-core/src/lib.rs`](../../business-logic/classic-path-core/src/lib.rs) |
 | `install_atomic`, `rollback` | [`business-logic/classic-file-io-core/src/lib.rs`](../../business-logic/classic-file-io-core/src/lib.rs) |
-| `YamlManifest`, `fetch_yaml_manifest`, `check_yaml_update`, `apply_yaml_update`, `rollback_yaml_update` | [`business-logic/classic-update-core/src/yaml_update.rs`](../../business-logic/classic-update-core/src/yaml_update.rs) |
-| CXX bridge (`yaml_check_update`, `yaml_apply_update`, `yaml_rollback_update`) | [`cpp-bindings/classic-cpp-bridge/src/update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) |
+| First-party YAML Data Update Channel (`check_yaml_data_update`, `apply_yaml_data_update_with_decision`, `rollback_yaml_data_update`) plus generic `YamlManifest`, `fetch_yaml_manifest`, `check_yaml_update`, `apply_yaml_update`, `rollback_yaml_update` | [`business-logic/classic-update-core/src/yaml_update.rs`](../../business-logic/classic-update-core/src/yaml_update.rs) |
+| CXX bridge first-party helpers (`yaml_data_check_update`, `yaml_data_apply_update`, `yaml_data_rollback_update`) and generic compatibility helpers (`yaml_check_update`, `yaml_apply_update`, `yaml_rollback_update`) | [`cpp-bindings/classic-cpp-bridge/src/update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs) |
 | Node bindings (`checkYamlUpdate`, `applyYamlUpdate`, `rollbackYamlUpdate`) | [`node-bindings/classic-node/src/update.rs`](../../node-bindings/classic-node/src/update.rs) |
 | Python bindings (`check_yaml_update`, `apply_yaml_update`, `rollback_yaml_update`) | [`python-bindings/classic-update-py/src/yaml_update.rs`](../../python-bindings/classic-update-py/src/yaml_update.rs) |
 | Publish workflow | [`.github/workflows/publish-yaml-data.yml`](../../.github/workflows/publish-yaml-data.yml) |

@@ -16,7 +16,6 @@
 #include <QThread>
 #include <QVBoxLayout>
 
-#include <cstdint>
 #include <string>
 
 #include "core/rust_qt_bridge.h"
@@ -339,12 +338,9 @@ void SettingsDialog::setupUpdatesTab(QTabWidget* tabs)
 
     // YAML data updates (yaml-update-delivery Section 12)
     //
-    // The three bridge entry points (`yaml_check_update`, `yaml_apply_update`,
-    // `yaml_rollback_update`) are called synchronously here — matching the
-    // existing binary-update flow above — because each call uses `block_on`
-    // on the shared Tokio runtime inside the bridge and returns within a few
-    // hundred milliseconds. This dialog is modal; briefly blocking the UI
-    // thread is acceptable here.
+    // The worker calls the first-party YAML Data bridge entry points off the
+    // UI thread because the Pages + Releases fallback path may block on
+    // network timeouts.
     {
         auto* group = new QGroupBox(QStringLiteral("Data File Updates"));
         auto* groupLayout = new QVBoxLayout(group);
@@ -736,62 +732,6 @@ void SettingsDialog::onCheckForUpdates()
 }
 
 // ── YAML data update slots (yaml-update-delivery Section 12) ──────────
-//
-// Pages URL and tag prefix are the compile-time lookup coordinates from
-// `yaml-update-delivery.md`; the repo owner matches the one already hard-coded
-// in the Rust bridge `GithubClient::new("evildarkarchon", "CLASSIC-Fallout4")`.
-// Kept as local constants instead of ad-hoc literals so the two slots below
-// cannot drift from each other.
-
-namespace {
-
-constexpr const char* kYamlPagesUrl =
-    "https://evildarkarchon.github.io/CLASSIC-Fallout4/yaml-data/manifest-latest.json";
-constexpr const char* kYamlTagPrefix = "yaml-data-v";
-
-// The two shippable files the client knows about today. The accepted ranges
-// mirror `client_schemas::MAIN_YAML` and `client_schemas::GAME_FALLOUT4_YAML`
-// on the Rust side (`SchemaCompat::new(2, 0)` for Main, `SchemaCompat::new(1, 0)`
-// for Fallout4); the schema-version gate in tools/schema_version_gate.py keeps
-// them in sync with the bundled YAML.
-//
-// We deliberately send `has_installed = false` for both entries: the Rust
-// orchestrator (`check_yaml_update`) reads each file from the yaml-cache
-// directory and fills in the installed schema_version itself, so a repeat
-// Check after Apply converges to `UpToDate` instead of treating the just-
-// installed bytes as "newer" again (which would rotate `.prev` to the
-// already-current bytes and destroy rollback history).
-rust::Vec<classic::update::YamlClientSchemaEntryDto> buildYamlSchemaEntries()
-{
-    rust::Vec<classic::update::YamlClientSchemaEntryDto> entries;
-
-    classic::update::YamlClientSchemaEntryDto main{};
-    main.name = "CLASSIC Main.yaml";
-    main.accepted_major = 2u;
-    main.accepted_minimum_minor = 0u;
-    main.has_installed = false;
-    entries.push_back(std::move(main));
-
-    classic::update::YamlClientSchemaEntryDto fallout4{};
-    fallout4.name = "CLASSIC Fallout4.yaml";
-    fallout4.accepted_major = 1u;
-    fallout4.accepted_minimum_minor = 0u;
-    fallout4.has_installed = false;
-    entries.push_back(std::move(fallout4));
-
-    return entries;
-}
-
-// Tag discriminator constants — kept in lockstep with the `TAG_*` constants
-// in `cpp-bindings/classic-cpp-bridge/src/update.rs`. If the bridge grows a
-// new case, update this block and the test_yaml_update_wiring fixtures.
-constexpr std::uint32_t kYamlTagDisabled = 0u;
-constexpr std::uint32_t kYamlTagUpdateAvailable = 1u;
-constexpr std::uint32_t kYamlTagUpToDate = 2u;
-constexpr std::uint32_t kYamlTagUnknown = 3u;
-constexpr std::uint32_t kYamlTagError = 4u;
-
-} // namespace
 
 void SettingsDialog::ensureYamlUpdateWorker()
 {
@@ -911,15 +851,7 @@ void SettingsDialog::onRollbackYamlUpdate()
     m_btnRollbackYamlUpdates->setEnabled(false);
     m_lblYamlUpdateStatus->setText(QStringLiteral("Rolling back data updates..."));
 
-    // Both shippable files share the same rollback path; the worker
-    // iterates and returns the aggregated outcome on
-    // `rollbackFinished` / `onYamlRollbackFinished`. Leave the other
-    // buttons alone — rollback is independent of the check/apply
-    // decision state.
-    const QStringList files{QStringLiteral("CLASSIC Main.yaml"),
-                            QStringLiteral("CLASSIC Fallout4.yaml")};
-    QMetaObject::invokeMethod(m_yamlUpdateWorker, "doRollback", Qt::QueuedConnection,
-                              Q_ARG(QStringList, files));
+    QMetaObject::invokeMethod(m_yamlUpdateWorker, "doRollback", Qt::QueuedConnection);
 }
 
 void SettingsDialog::onYamlCheckFinished(YamlCheckResult result)

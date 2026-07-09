@@ -669,6 +669,22 @@ If you extend the rule model, update this section when you change:
 - template placeholder behavior
 - `ConfigLayout` ownership expectations across config, scanlog, and scangame layers
 
+## Shippable schema metadata
+
+The `client_schemas` module owns the accepted schema ranges for first-party
+shippable YAML files:
+
+- `MAIN_YAML` — accepted range for `CLASSIC Main.yaml`
+- `GAME_FALLOUT4_YAML` — accepted range for `CLASSIC Fallout4.yaml`
+- `shippable_schema_entries()` — returns `ShippableSchemaEntry { file, accepted }`
+  for the current first-party shippable set, pairing each `ShippableFile` with
+  its governing `SchemaCompat`
+
+`classic-update-core` consumes `shippable_schema_entries()` for the first-party
+YAML Data Update Channel so native callers do not duplicate the file list or
+schema ranges. If a new first-party shippable YAML file is added, update this
+metadata and the schema drift guard together.
+
 ## Schema-gated `CLASSIC Main.yaml` version reader
 
 The `shippable` module exports a narrow startup-path reader,

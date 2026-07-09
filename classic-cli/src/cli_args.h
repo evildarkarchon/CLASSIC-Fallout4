@@ -23,6 +23,7 @@ struct CliArgs {
     // pipeline and dispatches to the YAML update handler instead.
     bool check_yaml_updates = false;
     bool apply_yaml_updates = false;
+    bool rollback_yaml_updates = false;
 
     // app-update-manifest-notification: binary-release notification check
     // via the Pages-first notification manifest. Short-circuits the scan

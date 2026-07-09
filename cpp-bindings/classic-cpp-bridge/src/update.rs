@@ -5,11 +5,13 @@
 //! - **Binary releases** — the pre-existing `GithubClient::has_update` /
 //!   `get_latest_release` flow, exposed as
 //!   [`ffi::github_has_update`] + [`ffi::github_check_for_updates`].
-//! - **YAML data updates** — the yaml-update-delivery flow added in the
-//!   `yaml-update-delivery` change. C++ callers use
-//!   [`ffi::yaml_check_update`], [`ffi::yaml_apply_update`], and
-//!   [`ffi::yaml_rollback_update`] to drive the Pages-first manifest fetch,
-//!   atomic cache install, and one-step rollback.
+//! - **YAML Data updates** — the first-party YAML Data Update Channel is
+//!   exposed through [`ffi::yaml_data_check_update`],
+//!   [`ffi::yaml_data_apply_update`], and [`ffi::yaml_data_rollback_update`].
+//!   The lower-level generic [`ffi::yaml_check_update`],
+//!   [`ffi::yaml_apply_update`], and [`ffi::yaml_rollback_update`] functions
+//!   remain available for tests and compatibility callers that need explicit
+//!   channel coordinates or schema entries.
 //!
 //! CXX FFI cannot carry tagged unions, so [`ffi::YamlUpdateStatusDto`] is a
 //! discriminated struct: its `tag` field names the case (0 = Disabled,
@@ -20,6 +22,9 @@
 
 use classic_settings_core::{SchemaCompat, SchemaVersion};
 use classic_shared_core::get_runtime;
+use classic_update_core::yaml_update::{
+    apply_yaml_data_update_with_decision, check_yaml_data_update, rollback_yaml_data_update,
+};
 use classic_update_core::{
     ApprovedUpdate, Classification, ClientSchemaSet, FileInstallOutcome, GithubClient,
     NotificationStatus, RollbackOutcome, UpdateCheckConfig, UpdateError, YamlManifestFile,
@@ -144,34 +149,7 @@ fn build_yaml_config(enabled: bool, bundled_yaml_dir: &str) -> UpdateCheckConfig
     cfg
 }
 
-// CXX bridge requires `&Vec<T>` (mapped to `const rust::Vec<T>&` in C++); the
-// `ptr_arg` clippy lint's "use `&[_]`" suggestion does not apply here because
-// cxx shared-struct transfer is by Vec, not slice.
-#[allow(clippy::ptr_arg)]
-fn yaml_check_update(
-    pages_url: &str,
-    tag_prefix: &str,
-    entries: &Vec<ffi::YamlClientSchemaEntryDto>,
-    enabled: bool,
-    bundled_yaml_dir: &str,
-) -> ffi::YamlUpdateStatusDto {
-    let client = match GithubClient::new("evildarkarchon", "CLASSIC-Fallout4") {
-        Ok(c) => c,
-        Err(e) => {
-            let mut dto = empty_status_dto();
-            dto.tag = TAG_ERROR;
-            dto.error_message = format!("github client init failed: {e}");
-            return dto;
-        }
-    };
-
-    let set = build_client_schema_set(entries);
-    let config = build_yaml_config(enabled, bundled_yaml_dir);
-
-    let result = get_runtime().block_on(check_yaml_update(
-        &client, pages_url, tag_prefix, &set, config,
-    ));
-
+fn yaml_status_to_dto(result: Result<YamlUpdateStatus, UpdateError>) -> ffi::YamlUpdateStatusDto {
     match result {
         Ok(YamlUpdateStatus::Disabled) => {
             let mut dto = empty_status_dto();
@@ -227,45 +205,69 @@ fn yaml_check_update(
     }
 }
 
-fn yaml_apply_update(request: &ffi::YamlApplyRequestDto) -> ffi::YamlUpdateReportDto {
-    // Apply is a user-consent-gated operation: we install exactly the files
-    // the user reviewed at check-time, for exactly the release tag they
-    // saw. The caller passes that decision back via `request.approved`; the
-    // core then refuses the install when the live manifest has rotated to a
-    // different release or changed the bytes advertised for an approved file.
-    //
-    // `request.enabled` is honored end-to-end: passing `false` makes the
-    // core return `UpdateCheckDisabled` without any HTTP — the "Update
-    // Check: false" setting survives between check and apply even if the
-    // user toggled it mid-review.
+fn yaml_github_client_error_dto(error: UpdateError) -> ffi::YamlUpdateStatusDto {
+    let mut dto = empty_status_dto();
+    dto.tag = TAG_ERROR;
+    dto.error_message = format!("github client init failed: {error}");
+    dto
+}
+
+// CXX bridge requires `&Vec<T>` (mapped to `const rust::Vec<T>&` in C++); the
+// `ptr_arg` clippy lint's "use `&[_]`" suggestion does not apply here because
+// cxx shared-struct transfer is by Vec, not slice.
+#[allow(clippy::ptr_arg)]
+fn yaml_check_update(
+    pages_url: &str,
+    tag_prefix: &str,
+    entries: &Vec<ffi::YamlClientSchemaEntryDto>,
+    enabled: bool,
+    bundled_yaml_dir: &str,
+) -> ffi::YamlUpdateStatusDto {
     let client = match GithubClient::new("evildarkarchon", "CLASSIC-Fallout4") {
         Ok(c) => c,
-        Err(e) => {
-            return ffi::YamlUpdateReportDto {
-                installed: Vec::new(),
-                failed: Vec::new(),
-                error_message: format!("github client init failed: {e}"),
-            };
-        }
+        Err(e) => return yaml_github_client_error_dto(e),
     };
 
-    let set = build_client_schema_set(&request.entries);
-    let config = build_yaml_config(request.enabled, &request.bundled_yaml_dir);
-    let approved = ApprovedUpdate {
-        release_tag: request.approved.release_tag.clone(),
-        file_names: request.approved.file_names.clone(),
-        file_sha256: request.approved.file_sha256.clone(),
-    };
+    let set = build_client_schema_set(entries);
+    let config = build_yaml_config(enabled, bundled_yaml_dir);
 
-    let result = get_runtime().block_on(apply_yaml_update_with_decision(
-        &client,
-        &request.pages_url,
-        &request.tag_prefix,
-        &set,
-        config,
-        &approved,
+    let result = get_runtime().block_on(check_yaml_update(
+        &client, pages_url, tag_prefix, &set, config,
     ));
 
+    yaml_status_to_dto(result)
+}
+
+fn yaml_data_check_update(enabled: bool) -> ffi::YamlUpdateStatusDto {
+    let client = match GithubClient::new("evildarkarchon", "CLASSIC-Fallout4") {
+        Ok(c) => c,
+        Err(e) => return yaml_github_client_error_dto(e),
+    };
+
+    let config = build_yaml_config(enabled, "");
+    let result = get_runtime().block_on(check_yaml_data_update(&client, config));
+    yaml_status_to_dto(result)
+}
+
+fn approved_update_from_dto(approved: &ffi::ApprovedUpdateDto) -> ApprovedUpdate {
+    ApprovedUpdate {
+        release_tag: approved.release_tag.clone(),
+        file_names: approved.file_names.clone(),
+        file_sha256: approved.file_sha256.clone(),
+    }
+}
+
+fn yaml_report_error_dto(message: String) -> ffi::YamlUpdateReportDto {
+    ffi::YamlUpdateReportDto {
+        installed: Vec::new(),
+        failed: Vec::new(),
+        error_message: message,
+    }
+}
+
+fn yaml_report_to_dto(
+    result: Result<classic_update_core::YamlUpdateReport, UpdateError>,
+) -> ffi::YamlUpdateReportDto {
     match result {
         Ok(report) => ffi::YamlUpdateReportDto {
             installed: report
@@ -279,38 +281,72 @@ fn yaml_apply_update(request: &ffi::YamlApplyRequestDto) -> ffi::YamlUpdateRepor
         // Typed errors get stable, GUI-parseable prefixes so the Qt layer
         // can route the "re-check required" message distinctly from a
         // generic transport failure.
-        Err(UpdateError::UpdateCheckDisabled) => ffi::YamlUpdateReportDto {
-            installed: Vec::new(),
-            failed: Vec::new(),
-            error_message:
-                "update check disabled: enable \"Check for Updates on Startup\" and try again"
-                    .to_string(),
-        },
-        Err(UpdateError::DecisionStale { approved, manifest }) => ffi::YamlUpdateReportDto {
-            installed: Vec::new(),
-            failed: Vec::new(),
-            error_message: format!(
-                "decision stale: approved release `{approved}` but current manifest is `{manifest}`; re-check required"
-            ),
-        },
+        Err(UpdateError::UpdateCheckDisabled) => yaml_report_error_dto(
+            "update check disabled: enable \"Check for Updates on Startup\" and try again"
+                .to_string(),
+        ),
+        Err(UpdateError::DecisionStale { approved, manifest }) => yaml_report_error_dto(format!(
+            "decision stale: approved release `{approved}` but current manifest is `{manifest}`; re-check required"
+        )),
         Err(UpdateError::DecisionDigestStale {
             release_tag,
             file,
             approved_sha256,
             manifest_sha256,
-        }) => ffi::YamlUpdateReportDto {
-            installed: Vec::new(),
-            failed: Vec::new(),
-            error_message: format!(
-                "decision stale: approved file `{file}` for release `{release_tag}` changed digest from `{approved_sha256}` to `{manifest_sha256}`; re-check required"
-            ),
-        },
-        Err(e) => ffi::YamlUpdateReportDto {
-            installed: Vec::new(),
-            failed: Vec::new(),
-            error_message: format!("apply_yaml_update failed: {e}"),
-        },
+        }) => yaml_report_error_dto(format!(
+            "decision stale: approved file `{file}` for release `{release_tag}` changed digest from `{approved_sha256}` to `{manifest_sha256}`; re-check required"
+        )),
+        Err(e) => yaml_report_error_dto(format!("apply_yaml_update failed: {e}")),
     }
+}
+
+fn yaml_apply_update(request: &ffi::YamlApplyRequestDto) -> ffi::YamlUpdateReportDto {
+    // Apply is a user-consent-gated operation: we install exactly the files
+    // the user reviewed at check-time, for exactly the release tag they
+    // saw. The caller passes that decision back via `request.approved`; the
+    // core then refuses the install when the live manifest has rotated to a
+    // different release or changed the bytes advertised for an approved file.
+    //
+    // `request.enabled` is honored end-to-end: passing `false` makes the
+    // core return `UpdateCheckDisabled` without any HTTP — the "Update
+    // Check: false" setting survives between check and apply even if the
+    // user toggled it mid-review.
+    let client = match GithubClient::new("evildarkarchon", "CLASSIC-Fallout4") {
+        Ok(c) => c,
+        Err(e) => return yaml_report_error_dto(format!("github client init failed: {e}")),
+    };
+
+    let set = build_client_schema_set(&request.entries);
+    let config = build_yaml_config(request.enabled, &request.bundled_yaml_dir);
+    let approved = approved_update_from_dto(&request.approved);
+
+    let result = get_runtime().block_on(apply_yaml_update_with_decision(
+        &client,
+        &request.pages_url,
+        &request.tag_prefix,
+        &set,
+        config,
+        &approved,
+    ));
+
+    yaml_report_to_dto(result)
+}
+
+fn yaml_data_apply_update(
+    enabled: bool,
+    approved: &ffi::ApprovedUpdateDto,
+) -> ffi::YamlUpdateReportDto {
+    let client = match GithubClient::new("evildarkarchon", "CLASSIC-Fallout4") {
+        Ok(c) => c,
+        Err(e) => return yaml_report_error_dto(format!("github client init failed: {e}")),
+    };
+
+    let config = build_yaml_config(enabled, "");
+    let approved = approved_update_from_dto(approved);
+    let result = get_runtime().block_on(apply_yaml_data_update_with_decision(
+        &client, config, &approved,
+    ));
+    yaml_report_to_dto(result)
 }
 
 fn install_outcome_to_dto(outcome: &FileInstallOutcome) -> ffi::YamlUpdateFileOutcomeDto {
@@ -433,6 +469,30 @@ fn yaml_rollback_update(file_name: &str) -> ffi::YamlRollbackOutcomeDto {
     }
 }
 
+fn yaml_data_rollback_update() -> ffi::YamlRollbackReportDto {
+    let mut dto = ffi::YamlRollbackReportDto {
+        rolled_back: Vec::new(),
+        no_previous_version: Vec::new(),
+        failed_files: Vec::new(),
+        failure_reasons: Vec::new(),
+    };
+
+    for (requested_name, outcome) in get_runtime().block_on(rollback_yaml_data_update()) {
+        match outcome {
+            Ok(RollbackOutcome::RolledBack { file_name }) => dto.rolled_back.push(file_name),
+            Ok(RollbackOutcome::NoPreviousVersion { file_name }) => {
+                dto.no_previous_version.push(file_name);
+            }
+            Err(error) => {
+                dto.failed_files.push(requested_name);
+                dto.failure_reasons.push(error.to_string());
+            }
+        }
+    }
+
+    dto
+}
+
 #[cxx::bridge(namespace = "classic::update")]
 mod ffi {
     /// Result of a binary-release update check (existing).
@@ -533,6 +593,18 @@ mod ffi {
         error_message: String,
     }
 
+    /// Aggregate result of first-party [`yaml_data_rollback_update`].
+    struct YamlRollbackReportDto {
+        /// Files whose previous generation was restored.
+        rolled_back: Vec<String>,
+        /// Files that had no previous generation to restore.
+        no_previous_version: Vec<String>,
+        /// Files whose rollback failed outright.
+        failed_files: Vec<String>,
+        /// Reason parallel to `failed_files`, same index.
+        failure_reasons: Vec<String>,
+    }
+
     /// Result of [`check_app_notification`]. C++ callers inspect
     /// `classification` first:
     ///
@@ -578,7 +650,37 @@ mod ffi {
             current_version: &str,
         ) -> UpdateCheckResult;
 
+        /// Check the first-party YAML Data Update Channel.
+        ///
+        /// Native CLI/GUI callers pass only the user's Update Check setting.
+        /// Rust owns the Pages URL, `yaml-data-v*` tag namespace, current
+        /// shippable file set, accepted schema ranges, and installed-file
+        /// enrichment. `enabled == false` returns `tag == 0` without HTTP.
+        fn yaml_data_check_update(enabled: bool) -> YamlUpdateStatusDto;
+
+        /// Install exactly the files approved from a prior first-party check.
+        ///
+        /// `approved` MUST be built from `yaml_data_check_update` result data
+        /// the user reviewed: `release_tag` plus each compatible file's
+        /// `(name, sha256)`. The Rust core re-fetches the live manifest and
+        /// refuses stale release tags or digest drift before touching disk.
+        fn yaml_data_apply_update(
+            enabled: bool,
+            approved: &ApprovedUpdateDto,
+        ) -> YamlUpdateReportDto;
+
+        /// Roll back every current first-party shippable YAML Data file.
+        ///
+        /// The Rust core owns the rollback target list. Per-file failures are
+        /// returned in `failed_files` / `failure_reasons`; a file with no
+        /// `.prev` generation is reported under `no_previous_version`.
+        fn yaml_data_rollback_update() -> YamlRollbackReportDto;
+
         /// Check for a published YAML data update.
+        ///
+        /// This is the lower-level compatibility seam. Native first-party
+        /// callers should prefer [`yaml_data_check_update`] so they do not
+        /// duplicate channel coordinates or schema metadata.
         ///
         /// `bundled_yaml_dir` is an explicit install-tree directory that
         /// contains the bundled shippable YAML files (e.g.
@@ -598,6 +700,10 @@ mod ffi {
 
         /// Install exactly the files the user approved at check-time.
         ///
+        /// This is the lower-level compatibility seam. Native first-party
+        /// callers should prefer [`yaml_data_apply_update`] so they do not
+        /// duplicate channel coordinates or schema metadata.
+        ///
         /// `request.enabled` mirrors the `Update Check: false` settings
         /// toggle; when `false`, no HTTP is issued and `error_message` is
         /// populated with a "update check disabled" diagnostic.
@@ -616,6 +722,11 @@ mod ffi {
         /// fallback; non-empty overrides it.
         fn yaml_apply_update(request: &YamlApplyRequestDto) -> YamlUpdateReportDto;
 
+        /// Roll back one caller-named YAML cache file.
+        ///
+        /// This lower-level compatibility seam remains available for tests
+        /// and unusual hosts. Native first-party callers should use
+        /// [`yaml_data_rollback_update`] so Rust owns the target list.
         fn yaml_rollback_update(file_name: &str) -> YamlRollbackOutcomeDto;
 
         /// Check for a published CLASSIC binary-release notification.

@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 357,
-    "current_total": 357,
-    "matched": 357,
+    "contract_total": 361,
+    "current_total": 361,
+    "matched": 361,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2409,6 +2409,30 @@
       "reason": "-"
     },
     {
+      "id": "fea7ac727c06be80",
+      "rustSymbol": "yaml_data_apply_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6332111bd05c50fe",
+      "rustSymbol": "yaml_data_check_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "621b9554c0305916",
+      "rustSymbol": "yaml_data_rollback_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "9b1acfc60be56622",
       "rustSymbol": "yaml_rollback_update",
       "kind": "function",
@@ -2459,6 +2483,14 @@
     {
       "id": "c7d8aa1ee5aed27e",
       "rustSymbol": "YamlRollbackOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6e14533e9d595fd3",
+      "rustSymbol": "YamlRollbackReportDto",
       "kind": "struct",
       "bridgeModule": "update",
       "status": "matched",

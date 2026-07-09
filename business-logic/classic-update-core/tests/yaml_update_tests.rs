@@ -22,6 +22,7 @@
 //!   covered at unit level in this module via small direct calls.
 
 use classic_settings_core::{SchemaCompat, SchemaVersion};
+use classic_update_core::yaml_update::check_yaml_data_update_with;
 use classic_update_core::{
     ApprovedUpdate, ClientSchemaSet, FileInstallOutcome, GithubClient, MAX_MANIFEST_VERSION,
     UpdateCheckConfig, UpdateError, YamlManifest, YamlManifestFile, YamlUpdateStatus,
@@ -444,6 +445,52 @@ async fn check_disabled_short_circuits_without_http() {
     .await
     .unwrap();
     assert!(matches!(status, YamlUpdateStatus::Disabled));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn check_yaml_data_update_with_uses_first_party_schema_entries() {
+    let mut server = mockito::Server::new_async().await;
+    let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());
+    let manifest_body = format!(
+        r#"{{
+  "manifest_version": 1,
+  "release_tag": "yaml-data-v2026.04.17",
+  "published_at": "2026-04-17T12:00:00Z",
+  "files": [
+    {{
+      "name": "CLASSIC Main.yaml",
+      "schema_version": "2.1",
+      "sha256": "{}",
+      "size_bytes": 7,
+      "download_url": "https://github.com/owner/repo/releases/download/yaml-data-v2026.04.17/CLASSIC%20Main.yaml"
+    }}
+  ]
+}}"#,
+        "c".repeat(64)
+    );
+    let _pages_mock = server
+        .mock("GET", "/yaml-data/manifest-latest.json")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(manifest_body)
+        .create_async()
+        .await;
+
+    let client = tokenless_client(&server.url());
+    let status = check_yaml_data_update_with(&client, &pages_url, UpdateCheckConfig::enabled())
+        .await
+        .expect("first-party YAML Data check should classify mocked manifest");
+
+    match status {
+        YamlUpdateStatus::UpdateAvailable {
+            compatible_files, ..
+        } => {
+            assert_eq!(compatible_files.len(), 1);
+            assert_eq!(compatible_files[0].name, "CLASSIC Main.yaml");
+            assert_eq!(compatible_files[0].schema_version, "2.1");
+        }
+        other => panic!("expected first-party check to use Main schema 2.x, got {other:?}"),
+    }
 }
 
 // ---------------------------------------------------------------------------

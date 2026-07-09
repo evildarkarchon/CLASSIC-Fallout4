@@ -2,14 +2,13 @@
 //
 // Catch2 bridge tests for the YAML update-delivery FFI surface.
 //
-// These exercises target `classic::update::yaml_check_update`,
-// `yaml_apply_update`, and `yaml_rollback_update` — the three entry points
-// added by the yaml-update-delivery change. The Rust-side unit tests in
-// `cpp-bindings/classic-cpp-bridge/src/update.rs` already cover the
-// `Disabled` short-circuit and the `NoPreviousVersion` rollback via the
-// same native functions, but the tests here prove the full FFI round-trip
-// works end to end: C++ builds the input DTO, calls through CXX, and
-// reads the discriminated output DTO back.
+// These exercises target the first-party `classic::update::yaml_data_*`
+// entry points used by native callers plus the lower-level generic
+// `yaml_*` compatibility functions retained by the yaml-update-delivery
+// change. The Rust-side unit tests in
+// `cpp-bindings/classic-cpp-bridge/src/update.rs` cover the same DTO
+// mapping, but the tests here prove the full FFI round-trip works end to
+// end from C++.
 //
 // This translation unit only runs when the bridge target is linked in
 // (see `classic-cli/CMakeLists.txt`). Invoke via
@@ -22,12 +21,14 @@
 
 #include "classic_cxx_bridge/update.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <string>
 #include <system_error>
+#include <vector>
 
 namespace {
 
@@ -37,7 +38,6 @@ namespace fs = std::filesystem;
 /// `cpp-bindings/classic-cpp-bridge/src/update.rs`. Keep in sync when
 /// the bridge adds a new status case.
 constexpr std::uint32_t kTagDisabled = 0u;
-constexpr std::uint32_t kTagError = 4u;
 
 rust::Vec<classic::update::YamlClientSchemaEntryDto> make_entries() {
     rust::Vec<classic::update::YamlClientSchemaEntryDto> entries;
@@ -101,6 +101,16 @@ TEST_CASE("yaml_check_update returns Disabled when enabled=false", "[bridge][upd
     REQUIRE(status.incompatible_files.empty());
 }
 
+TEST_CASE("yaml_data_check_update returns Disabled when enabled=false",
+          "[bridge][update][yaml]") {
+    auto status = classic::update::yaml_data_check_update(/*enabled=*/false);
+
+    REQUIRE(status.tag == kTagDisabled);
+    REQUIRE(std::string(status.error_message).empty());
+    REQUIRE(status.compatible_files.empty());
+    REQUIRE(status.incompatible_files.empty());
+}
+
 TEST_CASE("yaml_rollback_update on unknown file does not error",
           "[bridge][update][yaml]") {
     // The yaml-cache dir may not be populated on this machine; rollback
@@ -116,6 +126,25 @@ TEST_CASE("yaml_rollback_update on unknown file does not error",
     // produces a Generic error — still acceptable; the guard here is
     // only against a panic reaching C++.
     SUCCEED("yaml_rollback_update FFI round-trip produced a valid outcome");
+}
+
+TEST_CASE("yaml_data_rollback_update covers first-party shippable files",
+          "[bridge][update][yaml]") {
+    const auto report = classic::update::yaml_data_rollback_update();
+    std::vector<std::string> names;
+    for (const auto& fileName : report.rolled_back) {
+        names.emplace_back(fileName);
+    }
+    for (const auto& fileName : report.no_previous_version) {
+        names.emplace_back(fileName);
+    }
+    for (const auto& fileName : report.failed_files) {
+        names.emplace_back(fileName);
+    }
+
+    REQUIRE(std::find(names.begin(), names.end(), "CLASSIC Main.yaml") != names.end());
+    REQUIRE(std::find(names.begin(), names.end(), "CLASSIC Fallout4.yaml") != names.end());
+    REQUIRE(report.failed_files.size() == report.failure_reasons.size());
 }
 
 TEST_CASE("run_check_yaml_updates reports disabled setting without failing",

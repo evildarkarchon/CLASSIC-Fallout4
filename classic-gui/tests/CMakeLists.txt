@@ -184,9 +184,10 @@ add_classic_gui_qt_test(classic-gui-test-scanworker-cancellation
 )
 link_classic_gui_rust_bridge(classic-gui-test-scanworker-cancellation)
 
-# yaml-update-delivery bridge round-trip (Section 8.4 GUI counterpart).
-# Exercises `classic::update::yaml_check_update` + `yaml_rollback_update`
-# through the same CXX header the GUI controllers in Section 12 will use.
+# YAML Data bridge round-trip for the GUI counterpart.
+# Exercises the first-party `classic::update::yaml_data_*` helpers through
+# the same CXX header the GUI controllers use, while the test file also keeps
+# a small lower-level compatibility smoke check.
 add_classic_gui_qt_test(classic-gui-test-yaml-update-bridge
     test_yaml_update_bridge.cpp
 )

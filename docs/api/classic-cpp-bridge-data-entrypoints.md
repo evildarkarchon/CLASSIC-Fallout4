@@ -7,6 +7,7 @@ Contributor-facing documentation for the active C++ bridge entry points in:
 - [`cpp-bindings/classic-cpp-bridge/src/files.rs`](../../cpp-bindings/classic-cpp-bridge/src/files.rs)
 - [`cpp-bindings/classic-cpp-bridge/src/database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs)
 - [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs)
+- [`cpp-bindings/classic-cpp-bridge/src/update.rs`](../../cpp-bindings/classic-cpp-bridge/src/update.rs)
 
 This page is the companion to [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md). It documents the current CXX FFI surface that active C++ callers use for YAML operations, config loading, file utilities, FormID database access, crash-log scanning, and Papyrus monitoring.
 
@@ -92,6 +93,26 @@ It owns:
 - small standalone helpers for file similarity, encoding-aware reads and writes, and AUTOSCAN report files
 
 Some report-file helpers are bridge-local convenience code, not direct crate re-exports.
+
+## `src/update.rs` -> `classic::update`
+
+This file exposes the native update bridge for binary update compatibility, app-update notifications, and YAML Data updates.
+
+For YAML Data, native CLI/GUI callers use the first-party helpers:
+
+- `yaml_data_check_update(enabled) -> YamlUpdateStatusDto`
+- `yaml_data_apply_update(enabled, approved) -> YamlUpdateReportDto`
+- `yaml_data_rollback_update() -> YamlRollbackReportDto`
+
+These helpers forward to `classic_update_core::yaml_update` first-party functions. Rust owns the Pages URL shape, `yaml-data-v*` tag namespace, shippable YAML file list, accepted schema ranges, installed-file enrichment, and rollback targets. The bridge only passes the user's `Update Check` policy bit and the reviewed `ApprovedUpdateDto` identity captured from a prior check.
+
+The lower-level compatibility helpers remain public:
+
+- `yaml_check_update(pages_url, tag_prefix, entries, enabled, bundled_yaml_dir)`
+- `yaml_apply_update(request)`
+- `yaml_rollback_update(file_name)`
+
+Use the generic helpers only for tests or unusual hosts that intentionally need explicit channel coordinates or caller-built schema entries. Native first-party code should not call them.
 
 ## `src/database.rs` -> `classic::database`
 

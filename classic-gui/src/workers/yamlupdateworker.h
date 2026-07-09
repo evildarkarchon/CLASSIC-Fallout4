@@ -60,8 +60,8 @@ Q_DECLARE_METATYPE(YamlCheckResult)
 Q_DECLARE_METATYPE(YamlApplyResult)
 Q_DECLARE_METATYPE(YamlRollbackResult)
 
-/// Background worker that runs the three `classic::update::yaml_*` bridge
-/// calls off the Qt UI thread.
+/// Background worker that runs the first-party YAML Data bridge calls off the
+/// Qt UI thread.
 ///
 /// Why it exists: the bridge calls block on the shared Tokio runtime and
 /// can stall for tens of seconds on slow networks (Pages 5s + API 30s +
@@ -77,27 +77,22 @@ public:
     explicit YamlUpdateWorker(QObject* parent = nullptr);
 
 public slots:
-    /// Run `classic::update::yaml_check_update`. Emits `checkFinished`.
+    /// Run `classic::update::yaml_data_check_update`. Emits `checkFinished`.
     ///
-    /// The worker synthesizes the client schema entry set internally
-    /// (matching `buildYamlSchemaEntries` in settingsdialog.cpp) so the
-    /// UI slot only needs to pass the on/off setting.
+    /// Rust owns the first-party channel recipe and schema metadata, so the UI
+    /// slot only needs to pass the on/off setting.
     void doCheck(bool enabled);
 
-    /// Run `classic::update::yaml_apply_update` against a reviewed
+    /// Run `classic::update::yaml_data_apply_update` against a reviewed
     /// decision. Emits `applyFinished`.
     void doApply(bool enabled, const QString& approvedReleaseTag,
                  const QStringList& approvedFileNames,
                  const QStringList& approvedFileSha256);
 
-    /// Run `classic::update::yaml_rollback_update` once per file in
-    /// `fileNames`, aggregating the per-file outcomes into a single
-    /// `YamlRollbackResult`. The bridge is graceful for files without a
-    /// `.prev` sibling, so callers can pass the full list of known
-    /// shippable files and let the worker sort out which ones actually
-    /// have something to undo. Emits `rollbackFinished` with the
-    /// aggregate result.
-    void doRollback(const QStringList& fileNames);
+    /// Run `classic::update::yaml_data_rollback_update`, letting Rust expand
+    /// the current first-party shippable file list. Emits `rollbackFinished`
+    /// with the aggregate result.
+    void doRollback();
 
 signals:
     void checkFinished(YamlCheckResult result);

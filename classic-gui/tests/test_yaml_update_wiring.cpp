@@ -2,7 +2,7 @@
 // settings-dialog controller wiring for the YAML data-update flow.
 //
 // Why this is a source-inspection test, not a runtime test:
-//   - The live `yaml_check_update` / `yaml_apply_update` paths hit GitHub
+//   - The live `yaml_data_check_update` / `yaml_data_apply_update` paths hit GitHub
 //     Pages over HTTPS; we already cover the FFI round-trip in
 //     `test_yaml_update_bridge.cpp` (bridge reachability) and in the
 //     Rust-side `update.rs` unit tests (business-logic correctness).
@@ -30,10 +30,9 @@ private slots:
     // against a future refactor that, say, folds apply into the check handler.
     void settings_dialog_wires_yaml_update_buttons_to_dedicated_slots();
 
-    // 12.1: the check slot must call the bridge with the compile-time Pages
-    // URL and tag prefix. Protects against accidental runtime configuration
-    // of credentials/endpoints.
-    void settings_dialog_check_slot_calls_bridge_with_pinned_pages_url();
+    // 12.1: the check slot must call the first-party bridge helper. Protects
+    // against reintroducing native Pages URL / tag prefix / schema builders.
+    void settings_dialog_check_slot_calls_first_party_bridge_helper();
 
     // 12.4: the check slot must forward `Update Check: false` by passing
     // `m_chkUpdateCheck->isChecked()` as the `enabled` argument. The bridge
@@ -70,10 +69,9 @@ private slots:
     // regardless of user opt-out.
     void cli_handler_reads_update_check_setting_and_forwards_to_bridge();
 
-    // The native YAML update entry builders must stay in sync with
-    // `classic_config_core::client_schemas`; otherwise C++ callers reject a
-    // current data release before Rust can install it.
-    void native_yaml_update_builders_accept_current_main_schema();
+    // Native callers must use first-party bridge helpers instead of duplicating
+    // the channel URL, tag namespace, shippable file list, or schema ranges.
+    void native_yaml_update_callers_use_first_party_bridge_helpers();
 };
 
 namespace {
@@ -88,12 +86,23 @@ QString readFile(const QString& relativePath)
     return QString::fromUtf8(file.readAll());
 }
 
-bool builderAcceptsCurrentMainSchema(const QString& source)
+bool containsNativeYamlRecipeDuplication(const QString& source)
 {
-    const QRegularExpression mainSchema(
-        QStringLiteral(R"(main\.name\s*=\s*"CLASSIC Main\.yaml"\s*;\s*main\.accepted_major\s*=\s*2u\s*;)"),
-        QRegularExpression::DotMatchesEverythingOption);
-    return mainSchema.match(source).hasMatch();
+    const QStringList forbidden{
+        QStringLiteral("YamlClientSchemaEntryDto"),
+        QStringLiteral("kYamlPagesUrl"),
+        QStringLiteral("kYamlTagPrefix"),
+        QStringLiteral("https://evildarkarchon.github.io/CLASSIC-Fallout4/yaml-data/manifest-latest.json"),
+        QStringLiteral("\"yaml-data-v\""),
+        QStringLiteral("accepted_major"),
+        QStringLiteral("accepted_minimum_minor"),
+    };
+    for (const auto& needle : forbidden) {
+        if (source.contains(needle)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 } // namespace
@@ -118,7 +127,7 @@ void YamlUpdateWiringTests::settings_dialog_wires_yaml_update_buttons_to_dedicat
              "Rollback button should connect to onRollbackYamlUpdate");
 }
 
-void YamlUpdateWiringTests::settings_dialog_check_slot_calls_bridge_with_pinned_pages_url()
+void YamlUpdateWiringTests::settings_dialog_check_slot_calls_first_party_bridge_helper()
 {
     // Post-async-refactor: the bridge call itself lives in the worker
     // translation unit. The dialog dispatches to the worker via
@@ -127,16 +136,10 @@ void YamlUpdateWiringTests::settings_dialog_check_slot_calls_bridge_with_pinned_
     const QString worker = readFile(QStringLiteral("src/workers/yamlupdateworker.cpp"));
     QVERIFY2(!worker.isEmpty(), "yamlupdateworker.cpp must be readable");
 
-    QVERIFY2(worker.contains(QStringLiteral("kYamlPagesUrl")),
-             "YamlUpdateWorker should pin the Pages URL in a named constant");
-    QVERIFY2(worker.contains(QStringLiteral("https://evildarkarchon.github.io/CLASSIC-Fallout4/")),
-             "Pinned Pages URL must match the repo owner/repo hard-coded in the Rust bridge");
-    QVERIFY2(worker.contains(QStringLiteral("kYamlTagPrefix")),
-             "YamlUpdateWorker should pin the tag prefix in a named constant");
-    QVERIFY2(worker.contains(QStringLiteral("\"yaml-data-v\"")),
-             "Tag prefix should match the dedicated YAML release namespace");
-    QVERIFY2(worker.contains(QStringLiteral("classic::update::yaml_check_update(")),
-             "YamlUpdateWorker::doCheck should call the bridge's yaml_check_update");
+    QVERIFY2(worker.contains(QStringLiteral("classic::update::yaml_data_check_update(")),
+             "YamlUpdateWorker::doCheck should call the first-party yaml_data_check_update bridge");
+    QVERIFY2(!containsNativeYamlRecipeDuplication(worker),
+             "YamlUpdateWorker must not duplicate Pages URL, tag prefix, or schema entries");
 
     const QString dialog = readFile(QStringLiteral("src/app/settingsdialog.cpp"));
     QVERIFY2(!dialog.isEmpty(), "settingsdialog.cpp must be readable");
@@ -161,16 +164,13 @@ void YamlUpdateWiringTests::settings_dialog_check_slot_forwards_update_check_set
     QVERIFY2(invoke.match(dialog).hasMatch(),
              "onCheckForYamlUpdates must forward the Update Check setting as the bool arg to doCheck");
 
-    // And the worker must actually pass `enabled` through to the bridge.
-    // The bridge now takes an additional trailing `bundled_yaml_dir` arg
-    // after `enabled`; this regex accepts any trailing args (`rust::Str("")`
-    // for the native GUI exe) so the wiring check is about `enabled` being
-    // forwarded, not about the exact shape of the final argument list.
+    // And the worker must actually pass `enabled` through to the first-party
+    // bridge helper.
     const QString worker = readFile(QStringLiteral("src/workers/yamlupdateworker.cpp"));
     const QRegularExpression call(
-        QStringLiteral(R"(yaml_check_update\(\s*kYamlPagesUrl\s*,\s*kYamlTagPrefix\s*,\s*entries\s*,\s*enabled\s*[,)])"));
+        QStringLiteral(R"(yaml_data_check_update\(\s*enabled\s*\))"));
     QVERIFY2(call.match(worker).hasMatch(),
-             "YamlUpdateWorker::doCheck must pass the enabled flag through to yaml_check_update");
+             "YamlUpdateWorker::doCheck must pass the enabled flag through to yaml_data_check_update");
 }
 
 void YamlUpdateWiringTests::settings_dialog_apply_slot_confirms_before_install()
@@ -195,8 +195,8 @@ void YamlUpdateWiringTests::settings_dialog_apply_slot_confirms_before_install()
 
     // And the worker must call the bridge with the approved decision.
     const QString worker = readFile(QStringLiteral("src/workers/yamlupdateworker.cpp"));
-    QVERIFY2(worker.contains(QStringLiteral("classic::update::yaml_apply_update(")),
-             "YamlUpdateWorker::doApply should call the yaml_apply_update bridge");
+    QVERIFY2(worker.contains(QStringLiteral("classic::update::yaml_data_apply_update(")),
+             "YamlUpdateWorker::doApply should call the first-party yaml_data_apply_update bridge");
     QVERIFY2(worker.contains(QStringLiteral("approvedTag")) &&
                  worker.contains(QStringLiteral("approvedNames")),
              "YamlUpdateWorker::doApply must forward the approved release tag and file names");
@@ -222,12 +222,16 @@ void YamlUpdateWiringTests::settings_dialog_rollback_slot_calls_bridge_and_handl
 
     // And the worker does the actual bridge call + categorization.
     const QString worker = readFile(QStringLiteral("src/workers/yamlupdateworker.cpp"));
-    QVERIFY2(worker.contains(QStringLiteral("classic::update::yaml_rollback_update(")),
-             "YamlUpdateWorker::doRollback should call the yaml_rollback_update bridge");
+    QVERIFY2(worker.contains(QStringLiteral("classic::update::yaml_data_rollback_update(")),
+             "YamlUpdateWorker::doRollback should call the first-party yaml_data_rollback_update bridge");
     QVERIFY2(worker.contains(QStringLiteral("rolled_back")),
-             "YamlUpdateWorker::doRollback should inspect the rolled_back field of the outcome");
-    QVERIFY2(worker.contains(QStringLiteral("error_message")),
-             "YamlUpdateWorker::doRollback should inspect the error_message field of the outcome");
+             "YamlUpdateWorker::doRollback should inspect rolled_back results");
+    QVERIFY2(worker.contains(QStringLiteral("no_previous_version")),
+             "YamlUpdateWorker::doRollback should inspect no_previous_version results");
+    QVERIFY2(worker.contains(QStringLiteral("failed_files")),
+             "YamlUpdateWorker::doRollback should inspect failed_files results");
+    QVERIFY2(worker.contains(QStringLiteral("failure_reasons")),
+             "YamlUpdateWorker::doRollback should inspect failure_reasons results");
 }
 
 void YamlUpdateWiringTests::settings_dialog_apply_button_starts_disabled_and_re_enables_on_update()
@@ -262,6 +266,8 @@ void YamlUpdateWiringTests::cli_registers_yaml_update_flags_and_dispatches_befor
              "CLI should register a --check-yaml-updates flag");
     QVERIFY2(argsSource.contains(QStringLiteral("--apply-yaml-updates")),
              "CLI should register an --apply-yaml-updates flag");
+    QVERIFY2(argsSource.contains(QStringLiteral("--rollback-yaml-updates")),
+             "CLI should register a --rollback-yaml-updates flag");
 
     const QString mainSource = readFile(QStringLiteral("../classic-cli/src/main.cpp"));
     QVERIFY2(!mainSource.isEmpty(), "classic-cli/src/main.cpp must be readable");
@@ -288,32 +294,41 @@ void YamlUpdateWiringTests::cli_handler_reads_update_check_setting_and_forwards_
              "CLI handler should use a dedicated setting-reader helper");
 
     // The `enabled` variable derived from the setting must be forwarded to
-    // yaml_check_update. The bridge now takes an additional trailing
-    // `bundled_yaml_dir` arg after `enabled`, so we match `enabled` as a
-    // positional arg followed by anything (another arg, then the closing
-    // paren) instead of pinning it to the last slot.
+    // the first-party YAML Data check helper.
     const QRegularExpression forward(
-        QStringLiteral(R"(yaml_check_update\([^)]*\benabled\b[^)]*\))"));
+        QStringLiteral(R"(yaml_data_check_update\(\s*enabled\s*\))"));
     QVERIFY2(forward.match(handlerSource).hasMatch(),
-             "CLI handler must pass the Update Check setting as the `enabled` arg of yaml_check_update");
+             "CLI handler must pass the Update Check setting to yaml_data_check_update");
 }
 
-void YamlUpdateWiringTests::native_yaml_update_builders_accept_current_main_schema()
+void YamlUpdateWiringTests::native_yaml_update_callers_use_first_party_bridge_helpers()
 {
     const QString cliSource = readFile(QStringLiteral("../classic-cli/src/yaml_update.cpp"));
     QVERIFY2(!cliSource.isEmpty(), "classic-cli/src/yaml_update.cpp must be readable");
-    QVERIFY2(builderAcceptsCurrentMainSchema(cliSource),
-             "CLI YAML update entries must accept CLASSIC Main.yaml schema_version 2.x");
+    QVERIFY2(cliSource.contains(QStringLiteral("classic::update::yaml_data_check_update(")),
+             "CLI check path should call yaml_data_check_update");
+    QVERIFY2(cliSource.contains(QStringLiteral("classic::update::yaml_data_apply_update(")),
+             "CLI apply path should call yaml_data_apply_update");
+    QVERIFY2(cliSource.contains(QStringLiteral("classic::update::yaml_data_rollback_update(")),
+             "CLI rollback path should call yaml_data_rollback_update");
+    QVERIFY2(!containsNativeYamlRecipeDuplication(cliSource),
+             "CLI must not duplicate YAML Data channel constants or schema entries");
 
     const QString dialogSource = readFile(QStringLiteral("src/app/settingsdialog.cpp"));
     QVERIFY2(!dialogSource.isEmpty(), "settingsdialog.cpp must be readable");
-    QVERIFY2(builderAcceptsCurrentMainSchema(dialogSource),
-             "SettingsDialog YAML update entries must accept CLASSIC Main.yaml schema_version 2.x");
+    QVERIFY2(!containsNativeYamlRecipeDuplication(dialogSource),
+             "SettingsDialog must not duplicate YAML Data channel constants or schema entries");
 
     const QString workerSource = readFile(QStringLiteral("src/workers/yamlupdateworker.cpp"));
     QVERIFY2(!workerSource.isEmpty(), "yamlupdateworker.cpp must be readable");
-    QVERIFY2(builderAcceptsCurrentMainSchema(workerSource),
-             "YamlUpdateWorker YAML update entries must accept CLASSIC Main.yaml schema_version 2.x");
+    QVERIFY2(workerSource.contains(QStringLiteral("classic::update::yaml_data_check_update(")),
+             "YamlUpdateWorker check path should call yaml_data_check_update");
+    QVERIFY2(workerSource.contains(QStringLiteral("classic::update::yaml_data_apply_update(")),
+             "YamlUpdateWorker apply path should call yaml_data_apply_update");
+    QVERIFY2(workerSource.contains(QStringLiteral("classic::update::yaml_data_rollback_update(")),
+             "YamlUpdateWorker rollback path should call yaml_data_rollback_update");
+    QVERIFY2(!containsNativeYamlRecipeDuplication(workerSource),
+             "YamlUpdateWorker must not duplicate YAML Data channel constants or schema entries");
 }
 
 QTEST_MAIN(YamlUpdateWiringTests)

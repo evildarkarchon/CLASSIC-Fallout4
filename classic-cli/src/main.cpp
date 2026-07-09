@@ -56,12 +56,14 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    // yaml-update-delivery Section 12.3: data-update flags short-circuit the
-    // scan pipeline. They are mutually exclusive with each other and with a
-    // normal scan invocation; if combined, --apply takes precedence because
-    // it implies --check.
+    // YAML Data update actions short-circuit the scan pipeline. They are
+    // standalone actions; if combined, --apply takes precedence because it
+    // implies --check, then rollback wins over a plain check.
     if (args.apply_yaml_updates) {
         return run_apply_yaml_updates(args);
+    }
+    if (args.rollback_yaml_updates) {
+        return run_rollback_yaml_updates(args);
     }
     if (args.check_yaml_updates) {
         return run_check_yaml_updates(args);

@@ -58,6 +58,13 @@ fn yaml_check_update_disabled_short_circuits() {
 }
 
 #[test]
+fn yaml_data_check_update_disabled_short_circuits() {
+    let dto = yaml_data_check_update(false);
+    assert_eq!(dto.tag, TAG_DISABLED);
+    assert!(dto.error_message.is_empty());
+}
+
+#[test]
 fn yaml_rollback_update_returns_no_prev_for_unknown_file() {
     let dto = yaml_rollback_update("__cpp_bridge_definitely_nonexistent_file_xyzzy__.yaml");
     // Either the rollback ran and found nothing to roll back, or the
@@ -258,4 +265,41 @@ fn yaml_apply_update_accepts_structured_request_and_short_circuits_when_disabled
     assert!(dto.installed.is_empty());
     assert!(dto.failed.is_empty());
     assert!(dto.error_message.starts_with("update check disabled:"));
+}
+
+#[test]
+fn yaml_data_apply_update_short_circuits_when_disabled() {
+    let approved = ffi::ApprovedUpdateDto {
+        release_tag: "yaml-data-v-test".into(),
+        file_names: vec!["CLASSIC Main.yaml".into()],
+        file_sha256: vec!["deadbeef".into()],
+    };
+
+    let dto = yaml_data_apply_update(false, &approved);
+    assert!(dto.installed.is_empty());
+    assert!(dto.failed.is_empty());
+    assert!(dto.error_message.starts_with("update check disabled:"));
+}
+
+#[test]
+fn yaml_data_rollback_update_reports_first_party_targets() {
+    let dto = yaml_data_rollback_update();
+    let mut names = Vec::new();
+    names.extend(dto.rolled_back.iter().cloned());
+    names.extend(dto.no_previous_version.iter().cloned());
+    names.extend(dto.failed_files.iter().cloned());
+
+    assert!(
+        names.contains(&"CLASSIC Main.yaml".to_string()),
+        "bulk rollback must include CLASSIC Main.yaml, got {names:?}"
+    );
+    assert!(
+        names.contains(&"CLASSIC Fallout4.yaml".to_string()),
+        "bulk rollback must include CLASSIC Fallout4.yaml, got {names:?}"
+    );
+    assert_eq!(
+        dto.failed_files.len(),
+        dto.failure_reasons.len(),
+        "failure vectors must stay parallel"
+    );
 }

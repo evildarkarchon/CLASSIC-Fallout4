@@ -56,6 +56,8 @@ CliArgs parse_args(int argc, char* argv[]) {
                  "Check for CLASSIC data-file updates and print the result (no install)");
     app.add_flag("--apply-yaml-updates", args.apply_yaml_updates,
                  "Prompt for and apply any available CLASSIC data-file updates");
+    app.add_flag("--rollback-yaml-updates", args.rollback_yaml_updates,
+                 "Roll back installed CLASSIC data files to their previous cached generation");
     app.add_flag("--check-app-update", args.check_app_update,
                  "Check the CLASSIC app-update notification manifest and print the result");
 

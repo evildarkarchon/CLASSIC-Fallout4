@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T02:08:33Z",
+  "generated_at_utc": "2026-07-09T02:50:16Z",
   "schema_version": 1,
   "entries": [
     {
@@ -5983,6 +5983,56 @@
       }
     },
     {
+      "id": "fea7ac727c06be80",
+      "rustSymbol": "yaml_data_apply_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "enabled",
+            "type": "bool"
+          },
+          {
+            "name": "approved",
+            "type": "&ApprovedUpdateDto"
+          }
+        ],
+        "returnType": "YamlUpdateReportDto"
+      }
+    },
+    {
+      "id": "6332111bd05c50fe",
+      "rustSymbol": "yaml_data_check_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "enabled",
+            "type": "bool"
+          }
+        ],
+        "returnType": "YamlUpdateStatusDto"
+      }
+    },
+    {
+      "id": "621b9554c0305916",
+      "rustSymbol": "yaml_data_rollback_update",
+      "kind": "function",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [],
+        "returnType": "YamlRollbackReportDto"
+      }
+    },
+    {
       "id": "9b1acfc60be56622",
       "rustSymbol": "yaml_rollback_update",
       "kind": "function",
@@ -6180,6 +6230,32 @@
         {
           "name": "error_message",
           "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "6e14533e9d595fd3",
+      "rustSymbol": "YamlRollbackReportDto",
+      "kind": "struct",
+      "bridgeModule": "update",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/update.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "rolled_back",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "no_previous_version",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "failed_files",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "failure_reasons",
+          "type": "Vec<String>"
         }
       ]
     },

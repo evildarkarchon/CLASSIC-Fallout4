@@ -34,6 +34,7 @@
 //!   Destination` was added as an optional default setting. Current clients
 //!   still accept 2.0 because the key is not required to parse or scan.
 
+use crate::shippable::ShippableFile;
 use classic_settings_core::SchemaCompat;
 
 /// Schema range the client accepts for `CLASSIC Main.yaml` (and any future
@@ -44,3 +45,33 @@ pub const MAIN_YAML: SchemaCompat = SchemaCompat::new(2, 0);
 /// parallel per-game shippable file under
 /// `CLASSIC Data/databases/CLASSIC <Game>.yaml`).
 pub const GAME_FALLOUT4_YAML: SchemaCompat = SchemaCompat::new(1, 0);
+
+/// One canonical shippable YAML file plus the schema range this client accepts.
+///
+/// This is the metadata shape consumed by first-party YAML Data update checks:
+/// the update channel needs the same file names and compatibility ranges that
+/// runtime YAML loading uses, without native callers duplicating either value.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ShippableSchemaEntry {
+    /// File descriptor used by the shippable YAML loader.
+    pub file: ShippableFile,
+    /// Schema range accepted by this client for `file`.
+    pub accepted: SchemaCompat,
+}
+
+/// Returns the authoritative first-party shippable YAML files and schema ranges.
+///
+/// The order is stable for diagnostics and rollback summaries, but callers
+/// should still treat the returned entries as a set keyed by `file.file_name`.
+pub fn shippable_schema_entries() -> Vec<ShippableSchemaEntry> {
+    vec![
+        ShippableSchemaEntry {
+            file: ShippableFile::main(),
+            accepted: MAIN_YAML,
+        },
+        ShippableSchemaEntry {
+            file: ShippableFile::game("Fallout4"),
+            accepted: GAME_FALLOUT4_YAML,
+        },
+    ]
+}

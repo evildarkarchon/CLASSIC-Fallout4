@@ -974,3 +974,53 @@ fn client_schema_bounds_reject_client_above_max() {
     let err = check_client_schema_bounds(&entry, &ce).unwrap_err();
     assert!(err.contains("above"), "got: {err}");
 }
+
+#[test]
+fn yaml_data_pages_url_uses_client_owner_and_repo() {
+    let client =
+        GithubClient::with_base_url("test-owner", "test-repo", "http://localhost", None).unwrap();
+
+    assert_eq!(
+        build_yaml_data_pages_url(&client),
+        "https://test-owner.github.io/test-repo/yaml-data/manifest-latest.json"
+    );
+}
+
+#[test]
+fn yaml_data_tag_prefix_matches_publish_namespace() {
+    assert_eq!(YAML_DATA_TAG_PREFIX, "yaml-data-v");
+}
+
+#[test]
+fn yaml_data_client_schema_set_uses_config_metadata() {
+    let set = yaml_data_client_schema_set();
+
+    let main = set.get("CLASSIC Main.yaml").unwrap();
+    assert_eq!(
+        main.accepted,
+        classic_config_core::client_schemas::MAIN_YAML
+    );
+    assert!(main.installed.is_none());
+    assert!(main.installed_sha256.is_none());
+
+    let fallout4 = set.get("CLASSIC Fallout4.yaml").unwrap();
+    assert_eq!(
+        fallout4.accepted,
+        classic_config_core::client_schemas::GAME_FALLOUT4_YAML
+    );
+    assert!(fallout4.installed.is_none());
+    assert!(fallout4.installed_sha256.is_none());
+
+    assert_eq!(set.len(), 2);
+}
+
+#[test]
+fn yaml_data_rollback_targets_follow_config_metadata() {
+    assert_eq!(
+        yaml_data_rollback_targets(),
+        vec![
+            "CLASSIC Main.yaml".to_string(),
+            "CLASSIC Fallout4.yaml".to_string()
+        ]
+    );
+}

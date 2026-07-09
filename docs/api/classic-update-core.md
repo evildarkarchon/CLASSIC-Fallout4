@@ -48,6 +48,7 @@ This crate exposes four public modules plus a small root-level convenience surfa
 - `UpdateError` - crate-wide error enum re-export
 - `GithubClient`, `GithubRelease`, `GithubAsset` - GitHub API types re-exported from `github`
 - `AppNotificationDisplay`, `AppNotificationManifest`, `Classification`, `NotificationStatus`, `check_app_notification`, `check_app_notification_with`, `classify`, `fetch_app_notification_manifest`, `fetch_via_releases_fallback`, `build_app_notification_pages_url` - app-update notification surface re-exported from `notification`
+- `YamlManifest`, `YamlManifestFile`, `YamlUpdateStatus`, `YamlUpdateReport`, `ApprovedUpdate`, and lower-level generic `check_yaml_update`, `apply_yaml_update_with_decision`, `rollback_yaml_update` - YAML Data compatibility surface re-exported from `yaml_update`; first-party helpers live on the public `yaml_update` module
 
 ## Public modules
 
@@ -86,6 +87,30 @@ Contributor note:
 - there are no public traits in this crate today
 - the `notification` module is implemented in [`src/notification.rs`](../../business-logic/classic-update-core/src/notification.rs); the shared Pages-first + ETag helper it uses lives in [`src/manifest_fetch.rs`](../../business-logic/classic-update-core/src/manifest_fetch.rs)
 - almost all legacy GitHub-API behavior lives in [`src/github.rs`](../../business-logic/classic-update-core/src/github.rs); the module header flags it as compat-only
+
+### `yaml_update`
+
+YAML Data Update Channel: fetches the first-party YAML Data manifest from GitHub Pages (with ETag caching) or falls back to the `yaml-data-v*` Releases namespace, classifies compatible file updates, applies user-approved files atomically, and rolls back the current first-party shippable set. See [`yaml-update-delivery.md`](yaml-update-delivery.md) for the full cross-crate delivery contract.
+
+First-party helpers for native/product callers:
+
+- `check_yaml_data_update(client, config)` - first-party check; owns Pages URL, tag prefix, schema set, and installed-file enrichment
+- `check_yaml_data_update_with(client, pages_url, config)` - testable first-party check with an explicit Pages endpoint, while Rust still owns the tag prefix and schema set
+- `apply_yaml_data_update_with_decision(client, config, approved)` - first-party apply; keeps the approved-release and digest-staleness checks
+- `apply_yaml_data_update_with_decision_with(client, pages_url, config, approved)` - testable first-party apply with an explicit Pages endpoint
+- `rollback_yaml_data_update()` - first-party bulk rollback; returns one result per first-party shippable target so bridges can group rolled-back/no-previous/failure lists without duplicating the target list
+
+Lower-level compatibility helpers remain public for tests, unusual hosts, and Node/Python binding consumers:
+
+- `fetch_yaml_manifest(client, pages_url, tag_prefix, cache_dir)`
+- `check_yaml_update(client, pages_url, tag_prefix, current, config)`
+- `apply_yaml_update_with_decision(client, pages_url, tag_prefix, current, config, approved)`
+- `rollback_yaml_update(file_name)`
+
+Contributor note:
+
+- the first-party helpers derive the Pages URL from `GithubClient`, and derive shippable file names plus accepted schema ranges from `classic-config-core` metadata
+- native C++ callers should use the first-party CXX helpers backed by these Rust functions; do not duplicate the Pages URL, `yaml-data-v*` tag prefix, shippable file list, or schema ranges in CLI/GUI code
 
 ---
 

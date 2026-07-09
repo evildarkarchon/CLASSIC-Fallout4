@@ -53,6 +53,7 @@
 
 use crate::error::{Result, UpdateError};
 use crate::github::GithubClient;
+use classic_config_core::client_schemas;
 use classic_file_io_core::{
     FileHasher, FileIOError, RollbackOutcome as FsRollbackOutcome, install_atomic,
 };
@@ -69,6 +70,12 @@ use tokio::io::AsyncWriteExt;
 /// Highest `manifest_version` this client can parse. Bumped only when the
 /// manifest shape actually changes in a way existing clients cannot tolerate.
 pub const MAX_MANIFEST_VERSION: u32 = 1;
+
+/// GitHub Pages path segment for the first-party YAML Data manifest.
+const YAML_DATA_PAGES_PATH_SEGMENT: &str = "yaml-data/manifest-latest.json";
+
+/// Release tag prefix owned by the first-party YAML Data Update Channel.
+const YAML_DATA_TAG_PREFIX: &str = "yaml-data-v";
 
 // Pages-cache constants live in [`crate::manifest_fetch`] now that two
 // channels (yaml-data and app-notification) both fetch through the shared
@@ -1116,6 +1123,128 @@ impl UpdateCheckConfig {
         self.bundled_yaml_dir = Some(dir);
         self
     }
+}
+
+/// Build the canonical GitHub Pages URL for the first-party YAML Data manifest.
+///
+/// The owner and repository are read from `client`, which keeps forks and tests
+/// on the same channel shape without hard-coding the official repository in
+/// core update logic.
+fn build_yaml_data_pages_url(client: &GithubClient) -> String {
+    format!(
+        "https://{owner}.github.io/{repo}/{segment}",
+        owner = client.owner(),
+        repo = client.repo(),
+        segment = YAML_DATA_PAGES_PATH_SEGMENT,
+    )
+}
+
+/// Returns the current first-party YAML Data rollback target names.
+///
+/// This list is derived from `classic-config-core` shippable schema metadata,
+/// the same Rust-side source used to build update-check schema entries.
+fn yaml_data_rollback_targets() -> Vec<String> {
+    client_schemas::shippable_schema_entries()
+        .into_iter()
+        .map(|entry| entry.file.file_name)
+        .collect()
+}
+
+/// Builds the schema set for the first-party YAML Data Update Channel.
+///
+/// Installed versions are intentionally left unset here. The generic
+/// [`check_yaml_update`] enrichment step reads the cache and bundled files
+/// from disk so callers do not have to know how installed YAML Data state is
+/// represented.
+fn yaml_data_client_schema_set() -> ClientSchemaSet {
+    let mut set = ClientSchemaSet::new();
+    for entry in client_schemas::shippable_schema_entries() {
+        set.insert(entry.file.file_name, entry.accepted, None);
+    }
+    set
+}
+
+/// Check the first-party YAML Data Update Channel.
+///
+/// This is the product-level helper native callers should use. It owns the
+/// Pages URL shape, `yaml-data-v*` tag namespace, shippable file list, accepted
+/// schema ranges, and installed-file enrichment policy, then delegates the
+/// network/classification work to the generic lower-level update interface.
+pub async fn check_yaml_data_update(
+    client: &GithubClient,
+    config: UpdateCheckConfig,
+) -> Result<YamlUpdateStatus> {
+    let pages_url = build_yaml_data_pages_url(client);
+    check_yaml_data_update_with(client, &pages_url, config).await
+}
+
+/// Testable first-party YAML Data check with an explicit Pages URL.
+///
+/// Production callers should prefer [`check_yaml_data_update`]. This variant
+/// exists for integration tests and fork tooling that need to exercise the
+/// first-party schema/tag policy against a mock or alternate Pages endpoint
+/// while still keeping the tag prefix and shippable schema set in Rust.
+pub async fn check_yaml_data_update_with(
+    client: &GithubClient,
+    pages_url: &str,
+    config: UpdateCheckConfig,
+) -> Result<YamlUpdateStatus> {
+    let current = yaml_data_client_schema_set();
+    check_yaml_update(client, pages_url, YAML_DATA_TAG_PREFIX, &current, config).await
+}
+
+/// Apply an approved first-party YAML Data update decision.
+///
+/// The approved decision must come from a prior first-party check result the
+/// user reviewed. This helper owns the channel URL, tag prefix, and schema set,
+/// and keeps the existing stale-decision and digest-drift protections from
+/// [`apply_yaml_update_with_decision`].
+pub async fn apply_yaml_data_update_with_decision(
+    client: &GithubClient,
+    config: UpdateCheckConfig,
+    approved: &ApprovedUpdate,
+) -> Result<YamlUpdateReport> {
+    let pages_url = build_yaml_data_pages_url(client);
+    apply_yaml_data_update_with_decision_with(client, &pages_url, config, approved).await
+}
+
+/// Testable first-party YAML Data apply helper with an explicit Pages URL.
+///
+/// Like [`check_yaml_data_update_with`], this keeps first-party policy in Rust
+/// while allowing tests to point the Pages leg at a mock server.
+pub async fn apply_yaml_data_update_with_decision_with(
+    client: &GithubClient,
+    pages_url: &str,
+    config: UpdateCheckConfig,
+    approved: &ApprovedUpdate,
+) -> Result<YamlUpdateReport> {
+    let current = yaml_data_client_schema_set();
+    apply_yaml_update_with_decision(
+        client,
+        pages_url,
+        YAML_DATA_TAG_PREFIX,
+        &current,
+        config,
+        approved,
+    )
+    .await
+}
+
+/// Roll back every current first-party shippable YAML Data file.
+///
+/// Native callers use this instead of naming individual files. Rust expands
+/// the current first-party shippable target list and runs the lower-level
+/// rollback for each file. The returned vector preserves target order and
+/// carries the requested file name beside each outcome so frontends can still
+/// identify failed targets without duplicating the first-party file list.
+pub async fn rollback_yaml_data_update() -> Vec<(String, Result<RollbackOutcome>)> {
+    yaml_data_rollback_targets()
+        .into_iter()
+        .map(|file_name| {
+            let outcome = rollback_yaml_update(&file_name);
+            (file_name, outcome)
+        })
+        .collect()
 }
 
 /// Drive the manifest fetch + classify step. See [`YamlUpdateStatus`] for
