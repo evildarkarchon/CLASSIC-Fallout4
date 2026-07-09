@@ -109,8 +109,20 @@ The preparation of an existing Crash Log for analysis. It resolves the selected 
 _Avoid_: config loading, scan setup
 
 **Crash Log Scan Run**:
-The execution of analysis for one or more existing Crash Logs after intake. It produces Autoscan Reports, records per-log scan outcomes, and may move Unsolved Logs according to scan settings and scan intent.
-_Avoid_: scan transaction, analysis job
+The execution of a Standard or Targeted Crash Log scan intent. It resolves the Crash Logs for that intent, performs intake and analysis, produces Autoscan Reports, records per-log scan outcomes, and may move Unsolved Logs according to scan settings and scan intent.
+_Avoid_: scan transaction, analysis job, scan session
+
+**Crash Log Scan Run Result**:
+The structured outcome of a Crash Log Scan Run, including run status, discovery results, optional setup validation details, and per-log outcomes. It represents expected run-level outcomes such as no Crash Logs found, cancellation before discovery, or setup failure as data rather than exceptions.
+_Avoid_: result list, exception status, scan summary string
+
+**Crash Log Scan Discovery Result**:
+The structured discovery data inside a Crash Log Scan Run Result. It records the scan source, accepted Crash Logs, rejected targeted inputs, and searched locations while preserving the existing Standard and Targeted discovery contracts.
+_Avoid_: selected paths list, pre-scan event, discovery exception
+
+**Crash Log Scan Run Status**:
+The lifecycle state of a Crash Log Scan Run as a whole, such as completed, no Crash Logs found, setup failed, cancelled before discovery, or cancelled after discovery. It does not encode whether individual Crash Logs succeeded or failed.
+_Avoid_: completed-with-errors, summary quality, per-log outcome
 
 **Crash Suspect Finding**:
 An Autoscan Report Contribution that identifies crash evidence matching known crash messages, stack patterns, or DLL crash clues. It signals a suspected cause, not a guaranteed root cause.
@@ -120,12 +132,20 @@ _Avoid_: suspect fragment, known crash message, crash error
 A scan context flag that enables local installation checks and affects Autoscan Report text. Keep the flag distinct from Autoscan Report Contribution categories unless FCX detail rendering is intentionally redesigned.
 _Avoid_: FCX finding, FCX contribution
 
+**Crash Log Scan Setup Context**:
+The explicit game setup facts supplied to a Crash Log Scan Run when FCX Mode is enabled. It is built by adapters from saved settings or UI state; scanlog core uses it for setup validation but does not load or persist user configuration.
+_Avoid_: scan config, hidden config load, FCX globals input
+
+**Crash Log Scan Setup Result**:
+The structured setup validation data attached to a Crash Log Scan Run Result when FCX Mode is evaluated. It carries setup checks, proposed path updates, configuration issues, and any concise message needed by adapters; it is not a thrown setup exception.
+_Avoid_: setup error string, FCX exception, UI-only setup message
+
 **Standard Crash Log Scan Run**:
-A Crash Log Scan Run over the normal scan set where failed Crash Logs and their Autoscan Reports may be moved to Unsolved Logs when that setting is enabled.
+A Crash Log Scan Run over the normal discovered scan set where failed Crash Logs and their Autoscan Reports may be moved to Unsolved Logs when that setting is enabled.
 _Avoid_: batch scan, normal scan
 
 **Targeted Crash Log Scan Run**:
-A Crash Log Scan Run over Crash Logs explicitly selected by the user for that run. Targeted runs do not move failed Crash Logs or Autoscan Reports to Unsolved Logs.
+A Crash Log Scan Run over Crash Logs resolved from paths explicitly selected by the user for that run. Targeted runs do not move failed Crash Logs or Autoscan Reports to Unsolved Logs.
 _Avoid_: manual scan, selected-file scan
 
 **Version Registry**:
