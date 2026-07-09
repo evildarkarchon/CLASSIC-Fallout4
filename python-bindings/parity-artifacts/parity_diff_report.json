@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-07-09T10:44:48.766613+00:00",
+  "generated_at_utc": "2026-07-09T22:31:29.930828+00:00",
   "summary": {
-    "tier1_contract_total": 1084,
-    "tier1_matched": 1084,
+    "tier1_contract_total": 1085,
+    "tier1_matched": 1085,
     "tier1_missing_rust": 0,
     "tier1_missing_python": 0,
     "tier1_signature_mismatch": 0,
@@ -604,6 +604,21 @@
       "python_module": "classic_config",
       "python_export": "create_yamldata",
       "python_export_path": "create_yamldata",
+      "status": "matched",
+      "expected_python_kind": "function",
+      "actual_python_kind": "function",
+      "expected_python_arity": 3,
+      "actual_python_arity": 3
+    },
+    {
+      "id": "config.game_local.persist_game_local_paths",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "persist_game_local_paths",
+      "python_module": "classic_config",
+      "python_export": "persist_game_local_paths",
+      "python_export_path": "persist_game_local_paths",
       "status": "matched",
       "expected_python_kind": "function",
       "actual_python_kind": "function",

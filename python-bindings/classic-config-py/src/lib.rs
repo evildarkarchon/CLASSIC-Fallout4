@@ -89,6 +89,7 @@ use classic_config_core::{
 use classic_config_core::{
     ClassicConfig as CoreClassicConfig, ConfigError, CoreModExclude, ModSolutionCriteria,
     PathConfig as CorePathConfig, YamlDataCore, YamlSource as CoreYamlSource,
+    persist_game_local_paths as core_persist_game_local_paths,
 };
 use classic_settings_core::SettingsError;
 use classic_shared::{
@@ -1074,6 +1075,26 @@ pub fn create_yamldata(
     PyYamlData::new(py, yaml_dirs, game, game_version)
 }
 
+/// Persist optional runtime paths to an explicit Game Local YAML document.
+///
+/// ``None`` leaves the corresponding key unchanged. The operation delegates all
+/// document behavior to Rust core, releases the GIL while waiting, and never
+/// reads or writes User Settings.
+#[pyfunction]
+#[pyo3(signature = (local_yaml_path, game_root=None, docs_root=None))]
+pub fn persist_game_local_paths(
+    py: Python<'_>,
+    local_yaml_path: PathBuf,
+    game_root: Option<PathBuf>,
+    docs_root: Option<PathBuf>,
+) -> PyResult<()> {
+    without_gil_block_on(py, || async {
+        core_persist_game_local_paths(&local_yaml_path, game_root.as_deref(), docs_root.as_deref())
+            .await
+    })
+    .map_err(runtime_to_pyerr)
+}
+
 /// Clear the global YAML cache
 ///
 /// This function clears all cached YAML data. It's primarily useful for
@@ -1122,6 +1143,7 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlSource>()?;
     m.add_class::<PyClassicConfig>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
+    m.add_function(wrap_pyfunction!(persist_game_local_paths, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
     m.add_function(wrap_pyfunction!(set_application_dir, m)?)?;
     m.add_function(wrap_pyfunction!(get_application_dir, m)?)?;
@@ -1151,6 +1173,7 @@ pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlSource>()?;
     m.add_class::<PyClassicConfig>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
+    m.add_function(wrap_pyfunction!(persist_game_local_paths, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
     m.add_function(wrap_pyfunction!(set_application_dir, m)?)?;
     m.add_function(wrap_pyfunction!(get_application_dir, m)?)?;

@@ -3,7 +3,7 @@
 These tests exercise the checked-in ``parity_contract.json`` directly:
 
 - ``test_tier1_contract_total_baseline_floor`` locks the current live
-  one-tier contract floor at 705 rows so accidental row deletions or
+  one-tier contract floor at 706 rows so accidental row deletions or
   contract-file corruption fail fast.
 
 - ``test_tier2_definition_removed_after_plan_6`` keeps a positive
@@ -34,14 +34,14 @@ def _load_contract() -> dict:
 
 
 def test_tier1_contract_total_baseline_floor() -> None:
-    """tier1Mappings must not regress below the live 705-row contract floor."""
+    """tier1Mappings must not regress below the live 706-row contract floor."""
     contract = _load_contract()
     tier1 = contract.get("tier1Mappings", [])
     # The committed contract and checked-in diff report currently show a
-    # one-tier 705/705 matched baseline with no tier2 definition.
-    assert len(tier1) >= 705, (
+    # one-tier 706/706 matched baseline with no tier2 definition.
+    assert len(tier1) >= 706, (
         f"tier1Mappings regressed below the live one-tier floor: "
-        f"{len(tier1)} < 705. Something deleted contract rows."
+        f"{len(tier1)} < 706. Something deleted contract rows."
     )
 
 
@@ -62,8 +62,8 @@ def test_contract_description_matches_live_one_tier_baseline() -> None:
     assert "one-tier" in description, (
         "parity_contract.json description must describe the live one-tier baseline"
     )
-    assert "705" in description, (
-        "parity_contract.json description must preserve the live 705-row floor"
+    assert "706" in description, (
+        "parity_contract.json description must preserve the live 706-row floor"
     )
     assert "Hybrid-tiered" not in description, (
         "parity_contract.json description must not drift back to hybrid-tier wording"

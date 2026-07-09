@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T10:44:55.741718+00:00",
+  "generated_at_utc": "2026-07-09T22:31:30.214387+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -424,6 +424,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def load_main_yaml_version(bundled_yaml_dir: str | None = None) -> str:"
+    },
+    {
+      "module": "classic_config",
+      "export": "persist_game_local_paths",
+      "export_path": "persist_game_local_paths",
+      "kind": "function",
+      "arity": 3,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def persist_game_local_paths( local_yaml_path: str | Path, game_root: str | Path | None = None, docs_root: str | Path | None = None, ) -> None:"
     },
     {
       "module": "classic_config",

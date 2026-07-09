@@ -8,10 +8,11 @@
 //! are isolated and can't share opaque types across modules.
 
 use classic_config_core::{
-    ClassicConfig, MainYamlVersionError, ModSolutionCriteria,
-    SuspectErrorRule as CoreSuspectErrorRule, SuspectStackCountRule as CoreSuspectStackCountRule,
-    SuspectStackRule as CoreSuspectStackRule, YamlDataCore,
+    MainYamlVersionError, ModSolutionCriteria, SuspectErrorRule as CoreSuspectErrorRule,
+    SuspectStackCountRule as CoreSuspectStackCountRule, SuspectStackRule as CoreSuspectStackRule,
+    YamlDataCore,
     load_main_yaml_version_with_bundled_dir as core_load_main_yaml_version_with_bundled_dir,
+    persist_game_local_paths,
 };
 use classic_settings_core::{
     cache_stats as settings_core_cache_stats, clear_cache as clear_settings_cache,
@@ -44,25 +45,26 @@ fn yaml_data_load(
     Ok(Box::new(YamlData { inner }))
 }
 
+/// Persist optional game and documents paths through the standalone Game Local writer.
+///
+/// Empty path strings mean "leave this key unchanged". Failures are returned as
+/// strings for the existing CXX `Result` contract.
 fn save_local_yaml_paths(
     local_yaml_path: &str,
     game_root: &str,
     docs_root: &str,
 ) -> Result<(), String> {
-    // This helper only persists Local.yaml path fields, so a default config is
-    // enough as long as that save path stays scoped to `paths` state.
-    let mut config = ClassicConfig::default();
-
-    if !game_root.is_empty() {
-        config.paths.game_root = PathBuf::from(game_root);
-    }
-
-    if !docs_root.is_empty() {
-        config.paths.docs_root = Some(PathBuf::from(docs_root));
-    }
+    // CXX strings cannot express optional borrowed paths, so empty values retain
+    // the established adapter meaning of "do not update this field".
+    let game_root = (!game_root.is_empty()).then(|| Path::new(game_root));
+    let docs_root = (!docs_root.is_empty()).then(|| Path::new(docs_root));
 
     get_runtime()
-        .block_on(config.save_local_yaml_paths_to(Path::new(local_yaml_path)))
+        .block_on(persist_game_local_paths(
+            Path::new(local_yaml_path),
+            game_root,
+            docs_root,
+        ))
         .map_err(|e| format!("{e}"))
 }
 

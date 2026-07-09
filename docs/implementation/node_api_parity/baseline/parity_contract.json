@@ -1,7 +1,7 @@
 {
   "contractVersion": "1.0.0",
   "phase": "phase1",
-  "description": "Live one-tier 705-row Node vs Rust parity contract for high-level APIs.",
+  "description": "Live one-tier 706-row Node vs Rust parity contract for high-level APIs.",
   "tierDefinitions": {
     "tier1": "Must-have high-level APIs required by app workflows and cross-language integration."
   },
@@ -221,6 +221,17 @@
       "nodeExport": "clearYamlCache",
       "nodeKind": "function",
       "nodeArity": 0
+    },
+    {
+      "id": "config.game_local.persistGameLocalPaths",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "persist_game_local_paths",
+      "rustKind": "function",
+      "nodeExport": "persistGameLocalPaths",
+      "nodeKind": "function",
+      "nodeArity": 3
     },
     {
       "id": "config-yaml-source-enum",

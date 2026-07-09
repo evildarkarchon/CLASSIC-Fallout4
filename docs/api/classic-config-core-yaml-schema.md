@@ -94,7 +94,7 @@ Persistence notes:
 - `formid_databases` is omitted entirely when empty.
 - Relative `formid_databases.<game>[]` entries are preserved as strings and resolved by higher layers at runtime.
 
-## `GameLocal` Add-On Data Consumed By `ClassicConfig`
+## `GameLocal` Runtime Path Data
 
 `ClassicConfig::load_local_yaml_paths(game)` loads merged YAML from `CLASSIC Data/CLASSIC {game} Local.yaml` and reads only:
 
@@ -105,7 +105,7 @@ Persistence notes:
 
 If the local YAML file does not exist, the method returns `Ok(())` and leaves the existing config unchanged.
 
-`ClassicConfig::save_local_yaml_paths(game)` and `ClassicConfig::save_local_yaml_paths_to(path)` persist only those same keys. They create the local YAML file when needed, preserve unrelated existing YAML keys, and skip file creation entirely when both `paths.game_root` and `paths.docs_root` are unset.
+`classic_config_core::persist_game_local_paths(path, game_root, docs_root)` persists only those same keys independently of `ClassicConfig`. It creates the local YAML file when needed, preserves unrelated existing YAML keys, leaves a key unchanged when its update is `None`, and skips file creation entirely when both updates are `None`. The operation does not read or write `CLASSIC Settings.yaml`.
 
 ---
 

@@ -521,6 +521,26 @@ def create_yamldata(
 
     """
 
+def persist_game_local_paths(
+    local_yaml_path: str | Path,
+    game_root: str | Path | None = None,
+    docs_root: str | Path | None = None,
+) -> None:
+    """Persist supplied runtime paths to a Game Local YAML document.
+
+    ``None`` leaves the corresponding key unchanged. Existing unrelated Game
+    Local content is preserved, and the User Settings document is not accessed.
+
+    Args:
+        local_yaml_path: Explicit Game Local YAML document path.
+        game_root: Optional game-root update.
+        docs_root: Optional documents-root update.
+
+    Raises:
+        RustConfigIOError: If the document cannot be created or saved.
+        RustConfigParseError: If an existing Game Local document is malformed.
+    """
+
 def set_application_dir(path: str | Path) -> None:
     """Override the directory used to resolve ``CLASSIC Settings.yaml``.
 

@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-09T10:44:48.766613+00:00`
-- Tier-1 contract rows: **1084**
-- Tier-1 matched: **1084**
+- Generated: `2026-07-09T22:31:29.930828+00:00`
+- Tier-1 contract rows: **1085**
+- Tier-1 matched: **1085**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -52,6 +52,7 @@
 | `config.yamldata.YamlData.__init__` | `config` | `YamlDataCore` | `classic_config.YamlData.__init__` | `matched` |
 | `config.yamldata.YamlData.__repr__` | `config` | `YamlDataCore` | `classic_config.YamlData.__repr__` | `matched` |
 | `config.yamldata.create_yamldata` | `config` | `YamlDataCore` | `classic_config.create_yamldata` | `matched` |
+| `config.game_local.persist_game_local_paths` | `config` | `persist_game_local_paths` | `classic_config.persist_game_local_paths` | `matched` |
 | `config.yamldata.format_registry_game_version@rust` | `config` | `format_registry_game_version` | `classic_config.create_yamldata` | `matched` |
 | `config.yamldata.resolve_registry_version_info@rust` | `config` | `resolve_registry_version_info` | `classic_config.create_yamldata` | `matched` |
 | `config.yamldata.yamldata@rust` | `config` | `yamldata` | `classic_config.YamlData` | `matched` |

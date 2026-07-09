@@ -159,7 +159,27 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert config.paths.game_root == "C:/Games/Fallout4"
     assert config.paths.docs_root == "C:/Users/Test/Documents/My Games/Fallout4"
 
+    user_settings_before = resolved_default_settings.read_bytes()
+    classic_config.persist_game_local_paths(
+        local_yaml,
+        "D:/Games/Fallout4",
+        None,
+    )
+    local_yaml_after = local_yaml.read_text(encoding="utf-8")
+    assert 'Root_Folder_Game: "D:/Games/Fallout4"' in local_yaml_after
+    assert (
+        'Root_Folder_Docs: "C:/Users/Test/Documents/My Games/Fallout4"'
+        in local_yaml_after
+    )
+    assert resolved_default_settings.read_bytes() == user_settings_before
+
     local_yaml.write_text("{ invalid: yaml: content: }}}", encoding="utf-8")
+    with pytest.raises(classic_config.RustConfigParseError):
+        classic_config.persist_game_local_paths(
+            local_yaml,
+            "D:/Games/Fallout4",
+            None,
+        )
     with pytest.raises(classic_config.RustConfigParseError):
         config.load_local_yaml_paths("Fallout4")
 

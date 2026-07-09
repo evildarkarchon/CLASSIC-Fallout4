@@ -11,8 +11,8 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 43,
-      "contractIdsHash": "90a8f039181858fd8aeb5af9e0ab2d9f1b1a2256fcfe31800a2bf6f5ed04eee0",
+      "contractCount": 44,
+      "contractIdsHash": "978eee3903dde8a3df6768c161077b627c4cdf2f622dca739daac1717039d484",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "config-tier1-smoke",

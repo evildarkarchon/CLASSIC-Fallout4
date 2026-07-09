@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T10:44:45.648163+00:00",
+  "generated_at_utc": "2026-07-09T22:30:49.139892+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -2479,6 +2479,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function parseXseType(typeName: string): JsXseType",
       "arity": 1
+    },
+    {
+      "export": "persistGameLocalPaths",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function persistGameLocalPaths(localYamlPath: string, gameRoot?: string | undefined | null, docsRoot?: string | undefined | null): Promise<void>",
+      "arity": 3
     },
     {
       "export": "processGameLogs",

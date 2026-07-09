@@ -131,6 +131,46 @@ fn test_save_local_yaml_paths_creates_file() {
     );
 }
 
+#[test]
+fn test_save_local_yaml_paths_preserves_empty_adapter_field() {
+    let temp = tempdir().expect("failed to create temp dir");
+    let local_yaml_path = temp
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Fallout4 Local.yaml");
+
+    std::fs::create_dir_all(local_yaml_path.parent().expect("local YAML parent"))
+        .expect("create local YAML parent");
+    std::fs::write(
+        &local_yaml_path,
+        concat!(
+            "Game_Info:\n",
+            "  Root_Folder_Docs: C:/Users/Test/Documents/Existing\n",
+            "  Docs_Folder_XSE: C:/Users/Test/Documents/Existing/F4SE\n",
+        ),
+    )
+    .expect("seed local YAML");
+
+    save_local_yaml_paths(&local_yaml_path.to_string_lossy(), "D:/Games/Fallout4", "")
+        .expect("save_local_yaml_paths should preserve an unset docs path");
+
+    let yaml = classic_settings_core::YamlOperations::new()
+        .load_yaml_file(&local_yaml_path)
+        .expect("load local YAML");
+    assert_eq!(
+        yaml["Game_Info"]["Root_Folder_Game"].as_str(),
+        Some("D:/Games/Fallout4")
+    );
+    assert_eq!(
+        yaml["Game_Info"]["Root_Folder_Docs"].as_str(),
+        Some("C:/Users/Test/Documents/Existing")
+    );
+    assert_eq!(
+        yaml["Game_Info"]["Docs_Folder_XSE"].as_str(),
+        Some("C:/Users/Test/Documents/Existing/F4SE")
+    );
+}
+
 // ── CXXS-07 typed suspect-rule tests ───────────────────────────────
 
 /// Builds a minimal YamlData with suspect error rules for testing.

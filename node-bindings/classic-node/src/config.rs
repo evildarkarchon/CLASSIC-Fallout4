@@ -9,13 +9,14 @@
 //!    getters/setters for feature flags, paths, and preferences.
 //!
 //! 3. **Free functions**: `createYamlDataFromContent()`, `createDefaultConfig()`,
-//!    `clearYamlCache()`, convenience accessors.
+//!    `persistGameLocalPaths()`, `clearYamlCache()`, convenience accessors.
 
 use classic_config_core::{
     ClassicConfig as CoreClassicConfig, ConfigError, MainYamlVersionError, ModConflictEntry,
     ModSolutionCriteria, ModSolutionEntry, PathConfig as CorePathConfig, SuspectErrorRule,
     SuspectStackRule, YamlDataCore, YamlSource as CoreYamlSource,
     load_main_yaml_version_with_bundled_dir as core_load_main_yaml_version_with_bundled_dir,
+    persist_game_local_paths as core_persist_game_local_paths,
 };
 use classic_settings_core::SettingsError;
 use classic_shared_core::get_runtime;
@@ -207,6 +208,39 @@ fn runtime_to_napi_err(err: anyhow::Error) -> napi::Error {
     }
 
     napi::Error::new(Status::GenericFailure, display)
+}
+
+/// Persist optional runtime paths to an explicit Game Local YAML document.
+///
+/// Omitted path updates leave their existing keys unchanged. The operation is
+/// independent from `ClassicConfig` and never reads or writes User Settings.
+///
+/// @param localYamlPath - Explicit Game Local YAML document path.
+/// @param gameRoot - Optional game-root update.
+/// @param docsRoot - Optional documents-root update.
+/// @throws on directory creation, YAML parsing, or file persistence failures.
+#[napi]
+pub async fn persist_game_local_paths(
+    local_yaml_path: String,
+    game_root: Option<String>,
+    docs_root: Option<String>,
+) -> napi::Result<()> {
+    let local_yaml_path = PathBuf::from(local_yaml_path);
+    let game_root = game_root.map(PathBuf::from);
+    let docs_root = docs_root.map(PathBuf::from);
+    let handle = get_runtime().handle().clone();
+    let result = handle
+        .spawn(async move {
+            core_persist_game_local_paths(
+                &local_yaml_path,
+                game_root.as_deref(),
+                docs_root.as_deref(),
+            )
+            .await
+        })
+        .await
+        .map_err(|err| napi::Error::from_reason(format!("runtime join error: {err}")))?;
+    result.map_err(runtime_to_napi_err)
 }
 
 // ============================================================================

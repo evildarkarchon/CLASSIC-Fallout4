@@ -488,6 +488,17 @@
       "pythonArity": 3
     },
     {
+      "id": "config.game_local.persist_game_local_paths",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "persist_game_local_paths",
+      "pythonModule": "classic_config",
+      "pythonExportPath": "persist_game_local_paths",
+      "pythonKind": "function",
+      "pythonArity": 3
+    },
+    {
       "id": "config.yamldata.format_registry_game_version@rust",
       "tier": "tier1",
       "ownerModule": "config",

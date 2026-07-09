@@ -51,6 +51,12 @@ Runtime settings API for CLI/TUI-style application configuration.
 - `ClassicConfig` - persisted user/runtime settings
 - `PathConfig` - nested path settings used by `ClassicConfig`
 
+### `game_local`
+
+Independent persistence for runtime-discovered paths in a caller-selected Game Local YAML document.
+
+- `persist_game_local_paths(path, game_root, docs_root)` - root-reexported writer that updates supplied Game Local path keys without constructing or loading `ClassicConfig`
+
 ### `yamldata`
 
 Bulk YAML dataset loader for scanlog/business logic.
@@ -121,8 +127,6 @@ Important methods:
 - `get_config_path(&self) -> PathBuf`
 - `validate_paths(&self) -> anyhow::Result<()>`
 - `load_local_yaml_paths(&mut self, game: &str) -> anyhow::Result<()>`
-- `save_local_yaml_paths(&self, game: &str) -> anyhow::Result<()>`
-- `save_local_yaml_paths_to(&self, path: &Path) -> anyhow::Result<()>`
 
 Behavior worth knowing:
 
@@ -133,9 +137,15 @@ Behavior worth knowing:
 - `save_to_yaml()` creates parent directories if needed
 - `save_to_yaml()` serializes YAML in `spawn_blocking()` because `YamlEmitter` is not `Send`
 - `load_local_yaml_paths()` is non-fatal when `CLASSIC Data/CLASSIC {game} Local.yaml` does not exist
-- `save_local_yaml_paths()` creates `CLASSIC Data/CLASSIC {game} Local.yaml` when needed and updates only `Game_Info.Root_Folder_Game` / `Game_Info.Root_Folder_Docs`
-- `save_local_yaml_paths_to()` does the same work for an explicit caller-provided local-YAML path, which is useful for frontends that resolve `CLASSIC Data/` outside the process working directory
 - field-level YAML shape and default details live in [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md)
+
+## Game Local Path Persistence
+
+`classic_config_core::persist_game_local_paths(path, game_root, docs_root)` writes runtime-discovered paths to an explicit Game Local YAML path. `game_root` and `docs_root` are independent `Option<&Path>` updates: `None` leaves the corresponding key unchanged, and supplying neither path is a no-op that does not create a file.
+
+The writer creates parent directories when needed, merges an existing multi-document YAML stream, updates only `Game_Info.Root_Folder_Game` and `Game_Info.Root_Folder_Docs`, and preserves unrelated content. It neither constructs `ClassicConfig` nor reads or writes `CLASSIC Settings.yaml`.
+
+Binding adapters expose the same operation as CXX `save_local_yaml_paths(...)`, Node `persistGameLocalPaths(...) -> Promise<void>`, and Python `persist_game_local_paths(...) -> None`. Each adapter only converts optional path values and delegates document behavior to the Rust writer.
 
 ## `PathConfig`
 
@@ -231,11 +241,18 @@ These helpers bridge the config layer to [`classic-version-registry-core`](../..
 4. Nested `paths` and `formid_databases` are reconstructed.
 5. Optional post-processing may call:
    - `load_local_yaml_paths(game)` to fill `game_root` and `docs_root` from merged `GameLocal`
-   - `save_local_yaml_paths(game)` or `save_local_yaml_paths_to(path)` to persist detected runtime paths back into `GameLocal`
    - `validate_paths()` to fail fast on missing directories
 6. The config can be persisted again with `save_to_yaml()`.
 
 Read/write path policy is defined in [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md).
+
+## Game Local persistence flow
+
+1. A caller supplies an explicit Game Local YAML path and either or both runtime path updates.
+2. `persist_game_local_paths()` returns without I/O when neither update is supplied; otherwise it creates the parent directory and merges only the Game Local document when it already exists.
+3. The supplied path keys are updated and unrelated Game Local keys are preserved before the document is saved.
+
+This flow is independent from the `ClassicConfig` flow and never opens or saves the User Settings document.
 
 ## `YamlDataCore` flow
 

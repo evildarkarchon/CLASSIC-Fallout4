@@ -31,8 +31,8 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 105,
-      "contractIdsHash": "ffbbe54e7462d2fd2e60ae4c9081e60d045c628f27cb7f9ef5e0be4a4d4de249",
+      "contractCount": 106,
+      "contractIdsHash": "d2ebe5cadf0d77675b22aabd49453ccb716eef38599ce86d52e2044239146460",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "config-tier1-parity",
@@ -104,6 +104,18 @@
       "verificationMode": "direct_call",
       "testSuite": "node-bindings/classic-node/__test__/scangame.spec.ts",
       "testCaseId": "config-tier2-scangame"
+    },
+    {
+      "coverageId": "node-tier2-config-game-local-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "persistGameLocalPaths"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "config-game-local-persistence-runtime"
     },
     {
       "coverageId": "node-tier2-aux-application-dir-runtime",

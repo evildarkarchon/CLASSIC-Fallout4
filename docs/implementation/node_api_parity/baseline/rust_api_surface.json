@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T10:44:45.642376+00:00",
+  "generated_at_utc": "2026-07-09T22:30:49.135669+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -851,6 +851,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "game_local",
+      "kind": "module",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub mod game_local;",
+      "tier": "tier1"
+    },
+    {
       "symbol": "get_config_path",
       "kind": "function",
       "arity": 1,
@@ -1118,6 +1127,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/config.rs",
       "source_decl": "pub fn path(&self, game: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "persist_game_local_paths",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use game_local::persist_game_local_paths;",
+      "source_expr": "game_local::persist_game_local_paths",
       "tier": "tier1"
     },
     {

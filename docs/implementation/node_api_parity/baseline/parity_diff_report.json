@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-07-09T10:44:45.649369+00:00",
+  "generated_at_utc": "2026-07-09T22:30:49.140982+00:00",
   "summary": {
-    "tier1_contract_total": 705,
-    "tier1_matched": 705,
+    "tier1_contract_total": 706,
+    "tier1_matched": 706,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -282,6 +282,19 @@
       "actual_node_kind": "function",
       "expected_node_arity": 0,
       "actual_node_arity": 0
+    },
+    {
+      "id": "config.game_local.persistGameLocalPaths",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "persist_game_local_paths",
+      "node_export": "persistGameLocalPaths",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": 3,
+      "actual_node_arity": 3
     },
     {
       "id": "config-yaml-source-enum",

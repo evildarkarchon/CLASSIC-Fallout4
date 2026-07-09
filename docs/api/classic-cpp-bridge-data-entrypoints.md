@@ -222,13 +222,13 @@ Current bridge behavior:
 Forwards to:
 
 - `classic_shared_core::get_runtime()`
-- `classic_config_core::ClassicConfig::save_local_yaml_paths_to(...)`
+- `classic_config_core::persist_game_local_paths(...)`
 
 Current bridge behavior:
 
-- builds a temporary `ClassicConfig` only to reuse Rust-side Local-YAML persistence logic
 - treats empty `game_root` or `docs_root` strings as unset optional values
 - lets Rust create `CLASSIC Data/CLASSIC {game} Local.yaml` when the file is missing
+- reads and writes only the caller-selected Game Local YAML document; it does not load or save User Settings
 - preserves Rust-side error propagation as a CXX `Result` error string
 
 ### Selected scalar and vector getters

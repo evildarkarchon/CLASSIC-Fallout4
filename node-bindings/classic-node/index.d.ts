@@ -4012,6 +4012,19 @@ export declare function parseXseLog(logPath: string): string | null
 export declare function parseXseType(typeName: string): JsXseType
 
 /**
+ * Persist optional runtime paths to an explicit Game Local YAML document.
+ *
+ * Omitted path updates leave their existing keys unchanged. The operation is
+ * independent from `ClassicConfig` and never reads or writes User Settings.
+ *
+ * @param localYamlPath - Explicit Game Local YAML document path.
+ * @param gameRoot - Optional game-root update.
+ * @param docsRoot - Optional documents-root update.
+ * @throws on directory creation, YAML parsing, or file persistence failures.
+ */
+export declare function persistGameLocalPaths(localYamlPath: string, gameRoot?: string | undefined | null, docsRoot?: string | undefined | null): Promise<void>
+
+/**
  * Convenience function to process logs without creating a processor instance.
  *
  * @param logDir - Directory containing log files.

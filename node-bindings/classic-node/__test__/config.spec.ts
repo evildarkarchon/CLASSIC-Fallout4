@@ -1,5 +1,11 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import {
@@ -17,6 +23,7 @@ import {
   getYamlSourcePath,
   getYamlSourceDisplayName,
   getYamlSourceDisplayNameWithGame,
+  persistGameLocalPaths,
 } from "../index.js";
 import { getRuntimeCoverageEntries } from "./fixtures/runtime_coverage_registry";
 
@@ -217,7 +224,7 @@ describe("YamlData construction", () => {
 });
 
 describe("runtime coverage metadata", () => {
-  test("tracks application directory overrides", () => {
+  test("tracks application directory and Game Local persistence adapters", () => {
     const bindingIdentifiers = new Set(
       getRuntimeCoverageEntries(THIS_SUITE).flatMap(
         (entry) => entry.bindingIdentifiers ?? [],
@@ -226,6 +233,7 @@ describe("runtime coverage metadata", () => {
 
     expect(bindingIdentifiers.has("getApplicationDir")).toBe(true);
     expect(bindingIdentifiers.has("setApplicationDir")).toBe(true);
+    expect(bindingIdentifiers.has("persistGameLocalPaths")).toBe(true);
   });
 });
 
@@ -820,6 +828,61 @@ describe("ClassicConfigJs config path", () => {
       const error = err as Error & { code?: string };
       expect(error.code).toBe("GenericFailure");
       expect(error.message).toContain("Failed to load merged config YAML");
+    }
+  });
+});
+
+// ============================================================================
+// Game Local Path Persistence
+// ============================================================================
+
+describe("Game Local path persistence", () => {
+  test("updates supplied paths without touching User Settings", async () => {
+    const root = mkdtempSync(join(tmpdir(), "classic-node-game-local-"));
+
+    try {
+      const localYamlPath = join(
+        root,
+        "CLASSIC Data",
+        "CLASSIC Fallout4 Local.yaml",
+      );
+      const userSettingsPath = join(root, "CLASSIC Settings.yaml");
+      const userSettingsSentinel =
+        "{ malformed user settings that must stay untouched";
+
+      mkdirSync(dirname(localYamlPath), { recursive: true });
+      writeFileSync(
+        localYamlPath,
+        [
+          "Game_Info:",
+          "  Root_Folder_Game: C:/Games/Old",
+          "  Root_Folder_Docs: C:/Users/Test/Documents/Existing",
+          "  Docs_Folder_XSE: C:/Users/Test/Documents/Existing/F4SE",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+      writeFileSync(userSettingsPath, userSettingsSentinel, "utf8");
+
+      await persistGameLocalPaths(
+        localYamlPath,
+        "D:/Games/Fallout4",
+        undefined,
+      );
+
+      const localYaml = readFileSync(localYamlPath, "utf8");
+      expect(localYaml).toContain('Root_Folder_Game: "D:/Games/Fallout4"');
+      expect(localYaml).toContain(
+        'Root_Folder_Docs: "C:/Users/Test/Documents/Existing"',
+      );
+      expect(localYaml).toContain(
+        'Docs_Folder_XSE: "C:/Users/Test/Documents/Existing/F4SE"',
+      );
+      expect(readFileSync(userSettingsPath, "utf8")).toBe(
+        userSettingsSentinel,
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 });

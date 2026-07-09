@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T10:44:45.653556+00:00",
+  "generated_at_utc": "2026-07-09T22:30:49.144733+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,11 +7,11 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 732,
-    "runtime_verified_total": 732,
+    "tracked_surface_total": 734,
+    "runtime_verified_total": 734,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 705,
+    "tier1_contract_total": 706,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -22,8 +22,8 @@
       "total": 168
     },
     "config": {
-      "runtime_verified": 109,
-      "total": 109
+      "runtime_verified": 111,
+      "total": 111
     },
     "database": {
       "runtime_verified": 14,
@@ -509,6 +509,25 @@
       "classification": "runtime_verified",
       "rustSymbol": "clear_global_yaml_cache",
       "bindingIdentifier": "clearYamlCache",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "trackedId": "contract:config.game_local.persistGameLocalPaths",
+      "trackedType": "contract_row",
+      "contractId": "config.game_local.persistGameLocalPaths",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "persist_game_local_paths",
+      "bindingIdentifier": "persistGameLocalPaths",
       "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
@@ -12957,6 +12976,25 @@
       "verificationMode": "direct_call",
       "testSuite": "node-bindings/classic-node/__test__/scangame.spec.ts",
       "testCaseId": "config-tier2-scangame",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": null
+    },
+    {
+      "trackedId": "binding:persistGameLocalPaths",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "persistGameLocalPaths",
+      "coverageId": "node-tier2-config-game-local-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "config-game-local-persistence-runtime",
       "fixtureRefs": [],
       "wave": null,
       "owner": null,

@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-09T10:44:45.649369+00:00`
-- Tier-1 contract rows: **705**
-- Tier-1 matched: **705**
+- Generated: `2026-07-09T22:30:49.140982+00:00`
+- Tier-1 contract rows: **706**
+- Tier-1 matched: **706**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -33,6 +33,7 @@
 | `config-classic-config-class` | `config` | `ClassicConfig` | `ClassicConfigJs` | `matched` |
 | `config-create-default-config` | `config` | `ClassicConfig` | `createDefaultConfig` | `matched` |
 | `config-clear-yaml-cache` | `config` | `clear_global_yaml_cache` | `clearYamlCache` | `matched` |
+| `config.game_local.persistGameLocalPaths` | `config` | `persist_game_local_paths` | `persistGameLocalPaths` | `matched` |
 | `config-yaml-source-enum` | `config` | `YamlSource` | `JsYamlSource` | `matched` |
 | `config-yaml-source-path` | `config` | `YamlSource` | `getYamlSourcePath` | `matched` |
 | `config-yaml-source-display-name` | `config` | `YamlSource` | `getYamlSourceDisplayName` | `matched` |

@@ -4,7 +4,7 @@
 //! for both classic-cli and classic-tui applications.
 
 use anyhow::{Context, Result};
-use classic_settings_core::{YamlOperations, load_yaml_merged_async};
+use classic_settings_core::load_yaml_merged_async;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -842,78 +842,6 @@ impl ClassicConfig {
         if let Some(docs_root_str) = doc["Game_Info"]["Root_Folder_Docs"].as_str() {
             self.paths.docs_root = Some(PathBuf::from(docs_root_str));
         }
-
-        Ok(())
-    }
-
-    /// Save `game_root` and `docs_root` to the game's Local.yaml file.
-    ///
-    /// Uses the standard `YamlSource::GameLocal` location for the provided game.
-    /// If both paths are empty, this is a no-op.
-    pub async fn save_local_yaml_paths(&self, game: &str) -> Result<()> {
-        let local_yaml_path = YamlSource::GameLocal.path(game);
-        self.save_local_yaml_paths_to(&local_yaml_path).await
-    }
-
-    /// Save `game_root` and `docs_root` to an explicit Local.yaml path.
-    ///
-    /// Creates parent directories as needed and creates the file when it does not
-    /// already exist. Existing YAML content is merged first so unrelated keys under
-    /// `Game_Info` are preserved.
-    pub async fn save_local_yaml_paths_to(&self, path: &Path) -> Result<()> {
-        if self.paths.game_root.as_os_str().is_empty() && self.paths.docs_root.is_none() {
-            return Ok(());
-        }
-
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent)
-                .await
-                .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
-        }
-
-        let yaml_ops = YamlOperations::new();
-        let mut yaml = if path.exists() {
-            load_yaml_merged_async(path).await.with_context(|| {
-                format!(
-                    "Failed to load Local.yaml file for save: {}",
-                    path.display()
-                )
-            })?
-        } else {
-            Yaml::Hash(yaml_rust2::yaml::Hash::new())
-        };
-
-        if !self.paths.game_root.as_os_str().is_empty() {
-            yaml = yaml_ops
-                .set_setting(
-                    &yaml,
-                    "Game_Info.Root_Folder_Game",
-                    Yaml::String(self.paths.game_root.to_string_lossy().to_string()),
-                )
-                .context("Failed to set Game_Info.Root_Folder_Game in Local.yaml")?;
-        }
-
-        if let Some(ref docs_root) = self.paths.docs_root {
-            yaml = yaml_ops
-                .set_setting(
-                    &yaml,
-                    "Game_Info.Root_Folder_Docs",
-                    Yaml::String(docs_root.to_string_lossy().to_string()),
-                )
-                .context("Failed to set Game_Info.Root_Folder_Docs in Local.yaml")?;
-        }
-
-        let path = path.to_path_buf();
-        tokio::task::spawn_blocking(move || {
-            // Build a fresh helper on the blocking worker so the synchronous save
-            // stays fully owned by that thread.
-            let yaml_ops = YamlOperations::new();
-            yaml_ops
-                .save_yaml_file(&path, &yaml)
-                .map_err(anyhow::Error::new)
-        })
-        .await
-        .context("Local.yaml save task panicked")??;
 
         Ok(())
     }

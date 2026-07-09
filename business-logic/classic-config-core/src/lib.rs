@@ -15,6 +15,7 @@ pub mod config;
 pub mod crashgen_expectation_parser;
 pub(crate) mod crashgen_registry_yaml;
 pub mod crashgen_rules;
+pub mod game_local;
 pub mod shippable;
 pub mod yamldata;
 
@@ -24,6 +25,7 @@ pub use crashgen_expectation_parser::{
 pub use crashgen_rules::*;
 
 pub use config::{ClassicConfig, PathConfig, YamlSource};
+pub use game_local::persist_game_local_paths;
 pub use shippable::{
     CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile,
     YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir,
