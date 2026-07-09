@@ -1,8 +1,5 @@
-use crate::{
-    AutoscanReportPlacement, CheckRule, ConfigLayout, CrashgenEntryRaw, CrashgenSettingsRules,
-    ExpectedValue, Predicate, PreflightAction, PreflightActionKind, PreflightRule, RuleMessages,
-    RuleSeverity, RuleTarget, TargetValueType,
-};
+use crate::{CrashgenEntryRaw, CrashgenSettingsRules, parse_crashgen_expectations};
+use serde_json::{Map, Number, Value};
 use std::collections::HashMap;
 use yaml_rust2::Yaml;
 
@@ -67,12 +64,6 @@ pub(crate) fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, Crash
     result
 }
 
-fn get_hash_value<'a>(yaml: &'a Yaml, key: &str) -> Option<&'a Yaml> {
-    yaml.as_hash()?
-        .iter()
-        .find_map(|(k, v)| (k.as_str() == Some(key)).then_some(v))
-}
-
 fn parse_string_list_field(entry_name: &str, field_name: &str, field_yaml: &Yaml) -> Vec<String> {
     if let Some(items) = field_yaml.as_vec() {
         items
@@ -121,163 +112,6 @@ fn parse_version_field(entry_name: &str, field_yaml: &Yaml) -> Option<u32> {
     }
 }
 
-fn parse_predicate(yaml: &Yaml) -> Option<Predicate> {
-    if let Some(all_yaml) = get_hash_value(yaml, "all") {
-        let items = all_yaml
-            .as_vec()?
-            .iter()
-            .filter_map(parse_predicate)
-            .collect::<Vec<_>>();
-        return Some(Predicate::All(items));
-    }
-
-    if let Some(any_yaml) = get_hash_value(yaml, "any") {
-        let items = any_yaml
-            .as_vec()?
-            .iter()
-            .filter_map(parse_predicate)
-            .collect::<Vec<_>>();
-        return Some(Predicate::Any(items));
-    }
-
-    if let Some(not_yaml) = get_hash_value(yaml, "not") {
-        return parse_predicate(not_yaml).map(|item| Predicate::Not(Box::new(item)));
-    }
-
-    if let Some(plugin_yaml) = get_hash_value(yaml, "plugin_any") {
-        let plugins = plugin_yaml
-            .as_vec()?
-            .iter()
-            .filter_map(Yaml::as_str)
-            .map(|value| value.to_lowercase())
-            .collect::<Vec<_>>();
-        return Some(Predicate::PluginAny(plugins));
-    }
-
-    if let Some(layout_yaml) = get_hash_value(yaml, "config_layout_is") {
-        return ConfigLayout::parse(layout_yaml.as_str()?).map(Predicate::ConfigLayoutIs);
-    }
-
-    if let Some(version_yaml) = get_hash_value(yaml, "crashgen_version_lt") {
-        let parts = version_yaml
-            .as_str()?
-            .split('.')
-            .map(|part| part.trim().parse::<u32>().ok())
-            .collect::<Vec<_>>();
-        if parts.len() == 3 {
-            return Some(Predicate::CrashgenVersionLt((
-                parts[0]?, parts[1]?, parts[2]?,
-            )));
-        }
-    }
-
-    None
-}
-
-fn parse_severity(yaml: &Yaml, default: RuleSeverity) -> RuleSeverity {
-    yaml.as_str()
-        .and_then(RuleSeverity::parse)
-        .unwrap_or(default)
-}
-
-fn parse_autoscan_report_placement(action_yaml: &Yaml) -> AutoscanReportPlacement {
-    get_hash_value(action_yaml, "placement")
-        .and_then(Yaml::as_str)
-        .and_then(AutoscanReportPlacement::parse)
-        .or_else(|| {
-            get_hash_value(action_yaml, "bucket")
-                .and_then(Yaml::as_str)
-                .and_then(AutoscanReportPlacement::parse)
-        })
-        .unwrap_or_default()
-}
-
-fn parse_preflight_rule(yaml: &Yaml) -> Option<PreflightRule> {
-    let id = get_hash_value(yaml, "id")?.as_str()?.to_string();
-    let when = get_hash_value(yaml, "when")
-        .and_then(parse_predicate)
-        .unwrap_or(Predicate::Always);
-    let action_yaml = get_hash_value(yaml, "action")?;
-
-    let kind = get_hash_value(action_yaml, "kind")
-        .and_then(Yaml::as_str)
-        .and_then(PreflightActionKind::parse)
-        .unwrap_or(PreflightActionKind::Notice);
-    let bucket = parse_autoscan_report_placement(action_yaml);
-    let severity = get_hash_value(action_yaml, "severity")
-        .map(|value| parse_severity(value, RuleSeverity::Info))
-        .unwrap_or(RuleSeverity::Info);
-    let message = get_hash_value(action_yaml, "message")?
-        .as_str()?
-        .to_string();
-    let fix = get_hash_value(action_yaml, "fix")
-        .and_then(Yaml::as_str)
-        .map(ToString::to_string);
-
-    Some(PreflightRule {
-        id,
-        when,
-        action: PreflightAction {
-            kind,
-            bucket,
-            severity,
-            message,
-            fix,
-        },
-    })
-}
-
-fn parse_expected_value(expect_yaml: &Yaml) -> Option<ExpectedValue> {
-    let equals_yaml = get_hash_value(expect_yaml, "equals")?;
-    match equals_yaml {
-        Yaml::Boolean(value) => Some(ExpectedValue::Bool(*value)),
-        Yaml::Integer(value) => Some(ExpectedValue::Int(*value)),
-        Yaml::String(value) => Some(ExpectedValue::String(value.to_string())),
-        _ => None,
-    }
-}
-
-fn parse_check_rule(yaml: &Yaml) -> Option<CheckRule> {
-    let id = get_hash_value(yaml, "id")?.as_str()?.to_string();
-    let when = get_hash_value(yaml, "when")
-        .and_then(parse_predicate)
-        .unwrap_or(Predicate::Always);
-    let target_yaml = get_hash_value(yaml, "target")?;
-    let target = RuleTarget {
-        section: get_hash_value(target_yaml, "section")?
-            .as_str()?
-            .to_string(),
-        key: get_hash_value(target_yaml, "key")?.as_str()?.to_string(),
-        value_type: get_hash_value(target_yaml, "type")
-            .and_then(Yaml::as_str)
-            .and_then(TargetValueType::parse)
-            .unwrap_or(TargetValueType::Bool),
-    };
-    let expect = get_hash_value(yaml, "expect").and_then(parse_expected_value)?;
-    let messages_yaml = get_hash_value(yaml, "messages")?;
-    let messages = RuleMessages {
-        fail: get_hash_value(messages_yaml, "fail")?.as_str()?.to_string(),
-        fix: get_hash_value(messages_yaml, "fix")
-            .and_then(Yaml::as_str)
-            .map(ToString::to_string),
-        pass: get_hash_value(messages_yaml, "pass")
-            .and_then(Yaml::as_str)
-            .map(ToString::to_string),
-    };
-    let severity = get_hash_value(yaml, "severity")
-        .map(|value| parse_severity(value, RuleSeverity::Warning))
-        .unwrap_or(RuleSeverity::Warning);
-
-    Some(CheckRule {
-        id,
-        target,
-        when,
-        expect,
-        messages,
-        severity,
-    })
-}
-
 fn parse_settings_rules(
     entry_name: &str,
     settings_rules_version: Option<u32>,
@@ -294,20 +128,42 @@ fn parse_settings_rules(
         return None;
     }
 
-    let preflight = get_hash_value(field_yaml, "preflight")
-        .and_then(Yaml::as_vec)
-        .map(|items| items.iter().filter_map(parse_preflight_rule).collect())
-        .unwrap_or_default();
-    let checks = get_hash_value(field_yaml, "checks")
-        .and_then(Yaml::as_vec)
-        .map(|items| items.iter().filter_map(parse_check_rule).collect())
-        .unwrap_or_default();
+    let document = yaml_to_json(field_yaml);
+    let result = parse_crashgen_expectations(&document, settings_rules_version);
+    for diagnostic in &result.diagnostics {
+        log::debug!(
+            "Crashgen_Registry.{}.settings_rules{}: {}",
+            entry_name,
+            diagnostic.path.trim_start_matches('$'),
+            diagnostic.message
+        );
+    }
+    result.rules
+}
 
-    Some(CrashgenSettingsRules {
-        version: settings_rules_version.unwrap_or(1),
-        preflight,
-        checks,
-    })
+fn yaml_to_json(yaml: &Yaml) -> Value {
+    match yaml {
+        Yaml::Real(value) => value
+            .parse::<f64>()
+            .ok()
+            .and_then(Number::from_f64)
+            .map(Value::Number)
+            .unwrap_or(Value::Null),
+        Yaml::Integer(value) => Value::Number(Number::from(*value)),
+        Yaml::String(value) => Value::String(value.clone()),
+        Yaml::Boolean(value) => Value::Bool(*value),
+        Yaml::Array(items) => Value::Array(items.iter().map(yaml_to_json).collect()),
+        Yaml::Hash(items) => {
+            let mut map = Map::new();
+            for (key, value) in items {
+                if let Some(key) = key.as_str() {
+                    map.insert(key.to_string(), yaml_to_json(value));
+                }
+            }
+            Value::Object(map)
+        }
+        Yaml::Alias(_) | Yaml::Null | Yaml::BadValue => Value::Null,
+    }
 }
 
 #[cfg(test)]

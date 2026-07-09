@@ -1,9 +1,8 @@
 use classic_config_core::{
-    AutoscanReportPlacement, CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue,
-    Predicate, PreflightAction, PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity,
-    RuleTarget, TargetValueType,
+    AutoscanReportPlacement, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate,
+    PreflightActionKind, RuleSeverity, TargetValueType, parse_crashgen_expectations,
 };
-use serde_json::{Value, json};
+use serde_json::{Map, Value, json};
 
 #[derive(Clone)]
 #[napi(object)]
@@ -76,10 +75,6 @@ pub struct JsCrashgenRegistryEntry {
     pub settings_rules: Option<JsCrashgenSettingsRules>,
 }
 
-fn parse_severity(value: &str, default: RuleSeverity) -> RuleSeverity {
-    RuleSeverity::parse(value).unwrap_or(default)
-}
-
 fn severity_to_str(value: RuleSeverity) -> String {
     match value {
         RuleSeverity::Info => "info".to_string(),
@@ -90,67 +85,6 @@ fn severity_to_str(value: RuleSeverity) -> String {
 
 fn placement_to_str(value: AutoscanReportPlacement) -> String {
     value.as_str().to_string()
-}
-
-fn parse_action_placement(action: &JsPreflightAction) -> AutoscanReportPlacement {
-    action
-        .placement
-        .as_deref()
-        .and_then(AutoscanReportPlacement::parse)
-        .or_else(|| {
-            action
-                .bucket
-                .as_deref()
-                .and_then(AutoscanReportPlacement::parse)
-        })
-        .unwrap_or_default()
-}
-
-fn parse_predicate(value: &Value) -> Option<Predicate> {
-    let map = value.as_object()?;
-
-    if let Some(all) = map.get("all").and_then(Value::as_array) {
-        return Some(Predicate::All(
-            all.iter().filter_map(parse_predicate).collect(),
-        ));
-    }
-    if let Some(any) = map.get("any").and_then(Value::as_array) {
-        return Some(Predicate::Any(
-            any.iter().filter_map(parse_predicate).collect(),
-        ));
-    }
-    if let Some(not) = map.get("not") {
-        return parse_predicate(not).map(|p| Predicate::Not(Box::new(p)));
-    }
-    if let Some(plugins) = map.get("plugin_any").and_then(Value::as_array) {
-        return Some(Predicate::PluginAny(
-            plugins
-                .iter()
-                .filter_map(Value::as_str)
-                .map(|v| v.to_lowercase())
-                .collect(),
-        ));
-    }
-    if let Some(layout) = map
-        .get("config_layout_is")
-        .and_then(Value::as_str)
-        .and_then(ConfigLayout::parse)
-    {
-        return Some(Predicate::ConfigLayoutIs(layout));
-    }
-    if let Some(version) = map.get("crashgen_version_lt").and_then(Value::as_str) {
-        let parts = version
-            .split('.')
-            .map(|p| p.trim().parse::<u32>().ok())
-            .collect::<Vec<_>>();
-        if parts.len() == 3 {
-            return Some(Predicate::CrashgenVersionLt((
-                parts[0]?, parts[1]?, parts[2]?,
-            )));
-        }
-    }
-
-    None
 }
 
 fn predicate_to_json(predicate: &Predicate) -> Value {
@@ -178,66 +112,86 @@ fn predicate_to_json(predicate: &Predicate) -> Value {
     }
 }
 
+fn optional_string_value(value: Option<String>) -> Value {
+    value.map(Value::String).unwrap_or(Value::Null)
+}
+
+fn js_rules_to_document(rules: JsCrashgenSettingsRules) -> Value {
+    let mut root = Map::new();
+    root.insert("version".to_string(), json!(rules.version));
+    root.insert(
+        "preflight".to_string(),
+        Value::Array(
+            rules
+                .preflight
+                .into_iter()
+                .map(js_preflight_rule_to_document)
+                .collect(),
+        ),
+    );
+    root.insert(
+        "checks".to_string(),
+        Value::Array(
+            rules
+                .checks
+                .into_iter()
+                .map(js_check_rule_to_document)
+                .collect(),
+        ),
+    );
+    Value::Object(root)
+}
+
+fn js_preflight_rule_to_document(rule: JsPreflightRule) -> Value {
+    let mut action = Map::new();
+    action.insert("kind".to_string(), Value::String(rule.action.kind));
+    action.insert(
+        "placement".to_string(),
+        optional_string_value(rule.action.placement),
+    );
+    action.insert(
+        "bucket".to_string(),
+        optional_string_value(rule.action.bucket),
+    );
+    action.insert("severity".to_string(), Value::String(rule.action.severity));
+    action.insert("message".to_string(), Value::String(rule.action.message));
+    action.insert("fix".to_string(), optional_string_value(rule.action.fix));
+
+    json!({
+        "id": rule.id,
+        "when": rule.when,
+        "action": Value::Object(action),
+    })
+}
+
+fn js_check_rule_to_document(rule: JsCheckRule) -> Value {
+    json!({
+        "id": rule.id,
+        "target": {
+            "section": rule.target.section,
+            "key": rule.target.key,
+            "value_type": rule.target.value_type,
+        },
+        "when": rule.when,
+        "expect": {
+            "equals": rule.expect.equals,
+        },
+        "messages": {
+            "fail": rule.messages.fail,
+            "fix": rule.messages.fix,
+            "pass": rule.messages.pass,
+        },
+        "severity": rule.severity,
+    })
+}
+
+#[cfg(test)]
+#[path = "crashgen_rules_tests.rs"]
+mod tests;
+
 pub fn js_rules_to_core(rules: Option<JsCrashgenSettingsRules>) -> Option<CrashgenSettingsRules> {
     let rules = rules?;
-
-    let preflight = rules
-        .preflight
-        .into_iter()
-        .map(|rule| PreflightRule {
-            id: rule.id,
-            when: parse_predicate(&rule.when).unwrap_or(Predicate::Always),
-            action: PreflightAction {
-                kind: PreflightActionKind::parse(&rule.action.kind)
-                    .unwrap_or(PreflightActionKind::Notice),
-                bucket: parse_action_placement(&rule.action),
-                severity: parse_severity(&rule.action.severity, RuleSeverity::Info),
-                message: rule.action.message,
-                fix: rule.action.fix,
-            },
-        })
-        .collect();
-
-    let checks = rules
-        .checks
-        .into_iter()
-        .filter_map(|rule| {
-            let expect = rule.expect.equals;
-            let expected = if let Some(value) = expect.as_bool() {
-                Some(ExpectedValue::Bool(value))
-            } else if let Some(value) = expect.as_i64() {
-                Some(ExpectedValue::Int(value))
-            } else {
-                expect
-                    .as_str()
-                    .map(|value| ExpectedValue::String(value.to_string()))
-            }?;
-
-            Some(CheckRule {
-                id: rule.id,
-                target: RuleTarget {
-                    section: rule.target.section,
-                    key: rule.target.key,
-                    value_type: TargetValueType::parse(&rule.target.value_type)
-                        .unwrap_or(TargetValueType::Bool),
-                },
-                when: parse_predicate(&rule.when).unwrap_or(Predicate::Always),
-                expect: expected,
-                messages: RuleMessages {
-                    fail: rule.messages.fail,
-                    fix: rule.messages.fix,
-                    pass: rule.messages.pass,
-                },
-                severity: parse_severity(&rule.severity, RuleSeverity::Warning),
-            })
-        })
-        .collect();
-
-    Some(CrashgenSettingsRules {
-        version: rules.version,
-        preflight,
-        checks,
-    })
+    parse_crashgen_expectations(&js_rules_to_document(rules), None).rules
 }
 
 pub fn core_rules_to_js(rules: Option<&CrashgenSettingsRules>) -> Option<JsCrashgenSettingsRules> {

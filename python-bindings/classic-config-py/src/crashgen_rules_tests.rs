@@ -148,3 +148,37 @@ fn parse_settings_rules_defaults_missing_optional_values() {
         assert!(parsed.checks.is_empty());
     });
 }
+
+#[test]
+fn parse_settings_rules_accepts_canonical_target_type() {
+    Python::initialize();
+    Python::attach(|py| {
+        let rules = PyDict::new(py);
+
+        let target = PyDict::new(py);
+        target.set_item("section", "Compatibility").unwrap();
+        target.set_item("key", "Mode").unwrap();
+        target.set_item("type", "string").unwrap();
+
+        let expect = PyDict::new(py);
+        expect.set_item("equals", "Enabled").unwrap();
+
+        let messages = PyDict::new(py);
+        messages.set_item("fail", "bad").unwrap();
+
+        let check = PyDict::new(py);
+        check.set_item("id", "canonical_type").unwrap();
+        check.set_item("target", &target).unwrap();
+        check.set_item("expect", &expect).unwrap();
+        check.set_item("messages", &messages).unwrap();
+
+        rules
+            .set_item("checks", PyList::new(py, [&check]).unwrap())
+            .unwrap();
+
+        let parsed = parse_settings_rules(rules.as_any()).expect("rules should parse");
+
+        assert_eq!(parsed.checks.len(), 1);
+        assert_eq!(parsed.checks[0].target.value_type, TargetValueType::String);
+    });
+}

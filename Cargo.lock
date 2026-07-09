@@ -717,6 +717,7 @@ dependencies = [
  "classic-shared-core",
  "classic-shared-py",
  "pyo3",
+ "serde_json",
  "tempfile",
 ]
 

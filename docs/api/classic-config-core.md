@@ -65,6 +65,7 @@ Bulk YAML dataset loader for scanlog/business logic.
 
 - `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core)
 - `clear_global_yaml_cache` from [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: that owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
+- crashgen rule-model and Crashgen Expectation Parser types/functions from `crashgen_rules` and `crashgen_expectation_parser`
 
 `clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers.
 
@@ -394,11 +395,12 @@ This section defines the shared Rust rule model used for crashgen settings valid
 Use the crashgen rule model when you need to:
 
 - represent crashgen settings rules as typed Rust data
+- parse Crashgen Expectation payloads from YAML Data or binding adapters into typed Rust data
 - evaluate those rules against installed plugins, flattened settings, config layout facts, and optional crashgen version data
 - share one rule model across config loading, scanlog analysis, TOML/config validation, and bindings
 - build or transform `CrashgenSettingsRules` values in tests, registry builders, or binding adapters
 
-Do not use this module for parsing YAML or TOML directly, formatting final autoscan reports, deciding game-version family ownership for scan-time config building, or creating a Tokio runtime. Those live in sibling modules and the [`classic-scanlog-core`](classic-scanlog-core.md) / [`classic-scangame-core`](classic-scangame-core.md) crates.
+Do not use this module for parsing TOML settings files, formatting final autoscan reports, deciding game-version family ownership for scan-time config building, or creating a Tokio runtime. Those live in sibling modules and the [`classic-scanlog-core`](classic-scanlog-core.md) / [`classic-scangame-core`](classic-scangame-core.md) crates.
 
 ### Rule model types
 
@@ -428,6 +430,21 @@ Do not use this module for parsing YAML or TOML directly, formatting final autos
 ### Main function
 
 - `evaluate_rules(rules, context) -> EvaluationResult`
+
+### Crashgen Expectation Parser
+
+`crashgen_expectation_parser` owns the carrier-neutral parsing seam for Crashgen Expectations. YAML loading, Node bindings, and Python bindings translate their local carrier shape into a JSON-like `serde_json::Value`, then call:
+
+- `parse_crashgen_expectations(document, default_version) -> CrashgenExpectationParseResult`
+
+`CrashgenExpectationParseResult` contains:
+
+- `rules: Option<CrashgenSettingsRules>` - `None` only when the root payload is not a mapping
+- `diagnostics: Vec<CrashgenExpectationParseDiagnostic>` - non-fatal parse diagnostics for skipped/defaulted fields
+
+Parser behavior is intentionally tolerant. Malformed optional values are defaulted, malformed individual rules are skipped, and the parser returns diagnostics rather than failing the whole Crashgen Registry entry. `default_version` carries the YAML sibling `settings_rules_version`; a `version` value inside the parsed document wins when present.
+
+Canonical document field names follow YAML Data: `placement` for Autoscan Report Placement and `target.type` for target value type. Compatibility aliases `bucket` and `target.value_type` are still accepted. Precedence is valid canonical field first, then valid compatibility alias, then the historical default.
 
 ### `CrashgenSettingsRules`
 
@@ -555,16 +572,16 @@ The source-visible evaluation order:
 
 Template rendering is intentionally small in scope. `apply_template()` only replaces `{crashgen_name}`, `{display_section}`, and `{setting}`. If `display_section` is empty, the evaluator substitutes `[Compatibility]`.
 
-### Error handling model for the rule evaluator
+### Error handling model for the rule evaluator and parser
 
 The rule evaluator does not expose a dedicated error enum and `evaluate_rules()` is intentionally infallible. Contributor-facing implications:
 
 - enum parse helpers return `Option<_>`, not `Result<_>`
-- malformed or incomplete rule YAML is expected to be filtered or defaulted by upstream loaders inside this same crate
+- malformed or incomplete Crashgen Expectation payloads are filtered or defaulted by `parse_crashgen_expectations()`
 - missing settings do not produce an evaluator error; the corresponding check is skipped
 - unsupported template tokens remain unchanged because only three placeholders are recognized
 
-If you need richer diagnostics for malformed rule definitions, that work belongs in the loader layer rather than in the evaluator.
+Diagnostics for malformed rule definitions belong to the Crashgen Expectation Parser, not the evaluator. Existing loaders and binding adapters may ignore diagnostics for compatibility, but conformance tests should assert them when parser behavior changes.
 
 ### Current ownership boundaries
 
@@ -582,8 +599,8 @@ Keep `Vr` support intact unless the downstream callers and rule schema are chang
 ### YAML ownership for the rule schema
 
 - `classic-config-core` (this crate) parses `Crashgen_Registry.*.settings_rules` YAML into `CrashgenSettingsRules` via `CrashgenEntryRaw`; those rules, not deprecated `checks`, drive scanlog/scangame validation
-- Node and Python binding layers convert their own transport shapes into the same core types
-- keep the rule-model module focused on typed evaluation, not schema-specific file parsing
+- Node and Python binding layers convert their own transport shapes into a neutral document and call the same Crashgen Expectation Parser
+- keep the rule-model module focused on typed parsing/evaluation, not binding-specific wrappers or TOML settings parsing
 
 ### Rule-model usage example
 
@@ -664,6 +681,8 @@ Note the import path: the types come from `classic_config_core::`, not the forme
 If you extend the rule model, update this section when you change:
 
 - public types or enum variants in `src/crashgen_rules.rs`
+- public parser result or diagnostic types in `src/crashgen_expectation_parser.rs`
+- accepted Crashgen Expectation field names or compatibility aliases
 - predicate semantics or evaluation order
 - value-coercion rules in `value_matches()`
 - template placeholder behavior

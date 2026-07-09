@@ -12,11 +12,15 @@
 
 pub mod client_schemas;
 pub mod config;
+pub mod crashgen_expectation_parser;
 pub(crate) mod crashgen_registry_yaml;
 pub mod crashgen_rules;
 pub mod shippable;
 pub mod yamldata;
 
+pub use crashgen_expectation_parser::{
+    CrashgenExpectationParseDiagnostic, CrashgenExpectationParseResult, parse_crashgen_expectations,
+};
 pub use crashgen_rules::*;
 
 pub use config::{ClassicConfig, PathConfig, YamlSource};

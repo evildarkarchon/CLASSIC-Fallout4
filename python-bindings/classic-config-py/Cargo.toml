@@ -24,6 +24,7 @@ classic-shared-py = { path = "../../foundation/classic-shared-py" }
 # Python bindings
 anyhow = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module"] }
+serde_json = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

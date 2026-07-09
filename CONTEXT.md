@@ -16,6 +16,10 @@ _Avoid_: crash generator, logger plugin
 A YAML Data rule describing valid Crashgen configuration or compatibility guidance for analysis.
 _Avoid_: settings rule, hardcoded check
 
+**Crashgen Expectation Parser**:
+The interpretation step that turns a Crashgen Expectation payload from YAML Data or a binding caller into normalized Crashgen Expectations before evaluation. It owns compatibility aliases and malformed-input tolerance, not scan outcome evaluation.
+_Avoid_: settings rules parser, adapter rule parser, rule DTO conversion
+
 **Crashgen Expectation Outcome**:
 The report-relevant result of evaluating a Crashgen Expectation for a Crash Log. It is distinct from the YAML Data rule and from implementation-specific evaluator result types.
 _Avoid_: EvaluationOutcome, rule result, settings finding

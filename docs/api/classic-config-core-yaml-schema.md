@@ -192,7 +192,7 @@ Under legacy `schema_version: "1.x"` the value was decorated (`CLASSIC v9.1.0`);
 | `ignore_keys` | sequence of strings | defaults to empty list; used as `crashgen_ignore` fallback |
 | `checks` | sequence of strings | deprecated inert compatibility metadata; defaults to empty list and does not select scan-time checks |
 | `settings_rules_version` | non-negative integer or numeric string | optional |
-| `settings_rules` | mapping | optional; parsed into `CrashgenSettingsRules`; malformed nested rules are skipped/defaulted where possible |
+| `settings_rules` | mapping | optional; parsed by the Crashgen Expectation Parser into `CrashgenSettingsRules`; malformed nested rules are skipped/defaulted where possible |
 
 `settings_rules` is the behavioral source of Crashgen Expectations. Recognized nested settings-rules keys from current source include:
 
@@ -208,6 +208,7 @@ Under legacy `schema_version: "1.x"` the value was decorated (`CLASSIC v9.1.0`);
 - `settings_rules.checks[].target.section`
 - `settings_rules.checks[].target.key`
 - `settings_rules.checks[].target.type`
+- `settings_rules.checks[].target.value_type`
 - `settings_rules.checks[].when`
 - `settings_rules.checks[].expect.equals`
 - `settings_rules.checks[].messages.fail`
@@ -216,6 +217,12 @@ Under legacy `schema_version: "1.x"` the value was decorated (`CLASSIC v9.1.0`);
 - `settings_rules.checks[].severity`
 
 Recognized predicate keys are `plugin_any`, `config_layout_is`, `crashgen_version_lt`, `all`, `any`, and `not`; omitted or malformed predicates default to always-applicable at the rule level. Supported action kinds are `notice_and_skip_remaining`, `notice`, and `issue`. Supported severities are `info`, `warning`, and `error`. Supported target types are `bool`, `int`, and `string`.
+
+`settings_rules.checks[].target.type` is the canonical YAML Data key for target value type. `settings_rules.checks[].target.value_type` is accepted as a binding compatibility alias by the shared parser, but first-party YAML Data should prefer `type`. Current precedence is:
+
+1. valid `type`
+2. valid `value_type`
+3. default `bool`
 
 `settings_rules.preflight[].action.placement` is the preferred Autoscan Report Placement key. `settings_rules.preflight[].action.bucket` remains a compatibility alias for older clients during the transition. Current shipped YAML dual-writes both keys when a non-default placement is required.
 
