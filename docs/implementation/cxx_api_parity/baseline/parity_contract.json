@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T02:50:16Z",
+  "generated_at_utc": "2026-07-09T04:46:43Z",
   "schema_version": 1,
   "entries": [
     {
@@ -3548,7 +3548,7 @@
             "type": "&str"
           }
         ],
-        "returnType": "Vec<GameSetupCheckDto>"
+        "returnType": "Result<Vec<GameSetupCheckDto>>"
       }
     },
     {

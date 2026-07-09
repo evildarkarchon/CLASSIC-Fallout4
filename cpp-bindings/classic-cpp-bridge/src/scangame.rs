@@ -67,16 +67,16 @@ fn game_setup_intake_checks(
     game_root: &str,
     docs_path: &str,
     xse_log_path: &str,
-) -> Vec<ffi::GameSetupCheckDto> {
-    execute_game_setup_intake(game_id, game_version, game_root, docs_path, xse_log_path)
-        .map(|result| {
+) -> Result<Vec<ffi::GameSetupCheckDto>, String> {
+    execute_game_setup_intake(game_id, game_version, game_root, docs_path, xse_log_path).map(
+        |result| {
             result
                 .checks
                 .into_iter()
                 .map(game_setup_check_to_dto)
                 .collect()
-        })
-        .unwrap_or_default()
+        },
+    )
 }
 
 fn game_setup_needs_path_detection(
@@ -778,7 +778,7 @@ mod ffi {
             game_root: &str,
             docs_path: &str,
             xse_log_path: &str,
-        ) -> Vec<GameSetupCheckDto>;
+        ) -> Result<Vec<GameSetupCheckDto>>;
 
         fn game_setup_needs_path_detection(
             game_path: &str,

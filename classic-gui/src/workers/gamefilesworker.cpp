@@ -10,7 +10,7 @@ GameFilesWorker::GameFilesWorker(QObject* parent)
 }
 
 void GameFilesWorker::doScan(const QString& gameExePath, const QString& gameRoot, const QString& docsPath,
-                             const QString& gameName)
+                             const QString& gameName, const QString& gameVersion)
 {
     Q_UNUSED(gameExePath);
 
@@ -20,7 +20,7 @@ void GameFilesWorker::doScan(const QString& gameExePath, const QString& gameRoot
 
     try {
         auto result =
-            classic::scangame::run_game_setup_intake(classic::toRustString(gameName), ::rust::Str("auto", 4),
+            classic::scangame::run_game_setup_intake(classic::toRustString(gameName), classic::toRustString(gameVersion),
                                                      classic::toRustString(gameRoot), classic::toRustString(docsPath),
                                                      ::rust::Str("", 0));
 

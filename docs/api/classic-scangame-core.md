@@ -242,6 +242,7 @@ This module owns read-only setup intake for supported game installs.
 Important items:
 
 - `GameSetupIntake::new(game_id, selected_game_version)`
+- `GameSetupIntake::from_config(config, game_id)`
 - `GameSetupIntake::with_game_root(path)`
 - `GameSetupIntake::with_docs_root(path)`
 - `GameSetupIntake::with_xse_log_path(path)`
@@ -263,7 +264,9 @@ Behavior worth knowing:
 
 - Game Setup Intake is read-only; detected paths are returned as proposed updates instead of being persisted.
 - `auto` mode reads executable PE version metadata and attempts a Version Registry match.
+- `from_config(config, game_id)` returns `None` when no saved game root exists and uses `docs_root` before falling back to legacy `ini_folder`.
 - failed setup diagnostics are typed checks; the top-level status is `ActionRequired` only when user input is missing.
+- documents-folder state is mapped from `classic-path-core`'s structured `DocumentsCheckState`, not rendered message text.
 - the module covers setup-only diagnostics, not ENB, crashgen TOML, Wrye, BA2, loose-file, or mod INI scans.
 
 ## Loose-file and archive scanning APIs
@@ -476,7 +479,7 @@ Crashgen TOML flow in more detail:
 
 Game Setup Intake flow:
 
-1. Build `GameSetupIntake` with a `GameId`, selected version, and any saved paths.
+1. Build `GameSetupIntake` with a `GameId`, selected version, and any saved paths, or use `GameSetupIntake::from_config(config, game_id)` for saved CLASSIC config.
 2. Call `run()`.
 3. The crate resolves paths, registry metadata, executable facts, documents diagnostics, and XSE setup diagnostics.
 4. Callers use `rendered_report` for text display and `checks` for structured UI/status handling.

@@ -39,6 +39,46 @@ fn game_setup_path_detection_treats_blank_values_as_missing() {
 }
 
 #[test]
+fn from_config_requires_saved_game_root() {
+    let config = classic_config_core::ClassicConfig::default();
+
+    assert!(GameSetupIntake::from_config(&config, GameId::Fallout4).is_none());
+}
+
+#[test]
+fn from_config_prefers_docs_root_over_ini_folder() {
+    let (_temp, game_root, docs_root) = setup_roots();
+    let ini_folder = docs_root.with_file_name("IniFallback");
+    let mut config = classic_config_core::ClassicConfig {
+        game_version: "NextGen".to_string(),
+        ..classic_config_core::ClassicConfig::default()
+    };
+    config.paths.game_root = game_root.clone();
+    config.paths.docs_root = Some(docs_root.clone());
+    config.paths.ini_folder = Some(ini_folder);
+
+    let intake = GameSetupIntake::from_config(&config, GameId::Fallout4)
+        .expect("saved game root should build intake");
+
+    assert_eq!(intake.selected_game_version, "NextGen");
+    assert_eq!(intake.game_root.as_deref(), Some(game_root.as_path()));
+    assert_eq!(intake.docs_root.as_deref(), Some(docs_root.as_path()));
+}
+
+#[test]
+fn from_config_uses_ini_folder_as_legacy_docs_fallback() {
+    let (_temp, game_root, docs_root) = setup_roots();
+    let mut config = classic_config_core::ClassicConfig::default();
+    config.paths.game_root = game_root;
+    config.paths.ini_folder = Some(docs_root.clone());
+
+    let intake = GameSetupIntake::from_config(&config, GameId::Fallout4)
+        .expect("saved game root should build intake");
+
+    assert_eq!(intake.docs_root.as_deref(), Some(docs_root.as_path()));
+}
+
+#[test]
 fn registry_auto_candidates_keep_fallout4_non_vr() {
     let candidates = registry_auto_candidates(get_version_registry(), GameId::Fallout4);
 
@@ -98,6 +138,69 @@ fn executable_hash_matching_uses_registry_candidates() {
 
     assert_eq!(matched.id, "FO4_VR");
     assert_eq!(facts.match_confidence.as_deref(), Some("exact"));
+}
+
+#[test]
+fn explicit_vr_selection_from_fallout4_uses_vr_executable_docs_and_xse() {
+    let temp = TempDir::new().expect("temp dir");
+    let game_root = temp.path().join("Fallout4VR");
+    let docs_root = temp.path().join("Docs").join("Fallout4VR");
+    fs::create_dir_all(&game_root).expect("game root");
+    fs::create_dir_all(&docs_root).expect("docs root");
+    fs::write(game_root.join("Fallout4VR.exe"), b"not a real pe").expect("fake vr exe");
+    fs::write(game_root.join("f4sevr_loader.exe"), b"loader").expect("vr loader");
+    fs::write(game_root.join("f4sevr_0_6_20.dll"), b"dll").expect("vr version dll");
+
+    let result = GameSetupIntake::new(GameId::Fallout4, "VR")
+        .with_game_root(&game_root)
+        .with_docs_root(&docs_root)
+        .run();
+
+    assert_eq!(result.status, GameSetupIntakeStatus::Ready);
+    assert!(
+        !result
+            .actions
+            .contains(&GameSetupRequiredAction::ChooseGamePath)
+    );
+    let expected_exe = game_root.join("Fallout4VR.exe");
+    assert_eq!(
+        result.paths.game_exe_path.as_deref(),
+        Some(expected_exe.as_path())
+    );
+    assert_eq!(result.version.registry_id.as_deref(), Some("FO4_VR"));
+
+    let xse_loader = result
+        .checks
+        .iter()
+        .find(|check| check.kind == GameSetupCheckKind::XseLoader)
+        .expect("xse loader check");
+    assert_eq!(xse_loader.state, GameSetupCheckState::Passed);
+    assert!(xse_loader.message.contains("F4SEVR loader is installed."));
+
+    let xse_version = result
+        .checks
+        .iter()
+        .find(|check| check.kind == GameSetupCheckKind::XseVersion)
+        .expect("xse version check");
+    assert_eq!(xse_version.state, GameSetupCheckState::Passed);
+    assert!(
+        xse_version
+            .message
+            .contains("Detected F4SEVR version 0.6.20")
+    );
+
+    let documents = result
+        .checks
+        .iter()
+        .find(|check| check.kind == GameSetupCheckKind::DocumentsFolder)
+        .expect("documents check");
+    assert!(
+        documents
+            .details
+            .iter()
+            .any(|detail| detail.contains("Fallout4VR.ini")),
+        "VR selections should validate Fallout4VR INI names"
+    );
 }
 
 #[test]

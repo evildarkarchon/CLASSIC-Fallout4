@@ -22,8 +22,9 @@ public:
     /// @param gameRoot    Root directory of the game installation.
     /// @param docsPath    Documents/INI folder path used for docs checks.
     /// @param gameName    Game identifier string (e.g. "Fallout4").
+    /// @param gameVersion Saved game-version selection (e.g. "auto", "Original", or "VR").
     void startScan(const QString& gameExePath, const QString& gameRoot, const QString& docsPath,
-                   const QString& gameName);
+                   const QString& gameName, const QString& gameVersion);
 
     /// @return true if a scan is currently in progress.
     bool isScanning() const;

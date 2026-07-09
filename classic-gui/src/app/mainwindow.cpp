@@ -1653,7 +1653,7 @@ void MainWindow::onScanGameFiles()
     // Update backup controller with the game root (may have changed)
     m_backupController->setGameRoot(gameRoot);
 
-    m_gameFilesController->startScan(gameExePath, gameRoot, docsPath, gameName);
+    m_gameFilesController->startScan(gameExePath, gameRoot, docsPath, gameName, m_gameVersion);
 }
 
 void MainWindow::onExit()

@@ -875,39 +875,23 @@ describe("normalizeGameSetupVersionSelection", () => {
     const result = normalizeGameSetupVersionSelection("AE");
     expect(result).toBe("AnniversaryEdition");
   });
-});
 
-// ============================================================================
-// Game Setup Version Resolution
-// ============================================================================
-
-describe("normalizeGameSetupVersionSelection", () => {
   test("returns VR for VR", () => {
     expect(normalizeGameSetupVersionSelection("VR")).toBe("VR");
-  });
-
-  test("returns Original for Original", () => {
-    expect(normalizeGameSetupVersionSelection("Original")).toBe("Original");
   });
 
   test("returns NextGen for NextGen", () => {
     expect(normalizeGameSetupVersionSelection("NextGen")).toBe("NextGen");
   });
 
-  test("returns AnniversaryEdition for AE alias", () => {
-    expect(normalizeGameSetupVersionSelection("AE")).toBe("AnniversaryEdition");
+  test("preserves AnniversaryEdition", () => {
+    expect(normalizeGameSetupVersionSelection("AnniversaryEdition")).toBe(
+      "AnniversaryEdition"
+    );
   });
 
   test("returns auto for unknown value", () => {
     expect(normalizeGameSetupVersionSelection("invalid")).toBe("auto");
-  });
-
-  test("returns auto for null", () => {
-    expect(normalizeGameSetupVersionSelection(null)).toBe("auto");
-  });
-
-  test("returns auto for auto", () => {
-    expect(normalizeGameSetupVersionSelection("auto")).toBe("auto");
   });
 });
 

@@ -69,21 +69,7 @@ fn infer_game_id(config: &ClassicConfig) -> Option<GameId> {
 
 /// Build a read-only Game Setup Intake from saved CLASSIC configuration.
 fn build_game_setup_intake(config: &ClassicConfig, game_id: GameId) -> Option<GameSetupIntake> {
-    if config.paths.game_root.as_os_str().is_empty() {
-        return None;
-    }
-
-    let mut intake = GameSetupIntake::new(game_id, &config.game_version)
-        .with_game_root(config.paths.game_root.clone());
-    if let Some(docs_root) = config
-        .paths
-        .docs_root
-        .as_ref()
-        .or(config.paths.ini_folder.as_ref())
-    {
-        intake = intake.with_docs_root(docs_root.clone());
-    }
-    Some(intake)
+    GameSetupIntake::from_config(config, game_id)
 }
 
 fn to_scanlog_issue(issue: classic_scangame_core::ConfigIssue) -> ConfigIssue {

@@ -243,10 +243,19 @@ fn test_integrity_run_all_checks_empty_path_returns_empty() {
 
 #[test]
 fn test_game_setup_intake_checks_empty_paths_returns_diagnostics() {
-    let checks = game_setup_intake_checks("Fallout4", "auto", "", "", "");
+    let checks = game_setup_intake_checks("Fallout4", "auto", "", "", "")
+        .expect("valid game id should return setup diagnostics");
     assert!(!checks.is_empty());
     assert!(checks.iter().any(|check| !check.kind.is_empty()));
     assert!(checks.iter().any(|check| !check.state.is_empty()));
+}
+
+#[test]
+fn test_game_setup_intake_checks_invalid_game_id_returns_error() {
+    match game_setup_intake_checks("NotAGame", "auto", "", "", "") {
+        Ok(_) => panic!("invalid game id should be visible to C++ callers"),
+        Err(error) => assert!(error.contains("Unknown game identifier")),
+    }
 }
 
 // ── CrashgenOrchestrator tests ────────────────────────────────────────────

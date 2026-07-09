@@ -33,6 +33,49 @@ use crate::IniFile;
 use crate::error::DocsPathResult;
 use std::path::Path;
 
+/// Structured state for one documents-folder check message.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DocumentsCheckState {
+    /// The documents-folder expectation passed.
+    Passed,
+    /// The expectation produced a non-blocking warning.
+    Warning,
+    /// The expectation failed and should be surfaced as a setup issue.
+    Failed,
+}
+
+impl DocumentsCheckState {
+    /// Return the stable adapter-facing state identifier.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Passed => "passed",
+            Self::Warning => "warning",
+            Self::Failed => "failed",
+        }
+    }
+}
+
+/// Rendered documents-folder check message paired with structured state.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DocumentsCheckResult {
+    /// Structured state for the rendered message.
+    pub state: DocumentsCheckState,
+    /// Human-readable message describing the check result.
+    pub message: String,
+}
+
+impl DocumentsCheckResult {
+    /// Create a documents check result with an explicit state and message.
+    #[must_use]
+    pub fn new(state: DocumentsCheckState, message: impl Into<String>) -> Self {
+        Self {
+            state,
+            message: message.into(),
+        }
+    }
+}
+
 /// Result of an INI file validation check.
 ///
 /// This struct contains information about the validation status and any
@@ -92,6 +135,25 @@ impl IniCheckResult {
     /// `true` if there's an issue, `false` otherwise.
     pub fn has_issue(&self) -> bool {
         self.issue.is_some()
+    }
+
+    /// Return the setup-facing state represented by this INI check.
+    ///
+    /// Missing, corrupted, and incomplete INI files are represented by
+    /// `issue`, while parsed INIs without an issue are considered passed.
+    #[must_use]
+    pub fn state(&self) -> DocumentsCheckState {
+        if self.has_issue() {
+            DocumentsCheckState::Failed
+        } else {
+            DocumentsCheckState::Passed
+        }
+    }
+}
+
+impl From<IniCheckResult> for DocumentsCheckResult {
+    fn from(result: IniCheckResult) -> Self {
+        Self::new(result.state(), result.message)
     }
 }
 
@@ -165,15 +227,29 @@ impl DocumentsChecker {
     /// assert!(checker.check_onedrive_in_path(onedrive_path).is_some());
     /// ```
     pub fn check_onedrive_in_path(&self, docs_path: &Path) -> Option<String> {
+        self.check_onedrive_in_path_result(docs_path)
+            .map(|result| result.message)
+    }
+
+    /// Check if OneDrive is detected and return a structured warning result.
+    ///
+    /// Returns `Some` only when "onedrive" is found in the path string. The
+    /// result state is always [`DocumentsCheckState::Warning`] because this
+    /// condition is advisory rather than a hard validation failure.
+    #[must_use]
+    pub fn check_onedrive_in_path_result(&self, docs_path: &Path) -> Option<DocumentsCheckResult> {
         let path_str = docs_path.to_string_lossy().to_lowercase();
 
         if path_str.contains("onedrive") {
-            Some(format!(
-                "⚠️ WARNING: OneDrive detected in documents path.\n\
+            Some(DocumentsCheckResult::new(
+                DocumentsCheckState::Warning,
+                format!(
+                    "⚠️ WARNING: OneDrive detected in documents path.\n\
                  OneDrive sync may interfere with game files and cause issues.\n\
                  Path: {}\n\
                  -----",
-                docs_path.display()
+                    docs_path.display()
+                ),
             ))
         } else {
             None
@@ -360,7 +436,7 @@ impl DocumentsChecker {
     ///
     /// # Returns
     ///
-    /// A vector of check result messages (only non-empty results).
+    /// A vector of structured check results (only non-empty messages).
     ///
     /// # Errors
     ///
@@ -375,21 +451,24 @@ impl DocumentsChecker {
     /// let checker = DocumentsChecker::new("Fallout4");
     /// let docs_path = Path::new("C:\\Users\\Name\\Documents\\My Games\\Fallout4");
     ///
-    /// match checker.run_all_checks(docs_path) {
-    ///     Ok(messages) => {
-    ///         for msg in messages {
-    ///             println!("{}", msg);
+    /// match checker.run_all_check_results(docs_path) {
+    ///     Ok(results) => {
+    ///         for result in results {
+    ///             println!("{}: {}", result.state.as_str(), result.message);
     ///         }
     ///     }
     ///     Err(e) => eprintln!("Error: {}", e),
     /// }
     /// ```
-    pub fn run_all_checks(&self, docs_path: &Path) -> DocsPathResult<Vec<String>> {
-        let mut messages = Vec::new();
+    pub fn run_all_check_results(
+        &self,
+        docs_path: &Path,
+    ) -> DocsPathResult<Vec<DocumentsCheckResult>> {
+        let mut results = Vec::new();
 
         // Check for OneDrive
-        if let Some(onedrive_warning) = self.check_onedrive_in_path(docs_path) {
-            messages.push(onedrive_warning);
+        if let Some(onedrive_warning) = self.check_onedrive_in_path_result(docs_path) {
+            results.push(onedrive_warning);
         }
 
         // Validate main INI
@@ -397,7 +476,7 @@ impl DocumentsChecker {
         if let Ok(result) = self.validate_ini_file(docs_path, &main_ini)
             && !result.message.is_empty()
         {
-            messages.push(result.message);
+            results.push(result.into());
         }
 
         // Validate Custom INI
@@ -405,7 +484,7 @@ impl DocumentsChecker {
         if let Ok(result) = self.validate_ini_file(docs_path, &custom_ini)
             && !result.message.is_empty()
         {
-            messages.push(result.message);
+            results.push(result.into());
         }
 
         // Validate Prefs INI
@@ -413,10 +492,23 @@ impl DocumentsChecker {
         if let Ok(result) = self.validate_ini_file(docs_path, &prefs_ini)
             && !result.message.is_empty()
         {
-            messages.push(result.message);
+            results.push(result.into());
         }
 
-        Ok(messages)
+        Ok(results)
+    }
+
+    /// Run all document checks and return rendered messages.
+    ///
+    /// This compatibility wrapper preserves the historical `Vec<String>` API.
+    /// Call [`Self::run_all_check_results`] when the caller needs structured
+    /// pass/warning/failure state without parsing the rendered text.
+    pub fn run_all_checks(&self, docs_path: &Path) -> DocsPathResult<Vec<String>> {
+        Ok(self
+            .run_all_check_results(docs_path)?
+            .into_iter()
+            .map(|result| result.message)
+            .collect())
     }
 
     /// Get the game name.

@@ -16,7 +16,7 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 
 ## Purpose And Scope
 
-Game Setup Intake prepares a supported game install for setup validation. It resolves saved or detected paths, selects or detects the game version, looks up Version Registry expectations, and returns typed setup diagnostics plus a Rust-rendered report.
+Game Setup Intake prepares a supported game install for setup validation. The workflow resolves saved or detected paths, selects or detects the game version, looks up Version Registry expectations, and returns typed setup diagnostics plus a Rust-rendered report.
 
 It is intentionally setup-only. It does not run Crash Log analysis, ENB checks, crashgen TOML checks, Wrye parsing, loose-file scans, BA2 scans, or mod INI scans.
 
@@ -46,6 +46,7 @@ For crate-by-crate API details, see:
 Important public items:
 
 - `GameSetupIntake::new(game_id, selected_game_version)`
+- `GameSetupIntake::from_config(config, game_id)`
 - `with_game_root(path)`
 - `with_docs_root(path)`
 - `with_xse_log_path(path)`

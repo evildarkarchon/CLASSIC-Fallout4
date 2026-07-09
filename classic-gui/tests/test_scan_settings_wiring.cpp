@@ -10,6 +10,9 @@ private slots:
     void scan_controller_forwards_flags_to_worker();
     void mainwindow_forwards_scan_flags_to_controller();
     void mainwindow_forwards_game_version_to_scan_controller();
+    void mainwindow_forwards_game_version_to_game_files_controller();
+    void game_files_controller_forwards_game_version_to_worker();
+    void game_files_worker_forwards_game_version_to_setup_intake();
     void scan_worker_handles_move_unsolved_and_max_concurrent_settings();
     void scan_worker_uses_progress_enabled_batch_api();
     void scan_worker_forwards_batch_counts_in_progress_updates();
@@ -117,6 +120,55 @@ void ScanSettingsWiringTests::mainwindow_forwards_game_version_to_scan_controlle
         R"(m_scanController->startScan\((?:.|\n)*?m_gameVersion,\s*m_showFormIdValues,\s*m_fcxMode,\s*m_simplifyLogs,\s*m_moveUnsolvedLogs,\s*m_unsolvedLogsDestination,\s*m_maxConcurrentScans\s*,(?:.|\n)*?\))"));
     QVERIFY2(callRegex.match(sourceText).hasMatch(),
              "MainWindow should forward game version and all scan settings to ScanController::startScan()");
+}
+
+void ScanSettingsWiringTests::mainwindow_forwards_game_version_to_game_files_controller()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+
+    const QRegularExpression callRegex(QStringLiteral(
+        R"(m_gameFilesController->startScan\(\s*gameExePath,\s*gameRoot,\s*docsPath,\s*gameName,\s*m_gameVersion\s*\))"));
+    QVERIFY2(callRegex.match(sourceText).hasMatch(),
+             "MainWindow should forward the saved game version to GameFilesController::startScan()");
+}
+
+void ScanSettingsWiringTests::game_files_controller_forwards_game_version_to_worker()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/gamefilescontroller.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+
+    QVERIFY2(sourceText.contains(QStringLiteral("const QString& gameVersion")),
+             "GameFilesController::startScan() should receive the selected game version");
+    const QRegularExpression workerCallRegex(
+        QStringLiteral(R"(worker->doScan\((?:.|\n)*?gameName,\s*gameVersion\s*\))"));
+    QVERIFY2(workerCallRegex.match(sourceText).hasMatch(),
+             "GameFilesController should pass gameVersion through to GameFilesWorker::doScan()");
+}
+
+void ScanSettingsWiringTests::game_files_worker_forwards_game_version_to_setup_intake()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/gamefilesworker.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+
+    QVERIFY2(sourceText.contains(QStringLiteral("const QString& gameVersion")),
+             "GameFilesWorker::doScan() should receive the selected game version");
+    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(gameVersion)")),
+             "GameFilesWorker should forward gameVersion to run_game_setup_intake()");
+    QVERIFY2(!sourceText.contains(QStringLiteral("::rust::Str(\"auto\", 4)")),
+             "GameFilesWorker should not force setup intake back to auto detection");
 }
 
 void ScanSettingsWiringTests::scan_worker_handles_move_unsolved_and_max_concurrent_settings()

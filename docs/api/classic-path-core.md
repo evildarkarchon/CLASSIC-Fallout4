@@ -62,6 +62,7 @@ All contributor-facing APIs are re-exported from `src/lib.rs`; the internal modu
 
 - `IniFile` - parsed INI wrapper with case-insensitive section/key lookup
 - `DocumentsChecker` - read-only documents-folder checker
+- `DocumentsCheckResult` / `DocumentsCheckState` - rendered documents messages with structured state
 - `IniCheckResult` - structured result for one INI check
 
 ### Backup APIs
@@ -200,19 +201,26 @@ Construction:
 Important methods:
 
 - `check_onedrive_in_path(docs_path) -> Option<String>`
+- `check_onedrive_in_path_result(docs_path) -> Option<DocumentsCheckResult>`
 - `validate_ini_file(docs_path, ini_name) -> DocsPathResult<IniCheckResult>`
+- `run_all_check_results(docs_path) -> DocsPathResult<Vec<DocumentsCheckResult>>`
 - `run_all_checks(docs_path) -> DocsPathResult<Vec<String>>`
 - `game_name()`
+
+`DocumentsCheckResult` fields:
+
+- `state: DocumentsCheckState`
+- `message`
 
 `IniCheckResult` fields:
 
 - `ini_name`, `exists`, `is_valid`, `message`, `issue`
-- helper: `has_issue()`
+- helpers: `has_issue()`, `state()`
 
 Behavior worth knowing:
 
 - missing or corrupted INIs are reported as successful `Ok(IniCheckResult)` values with `issue` populated; they are not treated as hard errors
-- `run_all_checks()` currently checks only three files: `{Game}.ini`, `{Game}Custom.ini`, and `{Game}Prefs.ini`
+- `run_all_check_results()` and its string-only `run_all_checks()` wrapper currently check only three files: `{Game}.ini`, `{Game}Custom.ini`, and `{Game}Prefs.ini`
 - for `{Game}Custom.ini`, the checker requires an `[Archive]` section to consider archive invalidation enabled
 - OneDrive detection is a simple case-insensitive substring search over the path string
 
@@ -448,10 +456,10 @@ If the caller only needs the raw XSE-derived path, use `parse_xse_log()` directl
 - `parse_xse_log()` assumes a fixed `.../Data/XSE/Plugins`-style suffix and pops exactly three path components
 - `is_restricted_path()` is heuristic string matching, not a canonicalized allow/deny policy
 - `check_write_permissions()` writes a temporary `.classic_test_write` file into the target directory
-- `DocumentsChecker::run_all_checks()` ignores per-file `Err` results internally and only appends messages from successful `validate_ini_file()` calls
+- `DocumentsChecker::run_all_check_results()` ignores per-file `Err` results internally and only appends messages from successful `validate_ini_file()` calls; `run_all_checks()` preserves the historical string-only wrapper
 - `GamePathError` includes `ExecutableNotFound` and `XseFileNotFound`, but the current `GamePathFinder` implementation does not construct those variants during its normal validation path
 - some public error variants such as `UserCancelled` are part of the API surface even though the current Rust crate does not include an interactive prompt path that returns them
-- user-facing warning strings in `DocumentsChecker` currently include emoji; contributors changing message text should treat that as public behavior for bindings and setup reports
+- user-facing warning strings in `DocumentsChecker` currently include emoji; contributors changing message text should treat that as public behavior for bindings and setup reports, while structured callers should use `DocumentsCheckState` instead of parsing those strings
 
 If you extend this crate, update this document when you change:
 

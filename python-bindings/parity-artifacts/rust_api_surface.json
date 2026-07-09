@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T04:33:44.481608+00:00",
+  "generated_at_utc": "2026-07-09T04:46:18.081244+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -3664,12 +3664,50 @@
       "tier": "tier1"
     },
     {
+      "symbol": "DocumentsCheckResult",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use checker::{DocumentsCheckResult, DocumentsCheckState, DocumentsChecker, IniCheckResult};",
+      "source_expr": "checker::DocumentsCheckResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DocumentsCheckResult",
+      "kind": "struct",
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/checker.rs",
+      "source_decl": "pub struct DocumentsCheckResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DocumentsCheckState",
+      "kind": "enum",
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/checker.rs",
+      "source_decl": "pub enum DocumentsCheckState",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DocumentsCheckState",
+      "kind": "reexport",
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/lib.rs",
+      "source_decl": "pub use checker::{DocumentsCheckResult, DocumentsCheckState, DocumentsChecker, IniCheckResult};",
+      "source_expr": "checker::DocumentsCheckState",
+      "tier": "tier1"
+    },
+    {
       "symbol": "DocumentsChecker",
       "kind": "reexport",
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use checker::{DocumentsChecker, IniCheckResult};",
+      "source_decl": "pub use checker::{DocumentsCheckResult, DocumentsCheckState, DocumentsChecker, IniCheckResult};",
       "source_expr": "checker::DocumentsChecker",
       "tier": "tier1"
     },
@@ -3775,7 +3813,7 @@
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
-      "source_decl": "pub use checker::{DocumentsChecker, IniCheckResult};",
+      "source_decl": "pub use checker::{DocumentsCheckResult, DocumentsCheckState, DocumentsChecker, IniCheckResult};",
       "source_expr": "checker::IniCheckResult",
       "tier": "tier1"
     },
@@ -3953,6 +3991,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "check_onedrive_in_path_result",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/checker.rs",
+      "source_decl": "pub fn check_onedrive_in_path_result(&self, docs_path: &Path)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "check_read_permissions",
       "kind": "function",
       "arity": 1,
@@ -4100,6 +4148,15 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/game_path.rs",
       "source_decl": "pub fn find_via_xse_log(&self, log_path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/checker.rs",
+      "source_decl": "pub const fn",
       "tier": "tier1"
     },
     {
@@ -4414,6 +4471,16 @@
     {
       "symbol": "new",
       "kind": "function",
+      "arity": 2,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/checker.rs",
+      "source_decl": "pub fn new(state: DocumentsCheckState, message: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
       "arity": 1,
       "crate": "classic-path-core",
       "owner_module": "path",
@@ -4639,6 +4706,16 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/ini_parser.rs",
       "source_decl": "pub fn sections(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "state",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/checker.rs",
+      "source_decl": "pub fn state(&self)",
       "tier": "tier1"
     },
     {
@@ -7315,6 +7392,16 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/wrye.rs",
       "source_decl": "pub fn format_report(issues: &[WryeIssue])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "from_config",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn from_config(config: &ClassicConfig, game_id: GameId)",
       "tier": "tier1"
     },
     {

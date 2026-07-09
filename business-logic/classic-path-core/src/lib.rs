@@ -61,7 +61,7 @@ mod notification_cache;
 mod yaml_cache;
 
 pub use backup::{BackupManager, XseVersion};
-pub use checker::{DocumentsChecker, IniCheckResult};
+pub use checker::{DocumentsCheckResult, DocumentsCheckState, DocumentsChecker, IniCheckResult};
 pub use docs_path::DocsPathFinder;
 pub use error::{
     BackupError, BackupResult, DocsPathError, DocsPathResult, GamePathError, GamePathResult,

@@ -7,6 +7,7 @@
 
 use std::path::{Path, PathBuf};
 
+use classic_config_core::ClassicConfig;
 use classic_file_io_core::FileHasher;
 use classic_path_core::{DocsPathFinder, GamePathFinder};
 use classic_shared_core::GameId;
@@ -269,6 +270,31 @@ impl GameSetupIntake {
         }
     }
 
+    /// Build a Game Setup Intake request from saved CLASSIC configuration.
+    ///
+    /// Returns `None` when the saved config has no game root, because setup
+    /// intake cannot infer the game identity-specific root from config alone.
+    /// When both `docs_root` and legacy `ini_folder` are present, `docs_root`
+    /// wins and `ini_folder` remains a compatibility fallback.
+    #[must_use]
+    pub fn from_config(config: &ClassicConfig, game_id: GameId) -> Option<Self> {
+        if config.paths.game_root.as_os_str().is_empty() {
+            return None;
+        }
+
+        let mut intake =
+            Self::new(game_id, &config.game_version).with_game_root(config.paths.game_root.clone());
+        if let Some(docs_root) = config
+            .paths
+            .docs_root
+            .as_ref()
+            .or(config.paths.ini_folder.as_ref())
+        {
+            intake = intake.with_docs_root(docs_root.clone());
+        }
+        Some(intake)
+    }
+
     /// Set a saved or caller-provided game root.
     #[must_use]
     pub fn with_game_root(mut self, path: impl Into<PathBuf>) -> Self {
@@ -301,13 +327,20 @@ impl GameSetupIntake {
         let mut actions = Vec::new();
         let mut path_updates = Vec::new();
 
-        let game_root = resolve_game_root(self, &mut checks, &mut actions);
-        let game_exe_path = game_root
+        let selected = normalize_game_setup_version_selection(&self.selected_game_version);
+        let game_root = resolve_game_root(self, &selected, &mut checks, &mut actions);
+        let auto_detection_exe_path = game_root
             .as_ref()
-            .map(|root| root.join(self.game_id.exe_name()));
-        let version_context = resolve_version_context(self, game_exe_path.as_deref());
+            .map(|root| root.join(selected_version_exe_name(self.game_id, &selected)));
+        let version_context = resolve_version_context(self, auto_detection_exe_path.as_deref());
         let mut version_facts = version_context.facts;
         checks.extend(version_context.checks);
+        let game_exe_path = game_root.as_ref().map(|root| {
+            root.join(version_info_exe_name(
+                self.game_id,
+                version_context.info.as_ref(),
+            ))
+        });
 
         let paths = resolve_version_dependent_paths(
             self,
@@ -329,7 +362,11 @@ impl GameSetupIntake {
         }
 
         run_executable_checks(&paths, version_context.info.as_ref(), &mut checks);
-        run_documents_checks(self.game_id, &paths, &mut checks);
+        run_documents_checks(
+            documents_game_name(self.game_id, version_context.info.as_ref()),
+            &paths,
+            &mut checks,
+        );
         run_xse_checks(
             self.game_id,
             &paths,
@@ -621,16 +658,17 @@ fn resolve_version_dependent_paths(
 
 fn resolve_game_root(
     intake: &GameSetupIntake,
+    selected_version: &str,
     checks: &mut Vec<GameSetupCheck>,
     actions: &mut Vec<GameSetupRequiredAction>,
 ) -> Option<PathBuf> {
+    let path_game_id = game_id_for_selected_version(intake.game_id, selected_version);
     let finder = GamePathFinder::new(
-        intake.game_id.exe_name(),
+        path_game_id.exe_name(),
         None::<&str>,
-        intake.game_id.as_str(),
-        // GamePathFinder still needs a product hint for Windows registry lookup;
-        // VersionInfo drives the version-specific expectations after this point.
-        intake.game_id.is_vr(),
+        registry_product_name(path_game_id),
+        // GamePathFinder needs the base registry product plus a VR suffix for VR installs.
+        path_game_id.is_vr(),
     );
     match finder.find_game_path(intake.game_root.as_deref(), intake.xse_log_path.as_deref()) {
         Ok(path) => {
@@ -807,7 +845,7 @@ fn run_executable_checks(
 }
 
 fn run_documents_checks(
-    game_id: GameId,
+    game_name: &str,
     paths: &GameSetupResolvedPaths,
     checks: &mut Vec<GameSetupCheck>,
 ) {
@@ -820,16 +858,23 @@ fn run_documents_checks(
         return;
     };
 
-    let docs_checker = classic_path_core::DocumentsChecker::new(game_id.as_str());
-    match docs_checker.run_all_checks(docs_root) {
-        Ok(messages) => {
-            let state = if messages.iter().any(|message| message.contains("❌")) {
+    let docs_checker = classic_path_core::DocumentsChecker::new(game_name);
+    match docs_checker.run_all_check_results(docs_root) {
+        Ok(results) => {
+            let state = if results
+                .iter()
+                .any(|result| result.state == classic_path_core::DocumentsCheckState::Failed)
+            {
                 GameSetupCheckState::Failed
-            } else if messages.iter().any(|message| message.contains("⚠")) {
+            } else if results
+                .iter()
+                .any(|result| result.state == classic_path_core::DocumentsCheckState::Warning)
+            {
                 GameSetupCheckState::Warning
             } else {
                 GameSetupCheckState::Passed
             };
+            let messages = results.into_iter().map(|result| result.message).collect();
             checks.push(GameSetupCheck::with_details(
                 GameSetupCheckKind::DocumentsFolder,
                 state,
@@ -860,7 +905,7 @@ fn run_xse_checks(
         return;
     };
 
-    let xse_type = XseType::from_game_id(game_id);
+    let xse_type = xse_type_for_setup(game_id, info);
     let xse_info = get_xse_info(game_root, xse_type);
     checks.push(GameSetupCheck::new(
         GameSetupCheckKind::XseLoader,
@@ -1096,6 +1141,66 @@ pub fn game_setup_needs_path_detection(
     let needs_game = game_path.is_none_or(|path| path.trim().is_empty());
     let needs_docs = docs_path.is_none_or(|path| path.trim().is_empty());
     (needs_game, needs_docs)
+}
+
+/// Return the game identity implied by an explicit Fallout 4 version selection.
+fn game_id_for_selected_version(game_id: GameId, selected_version: &str) -> GameId {
+    match (game_id, selected_version) {
+        (GameId::Fallout4 | GameId::Fallout4VR, "VR") => GameId::Fallout4VR,
+        (GameId::Fallout4 | GameId::Fallout4VR, "Original" | "NextGen" | "AnniversaryEdition") => {
+            GameId::Fallout4
+        }
+        _ => game_id,
+    }
+}
+
+/// Return the executable name to use before registry metadata has been resolved.
+fn selected_version_exe_name(game_id: GameId, selected_version: &str) -> &'static str {
+    game_id_for_selected_version(game_id, selected_version).exe_name()
+}
+
+/// Return the game identity implied by resolved Version Registry metadata.
+fn game_id_for_version_info(game_id: GameId, info: Option<&VersionInfo>) -> GameId {
+    let Some(info) = info else {
+        return game_id;
+    };
+
+    // The Fallout 4 VR registry row keeps `game: Fallout4` for shared data,
+    // while `is_vr`/`docs_name` identify the executable and documents shape.
+    if matches!(info.game.as_str(), "Fallout4" | "Fallout4VR")
+        && (info.is_vr || info.docs_name == "Fallout4VR" || info.id == "FO4_VR")
+    {
+        return GameId::Fallout4VR;
+    }
+
+    info.game.parse::<GameId>().unwrap_or(game_id)
+}
+
+/// Return the executable name to validate for resolved setup metadata.
+fn version_info_exe_name(game_id: GameId, info: Option<&VersionInfo>) -> &'static str {
+    game_id_for_version_info(game_id, info).exe_name()
+}
+
+/// Return the Windows registry product hint expected by `GamePathFinder`.
+fn registry_product_name(game_id: GameId) -> &'static str {
+    match game_id {
+        GameId::Fallout4VR => "Fallout4",
+        _ => game_id.as_str(),
+    }
+}
+
+/// Return the documents INI basename for resolved setup metadata.
+fn documents_game_name(game_id: GameId, info: Option<&VersionInfo>) -> &str {
+    info.map(|info| info.docs_name.as_str())
+        .filter(|name| !name.trim().is_empty())
+        .unwrap_or_else(|| game_id.as_str())
+}
+
+/// Return the script extender type implied by registry XSE metadata.
+fn xse_type_for_setup(game_id: GameId, info: Option<&VersionInfo>) -> XseType {
+    info.and_then(|info| info.xse.as_ref())
+        .and_then(|xse| xse.acronym.parse::<XseType>().ok())
+        .unwrap_or_else(|| XseType::from_game_id(game_id_for_version_info(game_id, info)))
 }
 
 fn non_empty_pathbuf(path: PathBuf) -> Option<PathBuf> {

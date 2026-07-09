@@ -1,197 +1,136 @@
-# CLASSIC Repo Guide
+# CLASSIC Project Guide
 
-Use this reference when a task needs repository-specific details that are too bulky for the always-on prompt.
+This file supplements `AGENTS.md`. Keep always-on architecture rules there; keep exact commands, artifact ownership, publish preflights, and CI/platform details here.
 
-## Table of Contents
+## Command Picker
 
-1. Architecture Map
-2. Build, Test, and Validation Commands
-3. Repo Conventions and Constraints
-4. CXX API Parity Workflow
-5. Node API Parity Workflow
-6. Python API Parity Workflow
-7. YAML Data Publish Workflow
-8. App Update Notification Publish Workflow
-9. CI and Platform Notes
+| Touched surface | Local checks to consider | Artifacts or docs to consider |
+| --- | --- | --- |
+| Rust-only crates | `cargo fmt`, `cargo clippy`, focused `cargo test`; set `PYO3_PYTHON` first if PyO3 can build | Affected `docs/api/` pages for public contracts |
+| `classic-cli/` or `classic-gui/` | PowerShell wrappers in `Native C++ Wrappers` | Packaging/install output only when requested; CLI integration fixtures may require submodules |
+| `cpp-bindings/classic-cpp-bridge/` or Rust APIs exposed through C++ | CXX parity gate, then CLI/GUI wrapper tests for changed consumers | `docs/implementation/cxx_api_parity/baseline/`; `docs/api/cxx-parity-gate.md` |
+| `node-bindings/classic-node/` or Rust APIs exposed through Node | Node parity gate, declaration freshness, Bun and Node tests | `index.d.ts`, Node runtime coverage registry, `docs/implementation/node_api_parity/baseline/` |
+| `python-bindings/` or Rust APIs exposed through Python | Python parity gate, stub validation, rebuild, pytest | `.pyi` files, Python runtime coverage registry, `python-bindings/parity-artifacts/`, `docs/implementation/python_api_parity/baseline/` |
+| `CLASSIC Data/databases/` or schema-version behavior | Schema drift guard and YAML publish validator | `docs/api/yaml-update-delivery.md` for loader, manifest, or delivery contract changes |
+| `CLASSIC Data/app-notification.yaml` or notification publish tooling | Notification source validator, dry-run harness, publish-tool tests | `docs/api/app-update-notification-delivery.md` and affected update/path/error API docs |
+| Linux or cloud validation | Rust-only subsets and source-only gates first | Note any skipped Windows/MSVC-native checks explicitly |
 
-## Architecture Map
+## Native C++ Wrappers
 
-CLASSIC is a repo-root Cargo workspace with native C++ frontends, a Rust core, thin binding layers, and repo-owned YAML data.
-
-- `classic-cli/` - C++20 CLI frontend.
-- `classic-gui/` - Qt 6 C++20 desktop GUI.
-- `foundation/` - shared runtime and utility crates such as `classic-shared-core`.
-- `business-logic/` - 16 active domain crates, usually named `*-core`.
-- `cpp-bindings/classic-cpp-bridge/` - C++ bridge into Rust.
-- `node-bindings/classic-node/` - active Node.js and Bun binding surface.
-- `python-bindings/` - active Python binding tree, binding-local virtualenv, and tracked Python parity artifacts.
-- `ui-applications/classic-tui/` - Rust TUI application crate.
-- `CLASSIC Data/` - repo-owned runtime data, including shippable YAML databases under `CLASSIC Data/databases/` and app-update notification source `CLASSIC Data/app-notification.yaml`.
-- `sample_logs/FO4/` - crash-log fixture corpus used by CLI integration-style tests.
-- `ClassicLib-rs/` - historical residue only; do not treat it as the live workspace root.
-
-Repo-root workspace shell:
-
-- `Cargo.toml`, `Cargo.lock`, and `.cargo/config.toml` at repo root are the only live Cargo workspace shell.
-- Use `docs/workspace-migration-matrix.md` when translating older `ClassicLib-rs/...` path or command guidance.
-
-Placement guidance:
-
-- Put new product behavior in Rust core when it should be shared across frontends or bindings.
-- Keep `classic-cli/` and `classic-gui/` focused on frontend and integration concerns.
-- Keep bindings thin: C++, Node, and Python should wrap Rust APIs rather than reimplementing logic.
-- Treat Python as an active compatibility surface, not the default place for new product logic.
-- Keep YAML/schema-version behavior in the Rust core crates that own the contract, then wire release and validation tooling around that behavior.
-
-## Build, Test, and Validation Commands
-
-### Native C++ builds
-
-Recommended wrappers auto-detect Visual Studio, initialize the VS developer shell, and run CMake plus Ninja. MSVC is the default compiler; pass `-Compiler clang-cl` to use clang-cl against the Visual Studio/MSVC ABI toolchain, including Cargo `cc-rs`/`cxx_build` C++ bridge glue compiled during Corrosion builds.
+Run from the repo root. The wrappers initialize the Visual Studio developer shell, configure CMake/Ninja, and support `-Compiler clang-cl` while keeping the MSVC ABI. `-Package` implies `-Install` for both wrappers.
 
 ```powershell
-# Build CLI
+# Build
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
-pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Compiler clang-cl
-
-# Build GUI
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Compiler clang-cl
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Compiler clang-cl
 
-# Build plus tests
+# Build plus all tests
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
-pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
-pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -Compiler clang-cl
 
-# Build plus selected tests
+# Selected tests. CLI supports both CTest and integration scenario filters; GUI supports CTest filters only.
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
 
-# Clean rebuild
+# Clean rebuild, install, or package
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Clean
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Clean
-
-# Install or package
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Install
-pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Package
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Install
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Package
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Package
 ```
 
-Prerequisites:
+CLI integration scenarios use the crash-log fixture corpus under `sample_logs/FO4`; initialize it with `git submodule update --init --recursive` when that directory is missing.
 
-- Visual Studio with the C++ Desktop workload; install the optional LLVM clang-cl/lld-link components for clang-cl builds.
-- `VCPKG_ROOT` configured, for example `C:\vcpkg`.
-- Ninja available in the VS developer shell.
-- Qt 6 installed for GUI work; see `classic-gui/CMakePresets.json`.
-- For CLI integration-style tests, initialize fixture submodules first: `git submodule update --init --recursive`.
+## Rust And PyO3 Commands
 
-### C++ tests
-
-Policy: NEVER run C++ tests by invoking test binaries or raw `ctest` directly. Always run C++ tests through the PowerShell build wrappers.
-
-```powershell
-pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
-pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
-pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -Compiler clang-cl
-pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -Compiler clang-cl
-pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "ThreadPool executes all enqueued tasks"
-pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -IntegrationTestName help,version
-pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-scan-settings-wiring
-```
-
-### Rust workspace
-
-If a local build or test path touches PyO3 crates, set `PYO3_PYTHON` for the current PowerShell session first:
+Before cargo commands that can build PyO3 crates, point PyO3 at the binding-local interpreter:
 
 ```powershell
 $env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 ```
 
-Run the main Rust workspace commands from the repo root:
+Common workspace checks:
 
 ```powershell
-cargo build --workspace
-cargo build --workspace --release
-
-cargo test --workspace
-cargo test --workspace -- --nocapture
-cargo test -p classic-scanlog-core
-
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
+cargo test -p classic-scanlog-core
+cargo build --workspace
+cargo build --workspace --release
 ```
 
-### CXX parity gate
+Create or refresh the Python binding tool environment before Python binding smoke tests:
 
-Run these from the repo root.
+```powershell
+uv sync --project python-bindings --inexact
+uv sync --project python-bindings --inexact --group drift-guards
+```
+
+Use the `--group drift-guards` form when the schema drift guard or YAML publish tooling needs `ruamel.yaml`.
+
+## Binding Parity Workflows
+
+### CXX
+
+Use this when bridge source, `cpp-bindings/classic-cpp-bridge/build.rs`, or a Rust public API exposed through the bridge changes.
 
 ```powershell
 python tools/cxx_api_parity/check_parity_gate.py --repo-root .
 python tools/cxx_api_parity/check_parity_gate.py --repo-root . --update-baseline
 ```
 
-The gate is source-only. It updates local diagnostics under `cpp-bindings/classic-cpp-bridge/parity-artifacts/` and compares or refreshes the committed baseline under `docs/implementation/cxx_api_parity/baseline/`.
+Only run `--update-baseline` for intentional source-backed drift. Commit the refreshed files under `docs/implementation/cxx_api_parity/baseline/`; leave `cpp-bindings/classic-cpp-bridge/parity-artifacts/` as local diagnostics. The gate is source-only. For changed consumers, add the relevant CLI or GUI wrapper test command from `Native C++ Wrappers`.
 
-### Node bindings
+### Node
 
-Run these from `node-bindings/classic-node`.
+Run from `node-bindings/classic-node`.
 
 ```powershell
 bun install
-bun run build
-bun run cli -- --version
-
 bun run parity:gate
-bun run parity:gate:update-baseline
-bun run parity:gate:ci
 bun run parity:gate:local
-bun run parity:gate:local:vsdev
-
-bun run dts:refresh
 bun run test:bun
 bun run test:node
 bun run dts:freshness:check
+bun run cli -- --version
 ```
 
-`parity:gate:ci` mirrors the CI verification pair (`parity:gate` plus `dts:freshness:check`). `parity:gate:local` refreshes the tracked Node baseline and `index.d.ts` together for intentional source-backed drift.
+Use `parity:gate:local` only for intentional source-backed drift; it refreshes `index.d.ts`, updates the tracked Node baseline, and verifies declaration freshness. Commit affected files under `docs/implementation/node_api_parity/baseline/`, `node-bindings/classic-node/index.d.ts`, and `node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json` when ownership changes. Do not commit `node-bindings/classic-node/parity-artifacts/` or generated `index.js`.
 
-### Python bindings
+### Python
 
-Use a bindings-local virtual environment at `python-bindings/.venv`; do not rely on a repo-root `.venv` for Python binding smoke tests.
-
-Before local PyO3-flavored cargo flows, set `PYO3_PYTHON` for the current shell:
+Run from the repo root.
 
 ```powershell
-$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
-```
-
-Typical local workflow from the repo root:
-
-```powershell
-# `python-bindings/` is a uv-managed project (`pyproject.toml` + `uv.lock`).
-# `uv sync` creates the venv at python-bindings/.venv and installs the
-# locked tooling (maturin, pytest). `--inexact` is load-bearing: it stops
-# uv from pruning the maturin-built `classic-*-py` wheels on re-sync.
-# Add `--group drift-guards` when you need `ruamel.yaml` for schema_version_gate.py.
 uv sync --project python-bindings --inexact
-
 $env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 
 uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .
 uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings
-
 pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python
 uv run --project python-bindings python -m pytest python-bindings/tests -q
 ```
 
-Before `uv run --project python-bindings python -m pytest python-bindings/tests -q`, rebuild the Python bindings with `rebuild_rust.ps1 -Target python` so every `-py` crate is installed into `python-bindings/.venv/`. Use `python -m pytest`, not the `.venv\Scripts\pytest.exe` console-script entrypoint, because some tests anchor settings lookup to `sys.argv[0]`'s parent. You can pass crate filters only when deliberately narrowing a local iteration loop.
+When the same change touches shippable YAML data or schema-version constants, start with:
 
-### YAML data validation and publish helpers
+```powershell
+uv sync --project python-bindings --inexact --group drift-guards
+uv run --project python-bindings python tools/schema_version_gate.py --repo-root .
+```
 
-Run these from the repo root when changing `CLASSIC Data/databases/`, schema-version behavior, or YAML publish tooling.
+Commit touched `.pyi` files, runtime coverage registry changes under `python-bindings/tests/fixtures/`, tracked reports under `python-bindings/parity-artifacts/`, and affected files under `docs/implementation/python_api_parity/baseline/` when generated results legitimately change.
+
+## Data Publish Workflows
+
+### YAML Data
+
+Use this for shippable YAML databases, client schema ranges, schema-version rules, or YAML publish tooling.
 
 ```powershell
 uv sync --project python-bindings --inexact --group drift-guards
@@ -199,11 +138,11 @@ uv run --project python-bindings python tools/schema_version_gate.py --repo-root
 uv run --project python-bindings python tools/publish_yaml_data/validate.py --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"
 ```
 
-The maintainer publish workflow lives in `.github/workflows/publish-yaml-data.yml` and runs only for pushed `yaml-data-v*` tags.
+Update `docs/api/yaml-update-delivery.md` when loader, manifest, cache, fallback, or delivery behavior changes. The maintainer publish workflow is `.github/workflows/publish-yaml-data.yml` and runs only for pushed `yaml-data-v*` tags.
 
-### App-update notification validation and publish helpers
+### App Update Notification
 
-Run these from the repo root when changing `CLASSIC Data/app-notification.yaml`, app-notification publish tooling, or manifest delivery behavior.
+Use this for `CLASSIC Data/app-notification.yaml`, notification manifest semantics, or app-notification publish tooling.
 
 ```powershell
 uv sync --project python-bindings --inexact --group drift-guards
@@ -214,175 +153,25 @@ uv run --project python-bindings python tools/publish_app_notification/dry_run.p
 uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q
 ```
 
-The generator command writes a disposable local preview. The dry-run command validates the stricter `app-notification-v<SEMVER>` workflow tag, stages the same release-asset and `gh-pages` manifest files under a local output directory, and reuses the release-asset probe plus Pages smoke-test helper against a temporary localhost server. Add `--simulate-release-asset-mismatch` or `--simulate-pages-mismatch` when you need to verify failure ordering. Do not commit generated `manifest.json` or `gh-pages` outputs. The `uv` commands use the bindings-local tool environment so `ruamel.yaml` and pytest are available without relying on whatever `python` happens to resolve in the shell.
+Do not commit generated manifest previews or local `gh-pages` output. The maintainer publish workflow is `.github/workflows/publish-app-notification.yml` and runs only for pushed `app-notification-v*` tags. In `CLASSIC Data/app-notification.yaml`, `release_tag` is the advertised binary `v*` release, not the `app-notification-v*` workflow tag. Preserve `--latest=false` on notification release operations so GitHub's latest release pointer stays on binary releases.
 
-The maintainer publish workflow lives in `.github/workflows/publish-app-notification.yml` and runs only for pushed `app-notification-v*` tags. This channel is disjoint from `yaml-data-v*` data publishes and binary `v*` releases.
+## CI And Platform Notes
 
-## Repo Conventions and Constraints
+Primary workflows:
 
-- Maintain one shared Tokio runtime from the Rust core runtime facilities.
-- Rust edition is 2024.
-- Rust workspace policy denies `unsafe_code`.
-- C++ standard is C++20.
-- Native builds are MSVC-oriented and use vcpkg plus Corrosion.
-- Keep top-level docs synchronized with architecture or workflow changes, especially `README.md` and `AGENTS.md`.
-- Keep live guidance on repo-root paths. Use `docs/workspace-migration-matrix.md` for older `ClassicLib-rs/...` docs instead of restating the migration ad hoc.
-- Before local cargo commands that touch PyO3, set `PYO3_PYTHON` per shell. `.cargo/config.toml` intentionally omits a global pin so Windows-only venv paths do not leak into Linux or macOS builds. If PyO3 still reports a missing Python after setting it, check for a stale global `VIRTUAL_ENV` pointing at a removed or moved interpreter.
-- Use `python-bindings/.venv` for Python binding build and test workflows, and run pytest through `uv run --project python-bindings python -m pytest ...` rather than the `.venv\Scripts\pytest.exe` console-script entrypoint.
-- Rust unit tests live in sibling `*_tests.rs` files declared with `#[cfg(test)] #[path = "<name>_tests.rs"] mod tests;`, not inline `#[cfg(test)] mod tests { ... }` blocks. Full contract: `openspec/specs/rust-test-module-layout/spec.md`.
-- Never write to `NUL` or `nul` as a file path on Windows.
+| Workflow | Purpose |
+| --- | --- |
+| `ci-cpp.yml` | CXX parity plus CLI and GUI build/test pipeline |
+| `ci-rust.yml` | Rust format, lint, build, and test pipeline |
+| `ci-typescript.yml` | Node parity, declaration freshness, and runtime tests |
+| `ci-python-bindings.yml` | Python parity, stub validation, schema drift guard, rebuild, and smoke tests |
+| `benchmarks.yml` | Benchmark and performance pipeline |
+| `publish-yaml-data.yml` | Maintainer YAML-data release workflow for `yaml-data-v*` tags |
+| `publish-app-notification.yml` | Maintainer app-update notification workflow for `app-notification-v*` tags |
 
-## CXX API Parity Workflow
+Platform constraints worth remembering:
 
-Use this when `cpp-bindings/classic-cpp-bridge/` changes or a public Rust API change alters the `#[cxx::bridge]` contract.
-
-Trigger paths usually include:
-
-- `cpp-bindings/classic-cpp-bridge/src/`
-- `cpp-bindings/classic-cpp-bridge/build.rs`
-- public Rust `lib.rs` entrypoints in `foundation/` or `business-logic/` crates that the bridge exposes
-
-Required follow-up in the same change:
-
-1. Run `python tools/cxx_api_parity/check_parity_gate.py --repo-root .`.
-2. If the drift is intentional, refresh the committed baseline with `python tools/cxx_api_parity/check_parity_gate.py --repo-root . --update-baseline`.
-3. Review and stage the committed baseline under `docs/implementation/cxx_api_parity/baseline/`.
-4. Do not commit `cpp-bindings/classic-cpp-bridge/parity-artifacts/`; they are local diagnostics only.
-5. Run the relevant `classic-cli/build_cli.ps1 -Test` and/or `classic-gui/build_gui.ps1 -Test` flows if bridge consumers changed.
-6. Make sure `ci-cpp.yml` passes before merge.
-
-Reference: `docs/api/cxx-parity-gate.md`.
-
-## Node API Parity Workflow
-
-Use this when Rust APIs exposed through Node bindings change.
-
-Pair this checklist with `docs/api/binding-contract-refresh-note.md`, `docs/api/node-python-contract-map.md`, and `docs/api/binding-parity-policy.md`.
-
-Trigger paths usually include:
-
-- `business-logic/*/src/lib.rs` or `foundation/*/src/lib.rs` for Node-exposed public APIs
-- `node-bindings/classic-node/src/`
-- `node-bindings/classic-node/index.d.ts`
-- `node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json`
-
-Required follow-up in the same change:
-
-1. Update `docs/implementation/node_api_parity/baseline/parity_contract.json` when the tracked public Node surface intentionally changes.
-2. Update `node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json` when runtime coverage ownership changes.
-3. Refresh and commit the checked-in baseline reports under `docs/implementation/node_api_parity/baseline/` when gate-backed results legitimately change.
-4. Refresh and commit `node-bindings/classic-node/index.d.ts` when the public Node export surface changes (`bun run dts:refresh`, or `bun run parity:gate:local` for intentional source-backed drift together with the tracked baseline).
-5. Run from `node-bindings/classic-node`:
-   - `bun run dts:refresh` when step 4 applies and you are not using `parity:gate:local`
-   - `bun run parity:gate`
-   - `bun run parity:gate:update-baseline` only when the plain gate shows intentional source-backed drift
-   - `bun run parity:gate`
-   - `bun run test:bun`
-   - `bun run test:node`
-   - `bun run dts:freshness:check`
-6. Do not commit `node-bindings/classic-node/parity-artifacts/` or `index.js`; they are generated local diagnostics or gitignored outputs.
-7. Use `docs/workspace-migration-matrix.md` for old-to-new path translation instead of copying legacy path prose into this guide.
-8. Make sure `ci-typescript.yml` passes before merge.
-
-Release gate:
-
-- Do not tag a release unless the Tier-1 Node parity gate and the `index.d.ts` freshness gate pass in CI.
-
-## Python API Parity Workflow
-
-Use this when Rust APIs exposed through Python bindings change.
-
-Pair this checklist with `docs/api/binding-contract-refresh-note.md`, `docs/api/node-python-contract-map.md`, and `docs/api/binding-parity-policy.md`.
-
-Trigger paths usually include:
-
-- `business-logic/*/src/lib.rs` or `foundation/*/src/lib.rs` for Python-exposed public APIs
-- `python-bindings/*-py/src/`
-- `python-bindings/*-py/*.pyi`
-- `python-bindings/tests/fixtures/runtime_coverage_registry.json`
-
-Required follow-up in the same change:
-
-1. Update `docs/implementation/python_api_parity/baseline/parity_contract.json` when the tracked public Python surface intentionally changes.
-2. Update `python-bindings/tests/fixtures/runtime_coverage_registry.json` when runtime coverage ownership changes.
-3. Refresh and commit the touched `python-bindings/*-py/*.pyi` files when the public Python surface changes.
-4. Refresh and commit the tracked outputs under `python-bindings/parity-artifacts/` and any affected checked-in baseline reports under `docs/implementation/python_api_parity/baseline/` when generated results legitimately change.
-5. Before the first `uv sync`, decide whether the change touches shippable YAML data (`CLASSIC Data/databases/`) or schema-version constants. That choice is fixed for the rest of this checklist: `schema_version_gate.py` needs `ruamel.yaml`, which is only installed via `--group drift-guards` on the initial sync — adding the group later still works, but deciding now avoids a venv that cannot run the gate.
-   Run:
-   - **Python-only change:** `uv sync --project python-bindings --inexact` (creates/refreshes `python-bindings/.venv` from the locked tooling set; `--inexact` preserves the maturin-built `classic-*-py` wheels).
-   - **YAML or schema-version change:** `uv sync --project python-bindings --inexact --group drift-guards` (same as above, plus `ruamel.yaml` for `schema_version_gate.py`).
-   - `$env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"`
-   - `uv run --project python-bindings python tools/python_api_parity/check_parity_gate.py --repo-root .`
-   - `uv run --project python-bindings python validate_stubs.py --rust-dir . --parity-contract docs/implementation/python_api_parity/baseline/parity_contract.json --json-out python-bindings/parity-artifacts/stub_validation_report.json --fail-on-warnings`
-   - **YAML or schema-version change (same preflight decision):** `uv run --project python-bindings python tools/schema_version_gate.py --repo-root .`
-   - `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python`
-   - `uv run --project python-bindings python -m pytest python-bindings/tests -q`
-6. Use `docs/workspace-migration-matrix.md` for old-to-new path translation instead of copying legacy path prose into this guide.
-7. Make sure `ci-python-bindings.yml` passes before merge.
-
-## YAML Data Publish Workflow
-
-Use this when changing shippable YAML data, schema-version rules, or YAML-data release tooling.
-
-Trigger paths usually include:
-
-- `CLASSIC Data/databases/*.yaml`
-- `CLASSIC Data/databases/client-schema-ranges.yaml`
-- `tools/schema_version_gate.py`
-- `tools/publish_yaml_data/*`
-- `.github/workflows/publish-yaml-data.yml`
-
-Required follow-up in the same change:
-
-1. Run `uv sync --project python-bindings --inexact --group drift-guards`, then `uv run --project python-bindings python tools/schema_version_gate.py --repo-root .` to verify checked-in YAML `schema_version` headers still match the Rust-side acceptance contract.
-2. Run `uv run --project python-bindings python tools/publish_yaml_data/validate.py --databases-dir "CLASSIC Data/databases" --schema-ranges "CLASSIC Data/databases/client-schema-ranges.yaml"`.
-3. If loader, manifest, or delivery behavior changes, update `docs/api/yaml-update-delivery.md` and any affected crate API docs in `docs/api/`.
-4. Remember `publish-yaml-data.yml` is maintainer-triggered only on pushed `yaml-data-v*` tags; PRs do not publish YAML data.
-5. Account for the workflow's downstream effects: GitHub release assets are validated before publish, then Pages manifests are pushed under `gh-pages` `yaml-data/` entries. The YAML-data and app-notification workflows intentionally share the `publish-gh-pages-${{ github.repository }}` concurrency group because both mutate the same Pages branch.
-
-## App Update Notification Publish Workflow
-
-Use this when changing the payload-free app-update notification source, manifest contract, publish tooling, or delivery workflow.
-
-Trigger paths usually include:
-
-- `CLASSIC Data/app-notification.yaml`
-- `tools/publish_app_notification/*`
-- `.github/workflows/publish-app-notification.yml`
-- `tools/publish_yaml_data/smoke_test_pages.py` when changing behavior reused by the notification channel
-- `docs/api/app-update-notification-delivery.md`
-- notification-facing public APIs documented under `docs/api/`, especially `classic-update-core.md`, `classic-path-core.md`, and `error-contract.md`
-
-Required follow-up in the same change:
-
-1. Run `uv sync --project python-bindings --inexact --group drift-guards`, then `uv run --project python-bindings python tools/publish_app_notification/validate.py --source "CLASSIC Data/app-notification.yaml"`.
-2. If publish tooling changes, also run `uv run --project python-bindings python -m pytest tools/publish_app_notification/tests -q` and run the local dry-run harness using a current UTC timestamp, for example by setting `$publishedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")` and passing `--workflow-tag app-notification-v9.2.0 --published-at $publishedAt`.
-3. If manifest fields, validation rules, cache/fallback behavior, or delivery sequencing changes, update `docs/api/app-update-notification-delivery.md` and any affected crate API docs under `docs/api/`.
-4. Do not commit generated `manifest.json` previews or `gh-pages` publish outputs; the workflow owns those artifacts.
-5. Preserve tag namespace separation: `app-notification-v*` wakes the notification publish workflow, which validates the stricter `app-notification-v<SEMVER>` shape before publishing; `yaml-data-v*` triggers YAML-data publishes, and binary `v*` releases remain the advertised install target. In `CLASSIC Data/app-notification.yaml`, `release_tag` is the binary `v*` tag being advertised, not the `app-notification-v*` workflow tag. The notification and YAML-data workflows intentionally share the `publish-gh-pages-${{ github.repository }}` concurrency group because both mutate the same Pages branch.
-6. Preserve `--latest=false` on app-notification GitHub release operations so the repository's "latest" pointer stays on the newest binary `v*` release.
-7. Remember `publish-app-notification.yml` is maintainer-triggered only on pushed `app-notification-v*` tags and rejects non-SemVer suffixes; PRs do not publish app notifications.
-
-Reference: `docs/api/app-update-notification-delivery.md`.
-
-## CI and Platform Notes
-
-Primary CI workflows:
-
-1. `ci-cpp.yml` - C++ bridge parity plus CLI and GUI build/test pipeline.
-2. `ci-rust.yml` - Rust format, lint, build, and test pipeline.
-3. `ci-typescript.yml` - Node binding parity and runtime tests.
-4. `ci-python-bindings.yml` - Python binding parity, stub validation, schema drift guard, rebuild, and smoke tests.
-5. `publish-yaml-data.yml` - maintainer YAML-data release workflow for `yaml-data-v*` tags.
-6. `publish-app-notification.yml` - maintainer app-update notification workflow for `app-notification-v*` tags.
-7. `benchmarks.yml` - benchmark and performance pipeline.
-
-Platform notes:
-
-- `classic-cli` and `classic-gui` are Windows-focused and require MSVC.
+- `classic-cli/` and `classic-gui/` are Windows-focused native surfaces and require an MSVC-compatible toolchain.
 - `node-bindings/classic-node` currently targets `x86_64-pc-windows-msvc`.
-- CLI integration tests need `sample_logs/FO4` checked out from submodules.
-- Regular CLI/GUI clang-cl presets use `x64-windows-classic-clang-cl` for both target and host vcpkg packages, chainloaded through `cmake/toolchains/vcpkg-clang-cl.cmake` so vcpkg uses clang-cl/lld-link too. CLI CI still uses release-only vcpkg triplets. GUI CI installs prebuilt Qt and uses the `ci-system-qt` / `ci-system-qt-clang-cl` presets so the test job does not spend its timeout compiling Qt from source.
-- The CXX parity gate, YAML publish validation helpers, and app-notification publish validation helpers are source-only and do not require MSVC.
-- Some Rust crates depend on DirectX-related tooling via transitive `ba2` paths and may need subset builds on Linux.
-- On Linux or cloud environments, prefer Rust-only crate subsets plus source-only parity gates when the full workspace is not portable.
+- The CXX parity gate, YAML publish validator, and app-notification validator are source-only and do not require MSVC.
+- Some Rust workspace paths pull Windows-oriented dependencies through archive/DirectX-related crates; on Linux or generic cloud runners, prefer focused Rust subsets plus source-only gates unless full portability is the point of the task.

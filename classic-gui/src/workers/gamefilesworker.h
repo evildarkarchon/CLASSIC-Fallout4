@@ -20,7 +20,9 @@ public slots:
     ///
     /// Called from the QThread once it starts. Emits progress/finished/error
     /// signals back to the controller on the main thread.
-    void doScan(const QString& gameExePath, const QString& gameRoot, const QString& docsPath, const QString& gameName);
+    /// @param gameVersion Saved game-version selection forwarded to setup intake.
+    void doScan(const QString& gameExePath, const QString& gameRoot, const QString& docsPath, const QString& gameName,
+                const QString& gameVersion);
 
 signals:
     /// Emitted periodically to indicate scan progress.

@@ -66,7 +66,7 @@ This is currently the main bridge file where multiple crates meet.
 This file exposes Game Setup Intake plus the broader scanner/checker bridge functions in this namespace.
 
 - `run_game_setup_intake(...) -> GameSetupIntakeDto`
-- `game_setup_intake_checks(...) -> Vec<GameSetupCheckDto>`
+- `game_setup_intake_checks(...) -> Result<Vec<GameSetupCheckDto>>`
 - `game_setup_needs_path_detection(game_path, docs_path) -> GameSetupPathDetectionNeeds`
 
 Game Setup Intake is setup-only. ENB, crashgen, BA2, Wrye, INI, and mod-file checks remain separate bridge entry points.
@@ -370,9 +370,9 @@ Current bridge behavior that matters:
 - invalid `game_id` returns a fatal DTO rather than throwing across CXX
 - setup diagnostics come from Rust core and include registry-backed executable, documents, and XSE checks where metadata exists
 
-### `game_setup_intake_checks(game_id, game_version, game_root, docs_path, xse_log_path) -> Vec<GameSetupCheckDto>`
+### `game_setup_intake_checks(game_id, game_version, game_root, docs_path, xse_log_path) -> Result<Vec<GameSetupCheckDto>>`
 
-Returns the typed check list from the same intake run.
+Returns the typed check list from the same intake run. Invalid intake inputs, such as an unknown `game_id`, are returned as CXX `Result` errors rather than being collapsed to an empty check list.
 
 Bridge DTO shape:
 
@@ -427,7 +427,7 @@ Those DTOs still flatten the underlying Rust models heavily.
 
 `classic::scangame::run_game_setup_intake()` returns Rust-rendered report text plus summary counts.
 
-`classic::scangame::game_setup_intake_checks()` exposes typed check records for callers that need structured state.
+`classic::scangame::game_setup_intake_checks()` exposes typed check records for callers that need structured state and propagates intake setup errors.
 
 ---
 
@@ -511,7 +511,7 @@ When `run_game_setup_intake()` output looks wrong:
 - `src/game.rs` stringifies many failures as `""`; C++ callers cannot recover typed causes without adding new bridge surface
 - `src/game.rs::version_registry_get_xse_config()` drops `script_hashes`, so callers cannot build script-hash validation from this DTO alone
 - `src/scangame.rs::run_game_setup_intake()` collapses invalid `game_id` into a fatal DTO instead of exposing a typed Rust parse error
-- `src/scangame.rs::game_setup_intake_checks()` recomputes intake separately from `run_game_setup_intake()`; keep callers aware if they call both
+- `src/scangame.rs::game_setup_intake_checks()` recomputes intake separately from `run_game_setup_intake()` and returns a CXX `Result` on setup errors; keep callers aware if they call both
 - Game Setup Intake is setup-only; ENB, crashgen, Wrye, BA2, loose-file, and mod INI checks remain separate bridge calls
 
 These are current behavior notes, not recommendations for future design.

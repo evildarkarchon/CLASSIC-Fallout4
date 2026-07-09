@@ -36,6 +36,19 @@ fn test_check_onedrive_present() {
 }
 
 #[test]
+fn test_check_onedrive_result_uses_warning_state() {
+    let checker = DocumentsChecker::new("Fallout4");
+    let path = Path::new("C:\\Users\\Name\\OneDrive\\Documents\\My Games\\Fallout4");
+
+    let warning = checker
+        .check_onedrive_in_path_result(path)
+        .expect("OneDrive path should produce a warning");
+
+    assert_eq!(warning.state, DocumentsCheckState::Warning);
+    assert!(warning.message.contains("OneDrive"));
+}
+
+#[test]
 fn test_validate_ini_file_missing() {
     let temp_dir = TempDir::new().unwrap();
     let docs_path = create_test_docs(temp_dir.path(), "Fallout4");
@@ -158,10 +171,15 @@ fn test_run_all_checks_with_issues() {
     create_test_ini(&docs_path, "Fallout4.ini", "[General]\nkey=value\n");
 
     let checker = DocumentsChecker::new("Fallout4");
+    let results = checker.run_all_check_results(&docs_path).unwrap();
     let messages = checker.run_all_checks(&docs_path).unwrap();
 
     // Should have 3 messages (1 OK, 2 missing)
     assert_eq!(messages.len(), 3);
+    assert_eq!(results.len(), 3);
+    assert_eq!(results[0].state, DocumentsCheckState::Passed);
+    assert_eq!(results[1].state, DocumentsCheckState::Failed);
+    assert_eq!(results[2].state, DocumentsCheckState::Failed);
     assert!(messages[0].contains("✔️")); // Main INI OK
     assert!(messages[1].contains("❌")); // Custom INI missing
     assert!(messages[2].contains("❌")); // Prefs INI missing
