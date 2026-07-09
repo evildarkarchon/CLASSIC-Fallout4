@@ -24,6 +24,15 @@ fn test_detect_fallout4_docs_path_empty_input() {
     assert!(!result.contains('\0'));
 }
 
+#[test]
+fn test_fallout4_docs_relative_path_uses_proton_safe_separator() {
+    assert_eq!(fallout4_docs_relative_path("Fallout4"), "My Games/Fallout4");
+    assert_eq!(
+        fallout4_docs_relative_path("Fallout4VR"),
+        "My Games/Fallout4VR"
+    );
+}
+
 // ── New tests for widened CXXS-08 surface ────────────────────────────────
 
 #[test]

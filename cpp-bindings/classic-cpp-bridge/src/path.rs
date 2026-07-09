@@ -81,8 +81,8 @@ fn detect_fallout4_game_path(cached_path: &str, selected_game_version: &str) -> 
 
 fn detect_fallout4_docs_path(cached_path: &str, selected_game_version: &str) -> String {
     let relative = resolve_fallout4_version_info(selected_game_version)
-        .map(|info| format!(r"My Games\{}", info.docs_name))
-        .unwrap_or_else(|| r"My Games\Fallout4".to_string());
+        .map(|info| fallout4_docs_relative_path(&info.docs_name))
+        .unwrap_or_else(|| fallout4_docs_relative_path("Fallout4"));
     // Opt in to Fallout 4's Steam/Proton documents lookup on Linux.
     // The canonical 377160 literal now lives in classic_version_registry_core.
     let finder =
@@ -98,6 +98,11 @@ fn detect_fallout4_docs_path(cached_path: &str, selected_game_version: &str) -> 
         .find_docs_path(cached)
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_default()
+}
+
+fn fallout4_docs_relative_path(docs_name: &str) -> String {
+    // DocsPathFinder joins this string on Unix/Proton too, where backslash is a literal.
+    format!("My Games/{docs_name}")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -766,7 +766,7 @@ fn resolve_docs_root(
         .map(|info| info.docs_name.as_str())
         .filter(|name| !name.trim().is_empty())
         .unwrap_or_else(|| intake.game_id.as_str());
-    let mut finder = DocsPathFinder::new(format!(r"My Games\{docs_name}"));
+    let mut finder = DocsPathFinder::new(docs_relative_path(docs_name));
     if let Some(info) = info
         && info.steam_id != 0
     {
@@ -796,6 +796,11 @@ fn resolve_docs_root(
             None
         }
     }
+}
+
+fn docs_relative_path(docs_name: &str) -> String {
+    // DocsPathFinder joins this string on Unix/Proton too, where backslash is a literal.
+    format!("My Games/{docs_name}")
 }
 
 fn run_executable_checks(

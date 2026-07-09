@@ -67,6 +67,12 @@ fn test_xse_info_loader_path() {
 }
 
 #[test]
+fn docs_relative_path_uses_proton_safe_separator() {
+    assert_eq!(docs_relative_path("Fallout4"), "My Games/Fallout4");
+    assert_eq!(docs_relative_path("Fallout4VR"), "My Games/Fallout4VR");
+}
+
+#[test]
 fn resolve_xse_folder_prefers_explicit_local_yaml_xse_folder() {
     let temp = tempfile::tempdir().expect("tempdir");
     let data = temp.path().join("CLASSIC Data");

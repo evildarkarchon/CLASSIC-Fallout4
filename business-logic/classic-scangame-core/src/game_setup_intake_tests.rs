@@ -46,6 +46,12 @@ fn game_setup_path_detection_treats_blank_values_as_missing() {
 }
 
 #[test]
+fn docs_relative_path_uses_proton_safe_separator() {
+    assert_eq!(docs_relative_path("Fallout4"), "My Games/Fallout4");
+    assert_eq!(docs_relative_path("Fallout4VR"), "My Games/Fallout4VR");
+}
+
+#[test]
 fn from_config_requires_saved_game_root() {
     let config = classic_config_core::ClassicConfig::default();
 

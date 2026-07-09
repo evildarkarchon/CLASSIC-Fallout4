@@ -593,13 +593,18 @@ fn xse_docs_folder_name(acronym: &str) -> &str {
     }
 }
 
+fn docs_relative_path(docs_name: &str) -> String {
+    // DocsPathFinder joins this string on Unix/Proton too, where backslash is a literal.
+    format!("My Games/{docs_name}")
+}
+
 fn discover_xse_folder(version_info: Option<&'static VersionInfo>) -> Option<PathBuf> {
     let info = version_info?;
     if info.docs_name.trim().is_empty() {
         return None;
     }
 
-    let relative_docs = format!(r"My Games\{}", info.docs_name);
+    let relative_docs = docs_relative_path(&info.docs_name);
     let mut finder = DocsPathFinder::new(relative_docs);
     if info.steam_id != 0 {
         finder = finder.with_steam_app_id(info.steam_id);
