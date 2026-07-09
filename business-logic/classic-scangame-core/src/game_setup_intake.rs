@@ -12,7 +12,8 @@ use classic_path_core::{DocsPathFinder, GamePathFinder};
 use classic_shared_core::GameId;
 use classic_version_core::extract_pe_version;
 use classic_version_registry_core::{
-    GameVersion as RegistryGameVersion, MatchConfidence, VersionInfo, get_version_registry,
+    GameVersion as RegistryGameVersion, MatchConfidence, VersionInfo, VersionRegistry,
+    get_version_registry,
 };
 use classic_xse_core::{XseType, get_xse_info, parse_version};
 
@@ -300,13 +301,19 @@ impl GameSetupIntake {
         let mut actions = Vec::new();
         let mut path_updates = Vec::new();
 
-        let version_context = resolve_version_context(self);
+        let game_root = resolve_game_root(self, &mut checks, &mut actions);
+        let game_exe_path = game_root
+            .as_ref()
+            .map(|root| root.join(self.game_id.exe_name()));
+        let version_context = resolve_version_context(self, game_exe_path.as_deref());
         let mut version_facts = version_context.facts;
         checks.extend(version_context.checks);
 
-        let paths = resolve_paths(
+        let paths = resolve_version_dependent_paths(
             self,
             version_context.info.as_ref(),
+            game_root,
+            game_exe_path,
             &mut checks,
             &mut actions,
         );
@@ -472,7 +479,16 @@ struct VersionContext {
     checks: Vec<GameSetupCheck>,
 }
 
-fn resolve_version_context(intake: &GameSetupIntake) -> VersionContext {
+/// Resolve version registry metadata using any game executable path already discovered.
+fn resolve_version_context(intake: &GameSetupIntake, exe_path: Option<&Path>) -> VersionContext {
+    resolve_version_context_with_registry(intake, exe_path, get_version_registry())
+}
+
+fn resolve_version_context_with_registry(
+    intake: &GameSetupIntake,
+    exe_path: Option<&Path>,
+    registry: &VersionRegistry,
+) -> VersionContext {
     let selected = normalize_game_setup_version_selection(&intake.selected_game_version);
     let mut facts = GameSetupVersionFacts {
         requested: intake.selected_game_version.clone(),
@@ -480,7 +496,8 @@ fn resolve_version_context(intake: &GameSetupIntake) -> VersionContext {
         ..GameSetupVersionFacts::default()
     };
 
-    let Some(registry_game) = registry_game_name(intake.game_id) else {
+    let candidates = registry_auto_candidates(registry, intake.game_id);
+    if candidates.is_empty() {
         return VersionContext {
             info: None,
             facts,
@@ -495,19 +512,11 @@ fn resolve_version_context(intake: &GameSetupIntake) -> VersionContext {
         };
     };
 
-    let registry = get_version_registry();
     let info = if selected == "auto" {
-        let exe_path = intake
-            .game_root
-            .as_ref()
-            .map(|root| root.join(intake.game_id.exe_name()));
-        match exe_path.as_deref() {
-            Some(path) if path.exists() => detect_registry_info_from_exe(
-                path,
-                registry_game,
-                registry_is_vr(intake.game_id, &selected),
-                &mut facts,
-            ),
+        match exe_path {
+            Some(path) if path.exists() => {
+                detect_registry_info_from_exe(path, &candidates, &mut facts)
+            }
             _ => None,
         }
     } else {
@@ -541,11 +550,9 @@ fn resolve_version_context(intake: &GameSetupIntake) -> VersionContext {
 
 fn detect_registry_info_from_exe(
     exe_path: &Path,
-    registry_game: &str,
-    is_vr: bool,
+    candidates: &[VersionInfo],
     facts: &mut GameSetupVersionFacts,
 ) -> Option<VersionInfo> {
-    let registry = get_version_registry();
     if let Ok((major, minor, patch, build)) = extract_pe_version(exe_path) {
         let detected = RegistryGameVersion::new(
             u32::from(major),
@@ -554,36 +561,47 @@ fn detect_registry_info_from_exe(
             u32::from(build),
         );
         facts.detected_exe_version = Some(detected.to_string());
-        let matched = registry.match_version(&detected, registry_game, is_vr);
-        facts.match_confidence = Some(match_confidence_name(matched.confidence).to_string());
-        if matched.confidence.is_high_confidence() {
-            return matched.version_info;
+        if let Some(info) = candidates.iter().find(|info| info.version == detected) {
+            facts.match_confidence =
+                Some(match_confidence_name(MatchConfidence::Exact).to_string());
+            return Some(info.clone());
         }
+        if let Some(info) = candidates
+            .iter()
+            .find(|info| info.is_compatible_with(&detected))
+        {
+            facts.match_confidence =
+                Some(match_confidence_name(MatchConfidence::Range).to_string());
+            return Some(info.clone());
+        }
+        facts.match_confidence = Some(match_confidence_name(MatchConfidence::Unknown).to_string());
     }
 
     let hash = FileHasher::hash_file(exe_path).ok()?;
-    registry
-        .get_all_for_game(registry_game, Some(is_vr))
-        .into_iter()
+    candidates
+        .iter()
         .find(|info| {
             info.exe_hash
                 .as_deref()
                 .is_some_and(|expected| expected.eq_ignore_ascii_case(&hash))
         })
-        .cloned()
+        .map(|info| {
+            facts.match_confidence =
+                Some(match_confidence_name(MatchConfidence::Exact).to_string());
+            info.clone()
+        })
 }
 
-fn resolve_paths(
+/// Resolve paths whose exact shape depends on selected Version Registry metadata.
+fn resolve_version_dependent_paths(
     intake: &GameSetupIntake,
     info: Option<&VersionInfo>,
+    game_root: Option<PathBuf>,
+    game_exe_path: Option<PathBuf>,
     checks: &mut Vec<GameSetupCheck>,
     actions: &mut Vec<GameSetupRequiredAction>,
 ) -> GameSetupResolvedPaths {
-    let game_root = resolve_game_root(intake, checks, actions);
     let docs_root = resolve_docs_root(intake, info, checks, actions);
-    let game_exe_path = game_root
-        .as_ref()
-        .map(|root| root.join(intake.game_id.exe_name()));
     let plugins_path = game_root
         .as_ref()
         .zip(info.and_then(|info| info.xse.as_ref()))
@@ -610,6 +628,8 @@ fn resolve_game_root(
         intake.game_id.exe_name(),
         None::<&str>,
         intake.game_id.as_str(),
+        // GamePathFinder still needs a product hint for Windows registry lookup;
+        // VersionInfo drives the version-specific expectations after this point.
         intake.game_id.is_vr(),
     );
     match finder.find_game_path(intake.game_root.as_deref(), intake.xse_log_path.as_deref()) {
@@ -1086,15 +1106,47 @@ fn non_empty_pathbuf(path: PathBuf) -> Option<PathBuf> {
     }
 }
 
-fn registry_game_name(game_id: GameId) -> Option<&'static str> {
+fn registry_auto_candidates(registry: &VersionRegistry, game_id: GameId) -> Vec<VersionInfo> {
+    let default_id = registry
+        .unknown_version_handling()
+        .get_default(game_id.as_str());
+    let mut candidates = Vec::new();
+    for game_name in registry_game_names(game_id) {
+        for info in registry.get_all_for_game(game_name, None) {
+            if registry_info_matches_game_id(info, game_id, default_id)
+                && !candidates
+                    .iter()
+                    .any(|candidate: &VersionInfo| candidate.id == info.id)
+            {
+                candidates.push(info.clone());
+            }
+        }
+    }
+    candidates
+}
+
+fn registry_game_names(game_id: GameId) -> &'static [&'static str] {
     match game_id {
-        GameId::Fallout4 | GameId::Fallout4VR => Some("Fallout4"),
-        GameId::Skyrim | GameId::Starfield => None,
+        GameId::Fallout4 => &["Fallout4"],
+        GameId::Fallout4VR => &["Fallout4VR", "Fallout4"],
+        GameId::Skyrim | GameId::Starfield => &[],
     }
 }
 
-fn registry_is_vr(game_id: GameId, selected: &str) -> bool {
-    game_id.is_vr() || selected == "VR"
+fn registry_info_matches_game_id(
+    info: &VersionInfo,
+    game_id: GameId,
+    default_id: Option<&str>,
+) -> bool {
+    if default_id == Some(info.id.as_str()) {
+        return true;
+    }
+
+    match game_id {
+        GameId::Fallout4 => info.game == "Fallout4" && info.docs_name == "Fallout4",
+        GameId::Fallout4VR => info.game == "Fallout4VR" || info.docs_name == "Fallout4VR",
+        GameId::Skyrim | GameId::Starfield => info.game == game_id.as_str(),
+    }
 }
 
 fn registry_id_for_selection(game_id: GameId, selected: &str) -> Option<&'static str> {
