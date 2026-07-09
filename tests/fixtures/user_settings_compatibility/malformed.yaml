@@ -1,0 +1,4 @@
+schema_version: "1.0"
+CLASSIC_Settings:
+  Update Check: true
+  Broken Sequence: [one, two

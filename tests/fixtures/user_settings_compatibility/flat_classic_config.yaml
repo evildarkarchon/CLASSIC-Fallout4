@@ -1,0 +1,20 @@
+fcx_mode: true
+show_formid_values: true
+stat_logging: true
+move_unsolved_logs: false
+unsolved_logs_destination: C:/CLASSIC/Unsolved
+simplify_logs: true
+update_check: false
+game_version: Original
+update_source: github
+auto_switch_to_results: false
+auto_refresh_interval_ms: 2500
+paths:
+  ini_folder: C:/Users/Test/Documents/My Games/Fallout4
+  scan_custom: D:/Crash Logs
+  mods_folder: D:/Mod Staging
+  game_root: E:/Games/Fallout 4
+  docs_root: C:/Users/Test/Documents/My Games/Fallout4
+formid_databases:
+  Fallout4:
+    - databases/Fallout4 FormIDs.db

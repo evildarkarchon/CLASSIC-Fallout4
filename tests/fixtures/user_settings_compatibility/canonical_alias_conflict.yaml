@@ -1,0 +1,6 @@
+schema_version: "1.0"
+CLASSIC_Settings:
+  MODS Folder Path: D:/Canonical Mods
+  Staging Mods Folder: E:/Alias Mods
+  SCAN Custom Path: D:/Canonical Crash Logs
+  Custom Scan Folder: E:/Alias Crash Logs

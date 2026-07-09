@@ -1,0 +1,18 @@
+schema_version: "1.0"
+CLASSIC_Settings:
+  Managed Game: Fallout 4
+  Update Check: true
+  Game Version: auto
+  FCX Mode: false
+  Simplify Logs: false
+  Show Statistics: false
+  Show FormID Values: false
+  Move Unsolved Logs: true
+  Unsolved Logs Destination: null
+  INI Folder Path: null
+  MODS Folder Path: null
+  SCAN Custom Path: null
+  Audio Notifications: false
+  Update Source: GitHub
+  Disable CLI Progress: false
+  Max Concurrent Scans: 0

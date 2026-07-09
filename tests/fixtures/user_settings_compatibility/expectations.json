@@ -1,0 +1,510 @@
+{
+  "contract_version": 1,
+  "current_schema_version": "1.0",
+  "outcome_vocabulary": [
+    "read_only_open",
+    "degraded_fallback",
+    "proposed_update",
+    "accepted_commit",
+    "rejected_commit",
+    "conflict",
+    "migration",
+    "restore"
+  ],
+  "outcome_semantics": {
+    "read_only_open": {
+      "mutates_disk": false,
+      "meaning": "Open and project a usable view without creating, moving, repairing, or rewriting a document."
+    },
+    "degraded_fallback": {
+      "mutates_disk": false,
+      "meaning": "Return a usable but untrusted view with diagnostics and risk-sensitive fallbacks."
+    },
+    "proposed_update": {
+      "mutates_disk": false,
+      "meaning": "Validate all requested fields as one unit and name only accepted requested canonical fields."
+    },
+    "accepted_commit": {
+      "mutates_disk": true,
+      "meaning": "With caller consent and a matching revision, atomically patch only requested canonical nodes."
+    },
+    "rejected_commit": {
+      "mutates_disk": false,
+      "meaning": "Reject an invalid or disallowed update as one unit without a partial write."
+    },
+    "conflict": {
+      "mutates_disk": false,
+      "meaning": "Refuse a stale revision and leave the externally changed document untouched."
+    },
+    "migration": {
+      "ordinary_open_mutates_disk": false,
+      "approved_apply_mutates_disk": true,
+      "meaning": "Apply an explicit reversible shape, version, or location transition only after caller approval."
+    },
+    "restore": {
+      "mutates_disk": true,
+      "meaning": "Explicitly republish a verified pre-migration backup through conflict-safe atomic persistence."
+    }
+  },
+  "canonical_defaults": {
+    "source": "CLASSIC Data/databases/CLASSIC Main.yaml#CLASSIC_Info.default_settings",
+    "CLASSIC_Settings": {
+      "Managed Game": "Fallout 4",
+      "Update Check": true,
+      "Game Version": "auto",
+      "FCX Mode": false,
+      "Simplify Logs": false,
+      "Show Statistics": false,
+      "Show FormID Values": false,
+      "Move Unsolved Logs": true,
+      "Unsolved Logs Destination": null,
+      "INI Folder Path": null,
+      "MODS Folder Path": null,
+      "SCAN Custom Path": null,
+      "Audio Notifications": false,
+      "Update Source": "GitHub",
+      "Disable CLI Progress": false,
+      "Max Concurrent Scans": 0
+    }
+  },
+  "frontend_defaults": {
+    "UI": {
+      "preferences": {
+        "auto_switch_after_scan": true,
+        "auto_refresh_interval_ms": 5000
+      },
+      "tui": {
+        "active_tab": 0,
+        "results_panel_width": 30,
+        "sort_ascending": false
+      }
+    }
+  },
+  "degraded_fallbacks": {
+    "CLASSIC_Settings": {
+      "Update Check": {
+        "value": false,
+        "policy": "fail_closed"
+      },
+      "FCX Mode": {
+        "value": false,
+        "policy": "disable_untrusted_local_checks"
+      },
+      "Simplify Logs": {
+        "value": false,
+        "policy": "avoid_destructive_log_rewrite"
+      },
+      "Show FormID Values": {
+        "value": false,
+        "policy": "avoid_untrusted_database_lookup"
+      },
+      "Move Unsolved Logs": {
+        "value": false,
+        "policy": "avoid_untrusted_file_movement"
+      }
+    }
+  },
+  "semantic_losslessness": {
+    "preserves": [
+      "unknown_keys",
+      "unknown_values",
+      "unknown_nested_structures",
+      "scalar_types",
+      "untouched_invalid_values"
+    ],
+    "excludes": [
+      "comments",
+      "quoting",
+      "whitespace"
+    ]
+  },
+  "cases": [
+    {
+      "id": "canonical_current_nested",
+      "coverage": ["canonical_nested_document"],
+      "fixture": "canonical_current_nested.yaml",
+      "format": "yaml",
+      "parse": "valid",
+      "source": {
+        "classification": "canonical_current",
+        "location": "classic_root",
+        "relative_path": "CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": ["read_only_open", "proposed_update", "accepted_commit"],
+      "commit_eligible": true,
+      "migration_required": false,
+      "expected_view": {
+        "update_check": true,
+        "game_version": "auto",
+        "move_unsolved_logs": true,
+        "max_concurrent_scans": 0
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "flat_classic_config",
+      "coverage": ["flat_classic_config_shape"],
+      "fixture": "flat_classic_config.yaml",
+      "format": "yaml",
+      "parse": "valid",
+      "source": {
+        "classification": "legacy_flat_shape",
+        "location": "classic_root",
+        "relative_path": "CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": ["read_only_open", "migration", "restore"],
+      "commit_eligible": false,
+      "migration_required": true,
+      "expected_migration_projection": {
+        "CLASSIC_Settings.FCX Mode": true,
+        "CLASSIC_Settings.Show FormID Values": true,
+        "CLASSIC_Settings.Show Statistics": true,
+        "CLASSIC_Settings.Move Unsolved Logs": false,
+        "CLASSIC_Settings.Unsolved Logs Destination": "C:/CLASSIC/Unsolved",
+        "CLASSIC_Settings.Simplify Logs": true,
+        "CLASSIC_Settings.Update Check": false,
+        "CLASSIC_Settings.Game Version": "Original",
+        "CLASSIC_Settings.Update Source": "GitHub",
+        "UI.preferences.auto_switch_after_scan": false,
+        "UI.preferences.auto_refresh_interval_ms": 2500,
+        "CLASSIC_Settings.INI Folder Path": "C:/Users/Test/Documents/My Games/Fallout4",
+        "CLASSIC_Settings.Documents Folder Path": "C:/Users/Test/Documents/My Games/Fallout4",
+        "CLASSIC_Settings.SCAN Custom Path": "D:/Crash Logs",
+        "CLASSIC_Settings.MODS Folder Path": "D:/Mod Staging",
+        "CLASSIC_Settings.Game Folder Path": "E:/Games/Fallout 4",
+        "CLASSIC_Settings.FormID Databases.Fallout4": ["databases/Fallout4 FormIDs.db"]
+      },
+      "diagnostics": ["migration_required_flat_classic_config"]
+    },
+    {
+      "id": "previous_settings_location",
+      "coverage": ["previous_settings_location"],
+      "fixture": "previous_location_nested.yaml",
+      "format": "yaml",
+      "parse": "valid",
+      "source": {
+        "classification": "legacy_location",
+        "location": "classic_data_directory",
+        "relative_path": "CLASSIC Data/CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": ["read_only_open", "migration", "restore"],
+      "commit_eligible": false,
+      "migration_required": true,
+      "diagnostics": ["migration_required_previous_location"]
+    },
+    {
+      "id": "missing_document",
+      "coverage": ["missing_document"],
+      "fixture": null,
+      "format": "missing",
+      "parse": "not_applicable",
+      "source": {
+        "classification": "missing",
+        "location": "none",
+        "relative_path": null
+      },
+      "expected_outcomes": ["read_only_open", "proposed_update", "accepted_commit"],
+      "commit_eligible": true,
+      "migration_required": false,
+      "uses_canonical_defaults": true,
+      "open_creates_file_or_directory": false,
+      "diagnostics": []
+    },
+    {
+      "id": "malformed_document",
+      "coverage": ["malformed_document"],
+      "fixture": "malformed.yaml",
+      "format": "yaml",
+      "parse": "invalid",
+      "source": {
+        "classification": "malformed",
+        "location": "classic_root",
+        "relative_path": "CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": ["degraded_fallback", "rejected_commit"],
+      "commit_eligible": false,
+      "migration_required": false,
+      "uses_degraded_fallbacks": true,
+      "diagnostics": ["malformed_document", "commit_blocked_untrusted_document"]
+    },
+    {
+      "id": "invalid_known_values",
+      "coverage": ["invalid_known_values"],
+      "fixture": "invalid_known_values.yaml",
+      "format": "yaml",
+      "parse": "valid",
+      "source": {
+        "classification": "current_with_diagnostics",
+        "location": "classic_root",
+        "relative_path": "CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": ["read_only_open", "proposed_update", "accepted_commit", "rejected_commit"],
+      "commit_eligible": true,
+      "migration_required": false,
+      "expected_view": {
+        "update_check": false,
+        "game_version": "auto",
+        "move_unsolved_logs": false,
+        "max_concurrent_scans": 0,
+        "main_tab_width": 640,
+        "main_tab_maximized": false
+      },
+      "diagnostics": [
+        "invalid_type_update_check",
+        "invalid_enum_game_version",
+        "invalid_type_move_unsolved_logs",
+        "invalid_range_max_concurrent_scans",
+        "invalid_type_gui_geometry_width",
+        "invalid_type_gui_geometry_maximized"
+      ],
+      "preserve_nodes": [
+        {"pointer": "/CLASSIC_Settings/Update Check", "type": "string", "value": "sometimes"},
+        {"pointer": "/CLASSIC_Settings/Game Version", "type": "string", "value": "Future"},
+        {"pointer": "/CLASSIC_Settings/Move Unsolved Logs", "type": "string", "value": "ask-me"},
+        {"pointer": "/CLASSIC_Settings/Max Concurrent Scans", "type": "integer", "value": -4},
+        {"pointer": "/UI/window_geometry/main_tab/width", "type": "string", "value": "wide"},
+        {"pointer": "/UI/window_geometry/main_tab/maximized", "type": "string", "value": "sometimes"}
+      ]
+    },
+    {
+      "id": "canonical_alias_conflict",
+      "coverage": ["canonical_alias_conflicts"],
+      "fixture": "canonical_alias_conflict.yaml",
+      "format": "yaml",
+      "parse": "valid",
+      "source": {
+        "classification": "current_with_diagnostics",
+        "location": "classic_root",
+        "relative_path": "CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": ["read_only_open", "proposed_update", "accepted_commit", "migration"],
+      "commit_eligible": true,
+      "migration_required": false,
+      "expected_view": {
+        "mods_folder": "D:/Canonical Mods",
+        "custom_scan_folder": "D:/Canonical Crash Logs"
+      },
+      "diagnostics": [
+        "canonical_alias_conflict_mods_folder",
+        "canonical_alias_conflict_custom_scan_folder"
+      ],
+      "ordinary_commit_preserves_aliases": true,
+      "preserve_nodes": [
+        {"pointer": "/CLASSIC_Settings/Staging Mods Folder", "type": "string", "value": "E:/Alias Mods"},
+        {"pointer": "/CLASSIC_Settings/Custom Scan Folder", "type": "string", "value": "E:/Alias Crash Logs"}
+      ]
+    },
+    {
+      "id": "unknown_entries",
+      "coverage": ["unknown_root_entries", "unknown_nested_entries"],
+      "fixture": "unknown_entries.yaml",
+      "format": "yaml",
+      "parse": "valid",
+      "source": {
+        "classification": "current_with_unknown_entries",
+        "location": "classic_root",
+        "relative_path": "CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": ["read_only_open", "proposed_update", "accepted_commit"],
+      "commit_eligible": true,
+      "migration_required": false,
+      "diagnostics": [],
+      "preserve_nodes": [
+        {"pointer": "/ThirdPartyPlugin/enabled", "type": "boolean", "value": true},
+        {"pointer": "/ThirdPartyPlugin/retry_count", "type": "integer", "value": 3},
+        {"pointer": "/ThirdPartyPlugin/string_number", "type": "string", "value": "3"},
+        {"pointer": "/ThirdPartyPlugin/threshold", "type": "real", "value": "1.25"},
+        {"pointer": "/ThirdPartyPlugin/optional", "type": "null", "value": null},
+        {"pointer": "/ThirdPartyPlugin/tags", "type": "sequence", "value": ["alpha", "beta"]},
+        {"pointer": "/ThirdPartyPlugin/nested", "type": "mapping", "value": {"mode": "custom", "levels": [1, 2]}},
+        {"pointer": "/CLASSIC_Settings/Future Scan Knob", "type": "mapping", "value": {"mode": "careful", "weight": 7}},
+        {"pointer": "/UI/community_frontend/theme", "type": "string", "value": "amber"},
+        {"pointer": "/UI/window_geometry/main_tab/future_flag", "type": "boolean", "value": true}
+      ]
+    },
+    {
+      "id": "newer_major_schema",
+      "coverage": ["newer_major_schema"],
+      "fixture": "newer_major_schema.yaml",
+      "format": "yaml",
+      "parse": "valid",
+      "source": {
+        "classification": "future_major",
+        "location": "classic_root",
+        "relative_path": "CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": ["degraded_fallback", "rejected_commit"],
+      "commit_eligible": false,
+      "migration_required": false,
+      "uses_degraded_fallbacks": true,
+      "diagnostics": ["unsupported_future_major_schema", "commit_blocked_untrusted_document"]
+    },
+    {
+      "id": "gui_geometry",
+      "coverage": ["gui_geometry"],
+      "fixture": "gui_geometry.yaml",
+      "format": "yaml",
+      "parse": "valid",
+      "source": {
+        "classification": "current",
+        "location": "classic_root",
+        "relative_path": "CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": ["read_only_open", "proposed_update", "accepted_commit"],
+      "commit_eligible": true,
+      "migration_required": false,
+      "expected_view": {
+        "main_tab": {"maximized": false, "width": 705, "height": 641},
+        "backups_tab": {"maximized": false, "width": 750, "height": 580},
+        "articles_tab": {"maximized": false, "width": 550, "height": 350},
+        "results_tab": {"maximized": true, "width": 750, "height": 450}
+      },
+      "diagnostics": []
+    },
+    {
+      "id": "tui_remembered_state",
+      "coverage": ["tui_remembered_state"],
+      "fixture": "tui_state.json",
+      "format": "json",
+      "parse": "valid",
+      "source": {
+        "classification": "legacy_tui_state_import",
+        "location": "platform_project_config",
+        "relative_path": "classic-tui/state.json"
+      },
+      "expected_outcomes": ["read_only_open", "migration", "restore"],
+      "commit_eligible": false,
+      "migration_required": true,
+      "expected_migration_projection": {
+        "UI.tui.active_tab": 2,
+        "UI.tui.results_panel_width": 42,
+        "UI.tui.sort_ascending": true
+      },
+      "diagnostics": ["explicit_tui_state_import_available"]
+    },
+    {
+      "id": "concurrent_revision_conflict",
+      "coverage": [],
+      "fixture": "canonical_current_nested.yaml",
+      "external_fixture": "concurrent_external_edit.yaml",
+      "format": "yaml",
+      "parse": "valid",
+      "source": {
+        "classification": "canonical_current",
+        "location": "classic_root",
+        "relative_path": "CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": ["conflict"],
+      "commit_eligible": true,
+      "migration_required": false,
+      "external_document_must_remain_untouched": true,
+      "diagnostics": ["stale_revision"]
+    }
+  ],
+  "operation_scenarios": [
+    {
+      "id": "open_current_without_writing",
+      "outcome": "read_only_open",
+      "source_fixture": "canonical_current_nested.yaml",
+      "disk_fixture_before": "canonical_current_nested.yaml",
+      "expected_document": "canonical_current_nested.yaml",
+      "writes_document": false
+    },
+    {
+      "id": "open_malformed_with_safe_fallbacks",
+      "outcome": "degraded_fallback",
+      "source_fixture": "malformed.yaml",
+      "disk_fixture_before": "malformed.yaml",
+      "expected_document": "malformed.yaml",
+      "writes_document": false,
+      "uses_degraded_fallbacks": true
+    },
+    {
+      "id": "preview_multi_field_update",
+      "outcome": "proposed_update",
+      "source_fixture": "canonical_current_nested.yaml",
+      "disk_fixture_before": "canonical_current_nested.yaml",
+      "expected_document": "canonical_current_nested.yaml",
+      "writes_document": false,
+      "requested_update": {
+        "/CLASSIC_Settings/Update Check": false,
+        "/CLASSIC_Settings/Max Concurrent Scans": 4
+      },
+      "expected_preview": {
+        "/CLASSIC_Settings/Update Check": false,
+        "/CLASSIC_Settings/Max Concurrent Scans": 4
+      }
+    },
+    {
+      "id": "commit_one_canonical_field_without_losing_unknowns",
+      "outcome": "accepted_commit",
+      "source_fixture": "unknown_entries.yaml",
+      "disk_fixture_before": "unknown_entries.yaml",
+      "expected_document": "unknown_entries_after_update.yaml",
+      "writes_document": true,
+      "requested_update": {
+        "/CLASSIC_Settings/Update Check": false
+      },
+      "changed_pointers": ["/CLASSIC_Settings/Update Check"]
+    },
+    {
+      "id": "reject_invalid_update_as_one_unit",
+      "outcome": "rejected_commit",
+      "source_fixture": "invalid_known_values.yaml",
+      "disk_fixture_before": "invalid_known_values.yaml",
+      "expected_document": "invalid_known_values.yaml",
+      "writes_document": false,
+      "requested_update": {
+        "/CLASSIC_Settings/Update Check": true,
+        "/CLASSIC_Settings/Max Concurrent Scans": -9
+      }
+    },
+    {
+      "id": "refuse_stale_revision",
+      "outcome": "conflict",
+      "source_fixture": "canonical_current_nested.yaml",
+      "disk_fixture_before": "concurrent_external_edit.yaml",
+      "expected_document": "concurrent_external_edit.yaml",
+      "writes_document": false
+    },
+    {
+      "id": "migrate_every_flat_classic_config_leaf",
+      "outcome": "migration",
+      "source_fixture": "flat_classic_config.yaml",
+      "disk_fixture_before": "flat_classic_config.yaml",
+      "expected_document": "flat_migrated.yaml",
+      "backup_fixture": "flat_classic_config.yaml",
+      "writes_document": true,
+      "backup_is_byte_exact": true,
+      "target_nodes": [
+        {"source_pointer": "/fcx_mode", "pointer": "/CLASSIC_Settings/FCX Mode", "type": "boolean", "value": true},
+        {"source_pointer": "/show_formid_values", "pointer": "/CLASSIC_Settings/Show FormID Values", "type": "boolean", "value": true},
+        {"source_pointer": "/stat_logging", "pointer": "/CLASSIC_Settings/Show Statistics", "type": "boolean", "value": true},
+        {"source_pointer": "/move_unsolved_logs", "pointer": "/CLASSIC_Settings/Move Unsolved Logs", "type": "boolean", "value": false},
+        {"source_pointer": "/unsolved_logs_destination", "pointer": "/CLASSIC_Settings/Unsolved Logs Destination", "type": "string", "value": "C:/CLASSIC/Unsolved"},
+        {"source_pointer": "/simplify_logs", "pointer": "/CLASSIC_Settings/Simplify Logs", "type": "boolean", "value": true},
+        {"source_pointer": "/update_check", "pointer": "/CLASSIC_Settings/Update Check", "type": "boolean", "value": false},
+        {"source_pointer": "/game_version", "pointer": "/CLASSIC_Settings/Game Version", "type": "string", "value": "Original"},
+        {"source_pointer": "/update_source", "pointer": "/CLASSIC_Settings/Update Source", "type": "string", "value": "GitHub", "transform": "canonical_title_case"},
+        {"source_pointer": "/auto_switch_to_results", "pointer": "/UI/preferences/auto_switch_after_scan", "type": "boolean", "value": false},
+        {"source_pointer": "/auto_refresh_interval_ms", "pointer": "/UI/preferences/auto_refresh_interval_ms", "type": "integer", "value": 2500},
+        {"source_pointer": "/paths/ini_folder", "pointer": "/CLASSIC_Settings/INI Folder Path", "type": "string", "value": "C:/Users/Test/Documents/My Games/Fallout4"},
+        {"source_pointer": "/paths/scan_custom", "pointer": "/CLASSIC_Settings/SCAN Custom Path", "type": "string", "value": "D:/Crash Logs"},
+        {"source_pointer": "/paths/mods_folder", "pointer": "/CLASSIC_Settings/MODS Folder Path", "type": "string", "value": "D:/Mod Staging"},
+        {"source_pointer": "/paths/game_root", "pointer": "/CLASSIC_Settings/Game Folder Path", "type": "string", "value": "E:/Games/Fallout 4"},
+        {"source_pointer": "/paths/docs_root", "pointer": "/CLASSIC_Settings/Documents Folder Path", "type": "string", "value": "C:/Users/Test/Documents/My Games/Fallout4"},
+        {"source_pointer": "/formid_databases/Fallout4", "pointer": "/CLASSIC_Settings/FormID Databases/Fallout4", "type": "sequence", "value": ["databases/Fallout4 FormIDs.db"]}
+      ]
+    },
+    {
+      "id": "restore_verified_flat_backup",
+      "outcome": "restore",
+      "source_fixture": "flat_migrated.yaml",
+      "disk_fixture_before": "flat_migrated.yaml",
+      "backup_fixture": "flat_classic_config.yaml",
+      "expected_document": "flat_classic_config.yaml",
+      "writes_document": true,
+      "restored_document_is_byte_exact_backup": true
+    }
+  ]
+}

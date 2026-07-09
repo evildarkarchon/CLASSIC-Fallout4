@@ -1,0 +1,7 @@
+schema_version: "99.0"
+CLASSIC_Settings:
+  Update Check: true
+  Game Version: auto
+  Move Unsolved Logs: true
+  Future Required Behavior:
+    enabled: true

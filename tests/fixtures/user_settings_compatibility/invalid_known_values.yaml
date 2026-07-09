@@ -1,0 +1,15 @@
+schema_version: "1.0"
+CLASSIC_Settings:
+  Update Check: sometimes
+  Game Version: Future
+  FCX Mode: false
+  Simplify Logs: false
+  Show FormID Values: false
+  Move Unsolved Logs: ask-me
+  Max Concurrent Scans: -4
+UI:
+  window_geometry:
+    main_tab:
+      maximized: sometimes
+      width: wide
+      height: 500

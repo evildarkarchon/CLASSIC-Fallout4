@@ -1,0 +1,27 @@
+schema_version: "1.0"
+CLASSIC_Settings:
+  Update Check: true
+  Future Scan Knob:
+    mode: careful
+    weight: 7
+UI:
+  window_geometry:
+    main_tab:
+      maximized: false
+      width: 640
+      height: 500
+      future_flag: true
+  community_frontend:
+    theme: amber
+ThirdPartyPlugin:
+  enabled: true
+  retry_count: 3
+  string_number: "3"
+  threshold: 1.25
+  optional: null
+  tags:
+    - alpha
+    - beta
+  nested:
+    mode: custom
+    levels: [1, 2]

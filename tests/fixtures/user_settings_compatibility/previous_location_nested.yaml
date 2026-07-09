@@ -1,0 +1,12 @@
+CLASSIC_Settings:
+  Managed Game: Fallout 4
+  Update Check: false
+  Game Version: NextGen
+  FCX Mode: true
+  Simplify Logs: false
+  Show Statistics: true
+  Show FormID Values: true
+  Move Unsolved Logs: true
+  INI Folder Path: C:/Users/Test/Documents/My Games/Fallout4
+  MODS Folder Path: D:/Mod Staging
+  SCAN Custom Path: D:/Crash Logs

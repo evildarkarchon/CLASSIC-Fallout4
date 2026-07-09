@@ -1,0 +1,22 @@
+schema_version: "1.0"
+UI:
+  preferences:
+    auto_switch_after_scan: true
+    auto_refresh_interval_ms: 5000
+  window_geometry:
+    main_tab:
+      maximized: false
+      width: 705
+      height: 641
+    backups_tab:
+      maximized: false
+      width: 750
+      height: 580
+    articles_tab:
+      maximized: false
+      width: 550
+      height: 350
+    results_tab:
+      maximized: true
+      width: 750
+      height: 450

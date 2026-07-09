@@ -1,0 +1,23 @@
+schema_version: "1.0"
+CLASSIC_Settings:
+  FCX Mode: true
+  Show FormID Values: true
+  Show Statistics: true
+  Move Unsolved Logs: false
+  Unsolved Logs Destination: C:/CLASSIC/Unsolved
+  Simplify Logs: true
+  Update Check: false
+  Game Version: Original
+  Update Source: GitHub
+  INI Folder Path: C:/Users/Test/Documents/My Games/Fallout4
+  Documents Folder Path: C:/Users/Test/Documents/My Games/Fallout4
+  SCAN Custom Path: D:/Crash Logs
+  MODS Folder Path: D:/Mod Staging
+  Game Folder Path: E:/Games/Fallout 4
+  FormID Databases:
+    Fallout4:
+      - databases/Fallout4 FormIDs.db
+UI:
+  preferences:
+    auto_switch_after_scan: false
+    auto_refresh_interval_ms: 2500
