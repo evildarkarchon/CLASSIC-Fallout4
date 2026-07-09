@@ -1,6 +1,6 @@
 # Binding Parity Overview
 
-As of the active Phase 4 closure state, the surviving 16 Rust business-logic crates are exposed through the maintained binding surfaces: C++ via CXX, Node via NAPI-RS, and Python via PyO3. The sole exception is `classic-resource-core`, which still has no dedicated C++ bridge module.
+As of the active Phase 4 closure state, the surviving 17 Rust business-logic crates are exposed through the maintained binding surfaces: C++ via CXX, Node via NAPI-RS, and Python via PyO3. The sole exception is `classic-resource-core`, which still has no dedicated C++ bridge module.
 
 Historical consolidation note: `classic-settings-core` now owns the former `classic-yaml-core` surface, and `classic-config-core` now owns the former crashgen-settings rule surface. Those retired crate names remain here only as migration breadcrumbs.
 
@@ -21,6 +21,7 @@ Each shared Rust crate and its corresponding binding module across all three sur
 | `classic-perf-core` | [`perf.rs`](../../cpp-bindings/classic-cpp-bridge/src/perf.rs) | (via [`shared.rs`](../../node-bindings/classic-node/src/shared.rs)) | [`classic-perf-py`](../../python-bindings/classic-perf-py/) |
 | `classic-message-core` | [`message.rs`](../../cpp-bindings/classic-cpp-bridge/src/message.rs) | [`message.rs`](../../node-bindings/classic-node/src/message.rs) | [`classic-message-py`](../../python-bindings/classic-message-py/) |
 | `classic-settings-core` (historical note: absorbed the former `classic-yaml-core` in v9.1.0 Phase 1) | [`settings.rs`](../../cpp-bindings/classic-cpp-bridge/src/settings.rs) | [`settings.rs`](../../node-bindings/classic-node/src/settings.rs) | [`classic-settings-py`](../../python-bindings/classic-settings-py/) |
+| `classic-user-settings-core` | [`settings.rs`](../../cpp-bindings/classic-cpp-bridge/src/settings.rs) | [`user_settings.rs`](../../node-bindings/classic-node/src/user_settings.rs) | [`classic-user-settings-py`](../../python-bindings/classic-user-settings-py/) |
 | `classic-version-registry-core` | [`version_registry.rs`](../../cpp-bindings/classic-cpp-bridge/src/version_registry.rs) | [`version_registry.rs`](../../node-bindings/classic-node/src/version_registry.rs) | [`classic-version-registry-py`](../../python-bindings/classic-version-registry-py/) |
 | `classic-version-core` | (via [`game.rs`](../../cpp-bindings/classic-cpp-bridge/src/game.rs)) | [`version.rs`](../../node-bindings/classic-node/src/version.rs) | [`classic-version-py`](../../python-bindings/classic-version-py/) |
 | `classic-web-core` | [`web.rs`](../../cpp-bindings/classic-cpp-bridge/src/web.rs) | [`web.rs`](../../node-bindings/classic-node/src/web.rs) | [`classic-web-py`](../../python-bindings/classic-web-py/) |

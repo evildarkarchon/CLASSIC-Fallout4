@@ -1,7 +1,7 @@
 {
   "contractVersion": "1.0.0",
   "phase": "phase1",
-  "description": "Live one-tier 706-row Node vs Rust parity contract for high-level APIs.",
+  "description": "Live one-tier 730-row Node vs Rust parity contract for high-level APIs.",
   "tierDefinitions": {
     "tier1": "Must-have high-level APIs required by app workflows and cross-language integration."
   },
@@ -11,6 +11,9 @@
     },
     "config": {
       "description": "YAML data and runtime configuration APIs."
+    },
+    "user_settings": {
+      "description": "Typed, preservation-aware User Settings APIs."
     },
     "version_registry": {
       "description": "Game version lookup and compatibility APIs."
@@ -24,7 +27,8 @@
       "name": "Squad A (scanlog/config)",
       "ownerModules": [
         "scanlog",
-        "config"
+        "config",
+        "user_settings"
       ]
     },
     "version_registry_aux": {
@@ -36,6 +40,247 @@
     }
   },
   "tier1Mappings": [
+    {
+      "id": "user-settings-commit-eligibility",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "CommitEligibility",
+      "rustKind": "enum",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-diagnostic",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "Diagnostic",
+      "rustKind": "struct",
+      "nodeExport": "JsUserSettingsDiagnostic",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-document-classification",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "DocumentClassification",
+      "rustKind": "enum",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-preference-origin",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "PreferenceOrigin",
+      "rustKind": "enum",
+      "nodeExport": "JsUpdatePreferences",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-revision-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "Revision",
+      "rustKind": "enum",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-source-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "SettingsSource",
+      "rustKind": "struct",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-source-location",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "SourceLocation",
+      "rustKind": "enum",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-preferences-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UpdatePreferences",
+      "rustKind": "struct",
+      "nodeExport": "JsUpdatePreferences",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-snapshot-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettings",
+      "rustKind": "struct",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-classification-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "classification",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-diagnostic-code-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "code",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsDiagnostic",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-commit-eligibility-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "commit_eligibility",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-diagnostics-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "diagnostics",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-location-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "location",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-diagnostic-message-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "message",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsDiagnostic",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-open",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "open",
+      "rustKind": "function",
+      "nodeExport": "openUserSettings",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "user-settings-original-bytes-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "original_bytes",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-path-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "path",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-revision-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "revision",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-schema-version-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "schema_version",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-source-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "source",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-check-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "update_check",
+      "rustKind": "function",
+      "nodeExport": "JsUpdatePreferences",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-check-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "update_check_origin",
+      "rustKind": "function",
+      "nodeExport": "JsUpdatePreferences",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-preferences-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "update_preferences",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
     {
       "id": "scanlog-analysis-config",
       "tier": "tier1",

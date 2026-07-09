@@ -4,11 +4,22 @@
 
 #include "classic_cxx_bridge/message.h"
 #include "classic_cxx_bridge/runtime.h"
+#include "classic_cxx_bridge/settings.h"
 #include "classic_cxx_bridge/update.h"
 
 #include <fmt/core.h>
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#endif
+
+#include <filesystem>
+#include <optional>
 #include <string>
+
+namespace fs = std::filesystem;
 
 namespace {
 
@@ -26,6 +37,60 @@ constexpr const char* kClassificationDeprecated = "deprecated_client";
 constexpr const char* kClassificationUnknown = "unknown";
 constexpr const char* kClassificationNotPublished = "not_published";
 constexpr const char* kClassificationError = "error";
+
+/// Resolve the install root without interpreting User Settings in C++.
+///
+/// The selected path is passed explicitly to the Rust-owned User Settings module.
+std::optional<fs::path> resolve_classic_root() {
+    std::error_code ec;
+
+#ifdef _WIN32
+    wchar_t buffer[MAX_PATH];
+    const DWORD length = GetModuleFileNameW(nullptr, buffer, MAX_PATH);
+    if (length > 0 && length < MAX_PATH) {
+        const fs::path executable_root = fs::path(buffer).parent_path();
+        if (fs::is_directory(executable_root / "CLASSIC Data", ec)) {
+            return executable_root;
+        }
+        ec.clear();
+    }
+#endif
+
+    const fs::path current_root = fs::current_path(ec);
+    if (ec) {
+        return std::nullopt;
+    }
+    return current_root;
+}
+
+/// Open the typed Rust group and enforce its already safety-adjusted policy.
+///
+/// Returns `false` before the runtime, cache, or network notification pipeline
+/// is touched when Rust disables the check or applies a degraded fallback.
+bool update_check_enabled_for_root(const fs::path& classic_root) {
+    const std::string root = classic_root.string();
+    const auto preferences =
+        classic::settings::user_settings_open_update_preferences(root);
+
+    for (const auto& diagnostic : preferences.diagnostics) {
+        fmt::print(
+            stderr,
+            "User Settings warning [{}]: {}\n",
+            std::string(diagnostic.code),
+            std::string(diagnostic.message));
+    }
+
+    if (!preferences.update_check_enabled) {
+        fmt::print(
+            "App update check is disabled by User Settings "
+            "(source={}, classification={}, origin={}).\n",
+            std::string(preferences.source_location), std::string(preferences.classification),
+            std::string(preferences.update_check_origin));
+        return false;
+    }
+
+    return true;
+}
 
 bool is_classification(const rust::String& classification, const char* expected) {
     return std::string(classification) == expected;
@@ -118,6 +183,19 @@ bool init_runtime_for_app_update() {
 } // namespace
 
 int run_check_app_update(const CliArgs& /*args*/) {
+    const auto classic_root = resolve_classic_root();
+    if (!classic_root) {
+        fmt::print(stderr,
+                   "User Settings warning [classic_root_unavailable]: could not resolve the "
+                   "CLASSIC root.\n");
+        fmt::print("App update check is disabled because User Settings could not be trusted.\n");
+        return 0;
+    }
+
+    if (!update_check_enabled_for_root(*classic_root)) {
+        return 0;
+    }
+
     if (!init_runtime_for_app_update()) {
         return 2;
     }

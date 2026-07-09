@@ -26,6 +26,7 @@ RUST_TARGET_CRATES: dict[str, str] = {
     # Existing 3 (preserved for stability)
     "classic-scanlog-core": "business-logic/classic-scanlog-core/src/lib.rs",
     "classic-config-core": "business-logic/classic-config-core/src/lib.rs",
+    "classic-user-settings-core": "business-logic/classic-user-settings-core/src/lib.rs",
     "classic-version-registry-core": "business-logic/classic-version-registry-core/src/lib.rs",
     # Phase 3 additions -- 14 additional business-logic crates (the former yaml-core was absorbed into settings-core in v9.1.0 Phase 1)
     "classic-database-core": "business-logic/classic-database-core/src/lib.rs",
@@ -53,6 +54,7 @@ RUST_TARGET_CRATES: dict[str, str] = {
 RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-scanlog-core": "scanlog",
     "classic-config-core": "config",
+    "classic-user-settings-core": "user_settings",
     "classic-version-registry-core": "version_registry",
     "classic-database-core": "database",
     "classic-file-io-core": "file_io",
@@ -74,6 +76,7 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
 PYTHON_TARGET_MODULES: dict[str, str] = {
     "classic_scanlog": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
     "classic_config": "python-bindings/classic-config-py/classic_config.pyi",
+    "classic_user_settings": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
     "classic_version_registry": "python-bindings/classic-version-registry-py/classic_version_registry.pyi",
     "classic_database": "python-bindings/classic-database-py/classic_database.pyi",
     "classic_file_io": "python-bindings/classic-file-io-py/classic_file_io.pyi",
@@ -94,6 +97,7 @@ PYTHON_TARGET_MODULES: dict[str, str] = {
 PYTHON_OWNER_BY_MODULE: dict[str, str] = {
     "classic_scanlog": "scanlog",
     "classic_config": "config",
+    "classic_user_settings": "user_settings",
     "classic_version_registry": "version_registry",
     "classic_database": "database",
     "classic_file_io": "file_io",
@@ -115,6 +119,7 @@ SQUAD_BY_OWNER: dict[str, str] = {
     # Existing (pre-Phase-3) labels preserved for historical compatibility.
     "scanlog": "Squad A (scanlog/config)",
     "config": "Squad A (scanlog/config)",
+    "user_settings": "Squad A (scanlog/config)",
     "version_registry": "Squad B (version-registry)",
     # Phase 3 owner labels -- every new owner needs a squad label for reporting.
     # yaml was absorbed into settings in v9.1.0 Phase 1.

@@ -1,0 +1,24 @@
+[package]
+name = "classic-user-settings-py"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.96.0"
+authors = ["CLASSIC Development Team"]
+description = "Python bindings for classic-user-settings-core"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+name = "classic_user_settings"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+classic-user-settings-core = { path = "../../business-logic/classic-user-settings-core" }
+classic-shared-py = { path = "../../foundation/classic-shared-py" }
+pyo3 = { workspace = true, features = ["extension-module"] }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

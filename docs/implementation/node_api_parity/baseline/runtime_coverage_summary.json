@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T22:30:49.144733+00:00",
+  "generated_at_utc": "2026-07-09T23:25:02.559570+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,11 +7,11 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 734,
-    "runtime_verified_total": 734,
+    "tracked_surface_total": 758,
+    "runtime_verified_total": 758,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 706,
+    "tier1_contract_total": 730,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -69,6 +69,10 @@
       "runtime_verified": 6,
       "total": 6
     },
+    "user_settings": {
+      "runtime_verified": 24,
+      "total": 24
+    },
     "version": {
       "runtime_verified": 13,
       "total": 13
@@ -87,6 +91,462 @@
     }
   },
   "trackedSurface": [
+    {
+      "trackedId": "contract:user-settings-commit-eligibility",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-commit-eligibility",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "CommitEligibility",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-diagnostic",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-diagnostic",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "Diagnostic",
+      "bindingIdentifier": "JsUserSettingsDiagnostic",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-document-classification",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-document-classification",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "DocumentClassification",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-preference-origin",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-preference-origin",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "PreferenceOrigin",
+      "bindingIdentifier": "JsUpdatePreferences",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-revision-type",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-revision-type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "Revision",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-source-type",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-source-type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "SettingsSource",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-source-location",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-source-location",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "SourceLocation",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-update-preferences-type",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-update-preferences-type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "UpdatePreferences",
+      "bindingIdentifier": "JsUpdatePreferences",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-snapshot-type",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-snapshot-type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "UserSettings",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-classification-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-classification-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "classification",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-diagnostic-code-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-diagnostic-code-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "code",
+      "bindingIdentifier": "JsUserSettingsDiagnostic",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-commit-eligibility-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-commit-eligibility-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "commit_eligibility",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-diagnostics-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-diagnostics-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "diagnostics",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-location-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-location-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "location",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-diagnostic-message-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-diagnostic-message-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "message",
+      "bindingIdentifier": "JsUserSettingsDiagnostic",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-open",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-open",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "open",
+      "bindingIdentifier": "openUserSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-original-bytes-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-original-bytes-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "original_bytes",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-path-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-path-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "path",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-revision-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-revision-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "revision",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-schema-version-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-schema-version-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "schema_version",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-source-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-source-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "source",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-update-check-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-update-check-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "update_check",
+      "bindingIdentifier": "JsUpdatePreferences",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-update-check-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-update-check-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "update_check_origin",
+      "bindingIdentifier": "JsUpdatePreferences",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-update-preferences-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-update-preferences-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "update_preferences",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
     {
       "trackedId": "contract:scanlog-analysis-config",
       "trackedType": "contract_row",

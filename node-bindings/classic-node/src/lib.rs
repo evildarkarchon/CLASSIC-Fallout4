@@ -35,6 +35,7 @@ mod config;
 mod database;
 mod fileio;
 mod settings;
+mod user_settings;
 
 // Wave 4: Game Analysis
 mod path;

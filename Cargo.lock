@@ -737,6 +737,7 @@ dependencies = [
  "classic-settings-core",
  "classic-shared-core",
  "classic-update-core",
+ "classic-user-settings-core",
  "classic-version-core",
  "classic-version-registry-core",
  "classic-web-core",
@@ -869,6 +870,7 @@ dependencies = [
  "classic-settings-core",
  "classic-shared-core",
  "classic-update-core",
+ "classic-user-settings-core",
  "classic-version-core",
  "classic-version-registry-core",
  "classic-web-core",
@@ -1231,6 +1233,24 @@ dependencies = [
  "pyo3",
  "pyo3-async-runtimes",
  "tokio",
+]
+
+[[package]]
+name = "classic-user-settings-core"
+version = "9.1.0"
+dependencies = [
+ "classic-settings-core",
+ "sha2 0.11.0",
+ "tempfile",
+]
+
+[[package]]
+name = "classic-user-settings-py"
+version = "9.1.0"
+dependencies = [
+ "classic-shared-py",
+ "classic-user-settings-core",
+ "pyo3",
 ]
 
 [[package]]

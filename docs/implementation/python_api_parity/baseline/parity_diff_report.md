@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-09T22:31:29.930828+00:00`
-- Tier-1 contract rows: **1085**
-- Tier-1 matched: **1085**
+- Generated: `2026-07-09T23:25:02.834466+00:00`
+- Tier-1 contract rows: **1109**
+- Tier-1 matched: **1109**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -12,6 +12,30 @@
 
 | ID | Owner Module | Rust Symbol | Python Export | Status |
 |---|---|---|---|---|
+| `user_settings.commit_eligibility` | `user_settings` | `CommitEligibility` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.diagnostic` | `user_settings` | `Diagnostic` | `classic_user_settings.UserSettingsDiagnostic` | `matched` |
+| `user_settings.document_classification` | `user_settings` | `DocumentClassification` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.preference_origin` | `user_settings` | `PreferenceOrigin` | `classic_user_settings.UpdatePreferences` | `matched` |
+| `user_settings.revision_type` | `user_settings` | `Revision` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.source_type` | `user_settings` | `SettingsSource` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.source_location` | `user_settings` | `SourceLocation` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.update_preferences_type` | `user_settings` | `UpdatePreferences` | `classic_user_settings.UpdatePreferences` | `matched` |
+| `user_settings.snapshot_type` | `user_settings` | `UserSettings` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.classification_accessor` | `user_settings` | `classification` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.diagnostic_code_accessor` | `user_settings` | `code` | `classic_user_settings.UserSettingsDiagnostic` | `matched` |
+| `user_settings.commit_eligibility_accessor` | `user_settings` | `commit_eligibility` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.diagnostics_accessor` | `user_settings` | `diagnostics` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.location_accessor` | `user_settings` | `location` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.diagnostic_message_accessor` | `user_settings` | `message` | `classic_user_settings.UserSettingsDiagnostic` | `matched` |
+| `user_settings.open` | `user_settings` | `open` | `classic_user_settings.open_user_settings` | `matched` |
+| `user_settings.original_bytes_accessor` | `user_settings` | `original_bytes` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.path_accessor` | `user_settings` | `path` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.revision_accessor` | `user_settings` | `revision` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.schema_version_accessor` | `user_settings` | `schema_version` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.source_accessor` | `user_settings` | `source` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.update_check_accessor` | `user_settings` | `update_check` | `classic_user_settings.UpdatePreferences` | `matched` |
+| `user_settings.update_check_origin_accessor` | `user_settings` | `update_check_origin` | `classic_user_settings.UpdatePreferences` | `matched` |
+| `user_settings.update_preferences_accessor` | `user_settings` | `update_preferences` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `config-classic-config-class` | `config` | `ClassicConfig` | `classic_config.ClassicConfig` | `matched` |
 | `config-classic-config-get-config-path` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.get_config_path` | `matched` |
 | `config-classic-config-load-from-yaml` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.load_from_yaml` | `matched` |
@@ -1104,6 +1128,7 @@
 |---|---:|
 | `scanlog` | 0 |
 | `config` | 0 |
+| `user_settings` | 0 |
 | `version_registry` | 0 |
 | `database` | 0 |
 | `file_io` | 0 |

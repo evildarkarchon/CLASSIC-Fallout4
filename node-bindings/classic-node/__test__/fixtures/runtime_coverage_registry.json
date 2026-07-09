@@ -3,6 +3,24 @@
   "binding": "node",
   "entries": [
     {
+      "coverageId": "node-tier1-user-settings",
+      "classification": "runtime_verified",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "user_settings",
+        "tier": "tier1"
+      },
+      "contractCount": 24,
+      "contractIdsHash": "8b76b25464ccee73a234627ae52a571f5cb7c5d0bd167f9edb849146ff70217a",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ]
+    },
+    {
       "coverageId": "node-tier1-scanlog",
       "classification": "runtime_verified",
       "ownerModule": "scanlog",

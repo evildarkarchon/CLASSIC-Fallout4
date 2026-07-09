@@ -26,6 +26,7 @@ RUST_TARGET_CRATES: dict[str, str] = {
     # Phase 1 original 10 crates (verified pre-state 2026-04-08).
     "classic-scanlog-core": "business-logic/classic-scanlog-core/src/lib.rs",
     "classic-config-core": "business-logic/classic-config-core/src/lib.rs",
+    "classic-user-settings-core": "business-logic/classic-user-settings-core/src/lib.rs",
     "classic-version-registry-core": "business-logic/classic-version-registry-core/src/lib.rs",
     "classic-file-io-core": "business-logic/classic-file-io-core/src/lib.rs",
     "classic-path-core": "business-logic/classic-path-core/src/lib.rs",
@@ -53,6 +54,7 @@ RUST_TARGET_CRATES: dict[str, str] = {
 RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-scanlog-core": "scanlog",
     "classic-config-core": "config",
+    "classic-user-settings-core": "user_settings",
     "classic-version-registry-core": "version_registry",
     # Foundation/aux crates kept as distinct owners per Phase 3 A5.
     "classic-file-io-core": "file_io",
@@ -79,6 +81,7 @@ RUST_OWNER_BY_CRATE: dict[str, str] = {
 SQUAD_BY_OWNER: dict[str, str] = {
     "scanlog": "Squad A (scanlog/config)",
     "config": "Squad A (scanlog/config)",
+    "user_settings": "Squad A (scanlog/config)",
     "version_registry": "Squad B (version-registry/aux)",
     "aux": "Squad B (version-registry/aux)",
     # Foundation/aux owners (Phase 3 A5 distinct labels).

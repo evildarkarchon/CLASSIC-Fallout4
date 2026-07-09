@@ -1,9 +1,10 @@
 {
-  "generated_at_utc": "2026-07-09T22:31:30.203714+00:00",
+  "generated_at_utc": "2026-07-09T23:34:51.909419+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
       "classic-config-core",
+      "classic-user-settings-core",
       "classic-version-registry-core",
       "classic-database-core",
       "classic-file-io-core",
@@ -24,6 +25,7 @@
     "source_files": [
       "business-logic/classic-scanlog-core/src/lib.rs",
       "business-logic/classic-config-core/src/lib.rs",
+      "business-logic/classic-user-settings-core/src/lib.rs",
       "business-logic/classic-version-registry-core/src/lib.rs",
       "business-logic/classic-database-core/src/lib.rs",
       "business-logic/classic-file-io-core/src/lib.rs",
@@ -15157,6 +15159,327 @@
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/lib.rs",
       "source_decl": "pub mod yaml_update;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CommitEligibility",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub enum CommitEligibility",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CommitEligibility",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_expr": "document::CommitEligibility",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Diagnostic",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_expr": "document::Diagnostic",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Diagnostic",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub struct Diagnostic",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DocumentClassification",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub enum DocumentClassification",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DocumentClassification",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_expr": "document::DocumentClassification",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PreferenceOrigin",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub enum PreferenceOrigin",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PreferenceOrigin",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_expr": "document::PreferenceOrigin",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Revision",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub enum Revision",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Revision",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_expr": "document::Revision",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SettingsSource",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_expr": "document::SettingsSource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SettingsSource",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub struct SettingsSource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SourceLocation",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub enum SourceLocation",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "SourceLocation",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_expr": "document::SourceLocation",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UpdatePreferences",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_expr": "document::UpdatePreferences",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UpdatePreferences",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub struct UpdatePreferences",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettings",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_expr": "document::UserSettings",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettings",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub struct UserSettings",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "classification",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn classification(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "code",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn code(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "commit_eligibility",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn commit_eligibility(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "diagnostics",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn diagnostics(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "location",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn location(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn message(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "open",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn open(classic_root: impl AsRef<Path>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "original_bytes",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn original_bytes(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "revision",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn revision(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "schema_version",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn schema_version(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "source",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn source(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "update_check",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn update_check(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "update_check_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn update_check_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "update_preferences",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn update_preferences(&self)",
       "tier": "tier1"
     },
     {

@@ -205,7 +205,9 @@ if(Catch2_FOUND)
     # consumers prove the discriminated DTO shape at compile AND run time.
     add_executable(classic-cli-bridge-tests
         tests/test_yaml_update.cpp
+        tests/test_app_update.cpp
         src/yaml_update.cpp
+        src/app_update.cpp
     )
 
     target_include_directories(classic-cli-bridge-tests PRIVATE src/)
@@ -214,6 +216,12 @@ if(Catch2_FOUND)
         Catch2::Catch2WithMain
         fmt::fmt
         classic_cxx_bridge
+    )
+
+    # The sentinel is intentionally invalid: the disabled-policy test proves
+    # User Settings short-circuit before installed-version validation or I/O.
+    target_compile_definitions(classic-cli-bridge-tests PRIVATE
+        CLASSIC_CLI_VERSION="not-a-version"
     )
 
     if(MSVC)

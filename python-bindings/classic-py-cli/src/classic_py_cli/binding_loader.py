@@ -21,6 +21,7 @@ EXPECTED_BINDINGS = [
     "classic_scanlog",
     "classic_settings",
     "classic_update",
+    "classic_user_settings",
     "classic_version",
     "classic_version_registry",
     "classic_web",

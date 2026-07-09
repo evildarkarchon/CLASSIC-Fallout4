@@ -3522,6 +3522,46 @@ export interface JsUpdateCheckResult {
   latestRelease: JsGithubRelease
 }
 
+/** Update-related User Settings consumed by update-check policy. */
+export interface JsUpdatePreferences {
+  /** Whether first-party update checks are enabled after safe fallback policy. */
+  updateCheck: boolean
+  /** Provenance token: `document`, `default`, or `degradedFallback`. */
+  origin: string
+}
+
+/** One structured diagnostic produced while opening User Settings. */
+export interface JsUserSettingsDiagnostic {
+  /** Stable machine-readable diagnostic code. */
+  code: string
+  /** Human-readable diagnostic context. */
+  message: string
+}
+
+/** Read-only User Settings snapshot returned by `openUserSettings`. */
+export interface JsUserSettingsSnapshot {
+  /** Typed update preferences. */
+  updatePreferences: JsUpdatePreferences
+  /** Selected source token: `canonical`, `legacy`, or `missing`. */
+  sourceLocation: string
+  /** Selected source path, absent when the document is missing. */
+  sourcePath?: string
+  /** Document format/schema classification token. */
+  classification: string
+  /** Parsed schema major, absent for missing or unversioned documents. */
+  schemaMajor?: number
+  /** Parsed schema minor, absent for missing or unversioned documents. */
+  schemaMinor?: number
+  /** Content-derived revision token (`sha256:…`, `missing`, or `unavailable`). */
+  revision: string
+  /** Commit policy token: `eligible`, `requiresMigration`, or `blockedUntrusted`. */
+  commitEligibility: string
+  /** Structured diagnostics in discovery and validation order. */
+  diagnostics: Array<JsUserSettingsDiagnostic>
+  /** Exact source bytes retained for later semantic preservation. */
+  originalContent?: Buffer
+}
+
 /** XSE validation result. */
 export declare const enum JsValidationResult {
   /** Correct Address Library version installed */
@@ -3929,6 +3969,12 @@ export declare function normalizePath(path: string): string
 
 /** Normalize a single string (trim, lowercase, collapse extra whitespace). */
 export declare function normalizeString(value: string): string
+
+/**
+ * Opens User Settings relative to an explicit CLASSIC root without changing
+ * either supported source document.
+ */
+export declare function openUserSettings(classicRoot: string): JsUserSettingsSnapshot
 
 /**
  * Parse a crash generator version string into components.

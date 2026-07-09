@@ -385,3 +385,27 @@ fn test_settings_coerce_value_int_and_float() {
 fn test_settings_coerce_value_unknown_type_errors() {
     assert!(settings_coerce_value("42", "list").is_err());
 }
+
+#[test]
+fn test_user_settings_update_preferences_bridge_is_fail_closed_with_diagnostics() {
+    let root = tempfile::tempdir().unwrap();
+    let content = "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Update Check: invalid\n";
+    std::fs::write(root.path().join("CLASSIC Settings.yaml"), content).unwrap();
+
+    let preferences = user_settings_open_update_preferences(&root.path().display().to_string());
+
+    assert!(!preferences.update_check_enabled);
+    assert_eq!(preferences.update_check_origin, "degraded_fallback");
+    assert_eq!(preferences.source_location, "canonical");
+    assert_eq!(preferences.classification, "current");
+    assert!(preferences.has_schema_version);
+    assert_eq!(preferences.schema_major, 1);
+    assert_eq!(preferences.schema_minor, 0);
+    assert_eq!(preferences.commit_eligibility, "eligible");
+    assert_eq!(preferences.diagnostics.len(), 1);
+    assert_eq!(preferences.diagnostics[0].code, "invalid_type_update_check");
+    assert!(!preferences.diagnostics[0].message.is_empty());
+    assert!(preferences.has_original_content);
+    assert_eq!(preferences.original_content, content.as_bytes());
+    assert!(preferences.revision.starts_with("sha256:"));
+}

@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-09T22:30:49.140982+00:00`
-- Tier-1 contract rows: **706**
-- Tier-1 matched: **706**
+- Generated: `2026-07-09T23:25:02.554597+00:00`
+- Tier-1 contract rows: **730**
+- Tier-1 matched: **730**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -12,6 +12,30 @@
 
 | ID | Owner Module | Rust Symbol | Node Export | Status |
 |---|---|---|---|---|
+| `user-settings-commit-eligibility` | `user_settings` | `CommitEligibility` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-diagnostic` | `user_settings` | `Diagnostic` | `JsUserSettingsDiagnostic` | `matched` |
+| `user-settings-document-classification` | `user_settings` | `DocumentClassification` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-preference-origin` | `user_settings` | `PreferenceOrigin` | `JsUpdatePreferences` | `matched` |
+| `user-settings-revision-type` | `user_settings` | `Revision` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-source-type` | `user_settings` | `SettingsSource` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-source-location` | `user_settings` | `SourceLocation` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-update-preferences-type` | `user_settings` | `UpdatePreferences` | `JsUpdatePreferences` | `matched` |
+| `user-settings-snapshot-type` | `user_settings` | `UserSettings` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-classification-accessor` | `user_settings` | `classification` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-diagnostic-code-accessor` | `user_settings` | `code` | `JsUserSettingsDiagnostic` | `matched` |
+| `user-settings-commit-eligibility-accessor` | `user_settings` | `commit_eligibility` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-diagnostics-accessor` | `user_settings` | `diagnostics` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-location-accessor` | `user_settings` | `location` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-diagnostic-message-accessor` | `user_settings` | `message` | `JsUserSettingsDiagnostic` | `matched` |
+| `user-settings-open` | `user_settings` | `open` | `openUserSettings` | `matched` |
+| `user-settings-original-bytes-accessor` | `user_settings` | `original_bytes` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-path-accessor` | `user_settings` | `path` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-revision-accessor` | `user_settings` | `revision` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-schema-version-accessor` | `user_settings` | `schema_version` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-source-accessor` | `user_settings` | `source` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-update-check-accessor` | `user_settings` | `update_check` | `JsUpdatePreferences` | `matched` |
+| `user-settings-update-check-origin-accessor` | `user_settings` | `update_check_origin` | `JsUpdatePreferences` | `matched` |
+| `user-settings-update-preferences-accessor` | `user_settings` | `update_preferences` | `JsUserSettingsSnapshot` | `matched` |
 | `scanlog-analysis-config` | `scanlog` | `AnalysisConfig` | `createAnalysisConfig` | `matched` |
 | `scanlog-process-log` | `scanlog` | `OrchestratorCore` | `processLog` | `matched` |
 | `scanlog-process-batch` | `scanlog` | `OrchestratorCore` | `processLogsBatch` | `matched` |

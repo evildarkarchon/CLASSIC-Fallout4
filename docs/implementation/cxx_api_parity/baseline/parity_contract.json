@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T10:43:38Z",
+  "generated_at_utc": "2026-07-09T23:24:27Z",
   "schema_version": 1,
   "entries": [
     {
@@ -5319,6 +5319,23 @@
       }
     },
     {
+      "id": "ba33f05b060305af",
+      "rustSymbol": "user_settings_open_update_preferences",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          }
+        ],
+        "returnType": "UpdatePreferencesDto"
+      }
+    },
+    {
       "id": "867131bd442e6121",
       "rustSymbol": "yaml_file_as_str",
       "kind": "function",
@@ -5757,6 +5774,86 @@
       "fields": [
         {
           "name": "severity",
+          "type": "String"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "615d61776d653242",
+      "rustSymbol": "UpdatePreferencesDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "update_check_enabled",
+          "type": "bool"
+        },
+        {
+          "name": "update_check_origin",
+          "type": "String"
+        },
+        {
+          "name": "source_location",
+          "type": "String"
+        },
+        {
+          "name": "source_path",
+          "type": "String"
+        },
+        {
+          "name": "classification",
+          "type": "String"
+        },
+        {
+          "name": "has_schema_version",
+          "type": "bool"
+        },
+        {
+          "name": "schema_major",
+          "type": "u32"
+        },
+        {
+          "name": "schema_minor",
+          "type": "u32"
+        },
+        {
+          "name": "revision",
+          "type": "String"
+        },
+        {
+          "name": "commit_eligibility",
+          "type": "String"
+        },
+        {
+          "name": "diagnostics",
+          "type": "Vec<UserSettingsDiagnosticDto>"
+        },
+        {
+          "name": "has_original_content",
+          "type": "bool"
+        },
+        {
+          "name": "original_content",
+          "type": "Vec<u8>"
+        }
+      ]
+    },
+    {
+      "id": "0b2551f3acc13938",
+      "rustSymbol": "UserSettingsDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "code",
           "type": "String"
         },
         {

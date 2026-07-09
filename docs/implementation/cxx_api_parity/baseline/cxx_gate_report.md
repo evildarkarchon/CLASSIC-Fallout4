@@ -1,8 +1,8 @@
 # CXX Parity Gate Report
 
-- Contract rows: **366**
-- Current rows: **366**
-- Matched: **366**
+- Contract rows: **369**
+- Current rows: **369**
+- Matched: **369**
 - Missing from current: **0**
 - Missing from contract: **0**
 - Signature mismatch: **0**

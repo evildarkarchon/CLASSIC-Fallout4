@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T22:30:49.139892+00:00",
+  "generated_at_utc": "2026-07-09T23:25:02.553533+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -971,6 +971,30 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsUpdateCheckResult {"
+    },
+    {
+      "export": "JsUpdatePreferences",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUpdatePreferences {"
+    },
+    {
+      "export": "JsUserSettingsDiagnostic",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsDiagnostic {"
+    },
+    {
+      "export": "JsUserSettingsSnapshot",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsSnapshot {"
     },
     {
       "export": "JsValidationResult",
@@ -2406,6 +2430,15 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function normalizeString(value: string): string",
+      "arity": 1
+    },
+    {
+      "export": "openUserSettings",
+      "kind": "function",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function openUserSettings(classicRoot: string): JsUserSettingsSnapshot",
       "arity": 1
     },
     {

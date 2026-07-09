@@ -3,6 +3,24 @@
   "binding": "python",
   "entries": [
     {
+      "coverageId": "python-tier1-user-settings",
+      "classification": "runtime_verified",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "contractSelector": {
+        "ownerModule": "user_settings",
+        "tier": "tier1"
+      },
+      "contractCount": 24,
+      "contractIdsHash": "619c9b414771e172316f232d77d3fe2b3608bd2217ef7965e27302974db226ec",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ]
+    },
+    {
       "coverageId": "python-tier1-config",
       "classification": "runtime_verified",
       "ownerModule": "config",

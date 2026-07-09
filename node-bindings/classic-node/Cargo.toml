@@ -43,6 +43,7 @@ classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
 classic-database-core = { path = "../../business-logic/classic-database-core" }
 classic-settings-core = { path = "../../business-logic/classic-settings-core" }
+classic-user-settings-core = { path = "../../business-logic/classic-user-settings-core" }
 classic-config-core = { path = "../../business-logic/classic-config-core" }
 
 # Wave 4: Game Analysis

@@ -33,6 +33,8 @@ Unknown fields are tolerated so a future manifest can add optional metadata with
 
 ## 2. Runtime flow (client side)
 
+Native CLI policy adds a read-only preflight before the network flow below. `--check-app-update` passes an explicitly resolved CLASSIC root to `classic-user-settings-core`, receives typed Update Preferences through `classic::settings::user_settings_open_update_preferences`, and stops before runtime/cache/network work when the safe value is disabled. Missing settings use the published default `true`; malformed, incompatible, unreadable, or invalid Update Check state fails closed to `false` with structured diagnostics. GUI and TUI consumer migration is handled by their dedicated User Settings tickets.
+
 ```
 ┌───────────────────────────────────────────────────────────────────┐
 │ check_app_notification(owner, repo, installed_version):           │
@@ -176,6 +178,8 @@ No database state, no `.prev` swap, no per-file rollback is required (and none i
 ## 5. Relation to the binary-release update check
 
 The notification channel **replaces** the old `GithubClient::get_latest_release` + `has_update` pathway on user-facing surfaces (TUI, CLI `--check-app-update`, GUI `CHECK UPDATES` button + Settings dialog). The old `GithubClient` surface is retained as `#[deprecated]` for compat-only diagnostic tooling; it no longer drives any user-visible update check.
+
+For the native CLI, notification delivery is downstream of typed User Settings policy: a disabled or untrusted Update Check preference never enters the notification channel. This policy gate is separate from notification classifications such as `NotPublished`; disabled means no fetch was attempted, while `NotPublished` is a benign result after both publish channels report absence.
 
 ---
 

@@ -1,0 +1,25 @@
+[package]
+name = "classic-user-settings-core"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.96.0"
+authors = ["CLASSIC Development Team"]
+description = "Typed, preservation-aware User Settings business logic for CLASSIC"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+classic-settings-core = { path = "../classic-settings-core" }
+sha2 = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "warn"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

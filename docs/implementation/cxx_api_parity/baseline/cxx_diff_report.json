@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 366,
-    "current_total": 366,
-    "matched": 366,
+    "contract_total": 369,
+    "current_total": 369,
+    "matched": 369,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2097,6 +2097,14 @@
       "reason": "-"
     },
     {
+      "id": "ba33f05b060305af",
+      "rustSymbol": "user_settings_open_update_preferences",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "867131bd442e6121",
       "rustSymbol": "yaml_file_as_str",
       "kind": "function",
@@ -2267,6 +2275,22 @@
     {
       "id": "17a8395468c3cef5",
       "rustSymbol": "SettingsValidationIssue",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "615d61776d653242",
+      "rustSymbol": "UpdatePreferencesDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0b2551f3acc13938",
+      "rustSymbol": "UserSettingsDiagnosticDto",
       "kind": "struct",
       "bridgeModule": "settings",
       "status": "matched",

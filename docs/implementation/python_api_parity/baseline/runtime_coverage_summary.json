@@ -1,16 +1,16 @@
 {
-  "generated_at_utc": "2026-07-09T22:31:29.936834+00:00",
+  "generated_at_utc": "2026-07-09T23:25:02.841196+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1249,
-    "runtime_verified_total": 1249,
+    "tracked_surface_total": 1273,
+    "runtime_verified_total": 1273,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 1085,
+    "tier1_contract_total": 1109,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -68,6 +68,10 @@
       "runtime_verified": 10,
       "total": 10
     },
+    "user_settings": {
+      "runtime_verified": 24,
+      "total": 24
+    },
     "version": {
       "runtime_verified": 15,
       "total": 15
@@ -86,6 +90,462 @@
     }
   },
   "trackedSurface": [
+    {
+      "trackedId": "contract:user_settings.commit_eligibility",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.commit_eligibility",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "CommitEligibility",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.diagnostic",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.diagnostic",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "Diagnostic",
+      "bindingIdentifier": "classic_user_settings.UserSettingsDiagnostic",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.document_classification",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.document_classification",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "DocumentClassification",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.preference_origin",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.preference_origin",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "PreferenceOrigin",
+      "bindingIdentifier": "classic_user_settings.UpdatePreferences",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.revision_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.revision_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "Revision",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.source_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.source_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "SettingsSource",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.source_location",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.source_location",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "SourceLocation",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.update_preferences_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_preferences_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "UpdatePreferences",
+      "bindingIdentifier": "classic_user_settings.UpdatePreferences",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.snapshot_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.snapshot_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "UserSettings",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.classification_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.classification_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "classification",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.diagnostic_code_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.diagnostic_code_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "code",
+      "bindingIdentifier": "classic_user_settings.UserSettingsDiagnostic",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.commit_eligibility_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.commit_eligibility_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "commit_eligibility",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.diagnostics_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.diagnostics_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "diagnostics",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.location_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.location_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "location",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.diagnostic_message_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.diagnostic_message_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "message",
+      "bindingIdentifier": "classic_user_settings.UserSettingsDiagnostic",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.open",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.open",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "open",
+      "bindingIdentifier": "classic_user_settings.open_user_settings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.original_bytes_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.original_bytes_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "original_bytes",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.path_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.path_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "path",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.revision_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.revision_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "revision",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.schema_version_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.schema_version_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "schema_version",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.source_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.source_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "source",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.update_check_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_check_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "update_check",
+      "bindingIdentifier": "classic_user_settings.UpdatePreferences",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.update_check_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_check_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "update_check_origin",
+      "bindingIdentifier": "classic_user_settings.UpdatePreferences",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user_settings.update_preferences_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_preferences_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "update_preferences",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-only-open",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
     {
       "trackedId": "contract:config-classic-config-class",
       "trackedType": "contract_row",

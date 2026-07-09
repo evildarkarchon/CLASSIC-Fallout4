@@ -13,6 +13,9 @@
 //! 3. **Validators** (new — D-09): Settings document structure validation,
 //!    per-value type checking, and string-to-typed coercion. Mirrors the
 //!    Python `classic_settings` validator surface 1:1.
+//! 4. **User Settings read path**: Opens the deep User Settings module from an
+//!    explicit CLASSIC root and returns the typed Update Preferences needed by
+//!    native update-check policy.
 //!
 //! ## CXX type-system exceptions (documented)
 //!
@@ -37,6 +40,10 @@ use classic_settings_core::{
     self as settings_core, SETTINGS_IGNORE_NONE, YamlCacheStats, YamlFile as CoreYamlFile,
     YamlOperations, must_not_be_none as core_must_not_be_none, yaml_cache_stats,
 };
+use classic_user_settings_core::{
+    CommitEligibility, DocumentClassification, PreferenceOrigin, Revision, SourceLocation,
+    UserSettings,
+};
 use std::path::Path;
 use yaml_rust2::Yaml;
 
@@ -44,6 +51,107 @@ use yaml_rust2::Yaml;
 pub struct YamlOps {
     ops: YamlOperations,
     doc: Option<Yaml>,
+}
+
+// ── Typed User Settings read path ───────────────────────────────────
+
+/// Opens User Settings at an explicit CLASSIC root and flattens the typed
+/// Update Preferences view into a CXX-compatible diagnostic DTO.
+fn user_settings_open_update_preferences(classic_root: &str) -> ffi::UpdatePreferencesDto {
+    let settings = UserSettings::open(Path::new(classic_root));
+    let source = settings.source();
+    let (has_schema_version, schema_major, schema_minor) = settings
+        .schema_version()
+        .map_or((false, 0, 0), |(major, minor)| (true, major, minor));
+    let (has_original_content, original_content) = settings
+        .original_bytes()
+        .map_or((false, Vec::new()), |content| (true, content.to_vec()));
+
+    ffi::UpdatePreferencesDto {
+        update_check_enabled: settings.update_preferences().update_check(),
+        update_check_origin: preference_origin_token(
+            settings.update_preferences().update_check_origin(),
+        )
+        .to_string(),
+        source_location: source_location_token(source.location()).to_string(),
+        source_path: source
+            .path()
+            .map_or_else(String::new, |path| path.display().to_string()),
+        classification: document_classification_token(settings.classification()).to_string(),
+        has_schema_version,
+        schema_major,
+        schema_minor,
+        revision: revision_token(settings.revision()),
+        commit_eligibility: commit_eligibility_token(settings.commit_eligibility()).to_string(),
+        diagnostics: settings
+            .diagnostics()
+            .iter()
+            .map(|diagnostic| ffi::UserSettingsDiagnosticDto {
+                code: diagnostic.code().to_string(),
+                message: diagnostic.message().to_string(),
+            })
+            .collect(),
+        has_original_content,
+        original_content,
+    }
+}
+
+/// Returns the stable cross-language token for a preference's provenance.
+fn preference_origin_token(origin: PreferenceOrigin) -> &'static str {
+    match origin {
+        PreferenceOrigin::Document => "document",
+        PreferenceOrigin::Default => "default",
+        PreferenceOrigin::DegradedFallback => "degraded_fallback",
+    }
+}
+
+/// Returns the stable cross-language token for the selected source location.
+fn source_location_token(location: SourceLocation) -> &'static str {
+    match location {
+        SourceLocation::Canonical => "canonical",
+        SourceLocation::Legacy => "legacy",
+        SourceLocation::Missing => "missing",
+    }
+}
+
+/// Returns the stable cross-language token for document classification.
+fn document_classification_token(classification: DocumentClassification) -> &'static str {
+    match classification {
+        DocumentClassification::Current => "current",
+        DocumentClassification::Unversioned => "unversioned",
+        DocumentClassification::Older => "older",
+        DocumentClassification::NewerCompatible => "newer_compatible",
+        DocumentClassification::FutureMajor => "future_major",
+        DocumentClassification::LegacyFlat => "legacy_flat",
+        DocumentClassification::Malformed => "malformed",
+        DocumentClassification::Missing => "missing",
+    }
+}
+
+/// Returns the stable cross-language token for commit eligibility.
+fn commit_eligibility_token(eligibility: CommitEligibility) -> &'static str {
+    match eligibility {
+        CommitEligibility::Eligible => "eligible",
+        CommitEligibility::RequiresMigration => "requires_migration",
+        CommitEligibility::BlockedUntrusted => "blocked_untrusted",
+    }
+}
+
+/// Formats a content revision without exposing Rust-only enum layout through CXX.
+fn revision_token(revision: &Revision) -> String {
+    match revision {
+        Revision::Missing => "missing".to_string(),
+        Revision::Unavailable => "unavailable".to_string(),
+        Revision::ContentSha256(digest) => {
+            let mut token = String::with_capacity("sha256:".len() + digest.len() * 2);
+            token.push_str("sha256:");
+            for byte in digest {
+                use std::fmt::Write as _;
+                write!(&mut token, "{byte:02x}").expect("writing to a String cannot fail");
+            }
+            token
+        }
+    }
 }
 
 // ── Construction ────────────────────────────────────────────────────
@@ -500,6 +608,33 @@ mod ffi {
         value_type: String,
     }
 
+    /// One structured diagnostic produced while opening User Settings.
+    struct UserSettingsDiagnosticDto {
+        code: String,
+        message: String,
+    }
+
+    /// Typed Update Preferences plus User Settings source and diagnostic metadata.
+    ///
+    /// The boolean is already safety-adjusted by Rust: missing settings use the
+    /// published default, while malformed, incompatible, or invalid values are
+    /// fail-closed. C++ callers must not reinterpret raw YAML.
+    struct UpdatePreferencesDto {
+        update_check_enabled: bool,
+        update_check_origin: String,
+        source_location: String,
+        source_path: String,
+        classification: String,
+        has_schema_version: bool,
+        schema_major: u32,
+        schema_minor: u32,
+        revision: String,
+        commit_eligibility: String,
+        diagnostics: Vec<UserSettingsDiagnosticDto>,
+        has_original_content: bool,
+        original_content: Vec<u8>,
+    }
+
     extern "Rust" {
         type YamlOps;
 
@@ -507,6 +642,10 @@ mod ffi {
         fn yaml_file_description(f: YamlFile) -> String;
         fn must_not_be_none_key(key: &str) -> bool;
         fn settings_ignore_none_contains(key: &str) -> bool;
+
+        /// Open User Settings from an explicit CLASSIC root and return the
+        /// typed Update Preferences view used by native update-check policy.
+        fn user_settings_open_update_preferences(classic_root: &str) -> UpdatePreferencesDto;
 
         // Construction
         fn yaml_ops_new() -> Box<YamlOps>;

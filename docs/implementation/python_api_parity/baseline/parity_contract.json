@@ -12,6 +12,9 @@
     "config": {
       "description": "YAML data and runtime configuration APIs."
     },
+    "user_settings": {
+      "description": "Typed, preservation-aware User Settings APIs."
+    },
     "version_registry": {
       "description": "Game version lookup and compatibility APIs."
     },
@@ -62,6 +65,247 @@
     }
   },
   "tier1Mappings": [
+    {
+      "id": "user_settings.commit_eligibility",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "CommitEligibility",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.diagnostic",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "Diagnostic",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsDiagnostic",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.document_classification",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "DocumentClassification",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.preference_origin",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "PreferenceOrigin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UpdatePreferences",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.revision_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "Revision",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.source_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "SettingsSource",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.source_location",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "SourceLocation",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_preferences_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UpdatePreferences",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UpdatePreferences",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.snapshot_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettings",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.classification_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "classification",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.diagnostic_code_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "code",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsDiagnostic",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.commit_eligibility_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "commit_eligibility",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.diagnostics_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "diagnostics",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.location_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "location",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.diagnostic_message_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "message",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsDiagnostic",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.open",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "open",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "open_user_settings",
+      "pythonKind": "function",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.original_bytes_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "original_bytes",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.path_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "path",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.revision_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "revision",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.schema_version_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "schema_version",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.source_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "source",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_check_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "update_check",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UpdatePreferences",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_check_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "update_check_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UpdatePreferences",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_preferences_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "update_preferences",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
     {
       "id": "config-classic-config-class",
       "tier": "tier1",

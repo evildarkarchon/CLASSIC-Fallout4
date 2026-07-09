@@ -151,6 +151,14 @@ This is currently where `classic-config-core`, `classic-database-core`, `classic
 
 (This namespace was renamed from `classic::yaml` during v9.1.0 Phase 1 Plan 2 and expanded with the D-09 settings-core surface in the same change.)
 
+### Typed User Settings Update Preferences
+
+`user_settings_open_update_preferences(classic_root) -> UpdatePreferencesDto` forwards an explicit CLASSIC root to `classic_user_settings_core::UserSettings::open(...)`. Rust owns canonical/legacy discovery, schema classification, published defaults, fail-closed fallbacks, content revision, commit eligibility, and diagnostics; C++ does not interpret a raw User Settings key path.
+
+`UpdatePreferencesDto.update_check_enabled` is ready for policy use. Missing settings produce the published default `true`; invalid, malformed, unreadable, older-incompatible, and future-major inputs produce `false`. The remaining fields expose provenance, source location/path, document classification, optional schema version, revision token, commit policy, structured diagnostics, and the exact original source bytes when available.
+
+The native CLI `--check-app-update` consumer resolves its CLASSIC root and short-circuits on this DTO before initializing the update runtime or calling `check_app_notification`. The broader CLI scan and YAML Data command migration is intentionally outside this slice.
+
 ### YAML file-cache helpers
 
 These helpers keep the C++ YAML surface aligned with the canonical Phase 4 cache stats contract:

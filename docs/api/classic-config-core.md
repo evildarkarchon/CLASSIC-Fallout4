@@ -108,7 +108,7 @@ Contributor notes:
 
 ## `ClassicConfig`
 
-`ClassicConfig` is the persisted settings struct shared by application surfaces.
+`ClassicConfig` is the transitional legacy flat-schema settings struct. New User Settings ownership lives in [`classic-user-settings-core`](classic-user-settings-core.md); maintained consumers migrate there through the staged ADR-0004 tickets before `ClassicConfig` is removed in the intentional breaking cutovers.
 
 Key fields include:
 
