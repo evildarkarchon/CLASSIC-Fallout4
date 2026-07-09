@@ -200,18 +200,14 @@ impl PyFcxModeHandler {
         }
 
         if !self.inner.fcx_mode {
-            // FCX mode disabled - set default messages
-            self.inner.set_main_files_result(
-                "❌ FCX Mode is disabled, skipping game files check... \n-----\n".to_string(),
-            );
+            // FCX mode is off; leave report output empty but mark the session checked.
+            self.inner.set_main_files_result(String::new());
             self.inner.set_game_files_result(String::new());
 
             // Mark as run even when disabled (don't re-run for each log)
             global_handler.checks_run = true;
             global_handler.fcx_mode = false;
-            global_handler.set_main_files_result(
-                "❌ FCX Mode is disabled, skipping game files check... \n-----\n".to_string(),
-            );
+            global_handler.set_main_files_result(String::new());
             global_handler.set_game_files_result(String::new());
 
             return Ok(());

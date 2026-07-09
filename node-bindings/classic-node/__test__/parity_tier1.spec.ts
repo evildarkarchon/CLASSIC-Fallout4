@@ -73,6 +73,7 @@ import {
   checkEnb,
   JsLogProcessor,
   processGameLogs,
+  runGameSetupIntake,
   scanAllBa2Archives,
   scanUnpackedFiles,
   getVersionById,
@@ -420,6 +421,46 @@ describe("Tier-1 parity fixture suites", () => {
       } finally {
         clearHashCache();
         resetHashCacheStats();
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+    });
+  }
+
+  if (activeCoverageCases.has("scangame-tier1-parity")) {
+    describe("scangame parity", () => {
+    test("setup intake forwards configured executable path for non-default basenames", () => {
+      const dir = mkdtempSync(join(tmpdir(), "classic-tier1-setup-"));
+      const gameRoot = join(dir, "Fallout4");
+      const docsRoot = join(dir, "Docs");
+      const configuredExe = join(gameRoot, "Fallout4Custom.exe");
+
+      try {
+        mkdirSync(gameRoot, { recursive: true });
+        mkdirSync(docsRoot, { recursive: true });
+        writeFileSync(join(docsRoot, "Fallout4.ini"), "[General]\n", "utf-8");
+        writeFileSync(join(docsRoot, "Fallout4Custom.ini"), "[Archive]\n", "utf-8");
+        writeFileSync(join(docsRoot, "Fallout4Prefs.ini"), "[General]\n", "utf-8");
+        writeFileSync(configuredExe, "not a real pe", "utf-8");
+        writeFileSync(join(gameRoot, "f4se_loader.exe"), "loader", "utf-8");
+
+        const result = runGameSetupIntake({
+          gameId: "Fallout4",
+          gameVersion: "auto",
+          gameRoot,
+          gameExePath: configuredExe,
+          docsRoot,
+        });
+
+        expect(result.status).toBe("action_required");
+        expect(result.hasErrors).toBe(false);
+        expect(result.actionCount).toBe(1);
+        expect(result.gameRoot).toBe(gameRoot);
+        expect(result.docsRoot).toBe(docsRoot);
+        expect(result.renderedReport).toContain(
+          "Resolved game root from configured executable",
+        );
+      } finally {
         rmSync(dir, { recursive: true, force: true });
       }
     });

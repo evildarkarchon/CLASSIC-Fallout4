@@ -465,13 +465,11 @@ help:
           topic: "scan_crash_logs"
 
     fcx_mode:
-      title: "FCX Mode (Deprecated)"
+      title: "FCX Mode"
       content: |
-        # FCX Mode - File Check eXtended (Deprecated)
+        # FCX Mode - File Check eXtended
 
-        > **Deprecated:** FCX Mode is being phased out and will be removed in a future release.
-
-        Enables extended scans and actions that only make sense when analyzing your own crashes.
+        Enables extended local checks that only make sense when analyzing your own crashes.
 
         ## What is FCX Mode?
         FCX (File Check eXtended) is an extended analysis mode that performs deeper checks

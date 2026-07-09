@@ -191,8 +191,8 @@ saved settings / frontend inputs
 Current binding surfaces should stay thin:
 
 - C++ bridge: `classic::scangame::run_game_setup_intake(...)`, `game_setup_intake_checks(...)`, and `game_setup_needs_path_detection(...)`
-- Node binding: `runGameSetupIntake(...)`, `normalizeGameSetupVersionSelection(...)`, and `gameSetupNeedsPathDetection(...)`
-- Python binding: `GameSetupIntake`, `run_game_setup_intake(...)`, `normalize_game_setup_version_selection(...)`, and `game_setup_needs_path_detection(...)`
+- Node binding: `runGameSetupIntake(...)`, `normalizeGameSetupVersionSelection(...)`, and `gameSetupNeedsPathDetection(...)`; `runGameSetupIntake` accepts `gameExePath` when the caller has a saved executable path.
+- Python binding: `GameSetupIntake`, `run_game_setup_intake(...)`, `normalize_game_setup_version_selection(...)`, and `game_setup_needs_path_detection(...)`; `GameSetupIntake` accepts `game_exe_path` when the caller has a saved executable path.
 
 Adapters should not rebuild executable-hash, XSE, Address Library, or documents logic locally. If a setup diagnostic needs to change, change `classic-scangame-core::game_setup_intake`.
 

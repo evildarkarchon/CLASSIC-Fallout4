@@ -1168,6 +1168,7 @@ class GameSetupIntake:
         game_root: Path | None = ...,
         docs_root: Path | None = ...,
         xse_log_path: Path | None = ...,
+        game_exe_path: Path | None = ...,
     ) -> None:
         """Create a new Game Setup Intake request."""
 
@@ -1182,6 +1183,10 @@ class GameSetupIntake:
     @property
     def game_root(self) -> str | None:
         """Saved or caller-provided game root."""
+
+    @property
+    def game_exe_path(self) -> str | None:
+        """Saved or caller-provided game executable path."""
 
     @property
     def docs_root(self) -> str | None:

@@ -117,7 +117,7 @@ An Autoscan Report Contribution that identifies crash evidence matching known cr
 _Avoid_: suspect fragment, known crash message, crash error
 
 **FCX Mode**:
-A deprecated scan context flag that affects Autoscan Report text. It is retained only for current compatibility and should not become a new Autoscan Report Contribution category.
+A scan context flag that enables local installation checks and affects Autoscan Report text. Keep the flag distinct from Autoscan Report Contribution categories unless FCX detail rendering is intentionally redesigned.
 _Avoid_: FCX finding, FCX contribution
 
 **Standard Crash Log Scan Run**:

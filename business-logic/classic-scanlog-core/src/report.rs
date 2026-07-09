@@ -345,8 +345,8 @@ impl AutoscanReportAssembler {
 
     fn fcx_mode_notice_fragment() -> ReportFragment {
         ReportFragment::from_lines(vec![
-            "* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION * \n\n".to_string(),
-            "[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ] \n\n".to_string(),
+            "* NOTICE: FCX LOCAL FILE CHECKS ARE ENABLED FOR THIS SCAN * \n\n".to_string(),
+            "[ Use FCX only with crash logs from your own installation. ] \n\n".to_string(),
         ])
     }
 }

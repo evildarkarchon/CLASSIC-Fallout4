@@ -1552,6 +1552,8 @@ pub struct JsGameSetupIntakeOptions {
     pub game_version: Option<String>,
     /// Optional game installation root.
     pub game_root: Option<String>,
+    /// Optional game executable path.
+    pub game_exe_path: Option<String>,
     /// Optional documents root.
     pub docs_root: Option<String>,
     /// Optional XSE log path for loader version detection.
@@ -1622,6 +1624,9 @@ fn build_game_setup_intake(options: JsGameSetupIntakeOptions) -> Result<GameSetu
     let mut intake = GameSetupIntake::new(game_id, game_version);
     if let Some(game_root) = optional_path(options.game_root) {
         intake = intake.with_game_root(game_root);
+    }
+    if let Some(game_exe_path) = optional_path(options.game_exe_path) {
+        intake = intake.with_game_exe_path(game_exe_path);
     }
     if let Some(docs_root) = optional_path(options.docs_root) {
         intake = intake.with_docs_root(docs_root);

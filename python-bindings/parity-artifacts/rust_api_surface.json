@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T04:46:18.081244+00:00",
+  "generated_at_utc": "2026-07-09T09:07:31.225309+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -8063,6 +8063,16 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
       "source_decl": "pub fn with_docs_root(mut self, path: impl Into<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_game_exe_path",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn with_game_exe_path(mut self, path: impl Into<PathBuf>)",
       "tier": "tier1"
     },
     {

@@ -358,7 +358,7 @@ Canonical section ownership:
 - header and Error Information
 - Crashgen Expectation outcomes placed in Error Information before that section's separator
 - crash suspect section, always present, including the no-suspects footer
-- deprecated FCX Mode notice from per-log facts
+- FCX Mode notice from per-log facts
 - settings-related guidance, including settings-placement Crashgen Expectation outcomes and Disabled Setting Notices
 - Mod Guidance groups in fixed order: conflicts, frequent crashes, solutions, important mods
 - Plugin Evidence, FormID Finding, and Named Record Finding sections

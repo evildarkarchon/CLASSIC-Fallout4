@@ -229,15 +229,15 @@ fn autoscan_report_assembler_renders_no_suspects_footer_when_no_findings_exist()
 }
 
 #[test]
-fn autoscan_report_assembler_renders_deprecated_fcx_mode_notice_from_facts() {
+fn autoscan_report_assembler_renders_fcx_mode_notice_from_facts() {
     let mut facts = base_facts();
     facts.fcx_mode_enabled = true;
 
     let report_lines = AutoscanReportAssembler::new().assemble(&facts, vec![]);
     let text = report_lines.join("");
 
-    assert!(text.contains("FCX MODE IS ENABLED"));
-    assert!(text.contains("disable FCX Mode"));
+    assert!(text.contains("FCX LOCAL FILE CHECKS ARE ENABLED"));
+    assert!(text.contains("Use FCX only with crash logs from your own installation"));
 }
 
 #[test]

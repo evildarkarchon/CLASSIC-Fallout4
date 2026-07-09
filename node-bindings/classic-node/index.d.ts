@@ -2830,6 +2830,8 @@ export interface JsGameSetupIntakeOptions {
   gameVersion?: string
   /** Optional game installation root. */
   gameRoot?: string
+  /** Optional game executable path. */
+  gameExePath?: string
   /** Optional documents root. */
   docsRoot?: string
   /** Optional XSE log path for loader version detection. */

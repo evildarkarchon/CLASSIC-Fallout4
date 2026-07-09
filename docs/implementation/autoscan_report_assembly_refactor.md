@@ -86,7 +86,7 @@ Implementation notes:
 - `AutoscanReportFacts` should contain only values that affect report content. Keep `formid_count`, `plugin_count`, and `suspect_count` as `AnalysisResult` metadata.
 - `crashgen_name` in facts must be the effective Crashgen name resolved from the Crash Log, not the configured default.
 - `fake_bot_compatible_mode` is a fact rendered in Error Information. Settings collection should preserve current behavior by producing no Crashgen Expectation or Disabled Setting Notice contributions when that mode disables checks.
-- `fcx_mode_enabled` is a deprecated compatibility fact. Do not model FCX as a contribution. For the first slice, preserve current report-path behavior and do not pull in FCX detail lines such as cached file checks or detected configuration issues.
+- `fcx_mode_enabled` is a scan context fact. Do not model FCX as a contribution in this slice; preserve current report-path behavior and do not pull in FCX detail lines such as cached file checks or detected configuration issues.
 
 ## Contribution Rules
 
@@ -102,7 +102,7 @@ Canonical report section order for tests:
 1. Header
 2. Error Information, including Crashgen Expectation Outcomes with `ErrorInformation` placement before that section's separator
 3. Crash Suspect Findings section, always present
-4. Deprecated FCX Mode notice when enabled
+4. FCX Mode notice when enabled
 5. Settings-related guidance when any settings-placement Crashgen Expectation Outcome or Disabled Setting Notice exists
 6. Mod Guidance
 7. Plugin Evidence
@@ -171,7 +171,7 @@ Rust unit tests must stay in sibling `*_tests.rs` files.
 - Settings placement renders under settings-related guidance.
 - Disabled Setting Notices render through assembly.
 - Crash-suspect section renders the existing no-suspects footer when no findings exist.
-- Deprecated FCX Mode notice renders from facts.
+- FCX Mode notice renders from facts.
 - Header/footer output remains compatible with `ReportGenerator` behavior.
 - `ReportComposer::compose()` preserves order for more than the previous parallel threshold.
 

@@ -35,19 +35,24 @@ impl PyGameSetupIntake {
     ///     game_root: Optional game installation root.
     ///     docs_root: Optional documents root.
     ///     xse_log_path: Optional XSE log path used as a detection hint.
+    ///     game_exe_path: Optional game executable path.
     #[new]
-    #[pyo3(signature = (game_id, game_version="auto".to_string(), game_root=None, docs_root=None, xse_log_path=None))]
+    #[pyo3(signature = (game_id, game_version="auto".to_string(), game_root=None, docs_root=None, xse_log_path=None, game_exe_path=None))]
     fn new(
         game_id: String,
         game_version: String,
         game_root: Option<PathBuf>,
         docs_root: Option<PathBuf>,
         xse_log_path: Option<PathBuf>,
+        game_exe_path: Option<PathBuf>,
     ) -> PyResult<Self> {
         let parsed_game_id = GameId::from_str(&game_id).map_err(PyValueError::new_err)?;
         let mut intake = GameSetupIntake::new(parsed_game_id, game_version);
         if let Some(path) = game_root {
             intake = intake.with_game_root(path);
+        }
+        if let Some(path) = game_exe_path {
+            intake = intake.with_game_exe_path(path);
         }
         if let Some(path) = docs_root {
             intake = intake.with_docs_root(path);
@@ -75,6 +80,15 @@ impl PyGameSetupIntake {
     fn game_root(&self) -> Option<String> {
         self.inner
             .game_root
+            .as_ref()
+            .map(|path| path.to_string_lossy().into_owned())
+    }
+
+    /// Saved or caller-provided game executable path.
+    #[getter]
+    fn game_exe_path(&self) -> Option<String> {
+        self.inner
+            .game_exe_path
             .as_ref()
             .map(|path| path.to_string_lossy().into_owned())
     }

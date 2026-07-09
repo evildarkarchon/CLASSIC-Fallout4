@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T04:46:18.091522+00:00",
+  "generated_at_utc": "2026-07-09T09:07:31.234962+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -3896,11 +3896,11 @@
       "export_path": "GameSetupIntake.__init__",
       "parent_class": "GameSetupIntake",
       "kind": "method",
-      "arity": 5,
+      "arity": 6,
       "owner_module": "scangame",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "def __init__( self, game_id: str, game_version: str = ..., game_root: Path | None = ..., docs_root: Path | None = ..., xse_log_path: Path | None = ..., ) -> None:"
+      "signature": "def __init__( self, game_id: str, game_version: str = ..., game_root: Path | None = ..., docs_root: Path | None = ..., xse_log_path: Path | None = ..., game_exe_path: Path | None = ..., ) -> None:"
     },
     {
       "module": "classic_scangame",

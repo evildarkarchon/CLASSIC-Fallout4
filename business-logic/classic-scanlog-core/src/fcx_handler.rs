@@ -216,8 +216,12 @@ impl FcxModeHandler {
         let mut lines = Vec::new();
 
         if self.fcx_mode {
-            lines.push("* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION * \n\n".to_string());
-            lines.push("[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ] \n\n".to_string());
+            lines.push(
+                "* NOTICE: FCX LOCAL FILE CHECKS ARE ENABLED FOR THIS SCAN * \n\n".to_string(),
+            );
+            lines.push(
+                "[ Use FCX only with crash logs from your own installation. ] \n\n".to_string(),
+            );
 
             // Add main files check if available
             if let Some(ref main_check) = self.main_files_check

@@ -307,8 +307,8 @@ class FCXModeHandlerFragments:
             return ""
 
         parts = [
-            "* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION *\n",
-            "[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ]\n\n",
+            "* NOTICE: FCX LOCAL FILE CHECKS ARE ENABLED FOR THIS SCAN *\n",
+            "[ Use FCX only with crash logs from your own installation. ]\n\n",
         ]
 
         # Main files result
@@ -1015,8 +1015,8 @@ Each detected issue includes:
 ### Before (Auto-Fix Behavior)
 
 ```
-* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION *
-[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ]
+* NOTICE: FCX LOCAL FILE CHECKS ARE ENABLED FOR THIS SCAN *
+[ Use FCX only with crash logs from your own installation. ]
 
 ✔️ You have the latest version of Fallout 4!
 ✔️ F4SE is installed and up to date!
@@ -1033,8 +1033,8 @@ Each detected issue includes:
 ### After (Read-Only Reporting)
 
 ```
-* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION *
-[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ]
+* NOTICE: FCX LOCAL FILE CHECKS ARE ENABLED FOR THIS SCAN *
+[ Use FCX only with crash logs from your own installation. ]
 
 ✔️ You have the latest version of Fallout 4!
 ✔️ F4SE is installed and up to date!

@@ -915,21 +915,31 @@ def test_scangame_game_setup_intake_helpers_smoke() -> None:
         docs_root = fixture_root / "Docs"
         game_root.mkdir()
         docs_root.mkdir()
-        (game_root / "Fallout4.exe").write_bytes(b"not a real pe")
+        (docs_root / "Fallout4.ini").write_text("[General]\n", encoding="utf-8")
+        (docs_root / "Fallout4Custom.ini").write_text("[Archive]\n", encoding="utf-8")
+        (docs_root / "Fallout4Prefs.ini").write_text("[General]\n", encoding="utf-8")
+        configured_exe = game_root / "Fallout4Custom.exe"
+        configured_exe.write_bytes(b"not a real pe")
+        (game_root / "f4se_loader.exe").write_bytes(b"loader")
 
         intake = classic_scangame.GameSetupIntake(
             "Fallout4",
             "auto",
             str(game_root),
             str(docs_root),
+            None,
+            str(configured_exe),
         )
+        assert intake.game_exe_path == str(configured_exe)
         result = classic_scangame.run_game_setup_intake(intake)
 
     assert isinstance(result, classic_scangame.GameSetupIntakeResult)
     assert result.status == "action_required"
+    assert not result.has_errors
     assert result.action_count >= 1
     assert result.total_checks == len(result.checks)
     assert result.combined() == result.rendered_report
+    assert "Resolved game root from configured executable" in result.rendered_report
 
 
 def test_scangame_toml_issue_severity_is_a_type() -> None:
