@@ -1,6 +1,6 @@
 # CLASSIC Crash Log Analysis
 
-CLASSIC analyzes supported Bethesda game crash evidence and turns it into human-readable guidance. This context names the domain terms used when discussing scan preparation, analysis, and generated reports.
+CLASSIC analyzes supported Bethesda game crash evidence and turns it into human-readable guidance. This context names the domain terms used when discussing application setup, scan preparation, analysis, and generated reports.
 
 ## Language
 
@@ -55,6 +55,14 @@ _Avoid_: config files, databases
 **YAML Data Update Channel**:
 The first-party distribution channel through which CLASSIC clients discover, review, install, and roll back newer YAML Data. It is the maintained update path for curated YAML Data, not a generic arbitrary data feed.
 _Avoid_: YAML updater, data update constants, update feed
+
+**User Settings**:
+The complete set of persisted user choices that customize CLASSIC behavior and remember frontend state, including scan and setup preferences, saved paths, limits, and presentation state. They are distinct from curated YAML Data.
+_Avoid_: user config, raw settings keys, frontend settings
+
+**User Settings Update**:
+A proposed change to one or more User Settings. Producing an update does not persist it; a caller accepts or rejects the update before it is committed.
+_Avoid_: implicit save, raw settings mutation, auto-persist
 
 **Mod Guidance**:
 An Autoscan Report Contribution based on YAML Data about installed mods, mod combinations, or mod-related remediation. It is distinct from crash evidence that mentions a plugin.
@@ -133,7 +141,7 @@ A scan context flag that enables local installation checks and affects Autoscan 
 _Avoid_: FCX finding, FCX contribution
 
 **Crash Log Scan Setup Context**:
-The explicit game setup facts supplied to a Crash Log Scan Run when FCX Mode is enabled. It is built by adapters from saved settings or UI state; scanlog core uses it for setup validation but does not load or persist user configuration.
+The explicit game setup facts supplied to a Crash Log Scan Run when FCX Mode is enabled. It is built by adapters from saved User Settings or current frontend state; scanlog core uses it for setup validation but does not load or persist User Settings.
 _Avoid_: scan config, hidden config load, FCX globals input
 
 **Crash Log Scan Setup Result**:
