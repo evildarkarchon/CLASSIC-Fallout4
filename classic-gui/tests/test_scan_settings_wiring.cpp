@@ -8,12 +8,14 @@ class ScanSettingsWiringTests : public QObject {
 private slots:
     void scan_worker_forwards_runtime_flags_to_rust_config();
     void scan_controller_forwards_flags_to_worker();
+    void scan_pipeline_forwards_existing_xse_log_hint();
     void mainwindow_forwards_scan_flags_to_controller();
     void mainwindow_forwards_game_version_to_scan_controller();
     void mainwindow_forwards_game_version_to_game_files_controller();
     void game_files_controller_forwards_game_version_to_worker();
     void game_files_worker_forwards_game_version_to_setup_intake();
     void game_files_worker_marks_required_actions_as_attention();
+    void game_files_worker_catches_non_standard_exceptions();
     void scan_worker_handles_move_unsolved_and_max_concurrent_settings();
     void scan_worker_uses_progress_enabled_batch_api();
     void scan_worker_forwards_batch_counts_in_progress_updates();
@@ -76,6 +78,8 @@ void ScanSettingsWiringTests::scan_worker_forwards_runtime_flags_to_rust_config(
              "ScanWorker should forward fcxMode to scan_run_execute()");
     QVERIFY2(sourceText.contains(QStringLiteral("simplifyLogs")),
              "ScanWorker should forward simplifyLogs to scan_run_execute()");
+    QVERIFY2(sourceText.contains(QStringLiteral("request.setup_xse_log_path = classic::toRustString(setupXseLogPath)")),
+             "ScanWorker should forward the setup XSE log path instead of discarding it");
 }
 
 void ScanSettingsWiringTests::scan_controller_forwards_flags_to_worker()
@@ -98,10 +102,36 @@ void ScanSettingsWiringTests::scan_controller_forwards_flags_to_worker()
                                     QStringLiteral("maxConcurrentScans"), QStringLiteral("baseDir"),
                                     QStringLiteral("customFolder"), QStringLiteral("setupGameRoot"),
                                     QStringLiteral("setupDocsRoot"), QStringLiteral("setupGameExePath"),
-                                    QStringLiteral("targetedMode"), QStringLiteral("targetedInputs")}) {
+                                    QStringLiteral("setupXseLogPath"), QStringLiteral("targetedMode"),
+                                    QStringLiteral("targetedInputs")}) {
         QVERIFY2(call.contains(expected),
                  qPrintable(QStringLiteral("ScanController should pass %1 to ScanWorker::doScan()").arg(expected)));
     }
+}
+
+void ScanSettingsWiringTests::scan_pipeline_forwards_existing_xse_log_hint()
+{
+    const QString mainWindowPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile mainWindowFile(mainWindowPath);
+    QVERIFY2(mainWindowFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(mainWindowPath)));
+    const QString mainWindowSource = QString::fromUtf8(mainWindowFile.readAll());
+
+    QVERIFY2(mainWindowSource.contains(QStringLiteral("classic::xse::resolve_xse_folder_for_scan")),
+             "MainWindow should use the shared XSE folder resolver for the setup hint");
+    QVERIFY2(mainWindowSource.contains(QStringLiteral("QFileInfo(logPath).isFile()")),
+             "MainWindow should forward only an XSE log that actually exists");
+    QVERIFY2(mainWindowSource.contains(QStringLiteral("f4se.log")) &&
+                 mainWindowSource.contains(QStringLiteral("f4sevr.log")),
+             "MainWindow should support Fallout 4 and Fallout 4 VR XSE log conventions");
+
+    const qsizetype callStart = mainWindowSource.indexOf(QStringLiteral("m_scanController->startScan("));
+    QVERIFY2(callStart >= 0, "MainWindow should call ScanController::startScan()");
+    const qsizetype callEnd = mainWindowSource.indexOf(QStringLiteral(");"), callStart);
+    QVERIFY2(callEnd > callStart, "MainWindow should have a complete ScanController::startScan() call");
+    const QString call = mainWindowSource.mid(callStart, callEnd - callStart);
+    QVERIFY2(call.contains(QStringLiteral("setupXseLogPath")),
+             "MainWindow should pass the resolved XSE log hint to ScanController");
 }
 
 void ScanSettingsWiringTests::mainwindow_forwards_scan_flags_to_controller()
@@ -204,6 +234,20 @@ void ScanSettingsWiringTests::game_files_worker_marks_required_actions_as_attent
              "GameFilesWorker should treat required setup actions as needing user attention");
     QVERIFY2(sourceText.contains(QStringLiteral("requiresAttention")),
              "GameFilesWorker should forward the combined attention state to the GUI");
+}
+
+void ScanSettingsWiringTests::game_files_worker_catches_non_standard_exceptions()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/gamefilesworker.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("catch (...)")),
+             "GameFilesWorker should surface non-standard worker exceptions");
+    QVERIFY2(sourceText.contains(QStringLiteral("emit error(QStringLiteral(\"unknown error\"))")),
+             "GameFilesWorker should report a stable fallback error message");
 }
 
 void ScanSettingsWiringTests::scan_worker_handles_move_unsolved_and_max_concurrent_settings()
@@ -463,6 +507,9 @@ void ScanSettingsWiringTests::mainwindow_blocks_crash_logs_scan_when_fcx_enabled
     QVERIFY2(
         guardRegex.match(body).hasMatch(),
         "MainWindow crash-log scan should gate FCX mode on validated paths inside onScanCrashLogs() and return early");
+    QVERIFY2(body.contains(
+                 QStringLiteral("classic::gui::normalizeGameExecutablePath(setupGameExePath, setupGameRoot)")),
+             "MainWindow FCX scan should use the shared executable normalization rule");
 }
 
 void ScanSettingsWiringTests::mainwindow_resets_stale_game_exe_path_outside_selected_root()
@@ -487,14 +534,8 @@ void ScanSettingsWiringTests::mainwindow_resets_stale_game_exe_path_outside_sele
 
     const QString body = extractFunctionBody(QStringLiteral("onScanGameFiles()"));
     QVERIFY2(!body.isEmpty(), "MainWindow game-file scan slot should exist");
-    QVERIFY2(body.contains(QStringLiteral("QFileInfo")),
-             "MainWindow should inspect executable parent folder to detect stale game executable paths");
-    QVERIFY2(body.contains(QStringLiteral("Qt::CaseInsensitive")),
-             "MainWindow should compare executable and root paths case-insensitively on Windows");
-    QVERIFY2(body.contains(QStringLiteral("gameExePath.clear()")),
-             "MainWindow should clear stale executable paths outside the selected game root");
-    QVERIFY2(body.contains(QStringLiteral("gameRoot + QStringLiteral(\"/Fallout4.exe\")")),
-             "MainWindow should fall back to selected game root executable after stale path reset");
+    QVERIFY2(body.contains(QStringLiteral("classic::gui::normalizeGameExecutablePath(gameExePath, gameRoot)")),
+             "MainWindow should use the shared executable normalization rule");
 }
 
 void ScanSettingsWiringTests::mainwindow_uses_exe_relative_crash_logs_dir()
@@ -622,12 +663,8 @@ void ScanSettingsWiringTests::settings_dialog_resets_stale_game_exe_path_when_ga
 
     const QString body = extractFunctionBody(QStringLiteral("bool SettingsDialog::saveSettings()"));
     QVERIFY2(!body.isEmpty(), "SettingsDialog::saveSettings() should exist");
-    QVERIFY2(body.contains(QStringLiteral("QFileInfo")),
-             "SettingsDialog should inspect existing game executable path location when saving");
-    QVERIFY2(body.contains(QStringLiteral("QFile::exists")),
-             "SettingsDialog should reset stale game executable paths when the stored executable no longer exists");
-    QVERIFY2(body.contains(QStringLiteral("Qt::CaseInsensitive")),
-             "SettingsDialog should compare executable parent and selected game folder case-insensitively");
+    QVERIFY2(body.contains(QStringLiteral("classic::gui::normalizeGameExecutablePath(exePath, gameText)")),
+             "SettingsDialog should use the shared executable normalization rule");
 }
 
 void ScanSettingsWiringTests::settings_dialog_adds_multiple_formid_databases()

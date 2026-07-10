@@ -393,6 +393,13 @@ export async function runCli(
 			return { exitCode: 0 };
 		}
 
+		if (!options.json) {
+			// Discovery now runs inside the Rust scan service, so its count is available only after the run returns.
+			console.log(
+				`Found ${formatPluralizedCount(scanResult.total, "crash log")}\n`,
+			);
+		}
+
     const reportsWritten = results.filter(
       (result) => result.success && result.autoscanReportPath,
     ).length;

@@ -365,11 +365,14 @@ impl GameSetupIntake {
 
         let selected = normalize_game_setup_version_selection(&self.selected_game_version);
         let game_root = resolve_game_root(self, &selected, &mut checks, &mut actions);
-        let auto_detection_exe_path = self.game_exe_path.clone().or_else(|| {
-            game_root
-                .as_ref()
-                .map(|root| root.join(selected_version_exe_name(self.game_id, &selected)))
-        });
+        let auto_detection_exe_path =
+            configured_game_exe_for_root(self.game_exe_path.as_deref(), game_root.as_deref())
+                .map(Path::to_path_buf)
+                .or_else(|| {
+                    game_root
+                        .as_ref()
+                        .map(|root| root.join(selected_version_exe_name(self.game_id, &selected)))
+                });
         let version_context = resolve_version_context(self, auto_detection_exe_path.as_deref());
         let mut version_facts = version_context.facts;
         checks.extend(version_context.checks);
@@ -696,10 +699,23 @@ fn resolve_game_exe_path(
     game_root: Option<&Path>,
     info: Option<&VersionInfo>,
 ) -> Option<PathBuf> {
-    intake
-        .game_exe_path
-        .clone()
+    configured_game_exe_for_root(intake.game_exe_path.as_deref(), game_root)
+        .map(Path::to_path_buf)
         .or_else(|| game_root.map(|root| root.join(version_info_exe_name(intake.game_id, info))))
+}
+
+/// Accept a configured executable only when it is a file directly under the resolved root.
+fn configured_game_exe_for_root<'a>(
+    game_exe_path: Option<&'a Path>,
+    game_root: Option<&Path>,
+) -> Option<&'a Path> {
+    let exe_path = game_exe_path?;
+    let game_root = game_root?;
+    (exe_path.is_file()
+        && exe_path
+            .parent()
+            .is_some_and(|parent| paths_refer_to_same_location(parent, game_root)))
+    .then_some(exe_path)
 }
 
 fn resolve_game_root(
@@ -758,7 +774,7 @@ fn resolve_game_root_from_configured_exe(
     game_exe_path: Option<&Path>,
 ) -> Option<PathBuf> {
     let exe_path = game_exe_path?;
-    if !exe_path.exists() {
+    if !exe_path.is_file() {
         return None;
     }
 

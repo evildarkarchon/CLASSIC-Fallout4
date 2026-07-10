@@ -18,7 +18,8 @@ public:
                    bool showFormIdValues, bool fcxMode, bool simplifyLogs, bool moveUnsolvedLogs,
                    const QString& unsolvedLogsDestination, int maxConcurrentScans, const QString& customFolder,
                    const QString& setupGameRoot = {}, const QString& setupDocsRoot = {},
-                   const QString& setupGameExePath = {}, const QStringList& targetedInputs = {});
+                   const QString& setupGameExePath = {}, const QString& setupXseLogPath = {},
+                   const QStringList& targetedInputs = {});
     void cancelScan();
     bool isScanning() const;
 

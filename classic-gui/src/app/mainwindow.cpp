@@ -38,6 +38,7 @@
 #include "controllers/gamefilescontroller.h"
 #include "controllers/resultscontroller.h"
 #include "controllers/scancontroller.h"
+#include "core/gamepathutils.h"
 #include "core/rust_qt_bridge.h"
 #include "core/signalhub.h"
 #include "core/threadmanager.h"
@@ -56,6 +57,7 @@
 #include "classic_cxx_bridge/scangame.h"
 #include "classic_cxx_bridge/settings.h"
 #include "classic_cxx_bridge/shared.h"
+#include "classic_cxx_bridge/xse.h"
 #include "rust/cxx.h"
 
 #include <QDateTime>
@@ -77,6 +79,32 @@ QString format_elapsed_seconds(const QElapsedTimer& timer)
 QString settingsFilePath(const QString& dataRoot)
 {
     return dataRoot + QStringLiteral("/CLASSIC Settings.yaml");
+}
+
+/// Resolve an existing Fallout 4 script-extender log to use as a setup detection hint.
+/// The selected version controls preference, while checking both names keeps auto-detected VR installs working.
+QString resolveExistingXseLogPath(const QString& yamlData, const QString& game, const QString& selectedGameVersion,
+                                  const QString& configuredDocsRoot)
+{
+    const auto resolvedFolder = classic::xse::resolve_xse_folder_for_scan(
+        classic::toRustString(yamlData), classic::toRustString(game), classic::toRustString(selectedGameVersion),
+        classic::toRustString(configuredDocsRoot));
+    if (resolvedFolder.empty()) {
+        return {};
+    }
+
+    const QDir xseFolder(classic::toQString(resolvedFolder));
+    const bool preferVrLog = selectedGameVersion.compare(QStringLiteral("VR"), Qt::CaseInsensitive) == 0;
+    const QStringList logNames = preferVrLog ? QStringList{QStringLiteral("f4sevr.log"), QStringLiteral("f4se.log")}
+                                             : QStringList{QStringLiteral("f4se.log"), QStringLiteral("f4sevr.log")};
+    for (const QString& logName : logNames) {
+        const QString logPath = QDir::cleanPath(xseFolder.filePath(logName));
+        if (QFileInfo(logPath).isFile()) {
+            return logPath;
+        }
+    }
+
+    return {};
 }
 
 void logUpdateCheckFailure(const QString& errorMessage)
@@ -1564,6 +1592,7 @@ void MainWindow::onScanCrashLogs()
     QString setupGameRoot;
     QString setupDocsPath;
     QString setupGameExePath;
+    QString setupXseLogPath;
     if (m_fcxMode) {
         if (!loadValidatedGameAndDocsPaths(&setupGameRoot, &setupDocsPath)) {
             QMessageBox::warning(this, QStringLiteral("FCX Mode Requires Paths"),
@@ -1585,21 +1614,9 @@ void MainWindow::onScanCrashLogs()
             // Fall through -- default exe path below.
         }
 
-        if (!setupGameExePath.isEmpty()) {
-            const QFileInfo exeInfo(setupGameExePath);
-            if (!exeInfo.exists()) {
-                setupGameExePath.clear();
-            } else {
-                const QString exeParent = QDir::cleanPath(exeInfo.absolutePath());
-                if (exeParent.compare(setupGameRoot, Qt::CaseInsensitive) != 0) {
-                    setupGameExePath.clear();
-                }
-            }
-        }
-
-        if (setupGameExePath.isEmpty() || !QFile::exists(setupGameExePath)) {
-            setupGameExePath = setupGameRoot + QStringLiteral("/Fallout4.exe");
-        }
+        setupGameExePath = classic::gui::normalizeGameExecutablePath(setupGameExePath, setupGameRoot);
+        setupXseLogPath = resolveExistingXseLogPath(m_dataDir, QStringLiteral("Fallout4"), m_gameVersion,
+                                                    setupDocsPath);
     }
 
     m_btnScanCrashLogs->setEnabled(false);
@@ -1615,7 +1632,7 @@ void MainWindow::onScanCrashLogs()
     m_scanController->startScan(m_dataRoot, m_dataDir, QStringLiteral("Fallout4"), m_gameVersion, m_showFormIdValues,
                                  m_fcxMode, m_simplifyLogs, m_moveUnsolvedLogs, m_unsolvedLogsDestination,
                                  m_maxConcurrentScans, m_editCustomFolder->text(), setupGameRoot, setupDocsPath,
-                                 setupGameExePath, m_targetedInputPaths);
+                                 setupGameExePath, setupXseLogPath, m_targetedInputPaths);
 }
 
 void MainWindow::onScanGameFiles()
@@ -1658,22 +1675,7 @@ void MainWindow::onScanGameFiles()
         // Fall through -- default exe path below.
     }
 
-    if (!gameExePath.isEmpty()) {
-        const QFileInfo exeInfo(gameExePath);
-        if (!exeInfo.exists()) {
-            gameExePath.clear();
-        } else {
-            const QString exeParent = QDir::cleanPath(exeInfo.absolutePath());
-            if (exeParent.compare(gameRoot, Qt::CaseInsensitive) != 0) {
-                gameExePath.clear();
-            }
-        }
-    }
-
-    // If exe path is not set, construct a default from game root
-    if (gameExePath.isEmpty() || !QFile::exists(gameExePath)) {
-        gameExePath = gameRoot + QStringLiteral("/Fallout4.exe");
-    }
+    gameExePath = classic::gui::normalizeGameExecutablePath(gameExePath, gameRoot);
 
     m_btnScanGameFiles->setEnabled(false);
     m_btnScanGameFiles->setText(QStringLiteral("SCANNING..."));

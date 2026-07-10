@@ -11,7 +11,7 @@
   ],
   "delegatedGates": [],
   "environment": {
-    "fixtureRoot": "D:\\repos\\CLASSIC-Fallout4\\sample_logs\\FO4",
+    "fixtureRoot": "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures",
     "python": "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\.venv\\Scripts\\python.exe",
     "repoRoot": "D:\\repos\\CLASSIC-Fallout4"
   },
@@ -122,7 +122,6 @@
         "--path",
         "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"
       ],
-      "contractFailure": "Addictol scanlog scenario did not process exactly one log",
       "coveredExports": [
         "scan_run_execute",
         "ScanRunLogResult.autoscan_report_path"
@@ -130,21 +129,24 @@
       "data": {
         "failedLogs": 0,
         "failures": [],
-        "processedLogs": 0,
-        "reportEvidence": [],
+        "processedLogs": 1,
+        "reportEvidence": [
+          {
+            "logPath": "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures\\scanlogs\\addictol-newer-than-floor.log",
+            "outdatedWarningPresent": false,
+            "validVersionLine": "\u2705 *You have a valid version of Addictol!*"
+          }
+        ],
         "scanPath": "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures\\scanlogs\\addictol-newer-than-floor.log",
-        "successfulLogs": 0
+        "successfulLogs": 1
       },
       "exitCode": 0,
       "expectedExitCode": 0,
-      "failureClassifications": [
-        "missing-runtime-coverage",
-        "true-binding-compliance-gap"
-      ],
+      "failureClassifications": [],
       "id": "scanlog-addictol-newer-than-floor",
       "owner": "classic_scanlog",
-      "status": "failed",
-      "summary": "Addictol scanlog scenario did not process exactly one log"
+      "status": "passed",
+      "summary": "Scanlog binding completed: 1 succeeded, 0 failed"
     }
   ],
   "schemaVersion": "1.0"

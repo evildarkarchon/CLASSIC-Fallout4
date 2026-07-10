@@ -17,7 +17,7 @@ foreach ($directoryName in @('TES5Edit', 'tests', 'build', 'CMakeFiles', 'Testin
     [void] $excludedDirectoryNames.Add($directoryName)
 }
 
-function Get-FormatCppFiles {
+function Get-FormatCppFile {
     param(
         [Parameter(Mandatory = $true)]
         [string] $Directory
@@ -29,7 +29,7 @@ function Get-FormatCppFiles {
                 continue
             }
 
-            Get-FormatCppFiles -Directory $entry.FullName
+            Get-FormatCppFile -Directory $entry.FullName
             continue
         }
 
@@ -41,7 +41,7 @@ function Get-FormatCppFiles {
 
 $formattedCount = 0
 
-foreach ($file in Get-FormatCppFiles -Directory $rootPath) {
+foreach ($file in Get-FormatCppFile -Directory $rootPath) {
     $relativePath = [System.IO.Path]::GetRelativePath($rootPath, $file.FullName)
     Write-Host "Formatting $relativePath"
 

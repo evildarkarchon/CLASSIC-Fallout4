@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "core/gamepathutils.h"
 #include "core/rust_qt_bridge.h"
 #include "core/signalhub.h"
 #include "widgets/toggleswitch.h"
@@ -519,22 +520,10 @@ bool SettingsDialog::saveSettings()
         auto gameExePath = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
         QString exePath = gameExePath.empty() ? QString() : QDir::cleanPath(classic::toQString(gameExePath).trimmed());
 
-        bool shouldResetExePath = false;
-        if (!gameText.isEmpty()) {
-            if (exePath.isEmpty() || !QFile::exists(exePath)) {
-                shouldResetExePath = true;
-            } else {
-                const QString exeParent = QDir::cleanPath(QFileInfo(exePath).absolutePath());
-                if (exeParent.compare(gameText, Qt::CaseInsensitive) != 0) {
-                    shouldResetExePath = true;
-                }
-            }
-        }
-
-        if (shouldResetExePath) {
-            const QString defaultExe = QDir::cleanPath(gameText + QStringLiteral("/Fallout4.exe"));
+        const QString normalizedExePath = classic::gui::normalizeGameExecutablePath(exePath, gameText);
+        if (normalizedExePath != exePath) {
             classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game EXE Path",
-                                                           std::string(defaultExe.toUtf8().constData()));
+                                                           std::string(normalizedExePath.toUtf8().constData()));
         }
 
         auto iniText = m_editIniFolder->text();

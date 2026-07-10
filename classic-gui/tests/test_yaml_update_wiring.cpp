@@ -40,6 +40,10 @@ private slots:
     // sole wiring point that actually honors the setting in the GUI.
     void settings_dialog_check_slot_forwards_update_check_setting();
 
+    // Both successful check outcomes must use the same incompatible-file
+    // population path so their diagnostics cannot drift apart.
+    void yaml_update_worker_reuses_incompatible_file_population();
+
     // 12.1: the apply slot must show a confirm dialog BEFORE calling the
     // bridge. An accidental re-order ("apply then confirm") would make the
     // bridge install files that the user declined.
@@ -171,6 +175,16 @@ void YamlUpdateWiringTests::settings_dialog_check_slot_forwards_update_check_set
         QStringLiteral(R"(yaml_data_check_update\(\s*enabled\s*\))"));
     QVERIFY2(call.match(worker).hasMatch(),
              "YamlUpdateWorker::doCheck must pass the enabled flag through to yaml_data_check_update");
+}
+
+void YamlUpdateWiringTests::yaml_update_worker_reuses_incompatible_file_population()
+{
+    const QString worker = readFile(QStringLiteral("src/workers/yamlupdateworker.cpp"));
+    QVERIFY2(!worker.isEmpty(), "yamlupdateworker.cpp must be readable");
+
+    QCOMPARE(worker.count(QStringLiteral("populateIncompatibleFiles();")), 2);
+    QCOMPARE(worker.count(QStringLiteral("result.incompatibleFileNames.push_back")), 1);
+    QCOMPARE(worker.count(QStringLiteral("result.incompatibleReasons.push_back")), 1);
 }
 
 void YamlUpdateWiringTests::settings_dialog_apply_slot_confirms_before_install()

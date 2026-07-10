@@ -20,8 +20,8 @@ public slots:
                 const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
                 bool moveUnsolvedLogs, const QString& unsolvedLogsDestination, int maxConcurrentScans,
                 const QString& baseDirectory, const QString& customFolder, const QString& setupGameRoot,
-                const QString& setupDocsRoot, const QString& setupGameExePath, bool targetedMode,
-                const QStringList& targetedInputs);
+                const QString& setupDocsRoot, const QString& setupGameExePath, const QString& setupXseLogPath,
+                bool targetedMode, const QStringList& targetedInputs);
     void requestCancel();
 
 signals:

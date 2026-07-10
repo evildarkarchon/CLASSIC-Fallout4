@@ -905,6 +905,7 @@ fn evaluate_setup_for_scan(
     let configuration_issues = context
         .game_root
         .as_deref()
+        .or(game_setup.paths.game_root.as_deref())
         .map(|game_root| {
             detect_config_issues(game_root, game_id.as_str())
                 .into_iter()

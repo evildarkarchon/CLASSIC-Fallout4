@@ -31,5 +31,8 @@ void GameFilesWorker::doScan(const QString& gameExePath, const QString& gameRoot
         emit error(QString::fromUtf8(e.what()));
     } catch (const std::exception& e) {
         emit error(QString::fromUtf8(e.what()));
+    } catch (...) {
+        // Keep non-standard bridge exceptions from escaping the worker thread.
+        emit error(QStringLiteral("unknown error"));
     }
 }

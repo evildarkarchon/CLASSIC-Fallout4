@@ -426,6 +426,34 @@ fn configured_game_exe_path_allows_non_default_executable_under_root() {
 }
 
 #[test]
+fn configured_game_exe_path_outside_resolved_root_falls_back_to_root_executable() {
+    let temp = TempDir::new().expect("temp dir");
+    let game_root = temp.path().join("Fallout4");
+    let unrelated_root = temp.path().join("OtherFallout4");
+    let docs_root = temp.path().join("Docs");
+    fs::create_dir_all(&game_root).expect("game root");
+    fs::create_dir_all(&unrelated_root).expect("unrelated game root");
+    fs::create_dir_all(&docs_root).expect("docs root");
+    write_valid_docs_inis(&docs_root);
+    let root_exe = game_root.join("Fallout4.exe");
+    let unrelated_exe = unrelated_root.join("Fallout4.exe");
+    fs::write(&root_exe, b"resolved root executable").expect("root exe");
+    fs::write(&unrelated_exe, b"unrelated executable").expect("unrelated exe");
+
+    let result = GameSetupIntake::new(GameId::Fallout4, "Original")
+        .with_game_root(&game_root)
+        .with_game_exe_path(&unrelated_exe)
+        .with_docs_root(&docs_root)
+        .run();
+
+    assert_eq!(result.paths.game_root.as_deref(), Some(game_root.as_path()));
+    assert_eq!(
+        result.paths.game_exe_path.as_deref(),
+        Some(root_exe.as_path())
+    );
+}
+
+#[test]
 fn unsupported_game_id_returns_registry_diagnostic() {
     let (_temp, game_root, docs_root) = setup_roots();
     fs::write(game_root.join("Starfield.exe"), b"fake").expect("fake starfield exe");

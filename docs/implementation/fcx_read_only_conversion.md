@@ -1015,8 +1015,8 @@ Each detected issue includes:
 ### Before (Auto-Fix Behavior)
 
 ```
-* NOTICE: FCX LOCAL FILE CHECKS ARE ENABLED FOR THIS SCAN *
-[ Use FCX only with crash logs from your own installation. ]
+* NOTICE: FCX MODE IS ENABLED. CLASSIC MUST BE RUN BY THE ORIGINAL USER FOR CORRECT DETECTION *
+[ To disable mod & game files detection, disable FCX Mode in the exe or CLASSIC Settings.yaml ]
 
 ✔️ You have the latest version of Fallout 4!
 ✔️ F4SE is installed and up to date!

@@ -529,12 +529,14 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         module = require_binding("classic_scanlog")
         paths = [str(path) for path in scan_path.glob("*.log")] if scan_path.is_dir() else [str(scan_path)]
         with _working_directory(yaml_dir_root):
+            # Explicit CLI paths must select Targeted mode so Rust does not replace them with Standard discovery.
             result = module.scan_run_execute(
                 str(yaml_dir_root),
                 str(yaml_dir_data),
                 "Fallout4",
                 "auto",
                 paths,
+                targeted_mode=True,
             )
     except ImportError as exc:
         return failure("scan logs", str(exc), int(ExitCode.BINDING_IMPORT))

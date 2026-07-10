@@ -629,7 +629,7 @@ If the caller already has YAML-backed crashgen settings rules from [`classic-con
 - `ConfigDuplicateDetector::duplicate_groups` appears unused by the current implementation.
 - `Game Setup Intake` is setup-only; broader game-file and crash-log-adjacent checks remain in the orchestrator and scanner modules.
 - `LogProcessor` scans only the top level of the target directory; it does not recurse.
-- `CrashgenChecker` flattens TOML settings by key name only for rule evaluation, so same-named keys in multiple sections would collide.
+- `CrashgenChecker` evaluates TOML settings by both `RuleTarget.section` and `RuleTarget.key`, preserving same-named keys in different sections.
 - `detect_plugins()` and `CrashgenChecker` plugin discovery include any stringifiable entry names in the plugins directory, not just DLLs.
 - BA2 content scanning is Windows-only; non-Windows callers keep the same API but get `UnsupportedPlatform`.
 - Current Fallout 4-oriented assumptions are visible throughout version, Address Library, and Buffout4-specific paths.

@@ -184,7 +184,10 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
         game: str,
         game_version: str,
         paths: list[str],
+        *,
+        targeted_mode: bool,
     ) -> list[types.SimpleNamespace]:
+        assert targeted_mode is True
         assert yaml_dir_root == str(REPO_ROOT)
         assert yaml_dir_data == str(REPO_ROOT / "CLASSIC Data")
         return [
@@ -252,7 +255,10 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
         game: str,
         game_version: str,
         paths: list[str],
+        *,
+        targeted_mode: bool,
     ) -> list[types.SimpleNamespace]:
+        assert targeted_mode is True
         assert yaml_dir_root == str(fixture_root)
         assert yaml_dir_data == str(fixture_root / "CLASSIC Data")
         assert paths == [str(scan_fixture)]
@@ -322,7 +328,10 @@ def test_smoke_scanlog_contract_rejects_outdated_warning(monkeypatch: pytest.Mon
         game: str,
         game_version: str,
         paths: list[str],
+        *,
+        targeted_mode: bool,
     ) -> list[types.SimpleNamespace]:
+        assert targeted_mode is True
         return [
             types.SimpleNamespace(
                 log_path=str(scan_fixture),

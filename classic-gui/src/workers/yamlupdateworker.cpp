@@ -33,6 +33,16 @@ void YamlUpdateWorker::doCheck(bool enabled)
     YamlCheckResult result;
     try {
         auto status = classic::update::yaml_data_check_update(enabled);
+        const auto populateIncompatibleFiles = [&result, &status]() {
+            result.incompatibleFileNames.reserve(static_cast<int>(status.incompatible_files.size()));
+            result.incompatibleReasons.reserve(static_cast<int>(status.incompatible_reasons.size()));
+            for (std::size_t i = 0; i < status.incompatible_files.size(); ++i) {
+                result.incompatibleFileNames.push_back(classic::toQString(status.incompatible_files[i].name));
+                result.incompatibleReasons.push_back(i < status.incompatible_reasons.size()
+                                                         ? classic::toQString(status.incompatible_reasons[i])
+                                                         : QString());
+            }
+        };
 
         switch (status.tag) {
         case kYamlTagDisabled:
@@ -47,14 +57,7 @@ void YamlUpdateWorker::doCheck(bool enabled)
                 result.compatibleFileNames.push_back(classic::toQString(f.name));
                 result.compatibleFileSha256.push_back(classic::toQString(f.sha256));
             }
-            result.incompatibleFileNames.reserve(static_cast<int>(status.incompatible_files.size()));
-            result.incompatibleReasons.reserve(static_cast<int>(status.incompatible_reasons.size()));
-            for (std::size_t i = 0; i < status.incompatible_files.size(); ++i) {
-                result.incompatibleFileNames.push_back(classic::toQString(status.incompatible_files[i].name));
-                result.incompatibleReasons.push_back(i < status.incompatible_reasons.size()
-                                                         ? classic::toQString(status.incompatible_reasons[i])
-                                                         : QString());
-            }
+            populateIncompatibleFiles();
             break;
         case kYamlTagUpToDate:
             result.status = QStringLiteral("upToDate");
@@ -63,14 +66,7 @@ void YamlUpdateWorker::doCheck(bool enabled)
             // status model reports these even when no compatible file is
             // newer, so the UI can distinguish "genuinely in sync" from
             // "newer feed exists but this client cannot consume it".
-            result.incompatibleFileNames.reserve(static_cast<int>(status.incompatible_files.size()));
-            result.incompatibleReasons.reserve(static_cast<int>(status.incompatible_reasons.size()));
-            for (std::size_t i = 0; i < status.incompatible_files.size(); ++i) {
-                result.incompatibleFileNames.push_back(classic::toQString(status.incompatible_files[i].name));
-                result.incompatibleReasons.push_back(i < status.incompatible_reasons.size()
-                                                         ? classic::toQString(status.incompatible_reasons[i])
-                                                         : QString());
-            }
+            populateIncompatibleFiles();
             break;
         case kYamlTagUnknown:
             result.status = QStringLiteral("unknown");

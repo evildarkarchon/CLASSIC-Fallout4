@@ -210,6 +210,45 @@ fn service_fcx_mode_without_setup_context_returns_setup_failed_result() {
 }
 
 #[test]
+fn fcx_config_checks_use_game_root_resolved_from_configured_executable() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let game_root = temp.path().join("Fallout4");
+    let docs_root = temp.path().join("Docs");
+    std::fs::create_dir_all(&game_root).expect("game root should be created");
+    std::fs::create_dir_all(&docs_root).expect("docs root should be created");
+    let game_exe_path = game_root.join("Fallout4.exe");
+    std::fs::write(&game_exe_path, b"not a real PE").expect("game executable should be written");
+    std::fs::write(
+        game_root.join("epo.ini"),
+        "[Particles]\niMaxDesired = 6001\n",
+    )
+    .expect("problematic config should be written");
+    let source = CrashLogScanSource::Targeted(TargetedCrashLogScanSource { inputs: Vec::new() });
+    let mut request = service_request(
+        temp.path(),
+        source,
+        CrashLogScanOptions::new(false, true, false),
+    );
+    request.game_version = "Original".to_string();
+    request.setup_context = Some(CrashLogScanSetupContext {
+        game_root: None,
+        docs_root: Some(docs_root),
+        game_exe_path: Some(game_exe_path),
+        xse_log_path: None,
+    });
+
+    let (setup, _) = evaluate_setup_for_scan(&request);
+
+    let setup = setup.expect("FCX setup result should be present");
+    assert!(
+        setup
+            .configuration_issues
+            .iter()
+            .any(|issue| { issue.setting == "iMaxDesired" && issue.current_value == "6001" })
+    );
+}
+
+#[test]
 fn service_standard_discovery_runs_analysis_and_attaches_discovery() {
     let temp = tempdir().expect("tempdir should succeed");
     let root = temp.path();

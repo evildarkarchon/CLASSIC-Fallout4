@@ -63,8 +63,8 @@ void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, co
                         const QString& game, const QString& gameVersion, bool showFormIdValues, bool fcxMode,
                         bool simplifyLogs, bool moveUnsolvedLogs, const QString& unsolvedLogsDestination,
                         int maxConcurrentScans, const QString& baseDirectory, const QString& customFolder,
-                        const QString& setupGameRoot, const QString& setupDocsRoot,
-                        const QString& setupGameExePath, bool targetedMode, const QStringList& targetedInputs)
+                        const QString& setupGameRoot, const QString& setupDocsRoot, const QString& setupGameExePath,
+                        const QString& setupXseLogPath, bool targetedMode, const QStringList& targetedInputs)
 {
     m_cancelled.store(false);
     classic::scanner::scan_cancellation_token_reset(*m_cancellationToken);
@@ -111,7 +111,7 @@ void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, co
         request.setup_game_root = classic::toRustString(setupGameRoot);
         request.setup_docs_root = classic::toRustString(setupDocsRoot);
         request.setup_game_exe_path = classic::toRustString(setupGameExePath);
-        request.setup_xse_log_path = classic::toRustString(QString{});
+        request.setup_xse_log_path = classic::toRustString(setupXseLogPath);
         request.max_concurrent = maxConcurrent;
         request.targeted_inputs = std::move(rustTargetedInputs);
         request.log_paths = std::move(rustPaths);
