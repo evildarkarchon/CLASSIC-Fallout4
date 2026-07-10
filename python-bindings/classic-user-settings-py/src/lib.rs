@@ -1,9 +1,9 @@
 //! Thin PyO3 adapter for read-only User Settings and non-persisting update previews.
 
 use classic_user_settings_core::{
-    CommitEligibility, CrashLogScanSettings, DocumentClassification, PreferenceOrigin, Revision,
-    SourceLocation, UserSettings, UserSettingsUpdate, UserSettingsUpdateField,
-    UserSettingsUpdatePreview,
+    CommitEligibility, CrashLogScanSettings, DocumentClassification, GameSetupSettings,
+    PreferenceOrigin, Revision, SourceLocation, UserSettings, UserSettingsUpdate,
+    UserSettingsUpdateField, UserSettingsUpdatePreview,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict};
@@ -99,6 +99,66 @@ pub struct PyCrashLogScanSettings {
     max_concurrent_scans_origin: String,
 }
 
+/// Typed Game Setup settings projected from User Settings.
+#[pyclass(name = "GameSetupSettings", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyGameSetupSettings {
+    /// Stable managed-game identifier.
+    #[pyo3(get)]
+    managed_game: String,
+    /// Provenance of the managed-game identifier.
+    #[pyo3(get)]
+    managed_game_origin: String,
+    /// Saved game-version selection token.
+    #[pyo3(get)]
+    game_version_selection: String,
+    /// Provenance of the game-version selection.
+    #[pyo3(get)]
+    game_version_selection_origin: String,
+    /// Optional persisted game installation root, preserving its spelling.
+    #[pyo3(get)]
+    game_root: Option<String>,
+    /// Provenance of the game installation root.
+    #[pyo3(get)]
+    game_root_origin: String,
+    /// Optional persisted game executable path, preserving its spelling.
+    #[pyo3(get)]
+    game_executable: Option<String>,
+    /// Provenance of the game executable path.
+    #[pyo3(get)]
+    game_executable_origin: String,
+    /// Optional persisted documents root, preserving its spelling.
+    #[pyo3(get)]
+    documents_root: Option<String>,
+    /// Provenance of the documents root.
+    #[pyo3(get)]
+    documents_root_origin: String,
+    /// Optional persisted INI-folder fallback, preserving its spelling.
+    #[pyo3(get)]
+    ini_folder: Option<String>,
+    /// Provenance of the INI-folder fallback.
+    #[pyo3(get)]
+    ini_folder_origin: String,
+    /// Optional persisted mods or staging root, preserving its spelling.
+    #[pyo3(get)]
+    mods_root: Option<String>,
+    /// Provenance of the mods or staging root.
+    #[pyo3(get)]
+    mods_root_origin: String,
+    /// Optional custom Crash Log Scan input, preserving its spelling.
+    #[pyo3(get)]
+    custom_scan_input: Option<String>,
+    /// Provenance of the custom Crash Log Scan input.
+    #[pyo3(get)]
+    custom_scan_input_origin: String,
+    /// Optional persisted Papyrus log path, preserving its spelling.
+    #[pyo3(get)]
+    papyrus_log: Option<String>,
+    /// Provenance of the Papyrus log path.
+    #[pyo3(get)]
+    papyrus_log_origin: String,
+}
+
 /// A caller-authored request for a non-persisting User Settings Update preview.
 #[pyclass(name = "UserSettingsUpdate", skip_from_py_object)]
 #[derive(Clone, Default)]
@@ -119,9 +179,39 @@ impl PyUserSettingsUpdate {
         self.inner = std::mem::take(&mut self.inner).with_update_check(value);
     }
 
+    /// Requests a managed-game identifier for validation with the complete preview.
+    fn set_managed_game(&mut self, value: String) {
+        self.inner = std::mem::take(&mut self.inner).with_managed_game(value);
+    }
+
     /// Requests one canonical game-version selection token.
     fn set_game_version_selection(&mut self, value: String) {
         self.inner = std::mem::take(&mut self.inner).with_game_version_selection(value);
+    }
+
+    /// Requests an optional game installation root; `None` clears it.
+    fn set_game_root(&mut self, value: Option<String>) {
+        self.inner = std::mem::take(&mut self.inner).with_game_root(value);
+    }
+
+    /// Requests an optional game executable path; `None` clears it.
+    fn set_game_executable(&mut self, value: Option<String>) {
+        self.inner = std::mem::take(&mut self.inner).with_game_executable(value);
+    }
+
+    /// Requests an optional documents root; `None` clears it.
+    fn set_documents_root(&mut self, value: Option<String>) {
+        self.inner = std::mem::take(&mut self.inner).with_documents_root(value);
+    }
+
+    /// Requests an optional INI-folder compatibility fallback; `None` clears it.
+    fn set_ini_folder(&mut self, value: Option<String>) {
+        self.inner = std::mem::take(&mut self.inner).with_ini_folder(value);
+    }
+
+    /// Requests an optional mods or staging root; `None` clears it.
+    fn set_mods_folder(&mut self, value: Option<String>) {
+        self.inner = std::mem::take(&mut self.inner).with_mods_folder(value);
     }
 
     /// Requests a new FCX Mode preference.
@@ -163,6 +253,11 @@ impl PyUserSettingsUpdate {
     /// Requests an optional custom Crash Log Scan input; `None` clears it.
     fn set_custom_scan_input(&mut self, value: Option<String>) {
         self.inner = std::mem::take(&mut self.inner).with_custom_scan_input(value);
+    }
+
+    /// Requests an optional Papyrus log path; `None` clears it.
+    fn set_papyrus_log_path(&mut self, value: Option<String>) {
+        self.inner = std::mem::take(&mut self.inner).with_papyrus_log_path(value);
     }
 
     /// Requests scan concurrency in the persisted `0..=32` range.
@@ -262,6 +357,9 @@ pub struct PyUserSettingsSnapshot {
     /// Typed Crash Log Scan settings.
     #[pyo3(get)]
     crash_log_scan_settings: PyCrashLogScanSettings,
+    /// Typed Game Setup settings.
+    #[pyo3(get)]
+    game_setup_settings: PyGameSetupSettings,
     /// Selected source token: `canonical`, `legacy`, or `missing`.
     #[pyo3(get)]
     source_location: String,
@@ -327,6 +425,7 @@ pub fn open_user_settings(classic_root: String) -> PyUserSettingsSnapshot {
                 .to_string(),
         },
         crash_log_scan_settings: crash_log_scan_settings_to_py(settings.crash_log_scan_settings()),
+        game_setup_settings: game_setup_settings_to_py(settings.game_setup_settings()),
         source_location: source_location_token(settings.source().location()).to_string(),
         source_path: settings
             .source()
@@ -347,6 +446,36 @@ pub fn open_user_settings(classic_root: String) -> PyUserSettingsSnapshot {
             .collect(),
         original_content: settings.original_bytes().map(<[u8]>::to_vec),
         inner: settings,
+    }
+}
+
+/// Converts core Game Setup settings into Python-owned values without normalizing paths.
+fn game_setup_settings_to_py(settings: &GameSetupSettings) -> PyGameSetupSettings {
+    PyGameSetupSettings {
+        managed_game: settings.managed_game().as_str().to_string(),
+        managed_game_origin: preference_origin_token(settings.managed_game_origin()).to_string(),
+        game_version_selection: settings.game_version_selection().as_str().to_string(),
+        game_version_selection_origin: preference_origin_token(
+            settings.game_version_selection_origin(),
+        )
+        .to_string(),
+        game_root: settings.game_root().map(str::to_string),
+        game_root_origin: preference_origin_token(settings.game_root_origin()).to_string(),
+        game_executable: settings.game_executable().map(str::to_string),
+        game_executable_origin: preference_origin_token(settings.game_executable_origin())
+            .to_string(),
+        documents_root: settings.documents_root().map(str::to_string),
+        documents_root_origin: preference_origin_token(settings.documents_root_origin())
+            .to_string(),
+        ini_folder: settings.ini_folder().map(str::to_string),
+        ini_folder_origin: preference_origin_token(settings.ini_folder_origin()).to_string(),
+        mods_root: settings.mods_root().map(str::to_string),
+        mods_root_origin: preference_origin_token(settings.mods_root_origin()).to_string(),
+        custom_scan_input: settings.custom_scan_input().map(str::to_string),
+        custom_scan_input_origin: preference_origin_token(settings.custom_scan_input_origin())
+            .to_string(),
+        papyrus_log: settings.papyrus_log().map(str::to_string),
+        papyrus_log_origin: preference_origin_token(settings.papyrus_log_origin()).to_string(),
     }
 }
 
@@ -433,13 +562,22 @@ fn update_field_to_py(field: &UserSettingsUpdateField) -> PyUserSettingsUpdateFi
         UserSettingsUpdateField::GameVersionSelection(value) => {
             PyUserSettingsUpdateValue::String(value.as_str().to_string())
         }
+        UserSettingsUpdateField::ManagedGame(value) => {
+            PyUserSettingsUpdateValue::String(value.as_str().to_string())
+        }
         UserSettingsUpdateField::FormIdDatabases(value) => PyUserSettingsUpdateValue::StringLists(
             value
                 .iter()
                 .map(|(game, paths)| (game.clone(), paths.clone()))
                 .collect(),
         ),
-        UserSettingsUpdateField::UnsolvedLogsDestination(value)
+        UserSettingsUpdateField::GameRoot(value)
+        | UserSettingsUpdateField::GameExecutable(value)
+        | UserSettingsUpdateField::DocumentsRoot(value)
+        | UserSettingsUpdateField::IniFolder(value)
+        | UserSettingsUpdateField::ModsFolder(value)
+        | UserSettingsUpdateField::PapyrusLogPath(value)
+        | UserSettingsUpdateField::UnsolvedLogsDestination(value)
         | UserSettingsUpdateField::CustomScanInput(value) => {
             PyUserSettingsUpdateValue::OptionalString(value.clone())
         }
@@ -520,6 +658,7 @@ fn classic_user_settings(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyUserSettingsDiagnostic>()?;
     module.add_class::<PyUpdatePreferences>()?;
     module.add_class::<PyCrashLogScanSettings>()?;
+    module.add_class::<PyGameSetupSettings>()?;
     module.add_class::<PyUserSettingsUpdate>()?;
     module.add_class::<PyUserSettingsUpdateDiagnostic>()?;
     module.add_class::<PyUserSettingsUpdateField>()?;

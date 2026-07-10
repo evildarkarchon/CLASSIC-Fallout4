@@ -1,5 +1,6 @@
 //! Thin NAPI adapter for read-only User Settings and non-persisting update previews.
 
+use crate::shared::{JsGameId, core_to_js_game_id, js_to_core_game_id};
 use classic_user_settings_core::{
     CommitEligibility, DocumentClassification, PreferenceOrigin, Revision, SourceLocation,
     UserSettings, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview,
@@ -70,13 +71,66 @@ pub struct JsCrashLogScanSettings {
     pub max_concurrent_scans_origin: String,
 }
 
+/// Typed Game Setup settings together with per-field provenance.
+#[napi(object)]
+pub struct JsGameSetupSettings {
+    /// Supported game managed by this settings document.
+    pub managed_game: JsGameId,
+    /// Provenance token for the managed game.
+    pub managed_game_origin: String,
+    /// Canonical game-version selection token.
+    pub game_version_selection: String,
+    /// Provenance token for game-version selection.
+    pub game_version_selection_origin: String,
+    /// Persisted game installation root without path normalization.
+    pub game_root: Option<String>,
+    /// Provenance token for the game installation root.
+    pub game_root_origin: String,
+    /// Persisted game executable path without path normalization.
+    pub game_executable: Option<String>,
+    /// Provenance token for the game executable path.
+    pub game_executable_origin: String,
+    /// Persisted documents root without path normalization.
+    pub documents_root: Option<String>,
+    /// Provenance token for the documents root.
+    pub documents_root_origin: String,
+    /// Persisted INI-folder compatibility fallback without path normalization.
+    pub ini_folder: Option<String>,
+    /// Provenance token for the INI-folder compatibility fallback.
+    pub ini_folder_origin: String,
+    /// Persisted mods or staging root without path normalization.
+    pub mods_root: Option<String>,
+    /// Provenance token for the mods or staging root.
+    pub mods_root_origin: String,
+    /// Persisted custom Crash Log Scan input without path normalization.
+    pub custom_scan_input: Option<String>,
+    /// Provenance token for the custom Crash Log Scan input.
+    pub custom_scan_input_origin: String,
+    /// Persisted Papyrus log path without path normalization.
+    pub papyrus_log: Option<String>,
+    /// Provenance token for the Papyrus log path.
+    pub papyrus_log_origin: String,
+}
+
 /// Caller-authored fields to validate as one non-persisting User Settings Update.
 #[napi(object)]
 pub struct JsUserSettingsUpdate {
     /// Requested Update Check preference.
     pub update_check: Option<bool>,
+    /// Requested managed game.
+    pub managed_game: Option<JsGameId>,
     /// Requested canonical game-version selection.
     pub game_version_selection: Option<String>,
+    /// Requested game installation root; `null` explicitly clears the saved path.
+    pub game_root: Option<Either<String, Null>>,
+    /// Requested game executable path; `null` explicitly clears the saved path.
+    pub game_executable: Option<Either<String, Null>>,
+    /// Requested documents root; `null` explicitly clears the saved path.
+    pub documents_root: Option<Either<String, Null>>,
+    /// Requested INI-folder compatibility fallback; `null` explicitly clears it.
+    pub ini_folder: Option<Either<String, Null>>,
+    /// Requested mods or staging folder; `null` explicitly clears the saved path.
+    pub mods_folder: Option<Either<String, Null>>,
     /// Requested FCX Mode preference.
     pub fcx_mode: Option<bool>,
     /// Requested Simplify Logs preference.
@@ -93,6 +147,8 @@ pub struct JsUserSettingsUpdate {
     pub unsolved_logs_destination: Option<Either<String, Null>>,
     /// Requested custom scan input; `null` explicitly selects automatic discovery.
     pub custom_scan_input: Option<Either<String, Null>>,
+    /// Requested Papyrus log path; `null` explicitly clears the saved path.
+    pub papyrus_log_path: Option<Either<String, Null>>,
     /// Requested scan concurrency in the persisted `0..=32` range.
     pub max_concurrent_scans: Option<f64>,
 }
@@ -137,6 +193,8 @@ pub struct JsUserSettingsSnapshot {
     pub update_preferences: JsUpdatePreferences,
     /// Typed Crash Log Scan settings.
     pub crash_log_scan_settings: JsCrashLogScanSettings,
+    /// Typed Game Setup settings.
+    pub game_setup_settings: JsGameSetupSettings,
     /// Selected source token: `canonical`, `legacy`, or `missing`.
     pub source_location: String,
     /// Selected source path, absent when the document is missing.
@@ -173,6 +231,7 @@ pub fn open_user_settings(classic_root: String) -> JsUserSettingsSnapshot {
                 .to_string(),
         },
         crash_log_scan_settings: crash_log_scan_settings_to_js(&settings),
+        game_setup_settings: game_setup_settings_to_js(&settings),
         source_location: source_location_token(settings.source().location()).to_string(),
         source_path: settings
             .source()
@@ -194,6 +253,35 @@ pub fn open_user_settings(classic_root: String) -> JsUserSettingsSnapshot {
         original_content: settings
             .original_bytes()
             .map(|content| Buffer::from(content.to_vec())),
+    }
+}
+
+/// Converts the Rust-owned Game Setup settings group into its NAPI DTO.
+fn game_setup_settings_to_js(settings: &UserSettings) -> JsGameSetupSettings {
+    let setup = settings.game_setup_settings();
+    JsGameSetupSettings {
+        managed_game: core_to_js_game_id(&setup.managed_game()),
+        managed_game_origin: preference_origin_token(setup.managed_game_origin()).to_string(),
+        game_version_selection: setup.game_version_selection().as_str().to_string(),
+        game_version_selection_origin: preference_origin_token(
+            setup.game_version_selection_origin(),
+        )
+        .to_string(),
+        game_root: setup.game_root().map(ToOwned::to_owned),
+        game_root_origin: preference_origin_token(setup.game_root_origin()).to_string(),
+        game_executable: setup.game_executable().map(ToOwned::to_owned),
+        game_executable_origin: preference_origin_token(setup.game_executable_origin()).to_string(),
+        documents_root: setup.documents_root().map(ToOwned::to_owned),
+        documents_root_origin: preference_origin_token(setup.documents_root_origin()).to_string(),
+        ini_folder: setup.ini_folder().map(ToOwned::to_owned),
+        ini_folder_origin: preference_origin_token(setup.ini_folder_origin()).to_string(),
+        mods_root: setup.mods_root().map(ToOwned::to_owned),
+        mods_root_origin: preference_origin_token(setup.mods_root_origin()).to_string(),
+        custom_scan_input: setup.custom_scan_input().map(ToOwned::to_owned),
+        custom_scan_input_origin: preference_origin_token(setup.custom_scan_input_origin())
+            .to_string(),
+        papyrus_log: setup.papyrus_log().map(ToOwned::to_owned),
+        papyrus_log_origin: preference_origin_token(setup.papyrus_log_origin()).to_string(),
     }
 }
 
@@ -257,8 +345,26 @@ fn user_settings_update_to_core(update: JsUserSettingsUpdate) -> UserSettingsUpd
     if let Some(value) = update.update_check {
         core = core.with_update_check(value);
     }
+    if let Some(value) = update.managed_game {
+        core = core.with_managed_game(js_to_core_game_id(&value).as_str());
+    }
     if let Some(value) = update.game_version_selection {
         core = core.with_game_version_selection(value);
+    }
+    if let Some(value) = update.game_root {
+        core = core.with_game_root(nullable_string_to_option(value));
+    }
+    if let Some(value) = update.game_executable {
+        core = core.with_game_executable(nullable_string_to_option(value));
+    }
+    if let Some(value) = update.documents_root {
+        core = core.with_documents_root(nullable_string_to_option(value));
+    }
+    if let Some(value) = update.ini_folder {
+        core = core.with_ini_folder(nullable_string_to_option(value));
+    }
+    if let Some(value) = update.mods_folder {
+        core = core.with_mods_folder(nullable_string_to_option(value));
     }
     if let Some(value) = update.fcx_mode {
         core = core.with_fcx_mode(value);
@@ -283,6 +389,9 @@ fn user_settings_update_to_core(update: JsUserSettingsUpdate) -> UserSettingsUpd
     }
     if let Some(value) = update.custom_scan_input {
         core = core.with_custom_scan_input(nullable_string_to_option(value));
+    }
+    if let Some(value) = update.papyrus_log_path {
+        core = core.with_papyrus_log_path(nullable_string_to_option(value));
     }
     if let Some(value) = update.max_concurrent_scans {
         core = core.with_max_concurrent_scans(scan_concurrency_to_core(value));
@@ -353,13 +462,20 @@ fn user_settings_update_field_to_js(field: &UserSettingsUpdateField) -> JsUserSe
         UserSettingsUpdateField::GameVersionSelection(value) => {
             Either5::B(value.as_str().to_string())
         }
+        UserSettingsUpdateField::ManagedGame(value) => Either5::B(value.as_str().to_string()),
         UserSettingsUpdateField::FormIdDatabases(value) => Either5::C(
             value
                 .iter()
                 .map(|(game, paths)| (game.clone(), paths.clone()))
                 .collect(),
         ),
-        UserSettingsUpdateField::UnsolvedLogsDestination(value)
+        UserSettingsUpdateField::GameRoot(value)
+        | UserSettingsUpdateField::GameExecutable(value)
+        | UserSettingsUpdateField::DocumentsRoot(value)
+        | UserSettingsUpdateField::IniFolder(value)
+        | UserSettingsUpdateField::ModsFolder(value)
+        | UserSettingsUpdateField::PapyrusLogPath(value)
+        | UserSettingsUpdateField::UnsolvedLogsDestination(value)
         | UserSettingsUpdateField::CustomScanInput(value) => match value {
             Some(value) => Either5::B(value.clone()),
             None => Either5::E(Null),

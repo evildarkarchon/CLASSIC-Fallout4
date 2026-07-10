@@ -59,6 +59,36 @@ fn test_run_game_setup_intake_uses_configured_executable_path() {
 }
 
 #[test]
+fn test_run_game_setup_intake_returns_exact_proposed_path_updates() {
+    let temp = TempDir::new().expect("temp dir");
+    let game_root = temp.path().join("Fallout4");
+    let docs_root = temp.path().join("Docs");
+    fs::create_dir_all(&game_root).expect("game root");
+    fs::create_dir_all(&docs_root).expect("docs root");
+    write_valid_fallout4_docs_inis(&docs_root);
+    let configured_exe = game_root.join("Fallout4.exe");
+    fs::write(&configured_exe, b"not a real pe").expect("configured exe");
+
+    let result = run_game_setup_intake(
+        "Fallout4",
+        "auto",
+        "",
+        &docs_root.to_string_lossy(),
+        "",
+        &configured_exe.to_string_lossy(),
+    );
+
+    assert_eq!(result.path_update_count, 1);
+    assert_eq!(result.path_updates.len(), 1);
+    assert_eq!(result.path_updates[0].kind, "game_root");
+    assert_eq!(
+        result.path_updates[0].path,
+        game_root.to_string_lossy().into_owned()
+    );
+    assert_eq!(result.game_root, game_root.to_string_lossy());
+}
+
+#[test]
 fn test_game_setup_needs_path_detection_empty() {
     let result = game_setup_needs_path_detection("", "");
     assert!(result.needs_game_path);

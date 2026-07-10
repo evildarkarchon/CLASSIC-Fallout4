@@ -91,7 +91,10 @@ fn open_conflicting_alias_document_prefers_the_valid_canonical_label_with_a_diag
             .iter()
             .map(|diagnostic| diagnostic.code())
             .collect::<Vec<_>>(),
-        vec!["canonical_alias_conflict_custom_scan_folder"]
+        vec![
+            "canonical_alias_conflict_mods_folder",
+            "canonical_alias_conflict_custom_scan_folder",
+        ]
     );
     assert_eq!(settings.original_bytes(), Some(bytes_before.as_slice()));
     assert_eq!(std::fs::read(path).unwrap(), bytes_before);

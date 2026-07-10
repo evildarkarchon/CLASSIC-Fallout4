@@ -1,3 +1,4 @@
+use crate::GameSetupSettings;
 use crate::scan_settings::CrashLogScanSettings;
 use classic_settings_core::{
     SchemaVersion, Yaml, YamlSchemaError, extract_schema_version, parse_yaml_content,
@@ -148,6 +149,7 @@ pub struct UserSettings {
     revision: Revision,
     update_preferences: UpdatePreferences,
     crash_log_scan_settings: CrashLogScanSettings,
+    game_setup_settings: GameSetupSettings,
     diagnostics: Vec<Diagnostic>,
     original_bytes: Option<Vec<u8>>,
     commit_eligibility: CommitEligibility,
@@ -326,6 +328,12 @@ impl UserSettings {
             } else {
                 CrashLogScanSettings::from_nested_document(&document)
             };
+        let (game_setup_settings, game_setup_diagnostics) =
+            if classification == DocumentClassification::LegacyFlat {
+                GameSetupSettings::from_legacy_flat_document(&document, &crash_log_scan_settings)
+            } else {
+                GameSetupSettings::from_nested_document(&document, &crash_log_scan_settings)
+            };
         let requires_migration = location == SourceLocation::Legacy
             || matches!(
                 classification,
@@ -350,6 +358,7 @@ impl UserSettings {
             Vec::new()
         };
         diagnostics.extend(update_diagnostic);
+        diagnostics.extend(game_setup_diagnostics);
         diagnostics.extend(scan_diagnostics);
 
         Self {
@@ -365,6 +374,7 @@ impl UserSettings {
                 update_check_origin,
             },
             crash_log_scan_settings,
+            game_setup_settings,
             diagnostics,
             original_bytes: Some(bytes),
             commit_eligibility: if requires_migration {
@@ -390,6 +400,7 @@ impl UserSettings {
                 update_check_origin: PreferenceOrigin::Default,
             },
             crash_log_scan_settings: CrashLogScanSettings::published_defaults(),
+            game_setup_settings: GameSetupSettings::published_defaults(),
             diagnostics: Vec::new(),
             original_bytes: None,
             commit_eligibility: CommitEligibility::Eligible,
@@ -411,6 +422,7 @@ impl UserSettings {
                 update_check_origin: PreferenceOrigin::DegradedFallback,
             },
             crash_log_scan_settings: CrashLogScanSettings::degraded_fallbacks(),
+            game_setup_settings: GameSetupSettings::degraded_fallbacks(),
             diagnostics: vec![
                 Diagnostic::new("unreadable_document", error.to_string()),
                 Diagnostic::new(
@@ -443,6 +455,7 @@ impl UserSettings {
                 update_check_origin: PreferenceOrigin::DegradedFallback,
             },
             crash_log_scan_settings: CrashLogScanSettings::degraded_fallbacks(),
+            game_setup_settings: GameSetupSettings::degraded_fallbacks(),
             diagnostics: vec![
                 Diagnostic::new("malformed_document", message),
                 Diagnostic::new(
@@ -478,6 +491,7 @@ impl UserSettings {
                 update_check_origin: PreferenceOrigin::DegradedFallback,
             },
             crash_log_scan_settings: CrashLogScanSettings::degraded_fallbacks(),
+            game_setup_settings: GameSetupSettings::degraded_fallbacks(),
             diagnostics: vec![
                 Diagnostic::new(code, message),
                 Diagnostic::new(
@@ -518,6 +532,11 @@ impl UserSettings {
     /// Returns the typed Crash Log Scan settings group.
     pub fn crash_log_scan_settings(&self) -> &CrashLogScanSettings {
         &self.crash_log_scan_settings
+    }
+
+    /// Returns the typed Game Setup settings group.
+    pub fn game_setup_settings(&self) -> &GameSetupSettings {
+        &self.game_setup_settings
     }
 
     /// Returns structured diagnostics in discovery and validation order.

@@ -1573,6 +1573,17 @@ pub struct JsGameSetupCheck {
     pub details: Vec<String>,
 }
 
+/// One path discovered by Game Setup Intake that the caller may choose to persist.
+#[napi(object)]
+pub struct JsGameSetupPathUpdate {
+    /// Stable proposal kind, currently `game_root` or `docs_root`.
+    pub kind: String,
+    /// Resolved path represented as a JavaScript string.
+    ///
+    /// UTF-8-representable paths are exact; other native values use replacement characters.
+    pub path: String,
+}
+
 /// Result of running Game Setup Intake.
 #[napi(object)]
 pub struct JsGameSetupIntakeResult {
@@ -1590,6 +1601,11 @@ pub struct JsGameSetupIntakeResult {
     pub action_count: u32,
     /// Number of detected paths that callers may persist.
     pub path_update_count: u32,
+    /// Ordered detected path proposals; Game Setup Intake does not persist them.
+    ///
+    /// UTF-8-representable paths are exact; other native path values use replacement
+    /// characters because JavaScript exposes this field as a string.
+    pub path_updates: Vec<JsGameSetupPathUpdate>,
     /// Resolved game root, when known.
     pub game_root: Option<String>,
     /// Resolved documents root, when known.
@@ -1646,10 +1662,30 @@ fn game_setup_check_to_js(check: GameSetupCheck) -> JsGameSetupCheck {
     }
 }
 
+/// Converts one Rust-owned Game Setup path proposal into its NAPI DTO.
+fn game_setup_path_update_to_js(
+    update: classic_scangame_core::GameSetupPathUpdate,
+) -> JsGameSetupPathUpdate {
+    JsGameSetupPathUpdate {
+        kind: update.kind,
+        path: update.path.to_string_lossy().into_owned(),
+    }
+}
+
+/// Converts a core intake result into its NAPI DTO without changing proposal order.
+///
+/// `path_update_count` is derived from the emitted proposal vector. Paths use the
+/// binding's existing lossy string convention because JavaScript has no `OsString`.
 fn game_setup_result_to_js(result: GameSetupIntakeResult) -> JsGameSetupIntakeResult {
     let has_errors = result.has_errors();
     let total_checks = result.total_checks() as u32;
     let failed_checks = result.failed_checks() as u32;
+    let path_updates: Vec<_> = result
+        .path_updates
+        .into_iter()
+        .map(game_setup_path_update_to_js)
+        .collect();
+    let path_update_count = path_updates.len() as u32;
     JsGameSetupIntakeResult {
         rendered_report: result.rendered_report,
         status: result.status.as_str().to_string(),
@@ -1657,7 +1693,8 @@ fn game_setup_result_to_js(result: GameSetupIntakeResult) -> JsGameSetupIntakeRe
         total_checks,
         failed_checks,
         action_count: result.actions.len() as u32,
-        path_update_count: result.path_updates.len() as u32,
+        path_update_count,
+        path_updates,
         game_root: result
             .paths
             .game_root

@@ -5,8 +5,8 @@
 //! Rust core, then exposes the rendered report and typed diagnostics.
 
 use classic_scangame_core::{
-    GameSetupCheck, GameSetupIntake, GameSetupIntakeResult, game_setup_needs_path_detection,
-    normalize_game_setup_version_selection,
+    GameSetupCheck, GameSetupIntake, GameSetupIntakeResult, GameSetupPathUpdate,
+    game_setup_needs_path_detection, normalize_game_setup_version_selection,
 };
 use classic_shared::without_gil;
 use classic_shared_core::GameId;
@@ -147,6 +147,29 @@ impl PyGameSetupCheck {
     }
 }
 
+/// Python wrapper for one caller-controlled Game Setup path update proposal.
+#[pyclass(name = "GameSetupPathUpdate", from_py_object)]
+#[derive(Clone)]
+pub struct PyGameSetupPathUpdate {
+    /// Stable path kind, such as `game_root` or `docs_root`.
+    #[pyo3(get)]
+    pub kind: String,
+    /// Exact resolved path proposed for persistence.
+    #[pyo3(get)]
+    pub path: PathBuf,
+}
+
+#[pymethods]
+impl PyGameSetupPathUpdate {
+    /// Return a diagnostic representation of this path proposal.
+    fn __repr__(&self) -> String {
+        format!(
+            "GameSetupPathUpdate(kind='{}', path={:?})",
+            self.kind, self.path
+        )
+    }
+}
+
 /// Python wrapper for a Game Setup Intake result.
 #[pyclass(name = "GameSetupIntakeResult", from_py_object)]
 #[derive(Clone)]
@@ -172,6 +195,9 @@ pub struct PyGameSetupIntakeResult {
     /// Number of detected paths that callers may persist.
     #[pyo3(get)]
     pub path_update_count: usize,
+    /// Exact detected path proposals that callers may choose to persist.
+    #[pyo3(get)]
+    pub path_updates: Vec<PyGameSetupPathUpdate>,
     /// Resolved game root, when known.
     #[pyo3(get)]
     pub game_root: Option<String>,
@@ -207,6 +233,18 @@ fn convert_check(check: GameSetupCheck) -> PyGameSetupCheck {
     }
 }
 
+/// Convert one core path proposal without normalizing its kind or path value.
+fn convert_path_update(update: GameSetupPathUpdate) -> PyGameSetupPathUpdate {
+    PyGameSetupPathUpdate {
+        kind: update.kind,
+        path: update.path,
+    }
+}
+
+/// Converts a core intake result into its Python DTO without changing proposal order.
+///
+/// `path_update_count` is measured from the source proposal vector, while each proposal
+/// retains its `PathBuf` so PyO3 can expose the platform path without string rewriting.
 fn convert_result(result: GameSetupIntakeResult) -> PyGameSetupIntakeResult {
     let has_errors = result.has_errors();
     let total_checks = result.total_checks();
@@ -219,6 +257,11 @@ fn convert_result(result: GameSetupIntakeResult) -> PyGameSetupIntakeResult {
         failed_checks,
         action_count: result.actions.len(),
         path_update_count: result.path_updates.len(),
+        path_updates: result
+            .path_updates
+            .into_iter()
+            .map(convert_path_update)
+            .collect(),
         game_root: result
             .paths
             .game_root
@@ -264,6 +307,7 @@ fn game_setup_needs_path_detection_py(
 pub fn register_setup(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyGameSetupIntake>()?;
     m.add_class::<PyGameSetupCheck>()?;
+    m.add_class::<PyGameSetupPathUpdate>()?;
     m.add_class::<PyGameSetupIntakeResult>()?;
     m.add_function(wrap_pyfunction!(run_game_setup_intake, m)?)?;
     m.add_function(wrap_pyfunction!(

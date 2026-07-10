@@ -1,7 +1,7 @@
 {
   "contractVersion": "1.0.0",
   "phase": "phase1",
-  "description": "Live one-tier 730-row Node vs Rust parity contract for high-level APIs.",
+  "description": "Live one-tier 807-row Node vs Rust parity contract for high-level APIs, preserving the 706-row enforcement floor.",
   "tierDefinitions": {
     "tier1": "Must-have high-level APIs required by app workflows and cross-language integration."
   },
@@ -532,6 +532,206 @@
       "nodeKind": "interface"
     },
     {
+      "id": "user-settings-game-setup-settings-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "GameSetupSettings",
+      "rustKind": "struct",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-setup-settings-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_setup_settings",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-managed-game-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "managed_game",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-managed-game-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "managed_game_origin",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-setup-version-selection-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_version_selection",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-setup-version-selection-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_version_selection_origin",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-root-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_root",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-root-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_root_origin",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-executable-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_executable",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-executable-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_executable_origin",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-documents-root-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "documents_root",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-documents-root-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "documents_root_origin",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-ini-folder-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "ini_folder",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-ini-folder-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "ini_folder_origin",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-mods-root-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "mods_root",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-mods-root-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "mods_root_origin",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-setup-custom-scan-input-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "custom_scan_input",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-setup-custom-scan-input-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "custom_scan_input_origin",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-papyrus-log-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "papyrus_log",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-papyrus-log-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "papyrus_log_origin",
+      "rustKind": "function",
+      "nodeExport": "JsGameSetupSettings",
+      "nodeKind": "interface"
+    },
+    {
       "id": "user-settings-update-type",
       "tier": "tier1",
       "ownerModule": "user_settings",
@@ -607,6 +807,76 @@
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
       "rustSymbol": "with_game_version_selection",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-managed-game-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_managed_game",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-root-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_game_root",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-executable-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_game_executable",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-documents-root-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_documents_root",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-ini-folder-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_ini_folder",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-mods-folder-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_mods_folder",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-papyrus-log-path-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_papyrus_log_path",
       "rustKind": "function",
       "nodeExport": "JsUserSettingsUpdate",
       "nodeKind": "interface"
@@ -6531,6 +6801,16 @@
       "rustCrate": "classic-scangame-core",
       "rustSymbol": "GameSetupIntakeResult",
       "nodeExport": "JsGameSetupIntakeResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scangame.JsGameSetupPathUpdate",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupPathUpdate",
+      "rustKind": "struct",
+      "nodeExport": "JsGameSetupPathUpdate",
       "nodeKind": "interface"
     },
     {

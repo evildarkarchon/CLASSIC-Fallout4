@@ -170,6 +170,7 @@ describe("Crash Log Scan User Settings", () => {
       "D:/Canonical Crash Logs",
     );
     expect(conflict.diagnostics.map((diagnostic) => diagnostic.code)).toEqual([
+      "canonical_alias_conflict_mods_folder",
       "canonical_alias_conflict_custom_scan_folder",
     ]);
 
@@ -214,6 +215,46 @@ describe("Crash Log Scan User Settings", () => {
   });
 });
 
+describe("Game Setup User Settings", () => {
+  test("user-settings-game-setup-snapshot", () => {
+    const content = `schema_version: "1.0"
+CLASSIC_Settings:
+  Managed Game: Fallout 4 VR
+  Game Version: VR
+  Game Folder Path: C:/Games/Fallout4VR
+  Game EXE Path: C:/Games/Fallout4VR/Fallout4VR.exe
+  Documents Folder Path: C:/Users/Player/Documents/My Games/Fallout4VR
+  INI Folder Path: D:/Overrides/Fallout4VR
+  MODS Folder Path: E:/Staging/Fallout4VR
+  SCAN Custom Path: F:/Crash Logs
+  Papyrus Log Path: C:/Users/Player/Documents/My Games/Fallout4VR/Logs/Script/Papyrus.0.log
+`;
+    const snapshot = openUserSettings(makeRoot(content));
+
+    expect(snapshot.gameSetupSettings).toEqual({
+      managedGame: "Fallout4VR",
+      managedGameOrigin: "document",
+      gameVersionSelection: "VR",
+      gameVersionSelectionOrigin: "document",
+      gameRoot: "C:/Games/Fallout4VR",
+      gameRootOrigin: "document",
+      gameExecutable: "C:/Games/Fallout4VR/Fallout4VR.exe",
+      gameExecutableOrigin: "document",
+      documentsRoot: "C:/Users/Player/Documents/My Games/Fallout4VR",
+      documentsRootOrigin: "document",
+      iniFolder: "D:/Overrides/Fallout4VR",
+      iniFolderOrigin: "document",
+      modsRoot: "E:/Staging/Fallout4VR",
+      modsRootOrigin: "document",
+      customScanInput: "F:/Crash Logs",
+      customScanInputOrigin: "document",
+      papyrusLog:
+        "C:/Users/Player/Documents/My Games/Fallout4VR/Logs/Script/Papyrus.0.log",
+      papyrusLogOrigin: "document",
+    });
+  });
+});
+
 describe("User Settings Update preview", () => {
   test("user-settings-update-preview", () => {
     const content = fixture("unknown_entries.yaml");
@@ -251,6 +292,48 @@ describe("User Settings Update preview", () => {
       ],
       diagnostics: [],
     });
+    expect(readFileSync(path)).toEqual(content);
+
+    const gameSetupAccepted = previewUserSettingsUpdate(root, {
+      managedGame: "Starfield",
+      gameRoot: "C:/Games/Starfield",
+      gameExecutable: "C:/Games/Starfield/Starfield.exe",
+      documentsRoot: "C:/Users/Player/Documents/My Games/Starfield",
+      iniFolder: null,
+      modsFolder: "D:/Mod Staging/Starfield",
+      papyrusLogPath: null,
+    });
+    expect(gameSetupAccepted.fields).toEqual([
+      {
+        fieldPath: "/CLASSIC_Settings/Managed Game",
+        value: "Starfield",
+      },
+      {
+        fieldPath: "/CLASSIC_Settings/Game Folder Path",
+        value: "C:/Games/Starfield",
+      },
+      {
+        fieldPath: "/CLASSIC_Settings/Game EXE Path",
+        value: "C:/Games/Starfield/Starfield.exe",
+      },
+      {
+        fieldPath: "/CLASSIC_Settings/Documents Folder Path",
+        value: "C:/Users/Player/Documents/My Games/Starfield",
+      },
+      {
+        fieldPath: "/CLASSIC_Settings/INI Folder Path",
+        value: null,
+      },
+      {
+        fieldPath: "/CLASSIC_Settings/MODS Folder Path",
+        value: "D:/Mod Staging/Starfield",
+      },
+      {
+        fieldPath: "/CLASSIC_Settings/Papyrus Log Path",
+        value: null,
+      },
+    ]);
+    expect(gameSetupAccepted.diagnostics).toEqual([]);
     expect(readFileSync(path)).toEqual(content);
 
     const rejected = previewUserSettingsUpdate(root, {

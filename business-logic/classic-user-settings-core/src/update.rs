@@ -1,5 +1,8 @@
-use crate::scan_settings::{is_absolute_user_path, valid_formid_databases};
+use crate::game_setup_settings::parse_managed_game;
+use crate::preference::is_absolute_user_path;
+use crate::scan_settings::valid_formid_databases;
 use crate::{CommitEligibility, GameVersionSelection, Revision, UserSettings};
+use classic_shared_core::GameId;
 use std::collections::BTreeMap;
 
 /// A caller-authored, non-persisting request to change one or more User Settings.
@@ -9,7 +12,14 @@ use std::collections::BTreeMap;
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct UserSettingsUpdate {
     update_check: Option<bool>,
+    managed_game: Option<String>,
     game_version_selection: Option<String>,
+    game_root: Option<Option<String>>,
+    game_executable: Option<Option<String>>,
+    documents_root: Option<Option<String>>,
+    ini_folder: Option<Option<String>>,
+    mods_folder: Option<Option<String>>,
+    papyrus_log_path: Option<Option<String>>,
     fcx_mode: Option<bool>,
     simplify_logs: Option<bool>,
     show_statistics: Option<bool>,
@@ -33,9 +43,51 @@ impl UserSettingsUpdate {
         self
     }
 
+    /// Requests a new managed game.
+    pub fn with_managed_game(mut self, value: impl Into<String>) -> Self {
+        self.managed_game = Some(value.into());
+        self
+    }
+
     /// Requests a canonical game-version selection string.
     pub fn with_game_version_selection(mut self, value: impl Into<String>) -> Self {
         self.game_version_selection = Some(value.into());
+        self
+    }
+
+    /// Requests an optional game installation root.
+    pub fn with_game_root(mut self, value: Option<String>) -> Self {
+        self.game_root = Some(value);
+        self
+    }
+
+    /// Requests an optional game executable path.
+    pub fn with_game_executable(mut self, value: Option<String>) -> Self {
+        self.game_executable = Some(value);
+        self
+    }
+
+    /// Requests an optional saved documents root.
+    pub fn with_documents_root(mut self, value: Option<String>) -> Self {
+        self.documents_root = Some(value);
+        self
+    }
+
+    /// Requests an optional INI-folder compatibility fallback.
+    pub fn with_ini_folder(mut self, value: Option<String>) -> Self {
+        self.ini_folder = Some(value);
+        self
+    }
+
+    /// Requests an optional mods or staging folder.
+    pub fn with_mods_folder(mut self, value: Option<String>) -> Self {
+        self.mods_folder = Some(value);
+        self
+    }
+
+    /// Requests an optional Papyrus log path.
+    pub fn with_papyrus_log_path(mut self, value: Option<String>) -> Self {
+        self.papyrus_log_path = Some(value);
         self
     }
 
@@ -105,8 +157,22 @@ impl UserSettingsUpdate {
 pub enum UserSettingsUpdateField {
     /// `CLASSIC_Settings.Update Check`.
     UpdateCheck(bool),
+    /// `CLASSIC_Settings.Managed Game`.
+    ManagedGame(GameId),
     /// `CLASSIC_Settings.Game Version`.
     GameVersionSelection(GameVersionSelection),
+    /// `CLASSIC_Settings.Game Folder Path`.
+    GameRoot(Option<String>),
+    /// `CLASSIC_Settings.Game EXE Path`.
+    GameExecutable(Option<String>),
+    /// `CLASSIC_Settings.Documents Folder Path`.
+    DocumentsRoot(Option<String>),
+    /// `CLASSIC_Settings.INI Folder Path`.
+    IniFolder(Option<String>),
+    /// `CLASSIC_Settings.MODS Folder Path`.
+    ModsFolder(Option<String>),
+    /// `CLASSIC_Settings.Papyrus Log Path`.
+    PapyrusLogPath(Option<String>),
     /// `CLASSIC_Settings.FCX Mode`.
     FcxMode(bool),
     /// `CLASSIC_Settings.Simplify Logs`.
@@ -132,7 +198,14 @@ impl UserSettingsUpdateField {
     pub fn canonical_path(&self) -> &'static str {
         match self {
             Self::UpdateCheck(_) => "/CLASSIC_Settings/Update Check",
+            Self::ManagedGame(_) => "/CLASSIC_Settings/Managed Game",
             Self::GameVersionSelection(_) => "/CLASSIC_Settings/Game Version",
+            Self::GameRoot(_) => "/CLASSIC_Settings/Game Folder Path",
+            Self::GameExecutable(_) => "/CLASSIC_Settings/Game EXE Path",
+            Self::DocumentsRoot(_) => "/CLASSIC_Settings/Documents Folder Path",
+            Self::IniFolder(_) => "/CLASSIC_Settings/INI Folder Path",
+            Self::ModsFolder(_) => "/CLASSIC_Settings/MODS Folder Path",
+            Self::PapyrusLogPath(_) => "/CLASSIC_Settings/Papyrus Log Path",
             Self::FcxMode(_) => "/CLASSIC_Settings/FCX Mode",
             Self::SimplifyLogs(_) => "/CLASSIC_Settings/Simplify Logs",
             Self::ShowStatistics(_) => "/CLASSIC_Settings/Show Statistics",
@@ -238,6 +311,16 @@ impl UserSettings {
         if let Some(value) = update.update_check {
             fields.push(UserSettingsUpdateField::UpdateCheck(value));
         }
+        if let Some(value) = update.managed_game {
+            match parse_managed_game(&value) {
+                Some(value) => fields.push(UserSettingsUpdateField::ManagedGame(value)),
+                None => diagnostics.push(UpdateDiagnostic::for_field(
+                    "/CLASSIC_Settings/Managed Game",
+                    "invalid_enum_managed_game",
+                    "Managed Game must be Fallout 4, Fallout 4 VR, Skyrim SE, or Starfield",
+                )),
+            }
+        }
         if let Some(value) = update.game_version_selection {
             match GameVersionSelection::parse_canonical(&value) {
                 Some(value) => {
@@ -250,6 +333,51 @@ impl UserSettings {
                 )),
             }
         }
+        validate_optional_path_update(
+            update.game_root,
+            "/CLASSIC_Settings/Game Folder Path",
+            "invalid_path_game_root",
+            "Game Folder Path must be empty or an absolute path",
+            UserSettingsUpdateField::GameRoot,
+            &mut fields,
+            &mut diagnostics,
+        );
+        validate_optional_path_update(
+            update.game_executable,
+            "/CLASSIC_Settings/Game EXE Path",
+            "invalid_path_game_executable",
+            "Game EXE Path must be empty or an absolute path",
+            UserSettingsUpdateField::GameExecutable,
+            &mut fields,
+            &mut diagnostics,
+        );
+        validate_optional_path_update(
+            update.documents_root,
+            "/CLASSIC_Settings/Documents Folder Path",
+            "invalid_path_documents_root",
+            "Documents Folder Path must be empty or an absolute path",
+            UserSettingsUpdateField::DocumentsRoot,
+            &mut fields,
+            &mut diagnostics,
+        );
+        validate_optional_path_update(
+            update.ini_folder,
+            "/CLASSIC_Settings/INI Folder Path",
+            "invalid_path_ini_folder",
+            "INI Folder Path must be empty or an absolute path",
+            UserSettingsUpdateField::IniFolder,
+            &mut fields,
+            &mut diagnostics,
+        );
+        validate_optional_path_update(
+            update.mods_folder,
+            "/CLASSIC_Settings/MODS Folder Path",
+            "invalid_path_mods_folder",
+            "MODS Folder Path must be empty or an absolute path",
+            UserSettingsUpdateField::ModsFolder,
+            &mut fields,
+            &mut diagnostics,
+        );
         if let Some(value) = update.fcx_mode {
             fields.push(UserSettingsUpdateField::FcxMode(value));
         }
@@ -298,6 +426,15 @@ impl UserSettings {
                 ));
             }
         }
+        validate_optional_path_update(
+            update.papyrus_log_path,
+            "/CLASSIC_Settings/Papyrus Log Path",
+            "invalid_path_papyrus_log",
+            "Papyrus Log Path must be empty or an absolute path",
+            UserSettingsUpdateField::PapyrusLogPath,
+            &mut fields,
+            &mut diagnostics,
+        );
         if let Some(value) = update.max_concurrent_scans {
             if let Ok(value) = u32::try_from(value)
                 && value <= 32
@@ -323,7 +460,27 @@ impl UserSettings {
     }
 }
 
-/// Accepts native absolute paths plus Windows drive and UNC forms on every build platform.
+/// Validates one optional path update and appends either its field or diagnostic.
+fn validate_optional_path_update(
+    value: Option<Option<String>>,
+    field_path: &'static str,
+    code: &'static str,
+    message: &'static str,
+    field: impl FnOnce(Option<String>) -> UserSettingsUpdateField,
+    fields: &mut Vec<UserSettingsUpdateField>,
+    diagnostics: &mut Vec<UpdateDiagnostic>,
+) {
+    let Some(value) = value else {
+        return;
+    };
+    if valid_optional_absolute_path(value.as_deref()) {
+        fields.push(field(value));
+    } else {
+        diagnostics.push(UpdateDiagnostic::for_field(field_path, code, message));
+    }
+}
+
+/// Accepts native, Unix/Proton, Windows drive, and UNC forms on every build platform.
 fn valid_optional_absolute_path(path: Option<&str>) -> bool {
     let Some(path) = path else {
         return true;

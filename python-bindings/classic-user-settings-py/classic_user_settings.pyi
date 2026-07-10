@@ -87,6 +87,64 @@ class CrashLogScanSettings:
     def max_concurrent_scans_origin(self) -> str: ...
 
 
+class GameSetupSettings:
+    """Typed Game Setup settings projected from User Settings."""
+
+    @property
+    def managed_game(self) -> str: ...
+
+    @property
+    def managed_game_origin(self) -> str: ...
+
+    @property
+    def game_version_selection(self) -> str: ...
+
+    @property
+    def game_version_selection_origin(self) -> str: ...
+
+    @property
+    def game_root(self) -> str | None: ...
+
+    @property
+    def game_root_origin(self) -> str: ...
+
+    @property
+    def game_executable(self) -> str | None: ...
+
+    @property
+    def game_executable_origin(self) -> str: ...
+
+    @property
+    def documents_root(self) -> str | None: ...
+
+    @property
+    def documents_root_origin(self) -> str: ...
+
+    @property
+    def ini_folder(self) -> str | None: ...
+
+    @property
+    def ini_folder_origin(self) -> str: ...
+
+    @property
+    def mods_root(self) -> str | None: ...
+
+    @property
+    def mods_root_origin(self) -> str: ...
+
+    @property
+    def custom_scan_input(self) -> str | None: ...
+
+    @property
+    def custom_scan_input_origin(self) -> str: ...
+
+    @property
+    def papyrus_log(self) -> str | None: ...
+
+    @property
+    def papyrus_log_origin(self) -> str: ...
+
+
 class UserSettingsUpdate:
     """A caller-authored request for a non-persisting User Settings Update preview."""
 
@@ -95,8 +153,26 @@ class UserSettingsUpdate:
     def set_update_check(self, value: bool) -> None:
         """Request a new Update Check preference."""
 
+    def set_managed_game(self, value: str) -> None:
+        """Request a managed-game identifier for complete preview validation."""
+
     def set_game_version_selection(self, value: str) -> None:
         """Request one canonical game-version selection token."""
+
+    def set_game_root(self, value: str | None) -> None:
+        """Request an optional game installation root; None clears it."""
+
+    def set_game_executable(self, value: str | None) -> None:
+        """Request an optional game executable path; None clears it."""
+
+    def set_documents_root(self, value: str | None) -> None:
+        """Request an optional documents root; None clears it."""
+
+    def set_ini_folder(self, value: str | None) -> None:
+        """Request an optional INI-folder fallback; None clears it."""
+
+    def set_mods_folder(self, value: str | None) -> None:
+        """Request an optional mods or staging root; None clears it."""
 
     def set_fcx_mode(self, value: bool) -> None:
         """Request a new FCX Mode preference."""
@@ -121,6 +197,9 @@ class UserSettingsUpdate:
 
     def set_custom_scan_input(self, value: str | None) -> None:
         """Request an optional custom Crash Log Scan input; None clears it."""
+
+    def set_papyrus_log_path(self, value: str | None) -> None:
+        """Request an optional Papyrus log path; None clears it."""
 
     def set_max_concurrent_scans(self, value: int) -> None:
         """Request scan concurrency in the persisted 0 through 32 range."""
@@ -173,6 +252,9 @@ class UserSettingsSnapshot:
 
     @property
     def crash_log_scan_settings(self) -> CrashLogScanSettings: ...
+
+    @property
+    def game_setup_settings(self) -> GameSetupSettings: ...
 
     @property
     def source_location(self) -> str: ...

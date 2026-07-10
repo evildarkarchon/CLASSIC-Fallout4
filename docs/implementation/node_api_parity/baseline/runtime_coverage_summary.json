@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T00:13:53.170555+00:00",
+  "generated_at_utc": "2026-07-10T01:31:14.909809+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,11 +7,11 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 807,
-    "runtime_verified_total": 807,
+    "tracked_surface_total": 835,
+    "runtime_verified_total": 835,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 779,
+    "tier1_contract_total": 807,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -50,8 +50,8 @@
       "total": 14
     },
     "scangame": {
-      "runtime_verified": 75,
-      "total": 75
+      "runtime_verified": 76,
+      "total": 76
     },
     "scanlog": {
       "runtime_verified": 95,
@@ -70,8 +70,8 @@
       "total": 6
     },
     "user_settings": {
-      "runtime_verified": 73,
-      "total": 73
+      "runtime_verified": 100,
+      "total": 100
     },
     "version": {
       "runtime_verified": 13,
@@ -1023,6 +1023,386 @@
       "notes": null
     },
     {
+      "trackedId": "contract:user-settings-game-setup-settings-type",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-game-setup-settings-type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "GameSetupSettings",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-game-setup-settings-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-game-setup-settings-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_setup_settings",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-managed-game-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-managed-game-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "managed_game",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-managed-game-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-managed-game-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "managed_game_origin",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-game-setup-version-selection-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-game-setup-version-selection-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_version_selection",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-game-setup-version-selection-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-game-setup-version-selection-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_version_selection_origin",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-game-root-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-game-root-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_root",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-game-root-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-game-root-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_root_origin",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-game-executable-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-game-executable-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_executable",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-game-executable-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-game-executable-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_executable_origin",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-documents-root-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-documents-root-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "documents_root",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-documents-root-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-documents-root-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "documents_root_origin",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-ini-folder-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-ini-folder-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "ini_folder",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-ini-folder-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-ini-folder-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "ini_folder_origin",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-mods-root-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-mods-root-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "mods_root",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-mods-root-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-mods-root-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "mods_root_origin",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-game-setup-custom-scan-input-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-game-setup-custom-scan-input-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "custom_scan_input",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-game-setup-custom-scan-input-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-game-setup-custom-scan-input-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "custom_scan_input_origin",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-papyrus-log-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-papyrus-log-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "papyrus_log",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-papyrus-log-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-papyrus-log-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "papyrus_log_origin",
+      "bindingIdentifier": "JsGameSetupSettings",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
       "trackedId": "contract:user-settings-update-type",
       "trackedType": "contract_row",
       "contractId": "user-settings-update-type",
@@ -1164,6 +1544,139 @@
       "status": "matched",
       "classification": "runtime_verified",
       "rustSymbol": "with_game_version_selection",
+      "bindingIdentifier": "JsUserSettingsUpdate",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-managed-game-builder",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-managed-game-builder",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_managed_game",
+      "bindingIdentifier": "JsUserSettingsUpdate",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-game-root-builder",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-game-root-builder",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_game_root",
+      "bindingIdentifier": "JsUserSettingsUpdate",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-game-executable-builder",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-game-executable-builder",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_game_executable",
+      "bindingIdentifier": "JsUserSettingsUpdate",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-documents-root-builder",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-documents-root-builder",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_documents_root",
+      "bindingIdentifier": "JsUserSettingsUpdate",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-ini-folder-builder",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-ini-folder-builder",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_ini_folder",
+      "bindingIdentifier": "JsUserSettingsUpdate",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-mods-folder-builder",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-mods-folder-builder",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_mods_folder",
+      "bindingIdentifier": "JsUserSettingsUpdate",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:user-settings-papyrus-log-path-builder",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-papyrus-log-path-builder",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_papyrus_log_path",
       "bindingIdentifier": "JsUserSettingsUpdate",
       "coverageId": "node-tier1-user-settings",
       "verificationMode": "direct_call",
@@ -14063,6 +14576,23 @@
       "classification": "runtime_verified",
       "rustSymbol": "GameSetupIntakeResult",
       "bindingIdentifier": "JsGameSetupIntakeResult",
+      "coverageId": "node-tier1-scangame",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "scangame-tier1-parity",
+      "fixtureRefs": [],
+      "notes": null
+    },
+    {
+      "trackedId": "contract:scangame.JsGameSetupPathUpdate",
+      "trackedType": "contract_row",
+      "contractId": "scangame.JsGameSetupPathUpdate",
+      "ownerModule": "scangame",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "GameSetupPathUpdate",
+      "bindingIdentifier": "JsGameSetupPathUpdate",
       "coverageId": "node-tier1-scangame",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",

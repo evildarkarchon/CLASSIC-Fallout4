@@ -1204,6 +1204,12 @@ class GameSetupCheck:
     message: str
     details: list[str]
 
+class GameSetupPathUpdate:
+    """One detected Game Setup path proposal controlled by the caller."""
+
+    kind: str
+    path: Path
+
 class GameSetupIntakeResult:
     """Rendered and typed result from Game Setup Intake."""
 
@@ -1214,6 +1220,7 @@ class GameSetupIntakeResult:
     failed_checks: int
     action_count: int
     path_update_count: int
+    path_updates: list[GameSetupPathUpdate]
     game_root: str | None
     docs_root: str | None
     checks: list[GameSetupCheck]

@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-10T00:17:50.721349+00:00`
-- Tier-1 contract rows: **1158**
-- Tier-1 matched: **1158**
+- Generated: `2026-07-10T01:23:56.587294+00:00`
+- Tier-1 contract rows: **1186**
+- Tier-1 matched: **1186**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -85,6 +85,33 @@
 | `user_settings.update_diagnostic_field_path_accessor` | `user_settings` | `field_path` | `classic_user_settings.UserSettingsUpdateDiagnostic` | `matched` |
 | `user_settings.update_diagnostic_code_accessor` | `user_settings` | `code` | `classic_user_settings.UserSettingsUpdateDiagnostic` | `matched` |
 | `user_settings.update_diagnostic_message_accessor` | `user_settings` | `message` | `classic_user_settings.UserSettingsUpdateDiagnostic` | `matched` |
+| `user_settings.game_setup_settings_type` | `user_settings` | `GameSetupSettings` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.game_setup_settings_accessor` | `user_settings` | `game_setup_settings` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.setup_managed_game_accessor` | `user_settings` | `managed_game` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_managed_game_origin_accessor` | `user_settings` | `managed_game_origin` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_game_version_selection_accessor` | `user_settings` | `game_version_selection` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_game_version_selection_origin_accessor` | `user_settings` | `game_version_selection_origin` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_game_root_accessor` | `user_settings` | `game_root` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_game_root_origin_accessor` | `user_settings` | `game_root_origin` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_game_executable_accessor` | `user_settings` | `game_executable` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_game_executable_origin_accessor` | `user_settings` | `game_executable_origin` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_documents_root_accessor` | `user_settings` | `documents_root` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_documents_root_origin_accessor` | `user_settings` | `documents_root_origin` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_ini_folder_accessor` | `user_settings` | `ini_folder` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_ini_folder_origin_accessor` | `user_settings` | `ini_folder_origin` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_mods_root_accessor` | `user_settings` | `mods_root` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_mods_root_origin_accessor` | `user_settings` | `mods_root_origin` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_custom_scan_input_accessor` | `user_settings` | `custom_scan_input` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_custom_scan_input_origin_accessor` | `user_settings` | `custom_scan_input_origin` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_papyrus_log_accessor` | `user_settings` | `papyrus_log` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.setup_papyrus_log_origin_accessor` | `user_settings` | `papyrus_log_origin` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.update_with_managed_game` | `user_settings` | `with_managed_game` | `classic_user_settings.UserSettingsUpdate.set_managed_game` | `matched` |
+| `user_settings.update_with_game_root` | `user_settings` | `with_game_root` | `classic_user_settings.UserSettingsUpdate.set_game_root` | `matched` |
+| `user_settings.update_with_game_executable` | `user_settings` | `with_game_executable` | `classic_user_settings.UserSettingsUpdate.set_game_executable` | `matched` |
+| `user_settings.update_with_documents_root` | `user_settings` | `with_documents_root` | `classic_user_settings.UserSettingsUpdate.set_documents_root` | `matched` |
+| `user_settings.update_with_ini_folder` | `user_settings` | `with_ini_folder` | `classic_user_settings.UserSettingsUpdate.set_ini_folder` | `matched` |
+| `user_settings.update_with_mods_folder` | `user_settings` | `with_mods_folder` | `classic_user_settings.UserSettingsUpdate.set_mods_folder` | `matched` |
+| `user_settings.update_with_papyrus_log_path` | `user_settings` | `with_papyrus_log_path` | `classic_user_settings.UserSettingsUpdate.set_papyrus_log_path` | `matched` |
 | `config-classic-config-class` | `config` | `ClassicConfig` | `classic_config.ClassicConfig` | `matched` |
 | `config-classic-config-get-config-path` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.get_config_path` | `matched` |
 | `config-classic-config-load-from-yaml` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.load_from_yaml` | `matched` |
@@ -1165,6 +1192,7 @@
 | `scangame.setup.GameSetupIntake` | `scangame` | `GameSetupIntake` | `classic_scangame.GameSetupIntake` | `matched` |
 | `scangame.setup.GameSetupIntake.__init__` | `scangame` | `GameSetupIntake` | `classic_scangame.GameSetupIntake.__init__` | `matched` |
 | `scangame.setup.GameSetupCheck` | `scangame` | `GameSetupCheck` | `classic_scangame.GameSetupCheck` | `matched` |
+| `scangame.setup.GameSetupPathUpdate` | `scangame` | `GameSetupPathUpdate` | `classic_scangame.GameSetupPathUpdate` | `matched` |
 | `scangame.setup.GameSetupIntakeResult` | `scangame` | `GameSetupIntakeResult` | `classic_scangame.GameSetupIntakeResult` | `matched` |
 | `scangame.setup.GameSetupIntakeResult.combined` | `scangame` | `GameSetupIntakeResult` | `classic_scangame.GameSetupIntakeResult.combined` | `matched` |
 | `scangame.setup.run_game_setup_intake` | `scangame` | `GameSetupIntake` | `classic_scangame.run_game_setup_intake` | `matched` |

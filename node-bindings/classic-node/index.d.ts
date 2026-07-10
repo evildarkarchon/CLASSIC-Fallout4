@@ -2898,12 +2898,71 @@ export interface JsGameSetupIntakeResult {
   actionCount: number
   /** Number of detected paths that callers may persist. */
   pathUpdateCount: number
+  /**
+   * Ordered detected path proposals; Game Setup Intake does not persist them.
+   *
+   * UTF-8-representable paths are exact; other native path values use replacement
+   * characters because JavaScript exposes this field as a string.
+   */
+  pathUpdates: Array<JsGameSetupPathUpdate>
   /** Resolved game root, when known. */
   gameRoot?: string
   /** Resolved documents root, when known. */
   docsRoot?: string
   /** Typed check results for structured consumers. */
   checks: Array<JsGameSetupCheck>
+}
+
+/** One path discovered by Game Setup Intake that the caller may choose to persist. */
+export interface JsGameSetupPathUpdate {
+  /** Stable proposal kind, currently `game_root` or `docs_root`. */
+  kind: string
+  /**
+   * Resolved path represented as a JavaScript string.
+   *
+   * UTF-8-representable paths are exact; other native values use replacement characters.
+   */
+  path: string
+}
+
+/** Typed Game Setup settings together with per-field provenance. */
+export interface JsGameSetupSettings {
+  /** Supported game managed by this settings document. */
+  managedGame: JsGameId
+  /** Provenance token for the managed game. */
+  managedGameOrigin: string
+  /** Canonical game-version selection token. */
+  gameVersionSelection: string
+  /** Provenance token for game-version selection. */
+  gameVersionSelectionOrigin: string
+  /** Persisted game installation root without path normalization. */
+  gameRoot?: string
+  /** Provenance token for the game installation root. */
+  gameRootOrigin: string
+  /** Persisted game executable path without path normalization. */
+  gameExecutable?: string
+  /** Provenance token for the game executable path. */
+  gameExecutableOrigin: string
+  /** Persisted documents root without path normalization. */
+  documentsRoot?: string
+  /** Provenance token for the documents root. */
+  documentsRootOrigin: string
+  /** Persisted INI-folder compatibility fallback without path normalization. */
+  iniFolder?: string
+  /** Provenance token for the INI-folder compatibility fallback. */
+  iniFolderOrigin: string
+  /** Persisted mods or staging root without path normalization. */
+  modsRoot?: string
+  /** Provenance token for the mods or staging root. */
+  modsRootOrigin: string
+  /** Persisted custom Crash Log Scan input without path normalization. */
+  customScanInput?: string
+  /** Provenance token for the custom Crash Log Scan input. */
+  customScanInputOrigin: string
+  /** Persisted Papyrus log path without path normalization. */
+  papyrusLog?: string
+  /** Provenance token for the Papyrus log path. */
+  papyrusLogOrigin: string
 }
 
 /** Game version enum for XSE validation. */
@@ -3588,6 +3647,8 @@ export interface JsUserSettingsSnapshot {
   updatePreferences: JsUpdatePreferences
   /** Typed Crash Log Scan settings. */
   crashLogScanSettings: JsCrashLogScanSettings
+  /** Typed Game Setup settings. */
+  gameSetupSettings: JsGameSetupSettings
   /** Selected source token: `canonical`, `legacy`, or `missing`. */
   sourceLocation: string
   /** Selected source path, absent when the document is missing. */
@@ -3612,8 +3673,20 @@ export interface JsUserSettingsSnapshot {
 export interface JsUserSettingsUpdate {
   /** Requested Update Check preference. */
   updateCheck?: boolean
+  /** Requested managed game. */
+  managedGame?: JsGameId
   /** Requested canonical game-version selection. */
   gameVersionSelection?: string
+  /** Requested game installation root; `null` explicitly clears the saved path. */
+  gameRoot?: string | null
+  /** Requested game executable path; `null` explicitly clears the saved path. */
+  gameExecutable?: string | null
+  /** Requested documents root; `null` explicitly clears the saved path. */
+  documentsRoot?: string | null
+  /** Requested INI-folder compatibility fallback; `null` explicitly clears it. */
+  iniFolder?: string | null
+  /** Requested mods or staging folder; `null` explicitly clears the saved path. */
+  modsFolder?: string | null
   /** Requested FCX Mode preference. */
   fcxMode?: boolean
   /** Requested Simplify Logs preference. */
@@ -3630,6 +3703,8 @@ export interface JsUserSettingsUpdate {
   unsolvedLogsDestination?: string | null
   /** Requested custom scan input; `null` explicitly selects automatic discovery. */
   customScanInput?: string | null
+  /** Requested Papyrus log path; `null` explicitly clears the saved path. */
+  papyrusLogPath?: string | null
   /** Requested scan concurrency in the persisted `0..=32` range. */
   maxConcurrentScans?: number
 }

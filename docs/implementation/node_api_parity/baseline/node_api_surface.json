@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T00:13:53.164525+00:00",
+  "generated_at_utc": "2026-07-10T01:31:14.904328+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -547,6 +547,22 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsGameSetupIntakeResult {"
+    },
+    {
+      "export": "JsGameSetupPathUpdate",
+      "kind": "interface",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsGameSetupPathUpdate {"
+    },
+    {
+      "export": "JsGameSetupSettings",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsGameSetupSettings {"
     },
     {
       "export": "JsGameVersion",

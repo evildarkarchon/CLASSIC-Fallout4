@@ -1,4 +1,7 @@
 use super::*;
+use classic_user_settings_core::{
+    UserSettings, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview,
+};
 use std::fs;
 use std::path::Path;
 use tempfile::TempDir;
@@ -89,6 +92,138 @@ fn from_config_uses_ini_folder_as_legacy_docs_fallback() {
         .expect("saved game root should build intake");
 
     assert_eq!(intake.docs_root.as_deref(), Some(docs_root.as_path()));
+}
+
+#[test]
+fn from_user_settings_prepares_typed_facts_without_loading_or_writing() {
+    let root = tempfile::tempdir().expect("temporary CLASSIC root");
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let content = concat!(
+        "schema_version: \"1.0\"\n",
+        "CLASSIC_Settings:\n",
+        "  Managed Game: Fallout 4\n",
+        "  Game Version: NextGen\n",
+        "  Game Folder Path: 'C:/Games/Fallout 4'\n",
+        "  Game EXE Path: 'C:/Games/Fallout 4/Fallout4Custom.exe'\n",
+        "  Documents Folder Path: 'C:/Users/Test/Documents/My Games/Fallout4'\n",
+        "  INI Folder Path: 'C:/ModOrganizer/profiles/Fallout 4'\n",
+        "  MODS Folder Path: 'D:/Mods'\n",
+        "  SCAN Custom Path: 'D:/Crash Logs'\n",
+        "  Papyrus Log Path: 'C:/Logs/Papyrus.0.log'\n",
+    );
+    fs::write(&settings_path, content).expect("write User Settings fixture");
+    let bytes_before = fs::read(&settings_path).expect("read fixture before preparation");
+    let settings = UserSettings::open(root.path());
+
+    let intake = GameSetupIntake::from_user_settings(settings.game_setup_settings());
+
+    assert_eq!(intake.game_id, GameId::Fallout4);
+    assert_eq!(intake.selected_game_version, "NextGen");
+    assert_eq!(
+        intake.game_root.as_deref(),
+        Some(Path::new("C:/Games/Fallout 4"))
+    );
+    assert_eq!(
+        intake.game_exe_path.as_deref(),
+        Some(Path::new("C:/Games/Fallout 4/Fallout4Custom.exe"))
+    );
+    assert_eq!(
+        intake.docs_root.as_deref(),
+        Some(Path::new("C:/Users/Test/Documents/My Games/Fallout4"))
+    );
+    assert_eq!(
+        fs::read(settings_path).expect("read fixture after preparation"),
+        bytes_before
+    );
+}
+
+#[test]
+fn from_missing_user_settings_still_builds_intake_for_path_detection() {
+    let root = tempfile::tempdir().expect("temporary CLASSIC root");
+    let settings = UserSettings::open(root.path());
+
+    let intake = GameSetupIntake::from_user_settings(settings.game_setup_settings());
+
+    assert_eq!(intake.game_id, GameId::Fallout4);
+    assert_eq!(intake.selected_game_version, "auto");
+    assert_eq!(intake.game_root, None);
+    assert_eq!(intake.game_exe_path, None);
+    assert_eq!(intake.docs_root, None);
+    assert!(!root.path().join("CLASSIC Settings.yaml").exists());
+}
+
+#[test]
+fn from_user_settings_does_not_resurrect_ini_alias_after_explicit_documents_clear() {
+    let root = tempfile::tempdir().expect("temporary CLASSIC root");
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let content = concat!(
+        "schema_version: \"1.0\"\n",
+        "CLASSIC_Settings:\n",
+        "  Documents Folder Path: null\n",
+        "  INI Folder Path: 'D:/Stale Documents'\n",
+    );
+    fs::write(&settings_path, content).expect("write documents conflict fixture");
+    let settings = UserSettings::open(root.path());
+
+    let intake = GameSetupIntake::from_user_settings(settings.game_setup_settings());
+
+    assert_eq!(intake.docs_root, None);
+    assert_eq!(
+        fs::read_to_string(settings_path).expect("read unchanged conflict fixture"),
+        content
+    );
+}
+
+#[test]
+fn discovered_path_update_requires_caller_conversion_before_settings_preview() {
+    let root = tempfile::tempdir().expect("temporary CLASSIC root");
+    let game_root = root.path().join("Fallout 4");
+    fs::create_dir(&game_root).expect("create game root");
+    let game_executable = game_root.join("Fallout4.exe");
+    fs::write(&game_executable, b"not a real PE").expect("write fake game executable");
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let executable_setting = game_executable.to_string_lossy().replace('\\', "/");
+    let content = format!(
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  Game Version: Original\n  Game EXE Path: '{executable_setting}'\n"
+    );
+    fs::write(&settings_path, &content).expect("write User Settings fixture");
+    let bytes_before = fs::read(&settings_path).expect("read fixture before intake");
+    let settings = UserSettings::open(root.path());
+
+    let result = GameSetupIntake::from_user_settings(settings.game_setup_settings()).run();
+
+    let discovered_game_root = result
+        .path_updates
+        .iter()
+        .find(|update| update.kind == "game_root")
+        .expect("configured executable should discover its game root");
+    assert_eq!(discovered_game_root.path, game_root);
+    assert_eq!(settings.game_setup_settings().game_root(), None);
+    assert_eq!(
+        fs::read(&settings_path).expect("read after intake"),
+        bytes_before
+    );
+
+    // Consent remains explicit: the caller selects a proposal and authors the update request.
+    let proposed = UserSettingsUpdate::new().with_game_root(Some(
+        discovered_game_root
+            .path
+            .to_str()
+            .expect("temporary test path must be valid UTF-8")
+            .to_string(),
+    ));
+    let UserSettingsUpdatePreview::Accepted(accepted) = settings.preview_update(proposed) else {
+        panic!("selected discovered path should form a valid settings preview");
+    };
+    assert!(matches!(
+        accepted.fields(),
+        [UserSettingsUpdateField::GameRoot(Some(path))]
+            if Path::new(path) == game_root.as_path()
+    ));
+    assert_eq!(
+        fs::read(settings_path).expect("read after preview"),
+        bytes_before
+    );
 }
 
 #[test]

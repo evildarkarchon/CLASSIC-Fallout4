@@ -14,8 +14,8 @@
 //!    per-value type checking, and string-to-typed coercion. Mirrors the
 //!    Python `classic_settings` validator surface 1:1.
 //! 4. **User Settings**: Opens the deep User Settings module from an explicit
-//!    CLASSIC root, returns typed Update and Crash Log Scan preferences, and
-//!    previews caller-authored updates without persistence.
+//!    CLASSIC root, returns typed Update, Crash Log Scan, and Game Setup groups,
+//!    and previews caller-authored updates without persistence.
 //!
 //! ## CXX type-system exceptions (documented)
 //!
@@ -158,6 +158,74 @@ fn user_settings_open_crash_log_scan_settings(classic_root: &str) -> ffi::CrashL
     }
 }
 
+/// Opens User Settings at an explicit CLASSIC root and returns the cohesive,
+/// preservation-aware Game Setup group with per-field provenance.
+fn user_settings_open_game_setup_settings(classic_root: &str) -> ffi::GameSetupSettingsDto {
+    let settings = UserSettings::open(Path::new(classic_root));
+    let setup = settings.game_setup_settings();
+    let (has_game_root, game_root) = setup
+        .game_root()
+        .map_or((false, String::new()), |value| (true, value.to_string()));
+    let (has_game_executable, game_executable) = setup
+        .game_executable()
+        .map_or((false, String::new()), |value| (true, value.to_string()));
+    let (has_documents_root, documents_root) = setup
+        .documents_root()
+        .map_or((false, String::new()), |value| (true, value.to_string()));
+    let (has_ini_folder, ini_folder) = setup
+        .ini_folder()
+        .map_or((false, String::new()), |value| (true, value.to_string()));
+    let (has_mods_root, mods_root) = setup
+        .mods_root()
+        .map_or((false, String::new()), |value| (true, value.to_string()));
+    let (has_custom_scan_input, custom_scan_input) = setup
+        .custom_scan_input()
+        .map_or((false, String::new()), |value| (true, value.to_string()));
+    let (has_papyrus_log, papyrus_log) = setup
+        .papyrus_log()
+        .map_or((false, String::new()), |value| (true, value.to_string()));
+
+    ffi::GameSetupSettingsDto {
+        managed_game: setup.managed_game().as_str().to_string(),
+        managed_game_origin: preference_origin_token(setup.managed_game_origin()).to_string(),
+        game_version_selection: setup.game_version_selection().as_str().to_string(),
+        game_version_selection_origin: preference_origin_token(
+            setup.game_version_selection_origin(),
+        )
+        .to_string(),
+        has_game_root,
+        game_root,
+        game_root_origin: preference_origin_token(setup.game_root_origin()).to_string(),
+        has_game_executable,
+        game_executable,
+        game_executable_origin: preference_origin_token(setup.game_executable_origin()).to_string(),
+        has_documents_root,
+        documents_root,
+        documents_root_origin: preference_origin_token(setup.documents_root_origin()).to_string(),
+        has_ini_folder,
+        ini_folder,
+        ini_folder_origin: preference_origin_token(setup.ini_folder_origin()).to_string(),
+        has_mods_root,
+        mods_root,
+        mods_root_origin: preference_origin_token(setup.mods_root_origin()).to_string(),
+        has_custom_scan_input,
+        custom_scan_input,
+        custom_scan_input_origin: preference_origin_token(setup.custom_scan_input_origin())
+            .to_string(),
+        has_papyrus_log,
+        papyrus_log,
+        papyrus_log_origin: preference_origin_token(setup.papyrus_log_origin()).to_string(),
+        classification: document_classification_token(settings.classification()).to_string(),
+        revision: revision_token(settings.revision()),
+        commit_eligibility: commit_eligibility_token(settings.commit_eligibility()).to_string(),
+        diagnostics: settings
+            .diagnostics()
+            .iter()
+            .map(user_settings_diagnostic_dto)
+            .collect(),
+    }
+}
+
 /// Validates a caller-authored User Settings Update against the current on-disk snapshot
 /// and returns an all-or-nothing preview without persisting any changes.
 fn user_settings_preview_update(
@@ -209,15 +277,51 @@ fn user_settings_preview_update(
     }
 }
 
-/// Converts the CXX request DTO into the Rust-owned update builder without validating
-/// or normalizing domain values; validation remains in `UserSettings::preview_update`.
+/// Converts the CXX request DTO into the Rust-owned update builder without validation.
+///
+/// Raw domain strings remain unchanged so `UserSettings::preview_update` can validate
+/// every requested field in one pass and return all diagnostics together.
 fn core_user_settings_update(update: &ffi::UserSettingsUpdateDto) -> CoreUserSettingsUpdate {
     let mut core = CoreUserSettingsUpdate::new();
     if update.has_update_check {
         core = core.with_update_check(update.update_check);
     }
+    if update.has_managed_game {
+        core = core.with_managed_game(update.managed_game.clone());
+    }
     if update.has_game_version_selection {
         core = core.with_game_version_selection(update.game_version_selection.clone());
+    }
+    if update.has_game_root {
+        core = core.with_game_root(update.has_game_root_value.then(|| update.game_root.clone()));
+    }
+    if update.has_game_executable {
+        core = core.with_game_executable(
+            update
+                .has_game_executable_value
+                .then(|| update.game_executable.clone()),
+        );
+    }
+    if update.has_documents_root {
+        core = core.with_documents_root(
+            update
+                .has_documents_root_value
+                .then(|| update.documents_root.clone()),
+        );
+    }
+    if update.has_ini_folder {
+        core = core.with_ini_folder(
+            update
+                .has_ini_folder_value
+                .then(|| update.ini_folder.clone()),
+        );
+    }
+    if update.has_mods_folder {
+        core = core.with_mods_folder(
+            update
+                .has_mods_folder_value
+                .then(|| update.mods_folder.clone()),
+        );
     }
     if update.has_fcx_mode {
         core = core.with_fcx_mode(update.fcx_mode);
@@ -263,6 +367,13 @@ fn core_user_settings_update(update: &ffi::UserSettingsUpdateDto) -> CoreUserSet
                 .then(|| update.custom_scan_input.clone()),
         );
     }
+    if update.has_papyrus_log_path {
+        core = core.with_papyrus_log_path(
+            update
+                .has_papyrus_log_path_value
+                .then(|| update.papyrus_log_path.clone()),
+        );
+    }
     if update.has_max_concurrent_scans {
         core = core.with_max_concurrent_scans(update.max_concurrent_scans);
     }
@@ -300,13 +411,22 @@ fn user_settings_update_field_dto(
         | CoreUserSettingsUpdateField::MoveUnsolvedLogs(value) => {
             ("bool", *value, false, String::new(), 0)
         }
+        CoreUserSettingsUpdateField::ManagedGame(value) => {
+            ("string", false, true, value.as_str().to_string(), 0)
+        }
         CoreUserSettingsUpdateField::GameVersionSelection(value) => {
             ("string", false, true, value.as_str().to_string(), 0)
         }
         CoreUserSettingsUpdateField::FormIdDatabases(_) => {
             ("formid_databases", false, false, String::new(), 0)
         }
-        CoreUserSettingsUpdateField::UnsolvedLogsDestination(value)
+        CoreUserSettingsUpdateField::GameRoot(value)
+        | CoreUserSettingsUpdateField::GameExecutable(value)
+        | CoreUserSettingsUpdateField::DocumentsRoot(value)
+        | CoreUserSettingsUpdateField::IniFolder(value)
+        | CoreUserSettingsUpdateField::ModsFolder(value)
+        | CoreUserSettingsUpdateField::PapyrusLogPath(value)
+        | CoreUserSettingsUpdateField::UnsolvedLogsDestination(value)
         | CoreUserSettingsUpdateField::CustomScanInput(value) => (
             "optional_string",
             false,
@@ -923,6 +1043,42 @@ mod ffi {
         diagnostics: Vec<UserSettingsDiagnosticDto>,
     }
 
+    /// Preservation-aware Game Setup settings plus per-field source provenance.
+    ///
+    /// Optional path strings use explicit presence flags, remain byte-for-byte
+    /// unchanged from valid persisted YAML, and are never normalized by the bridge.
+    struct GameSetupSettingsDto {
+        managed_game: String,
+        managed_game_origin: String,
+        game_version_selection: String,
+        game_version_selection_origin: String,
+        has_game_root: bool,
+        game_root: String,
+        game_root_origin: String,
+        has_game_executable: bool,
+        game_executable: String,
+        game_executable_origin: String,
+        has_documents_root: bool,
+        documents_root: String,
+        documents_root_origin: String,
+        has_ini_folder: bool,
+        ini_folder: String,
+        ini_folder_origin: String,
+        has_mods_root: bool,
+        mods_root: String,
+        mods_root_origin: String,
+        has_custom_scan_input: bool,
+        custom_scan_input: String,
+        custom_scan_input_origin: String,
+        has_papyrus_log: bool,
+        papyrus_log: String,
+        papyrus_log_origin: String,
+        classification: String,
+        revision: String,
+        commit_eligibility: String,
+        diagnostics: Vec<UserSettingsDiagnosticDto>,
+    }
+
     /// Caller-authored multi-field User Settings Update request.
     ///
     /// Each `has_*` flag distinguishes an omitted field from a requested false,
@@ -931,8 +1087,28 @@ mod ffi {
     struct UserSettingsUpdateDto {
         has_update_check: bool,
         update_check: bool,
+        has_managed_game: bool,
+        managed_game: String,
         has_game_version_selection: bool,
         game_version_selection: String,
+        has_game_root: bool,
+        has_game_root_value: bool,
+        game_root: String,
+        has_game_executable: bool,
+        has_game_executable_value: bool,
+        game_executable: String,
+        has_documents_root: bool,
+        has_documents_root_value: bool,
+        documents_root: String,
+        has_ini_folder: bool,
+        has_ini_folder_value: bool,
+        ini_folder: String,
+        has_mods_folder: bool,
+        has_mods_folder_value: bool,
+        mods_folder: String,
+        has_papyrus_log_path: bool,
+        has_papyrus_log_path_value: bool,
+        papyrus_log_path: String,
         has_fcx_mode: bool,
         fcx_mode: bool,
         has_simplify_logs: bool,
@@ -1007,6 +1183,9 @@ mod ffi {
         fn user_settings_open_crash_log_scan_settings(
             classic_root: &str,
         ) -> CrashLogScanSettingsDto;
+
+        /// Open User Settings and return the complete typed Game Setup group.
+        fn user_settings_open_game_setup_settings(classic_root: &str) -> GameSetupSettingsDto;
 
         /// Validate a multi-field User Settings Update without writing to disk.
         fn user_settings_preview_update(

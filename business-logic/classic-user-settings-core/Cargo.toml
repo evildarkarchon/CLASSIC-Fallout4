@@ -11,6 +11,7 @@ repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 crate-type = ["rlib"]
 
 [dependencies]
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-settings-core = { path = "../classic-settings-core" }
 sha2 = { workspace = true }
 

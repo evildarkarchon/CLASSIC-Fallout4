@@ -1,5 +1,6 @@
 //! Behavioral checks for non-persisting User Settings Update previews.
 
+use classic_shared_core::GameId;
 use classic_user_settings_core::{
     GameVersionSelection, UserSettings, UserSettingsUpdate, UserSettingsUpdateField,
     UserSettingsUpdatePreview,
@@ -75,7 +76,14 @@ fn preview_rejects_all_requested_fields_as_one_unit_with_field_specific_diagnost
     let settings = UserSettings::open(root.path());
     let update = UserSettingsUpdate::new()
         .with_update_check(true)
+        .with_managed_game("Future Game")
         .with_game_version_selection("Future")
+        .with_game_root(Some("relative/game".to_string()))
+        .with_game_executable(Some("relative/game.exe".to_string()))
+        .with_documents_root(Some("relative/documents".to_string()))
+        .with_ini_folder(Some("relative/ini".to_string()))
+        .with_mods_folder(Some("relative/mods".to_string()))
+        .with_papyrus_log_path(Some("relative/Papyrus.0.log".to_string()))
         .with_max_concurrent_scans(-9);
 
     let preview = settings.preview_update(update);
@@ -90,8 +98,36 @@ fn preview_rejects_all_requested_fields_as_one_unit_with_field_specific_diagnost
             .collect::<Vec<_>>(),
         vec![
             (
+                Some("/CLASSIC_Settings/Managed Game"),
+                "invalid_enum_managed_game",
+            ),
+            (
                 Some("/CLASSIC_Settings/Game Version"),
                 "invalid_enum_game_version",
+            ),
+            (
+                Some("/CLASSIC_Settings/Game Folder Path"),
+                "invalid_path_game_root",
+            ),
+            (
+                Some("/CLASSIC_Settings/Game EXE Path"),
+                "invalid_path_game_executable",
+            ),
+            (
+                Some("/CLASSIC_Settings/Documents Folder Path"),
+                "invalid_path_documents_root",
+            ),
+            (
+                Some("/CLASSIC_Settings/INI Folder Path"),
+                "invalid_path_ini_folder",
+            ),
+            (
+                Some("/CLASSIC_Settings/MODS Folder Path"),
+                "invalid_path_mods_folder",
+            ),
+            (
+                Some("/CLASSIC_Settings/Papyrus Log Path"),
+                "invalid_path_papyrus_log",
             ),
             (
                 Some("/CLASSIC_Settings/Max Concurrent Scans"),
@@ -182,4 +218,58 @@ fn preview_rejects_an_untrusted_base_without_exposing_requested_fields() {
     assert_eq!(diagnostics[0].field_path(), None);
     assert_eq!(diagnostics[0].code(), "update_base_not_commit_eligible");
     assert_eq!(std::fs::read(path).unwrap(), bytes_before);
+}
+
+#[test]
+fn preview_carries_every_requested_game_setup_field_as_canonical_paths() {
+    let root = tempfile::tempdir().unwrap();
+    install_fixture(root.path(), "canonical_current_nested.yaml");
+    let settings = UserSettings::open(root.path());
+
+    let preview = settings.preview_update(
+        UserSettingsUpdate::new()
+            .with_managed_game("Skyrim")
+            .with_game_version_selection("AnniversaryEdition")
+            .with_game_root(Some("C:\\Games\\Skyrim".to_string()))
+            .with_game_executable(Some("C:\\Games\\Skyrim\\SkyrimSE.exe".to_string()))
+            .with_documents_root(Some("/home/deck/My Documents/My Games/Skyrim".to_string()))
+            .with_ini_folder(None)
+            .with_mods_folder(Some("D:/Mod Staging/Skyrim".to_string()))
+            .with_custom_scan_input(Some("D:/Crash Logs".to_string()))
+            .with_papyrus_log_path(Some("D:/Logs/Papyrus.0.log".to_string())),
+    );
+
+    let UserSettingsUpdatePreview::Accepted(accepted) = preview else {
+        panic!("valid Game Setup update should be accepted");
+    };
+    assert_eq!(
+        accepted
+            .fields()
+            .iter()
+            .map(UserSettingsUpdateField::canonical_path)
+            .collect::<Vec<_>>(),
+        vec![
+            "/CLASSIC_Settings/Managed Game",
+            "/CLASSIC_Settings/Game Version",
+            "/CLASSIC_Settings/Game Folder Path",
+            "/CLASSIC_Settings/Game EXE Path",
+            "/CLASSIC_Settings/Documents Folder Path",
+            "/CLASSIC_Settings/INI Folder Path",
+            "/CLASSIC_Settings/MODS Folder Path",
+            "/CLASSIC_Settings/SCAN Custom Path",
+            "/CLASSIC_Settings/Papyrus Log Path",
+        ]
+    );
+    assert!(matches!(
+        accepted.fields()[0],
+        UserSettingsUpdateField::ManagedGame(GameId::Skyrim)
+    ));
+    assert!(matches!(
+        accepted.fields()[2],
+        UserSettingsUpdateField::GameRoot(Some(ref path)) if path == "C:\\Games\\Skyrim"
+    ));
+    assert!(matches!(
+        accepted.fields()[5],
+        UserSettingsUpdateField::IniFolder(None)
+    ));
 }

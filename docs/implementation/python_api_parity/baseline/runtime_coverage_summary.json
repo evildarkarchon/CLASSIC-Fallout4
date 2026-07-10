@@ -1,16 +1,16 @@
 {
-  "generated_at_utc": "2026-07-10T00:18:04.297026+00:00",
+  "generated_at_utc": "2026-07-10T01:26:32.976436+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1322,
-    "runtime_verified_total": 1322,
+    "tracked_surface_total": 1361,
+    "runtime_verified_total": 1361,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 1158,
+    "tier1_contract_total": 1186,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -49,8 +49,8 @@
       "total": 36
     },
     "scangame": {
-      "runtime_verified": 164,
-      "total": 164
+      "runtime_verified": 167,
+      "total": 167
     },
     "scanlog": {
       "runtime_verified": 370,
@@ -69,8 +69,8 @@
       "total": 10
     },
     "user_settings": {
-      "runtime_verified": 73,
-      "total": 73
+      "runtime_verified": 109,
+      "total": 109
     },
     "version": {
       "runtime_verified": 15,
@@ -107,7 +107,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.diagnostic",
@@ -126,7 +126,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.document_classification",
@@ -145,7 +145,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.preference_origin",
@@ -164,7 +164,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.revision_type",
@@ -183,7 +183,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.source_type",
@@ -202,7 +202,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.source_location",
@@ -221,7 +221,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_preferences_type",
@@ -240,7 +240,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.snapshot_type",
@@ -259,7 +259,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.classification_accessor",
@@ -278,7 +278,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.diagnostic_code_accessor",
@@ -297,7 +297,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.commit_eligibility_accessor",
@@ -316,7 +316,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.diagnostics_accessor",
@@ -335,7 +335,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.location_accessor",
@@ -354,7 +354,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.diagnostic_message_accessor",
@@ -373,7 +373,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.open",
@@ -392,7 +392,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.original_bytes_accessor",
@@ -411,7 +411,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.path_accessor",
@@ -430,7 +430,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.revision_accessor",
@@ -449,7 +449,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.schema_version_accessor",
@@ -468,7 +468,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.source_accessor",
@@ -487,7 +487,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_check_accessor",
@@ -506,7 +506,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_check_origin_accessor",
@@ -525,7 +525,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_preferences_accessor",
@@ -544,7 +544,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.crash_log_scan_settings_type",
@@ -563,7 +563,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.game_version_selection_type",
@@ -582,7 +582,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.accepted_update_type",
@@ -601,7 +601,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_diagnostic_type",
@@ -620,7 +620,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_request_type",
@@ -639,7 +639,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_field_type",
@@ -658,7 +658,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_preview_type",
@@ -677,7 +677,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.crash_log_scan_settings_accessor",
@@ -696,7 +696,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_fcx_mode_accessor",
@@ -715,7 +715,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_fcx_mode_origin_accessor",
@@ -734,7 +734,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_simplify_logs_accessor",
@@ -753,7 +753,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_simplify_logs_origin_accessor",
@@ -772,7 +772,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_show_statistics_accessor",
@@ -791,7 +791,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_show_statistics_origin_accessor",
@@ -810,7 +810,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_formid_value_lookup_accessor",
@@ -829,7 +829,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_formid_value_lookup_origin_accessor",
@@ -848,7 +848,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_formid_databases_accessor",
@@ -867,7 +867,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_formid_databases_origin_accessor",
@@ -886,7 +886,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_move_unsolved_logs_accessor",
@@ -905,7 +905,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_move_unsolved_logs_origin_accessor",
@@ -924,7 +924,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_unsolved_logs_destination_accessor",
@@ -943,7 +943,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_unsolved_logs_destination_origin_accessor",
@@ -962,7 +962,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_custom_scan_input_accessor",
@@ -981,7 +981,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_custom_scan_input_origin_accessor",
@@ -1000,7 +1000,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_game_version_selection_accessor",
@@ -1019,7 +1019,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_game_version_selection_origin_accessor",
@@ -1038,7 +1038,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_max_concurrent_scans_accessor",
@@ -1057,7 +1057,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_max_concurrent_scans_origin_accessor",
@@ -1076,7 +1076,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.game_version_as_str",
@@ -1095,7 +1095,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.game_version_parse",
@@ -1114,7 +1114,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_new",
@@ -1133,7 +1133,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_update_check",
@@ -1152,7 +1152,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_game_version_selection",
@@ -1171,7 +1171,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_fcx_mode",
@@ -1190,7 +1190,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_simplify_logs",
@@ -1209,7 +1209,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_show_statistics",
@@ -1228,7 +1228,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_formid_value_lookup",
@@ -1247,7 +1247,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_formid_databases",
@@ -1266,7 +1266,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_move_unsolved_logs",
@@ -1285,7 +1285,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_unsolved_logs_destination",
@@ -1304,7 +1304,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_custom_scan_input",
@@ -1323,7 +1323,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_max_concurrent_scans",
@@ -1342,7 +1342,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.preview_update",
@@ -1361,7 +1361,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.accepted_base_revision_accessor",
@@ -1380,7 +1380,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.accepted_fields_accessor",
@@ -1399,7 +1399,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_field_canonical_path_accessor",
@@ -1418,7 +1418,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_diagnostic_field_path_accessor",
@@ -1437,7 +1437,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_diagnostic_code_accessor",
@@ -1456,7 +1456,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_diagnostic_message_accessor",
@@ -1475,7 +1475,520 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.game_setup_settings_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.game_setup_settings_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "GameSetupSettings",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.game_setup_settings_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.game_setup_settings_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_setup_settings",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_managed_game_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_managed_game_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "managed_game",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_managed_game_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_managed_game_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "managed_game_origin",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_game_version_selection_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_game_version_selection_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_version_selection",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_game_version_selection_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_game_version_selection_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_version_selection_origin",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_game_root_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_game_root_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_root",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_game_root_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_game_root_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_root_origin",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_game_executable_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_game_executable_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_executable",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_game_executable_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_game_executable_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_executable_origin",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_documents_root_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_documents_root_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "documents_root",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_documents_root_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_documents_root_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "documents_root_origin",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_ini_folder_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_ini_folder_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "ini_folder",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_ini_folder_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_ini_folder_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "ini_folder_origin",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_mods_root_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_mods_root_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "mods_root",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_mods_root_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_mods_root_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "mods_root_origin",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_custom_scan_input_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_custom_scan_input_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "custom_scan_input",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_custom_scan_input_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_custom_scan_input_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "custom_scan_input_origin",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_papyrus_log_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_papyrus_log_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "papyrus_log",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.setup_papyrus_log_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.setup_papyrus_log_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "papyrus_log_origin",
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_managed_game",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_managed_game",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_managed_game",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_managed_game",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_game_root",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_game_root",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_game_root",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_game_root",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_game_executable",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_game_executable",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_game_executable",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_game_executable",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_documents_root",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_documents_root",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_documents_root",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_documents_root",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_ini_folder",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_ini_folder",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_ini_folder",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_ini_folder",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_mods_folder",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_mods_folder",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_mods_folder",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_mods_folder",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_papyrus_log_path",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_papyrus_log_path",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_papyrus_log_path",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_papyrus_log_path",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:config-classic-config-class",
@@ -8672,7 +9185,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ba2.BA2Issues.has_issues",
@@ -8689,7 +9202,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ba2.BA2Issues.total_count",
@@ -8706,7 +9219,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ba2.BA2Scanner",
@@ -8723,7 +9236,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ba2.BA2Scanner.__init__",
@@ -8740,7 +9253,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ba2.BA2Scanner.find_ba2_files",
@@ -8757,7 +9270,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ba2.BA2Scanner.scan_archive",
@@ -8774,7 +9287,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ba2.BA2Scanner.scan_archives_batch",
@@ -8791,7 +9304,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ba2.scan_all_ba2_archives",
@@ -8808,7 +9321,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config.ConfigDuplicateDetector",
@@ -8825,7 +9338,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config.ConfigDuplicateDetector.__init__",
@@ -8842,7 +9355,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config.ConfigDuplicateDetector.detect_duplicates",
@@ -8859,7 +9372,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config.ConfigDuplicateDetector.get_duplicate_map",
@@ -8876,7 +9389,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config.DuplicateGroup",
@@ -8893,7 +9406,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config.detect_config_duplicates",
@@ -8910,7 +9423,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.DuplicateEntry",
@@ -8927,7 +9440,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.ModIniScanResult",
@@ -8944,7 +9457,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustConfigFileCache",
@@ -8961,7 +9474,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustConfigFileCache.__init__",
@@ -8978,7 +9491,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustConfigFileCache.config_files",
@@ -8995,7 +9508,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustConfigFileCache.contains",
@@ -9012,7 +9525,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustConfigFileCache.get_bool",
@@ -9029,7 +9542,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustConfigFileCache.get_duplicates",
@@ -9046,7 +9559,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustConfigFileCache.get_float",
@@ -9063,7 +9576,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustConfigFileCache.get_int",
@@ -9080,7 +9593,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustConfigFileCache.get_path",
@@ -9097,7 +9610,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustConfigFileCache.get_str",
@@ -9114,7 +9627,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustConfigFileCache.has_setting",
@@ -9131,7 +9644,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustModIniScanner",
@@ -9148,7 +9661,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustModIniScanner.__init__",
@@ -9165,7 +9678,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.RustModIniScanner.scan",
@@ -9182,7 +9695,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.VsyncEntry",
@@ -9199,7 +9712,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.config_cache.scan_mod_inis",
@@ -9216,7 +9729,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.crashgen_orchestrator.CrashgenCheckOrchestrator",
@@ -9233,7 +9746,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.crashgen_orchestrator.CrashgenCheckOrchestrator.__init__",
@@ -9250,7 +9763,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.crashgen_orchestrator.CrashgenCheckOrchestrator.check",
@@ -9267,7 +9780,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.crashgen_orchestrator.CrashgenCheckOrchestrator.detect_plugins",
@@ -9284,7 +9797,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.crashgen_orchestrator.CrashgenCheckOrchestrator.resolve_config_path",
@@ -9301,7 +9814,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.crashgen_orchestrator.CrashgenReport",
@@ -9318,7 +9831,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.crashgen_orchestrator.check_crashgen_settings",
@@ -9335,7 +9848,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.enb.EnbChecker",
@@ -9352,7 +9865,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.enb.EnbChecker.__init__",
@@ -9369,7 +9882,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.enb.EnbChecker.check_binaries",
@@ -9386,7 +9899,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.enb.EnbChecker.check_config",
@@ -9403,7 +9916,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.enb.EnbChecker.format_message",
@@ -9420,7 +9933,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.enb.EnbChecker.validate",
@@ -9437,7 +9950,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.enb.EnbConfigResult",
@@ -9454,7 +9967,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.enb.EnbResult",
@@ -9471,7 +9984,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.enb.EnbValidationResult",
@@ -9488,7 +10001,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.enb.EnbValidationResult.is_fully_configured",
@@ -9505,7 +10018,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.enb.EnbValidationResult.is_present",
@@ -9522,7 +10035,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.enb.check_enb",
@@ -9539,7 +10052,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.game_report.build_archived_report",
@@ -9556,7 +10069,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.game_report.build_combined_scan_report",
@@ -9573,7 +10086,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.game_report.build_unpacked_report",
@@ -9590,7 +10103,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.game_report.get_scan_issue_messages",
@@ -9607,7 +10120,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ini.ConfigIssue",
@@ -9624,7 +10137,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ini.IniValidator",
@@ -9641,7 +10154,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ini.IniValidator.__init__",
@@ -9658,7 +10171,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ini.IniValidator.detect_all_issues",
@@ -9675,7 +10188,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ini.IniValidator.validate_inis",
@@ -9692,7 +10205,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.ini.IssueSeverity",
@@ -9709,7 +10222,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.CheckType",
@@ -9726,7 +10239,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.CheckType.executable_version",
@@ -9743,7 +10256,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.CheckType.installation_location",
@@ -9760,7 +10273,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.CheckType.is_executable_version",
@@ -9777,7 +10290,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.CheckType.is_installation_location",
@@ -9794,7 +10307,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.GameIntegrityChecker",
@@ -9811,7 +10324,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.GameIntegrityChecker.__init__",
@@ -9828,7 +10341,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.GameIntegrityChecker.check_executable_version",
@@ -9845,7 +10358,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.GameIntegrityChecker.check_installation_location",
@@ -9862,7 +10375,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.GameIntegrityChecker.run_all_checks",
@@ -9879,7 +10392,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.GameIntegrityChecker.run_full_check",
@@ -9896,7 +10409,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.IntegrityCheckResult",
@@ -9913,7 +10426,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.IntegrityConfig",
@@ -9930,7 +10443,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.IntegrityConfig.__init__",
@@ -9947,7 +10460,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.IntegrityConfig.with_root_warn",
@@ -9964,7 +10477,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.integrity.IntegrityConfig.with_steam_ini",
@@ -9981,7 +10494,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.logs.LogErrorEntry",
@@ -9998,7 +10511,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.logs.LogProcessor",
@@ -10015,7 +10528,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.logs.LogProcessor.__init__",
@@ -10032,7 +10545,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.logs.LogProcessor.process_logs",
@@ -10049,7 +10562,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.logs.process_logs",
@@ -10066,7 +10579,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.orchestrator.CheckResult",
@@ -10083,7 +10596,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.orchestrator.GameScanConfig",
@@ -10100,7 +10613,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.orchestrator.GameScanConfig.__init__",
@@ -10117,7 +10630,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.orchestrator.GameScanOrchestrator",
@@ -10134,7 +10647,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.orchestrator.GameScanOrchestrator.__init__",
@@ -10151,7 +10664,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.orchestrator.GameScanOrchestrator.run_full_scan",
@@ -10168,7 +10681,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.orchestrator.GameScanOrchestrator.run_game_checks",
@@ -10185,7 +10698,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.orchestrator.GameScanOrchestrator.run_mod_scans",
@@ -10202,7 +10715,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.orchestrator.GameScanResult",
@@ -10219,7 +10732,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.orchestrator.ModScanResult",
@@ -10236,7 +10749,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.toml_check.CrashgenChecker",
@@ -10253,7 +10766,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.toml_check.CrashgenChecker.__init__",
@@ -10270,7 +10783,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.toml_check.CrashgenChecker.check",
@@ -10287,7 +10800,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.toml_check.TomlConfigIssue",
@@ -10304,7 +10817,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.toml_check.TomlIssueSeverity",
@@ -10321,7 +10834,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.toml_check.check_crashgen_config",
@@ -10338,7 +10851,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.unpacked.UnpackedIssues",
@@ -10355,7 +10868,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.unpacked.UnpackedIssues.has_issues",
@@ -10372,7 +10885,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.unpacked.UnpackedIssues.total_count",
@@ -10389,7 +10902,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.unpacked.UnpackedScanner",
@@ -10406,7 +10919,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.unpacked.UnpackedScanner.__init__",
@@ -10423,7 +10936,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.unpacked.UnpackedScanner.scan_directory",
@@ -10440,7 +10953,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.unpacked.scan_unpacked_files",
@@ -10457,7 +10970,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.wrye.WryeBashParser",
@@ -10474,7 +10987,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.wrye.WryeBashParser.__init__",
@@ -10491,7 +11004,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.wrye.WryeBashParser.format_report",
@@ -10508,7 +11021,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.wrye.WryeBashParser.parse",
@@ -10525,7 +11038,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.wrye.WryeIssue",
@@ -10542,7 +11055,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.wrye.WryeSeverity",
@@ -10559,7 +11072,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.wrye.parse_wrye_report",
@@ -10576,7 +11089,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.AddressLibInfo",
@@ -10593,7 +11106,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.AddressLibInfo.next_gen",
@@ -10610,7 +11123,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.AddressLibInfo.original",
@@ -10627,7 +11140,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.AddressLibInfo.vr",
@@ -10644,7 +11157,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.BA2Error@rust",
@@ -10661,7 +11174,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.CachedConfigFile@rust",
@@ -10678,7 +11191,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.ConfigCacheError@rust",
@@ -10695,7 +11208,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.ConfigFileCache@rust",
@@ -10712,7 +11225,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.CrashgenOrchestratorError@rust",
@@ -10729,7 +11242,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.EnbError@rust",
@@ -10746,7 +11259,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.GameVersion",
@@ -10763,7 +11276,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.IniError@rust",
@@ -10780,7 +11293,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.IntegrityError@rust",
@@ -10797,7 +11310,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.LogError@rust",
@@ -10814,7 +11327,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.ModIniScanner@rust",
@@ -10831,7 +11344,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.OrchestratorError@rust",
@@ -10848,7 +11361,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.ScanGameError@rust",
@@ -10865,7 +11378,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.ScanReportBuilder@rust",
@@ -10882,7 +11395,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.ScanValidators@rust",
@@ -10899,7 +11412,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.TomlError@rust",
@@ -10916,7 +11429,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.UnpackedError@rust",
@@ -10933,7 +11446,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.VERSION@rust",
@@ -10950,7 +11463,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.ValidationResult",
@@ -10967,7 +11480,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.WryeError@rust",
@@ -10984,7 +11497,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.XseChecker",
@@ -11001,7 +11514,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.XseChecker.__init__",
@@ -11018,7 +11531,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.XseChecker.check",
@@ -11035,7 +11548,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.XseChecker.validate",
@@ -11052,7 +11565,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.XseError@rust",
@@ -11069,7 +11582,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.ba2@rust",
@@ -11086,7 +11599,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.check_xse_plugins",
@@ -11103,7 +11616,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.config_cache@rust",
@@ -11120,7 +11633,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.crashgen_orchestrator@rust",
@@ -11137,7 +11650,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.detect_config_issues@rust",
@@ -11154,7 +11667,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.enb@rust",
@@ -11171,7 +11684,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.ini@rust",
@@ -11188,7 +11701,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.integrity@rust",
@@ -11205,7 +11718,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.logs@rust",
@@ -11222,7 +11735,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.mod_ini@rust",
@@ -11239,7 +11752,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.toml@rust",
@@ -11256,7 +11769,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.unpacked@rust",
@@ -11273,7 +11786,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.wrye@rust",
@@ -11290,7 +11803,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.xse.xse@rust",
@@ -11307,7 +11820,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scanlog-analysis-config-class",
@@ -20961,7 +21474,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.setup.GameSetupIntake.__init__",
@@ -20978,7 +21491,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.setup.GameSetupCheck",
@@ -20995,7 +21508,24 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
+    },
+    {
+      "trackedId": "contract:scangame.setup.GameSetupPathUpdate",
+      "trackedType": "contract_row",
+      "contractId": "scangame.setup.GameSetupPathUpdate",
+      "ownerModule": "scangame",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "GameSetupPathUpdate",
+      "bindingIdentifier": "classic_scangame.GameSetupPathUpdate",
+      "coverageId": "python-tier1-scangame",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "scangame-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.setup.GameSetupIntakeResult",
@@ -21012,7 +21542,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.setup.GameSetupIntakeResult.combined",
@@ -21029,7 +21559,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.setup.run_game_setup_intake",
@@ -21046,7 +21576,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.setup.game_setup_needs_path_detection",
@@ -21063,7 +21593,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "trackedId": "contract:scangame.setup.normalize_game_setup_version_selection",
@@ -21080,7 +21610,196 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.GameSetupSettings",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.GameSetupSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.UserSettingsSnapshot.game_setup_settings",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot.game_setup_settings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_managed_game",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_managed_game",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_game_root",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_game_root",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_game_executable",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_game_executable",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_documents_root",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_documents_root",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_ini_folder",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_ini_folder",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_mods_folder",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_mods_folder",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_papyrus_log_path",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_papyrus_log_path",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "binding:classic_config.ClassicConfig.__init__",
@@ -24197,6 +24916,44 @@
       "owner": null,
       "deferReason": null,
       "notes": null
+    },
+    {
+      "trackedId": "binding:classic_scangame.GameSetupPathUpdate",
+      "trackedType": "registry_only",
+      "ownerModule": "scangame",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scangame.GameSetupPathUpdate",
+      "coverageId": "python-tier1-scangame",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "scangame-residuals-smoke",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
+    },
+    {
+      "trackedId": "binding:classic_scangame.GameSetupIntakeResult.path_updates",
+      "trackedType": "registry_only",
+      "ownerModule": "scangame",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scangame.GameSetupIntakeResult.path_updates",
+      "coverageId": "python-tier1-scangame",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "scangame-residuals-smoke",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     }
   ]
 }

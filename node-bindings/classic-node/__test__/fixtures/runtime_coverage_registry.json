@@ -11,8 +11,8 @@
         "ownerModule": "user_settings",
         "tier": "tier1"
       },
-      "contractCount": 73,
-      "contractIdsHash": "4de4c6b1e185b5334baef28adc84aa354d6036081b2d91fde540147e5a16e6da",
+      "contractCount": 100,
+      "contractIdsHash": "01fc7d97b8c9c65b029605c12bfc13783ac623b4bb0293be5dfa5b44848c40a5",
       "verificationMode": "direct_call",
       "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
       "testCaseId": "user-settings-public-runtime",
@@ -325,8 +325,8 @@
         "ownerModule": "scangame",
         "tier": "tier1"
       },
-      "contractCount": 75,
-      "contractIdsHash": "c8b40903c2015ff77f579831897f0c2461b0eaf4f9277f844ca619f3e72feb3c",
+      "contractCount": 76,
+      "contractIdsHash": "4c4e2a6ea2a5a2dab38c2d0bd28efefbe868c84c0ef0b581ddaa263ee08c46c5",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "scangame-tier1-parity",

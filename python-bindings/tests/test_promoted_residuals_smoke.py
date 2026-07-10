@@ -925,7 +925,7 @@ def test_scangame_game_setup_intake_helpers_smoke() -> None:
         intake = classic_scangame.GameSetupIntake(
             "Fallout4",
             "auto",
-            str(game_root),
+            None,
             str(docs_root),
             None,
             str(configured_exe),
@@ -938,6 +938,11 @@ def test_scangame_game_setup_intake_helpers_smoke() -> None:
     assert not result.has_errors
     assert result.action_count >= 1
     assert result.total_checks == len(result.checks)
+    assert result.path_update_count == len(result.path_updates) == 1
+    assert [(update.kind, str(update.path)) for update in result.path_updates] == [
+        ("game_root", str(game_root))
+    ]
+    assert isinstance(result.path_updates[0], classic_scangame.GameSetupPathUpdate)
     assert result.combined() == result.rendered_report
     assert "Resolved game root from configured executable" in result.rendered_report
 

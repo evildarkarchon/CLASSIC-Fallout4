@@ -361,6 +361,7 @@ Bridge DTO shape:
 - `failed_checks`
 - `action_count`
 - `path_update_count`
+- `path_updates: Vec<GameSetupPathUpdateDto>` with ordered `kind` and `path` proposals; UTF-8-representable paths are exact, while other native paths follow the CXX bridge's established lossy string conversion
 - `game_root`
 - `docs_root`
 
@@ -427,7 +428,7 @@ Those DTOs still flatten the underlying Rust models heavily.
 
 ## 3. Rendered text plus typed setup DTOs
 
-`classic::scangame::run_game_setup_intake()` returns Rust-rendered report text plus summary counts.
+`classic::scangame::run_game_setup_intake()` returns Rust-rendered report text, summary counts, and ordered typed path proposals for caller review. UTF-8-representable paths cross exactly; other native paths use the CXX bridge's established lossy string transport. Returning a proposal does not preview or persist User Settings.
 
 `classic::scangame::game_setup_intake_checks()` exposes typed check records for callers that need structured state and propagates intake setup errors.
 

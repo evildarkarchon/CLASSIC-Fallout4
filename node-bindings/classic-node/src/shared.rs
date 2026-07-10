@@ -32,7 +32,8 @@ pub enum JsGameId {
     Starfield,
 }
 
-fn js_to_core_game_id(id: &JsGameId) -> GameId {
+/// Converts the public JavaScript game enum into the shared core identifier.
+pub(crate) fn js_to_core_game_id(id: &JsGameId) -> GameId {
     match id {
         JsGameId::Fallout4 => GameId::Fallout4,
         JsGameId::Fallout4Vr => GameId::Fallout4VR,
@@ -41,7 +42,8 @@ fn js_to_core_game_id(id: &JsGameId) -> GameId {
     }
 }
 
-fn core_to_js_game_id(id: &GameId) -> JsGameId {
+/// Converts a shared core game identifier into the public JavaScript enum.
+pub(crate) fn core_to_js_game_id(id: &GameId) -> JsGameId {
     match id {
         GameId::Fallout4 => JsGameId::Fallout4,
         GameId::Fallout4VR => JsGameId::Fallout4Vr,

@@ -11,6 +11,7 @@ use classic_config_core::ClassicConfig;
 use classic_file_io_core::FileHasher;
 use classic_path_core::{DocsPathFinder, GamePathFinder};
 use classic_shared_core::GameId;
+use classic_user_settings_core::GameSetupSettings;
 use classic_version_core::extract_pe_version;
 use classic_version_registry_core::{
     GameVersion as RegistryGameVersion, MatchConfidence, VersionInfo, VersionRegistry,
@@ -275,6 +276,9 @@ impl GameSetupIntake {
 
     /// Build a Game Setup Intake request from saved CLASSIC configuration.
     ///
+    /// This remains a transitional expand-phase adapter while maintained callers move to
+    /// [`Self::from_user_settings`]. New callers should prefer the typed User Settings group.
+    ///
     /// Returns `None` when the saved config has no game root, because setup
     /// intake cannot infer the game identity-specific root from config alone.
     /// When both `docs_root` and legacy `ini_folder` are present, `docs_root`
@@ -296,6 +300,28 @@ impl GameSetupIntake {
             intake = intake.with_docs_root(docs_root.clone());
         }
         Some(intake)
+    }
+
+    /// Prepares Game Setup Intake from an already-opened typed User Settings group.
+    ///
+    /// This adapter performs no settings discovery, mutation, or persistence. The typed
+    /// documents root has already applied canonical-before-INI alias precedence.
+    #[must_use]
+    pub fn from_user_settings(settings: &GameSetupSettings) -> Self {
+        let mut intake = Self::new(
+            settings.managed_game(),
+            settings.game_version_selection().as_str(),
+        );
+        if let Some(path) = settings.game_root() {
+            intake = intake.with_game_root(path);
+        }
+        if let Some(path) = settings.game_executable() {
+            intake = intake.with_game_exe_path(path);
+        }
+        if let Some(path) = settings.documents_root() {
+            intake = intake.with_docs_root(path);
+        }
+        intake
     }
 
     /// Set a saved or caller-provided game root.

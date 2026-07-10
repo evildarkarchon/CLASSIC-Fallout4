@@ -63,6 +63,7 @@ fn run_game_setup_intake(
             failed_checks: 0,
             action_count: 0,
             path_update_count: 0,
+            path_updates: Vec::new(),
             game_root: String::new(),
             docs_root: String::new(),
         },
@@ -140,10 +141,22 @@ fn execute_game_setup_intake(
     Ok(intake.run())
 }
 
+/// Converts a core intake result into the CXX DTO without changing proposal order.
+///
+/// `path_update_count` is derived from the emitted proposal vector. Paths cross the
+/// string-only CXX boundary with the bridge's existing lossy non-UTF-8 convention.
 fn game_setup_result_to_dto(result: GameSetupIntakeResult) -> ffi::GameSetupIntakeDto {
     let has_errors = result.has_errors();
     let total_checks = result.total_checks() as u32;
     let failed_checks = result.failed_checks() as u32;
+    let path_updates = result
+        .path_updates
+        .iter()
+        .map(|update| ffi::GameSetupPathUpdateDto {
+            kind: update.kind.clone(),
+            path: update.path.to_string_lossy().into_owned(),
+        })
+        .collect::<Vec<_>>();
     ffi::GameSetupIntakeDto {
         rendered_report: result.rendered_report,
         status: result.status.as_str().to_string(),
@@ -151,7 +164,8 @@ fn game_setup_result_to_dto(result: GameSetupIntakeResult) -> ffi::GameSetupInta
         total_checks,
         failed_checks,
         action_count: result.actions.len() as u32,
-        path_update_count: result.path_updates.len() as u32,
+        path_update_count: path_updates.len() as u32,
+        path_updates,
         game_root: result
             .paths
             .game_root
@@ -616,6 +630,17 @@ fn crashgen_orchestrator_get_installed_plugins(
 #[cxx::bridge(namespace = "classic::scangame")]
 mod ffi {
     // ── Game Setup Intake DTOs ───────────────────────────────────────────────
+    /// One caller-consent-gated path proposal discovered by Game Setup Intake.
+    struct GameSetupPathUpdateDto {
+        kind: String,
+        path: String,
+    }
+
+    /// Flattened Game Setup result with ordered consent-gated path proposals.
+    ///
+    /// `path_update_count` remains as a compatibility summary and always equals
+    /// `path_updates.len()`. UTF-8-representable paths are exact; other native path
+    /// values follow the bridge's established lossy string conversion.
     struct GameSetupIntakeDto {
         rendered_report: String,
         status: String,
@@ -624,6 +649,7 @@ mod ffi {
         failed_checks: u32,
         action_count: u32,
         path_update_count: u32,
+        path_updates: Vec<GameSetupPathUpdateDto>,
         game_root: String,
         docs_root: String,
     }

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T00:12:20Z",
+  "generated_at_utc": "2026-07-10T01:19:21Z",
   "schema_version": 1,
   "entries": [
     {
@@ -3872,6 +3872,10 @@
           "type": "u32"
         },
         {
+          "name": "path_updates",
+          "type": "Vec<GameSetupPathUpdateDto>"
+        },
+        {
           "name": "game_root",
           "type": "String"
         },
@@ -3896,6 +3900,24 @@
         {
           "name": "needs_docs_path",
           "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "6c105c01ea5f0d3c",
+      "rustSymbol": "GameSetupPathUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "path",
+          "type": "String"
         }
       ]
     },
@@ -5336,6 +5358,23 @@
       }
     },
     {
+      "id": "be7beecfe544998c",
+      "rustSymbol": "user_settings_open_game_setup_settings",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          }
+        ],
+        "returnType": "GameSetupSettingsDto"
+      }
+    },
+    {
       "id": "ba33f05b060305af",
       "rustSymbol": "user_settings_open_update_preferences",
       "kind": "function",
@@ -5879,6 +5918,132 @@
       ]
     },
     {
+      "id": "5bf9e83ee7c33813",
+      "rustSymbol": "GameSetupSettingsDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "managed_game",
+          "type": "String"
+        },
+        {
+          "name": "managed_game_origin",
+          "type": "String"
+        },
+        {
+          "name": "game_version_selection",
+          "type": "String"
+        },
+        {
+          "name": "game_version_selection_origin",
+          "type": "String"
+        },
+        {
+          "name": "has_game_root",
+          "type": "bool"
+        },
+        {
+          "name": "game_root",
+          "type": "String"
+        },
+        {
+          "name": "game_root_origin",
+          "type": "String"
+        },
+        {
+          "name": "has_game_executable",
+          "type": "bool"
+        },
+        {
+          "name": "game_executable",
+          "type": "String"
+        },
+        {
+          "name": "game_executable_origin",
+          "type": "String"
+        },
+        {
+          "name": "has_documents_root",
+          "type": "bool"
+        },
+        {
+          "name": "documents_root",
+          "type": "String"
+        },
+        {
+          "name": "documents_root_origin",
+          "type": "String"
+        },
+        {
+          "name": "has_ini_folder",
+          "type": "bool"
+        },
+        {
+          "name": "ini_folder",
+          "type": "String"
+        },
+        {
+          "name": "ini_folder_origin",
+          "type": "String"
+        },
+        {
+          "name": "has_mods_root",
+          "type": "bool"
+        },
+        {
+          "name": "mods_root",
+          "type": "String"
+        },
+        {
+          "name": "mods_root_origin",
+          "type": "String"
+        },
+        {
+          "name": "has_custom_scan_input",
+          "type": "bool"
+        },
+        {
+          "name": "custom_scan_input",
+          "type": "String"
+        },
+        {
+          "name": "custom_scan_input_origin",
+          "type": "String"
+        },
+        {
+          "name": "has_papyrus_log",
+          "type": "bool"
+        },
+        {
+          "name": "papyrus_log",
+          "type": "String"
+        },
+        {
+          "name": "papyrus_log_origin",
+          "type": "String"
+        },
+        {
+          "name": "classification",
+          "type": "String"
+        },
+        {
+          "name": "revision",
+          "type": "String"
+        },
+        {
+          "name": "commit_eligibility",
+          "type": "String"
+        },
+        {
+          "name": "diagnostics",
+          "type": "Vec<UserSettingsDiagnosticDto>"
+        }
+      ]
+    },
+    {
       "id": "310d1c205c55a783",
       "rustSymbol": "SettingsCacheStats",
       "kind": "struct",
@@ -6079,11 +6244,91 @@
           "type": "bool"
         },
         {
+          "name": "has_managed_game",
+          "type": "bool"
+        },
+        {
+          "name": "managed_game",
+          "type": "String"
+        },
+        {
           "name": "has_game_version_selection",
           "type": "bool"
         },
         {
           "name": "game_version_selection",
+          "type": "String"
+        },
+        {
+          "name": "has_game_root",
+          "type": "bool"
+        },
+        {
+          "name": "has_game_root_value",
+          "type": "bool"
+        },
+        {
+          "name": "game_root",
+          "type": "String"
+        },
+        {
+          "name": "has_game_executable",
+          "type": "bool"
+        },
+        {
+          "name": "has_game_executable_value",
+          "type": "bool"
+        },
+        {
+          "name": "game_executable",
+          "type": "String"
+        },
+        {
+          "name": "has_documents_root",
+          "type": "bool"
+        },
+        {
+          "name": "has_documents_root_value",
+          "type": "bool"
+        },
+        {
+          "name": "documents_root",
+          "type": "String"
+        },
+        {
+          "name": "has_ini_folder",
+          "type": "bool"
+        },
+        {
+          "name": "has_ini_folder_value",
+          "type": "bool"
+        },
+        {
+          "name": "ini_folder",
+          "type": "String"
+        },
+        {
+          "name": "has_mods_folder",
+          "type": "bool"
+        },
+        {
+          "name": "has_mods_folder_value",
+          "type": "bool"
+        },
+        {
+          "name": "mods_folder",
+          "type": "String"
+        },
+        {
+          "name": "has_papyrus_log_path",
+          "type": "bool"
+        },
+        {
+          "name": "has_papyrus_log_path_value",
+          "type": "bool"
+        },
+        {
+          "name": "papyrus_log_path",
           "type": "String"
         },
         {

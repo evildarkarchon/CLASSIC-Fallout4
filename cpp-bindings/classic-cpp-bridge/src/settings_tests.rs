@@ -414,8 +414,28 @@ fn empty_user_settings_update() -> ffi::UserSettingsUpdateDto {
     ffi::UserSettingsUpdateDto {
         has_update_check: false,
         update_check: false,
+        has_managed_game: false,
+        managed_game: String::new(),
         has_game_version_selection: false,
         game_version_selection: String::new(),
+        has_game_root: false,
+        has_game_root_value: false,
+        game_root: String::new(),
+        has_game_executable: false,
+        has_game_executable_value: false,
+        game_executable: String::new(),
+        has_documents_root: false,
+        has_documents_root_value: false,
+        documents_root: String::new(),
+        has_ini_folder: false,
+        has_ini_folder_value: false,
+        ini_folder: String::new(),
+        has_mods_folder: false,
+        has_mods_folder_value: false,
+        mods_folder: String::new(),
+        has_papyrus_log_path: false,
+        has_papyrus_log_path_value: false,
+        papyrus_log_path: String::new(),
         has_fcx_mode: false,
         fcx_mode: false,
         has_simplify_logs: false,
@@ -438,6 +458,80 @@ fn empty_user_settings_update() -> ffi::UserSettingsUpdateDto {
         has_max_concurrent_scans: false,
         max_concurrent_scans: 0,
     }
+}
+
+#[test]
+fn test_user_settings_game_setup_snapshot_preserves_paths_origins_and_alias_diagnostics() {
+    let root = tempfile::tempdir().unwrap();
+    let content = concat!(
+        "schema_version: \"1.0\"\n",
+        "CLASSIC_Settings:\n",
+        "  Managed Game: Fallout4VR\n",
+        "  Game Version: VR\n",
+        "  Game Folder Path: 'C:\\Games\\Fallout 4 VR'\n",
+        "  Game EXE Path: D:/Games/Fallout4VR.exe\n",
+        "  Documents Folder Path: C:/Users/Test/Documents/My Games/Fallout4VR\n",
+        "  INI Folder Path: C:/Users/Test/Documents/My Games/Fallout4VR\n",
+        "  MODS Folder Path: E:/Canonical Mods\n",
+        "  Staging Mods Folder: F:/Legacy Mods Alias\n",
+        "  SCAN Custom Path: G:/Canonical Crash Logs\n",
+        "  Custom Scan Folder: H:/Legacy Scan Alias\n",
+        "  Papyrus Log Path: C:/Users/Test/Documents/My Games/Fallout4VR/Logs/Script/Papyrus.0.log\n",
+    );
+    std::fs::write(root.path().join("CLASSIC Settings.yaml"), content).unwrap();
+
+    let snapshot = user_settings_open_game_setup_settings(&root.path().display().to_string());
+
+    assert_eq!(snapshot.managed_game, "Fallout4VR");
+    assert_eq!(snapshot.managed_game_origin, "document");
+    assert_eq!(snapshot.game_version_selection, "VR");
+    assert_eq!(snapshot.game_version_selection_origin, "document");
+    assert!(snapshot.has_game_root);
+    assert_eq!(snapshot.game_root, r"C:\Games\Fallout 4 VR");
+    assert_eq!(snapshot.game_root_origin, "document");
+    assert!(snapshot.has_game_executable);
+    assert_eq!(snapshot.game_executable, "D:/Games/Fallout4VR.exe");
+    assert_eq!(snapshot.game_executable_origin, "document");
+    assert!(snapshot.has_documents_root);
+    assert_eq!(
+        snapshot.documents_root,
+        "C:/Users/Test/Documents/My Games/Fallout4VR"
+    );
+    assert_eq!(snapshot.documents_root_origin, "document");
+    assert!(snapshot.has_ini_folder);
+    assert_eq!(
+        snapshot.ini_folder,
+        "C:/Users/Test/Documents/My Games/Fallout4VR"
+    );
+    assert_eq!(snapshot.ini_folder_origin, "document");
+    assert!(snapshot.has_mods_root);
+    assert_eq!(snapshot.mods_root, "E:/Canonical Mods");
+    assert_eq!(snapshot.mods_root_origin, "document");
+    assert!(snapshot.has_custom_scan_input);
+    assert_eq!(snapshot.custom_scan_input, "G:/Canonical Crash Logs");
+    assert_eq!(snapshot.custom_scan_input_origin, "document");
+    assert!(snapshot.has_papyrus_log);
+    assert_eq!(
+        snapshot.papyrus_log,
+        "C:/Users/Test/Documents/My Games/Fallout4VR/Logs/Script/Papyrus.0.log"
+    );
+    assert_eq!(snapshot.papyrus_log_origin, "document");
+    assert_eq!(snapshot.classification, "current");
+    assert_eq!(snapshot.commit_eligibility, "eligible");
+    assert!(snapshot.revision.starts_with("sha256:"));
+    let diagnostic_codes = snapshot
+        .diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.code.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        diagnostic_codes,
+        vec![
+            "canonical_alias_conflict_mods_folder",
+            "canonical_alias_conflict_custom_scan_folder",
+        ],
+        "Game Setup diagnostics must precede shared Crash Log Scan diagnostics"
+    );
 }
 
 #[test]
@@ -495,6 +589,79 @@ fn test_user_settings_crash_log_scan_snapshot_is_typed_and_preserves_origins() {
     assert_eq!(
         snapshot.diagnostics[0].code,
         "canonical_alias_conflict_custom_scan_folder"
+    );
+}
+
+#[test]
+fn test_user_settings_update_preview_maps_all_game_setup_fields() {
+    let root = tempfile::tempdir().unwrap();
+    let content = "schema_version: \"1.0\"\nCLASSIC_Settings: {}\n";
+    std::fs::write(root.path().join("CLASSIC Settings.yaml"), content).unwrap();
+    let mut update = empty_user_settings_update();
+    update.has_managed_game = true;
+    update.managed_game = "Fallout4VR".to_string();
+    update.has_game_root = true;
+    update.has_game_root_value = true;
+    update.game_root = r"C:\Games\Fallout 4 VR".to_string();
+    update.has_game_executable = true;
+    update.has_game_executable_value = true;
+    update.game_executable = "D:/Games/Fallout4VR.exe".to_string();
+    update.has_documents_root = true;
+    update.has_documents_root_value = true;
+    update.documents_root = "C:/Users/Test/Documents/My Games/Fallout4VR".to_string();
+    update.has_ini_folder = true;
+    update.has_ini_folder_value = true;
+    update.ini_folder = "C:/Users/Test/Documents/My Games/Fallout4VR".to_string();
+    update.has_mods_folder = true;
+    update.has_mods_folder_value = true;
+    update.mods_folder = "E:/Mod Staging/Fallout4VR".to_string();
+    update.has_papyrus_log_path = true;
+    update.has_papyrus_log_path_value = true;
+    update.papyrus_log_path =
+        "C:/Users/Test/Documents/My Games/Fallout4VR/Logs/Script/Papyrus.0.log".to_string();
+
+    let preview = user_settings_preview_update(&root.path().display().to_string(), &update);
+
+    assert!(preview.accepted);
+    assert!(preview.diagnostics.is_empty());
+    assert_eq!(
+        preview
+            .accepted_fields
+            .iter()
+            .map(|field| (field.field_path.as_str(), field.value_kind.as_str()))
+            .collect::<Vec<_>>(),
+        vec![
+            ("/CLASSIC_Settings/Managed Game", "string"),
+            ("/CLASSIC_Settings/Game Folder Path", "optional_string"),
+            ("/CLASSIC_Settings/Game EXE Path", "optional_string"),
+            ("/CLASSIC_Settings/Documents Folder Path", "optional_string"),
+            ("/CLASSIC_Settings/INI Folder Path", "optional_string"),
+            ("/CLASSIC_Settings/MODS Folder Path", "optional_string"),
+            ("/CLASSIC_Settings/Papyrus Log Path", "optional_string"),
+        ]
+    );
+    assert_eq!(preview.accepted_fields[0].string_value, "Fallout4VR");
+    assert_eq!(
+        preview
+            .accepted_fields
+            .iter()
+            .skip(1)
+            .map(|field| field.string_value.as_str())
+            .collect::<Vec<_>>(),
+        vec![
+            r"C:\Games\Fallout 4 VR",
+            "D:/Games/Fallout4VR.exe",
+            "C:/Users/Test/Documents/My Games/Fallout4VR",
+            "C:/Users/Test/Documents/My Games/Fallout4VR",
+            "E:/Mod Staging/Fallout4VR",
+            "C:/Users/Test/Documents/My Games/Fallout4VR/Logs/Script/Papyrus.0.log",
+        ]
+    );
+    assert!(
+        preview
+            .accepted_fields
+            .iter()
+            .all(|field| field.has_string_value)
     );
 }
 

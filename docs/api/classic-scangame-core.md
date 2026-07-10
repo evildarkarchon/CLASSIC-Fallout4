@@ -242,6 +242,7 @@ This module owns read-only setup intake for supported game installs.
 Important items:
 
 - `GameSetupIntake::new(game_id, selected_game_version)`
+- `GameSetupIntake::from_user_settings(game_setup_settings)`
 - `GameSetupIntake::from_config(config, game_id)`
 - `GameSetupIntake::with_game_root(path)`
 - `GameSetupIntake::with_game_exe_path(path)`
@@ -264,6 +265,7 @@ Important items:
 Behavior worth knowing:
 
 - Game Setup Intake is read-only; detected paths are returned as proposed updates instead of being persisted.
+- `from_user_settings(game_setup_settings)` copies typed facts from an already-opened snapshot, performs no settings I/O, and consumes the effective documents root after User Settings has applied canonical-before-INI alias precedence.
 - `auto` mode reads executable PE version metadata and attempts a Version Registry match.
 - a caller-provided executable path is used for root fallback, auto-version detection, executable version checks, hash checks, and installation-location checks.
 - `from_config(config, game_id)` returns `None` when no saved game root exists and uses `docs_root` before falling back to legacy `ini_folder`.
@@ -481,7 +483,7 @@ Crashgen TOML flow in more detail:
 
 Game Setup Intake flow:
 
-1. Build `GameSetupIntake` with a `GameId`, selected version, and any saved paths, or use `GameSetupIntake::from_config(config, game_id)` for saved CLASSIC config.
+1. Build `GameSetupIntake` with a `GameId`, selected version, and any saved paths; use `GameSetupIntake::from_user_settings(group)` for typed User Settings, or retain `from_config(config, game_id)` only as the transitional ClassicConfig adapter.
 2. Call `run()`.
 3. The crate resolves paths, registry metadata, executable facts, documents diagnostics, and XSE setup diagnostics.
 4. Callers use `rendered_report` for text display and `checks` for structured UI/status handling.

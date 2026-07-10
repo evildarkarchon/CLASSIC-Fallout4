@@ -155,7 +155,8 @@ def test_user_settings_scan_snapshot_exposes_typed_values_and_alias_policy(
     conflict = classic_user_settings.open_user_settings(str(conflict_root))
     assert conflict.crash_log_scan_settings.custom_scan_input == "D:/Canonical Crash Logs"
     assert [diagnostic.code for diagnostic in conflict.diagnostics] == [
-        "canonical_alias_conflict_custom_scan_folder"
+        "canonical_alias_conflict_mods_folder",
+        "canonical_alias_conflict_custom_scan_folder",
     ]
     assert conflict_path.read_bytes() == conflict_bytes
 
@@ -180,6 +181,48 @@ def test_user_settings_scan_snapshot_exposes_typed_values_and_alias_policy(
     assert invalid_scan.max_concurrent_scans_origin == "degraded_fallback"
     assert invalid_path.read_bytes() == invalid_bytes
 
+    game_setup_root = tmp_path / "game-setup"
+    game_setup_root.mkdir()
+    game_setup_bytes = b"""schema_version: \"1.0\"
+CLASSIC_Settings:
+  Managed Game: Fallout 4 VR
+  Game Version: VR
+  Game Folder Path: 'Z:\\Games\\Fallout 4 VR'
+  Game EXE Path: 'Z:\\Games\\Fallout 4 VR\\Fallout4VR.exe'
+  Documents Folder Path: /home/deck/Documents/My Games/Fallout4VR
+  INI Folder Path: /home/deck/compatdata/fallout4vr/ini
+  MODS Folder Path: /home/deck/Games/Fallout4VR/mods
+  SCAN Custom Path: /home/deck/CLASSIC/crash-logs
+  Papyrus Log Path: /home/deck/Documents/My Games/Fallout4VR/Logs/Script/Papyrus.0.log
+"""
+    (game_setup_root / "CLASSIC Settings.yaml").write_bytes(game_setup_bytes)
+
+    setup_snapshot = classic_user_settings.open_user_settings(str(game_setup_root))
+    setup = setup_snapshot.game_setup_settings
+    assert isinstance(setup, classic_user_settings.GameSetupSettings)
+    assert setup.managed_game == "Fallout4VR"
+    assert setup.game_version_selection == "VR"
+    assert setup.game_root == r"Z:\Games\Fallout 4 VR"
+    assert setup.game_executable == r"Z:\Games\Fallout 4 VR\Fallout4VR.exe"
+    assert setup.documents_root == "/home/deck/Documents/My Games/Fallout4VR"
+    assert setup.ini_folder == "/home/deck/compatdata/fallout4vr/ini"
+    assert setup.mods_root == "/home/deck/Games/Fallout4VR/mods"
+    assert setup.custom_scan_input == "/home/deck/CLASSIC/crash-logs"
+    assert setup.papyrus_log == (
+        "/home/deck/Documents/My Games/Fallout4VR/Logs/Script/Papyrus.0.log"
+    )
+    assert {
+        setup.managed_game_origin,
+        setup.game_version_selection_origin,
+        setup.game_root_origin,
+        setup.game_executable_origin,
+        setup.documents_root_origin,
+        setup.ini_folder_origin,
+        setup.mods_root_origin,
+        setup.custom_scan_input_origin,
+        setup.papyrus_log_origin,
+    } == {"document"}
+
 
 def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
     tmp_path: Path,
@@ -198,7 +241,13 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
 
     accepted_update = classic_user_settings.UserSettingsUpdate()
     accepted_update.set_update_check(False)
+    accepted_update.set_managed_game("Fallout4VR")
     accepted_update.set_game_version_selection("VR")
+    accepted_update.set_game_root(r"Z:\Games\Fallout 4 VR")
+    accepted_update.set_game_executable(r"Z:\Games\Fallout 4 VR\Fallout4VR.exe")
+    accepted_update.set_documents_root("/home/deck/Documents/My Games/Fallout4VR")
+    accepted_update.set_ini_folder("/home/deck/compatdata/fallout4vr/ini")
+    accepted_update.set_mods_folder("/home/deck/Games/Fallout4VR/mods")
     accepted_update.set_fcx_mode(True)
     accepted_update.set_simplify_logs(True)
     accepted_update.set_show_statistics(True)
@@ -207,6 +256,9 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
     accepted_update.set_move_unsolved_logs(False)
     accepted_update.set_unsolved_logs_destination("C:/CLASSIC/Unsolved")
     accepted_update.set_custom_scan_input("D:/Crash Logs")
+    accepted_update.set_papyrus_log_path(
+        "/home/deck/Documents/My Games/Fallout4VR/Logs/Script/Papyrus.0.log"
+    )
     accepted_update.set_max_concurrent_scans(4)
     accepted = snapshot.preview_update(accepted_update)
 
@@ -215,7 +267,13 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
     assert accepted.diagnostics == []
     assert [field.canonical_path for field in accepted.fields] == [
         "/CLASSIC_Settings/Update Check",
+        "/CLASSIC_Settings/Managed Game",
         "/CLASSIC_Settings/Game Version",
+        "/CLASSIC_Settings/Game Folder Path",
+        "/CLASSIC_Settings/Game EXE Path",
+        "/CLASSIC_Settings/Documents Folder Path",
+        "/CLASSIC_Settings/INI Folder Path",
+        "/CLASSIC_Settings/MODS Folder Path",
         "/CLASSIC_Settings/FCX Mode",
         "/CLASSIC_Settings/Simplify Logs",
         "/CLASSIC_Settings/Show Statistics",
@@ -224,11 +282,18 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
         "/CLASSIC_Settings/Move Unsolved Logs",
         "/CLASSIC_Settings/Unsolved Logs Destination",
         "/CLASSIC_Settings/SCAN Custom Path",
+        "/CLASSIC_Settings/Papyrus Log Path",
         "/CLASSIC_Settings/Max Concurrent Scans",
     ]
     assert [field.value for field in accepted.fields] == [
         False,
+        "Fallout4VR",
         "VR",
+        r"Z:\Games\Fallout 4 VR",
+        r"Z:\Games\Fallout 4 VR\Fallout4VR.exe",
+        "/home/deck/Documents/My Games/Fallout4VR",
+        "/home/deck/compatdata/fallout4vr/ini",
+        "/home/deck/Games/Fallout4VR/mods",
         True,
         True,
         True,
@@ -237,6 +302,7 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
         False,
         "C:/CLASSIC/Unsolved",
         "D:/Crash Logs",
+        "/home/deck/Documents/My Games/Fallout4VR/Logs/Script/Papyrus.0.log",
         4,
     ]
     assert snapshot.update_preferences.update_check is True
@@ -245,6 +311,7 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
 
     rejected_update = classic_user_settings.UserSettingsUpdate()
     rejected_update.set_update_check(False)
+    rejected_update.set_managed_game("Morrowind")
     rejected_update.set_game_version_selection("Future")
     rejected_update.set_max_concurrent_scans(-9)
     rejected = snapshot.preview_update(rejected_update)
@@ -256,6 +323,10 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
         (diagnostic.field_path, diagnostic.code)
         for diagnostic in rejected.diagnostics
     ] == [
+        (
+            "/CLASSIC_Settings/Managed Game",
+            "invalid_enum_managed_game",
+        ),
         (
             "/CLASSIC_Settings/Game Version",
             "invalid_enum_game_version",

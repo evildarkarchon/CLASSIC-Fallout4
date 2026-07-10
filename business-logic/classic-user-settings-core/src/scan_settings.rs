@@ -1,4 +1,8 @@
 use crate::document::{Diagnostic, PreferenceOrigin};
+use crate::preference::{
+    OptionalPathField, Preference, aliased_optional_absolute_path_preference,
+    optional_absolute_path_preference,
+};
 use classic_settings_core::Yaml;
 use std::collections::BTreeMap;
 
@@ -234,9 +238,11 @@ impl CrashLogScanSettings {
         );
         let unsolved_logs_destination = optional_absolute_path_preference(
             &group["Unsolved Logs Destination"],
-            "CLASSIC_Settings.Unsolved Logs Destination",
-            "invalid_type_unsolved_logs_destination",
-            "invalid_path_unsolved_logs_destination",
+            OptionalPathField::new(
+                "CLASSIC_Settings.Unsolved Logs Destination",
+                "invalid_type_unsolved_logs_destination",
+                "invalid_path_unsolved_logs_destination",
+            ),
             &mut diagnostics,
         );
         let custom_scan_input = custom_scan_input_preference(group, &mut diagnostics);
@@ -307,16 +313,20 @@ impl CrashLogScanSettings {
         );
         let unsolved_logs_destination = optional_absolute_path_preference(
             &document["unsolved_logs_destination"],
-            "unsolved_logs_destination",
-            "invalid_type_unsolved_logs_destination",
-            "invalid_path_unsolved_logs_destination",
+            OptionalPathField::new(
+                "unsolved_logs_destination",
+                "invalid_type_unsolved_logs_destination",
+                "invalid_path_unsolved_logs_destination",
+            ),
             &mut diagnostics,
         );
         let custom_scan_input = optional_absolute_path_preference(
             &document["paths"]["scan_custom"],
-            "paths.scan_custom",
-            "invalid_type_custom_scan_input",
-            "invalid_path_custom_scan_input",
+            OptionalPathField::new(
+                "paths.scan_custom",
+                "invalid_type_custom_scan_input",
+                "invalid_path_custom_scan_input",
+            ),
             &mut diagnostics,
         );
         let game_version_selection =
@@ -360,20 +370,6 @@ impl CrashLogScanSettings {
     }
 }
 
-/// One typed preference together with its source provenance.
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct Preference<T> {
-    value: T,
-    origin: PreferenceOrigin,
-}
-
-impl<T> Preference<T> {
-    /// Creates a typed preference with its source provenance.
-    fn new(value: T, origin: PreferenceOrigin) -> Self {
-        Self { value, origin }
-    }
-}
-
 /// Projects a boolean preference with distinct published and degraded fallbacks.
 fn bool_preference(
     node: &Yaml,
@@ -393,146 +389,29 @@ fn bool_preference(
     }
 }
 
-/// Projects an optional absolute path while preserving valid Windows and Unix spellings.
-fn optional_absolute_path_preference(
-    node: &Yaml,
-    label: &'static str,
-    invalid_type_code: &'static str,
-    invalid_path_code: &'static str,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> Preference<Option<String>> {
-    match node {
-        Yaml::String(value) if value.is_empty() => {
-            Preference::new(None, PreferenceOrigin::Document)
-        }
-        Yaml::String(value) if is_absolute_user_path(value) => {
-            Preference::new(Some(value.clone()), PreferenceOrigin::Document)
-        }
-        Yaml::String(_) => {
-            diagnostics.push(Diagnostic::new(
-                invalid_path_code,
-                format!("{label} must be empty or an absolute path"),
-            ));
-            Preference::new(None, PreferenceOrigin::DegradedFallback)
-        }
-        Yaml::Null => Preference::new(None, PreferenceOrigin::Document),
-        Yaml::BadValue => Preference::new(None, PreferenceOrigin::Default),
-        _ => {
-            diagnostics.push(Diagnostic::new(
-                invalid_type_code,
-                format!("{label} must be a string or null"),
-            ));
-            Preference::new(None, PreferenceOrigin::DegradedFallback)
-        }
-    }
-}
-
-/// Accepts native absolute paths plus Windows drive and UNC forms on every build platform.
-pub(crate) fn is_absolute_user_path(path: &str) -> bool {
-    let bytes = path.as_bytes();
-    std::path::Path::new(path).is_absolute()
-        || matches!(bytes, [drive, b':', slash, ..] if drive.is_ascii_alphabetic() && matches!(slash, b'/' | b'\\'))
-        || path.starts_with("\\\\")
-        || path.starts_with("//")
-}
-
 /// Resolves the canonical custom-scan label ahead of its GUI-era alias.
 fn custom_scan_input_preference(
     group: &Yaml,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> Preference<Option<String>> {
-    let canonical = optional_absolute_path_node(&group["SCAN Custom Path"]);
-    let alias = optional_absolute_path_node(&group["Custom Scan Folder"]);
-
-    match (canonical, alias) {
-        (OptionalPathNode::Valid(canonical), OptionalPathNode::Valid(alias)) => {
-            if canonical != alias {
-                diagnostics.push(Diagnostic::new(
-                    "canonical_alias_conflict_custom_scan_folder",
-                    "CLASSIC_Settings.SCAN Custom Path overrides conflicting Custom Scan Folder",
-                ));
-            }
-            Preference::new(canonical, PreferenceOrigin::Document)
-        }
-        (OptionalPathNode::Valid(canonical), _) => {
-            Preference::new(canonical, PreferenceOrigin::Document)
-        }
-        (OptionalPathNode::Missing, OptionalPathNode::Valid(alias)) => {
-            Preference::new(alias, PreferenceOrigin::Document)
-        }
-        (
-            invalid @ (OptionalPathNode::InvalidType | OptionalPathNode::InvalidPath),
-            OptionalPathNode::Valid(alias),
-        ) => {
-            push_custom_scan_input_diagnostic(
-                &invalid,
-                "CLASSIC_Settings.SCAN Custom Path",
-                diagnostics,
-            );
-            Preference::new(alias, PreferenceOrigin::Document)
-        }
-        (OptionalPathNode::Missing, OptionalPathNode::Missing) => {
-            Preference::new(None, PreferenceOrigin::Default)
-        }
-        (OptionalPathNode::Missing, invalid) => {
-            push_custom_scan_input_diagnostic(
-                &invalid,
-                "CLASSIC_Settings.Custom Scan Folder",
-                diagnostics,
-            );
-            Preference::new(None, PreferenceOrigin::DegradedFallback)
-        }
-        (invalid, _) => {
-            push_custom_scan_input_diagnostic(
-                &invalid,
-                "CLASSIC_Settings.SCAN Custom Path",
-                diagnostics,
-            );
-            Preference::new(None, PreferenceOrigin::DegradedFallback)
-        }
-    }
-}
-
-/// Parsed state of an optional absolute-path YAML node.
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum OptionalPathNode {
-    Missing,
-    Valid(Option<String>),
-    InvalidType,
-    InvalidPath,
-}
-
-/// Classifies an optional absolute-path node without changing valid spelling.
-fn optional_absolute_path_node(node: &Yaml) -> OptionalPathNode {
-    match node {
-        Yaml::String(value) if value.is_empty() => OptionalPathNode::Valid(None),
-        Yaml::String(value) if is_absolute_user_path(value) => {
-            OptionalPathNode::Valid(Some(value.clone()))
-        }
-        Yaml::String(_) => OptionalPathNode::InvalidPath,
-        Yaml::Null => OptionalPathNode::Valid(None),
-        Yaml::BadValue => OptionalPathNode::Missing,
-        _ => OptionalPathNode::InvalidType,
-    }
-}
-
-/// Appends the stable diagnostic for an invalid custom-scan path node.
-fn push_custom_scan_input_diagnostic(
-    node: &OptionalPathNode,
-    label: &'static str,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    match node {
-        OptionalPathNode::InvalidType => diagnostics.push(Diagnostic::new(
+    aliased_optional_absolute_path_preference(
+        &group["SCAN Custom Path"],
+        &group["Custom Scan Folder"],
+        OptionalPathField::new(
+            "CLASSIC_Settings.SCAN Custom Path",
             "invalid_type_custom_scan_input",
-            format!("{label} must be a string or null"),
-        )),
-        OptionalPathNode::InvalidPath => diagnostics.push(Diagnostic::new(
             "invalid_path_custom_scan_input",
-            format!("{label} must be empty or an absolute path"),
-        )),
-        OptionalPathNode::Missing | OptionalPathNode::Valid(_) => {}
-    }
+        ),
+        OptionalPathField::new(
+            "CLASSIC_Settings.Custom Scan Folder",
+            "invalid_type_custom_scan_input",
+            "invalid_path_custom_scan_input",
+        ),
+        "canonical_alias_conflict_custom_scan_folder",
+        "CLASSIC_Settings.SCAN Custom Path overrides conflicting Custom Scan Folder",
+        diagnostics,
+    )
+    .resolved
 }
 
 /// Projects the game-version selection with `auto` as its safe fallback.

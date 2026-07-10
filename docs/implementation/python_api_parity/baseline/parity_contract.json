@@ -809,6 +809,283 @@
       "pythonKind": "class"
     },
     {
+      "id": "user_settings.game_setup_settings_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "GameSetupSettings",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.game_setup_settings_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_setup_settings",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_managed_game_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "managed_game",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_managed_game_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "managed_game_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_game_version_selection_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_version_selection",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_game_version_selection_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_version_selection_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_game_root_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_root",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_game_root_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_root_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_game_executable_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_executable",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_game_executable_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_executable_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_documents_root_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "documents_root",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_documents_root_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "documents_root_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_ini_folder_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "ini_folder",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_ini_folder_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "ini_folder_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_mods_root_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "mods_root",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_mods_root_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "mods_root_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_custom_scan_input_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "custom_scan_input",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_custom_scan_input_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "custom_scan_input_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_papyrus_log_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "papyrus_log",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.setup_papyrus_log_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "papyrus_log_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GameSetupSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_with_managed_game",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_managed_game",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_managed_game",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_game_root",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_game_root",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_game_root",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_game_executable",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_game_executable",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_game_executable",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_documents_root",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_documents_root",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_documents_root",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_ini_folder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_ini_folder",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_ini_folder",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_mods_folder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_mods_folder",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_mods_folder",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_papyrus_log_path",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_papyrus_log_path",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_papyrus_log_path",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
       "id": "config-classic-config-class",
       "tier": "tier1",
       "ownerModule": "config",
@@ -11942,6 +12219,16 @@
       "rustSymbol": "GameSetupCheck",
       "pythonModule": "classic_scangame",
       "pythonExportPath": "GameSetupCheck",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scangame.setup.GameSetupPathUpdate",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "GameSetupPathUpdate",
+      "pythonModule": "classic_scangame",
+      "pythonExportPath": "GameSetupPathUpdate",
       "pythonKind": "class"
     },
     {

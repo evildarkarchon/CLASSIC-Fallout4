@@ -20,6 +20,7 @@ import {
   checkCrashgenConfig,
   checkCrashgenFull,
   scanModInis,
+  runGameSetupIntake,
   normalizeGameSetupVersionSelection,
   gameSetupNeedsPathDetection,
   getAddressLibInfo,
@@ -854,6 +855,29 @@ describe("scanModInis", () => {
 // ============================================================================
 // Game Setup Version Normalization
 // ============================================================================
+
+describe("runGameSetupIntake", () => {
+  test("returns exact proposed path updates without persisting them", () => {
+    const gameRoot = join(tempDir, "Fallout4");
+    const docsRoot = join(tempDir, "Documents");
+    const gameExecutable = join(gameRoot, "Fallout4.exe");
+    mkdirSync(gameRoot, { recursive: true });
+    mkdirSync(docsRoot, { recursive: true });
+    writeFileSync(gameExecutable, "not a real executable");
+
+    const result = runGameSetupIntake({
+      gameId: "Fallout4",
+      gameVersion: "Original",
+      gameExePath: gameExecutable,
+      docsRoot,
+    });
+
+    expect(result.pathUpdates).toEqual([
+      { kind: "game_root", path: gameRoot },
+    ]);
+    expect(result.pathUpdateCount).toBe(result.pathUpdates.length);
+  });
+});
 
 describe("normalizeGameSetupVersionSelection", () => {
   test("preserves explicit original mode", () => {

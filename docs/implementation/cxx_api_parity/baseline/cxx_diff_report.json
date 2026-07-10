@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 377,
-    "current_total": 377,
-    "matched": 377,
+    "contract_total": 380,
+    "current_total": 380,
+    "matched": 380,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -1609,6 +1609,14 @@
       "reason": "-"
     },
     {
+      "id": "6c105c01ea5f0d3c",
+      "rustSymbol": "GameSetupPathUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "8fd138371890a42d",
       "rustSymbol": "IniConfigIssueDto",
       "kind": "struct",
@@ -2105,6 +2113,14 @@
       "reason": "-"
     },
     {
+      "id": "be7beecfe544998c",
+      "rustSymbol": "user_settings_open_game_setup_settings",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "ba33f05b060305af",
       "rustSymbol": "user_settings_open_update_preferences",
       "kind": "function",
@@ -2283,6 +2299,14 @@
     {
       "id": "af22cdd14c9a5cf1",
       "rustSymbol": "FormIdDatabasePathDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5bf9e83ee7c33813",
+      "rustSymbol": "GameSetupSettingsDto",
       "kind": "struct",
       "bridgeModule": "settings",
       "status": "matched",

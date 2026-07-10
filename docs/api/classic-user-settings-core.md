@@ -34,6 +34,7 @@ Open reads bytes directly and never uses `Path::exists()`, so permission failure
 - `revision()` — `Revision::ContentSha256` over exact source bytes, `Missing`, or `Unavailable`
 - `update_preferences()` — typed `UpdatePreferences`
 - `crash_log_scan_settings()` — typed `CrashLogScanSettings`
+- `game_setup_settings()` — typed `GameSetupSettings`
 - `diagnostics()` — ordered structured `Diagnostic { code, message }` values
 - `original_bytes()` — exact source content retained for later semantic preservation and byte-exact migration backups
 - `commit_eligibility()` — `Eligible`, `RequiresMigration`, or `BlockedUntrusted`
@@ -91,9 +92,29 @@ The default and degraded fallback are intentionally different. A first-run user 
 
 The published `SCAN Custom Path` label is canonical. The GUI-era `Custom Scan Folder` alias remains readable for compatibility. When both values are valid and conflict, the canonical value wins, `canonical_alias_conflict_custom_scan_folder` is reported, and both original nodes remain retained. An alias-only document is projected without being rewritten.
 
+## Game Setup settings
+
+`GameSetupSettings` projects the saved facts needed to prepare Game Setup Intake without making intake load or persist User Settings. It contains the managed `GameId`, the shared `GameVersionSelection`, and the following optional path strings:
+
+| User Settings label | Typed getter | Flat `ClassicConfig` source |
+| --- | --- | --- |
+| `Game Folder Path` | `game_root()` | `paths.game_root` |
+| `Game EXE Path` | `game_executable()` | none |
+| `Documents Folder Path` | `documents_root()` (effective canonical value) | `paths.docs_root` |
+| `INI Folder Path` | `ini_folder()` (typed compatibility-alias value) | `paths.ini_folder` |
+| `MODS Folder Path` | `mods_root()` | `paths.mods_folder` |
+| `SCAN Custom Path` | `custom_scan_input()` | `paths.scan_custom` |
+| `Papyrus Log Path` | `papyrus_log()` | none |
+
+Every getter has a matching `*_origin()` accessor. Missing settings use Fallout 4, `GameVersionSelection::Auto`, and absent paths as published defaults. An untrusted document exposes the same safe values with `DegradedFallback` provenance. `Managed Game` accepts the supported human-facing labels and stable `GameId` spellings.
+
+Paths are validated lexically without existence checks. Native, Windows drive, UNC, Unix, and Proton spellings are accepted on every build platform and retained exactly as persisted; opening never rewrites separators. `Documents Folder Path` is canonical and `INI Folder Path` is its compatibility alias. The effective `documents_root()` getter applies precedence before intake is built; a valid canonical null or empty value therefore remains an explicit clear and cannot resurrect a stale INI alias. `ini_folder()` still exposes the separately typed alias fact for transitional consumers.
+
+The published `Documents Folder Path`, `MODS Folder Path`, and `SCAN Custom Path` labels take precedence over their `INI Folder Path`, `Staging Mods Folder`, and `Custom Scan Folder` compatibility aliases. Two valid conflicting document paths report `canonical_alias_conflict_ini_folder`; mods and custom-scan conflicts report their corresponding codes. An invalid canonical value may fall back to a valid alias while retaining the canonical-field diagnostic; alias nodes are never rewritten by open or ordinary update preview.
+
 ## User Settings Update preview
 
-`UserSettingsUpdate` is an explicit request builder covering Update Check plus every field in `CrashLogScanSettings`. `UserSettings::preview_update(update)` performs no I/O and returns exactly one of:
+`UserSettingsUpdate` is an explicit request builder covering Update Check plus every field in `CrashLogScanSettings` and `GameSetupSettings`. `UserSettings::preview_update(update)` performs no I/O and returns exactly one of:
 
 - `UserSettingsUpdatePreview::Accepted(AcceptedUserSettingsUpdate)` when every requested field is valid
 - `UserSettingsUpdatePreview::Rejected(Vec<UpdateDiagnostic>)` when the base snapshot is not commit-eligible or any requested field is invalid
@@ -102,7 +123,7 @@ An accepted preview is anchored to the opened `Revision` and contains only the r
 
 Validation is all-or-nothing. The implementation checks every requested field in one pass and returns each field-specific `UpdateDiagnostic { field_path, code, message }`; otherwise-valid fields are not exposed as a partial preview. The accepted preview is the validation artifact that the later conflict-safe commit workflow consumes.
 
-Preview-specific rejection codes include `invalid_enum_game_version`, `invalid_value_formid_databases`, `invalid_path_unsolved_logs_destination`, `invalid_path_custom_scan_input`, `invalid_range_max_concurrent_scans`, and `update_base_not_commit_eligible`.
+Preview-specific rejection codes include `invalid_enum_game_version`, the `invalid_path_*` codes for every optional setup path, `invalid_value_formid_databases`, `invalid_path_unsolved_logs_destination`, `invalid_path_custom_scan_input`, `invalid_range_max_concurrent_scans`, and `update_base_not_commit_eligible`.
 
 Stable diagnostic codes currently include:
 
@@ -110,7 +131,14 @@ Stable diagnostic codes currently include:
 - `migration_required_unversioned_document`
 - `migration_required_flat_classic_config`
 - `invalid_type_update_check`
+- `invalid_enum_managed_game`
 - `invalid_enum_game_version`
+- `invalid_type_game_root` / `invalid_path_game_root`
+- `invalid_type_game_executable` / `invalid_path_game_executable`
+- `invalid_type_documents_root` / `invalid_path_documents_root`
+- `invalid_type_ini_folder` / `invalid_path_ini_folder`
+- `invalid_type_mods_folder` / `invalid_path_mods_folder`
+- `invalid_type_papyrus_log` / `invalid_path_papyrus_log`
 - `invalid_type_fcx_mode`
 - `invalid_type_simplify_logs`
 - `invalid_type_show_statistics`
@@ -124,6 +152,8 @@ Stable diagnostic codes currently include:
 - `invalid_type_max_concurrent_scans`
 - `invalid_range_max_concurrent_scans`
 - `invalid_value_formid_databases`
+- `canonical_alias_conflict_ini_folder`
+- `canonical_alias_conflict_mods_folder`
 - `canonical_alias_conflict_custom_scan_folder`
 - `malformed_document`
 - `unreadable_document`
@@ -134,11 +164,11 @@ Stable diagnostic codes currently include:
 
 ## Binding and native CLI surface
 
-- CXX: `classic::settings::user_settings_open_update_preferences(classic_root)` retains the narrow update-policy DTO; `user_settings_open_crash_log_scan_settings(classic_root)` exposes the complete typed scan group; and `user_settings_preview_update(classic_root, update)` returns an all-or-nothing preview DTO.
-- Node: `openUserSettings(classicRoot)` returns `JsUserSettingsSnapshot` with both typed groups and exact source bytes as `originalContent`; `previewUserSettingsUpdate(classicRoot, update)` validates a `JsUserSettingsUpdate` without writing.
-- Python: `classic_user_settings.open_user_settings(classic_root)` returns `UserSettingsSnapshot` with both typed groups and exact source bytes; `snapshot.preview_update(UserSettingsUpdate)` validates against that opened snapshot and revision without writing.
+- CXX: `classic::settings::user_settings_open_update_preferences(classic_root)` retains the narrow update-policy DTO; `user_settings_open_crash_log_scan_settings(classic_root)` and `user_settings_open_game_setup_settings(classic_root)` expose the two cohesive consumer groups; and `user_settings_preview_update(classic_root, update)` returns an all-or-nothing preview DTO.
+- Node: `openUserSettings(classicRoot)` returns `JsUserSettingsSnapshot` with all three typed groups and exact source bytes as `originalContent`; `previewUserSettingsUpdate(classicRoot, update)` validates a `JsUserSettingsUpdate` without writing.
+- Python: `classic_user_settings.open_user_settings(classic_root)` returns `UserSettingsSnapshot` with all three typed groups and exact source bytes; `snapshot.preview_update(UserSettingsUpdate)` validates against that opened snapshot and revision without writing.
 
-The native CLI `--check-app-update` path resolves a CLASSIC root, opens this typed group, reports structured diagnostics, and returns before runtime initialization, cache setup, installed-version validation, or network access when the safe value is `false`. YAML Data commands and scan preparation remain on their existing paths until issue #103’s broader native CLI cutover.
+The native CLI `--check-app-update` path resolves a CLASSIC root, opens Update Preferences, reports structured diagnostics, and returns before runtime initialization, cache setup, installed-version validation, or network access when the safe value is `false`. Game Setup Intake can now be prepared directly from an already-opened `GameSetupSettings` group; maintained frontend consumer cutovers remain separate work.
 
 ## Validation
 

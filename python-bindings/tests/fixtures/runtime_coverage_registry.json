@@ -11,15 +11,26 @@
         "ownerModule": "user_settings",
         "tier": "tier1"
       },
-      "contractCount": 73,
-      "contractIdsHash": "e10322d9156f8b6412760b4f132682a88a4d62e8231a1f09bf4bed0aa0b5ded8",
+      "contractCount": 100,
+      "contractIdsHash": "ae7553a1e6f536431a1c655d8e406fc90d082fed34fb8d7a6e71b9ed781424ec",
+      "bindingIdentifiers": [
+        "classic_user_settings.GameSetupSettings",
+        "classic_user_settings.UserSettingsSnapshot.game_setup_settings",
+        "classic_user_settings.UserSettingsUpdate.set_managed_game",
+        "classic_user_settings.UserSettingsUpdate.set_game_root",
+        "classic_user_settings.UserSettingsUpdate.set_game_executable",
+        "classic_user_settings.UserSettingsUpdate.set_documents_root",
+        "classic_user_settings.UserSettingsUpdate.set_ini_folder",
+        "classic_user_settings.UserSettingsUpdate.set_mods_folder",
+        "classic_user_settings.UserSettingsUpdate.set_papyrus_log_path"
+      ],
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
       "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "coverageId": "python-tier1-config",
@@ -367,10 +378,15 @@
         "ownerModule": "scangame",
         "tier": "tier1"
       },
-      "contractCount": 164,
-      "contractIdsHash": "fa2524e8a6b450c6647843b35893bd5ac990d8552797ffa8aa65a454d2d99ae1",
+      "contractCount": 165,
+      "contractIdsHash": "61de07b7ff9e1050458d10e06ce109da2edb0669eae0f45ba953cade9b88ef40",
+      "bindingIdentifiers": [
+        "classic_scangame.GameSetupPathUpdate",
+        "classic_scangame.GameSetupIntakeResult.path_updates"
+      ],
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "scangame-residuals-smoke"
+      "testCaseId": "scangame-residuals-smoke",
+      "notes": "Game Setup Intake smoke coverage asserts exact caller-controlled path update kind/path proposals and the retained proposal count."
     },
     {
       "coverageId": "python-tier1-path",

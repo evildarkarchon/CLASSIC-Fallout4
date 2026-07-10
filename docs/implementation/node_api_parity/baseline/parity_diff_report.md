@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-10T00:13:53.166091+00:00`
-- Tier-1 contract rows: **779**
-- Tier-1 matched: **779**
+- Generated: `2026-07-10T01:31:14.905493+00:00`
+- Tier-1 contract rows: **807**
+- Tier-1 matched: **807**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -61,6 +61,26 @@
 | `user-settings-game-version-selection-origin-accessor` | `user_settings` | `game_version_selection_origin` | `JsCrashLogScanSettings` | `matched` |
 | `user-settings-max-concurrent-scans-accessor` | `user_settings` | `max_concurrent_scans` | `JsCrashLogScanSettings` | `matched` |
 | `user-settings-max-concurrent-scans-origin-accessor` | `user_settings` | `max_concurrent_scans_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-game-setup-settings-type` | `user_settings` | `GameSetupSettings` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-setup-settings-accessor` | `user_settings` | `game_setup_settings` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-managed-game-accessor` | `user_settings` | `managed_game` | `JsGameSetupSettings` | `matched` |
+| `user-settings-managed-game-origin-accessor` | `user_settings` | `managed_game_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-setup-version-selection-accessor` | `user_settings` | `game_version_selection` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-setup-version-selection-origin-accessor` | `user_settings` | `game_version_selection_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-root-accessor` | `user_settings` | `game_root` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-root-origin-accessor` | `user_settings` | `game_root_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-executable-accessor` | `user_settings` | `game_executable` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-executable-origin-accessor` | `user_settings` | `game_executable_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-documents-root-accessor` | `user_settings` | `documents_root` | `JsGameSetupSettings` | `matched` |
+| `user-settings-documents-root-origin-accessor` | `user_settings` | `documents_root_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-ini-folder-accessor` | `user_settings` | `ini_folder` | `JsGameSetupSettings` | `matched` |
+| `user-settings-ini-folder-origin-accessor` | `user_settings` | `ini_folder_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-mods-root-accessor` | `user_settings` | `mods_root` | `JsGameSetupSettings` | `matched` |
+| `user-settings-mods-root-origin-accessor` | `user_settings` | `mods_root_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-setup-custom-scan-input-accessor` | `user_settings` | `custom_scan_input` | `JsGameSetupSettings` | `matched` |
+| `user-settings-game-setup-custom-scan-input-origin-accessor` | `user_settings` | `custom_scan_input_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-papyrus-log-accessor` | `user_settings` | `papyrus_log` | `JsGameSetupSettings` | `matched` |
+| `user-settings-papyrus-log-origin-accessor` | `user_settings` | `papyrus_log_origin` | `JsGameSetupSettings` | `matched` |
 | `user-settings-update-type` | `user_settings` | `UserSettingsUpdate` | `JsUserSettingsUpdate` | `matched` |
 | `user-settings-update-field-type` | `user_settings` | `UserSettingsUpdateField` | `JsUserSettingsUpdateField` | `matched` |
 | `user-settings-accepted-update-type` | `user_settings` | `AcceptedUserSettingsUpdate` | `JsUserSettingsUpdatePreview` | `matched` |
@@ -69,6 +89,13 @@
 | `user-settings-update-new` | `user_settings` | `new` | `JsUserSettingsUpdate` | `matched` |
 | `user-settings-update-check-builder` | `user_settings` | `with_update_check` | `JsUserSettingsUpdate` | `matched` |
 | `user-settings-game-version-selection-builder` | `user_settings` | `with_game_version_selection` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-managed-game-builder` | `user_settings` | `with_managed_game` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-game-root-builder` | `user_settings` | `with_game_root` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-game-executable-builder` | `user_settings` | `with_game_executable` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-documents-root-builder` | `user_settings` | `with_documents_root` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-ini-folder-builder` | `user_settings` | `with_ini_folder` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-mods-folder-builder` | `user_settings` | `with_mods_folder` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-papyrus-log-path-builder` | `user_settings` | `with_papyrus_log_path` | `JsUserSettingsUpdate` | `matched` |
 | `user-settings-fcx-mode-builder` | `user_settings` | `with_fcx_mode` | `JsUserSettingsUpdate` | `matched` |
 | `user-settings-simplify-logs-builder` | `user_settings` | `with_simplify_logs` | `JsUserSettingsUpdate` | `matched` |
 | `user-settings-show-statistics-builder` | `user_settings` | `with_show_statistics` | `JsUserSettingsUpdate` | `matched` |
@@ -781,6 +808,7 @@
 | `scangame.JsGameSetupCheck` | `scangame` | `GameSetupCheck` | `JsGameSetupCheck` | `matched` |
 | `scangame.JsGameSetupIntakeOptions` | `scangame` | `GameSetupIntake` | `JsGameSetupIntakeOptions` | `matched` |
 | `scangame.JsGameSetupIntakeResult` | `scangame` | `GameSetupIntakeResult` | `JsGameSetupIntakeResult` | `matched` |
+| `scangame.JsGameSetupPathUpdate` | `scangame` | `GameSetupPathUpdate` | `JsGameSetupPathUpdate` | `matched` |
 | `scangame.JsPathDetectionResult` | `scangame` | `game_setup_needs_path_detection` | `JsPathDetectionResult` | `matched` |
 | `scangame.gameSetupNeedsPathDetection` | `scangame` | `game_setup_needs_path_detection` | `gameSetupNeedsPathDetection` | `matched` |
 | `scangame.normalizeGameSetupVersionSelection` | `scangame` | `normalize_game_setup_version_selection` | `normalizeGameSetupVersionSelection` | `matched` |

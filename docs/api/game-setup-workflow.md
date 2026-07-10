@@ -5,6 +5,7 @@ Contributor-facing workflow notes for setup and install validation across:
 - [`classic-path-core`](../../business-logic/classic-path-core)
 - [`classic-xse-core`](../../business-logic/classic-xse-core)
 - [`classic-scangame-core`](../../business-logic/classic-scangame-core)
+- [`classic-user-settings-core`](../../business-logic/classic-user-settings-core)
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core)
 - [`classic-version-core`](../../business-logic/classic-version-core)
 
@@ -46,6 +47,7 @@ For crate-by-crate API details, see:
 Important public items:
 
 - `GameSetupIntake::new(game_id, selected_game_version)`
+- `GameSetupIntake::from_user_settings(game_setup_settings)`
 - `GameSetupIntake::from_config(config, game_id)`
 - `with_game_root(path)`
 - `with_game_exe_path(path)`
@@ -96,6 +98,22 @@ let intake = GameSetupIntake::new(GameId::Fallout4, "auto")
 ```
 
 All fields are read-only inputs. Running intake may return proposed `GameSetupPathUpdate` values, but it never persists them.
+
+When a caller already opened User Settings, it can prepare intake without another load:
+
+```rust
+use classic_scangame_core::GameSetupIntake;
+use classic_user_settings_core::UserSettings;
+
+let settings = UserSettings::open(classic_root);
+let intake = GameSetupIntake::from_user_settings(settings.game_setup_settings());
+```
+
+This copies the typed managed game, selected version, game root, executable, and effective documents path. `GameSetupSettings` has already resolved the canonical `Documents Folder Path` ahead of the `INI Folder Path` compatibility alias, including explicit null/empty clears, so intake does not reapply fallback logic. Mods/staging, custom-scan, and Papyrus facts remain available to their own consumers and are not misrouted into unrelated intake fields. The temporary `from_config` adapter remains available during the expand phase.
+
+## 2a. Review Proposed Path Updates
+
+`run()` leaves discovered values as `GameSetupPathUpdate { kind, path }`. It does not create a `UserSettingsUpdate` automatically. A caller must select a proposal, verify that its path is representable as UTF-8, map `game_root` to `with_game_root(...)` or `docs_root` to `with_documents_root(...)`, and then call `preview_update` on the snapshot. Preview still performs no write; conflict-safe persistence is a later explicit operation.
 
 ## 3. Resolve Paths
 

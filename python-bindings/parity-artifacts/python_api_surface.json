@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T00:35:49.033279+00:00",
+  "generated_at_utc": "2026-07-10T01:54:21.549657+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -3936,6 +3936,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
       "signature": "def combined(self) -> str:"
+    },
+    {
+      "module": "classic_scangame",
+      "export": "GameSetupPathUpdate",
+      "export_path": "GameSetupPathUpdate",
+      "kind": "class",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
+      "signature": "class GameSetupPathUpdate:"
     },
     {
       "module": "classic_scangame",
@@ -8583,6 +8593,16 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "GameSetupSettings",
+      "export_path": "GameSetupSettings",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class GameSetupSettings:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "UpdatePreferences",
       "export_path": "UpdatePreferences",
       "kind": "class",
@@ -8659,6 +8679,18 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "set_documents_root",
+      "export_path": "UserSettingsUpdate.set_documents_root",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_documents_root(self, value: str | None) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "set_fcx_mode",
       "export_path": "UserSettingsUpdate.set_fcx_mode",
       "parent_class": "UserSettingsUpdate",
@@ -8695,6 +8727,30 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "set_game_executable",
+      "export_path": "UserSettingsUpdate.set_game_executable",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_game_executable(self, value: str | None) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_game_root",
+      "export_path": "UserSettingsUpdate.set_game_root",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_game_root(self, value: str | None) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "set_game_version_selection",
       "export_path": "UserSettingsUpdate.set_game_version_selection",
       "parent_class": "UserSettingsUpdate",
@@ -8704,6 +8760,30 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "def set_game_version_selection(self, value: str) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_ini_folder",
+      "export_path": "UserSettingsUpdate.set_ini_folder",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_ini_folder(self, value: str | None) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_managed_game",
+      "export_path": "UserSettingsUpdate.set_managed_game",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_managed_game(self, value: str) -> None:"
     },
     {
       "module": "classic_user_settings",
@@ -8719,6 +8799,18 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "set_mods_folder",
+      "export_path": "UserSettingsUpdate.set_mods_folder",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_mods_folder(self, value: str | None) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "set_move_unsolved_logs",
       "export_path": "UserSettingsUpdate.set_move_unsolved_logs",
       "parent_class": "UserSettingsUpdate",
@@ -8728,6 +8820,18 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "def set_move_unsolved_logs(self, value: bool) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_papyrus_log_path",
+      "export_path": "UserSettingsUpdate.set_papyrus_log_path",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_papyrus_log_path(self, value: str | None) -> None:"
     },
     {
       "module": "classic_user_settings",
