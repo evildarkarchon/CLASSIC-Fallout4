@@ -1,16 +1,16 @@
 {
-  "generated_at_utc": "2026-07-10T01:26:32.976436+00:00",
+  "generated_at_utc": "2026-07-10T02:34:18.526560+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1361,
-    "runtime_verified_total": 1361,
+    "tracked_surface_total": 1419,
+    "runtime_verified_total": 1419,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 1186,
+    "tier1_contract_total": 1215,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -69,8 +69,8 @@
       "total": 10
     },
     "user_settings": {
-      "runtime_verified": 109,
-      "total": 109
+      "runtime_verified": 167,
+      "total": 167
     },
     "version": {
       "runtime_verified": 15,
@@ -107,7 +107,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.diagnostic",
@@ -126,7 +126,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.document_classification",
@@ -145,7 +145,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.preference_origin",
@@ -164,7 +164,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.revision_type",
@@ -183,7 +183,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.source_type",
@@ -202,7 +202,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.source_location",
@@ -221,7 +221,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_preferences_type",
@@ -240,7 +240,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.snapshot_type",
@@ -259,7 +259,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.classification_accessor",
@@ -278,7 +278,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.diagnostic_code_accessor",
@@ -297,7 +297,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.commit_eligibility_accessor",
@@ -316,7 +316,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.diagnostics_accessor",
@@ -335,7 +335,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.location_accessor",
@@ -354,7 +354,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.diagnostic_message_accessor",
@@ -373,7 +373,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.open",
@@ -392,7 +392,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.original_bytes_accessor",
@@ -411,7 +411,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.path_accessor",
@@ -430,7 +430,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.revision_accessor",
@@ -449,7 +449,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.schema_version_accessor",
@@ -468,7 +468,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.source_accessor",
@@ -487,7 +487,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_check_accessor",
@@ -506,7 +506,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_check_origin_accessor",
@@ -525,7 +525,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_preferences_accessor",
@@ -544,7 +544,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.crash_log_scan_settings_type",
@@ -563,7 +563,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.game_version_selection_type",
@@ -582,7 +582,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.accepted_update_type",
@@ -601,7 +601,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_diagnostic_type",
@@ -620,7 +620,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_request_type",
@@ -639,7 +639,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_field_type",
@@ -658,7 +658,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_preview_type",
@@ -677,7 +677,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.crash_log_scan_settings_accessor",
@@ -696,7 +696,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_fcx_mode_accessor",
@@ -715,7 +715,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_fcx_mode_origin_accessor",
@@ -734,7 +734,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_simplify_logs_accessor",
@@ -753,7 +753,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_simplify_logs_origin_accessor",
@@ -772,7 +772,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_show_statistics_accessor",
@@ -791,7 +791,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_show_statistics_origin_accessor",
@@ -810,7 +810,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_formid_value_lookup_accessor",
@@ -829,7 +829,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_formid_value_lookup_origin_accessor",
@@ -848,7 +848,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_formid_databases_accessor",
@@ -867,7 +867,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_formid_databases_origin_accessor",
@@ -886,7 +886,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_move_unsolved_logs_accessor",
@@ -905,7 +905,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_move_unsolved_logs_origin_accessor",
@@ -924,7 +924,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_unsolved_logs_destination_accessor",
@@ -943,7 +943,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_unsolved_logs_destination_origin_accessor",
@@ -962,7 +962,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_custom_scan_input_accessor",
@@ -981,7 +981,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_custom_scan_input_origin_accessor",
@@ -1000,7 +1000,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_game_version_selection_accessor",
@@ -1019,7 +1019,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_game_version_selection_origin_accessor",
@@ -1038,7 +1038,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_max_concurrent_scans_accessor",
@@ -1057,7 +1057,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.scan_max_concurrent_scans_origin_accessor",
@@ -1076,7 +1076,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.game_version_as_str",
@@ -1095,7 +1095,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.game_version_parse",
@@ -1114,7 +1114,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_new",
@@ -1133,7 +1133,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_update_check",
@@ -1152,7 +1152,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_game_version_selection",
@@ -1171,7 +1171,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_fcx_mode",
@@ -1190,7 +1190,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_simplify_logs",
@@ -1209,7 +1209,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_show_statistics",
@@ -1228,7 +1228,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_formid_value_lookup",
@@ -1247,7 +1247,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_formid_databases",
@@ -1266,7 +1266,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_move_unsolved_logs",
@@ -1285,7 +1285,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_unsolved_logs_destination",
@@ -1304,7 +1304,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_custom_scan_input",
@@ -1323,7 +1323,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_max_concurrent_scans",
@@ -1342,7 +1342,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.preview_update",
@@ -1361,7 +1361,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.accepted_base_revision_accessor",
@@ -1380,7 +1380,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.accepted_fields_accessor",
@@ -1399,7 +1399,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_field_canonical_path_accessor",
@@ -1418,7 +1418,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_diagnostic_field_path_accessor",
@@ -1437,7 +1437,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_diagnostic_code_accessor",
@@ -1456,7 +1456,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_diagnostic_message_accessor",
@@ -1475,7 +1475,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.game_setup_settings_type",
@@ -1494,7 +1494,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.game_setup_settings_accessor",
@@ -1513,7 +1513,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_managed_game_accessor",
@@ -1532,7 +1532,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_managed_game_origin_accessor",
@@ -1551,7 +1551,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_game_version_selection_accessor",
@@ -1570,7 +1570,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_game_version_selection_origin_accessor",
@@ -1589,7 +1589,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_game_root_accessor",
@@ -1608,7 +1608,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_game_root_origin_accessor",
@@ -1627,7 +1627,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_game_executable_accessor",
@@ -1646,7 +1646,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_game_executable_origin_accessor",
@@ -1665,7 +1665,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_documents_root_accessor",
@@ -1684,7 +1684,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_documents_root_origin_accessor",
@@ -1703,7 +1703,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_ini_folder_accessor",
@@ -1722,7 +1722,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_ini_folder_origin_accessor",
@@ -1741,7 +1741,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_mods_root_accessor",
@@ -1760,7 +1760,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_mods_root_origin_accessor",
@@ -1779,7 +1779,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_custom_scan_input_accessor",
@@ -1798,7 +1798,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_custom_scan_input_origin_accessor",
@@ -1817,7 +1817,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_papyrus_log_accessor",
@@ -1836,7 +1836,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.setup_papyrus_log_origin_accessor",
@@ -1855,7 +1855,558 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_state_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_state_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FrontendState",
+      "bindingIdentifier": "classic_user_settings.FrontendState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_preferences_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_preferences_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FrontendPreferences",
+      "bindingIdentifier": "classic_user_settings.FrontendPreferences",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.gui_window_geometry_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.gui_window_geometry_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "GuiWindowGeometry",
+      "bindingIdentifier": "classic_user_settings.GuiWindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.window_geometry_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.window_geometry_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "WindowGeometry",
+      "bindingIdentifier": "classic_user_settings.WindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.tui_remembered_state_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.tui_remembered_state_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "TuiRememberedState",
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_state_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_state_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "frontend_state",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_preferences_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_preferences_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "preferences",
+      "bindingIdentifier": "classic_user_settings.FrontendState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_window_geometry_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_window_geometry_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "window_geometry",
+      "bindingIdentifier": "classic_user_settings.FrontendState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_tui_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_tui_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "tui",
+      "bindingIdentifier": "classic_user_settings.FrontendState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_auto_switch_after_scan_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_auto_switch_after_scan_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "auto_switch_after_scan",
+      "bindingIdentifier": "classic_user_settings.FrontendPreferences",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_auto_switch_after_scan_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_auto_switch_after_scan_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "auto_switch_after_scan_origin",
+      "bindingIdentifier": "classic_user_settings.FrontendPreferences",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_auto_refresh_interval_ms_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_auto_refresh_interval_ms_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "auto_refresh_interval_ms",
+      "bindingIdentifier": "classic_user_settings.FrontendPreferences",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_auto_refresh_interval_ms_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_auto_refresh_interval_ms_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "auto_refresh_interval_ms_origin",
+      "bindingIdentifier": "classic_user_settings.FrontendPreferences",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_main_tab_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_main_tab_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "main_tab",
+      "bindingIdentifier": "classic_user_settings.GuiWindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_backups_tab_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_backups_tab_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "backups_tab",
+      "bindingIdentifier": "classic_user_settings.GuiWindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_articles_tab_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_articles_tab_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "articles_tab",
+      "bindingIdentifier": "classic_user_settings.GuiWindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_results_tab_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_results_tab_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "results_tab",
+      "bindingIdentifier": "classic_user_settings.GuiWindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_window_maximized_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_window_maximized_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "maximized",
+      "bindingIdentifier": "classic_user_settings.WindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_window_maximized_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_window_maximized_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "maximized_origin",
+      "bindingIdentifier": "classic_user_settings.WindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_window_width_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_window_width_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "width",
+      "bindingIdentifier": "classic_user_settings.WindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_window_width_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_window_width_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "width_origin",
+      "bindingIdentifier": "classic_user_settings.WindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_window_height_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_window_height_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "height",
+      "bindingIdentifier": "classic_user_settings.WindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_window_height_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_window_height_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "height_origin",
+      "bindingIdentifier": "classic_user_settings.WindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_tui_active_tab_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_tui_active_tab_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "active_tab",
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_tui_active_tab_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_tui_active_tab_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "active_tab_origin",
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_tui_results_panel_width_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_tui_results_panel_width_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "results_panel_width",
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_tui_results_panel_width_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_tui_results_panel_width_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "results_panel_width_origin",
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_tui_sort_ascending_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_tui_sort_ascending_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "sort_ascending",
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "contract:user_settings.frontend_tui_sort_ascending_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_tui_sort_ascending_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "sort_ascending_origin",
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_managed_game",
@@ -1874,7 +2425,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_game_root",
@@ -1893,7 +2444,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_game_executable",
@@ -1912,7 +2463,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_documents_root",
@@ -1931,7 +2482,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_ini_folder",
@@ -1950,7 +2501,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_mods_folder",
@@ -1969,7 +2520,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:user_settings.update_with_papyrus_log_path",
@@ -1988,7 +2539,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "contract:config-classic-config-class",
@@ -21631,7 +22182,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "binding:classic_user_settings.UserSettingsSnapshot.game_setup_settings",
@@ -21652,7 +22203,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_managed_game",
@@ -21673,7 +22224,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_game_root",
@@ -21694,7 +22245,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_game_executable",
@@ -21715,7 +22266,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_documents_root",
@@ -21736,7 +22287,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_ini_folder",
@@ -21757,7 +22308,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_mods_folder",
@@ -21778,7 +22329,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_papyrus_log_path",
@@ -21799,7 +22350,616 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.FrontendState",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.FrontendState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.FrontendPreferences",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.FrontendPreferences",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.GuiWindowGeometry",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.GuiWindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.WindowGeometry",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.WindowGeometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.TuiRememberedState",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.UserSettingsSnapshot.frontend_state",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot.frontend_state",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.FrontendState.preferences",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.FrontendState.preferences",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.FrontendState.window_geometry",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.FrontendState.window_geometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.FrontendState.tui",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.FrontendState.tui",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.FrontendPreferences.auto_switch_after_scan",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.FrontendPreferences.auto_switch_after_scan",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.FrontendPreferences.auto_switch_after_scan_origin",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.FrontendPreferences.auto_switch_after_scan_origin",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.FrontendPreferences.auto_refresh_interval_ms",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.FrontendPreferences.auto_refresh_interval_ms",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.FrontendPreferences.auto_refresh_interval_ms_origin",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.FrontendPreferences.auto_refresh_interval_ms_origin",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.GuiWindowGeometry.main_tab",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.GuiWindowGeometry.main_tab",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.GuiWindowGeometry.backups_tab",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.GuiWindowGeometry.backups_tab",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.GuiWindowGeometry.articles_tab",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.GuiWindowGeometry.articles_tab",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.GuiWindowGeometry.results_tab",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.GuiWindowGeometry.results_tab",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.WindowGeometry.maximized",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.WindowGeometry.maximized",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.WindowGeometry.maximized_origin",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.WindowGeometry.maximized_origin",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.WindowGeometry.width",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.WindowGeometry.width",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.WindowGeometry.width_origin",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.WindowGeometry.width_origin",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.WindowGeometry.height",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.WindowGeometry.height",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.WindowGeometry.height_origin",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.WindowGeometry.height_origin",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.TuiRememberedState.active_tab",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState.active_tab",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.TuiRememberedState.active_tab_origin",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState.active_tab_origin",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.TuiRememberedState.results_panel_width",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState.results_panel_width",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.TuiRememberedState.results_panel_width_origin",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState.results_panel_width_origin",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.TuiRememberedState.sort_ascending",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState.sort_ascending",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.TuiRememberedState.sort_ascending_origin",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.TuiRememberedState.sort_ascending_origin",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "trackedId": "binding:classic_config.ClassicConfig.__init__",

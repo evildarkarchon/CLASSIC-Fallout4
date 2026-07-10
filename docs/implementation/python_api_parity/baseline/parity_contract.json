@@ -1009,6 +1009,296 @@
       "pythonKind": "class"
     },
     {
+      "id": "user_settings.frontend_state_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "FrontendState",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "FrontendState",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_preferences_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "FrontendPreferences",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "FrontendPreferences",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.gui_window_geometry_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "GuiWindowGeometry",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GuiWindowGeometry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.window_geometry_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "WindowGeometry",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "WindowGeometry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.tui_remembered_state_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "TuiRememberedState",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "TuiRememberedState",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_state_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "frontend_state",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_preferences_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "preferences",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "FrontendState",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_window_geometry_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "window_geometry",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "FrontendState",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_tui_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "tui",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "FrontendState",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_auto_switch_after_scan_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "auto_switch_after_scan",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "FrontendPreferences",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_auto_switch_after_scan_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "auto_switch_after_scan_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "FrontendPreferences",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_auto_refresh_interval_ms_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "auto_refresh_interval_ms",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "FrontendPreferences",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_auto_refresh_interval_ms_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "auto_refresh_interval_ms_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "FrontendPreferences",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_main_tab_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "main_tab",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GuiWindowGeometry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_backups_tab_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "backups_tab",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GuiWindowGeometry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_articles_tab_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "articles_tab",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GuiWindowGeometry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_results_tab_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "results_tab",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "GuiWindowGeometry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_window_maximized_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "maximized",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "WindowGeometry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_window_maximized_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "maximized_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "WindowGeometry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_window_width_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "width",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "WindowGeometry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_window_width_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "width_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "WindowGeometry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_window_height_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "height",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "WindowGeometry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_window_height_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "height_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "WindowGeometry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_tui_active_tab_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "active_tab",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "TuiRememberedState",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_tui_active_tab_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "active_tab_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "TuiRememberedState",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_tui_results_panel_width_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "results_panel_width",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "TuiRememberedState",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_tui_results_panel_width_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "results_panel_width_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "TuiRememberedState",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_tui_sort_ascending_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "sort_ascending",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "TuiRememberedState",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.frontend_tui_sort_ascending_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "sort_ascending_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "TuiRememberedState",
+      "pythonKind": "class"
+    },
+    {
       "id": "user_settings.update_with_managed_game",
       "tier": "tier1",
       "ownerModule": "user_settings",

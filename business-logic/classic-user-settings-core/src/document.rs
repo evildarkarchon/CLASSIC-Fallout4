@@ -1,5 +1,5 @@
-use crate::GameSetupSettings;
 use crate::scan_settings::CrashLogScanSettings;
+use crate::{FrontendState, GameSetupSettings};
 use classic_settings_core::{
     SchemaVersion, Yaml, YamlSchemaError, extract_schema_version, parse_yaml_content,
 };
@@ -150,6 +150,7 @@ pub struct UserSettings {
     update_preferences: UpdatePreferences,
     crash_log_scan_settings: CrashLogScanSettings,
     game_setup_settings: GameSetupSettings,
+    frontend_state: FrontendState,
     diagnostics: Vec<Diagnostic>,
     original_bytes: Option<Vec<u8>>,
     commit_eligibility: CommitEligibility,
@@ -334,6 +335,12 @@ impl UserSettings {
             } else {
                 GameSetupSettings::from_nested_document(&document, &crash_log_scan_settings)
             };
+        let (frontend_state, frontend_diagnostics) =
+            if classification == DocumentClassification::LegacyFlat {
+                FrontendState::from_legacy_flat_document(&document)
+            } else {
+                FrontendState::from_nested_document(&document)
+            };
         let requires_migration = location == SourceLocation::Legacy
             || matches!(
                 classification,
@@ -360,6 +367,7 @@ impl UserSettings {
         diagnostics.extend(update_diagnostic);
         diagnostics.extend(game_setup_diagnostics);
         diagnostics.extend(scan_diagnostics);
+        diagnostics.extend(frontend_diagnostics);
 
         Self {
             source: SettingsSource {
@@ -375,6 +383,7 @@ impl UserSettings {
             },
             crash_log_scan_settings,
             game_setup_settings,
+            frontend_state,
             diagnostics,
             original_bytes: Some(bytes),
             commit_eligibility: if requires_migration {
@@ -401,6 +410,7 @@ impl UserSettings {
             },
             crash_log_scan_settings: CrashLogScanSettings::published_defaults(),
             game_setup_settings: GameSetupSettings::published_defaults(),
+            frontend_state: FrontendState::published_defaults(),
             diagnostics: Vec::new(),
             original_bytes: None,
             commit_eligibility: CommitEligibility::Eligible,
@@ -423,6 +433,7 @@ impl UserSettings {
             },
             crash_log_scan_settings: CrashLogScanSettings::degraded_fallbacks(),
             game_setup_settings: GameSetupSettings::degraded_fallbacks(),
+            frontend_state: FrontendState::degraded_fallbacks(),
             diagnostics: vec![
                 Diagnostic::new("unreadable_document", error.to_string()),
                 Diagnostic::new(
@@ -456,6 +467,7 @@ impl UserSettings {
             },
             crash_log_scan_settings: CrashLogScanSettings::degraded_fallbacks(),
             game_setup_settings: GameSetupSettings::degraded_fallbacks(),
+            frontend_state: FrontendState::degraded_fallbacks(),
             diagnostics: vec![
                 Diagnostic::new("malformed_document", message),
                 Diagnostic::new(
@@ -492,6 +504,7 @@ impl UserSettings {
             },
             crash_log_scan_settings: CrashLogScanSettings::degraded_fallbacks(),
             game_setup_settings: GameSetupSettings::degraded_fallbacks(),
+            frontend_state: FrontendState::degraded_fallbacks(),
             diagnostics: vec![
                 Diagnostic::new(code, message),
                 Diagnostic::new(
@@ -537,6 +550,11 @@ impl UserSettings {
     /// Returns the typed Game Setup settings group.
     pub fn game_setup_settings(&self) -> &GameSetupSettings {
         &self.game_setup_settings
+    }
+
+    /// Returns the typed, namespaced frontend-state group.
+    pub fn frontend_state(&self) -> &FrontendState {
+        &self.frontend_state
     }
 
     /// Returns structured diagnostics in discovery and validation order.

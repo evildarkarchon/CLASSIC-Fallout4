@@ -4,6 +4,7 @@ use crate::shared::{JsGameId, core_to_js_game_id, js_to_core_game_id};
 use classic_user_settings_core::{
     CommitEligibility, DocumentClassification, PreferenceOrigin, Revision, SourceLocation,
     UserSettings, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview,
+    WindowGeometry,
 };
 use napi::bindgen_prelude::{Buffer, Either, Either5, Null};
 use std::collections::HashMap;
@@ -112,6 +113,77 @@ pub struct JsGameSetupSettings {
     pub papyrus_log_origin: String,
 }
 
+/// Remembered presentation preferences shared by maintained frontends.
+#[napi(object)]
+pub struct JsFrontendPreferences {
+    /// Whether successful scans should select the Results presentation.
+    pub auto_switch_after_scan: bool,
+    /// Provenance token for automatic result switching.
+    pub auto_switch_after_scan_origin: String,
+    /// Remembered refresh interval in milliseconds, represented as a JavaScript number.
+    pub auto_refresh_interval_ms: f64,
+    /// Provenance token for the refresh interval.
+    pub auto_refresh_interval_ms_origin: String,
+}
+
+/// Widget-independent geometry for one maintained GUI tab.
+#[napi(object)]
+pub struct JsWindowGeometry {
+    /// Whether the tab's window was maximized.
+    pub maximized: bool,
+    /// Provenance token for the maximized state.
+    pub maximized_origin: String,
+    /// Remembered normal-state width in pixels.
+    pub width: u32,
+    /// Provenance token for the remembered width.
+    pub width_origin: String,
+    /// Remembered normal-state height in pixels.
+    pub height: u32,
+    /// Provenance token for the remembered height.
+    pub height_origin: String,
+}
+
+/// Remembered geometry for every maintained GUI tab.
+#[napi(object)]
+pub struct JsGuiWindowGeometry {
+    /// Geometry for the Main Options tab.
+    pub main_tab: JsWindowGeometry,
+    /// Geometry for the File Backup tab.
+    pub backups_tab: JsWindowGeometry,
+    /// Geometry for the Articles tab.
+    pub articles_tab: JsWindowGeometry,
+    /// Geometry for the Results tab.
+    pub results_tab: JsWindowGeometry,
+}
+
+/// Remembered TUI state from the canonical `UI.tui` namespace.
+#[napi(object)]
+pub struct JsTuiRememberedState {
+    /// Stable zero-based tab ordinal remembered by the TUI.
+    pub active_tab: u8,
+    /// Provenance token for the active-tab ordinal.
+    pub active_tab_origin: String,
+    /// Remembered Results list-panel width.
+    pub results_panel_width: u16,
+    /// Provenance token for the Results list-panel width.
+    pub results_panel_width_origin: String,
+    /// Whether Results are remembered in ascending order.
+    pub sort_ascending: bool,
+    /// Provenance token for the sort direction.
+    pub sort_ascending_origin: String,
+}
+
+/// Cohesive, widget-independent state remembered by CLASSIC frontends.
+#[napi(object)]
+pub struct JsFrontendState {
+    /// Presentation preferences shared by frontends.
+    pub preferences: JsFrontendPreferences,
+    /// Remembered geometry for maintained GUI tabs.
+    pub window_geometry: JsGuiWindowGeometry,
+    /// Canonically namespaced TUI remembered state.
+    pub tui: JsTuiRememberedState,
+}
+
 /// Caller-authored fields to validate as one non-persisting User Settings Update.
 #[napi(object)]
 pub struct JsUserSettingsUpdate {
@@ -195,6 +267,8 @@ pub struct JsUserSettingsSnapshot {
     pub crash_log_scan_settings: JsCrashLogScanSettings,
     /// Typed Game Setup settings.
     pub game_setup_settings: JsGameSetupSettings,
+    /// Typed frontend presentation and remembered state.
+    pub frontend_state: JsFrontendState,
     /// Selected source token: `canonical`, `legacy`, or `missing`.
     pub source_location: String,
     /// Selected source path, absent when the document is missing.
@@ -232,6 +306,7 @@ pub fn open_user_settings(classic_root: String) -> JsUserSettingsSnapshot {
         },
         crash_log_scan_settings: crash_log_scan_settings_to_js(&settings),
         game_setup_settings: game_setup_settings_to_js(&settings),
+        frontend_state: frontend_state_to_js(&settings),
         source_location: source_location_token(settings.source().location()).to_string(),
         source_path: settings
             .source()
@@ -253,6 +328,56 @@ pub fn open_user_settings(classic_root: String) -> JsUserSettingsSnapshot {
         original_content: settings
             .original_bytes()
             .map(|content| Buffer::from(content.to_vec())),
+    }
+}
+
+/// Converts the Rust-owned frontend state group into nested NAPI DTOs.
+fn frontend_state_to_js(settings: &UserSettings) -> JsFrontendState {
+    let frontend = settings.frontend_state();
+    let preferences = frontend.preferences();
+    let geometry = frontend.window_geometry();
+    let tui = frontend.tui();
+
+    JsFrontendState {
+        preferences: JsFrontendPreferences {
+            auto_switch_after_scan: preferences.auto_switch_after_scan(),
+            auto_switch_after_scan_origin: preference_origin_token(
+                preferences.auto_switch_after_scan_origin(),
+            )
+            .to_string(),
+            auto_refresh_interval_ms: preferences.auto_refresh_interval_ms() as f64,
+            auto_refresh_interval_ms_origin: preference_origin_token(
+                preferences.auto_refresh_interval_ms_origin(),
+            )
+            .to_string(),
+        },
+        window_geometry: JsGuiWindowGeometry {
+            main_tab: window_geometry_to_js(geometry.main_tab()),
+            backups_tab: window_geometry_to_js(geometry.backups_tab()),
+            articles_tab: window_geometry_to_js(geometry.articles_tab()),
+            results_tab: window_geometry_to_js(geometry.results_tab()),
+        },
+        tui: JsTuiRememberedState {
+            active_tab: tui.active_tab(),
+            active_tab_origin: preference_origin_token(tui.active_tab_origin()).to_string(),
+            results_panel_width: tui.results_panel_width(),
+            results_panel_width_origin: preference_origin_token(tui.results_panel_width_origin())
+                .to_string(),
+            sort_ascending: tui.sort_ascending(),
+            sort_ascending_origin: preference_origin_token(tui.sort_ascending_origin()).to_string(),
+        },
+    }
+}
+
+/// Converts one core GUI-tab geometry value without interpreting widget state.
+fn window_geometry_to_js(geometry: &WindowGeometry) -> JsWindowGeometry {
+    JsWindowGeometry {
+        maximized: geometry.maximized(),
+        maximized_origin: preference_origin_token(geometry.maximized_origin()).to_string(),
+        width: geometry.width(),
+        width_origin: preference_origin_token(geometry.width_origin()).to_string(),
+        height: geometry.height(),
+        height_origin: preference_origin_token(geometry.height_origin()).to_string(),
     }
 }
 

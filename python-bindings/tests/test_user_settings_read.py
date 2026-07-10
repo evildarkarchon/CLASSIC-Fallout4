@@ -5,14 +5,19 @@ from pathlib import Path
 import classic_user_settings
 
 
-def test_user_settings_read_only_open(tmp_path: Path) -> None:
-    """Expose safe typed preferences and retain unknown source content without writing."""
-    fixture_root = (
+def user_settings_fixture_root() -> Path:
+    """Return the repository-level User Settings compatibility corpus."""
+    return (
         Path(__file__).parents[2]
         / "tests"
         / "fixtures"
         / "user_settings_compatibility"
     )
+
+
+def test_user_settings_read_only_open(tmp_path: Path) -> None:
+    """Expose safe typed preferences and retain unknown source content without writing."""
+    fixture_root = user_settings_fixture_root()
     content = (fixture_root / "invalid_known_values.yaml").read_bytes()
     settings_path = tmp_path / "CLASSIC Settings.yaml"
     settings_path.write_bytes(content)
@@ -35,6 +40,8 @@ def test_user_settings_read_only_open(tmp_path: Path) -> None:
         "invalid_path_custom_scan_input",
         "invalid_range_max_concurrent_scans",
         "invalid_value_formid_databases",
+        "invalid_type_gui_geometry_width",
+        "invalid_type_gui_geometry_maximized",
     ]
     assert snapshot.diagnostics[0].message
     assert snapshot.revision.startswith("sha256:")
@@ -105,16 +112,80 @@ def test_user_settings_read_only_open(tmp_path: Path) -> None:
     assert invalid_bytes_snapshot.original_content == invalid_bytes
 
 
+def test_user_settings_frontend_state_exposes_nested_values_and_origins(
+    tmp_path: Path,
+) -> None:
+    """Expose shared preferences, GUI geometry, and namespaced TUI remembered state."""
+    fixture_root = user_settings_fixture_root()
+    settings_path = tmp_path / "CLASSIC Settings.yaml"
+    source_bytes = (fixture_root / "gui_geometry.yaml").read_bytes()
+    settings_path.write_bytes(source_bytes)
+
+    snapshot = classic_user_settings.open_user_settings(str(tmp_path))
+    frontend = snapshot.frontend_state
+
+    assert isinstance(frontend, classic_user_settings.FrontendState)
+    assert isinstance(frontend.preferences, classic_user_settings.FrontendPreferences)
+    assert frontend.preferences.auto_switch_after_scan is True
+    assert frontend.preferences.auto_switch_after_scan_origin == "document"
+    assert frontend.preferences.auto_refresh_interval_ms == 5000
+    assert frontend.preferences.auto_refresh_interval_ms_origin == "document"
+
+    geometry = frontend.window_geometry
+    assert isinstance(geometry, classic_user_settings.GuiWindowGeometry)
+    expected_tabs = {
+        "main_tab": (False, 705, 641),
+        "backups_tab": (False, 750, 580),
+        "articles_tab": (False, 550, 350),
+        "results_tab": (True, 750, 450),
+    }
+    for tab_name, expected in expected_tabs.items():
+        tab = getattr(geometry, tab_name)
+        assert isinstance(tab, classic_user_settings.WindowGeometry)
+        assert (tab.maximized, tab.width, tab.height) == expected
+        assert {
+            tab.maximized_origin,
+            tab.width_origin,
+            tab.height_origin,
+        } == {"document"}
+
+    assert isinstance(frontend.tui, classic_user_settings.TuiRememberedState)
+    assert frontend.tui.active_tab == 0
+    assert frontend.tui.results_panel_width == 30
+    assert frontend.tui.sort_ascending is False
+    assert {
+        frontend.tui.active_tab_origin,
+        frontend.tui.results_panel_width_origin,
+        frontend.tui.sort_ascending_origin,
+    } == {"default"}
+    assert snapshot.original_content == source_bytes
+    assert settings_path.read_bytes() == source_bytes
+
+    invalid_root = tmp_path / "invalid-frontend"
+    invalid_root.mkdir()
+    invalid_path = invalid_root / "CLASSIC Settings.yaml"
+    invalid_bytes = (fixture_root / "invalid_known_values.yaml").read_bytes()
+    invalid_path.write_bytes(invalid_bytes)
+
+    invalid = classic_user_settings.open_user_settings(str(invalid_root))
+    invalid_main = invalid.frontend_state.window_geometry.main_tab
+    assert (invalid_main.maximized, invalid_main.width, invalid_main.height) == (
+        False,
+        640,
+        500,
+    )
+    assert invalid_main.maximized_origin == "degraded_fallback"
+    assert invalid_main.width_origin == "degraded_fallback"
+    assert invalid_main.height_origin == "document"
+    assert invalid.original_content == invalid_bytes
+    assert invalid_path.read_bytes() == invalid_bytes
+
+
 def test_user_settings_scan_snapshot_exposes_typed_values_and_alias_policy(
     tmp_path: Path,
 ) -> None:
     """Project scan choices, provenance, aliases, and safe fallbacks as typed values."""
-    fixture_root = (
-        Path(__file__).parents[2]
-        / "tests"
-        / "fixtures"
-        / "user_settings_compatibility"
-    )
+    fixture_root = user_settings_fixture_root()
     current_path = tmp_path / "CLASSIC Settings.yaml"
     current_path.write_bytes((fixture_root / "canonical_current_nested.yaml").read_bytes())
 
@@ -228,12 +299,7 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
     tmp_path: Path,
 ) -> None:
     """Return one complete accepted preview or field-specific rejection diagnostics."""
-    fixture_root = (
-        Path(__file__).parents[2]
-        / "tests"
-        / "fixtures"
-        / "user_settings_compatibility"
-    )
+    fixture_root = user_settings_fixture_root()
     settings_path = tmp_path / "CLASSIC Settings.yaml"
     source_bytes = (fixture_root / "unknown_entries.yaml").read_bytes()
     settings_path.write_bytes(source_bytes)

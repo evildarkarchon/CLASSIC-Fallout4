@@ -16,7 +16,7 @@ As of the current codebase, CLASSIC is a **native C++ + Rust application**:
 - **Python bindings:** `python-bindings/`
 - **Rust TUI app:** `ui-applications/classic-tui/`
 
-Rust owns typed, preservation-aware User Settings. Game Setup Intake can be prepared from an already-opened typed settings group, while discovered paths remain caller-reviewed proposals and are never persisted by intake itself.
+Rust owns typed, preservation-aware User Settings, including widget-independent frontend preferences, GUI geometry, and a canonical TUI remembered-state namespace. Game Setup Intake can be prepared from an already-opened typed settings group, while discovered paths remain caller-reviewed proposals and are never persisted by intake itself.
 
 See the [Workspace Migration Matrix](docs/workspace-migration-matrix.md) for old-to-new command, path, and artifact translations.
 

@@ -732,6 +732,296 @@
       "nodeKind": "interface"
     },
     {
+      "id": "user-settings-frontend-state-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "FrontendState",
+      "rustKind": "struct",
+      "nodeExport": "JsFrontendState",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-frontend-preferences-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "FrontendPreferences",
+      "rustKind": "struct",
+      "nodeExport": "JsFrontendPreferences",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-gui-window-geometry-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "GuiWindowGeometry",
+      "rustKind": "struct",
+      "nodeExport": "JsGuiWindowGeometry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-window-geometry-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "WindowGeometry",
+      "rustKind": "struct",
+      "nodeExport": "JsWindowGeometry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-tui-remembered-state-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "TuiRememberedState",
+      "rustKind": "struct",
+      "nodeExport": "JsTuiRememberedState",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-frontend-state-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "frontend_state",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-frontend-state-preferences-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "preferences",
+      "rustKind": "function",
+      "nodeExport": "JsFrontendState",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-frontend-state-window-geometry-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "window_geometry",
+      "rustKind": "function",
+      "nodeExport": "JsFrontendState",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-frontend-state-tui-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "tui",
+      "rustKind": "function",
+      "nodeExport": "JsFrontendState",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-auto-switch-after-scan-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "auto_switch_after_scan",
+      "rustKind": "function",
+      "nodeExport": "JsFrontendPreferences",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-auto-switch-after-scan-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "auto_switch_after_scan_origin",
+      "rustKind": "function",
+      "nodeExport": "JsFrontendPreferences",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-auto-refresh-interval-ms-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "auto_refresh_interval_ms",
+      "rustKind": "function",
+      "nodeExport": "JsFrontendPreferences",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-auto-refresh-interval-ms-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "auto_refresh_interval_ms_origin",
+      "rustKind": "function",
+      "nodeExport": "JsFrontendPreferences",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-main-tab-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "main_tab",
+      "rustKind": "function",
+      "nodeExport": "JsGuiWindowGeometry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-backups-tab-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "backups_tab",
+      "rustKind": "function",
+      "nodeExport": "JsGuiWindowGeometry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-articles-tab-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "articles_tab",
+      "rustKind": "function",
+      "nodeExport": "JsGuiWindowGeometry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-results-tab-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "results_tab",
+      "rustKind": "function",
+      "nodeExport": "JsGuiWindowGeometry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-window-maximized-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "maximized",
+      "rustKind": "function",
+      "nodeExport": "JsWindowGeometry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-window-maximized-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "maximized_origin",
+      "rustKind": "function",
+      "nodeExport": "JsWindowGeometry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-window-width-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "width",
+      "rustKind": "function",
+      "nodeExport": "JsWindowGeometry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-window-width-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "width_origin",
+      "rustKind": "function",
+      "nodeExport": "JsWindowGeometry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-window-height-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "height",
+      "rustKind": "function",
+      "nodeExport": "JsWindowGeometry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-window-height-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "height_origin",
+      "rustKind": "function",
+      "nodeExport": "JsWindowGeometry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-tui-active-tab-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "active_tab",
+      "rustKind": "function",
+      "nodeExport": "JsTuiRememberedState",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-tui-active-tab-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "active_tab_origin",
+      "rustKind": "function",
+      "nodeExport": "JsTuiRememberedState",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-tui-results-panel-width-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "results_panel_width",
+      "rustKind": "function",
+      "nodeExport": "JsTuiRememberedState",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-tui-results-panel-width-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "results_panel_width_origin",
+      "rustKind": "function",
+      "nodeExport": "JsTuiRememberedState",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-tui-sort-ascending-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "sort_ascending",
+      "rustKind": "function",
+      "nodeExport": "JsTuiRememberedState",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-tui-sort-ascending-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "sort_ascending_origin",
+      "rustKind": "function",
+      "nodeExport": "JsTuiRememberedState",
+      "nodeKind": "interface"
+    },
+    {
       "id": "user-settings-update-type",
       "tier": "tier1",
       "ownerModule": "user_settings",

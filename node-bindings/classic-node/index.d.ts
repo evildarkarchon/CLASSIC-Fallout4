@@ -2789,6 +2789,28 @@ export interface JsFileOperationResult {
   errors: Array<string>
 }
 
+/** Remembered presentation preferences shared by maintained frontends. */
+export interface JsFrontendPreferences {
+  /** Whether successful scans should select the Results presentation. */
+  autoSwitchAfterScan: boolean
+  /** Provenance token for automatic result switching. */
+  autoSwitchAfterScanOrigin: string
+  /** Remembered refresh interval in milliseconds, represented as a JavaScript number. */
+  autoRefreshIntervalMs: number
+  /** Provenance token for the refresh interval. */
+  autoRefreshIntervalMsOrigin: string
+}
+
+/** Cohesive, widget-independent state remembered by CLASSIC frontends. */
+export interface JsFrontendState {
+  /** Presentation preferences shared by frontends. */
+  preferences: JsFrontendPreferences
+  /** Remembered geometry for maintained GUI tabs. */
+  windowGeometry: JsGuiWindowGeometry
+  /** Canonically namespaced TUI remembered state. */
+  tui: JsTuiRememberedState
+}
+
 /** Supported game identifiers exposed to JavaScript. */
 export declare const enum JsGameId {
   /** Fallout 4 (base game) */
@@ -3034,6 +3056,18 @@ export interface JsGpuInfo {
   manufacturer: string
   /** Rival GPU manufacturer for compatibility checks */
   rival?: string
+}
+
+/** Remembered geometry for every maintained GUI tab. */
+export interface JsGuiWindowGeometry {
+  /** Geometry for the Main Options tab. */
+  mainTab: JsWindowGeometry
+  /** Geometry for the File Backup tab. */
+  backupsTab: JsWindowGeometry
+  /** Geometry for the Articles tab. */
+  articlesTab: JsWindowGeometry
+  /** Geometry for the Results tab. */
+  resultsTab: JsWindowGeometry
 }
 
 /**
@@ -3586,6 +3620,22 @@ export declare const enum JsTomlIssueSeverity {
   Info = 'Info'
 }
 
+/** Remembered TUI state from the canonical `UI.tui` namespace. */
+export interface JsTuiRememberedState {
+  /** Stable zero-based tab ordinal remembered by the TUI. */
+  activeTab: number
+  /** Provenance token for the active-tab ordinal. */
+  activeTabOrigin: string
+  /** Remembered Results list-panel width. */
+  resultsPanelWidth: number
+  /** Provenance token for the Results list-panel width. */
+  resultsPanelWidthOrigin: string
+  /** Whether Results are remembered in ascending order. */
+  sortAscending: boolean
+  /** Provenance token for the sort direction. */
+  sortAscendingOrigin: string
+}
+
 /** Unknown-version handling policy from the version registry. */
 export interface JsUnknownVersionHandling {
   /** Strategy: "nearest_match", "strict", or "default_only" */
@@ -3649,6 +3699,8 @@ export interface JsUserSettingsSnapshot {
   crashLogScanSettings: JsCrashLogScanSettings
   /** Typed Game Setup settings. */
   gameSetupSettings: JsGameSetupSettings
+  /** Typed frontend presentation and remembered state. */
+  frontendState: JsFrontendState
   /** Selected source token: `canonical`, `legacy`, or `missing`. */
   sourceLocation: string
   /** Selected source path, absent when the document is missing. */
@@ -3805,6 +3857,22 @@ export interface JsVsyncEntry {
   filePath: string
   /** Setting name that has VSync enabled. */
   setting: string
+}
+
+/** Widget-independent geometry for one maintained GUI tab. */
+export interface JsWindowGeometry {
+  /** Whether the tab's window was maximized. */
+  maximized: boolean
+  /** Provenance token for the maximized state. */
+  maximizedOrigin: string
+  /** Remembered normal-state width in pixels. */
+  width: number
+  /** Provenance token for the remembered width. */
+  widthOrigin: string
+  /** Remembered normal-state height in pixels. */
+  height: number
+  /** Provenance token for the remembered height. */
+  heightOrigin: string
 }
 
 /** An issue found in the Wrye Bash plugin checker report. */

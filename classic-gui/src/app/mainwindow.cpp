@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 
+#include <cstdint>
 #include <filesystem>
+#include <limits>
 #include <QApplication>
 #include <QCoreApplication>
 #include <QDir>
@@ -1298,32 +1300,28 @@ void MainWindow::restoreTabGeometry(int tabIndex)
         return;
     }
 
-    QString settingsPath = settingsFilePath(m_dataRoot);
     int savedW = -1, savedH = -1;
     bool wasMax = false;
 
     try {
-        auto ops = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-
-        auto prefix = std::string("UI.window_geometry.") + kTabNames[tabIndex] + ".";
-
-        auto getInt = [&](const std::string& key) -> int {
-            auto val = classic::settings::yaml_ops_get_setting_value(*ops, key);
-            if (val.value_type == "integer") {
-                bool ok = false;
-                int result = QString::fromStdString(std::string(val.value)).toInt(&ok);
-                if (ok)
-                    return result;
-            }
-            return -1;
+        const auto frontendState = classic::settings::user_settings_open_frontend_state(
+            std::string(m_dataRoot.toUtf8().constData()));
+        const std::string targetTab = kTabNames[tabIndex];
+        const auto toWidgetDimension = [](std::uint32_t value) {
+            const auto maximum = static_cast<std::uint32_t>(std::numeric_limits<int>::max());
+            return static_cast<int>(qMin(value, maximum));
         };
 
-        savedW = getInt(prefix + "width");
-        savedH = getInt(prefix + "height");
-
-        auto maxVal = classic::settings::yaml_ops_get_setting_value(*ops, prefix + "maximized");
-        wasMax = (maxVal.value == "true");
+        // Rust owns persisted shape/default validation while Qt retains widget constraints.
+        // The raw save path stays available until revision-aware User Settings commits land.
+        for (const auto& geometry : frontendState.window_geometry) {
+            if (std::string(geometry.tab) == targetTab) {
+                savedW = toWidgetDimension(geometry.width);
+                savedH = toWidgetDimension(geometry.height);
+                wasMax = geometry.maximized;
+                break;
+            }
+        }
     } catch (...) {
         // Fall through to defaults
     }

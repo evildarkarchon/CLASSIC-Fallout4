@@ -161,9 +161,11 @@ This is currently where `classic-config-core`, `classic-database-core`, `classic
 
 `user_settings_open_game_setup_settings(classic_root) -> GameSetupSettingsDto` exposes the managed game, selected version, game root, executable, Documents and INI paths, mods/staging path, custom-scan path, and Papyrus log path with per-field provenance. Rust resolves compatibility labels and retains persisted separator spelling before the DTO is formed.
 
+`user_settings_open_frontend_state(classic_root) -> FrontendStateDto` exposes canonical presentation preferences, the four named GUI tab geometries, and the namespaced TUI remembered state with per-field provenance. The DTO contains primitives and stable tab-name tokens rather than Qt widget types. `MainWindow::restoreTabGeometry(...)` consumes this typed read; its existing raw geometry writer remains available until conflict-safe commits land.
+
 `user_settings_preview_update(classic_root, update) -> UserSettingsUpdatePreviewDto` validates every requested field, including Game Setup fields, as one unit and performs no write. Accepted results carry the opened base revision and only requested canonical fields; rejected results contain all field diagnostics and no partial fields. Optional strings and omitted fields use separate presence flags, while accepted field values use an explicit `value_kind` plus typed value members.
 
-The native CLI `--check-app-update` consumer resolves its CLASSIC root and short-circuits on the Update Preferences DTO before initializing the update runtime or calling `check_app_notification`. The typed scan and preview DTOs are available for downstream adapter cutovers, but this change does not make scan preparation or the settings dialog consume them automatically.
+The native CLI `--check-app-update` consumer resolves its CLASSIC root and short-circuits on the Update Preferences DTO before initializing the update runtime or calling `check_app_notification`. The typed frontend DTO now drives GUI geometry restoration; the typed scan, setup, and preview DTOs remain available for their downstream adapter cutovers.
 
 ### YAML file-cache helpers
 

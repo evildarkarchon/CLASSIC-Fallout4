@@ -4,6 +4,7 @@
 //! returns typed preference groups without changing the source document.
 
 mod document;
+mod frontend_state;
 mod game_setup_settings;
 mod preference;
 mod scan_settings;
@@ -12,6 +13,9 @@ mod update;
 pub use document::{
     CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision,
     SettingsSource, SourceLocation, UpdatePreferences, UserSettings,
+};
+pub use frontend_state::{
+    FrontendPreferences, FrontendState, GuiWindowGeometry, TuiRememberedState, WindowGeometry,
 };
 pub use game_setup_settings::GameSetupSettings;
 pub use scan_settings::{CrashLogScanSettings, GameVersionSelection};

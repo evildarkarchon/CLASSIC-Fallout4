@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T01:54:21.549657+00:00",
+  "generated_at_utc": "2026-07-10T02:38:46.155778+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -8593,6 +8593,26 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "FrontendPreferences",
+      "export_path": "FrontendPreferences",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class FrontendPreferences:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "FrontendState",
+      "export_path": "FrontendState",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class FrontendState:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "GameSetupSettings",
       "export_path": "GameSetupSettings",
       "kind": "class",
@@ -8600,6 +8620,26 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "class GameSetupSettings:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "GuiWindowGeometry",
+      "export_path": "GuiWindowGeometry",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class GuiWindowGeometry:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "TuiRememberedState",
+      "export_path": "TuiRememberedState",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class TuiRememberedState:"
     },
     {
       "module": "classic_user_settings",
@@ -8910,6 +8950,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "class UserSettingsUpdatePreview:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "WindowGeometry",
+      "export_path": "WindowGeometry",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class WindowGeometry:"
     },
     {
       "module": "classic_user_settings",

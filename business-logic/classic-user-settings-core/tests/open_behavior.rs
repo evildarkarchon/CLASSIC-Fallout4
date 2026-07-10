@@ -156,6 +156,8 @@ fn open_invalid_known_values_fall_back_safely_without_blocking_later_updates() {
             "invalid_path_custom_scan_input",
             "invalid_range_max_concurrent_scans",
             "invalid_value_formid_databases",
+            "invalid_type_gui_geometry_width",
+            "invalid_type_gui_geometry_maximized",
         ]
     );
     assert_eq!(settings.original_bytes(), Some(bytes_before.as_slice()));

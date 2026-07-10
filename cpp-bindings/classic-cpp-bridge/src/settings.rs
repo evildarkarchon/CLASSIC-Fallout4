@@ -44,7 +44,7 @@ use classic_user_settings_core::{
     CommitEligibility, DocumentClassification, PreferenceOrigin, Revision, SourceLocation,
     UserSettings, UserSettingsUpdate as CoreUserSettingsUpdate,
     UserSettingsUpdateField as CoreUserSettingsUpdateField,
-    UserSettingsUpdatePreview as CoreUserSettingsUpdatePreview,
+    UserSettingsUpdatePreview as CoreUserSettingsUpdatePreview, WindowGeometry,
 };
 use std::{collections::BTreeMap, path::Path};
 use yaml_rust2::Yaml;
@@ -223,6 +223,63 @@ fn user_settings_open_game_setup_settings(classic_root: &str) -> ffi::GameSetupS
             .iter()
             .map(user_settings_diagnostic_dto)
             .collect(),
+    }
+}
+
+/// Opens User Settings at an explicit CLASSIC root and returns the complete,
+/// widget-independent frontend state with per-field provenance.
+fn user_settings_open_frontend_state(classic_root: &str) -> ffi::FrontendStateDto {
+    let settings = UserSettings::open(Path::new(classic_root));
+    let frontend = settings.frontend_state();
+    let preferences = frontend.preferences();
+    let geometry = frontend.window_geometry();
+    let tui = frontend.tui();
+
+    ffi::FrontendStateDto {
+        auto_switch_after_scan: preferences.auto_switch_after_scan(),
+        auto_switch_after_scan_origin: preference_origin_token(
+            preferences.auto_switch_after_scan_origin(),
+        )
+        .to_string(),
+        auto_refresh_interval_ms: preferences.auto_refresh_interval_ms(),
+        auto_refresh_interval_ms_origin: preference_origin_token(
+            preferences.auto_refresh_interval_ms_origin(),
+        )
+        .to_string(),
+        window_geometry: vec![
+            frontend_window_geometry_dto("main_tab", geometry.main_tab()),
+            frontend_window_geometry_dto("backups_tab", geometry.backups_tab()),
+            frontend_window_geometry_dto("articles_tab", geometry.articles_tab()),
+            frontend_window_geometry_dto("results_tab", geometry.results_tab()),
+        ],
+        tui_active_tab: tui.active_tab(),
+        tui_active_tab_origin: preference_origin_token(tui.active_tab_origin()).to_string(),
+        tui_results_panel_width: tui.results_panel_width(),
+        tui_results_panel_width_origin: preference_origin_token(tui.results_panel_width_origin())
+            .to_string(),
+        tui_sort_ascending: tui.sort_ascending(),
+        tui_sort_ascending_origin: preference_origin_token(tui.sort_ascending_origin()).to_string(),
+        classification: document_classification_token(settings.classification()).to_string(),
+        revision: revision_token(settings.revision()),
+        commit_eligibility: commit_eligibility_token(settings.commit_eligibility()).to_string(),
+        diagnostics: settings
+            .diagnostics()
+            .iter()
+            .map(user_settings_diagnostic_dto)
+            .collect(),
+    }
+}
+
+/// Converts one named, widget-independent geometry entry into its CXX DTO.
+fn frontend_window_geometry_dto(tab: &str, geometry: &WindowGeometry) -> ffi::WindowGeometryDto {
+    ffi::WindowGeometryDto {
+        tab: tab.to_string(),
+        maximized: geometry.maximized(),
+        maximized_origin: preference_origin_token(geometry.maximized_origin()).to_string(),
+        width: geometry.width(),
+        width_origin: preference_origin_token(geometry.width_origin()).to_string(),
+        height: geometry.height(),
+        height_origin: preference_origin_token(geometry.height_origin()).to_string(),
     }
 }
 
@@ -1079,6 +1136,44 @@ mod ffi {
         diagnostics: Vec<UserSettingsDiagnosticDto>,
     }
 
+    /// Widget-independent geometry for one maintained GUI tab.
+    ///
+    /// `tab` is one of `main_tab`, `backups_tab`, `articles_tab`, or
+    /// `results_tab`. Each value is already defaulted or safely degraded by Rust;
+    /// the origin token tells C++ whether it came from the document.
+    struct WindowGeometryDto {
+        tab: String,
+        maximized: bool,
+        maximized_origin: String,
+        width: u32,
+        width_origin: String,
+        height: u32,
+        height_origin: String,
+    }
+
+    /// Typed frontend preferences, GUI geometry, and remembered TUI state.
+    ///
+    /// Geometry entries are returned in maintained GUI tab order. All scalar
+    /// values have a matching provenance token; document metadata and open-time
+    /// diagnostics follow the other typed User Settings DTOs.
+    struct FrontendStateDto {
+        auto_switch_after_scan: bool,
+        auto_switch_after_scan_origin: String,
+        auto_refresh_interval_ms: u64,
+        auto_refresh_interval_ms_origin: String,
+        window_geometry: Vec<WindowGeometryDto>,
+        tui_active_tab: u8,
+        tui_active_tab_origin: String,
+        tui_results_panel_width: u16,
+        tui_results_panel_width_origin: String,
+        tui_sort_ascending: bool,
+        tui_sort_ascending_origin: String,
+        classification: String,
+        revision: String,
+        commit_eligibility: String,
+        diagnostics: Vec<UserSettingsDiagnosticDto>,
+    }
+
     /// Caller-authored multi-field User Settings Update request.
     ///
     /// Each `has_*` flag distinguishes an omitted field from a requested false,
@@ -1186,6 +1281,9 @@ mod ffi {
 
         /// Open User Settings and return the complete typed Game Setup group.
         fn user_settings_open_game_setup_settings(classic_root: &str) -> GameSetupSettingsDto;
+
+        /// Open User Settings and return the complete typed frontend-state group.
+        fn user_settings_open_frontend_state(classic_root: &str) -> FrontendStateDto;
 
         /// Validate a multi-field User Settings Update without writing to disk.
         fn user_settings_preview_update(

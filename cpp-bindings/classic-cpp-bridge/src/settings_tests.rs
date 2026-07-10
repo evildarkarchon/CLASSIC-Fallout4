@@ -1,7 +1,25 @@
 use super::*;
 use serial_test::serial;
-use std::io::Write;
+use std::{
+    io::Write,
+    path::{Path, PathBuf},
+};
 use tempfile::NamedTempFile;
+
+/// Returns one fixture from the repository-level User Settings compatibility corpus.
+fn user_settings_fixture_path(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/user_settings_compatibility")
+        .join(name)
+}
+
+/// Installs one compatibility fixture as canonical User Settings.
+fn install_user_settings_fixture(root: &Path, name: &str) {
+    let source =
+        std::fs::read(user_settings_fixture_path(name)).expect("read User Settings fixture");
+    std::fs::write(root.join("CLASSIC Settings.yaml"), &source)
+        .expect("install User Settings fixture");
+}
 
 // ── YAML ops tests (pre-existing) ──────────────────────────────
 
@@ -408,6 +426,93 @@ fn test_user_settings_update_preferences_bridge_is_fail_closed_with_diagnostics(
     assert!(preferences.has_original_content);
     assert_eq!(preferences.original_content, content.as_bytes());
     assert!(preferences.revision.starts_with("sha256:"));
+}
+
+#[test]
+fn test_user_settings_frontend_state_bridge_maps_canonical_fixture() {
+    let root = tempfile::tempdir().expect("create temporary CLASSIC root");
+    install_user_settings_fixture(root.path(), "gui_geometry.yaml");
+
+    let frontend = user_settings_open_frontend_state(&root.path().display().to_string());
+
+    assert!(frontend.auto_switch_after_scan);
+    assert_eq!(frontend.auto_switch_after_scan_origin, "document");
+    assert_eq!(frontend.auto_refresh_interval_ms, 5_000);
+    assert_eq!(frontend.auto_refresh_interval_ms_origin, "document");
+    assert_eq!(frontend.window_geometry.len(), 4);
+    assert_eq!(
+        frontend
+            .window_geometry
+            .iter()
+            .map(|geometry| geometry.tab.as_str())
+            .collect::<Vec<_>>(),
+        vec!["main_tab", "backups_tab", "articles_tab", "results_tab"]
+    );
+
+    let main = &frontend.window_geometry[0];
+    assert_eq!((main.width, main.height, main.maximized), (705, 641, false));
+    assert_eq!(main.width_origin, "document");
+    assert_eq!(main.height_origin, "document");
+    assert_eq!(main.maximized_origin, "document");
+
+    let backups = &frontend.window_geometry[1];
+    assert_eq!(
+        (backups.width, backups.height, backups.maximized),
+        (750, 580, false)
+    );
+    let articles = &frontend.window_geometry[2];
+    assert_eq!(
+        (articles.width, articles.height, articles.maximized),
+        (550, 350, false)
+    );
+    let results = &frontend.window_geometry[3];
+    assert_eq!(
+        (results.width, results.height, results.maximized),
+        (750, 450, true)
+    );
+
+    assert_eq!(frontend.tui_active_tab, 0);
+    assert_eq!(frontend.tui_active_tab_origin, "default");
+    assert_eq!(frontend.tui_results_panel_width, 30);
+    assert_eq!(frontend.tui_results_panel_width_origin, "default");
+    assert!(!frontend.tui_sort_ascending);
+    assert_eq!(frontend.tui_sort_ascending_origin, "default");
+    assert_eq!(frontend.classification, "current");
+    assert!(frontend.revision.starts_with("sha256:"));
+    assert_eq!(frontend.commit_eligibility, "eligible");
+    assert!(frontend.diagnostics.is_empty());
+}
+
+#[test]
+fn test_user_settings_frontend_state_bridge_preserves_invalid_fixture_fallbacks() {
+    let root = tempfile::tempdir().expect("create temporary CLASSIC root");
+    install_user_settings_fixture(root.path(), "invalid_known_values.yaml");
+
+    let frontend = user_settings_open_frontend_state(&root.path().display().to_string());
+    let main = frontend
+        .window_geometry
+        .iter()
+        .find(|geometry| geometry.tab == "main_tab")
+        .expect("main-tab geometry");
+
+    assert_eq!((main.width, main.height, main.maximized), (640, 500, false));
+    assert_eq!(main.width_origin, "degraded_fallback");
+    assert_eq!(main.height_origin, "document");
+    assert_eq!(main.maximized_origin, "degraded_fallback");
+    assert_eq!(frontend.auto_switch_after_scan_origin, "default");
+    assert_eq!(frontend.auto_refresh_interval_ms_origin, "default");
+    assert_eq!(frontend.tui_active_tab_origin, "default");
+    assert_eq!(frontend.classification, "current");
+    assert!(frontend.revision.starts_with("sha256:"));
+    assert_eq!(frontend.commit_eligibility, "eligible");
+
+    let diagnostic_codes = frontend
+        .diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.code.as_str())
+        .collect::<Vec<_>>();
+    assert!(diagnostic_codes.contains(&"invalid_type_gui_geometry_width"));
+    assert!(diagnostic_codes.contains(&"invalid_type_gui_geometry_maximized"));
 }
 
 fn empty_user_settings_update() -> ffi::UserSettingsUpdateDto {

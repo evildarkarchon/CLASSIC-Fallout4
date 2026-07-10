@@ -72,6 +72,8 @@ describe("read-only User Settings", () => {
       "invalid_path_custom_scan_input",
       "invalid_range_max_concurrent_scans",
       "invalid_value_formid_databases",
+      "invalid_type_gui_geometry_width",
+      "invalid_type_gui_geometry_maximized",
     ]);
     expect(snapshot.diagnostics[0]?.message.length).toBeGreaterThan(0);
     expect(snapshot.revision.startsWith("sha256:")).toBe(true);
@@ -114,6 +116,119 @@ describe("read-only User Settings", () => {
     const invalidBytesSnapshot = openUserSettings(makeRoot(invalidBytes));
     expect(invalidBytesSnapshot.classification).toBe("malformed");
     expect(invalidBytesSnapshot.originalContent?.equals(invalidBytes)).toBe(true);
+  });
+});
+
+describe("Frontend State User Settings", () => {
+  test("user-settings-frontend-state-snapshot", () => {
+    const content = fixture("gui_geometry.yaml");
+    const root = makeRoot(content);
+
+    const snapshot = openUserSettings(root);
+
+    expect(snapshot.frontendState).toEqual({
+      preferences: {
+        autoSwitchAfterScan: true,
+        autoSwitchAfterScanOrigin: "document",
+        autoRefreshIntervalMs: 5000,
+        autoRefreshIntervalMsOrigin: "document",
+      },
+      windowGeometry: {
+        mainTab: {
+          maximized: false,
+          maximizedOrigin: "document",
+          width: 705,
+          widthOrigin: "document",
+          height: 641,
+          heightOrigin: "document",
+        },
+        backupsTab: {
+          maximized: false,
+          maximizedOrigin: "document",
+          width: 750,
+          widthOrigin: "document",
+          height: 580,
+          heightOrigin: "document",
+        },
+        articlesTab: {
+          maximized: false,
+          maximizedOrigin: "document",
+          width: 550,
+          widthOrigin: "document",
+          height: 350,
+          heightOrigin: "document",
+        },
+        resultsTab: {
+          maximized: true,
+          maximizedOrigin: "document",
+          width: 750,
+          widthOrigin: "document",
+          height: 450,
+          heightOrigin: "document",
+        },
+      },
+      tui: {
+        activeTab: 0,
+        activeTabOrigin: "default",
+        resultsPanelWidth: 30,
+        resultsPanelWidthOrigin: "default",
+        sortAscending: false,
+        sortAscendingOrigin: "default",
+      },
+    });
+    expect(snapshot.diagnostics).toEqual([]);
+    expect(snapshot.originalContent?.equals(content)).toBe(true);
+    expect(readFileSync(join(root, "CLASSIC Settings.yaml"))).toEqual(content);
+  });
+
+  test("user-settings-frontend-state-invalid-fallbacks", () => {
+    const content = fixture("invalid_known_values.yaml");
+    const root = makeRoot(content);
+
+    const snapshot = openUserSettings(root);
+    const main = snapshot.frontendState.windowGeometry.mainTab;
+
+    expect(main).toEqual({
+      maximized: false,
+      maximizedOrigin: "degradedFallback",
+      width: 640,
+      widthOrigin: "degradedFallback",
+      height: 500,
+      heightOrigin: "document",
+    });
+    expect(snapshot.frontendState.preferences).toEqual({
+      autoSwitchAfterScan: true,
+      autoSwitchAfterScanOrigin: "default",
+      autoRefreshIntervalMs: 5000,
+      autoRefreshIntervalMsOrigin: "default",
+    });
+    expect(snapshot.diagnostics.map((diagnostic) => diagnostic.code).slice(-2)).toEqual([
+      "invalid_type_gui_geometry_width",
+      "invalid_type_gui_geometry_maximized",
+    ]);
+    expect(snapshot.originalContent?.equals(content)).toBe(true);
+    expect(readFileSync(join(root, "CLASSIC Settings.yaml"))).toEqual(content);
+  });
+
+  test("user-settings-frontend-state-tui-namespace", () => {
+    const content = `schema_version: "1.0"
+UI:
+  tui:
+    active_tab: 2
+    results_panel_width: 42
+    sort_ascending: true
+`;
+
+    const snapshot = openUserSettings(makeRoot(content));
+
+    expect(snapshot.frontendState.tui).toEqual({
+      activeTab: 2,
+      activeTabOrigin: "document",
+      resultsPanelWidth: 42,
+      resultsPanelWidthOrigin: "document",
+      sortAscending: true,
+      sortAscendingOrigin: "document",
+    });
   });
 });
 

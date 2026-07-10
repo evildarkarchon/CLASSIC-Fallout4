@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T01:54:21.537176+00:00",
+  "generated_at_utc": "2026-07-10T02:38:46.143423+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -15267,6 +15267,44 @@
       "tier": "tier1"
     },
     {
+      "symbol": "FrontendPreferences",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use frontend_state::{ FrontendPreferences, FrontendState, GuiWindowGeometry, TuiRememberedState, WindowGeometry, };",
+      "source_expr": "frontend_state::FrontendPreferences",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FrontendPreferences",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub struct FrontendPreferences",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FrontendState",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use frontend_state::{ FrontendPreferences, FrontendState, GuiWindowGeometry, TuiRememberedState, WindowGeometry, };",
+      "source_expr": "frontend_state::FrontendState",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FrontendState",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub struct FrontendState",
+      "tier": "tier1"
+    },
+    {
       "symbol": "GameSetupSettings",
       "kind": "reexport",
       "crate": "classic-user-settings-core",
@@ -15302,6 +15340,25 @@
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
       "source_decl": "pub use scan_settings::{CrashLogScanSettings, GameVersionSelection};",
       "source_expr": "scan_settings::GameVersionSelection",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GuiWindowGeometry",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use frontend_state::{ FrontendPreferences, FrontendState, GuiWindowGeometry, TuiRememberedState, WindowGeometry, };",
+      "source_expr": "frontend_state::GuiWindowGeometry",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GuiWindowGeometry",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub struct GuiWindowGeometry",
       "tier": "tier1"
     },
     {
@@ -15378,6 +15435,25 @@
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
       "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
       "source_expr": "document::SourceLocation",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "TuiRememberedState",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use frontend_state::{ FrontendPreferences, FrontendState, GuiWindowGeometry, TuiRememberedState, WindowGeometry, };",
+      "source_expr": "frontend_state::TuiRememberedState",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "TuiRememberedState",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub struct TuiRememberedState",
       "tier": "tier1"
     },
     {
@@ -15495,6 +15571,55 @@
       "tier": "tier1"
     },
     {
+      "symbol": "WindowGeometry",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use frontend_state::{ FrontendPreferences, FrontendState, GuiWindowGeometry, TuiRememberedState, WindowGeometry, };",
+      "source_expr": "frontend_state::WindowGeometry",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "WindowGeometry",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub struct WindowGeometry",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "active_tab",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn active_tab(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "active_tab_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn active_tab_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "articles_tab",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn articles_tab(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "as_str",
       "kind": "function",
       "arity": 1,
@@ -15502,6 +15627,56 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
       "source_decl": "pub fn as_str(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "auto_refresh_interval_ms",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn auto_refresh_interval_ms(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "auto_refresh_interval_ms_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn auto_refresh_interval_ms_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "auto_switch_after_scan",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn auto_switch_after_scan(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "auto_switch_after_scan_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn auto_switch_after_scan_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "backups_tab",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn backups_tab(&self)",
       "tier": "tier1"
     },
     {
@@ -15725,6 +15900,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "frontend_state",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn frontend_state(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "game_executable",
       "kind": "function",
       "arity": 1,
@@ -15815,6 +16000,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "height",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn height(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "height_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn height_origin(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "ini_folder",
       "kind": "function",
       "arity": 1,
@@ -15842,6 +16047,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn location(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "main_tab",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn main_tab(&self)",
       "tier": "tier1"
     },
     {
@@ -15882,6 +16097,26 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
       "source_decl": "pub fn max_concurrent_scans_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "maximized",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn maximized(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "maximized_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn maximized_origin(&self)",
       "tier": "tier1"
     },
     {
@@ -16015,6 +16250,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "preferences",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn preferences(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "preview_update",
       "kind": "function",
       "arity": 2,
@@ -16022,6 +16267,36 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/update.rs",
       "source_decl": "pub fn preview_update(&self, update: UserSettingsUpdate)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "results_panel_width",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn results_panel_width(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "results_panel_width_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn results_panel_width_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "results_tab",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn results_tab(&self)",
       "tier": "tier1"
     },
     {
@@ -16085,6 +16360,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "sort_ascending",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn sort_ascending(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "sort_ascending_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn sort_ascending_origin(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "source",
       "kind": "function",
       "arity": 1,
@@ -16092,6 +16387,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn source(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "tui",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn tui(&self)",
       "tier": "tier1"
     },
     {
@@ -16142,6 +16447,36 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn update_preferences(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "width",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn width(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "width_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn width_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "window_geometry",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
+      "source_decl": "pub fn window_geometry(&self)",
       "tier": "tier1"
     },
     {

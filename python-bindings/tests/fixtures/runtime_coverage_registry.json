@@ -11,8 +11,8 @@
         "ownerModule": "user_settings",
         "tier": "tier1"
       },
-      "contractCount": 100,
-      "contractIdsHash": "ae7553a1e6f536431a1c655d8e406fc90d082fed34fb8d7a6e71b9ed781424ec",
+      "contractCount": 129,
+      "contractIdsHash": "c11d230fe319f269e8ad09307d2f4e5b365e1d70fba45956e936bf518ee698d9",
       "bindingIdentifiers": [
         "classic_user_settings.GameSetupSettings",
         "classic_user_settings.UserSettingsSnapshot.game_setup_settings",
@@ -22,7 +22,36 @@
         "classic_user_settings.UserSettingsUpdate.set_documents_root",
         "classic_user_settings.UserSettingsUpdate.set_ini_folder",
         "classic_user_settings.UserSettingsUpdate.set_mods_folder",
-        "classic_user_settings.UserSettingsUpdate.set_papyrus_log_path"
+        "classic_user_settings.UserSettingsUpdate.set_papyrus_log_path",
+        "classic_user_settings.FrontendState",
+        "classic_user_settings.FrontendPreferences",
+        "classic_user_settings.GuiWindowGeometry",
+        "classic_user_settings.WindowGeometry",
+        "classic_user_settings.TuiRememberedState",
+        "classic_user_settings.UserSettingsSnapshot.frontend_state",
+        "classic_user_settings.FrontendState.preferences",
+        "classic_user_settings.FrontendState.window_geometry",
+        "classic_user_settings.FrontendState.tui",
+        "classic_user_settings.FrontendPreferences.auto_switch_after_scan",
+        "classic_user_settings.FrontendPreferences.auto_switch_after_scan_origin",
+        "classic_user_settings.FrontendPreferences.auto_refresh_interval_ms",
+        "classic_user_settings.FrontendPreferences.auto_refresh_interval_ms_origin",
+        "classic_user_settings.GuiWindowGeometry.main_tab",
+        "classic_user_settings.GuiWindowGeometry.backups_tab",
+        "classic_user_settings.GuiWindowGeometry.articles_tab",
+        "classic_user_settings.GuiWindowGeometry.results_tab",
+        "classic_user_settings.WindowGeometry.maximized",
+        "classic_user_settings.WindowGeometry.maximized_origin",
+        "classic_user_settings.WindowGeometry.width",
+        "classic_user_settings.WindowGeometry.width_origin",
+        "classic_user_settings.WindowGeometry.height",
+        "classic_user_settings.WindowGeometry.height_origin",
+        "classic_user_settings.TuiRememberedState.active_tab",
+        "classic_user_settings.TuiRememberedState.active_tab_origin",
+        "classic_user_settings.TuiRememberedState.results_panel_width",
+        "classic_user_settings.TuiRememberedState.results_panel_width_origin",
+        "classic_user_settings.TuiRememberedState.sort_ascending",
+        "classic_user_settings.TuiRememberedState.sort_ascending_origin"
       ],
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
@@ -30,7 +59,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan and Game Setup settings with provenance and path-spelling preservation, plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
     },
     {
       "coverageId": "python-tier1-config",

@@ -145,6 +145,95 @@ class GameSetupSettings:
     def papyrus_log_origin(self) -> str: ...
 
 
+class FrontendPreferences:
+    """Remembered presentation preferences shared by maintained frontends."""
+
+    @property
+    def auto_switch_after_scan(self) -> bool: ...
+
+    @property
+    def auto_switch_after_scan_origin(self) -> str: ...
+
+    @property
+    def auto_refresh_interval_ms(self) -> int: ...
+
+    @property
+    def auto_refresh_interval_ms_origin(self) -> str: ...
+
+
+class WindowGeometry:
+    """Widget-independent remembered geometry for one GUI tab."""
+
+    @property
+    def maximized(self) -> bool: ...
+
+    @property
+    def maximized_origin(self) -> str: ...
+
+    @property
+    def width(self) -> int: ...
+
+    @property
+    def width_origin(self) -> str: ...
+
+    @property
+    def height(self) -> int: ...
+
+    @property
+    def height_origin(self) -> str: ...
+
+
+class GuiWindowGeometry:
+    """Remembered geometry for every maintained GUI tab."""
+
+    @property
+    def main_tab(self) -> WindowGeometry: ...
+
+    @property
+    def backups_tab(self) -> WindowGeometry: ...
+
+    @property
+    def articles_tab(self) -> WindowGeometry: ...
+
+    @property
+    def results_tab(self) -> WindowGeometry: ...
+
+
+class TuiRememberedState:
+    """Remembered TUI state represented under the canonical UI.tui namespace."""
+
+    @property
+    def active_tab(self) -> int: ...
+
+    @property
+    def active_tab_origin(self) -> str: ...
+
+    @property
+    def results_panel_width(self) -> int: ...
+
+    @property
+    def results_panel_width_origin(self) -> str: ...
+
+    @property
+    def sort_ascending(self) -> bool: ...
+
+    @property
+    def sort_ascending_origin(self) -> str: ...
+
+
+class FrontendState:
+    """Cohesive, widget-independent User Settings state remembered by frontends."""
+
+    @property
+    def preferences(self) -> FrontendPreferences: ...
+
+    @property
+    def window_geometry(self) -> GuiWindowGeometry: ...
+
+    @property
+    def tui(self) -> TuiRememberedState: ...
+
+
 class UserSettingsUpdate:
     """A caller-authored request for a non-persisting User Settings Update preview."""
 
@@ -255,6 +344,9 @@ class UserSettingsSnapshot:
 
     @property
     def game_setup_settings(self) -> GameSetupSettings: ...
+
+    @property
+    def frontend_state(self) -> FrontendState: ...
 
     @property
     def source_location(self) -> str: ...

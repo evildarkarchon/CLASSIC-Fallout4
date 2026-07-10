@@ -1,9 +1,10 @@
 //! Thin PyO3 adapter for read-only User Settings and non-persisting update previews.
 
 use classic_user_settings_core::{
-    CommitEligibility, CrashLogScanSettings, DocumentClassification, GameSetupSettings,
-    PreferenceOrigin, Revision, SourceLocation, UserSettings, UserSettingsUpdate,
-    UserSettingsUpdateField, UserSettingsUpdatePreview,
+    CommitEligibility, CrashLogScanSettings, DocumentClassification, FrontendPreferences,
+    FrontendState, GameSetupSettings, GuiWindowGeometry, PreferenceOrigin, Revision,
+    SourceLocation, TuiRememberedState, UserSettings, UserSettingsUpdate, UserSettingsUpdateField,
+    UserSettingsUpdatePreview, WindowGeometry,
 };
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict};
@@ -157,6 +158,105 @@ pub struct PyGameSetupSettings {
     /// Provenance of the Papyrus log path.
     #[pyo3(get)]
     papyrus_log_origin: String,
+}
+
+/// Remembered presentation preferences shared by maintained frontends.
+#[pyclass(name = "FrontendPreferences", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyFrontendPreferences {
+    /// Whether successful scans should select the Results presentation.
+    #[pyo3(get)]
+    auto_switch_after_scan: bool,
+    /// Provenance of the automatic result-switching preference.
+    #[pyo3(get)]
+    auto_switch_after_scan_origin: String,
+    /// Remembered refresh interval in milliseconds.
+    #[pyo3(get)]
+    auto_refresh_interval_ms: u64,
+    /// Provenance of the refresh interval.
+    #[pyo3(get)]
+    auto_refresh_interval_ms_origin: String,
+}
+
+/// Widget-independent remembered geometry for one GUI tab.
+#[pyclass(name = "WindowGeometry", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyWindowGeometry {
+    /// Whether the tab's window was maximized.
+    #[pyo3(get)]
+    maximized: bool,
+    /// Provenance of the maximized state.
+    #[pyo3(get)]
+    maximized_origin: String,
+    /// Remembered normal-state width in pixels.
+    #[pyo3(get)]
+    width: u32,
+    /// Provenance of the remembered width.
+    #[pyo3(get)]
+    width_origin: String,
+    /// Remembered normal-state height in pixels.
+    #[pyo3(get)]
+    height: u32,
+    /// Provenance of the remembered height.
+    #[pyo3(get)]
+    height_origin: String,
+}
+
+/// Remembered geometry for every maintained GUI tab.
+#[pyclass(name = "GuiWindowGeometry", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyGuiWindowGeometry {
+    /// Geometry for the Main Options tab.
+    #[pyo3(get)]
+    main_tab: PyWindowGeometry,
+    /// Geometry for the File Backup tab.
+    #[pyo3(get)]
+    backups_tab: PyWindowGeometry,
+    /// Geometry for the Articles tab.
+    #[pyo3(get)]
+    articles_tab: PyWindowGeometry,
+    /// Geometry for the Results tab.
+    #[pyo3(get)]
+    results_tab: PyWindowGeometry,
+}
+
+/// Remembered TUI state represented under the canonical `UI.tui` namespace.
+#[pyclass(name = "TuiRememberedState", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyTuiRememberedState {
+    /// Stable zero-based tab ordinal remembered by the TUI.
+    #[pyo3(get)]
+    active_tab: u8,
+    /// Provenance of the active-tab ordinal.
+    #[pyo3(get)]
+    active_tab_origin: String,
+    /// Remembered Results list-panel width.
+    #[pyo3(get)]
+    results_panel_width: u16,
+    /// Provenance of the Results list-panel width.
+    #[pyo3(get)]
+    results_panel_width_origin: String,
+    /// Whether Results are remembered in ascending order.
+    #[pyo3(get)]
+    sort_ascending: bool,
+    /// Provenance of the remembered sort direction.
+    #[pyo3(get)]
+    sort_ascending_origin: String,
+}
+
+/// Cohesive, widget-independent User Settings state remembered by frontends.
+#[pyclass(name = "FrontendState", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyFrontendState {
+    /// Remembered presentation preferences shared by frontends.
+    #[pyo3(get)]
+    preferences: PyFrontendPreferences,
+    /// Remembered geometry for each maintained GUI tab.
+    #[pyo3(get)]
+    window_geometry: PyGuiWindowGeometry,
+    /// Canonical namespace reserved for remembered TUI state.
+    #[pyo3(get)]
+    tui: PyTuiRememberedState,
 }
 
 /// A caller-authored request for a non-persisting User Settings Update preview.
@@ -360,6 +460,9 @@ pub struct PyUserSettingsSnapshot {
     /// Typed Game Setup settings.
     #[pyo3(get)]
     game_setup_settings: PyGameSetupSettings,
+    /// Typed, namespaced frontend state.
+    #[pyo3(get)]
+    frontend_state: PyFrontendState,
     /// Selected source token: `canonical`, `legacy`, or `missing`.
     #[pyo3(get)]
     source_location: String,
@@ -426,6 +529,7 @@ pub fn open_user_settings(classic_root: String) -> PyUserSettingsSnapshot {
         },
         crash_log_scan_settings: crash_log_scan_settings_to_py(settings.crash_log_scan_settings()),
         game_setup_settings: game_setup_settings_to_py(settings.game_setup_settings()),
+        frontend_state: frontend_state_to_py(settings.frontend_state()),
         source_location: source_location_token(settings.source().location()).to_string(),
         source_path: settings
             .source()
@@ -446,6 +550,66 @@ pub fn open_user_settings(classic_root: String) -> PyUserSettingsSnapshot {
             .collect(),
         original_content: settings.original_bytes().map(<[u8]>::to_vec),
         inner: settings,
+    }
+}
+
+/// Converts core frontend state into nested Python-owned values.
+fn frontend_state_to_py(state: &FrontendState) -> PyFrontendState {
+    PyFrontendState {
+        preferences: frontend_preferences_to_py(state.preferences()),
+        window_geometry: gui_window_geometry_to_py(state.window_geometry()),
+        tui: tui_remembered_state_to_py(state.tui()),
+    }
+}
+
+/// Converts shared frontend preferences into Python-owned values.
+fn frontend_preferences_to_py(preferences: &FrontendPreferences) -> PyFrontendPreferences {
+    PyFrontendPreferences {
+        auto_switch_after_scan: preferences.auto_switch_after_scan(),
+        auto_switch_after_scan_origin: preference_origin_token(
+            preferences.auto_switch_after_scan_origin(),
+        )
+        .to_string(),
+        auto_refresh_interval_ms: preferences.auto_refresh_interval_ms(),
+        auto_refresh_interval_ms_origin: preference_origin_token(
+            preferences.auto_refresh_interval_ms_origin(),
+        )
+        .to_string(),
+    }
+}
+
+/// Converts all maintained GUI tab geometry into Python-owned values.
+fn gui_window_geometry_to_py(geometry: &GuiWindowGeometry) -> PyGuiWindowGeometry {
+    PyGuiWindowGeometry {
+        main_tab: window_geometry_to_py(geometry.main_tab()),
+        backups_tab: window_geometry_to_py(geometry.backups_tab()),
+        articles_tab: window_geometry_to_py(geometry.articles_tab()),
+        results_tab: window_geometry_to_py(geometry.results_tab()),
+    }
+}
+
+/// Converts one core GUI geometry value into a Python-owned value.
+fn window_geometry_to_py(geometry: &WindowGeometry) -> PyWindowGeometry {
+    PyWindowGeometry {
+        maximized: geometry.maximized(),
+        maximized_origin: preference_origin_token(geometry.maximized_origin()).to_string(),
+        width: geometry.width(),
+        width_origin: preference_origin_token(geometry.width_origin()).to_string(),
+        height: geometry.height(),
+        height_origin: preference_origin_token(geometry.height_origin()).to_string(),
+    }
+}
+
+/// Converts canonical TUI remembered state into a Python-owned value.
+fn tui_remembered_state_to_py(state: &TuiRememberedState) -> PyTuiRememberedState {
+    PyTuiRememberedState {
+        active_tab: state.active_tab(),
+        active_tab_origin: preference_origin_token(state.active_tab_origin()).to_string(),
+        results_panel_width: state.results_panel_width(),
+        results_panel_width_origin: preference_origin_token(state.results_panel_width_origin())
+            .to_string(),
+        sort_ascending: state.sort_ascending(),
+        sort_ascending_origin: preference_origin_token(state.sort_ascending_origin()).to_string(),
     }
 }
 
@@ -659,6 +823,11 @@ fn classic_user_settings(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyUpdatePreferences>()?;
     module.add_class::<PyCrashLogScanSettings>()?;
     module.add_class::<PyGameSetupSettings>()?;
+    module.add_class::<PyFrontendPreferences>()?;
+    module.add_class::<PyWindowGeometry>()?;
+    module.add_class::<PyGuiWindowGeometry>()?;
+    module.add_class::<PyTuiRememberedState>()?;
+    module.add_class::<PyFrontendState>()?;
     module.add_class::<PyUserSettingsUpdate>()?;
     module.add_class::<PyUserSettingsUpdateDiagnostic>()?;
     module.add_class::<PyUserSettingsUpdateField>()?;

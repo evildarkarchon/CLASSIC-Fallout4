@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 380,
-    "current_total": 380,
-    "matched": 380,
+    "contract_total": 383,
+    "current_total": 383,
+    "matched": 383,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2113,6 +2113,14 @@
       "reason": "-"
     },
     {
+      "id": "8a63df003627ca8b",
+      "rustSymbol": "user_settings_open_frontend_state",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "be7beecfe544998c",
       "rustSymbol": "user_settings_open_game_setup_settings",
       "kind": "function",
@@ -2305,6 +2313,14 @@
       "reason": "-"
     },
     {
+      "id": "ee10cbce2e652a9a",
+      "rustSymbol": "FrontendStateDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "5bf9e83ee7c33813",
       "rustSymbol": "GameSetupSettingsDto",
       "kind": "struct",
@@ -2379,6 +2395,14 @@
     {
       "id": "8e77def1f30afb1a",
       "rustSymbol": "UserSettingsUpdatePreviewDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "519937ab9742360f",
+      "rustSymbol": "WindowGeometryDto",
       "kind": "struct",
       "bridgeModule": "settings",
       "status": "matched",

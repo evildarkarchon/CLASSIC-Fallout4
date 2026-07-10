@@ -153,6 +153,8 @@ fn open_invalid_known_values_uses_field_safe_fallbacks_and_preserves_original_no
             "invalid_path_custom_scan_input",
             "invalid_range_max_concurrent_scans",
             "invalid_value_formid_databases",
+            "invalid_type_gui_geometry_width",
+            "invalid_type_gui_geometry_maximized",
         ]
     );
     assert_eq!(settings.original_bytes(), Some(bytes_before.as_slice()));

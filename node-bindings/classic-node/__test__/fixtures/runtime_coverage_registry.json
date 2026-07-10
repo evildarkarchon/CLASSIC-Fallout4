@@ -11,14 +11,23 @@
         "ownerModule": "user_settings",
         "tier": "tier1"
       },
-      "contractCount": 100,
-      "contractIdsHash": "01fc7d97b8c9c65b029605c12bfc13783ac623b4bb0293be5dfa5b44848c40a5",
+      "contractCount": 129,
+      "contractIdsHash": "3c4a8d5ee23410532a5cee1c1ca08cad49714cd537200f8f97dcece910eb5248",
+      "bindingIdentifiers": [
+        "JsFrontendPreferences",
+        "JsFrontendState",
+        "JsGuiWindowGeometry",
+        "JsTuiRememberedState",
+        "JsUserSettingsSnapshot",
+        "JsWindowGeometry"
+      ],
       "verificationMode": "direct_call",
       "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
       "testCaseId": "user-settings-public-runtime",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
-      ]
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "coverageId": "node-tier1-scanlog",

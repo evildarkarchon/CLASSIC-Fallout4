@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T01:19:21Z",
+  "generated_at_utc": "2026-07-10T02:25:49Z",
   "schema_version": 1,
   "entries": [
     {
@@ -5358,6 +5358,23 @@
       }
     },
     {
+      "id": "8a63df003627ca8b",
+      "rustSymbol": "user_settings_open_frontend_state",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          }
+        ],
+        "returnType": "FrontendStateDto"
+      }
+    },
+    {
       "id": "be7beecfe544998c",
       "rustSymbol": "user_settings_open_game_setup_settings",
       "kind": "function",
@@ -5914,6 +5931,76 @@
         {
           "name": "path",
           "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "ee10cbce2e652a9a",
+      "rustSymbol": "FrontendStateDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "auto_switch_after_scan",
+          "type": "bool"
+        },
+        {
+          "name": "auto_switch_after_scan_origin",
+          "type": "String"
+        },
+        {
+          "name": "auto_refresh_interval_ms",
+          "type": "u64"
+        },
+        {
+          "name": "auto_refresh_interval_ms_origin",
+          "type": "String"
+        },
+        {
+          "name": "window_geometry",
+          "type": "Vec<WindowGeometryDto>"
+        },
+        {
+          "name": "tui_active_tab",
+          "type": "u8"
+        },
+        {
+          "name": "tui_active_tab_origin",
+          "type": "String"
+        },
+        {
+          "name": "tui_results_panel_width",
+          "type": "u16"
+        },
+        {
+          "name": "tui_results_panel_width_origin",
+          "type": "String"
+        },
+        {
+          "name": "tui_sort_ascending",
+          "type": "bool"
+        },
+        {
+          "name": "tui_sort_ascending_origin",
+          "type": "String"
+        },
+        {
+          "name": "classification",
+          "type": "String"
+        },
+        {
+          "name": "revision",
+          "type": "String"
+        },
+        {
+          "name": "commit_eligibility",
+          "type": "String"
+        },
+        {
+          "name": "diagnostics",
+          "type": "Vec<UserSettingsDiagnosticDto>"
         }
       ]
     },
@@ -6482,6 +6569,44 @@
         {
           "name": "diagnostics",
           "type": "Vec<UserSettingsUpdateDiagnosticDto>"
+        }
+      ]
+    },
+    {
+      "id": "519937ab9742360f",
+      "rustSymbol": "WindowGeometryDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "tab",
+          "type": "String"
+        },
+        {
+          "name": "maximized",
+          "type": "bool"
+        },
+        {
+          "name": "maximized_origin",
+          "type": "String"
+        },
+        {
+          "name": "width",
+          "type": "u32"
+        },
+        {
+          "name": "width_origin",
+          "type": "String"
+        },
+        {
+          "name": "height",
+          "type": "u32"
+        },
+        {
+          "name": "height_origin",
+          "type": "String"
         }
       ]
     },

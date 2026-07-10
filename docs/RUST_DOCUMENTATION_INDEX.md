@@ -37,7 +37,7 @@ For old-to-new workspace translations, see the [Workspace Migration Matrix](work
 - [`docs/api/classic-registry-core.md`](api/classic-registry-core.md) — process-wide typed singleton registry and convenience key helpers
 - [`docs/api/classic-message-core.md`](api/classic-message-core.md) — shared message DTOs, routing enums, and startup/log formatting helpers
 - [`docs/api/classic-settings-core.md`](api/classic-settings-core.md) — YAML settings cache plus sync/async raw-document loading helpers, including the surviving owner docs for absorbed YAML parsing/cache helpers plus `YamlFile` and settings constants
-- [`docs/api/classic-user-settings-core.md`](api/classic-user-settings-core.md) — typed, preservation-aware User Settings discovery, cohesive Update/Crash Log Scan/Game Setup groups, and non-persisting update previews
+- [`docs/api/classic-user-settings-core.md`](api/classic-user-settings-core.md) — typed, preservation-aware User Settings discovery, cohesive Update/Crash Log Scan/Game Setup/Frontend State groups, and non-persisting update previews
 - [`docs/api/classic-version-registry-core.md`](api/classic-version-registry-core.md) — version matching and registry-backed metadata, including the surviving owner docs for `Fallout4Version` and `NULL_VERSION`
 - [`docs/api/classic-shared-core.md`](api/classic-shared-core.md) — shared runtime, error, path, performance, and string helpers, including the surviving owner docs for `GameId`
 - [`docs/api/classic-version-core.md`](api/classic-version-core.md) — version parsing, text extraction, and PE-version helpers

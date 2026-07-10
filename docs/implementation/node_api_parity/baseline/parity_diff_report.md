@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-10T01:31:14.905493+00:00`
-- Tier-1 contract rows: **807**
-- Tier-1 matched: **807**
+- Generated: `2026-07-10T02:36:40.427709+00:00`
+- Tier-1 contract rows: **836**
+- Tier-1 matched: **836**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -81,6 +81,35 @@
 | `user-settings-game-setup-custom-scan-input-origin-accessor` | `user_settings` | `custom_scan_input_origin` | `JsGameSetupSettings` | `matched` |
 | `user-settings-papyrus-log-accessor` | `user_settings` | `papyrus_log` | `JsGameSetupSettings` | `matched` |
 | `user-settings-papyrus-log-origin-accessor` | `user_settings` | `papyrus_log_origin` | `JsGameSetupSettings` | `matched` |
+| `user-settings-frontend-state-type` | `user_settings` | `FrontendState` | `JsFrontendState` | `matched` |
+| `user-settings-frontend-preferences-type` | `user_settings` | `FrontendPreferences` | `JsFrontendPreferences` | `matched` |
+| `user-settings-gui-window-geometry-type` | `user_settings` | `GuiWindowGeometry` | `JsGuiWindowGeometry` | `matched` |
+| `user-settings-window-geometry-type` | `user_settings` | `WindowGeometry` | `JsWindowGeometry` | `matched` |
+| `user-settings-tui-remembered-state-type` | `user_settings` | `TuiRememberedState` | `JsTuiRememberedState` | `matched` |
+| `user-settings-frontend-state-accessor` | `user_settings` | `frontend_state` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-frontend-state-preferences-accessor` | `user_settings` | `preferences` | `JsFrontendState` | `matched` |
+| `user-settings-frontend-state-window-geometry-accessor` | `user_settings` | `window_geometry` | `JsFrontendState` | `matched` |
+| `user-settings-frontend-state-tui-accessor` | `user_settings` | `tui` | `JsFrontendState` | `matched` |
+| `user-settings-auto-switch-after-scan-accessor` | `user_settings` | `auto_switch_after_scan` | `JsFrontendPreferences` | `matched` |
+| `user-settings-auto-switch-after-scan-origin-accessor` | `user_settings` | `auto_switch_after_scan_origin` | `JsFrontendPreferences` | `matched` |
+| `user-settings-auto-refresh-interval-ms-accessor` | `user_settings` | `auto_refresh_interval_ms` | `JsFrontendPreferences` | `matched` |
+| `user-settings-auto-refresh-interval-ms-origin-accessor` | `user_settings` | `auto_refresh_interval_ms_origin` | `JsFrontendPreferences` | `matched` |
+| `user-settings-main-tab-accessor` | `user_settings` | `main_tab` | `JsGuiWindowGeometry` | `matched` |
+| `user-settings-backups-tab-accessor` | `user_settings` | `backups_tab` | `JsGuiWindowGeometry` | `matched` |
+| `user-settings-articles-tab-accessor` | `user_settings` | `articles_tab` | `JsGuiWindowGeometry` | `matched` |
+| `user-settings-results-tab-accessor` | `user_settings` | `results_tab` | `JsGuiWindowGeometry` | `matched` |
+| `user-settings-window-maximized-accessor` | `user_settings` | `maximized` | `JsWindowGeometry` | `matched` |
+| `user-settings-window-maximized-origin-accessor` | `user_settings` | `maximized_origin` | `JsWindowGeometry` | `matched` |
+| `user-settings-window-width-accessor` | `user_settings` | `width` | `JsWindowGeometry` | `matched` |
+| `user-settings-window-width-origin-accessor` | `user_settings` | `width_origin` | `JsWindowGeometry` | `matched` |
+| `user-settings-window-height-accessor` | `user_settings` | `height` | `JsWindowGeometry` | `matched` |
+| `user-settings-window-height-origin-accessor` | `user_settings` | `height_origin` | `JsWindowGeometry` | `matched` |
+| `user-settings-tui-active-tab-accessor` | `user_settings` | `active_tab` | `JsTuiRememberedState` | `matched` |
+| `user-settings-tui-active-tab-origin-accessor` | `user_settings` | `active_tab_origin` | `JsTuiRememberedState` | `matched` |
+| `user-settings-tui-results-panel-width-accessor` | `user_settings` | `results_panel_width` | `JsTuiRememberedState` | `matched` |
+| `user-settings-tui-results-panel-width-origin-accessor` | `user_settings` | `results_panel_width_origin` | `JsTuiRememberedState` | `matched` |
+| `user-settings-tui-sort-ascending-accessor` | `user_settings` | `sort_ascending` | `JsTuiRememberedState` | `matched` |
+| `user-settings-tui-sort-ascending-origin-accessor` | `user_settings` | `sort_ascending_origin` | `JsTuiRememberedState` | `matched` |
 | `user-settings-update-type` | `user_settings` | `UserSettingsUpdate` | `JsUserSettingsUpdate` | `matched` |
 | `user-settings-update-field-type` | `user_settings` | `UserSettingsUpdateField` | `JsUserSettingsUpdateField` | `matched` |
 | `user-settings-accepted-update-type` | `user_settings` | `AcceptedUserSettingsUpdate` | `JsUserSettingsUpdatePreview` | `matched` |

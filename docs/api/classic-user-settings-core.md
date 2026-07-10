@@ -35,6 +35,7 @@ Open reads bytes directly and never uses `Path::exists()`, so permission failure
 - `update_preferences()` — typed `UpdatePreferences`
 - `crash_log_scan_settings()` — typed `CrashLogScanSettings`
 - `game_setup_settings()` — typed `GameSetupSettings`
+- `frontend_state()` — typed, namespaced `FrontendState`
 - `diagnostics()` — ordered structured `Diagnostic { code, message }` values
 - `original_bytes()` — exact source content retained for later semantic preservation and byte-exact migration backups
 - `commit_eligibility()` — `Eligible`, `RequiresMigration`, or `BlockedUntrusted`
@@ -112,6 +113,27 @@ Paths are validated lexically without existence checks. Native, Windows drive, U
 
 The published `Documents Folder Path`, `MODS Folder Path`, and `SCAN Custom Path` labels take precedence over their `INI Folder Path`, `Staging Mods Folder`, and `Custom Scan Folder` compatibility aliases. Two valid conflicting document paths report `canonical_alias_conflict_ini_folder`; mods and custom-scan conflicts report their corresponding codes. An invalid canonical value may fall back to a valid alias while retaining the canonical-field diagnostic; alias nodes are never rewritten by open or ordinary update preview.
 
+## Frontend state
+
+`FrontendState` is a widget-independent projection of remembered presentation state. Rust owns the persisted value shapes, defaults, validation, provenance, and diagnostics; Qt and Ratatui keep control of widget sizing, rendering, and interaction behavior.
+
+| Namespace | Typed values | Published and invalid fallback |
+| --- | --- | --- |
+| `UI.preferences` | `auto_switch_after_scan`, `auto_refresh_interval_ms` | `true`, `5000` ms |
+| `UI.window_geometry.main_tab` | positive `u32` width/height, boolean maximized | `640 x 500`, not maximized |
+| `UI.window_geometry.backups_tab` | positive `u32` width/height, boolean maximized | `750 x 580`, not maximized |
+| `UI.window_geometry.articles_tab` | positive `u32` width/height, boolean maximized | `550 x 350`, not maximized |
+| `UI.window_geometry.results_tab` | positive `u32` width/height, boolean maximized | `750 x 450`, not maximized |
+| `UI.tui` | active tab `0..=3`, `u16` Results-panel width, boolean ascending sort | `0`, `30`, `false` |
+
+Every leaf has a matching `*_origin()` accessor. A missing leaf uses `PreferenceOrigin::Default`; an invalid leaf uses the documented value with `DegradedFallback` while valid sibling leaves remain available. A malformed, unreadable, older-incompatible, or future-major document exposes the same presentation-safe values with `DegradedFallback` provenance. The Results-panel width deliberately accepts the full `u16` range, including zero, so the canonical representation can import the legacy TUI document without inventing a new widget constraint; a frontend may still clamp it while rendering.
+
+`UI.preferences.auto_switch_after_scan` is canonical. The live GUI-era `CLASSIC_Settings.Auto Switch After Scan` label remains readable as a compatibility alias so the existing settings-dialog writer continues to affect later reads. When both booleans are valid and conflict, the canonical value wins and `canonical_alias_conflict_auto_switch_after_scan` is reported. The legacy flat `auto_switch_to_results` and `auto_refresh_interval_ms` fields are also projected for a later explicit migration.
+
+Opening User Settings never probes or imports the TUI's separate platform-config `state.json`; `UI.tui` only establishes its canonical destination. An explicit migration remains responsible for reading, backing up, and importing that legacy document. Unknown `UI` namespaces and unknown entries within `preferences`, `window_geometry`, individual tab mappings, and `tui` remain in `original_bytes()` unchanged. Invalid known nodes are likewise retained rather than repaired during open.
+
+The maintained Qt read path `MainWindow::restoreTabGeometry(...)` consumes the CXX frontend-state DTO. `MainWindow::saveTabGeometry(...)` intentionally remains on the existing raw writer until conflict-safe User Settings commits are available; this slice adds no frontend fields to `UserSettingsUpdate`.
+
 ## User Settings Update preview
 
 `UserSettingsUpdate` is an explicit request builder covering Update Check plus every field in `CrashLogScanSettings` and `GameSetupSettings`. `UserSettings::preview_update(update)` performs no I/O and returns exactly one of:
@@ -155,6 +177,18 @@ Stable diagnostic codes currently include:
 - `canonical_alias_conflict_ini_folder`
 - `canonical_alias_conflict_mods_folder`
 - `canonical_alias_conflict_custom_scan_folder`
+- `canonical_alias_conflict_auto_switch_after_scan`
+- `invalid_type_frontend_preferences`
+- `invalid_type_frontend_auto_switch_after_scan`
+- `invalid_type_frontend_auto_refresh_interval_ms` / `invalid_range_frontend_auto_refresh_interval_ms`
+- `invalid_type_gui_window_geometry` / `invalid_type_gui_geometry_tab`
+- `invalid_type_gui_geometry_width` / `invalid_range_gui_geometry_width`
+- `invalid_type_gui_geometry_height` / `invalid_range_gui_geometry_height`
+- `invalid_type_gui_geometry_maximized`
+- `invalid_type_tui_remembered_state`
+- `invalid_type_tui_active_tab` / `invalid_range_tui_active_tab`
+- `invalid_type_tui_results_panel_width` / `invalid_range_tui_results_panel_width`
+- `invalid_type_tui_sort_ascending`
 - `malformed_document`
 - `unreadable_document`
 - `invalid_schema_version`
@@ -164,9 +198,9 @@ Stable diagnostic codes currently include:
 
 ## Binding and native CLI surface
 
-- CXX: `classic::settings::user_settings_open_update_preferences(classic_root)` retains the narrow update-policy DTO; `user_settings_open_crash_log_scan_settings(classic_root)` and `user_settings_open_game_setup_settings(classic_root)` expose the two cohesive consumer groups; and `user_settings_preview_update(classic_root, update)` returns an all-or-nothing preview DTO.
-- Node: `openUserSettings(classicRoot)` returns `JsUserSettingsSnapshot` with all three typed groups and exact source bytes as `originalContent`; `previewUserSettingsUpdate(classicRoot, update)` validates a `JsUserSettingsUpdate` without writing.
-- Python: `classic_user_settings.open_user_settings(classic_root)` returns `UserSettingsSnapshot` with all three typed groups and exact source bytes; `snapshot.preview_update(UserSettingsUpdate)` validates against that opened snapshot and revision without writing.
+- CXX: `classic::settings::user_settings_open_update_preferences(classic_root)` retains the narrow update-policy DTO; `user_settings_open_crash_log_scan_settings(classic_root)`, `user_settings_open_game_setup_settings(classic_root)`, and `user_settings_open_frontend_state(classic_root)` expose cohesive consumer groups; and `user_settings_preview_update(classic_root, update)` returns an all-or-nothing preview DTO.
+- Node: `openUserSettings(classicRoot)` returns `JsUserSettingsSnapshot` with all four typed groups and exact source bytes as `originalContent`; `previewUserSettingsUpdate(classicRoot, update)` validates a `JsUserSettingsUpdate` without writing.
+- Python: `classic_user_settings.open_user_settings(classic_root)` returns `UserSettingsSnapshot` with all four typed groups and exact source bytes; `snapshot.preview_update(UserSettingsUpdate)` validates against that opened snapshot and revision without writing.
 
 The native CLI `--check-app-update` path resolves a CLASSIC root, opens Update Preferences, reports structured diagnostics, and returns before runtime initialization, cache setup, installed-version validation, or network access when the safe value is `false`. Game Setup Intake can now be prepared directly from an already-opened `GameSetupSettings` group; maintained frontend consumer cutovers remain separate work.
 
@@ -178,8 +212,9 @@ Focused checks:
 $env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 cargo test -p classic-user-settings-core
 cargo test -p classic-config-core --test user_settings_compatibility_tests
-cargo test -p classic-cpp-bridge test_user_settings_update_preferences_bridge_is_fail_closed_with_diagnostics
+cargo test -p classic-cpp-bridge test_user_settings_frontend_state_bridge
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "App update honors disabled typed User Settings before checking the network,App update fails closed for malformed User Settings"
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-mainwindow-geometry
 ```
 
 The compatibility source of truth remains [`tests/fixtures/user_settings_compatibility/expectations.json`](../../tests/fixtures/user_settings_compatibility/expectations.json), with its prefactoring guard in `classic-config-core` and public-interface behavioral coverage in this crate. The checked-in fixtures cover canonical, alias-only, conflicting-alias, invalid-known-value, and unknown-entry documents.

@@ -7,6 +7,7 @@ class MainWindowGeometryTests : public QObject {
 
 private slots:
     void main_tab_minimum_geometry_constant_matches_default_layout();
+    void restore_tab_geometry_reads_typed_user_settings();
     void tab_bar_configuration_is_responsive_for_narrow_windows();
     void custom_folder_handlers_refresh_results_directories();
     void entering_results_tab_forces_report_reload();
@@ -30,6 +31,33 @@ void MainWindowGeometryTests::main_tab_minimum_geometry_constant_matches_default
 
     QCOMPARE(match.captured(1).toInt(), 640);
     QCOMPARE(match.captured(2).toInt(), 500);
+}
+
+void MainWindowGeometryTests::restore_tab_geometry_reads_typed_user_settings()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const QString marker = QStringLiteral("void MainWindow::restoreTabGeometry(int tabIndex)");
+    const qsizetype start = sourceText.indexOf(marker);
+    QVERIFY2(start >= 0, "Could not locate MainWindow::restoreTabGeometry(int tabIndex)");
+    const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid MainWindow::"), start + marker.size());
+    const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
+    const QString body = sourceText.mid(start, end - start);
+
+    QVERIFY2(body.contains(QStringLiteral("user_settings_open_frontend_state")),
+             "Geometry restore should consume the typed User Settings frontend-state group");
+    QVERIFY2(!body.contains(QStringLiteral("yaml_ops_load_file")),
+             "Geometry restore should not reinterpret raw User Settings key paths");
+
+    const qsizetype saveStart = sourceText.indexOf(QStringLiteral("void MainWindow::saveTabGeometry(int tabIndex)"));
+    const qsizetype restoreStart = sourceText.indexOf(marker, saveStart);
+    const QString saveBody = sourceText.mid(saveStart, restoreStart - saveStart);
+    QVERIFY2(saveBody.contains(QStringLiteral("yaml_ops_save_file")),
+             "The existing geometry writer remains available until conflict-safe commits land");
 }
 
 void MainWindowGeometryTests::tab_bar_configuration_is_responsive_for_narrow_windows()

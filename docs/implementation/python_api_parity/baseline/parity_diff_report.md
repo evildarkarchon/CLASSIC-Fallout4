@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-10T01:23:56.587294+00:00`
-- Tier-1 contract rows: **1186**
-- Tier-1 matched: **1186**
+- Generated: `2026-07-10T02:34:18.518201+00:00`
+- Tier-1 contract rows: **1215**
+- Tier-1 matched: **1215**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -105,6 +105,35 @@
 | `user_settings.setup_custom_scan_input_origin_accessor` | `user_settings` | `custom_scan_input_origin` | `classic_user_settings.GameSetupSettings` | `matched` |
 | `user_settings.setup_papyrus_log_accessor` | `user_settings` | `papyrus_log` | `classic_user_settings.GameSetupSettings` | `matched` |
 | `user_settings.setup_papyrus_log_origin_accessor` | `user_settings` | `papyrus_log_origin` | `classic_user_settings.GameSetupSettings` | `matched` |
+| `user_settings.frontend_state_type` | `user_settings` | `FrontendState` | `classic_user_settings.FrontendState` | `matched` |
+| `user_settings.frontend_preferences_type` | `user_settings` | `FrontendPreferences` | `classic_user_settings.FrontendPreferences` | `matched` |
+| `user_settings.gui_window_geometry_type` | `user_settings` | `GuiWindowGeometry` | `classic_user_settings.GuiWindowGeometry` | `matched` |
+| `user_settings.window_geometry_type` | `user_settings` | `WindowGeometry` | `classic_user_settings.WindowGeometry` | `matched` |
+| `user_settings.tui_remembered_state_type` | `user_settings` | `TuiRememberedState` | `classic_user_settings.TuiRememberedState` | `matched` |
+| `user_settings.frontend_state_accessor` | `user_settings` | `frontend_state` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.frontend_preferences_accessor` | `user_settings` | `preferences` | `classic_user_settings.FrontendState` | `matched` |
+| `user_settings.frontend_window_geometry_accessor` | `user_settings` | `window_geometry` | `classic_user_settings.FrontendState` | `matched` |
+| `user_settings.frontend_tui_accessor` | `user_settings` | `tui` | `classic_user_settings.FrontendState` | `matched` |
+| `user_settings.frontend_auto_switch_after_scan_accessor` | `user_settings` | `auto_switch_after_scan` | `classic_user_settings.FrontendPreferences` | `matched` |
+| `user_settings.frontend_auto_switch_after_scan_origin_accessor` | `user_settings` | `auto_switch_after_scan_origin` | `classic_user_settings.FrontendPreferences` | `matched` |
+| `user_settings.frontend_auto_refresh_interval_ms_accessor` | `user_settings` | `auto_refresh_interval_ms` | `classic_user_settings.FrontendPreferences` | `matched` |
+| `user_settings.frontend_auto_refresh_interval_ms_origin_accessor` | `user_settings` | `auto_refresh_interval_ms_origin` | `classic_user_settings.FrontendPreferences` | `matched` |
+| `user_settings.frontend_main_tab_accessor` | `user_settings` | `main_tab` | `classic_user_settings.GuiWindowGeometry` | `matched` |
+| `user_settings.frontend_backups_tab_accessor` | `user_settings` | `backups_tab` | `classic_user_settings.GuiWindowGeometry` | `matched` |
+| `user_settings.frontend_articles_tab_accessor` | `user_settings` | `articles_tab` | `classic_user_settings.GuiWindowGeometry` | `matched` |
+| `user_settings.frontend_results_tab_accessor` | `user_settings` | `results_tab` | `classic_user_settings.GuiWindowGeometry` | `matched` |
+| `user_settings.frontend_window_maximized_accessor` | `user_settings` | `maximized` | `classic_user_settings.WindowGeometry` | `matched` |
+| `user_settings.frontend_window_maximized_origin_accessor` | `user_settings` | `maximized_origin` | `classic_user_settings.WindowGeometry` | `matched` |
+| `user_settings.frontend_window_width_accessor` | `user_settings` | `width` | `classic_user_settings.WindowGeometry` | `matched` |
+| `user_settings.frontend_window_width_origin_accessor` | `user_settings` | `width_origin` | `classic_user_settings.WindowGeometry` | `matched` |
+| `user_settings.frontend_window_height_accessor` | `user_settings` | `height` | `classic_user_settings.WindowGeometry` | `matched` |
+| `user_settings.frontend_window_height_origin_accessor` | `user_settings` | `height_origin` | `classic_user_settings.WindowGeometry` | `matched` |
+| `user_settings.frontend_tui_active_tab_accessor` | `user_settings` | `active_tab` | `classic_user_settings.TuiRememberedState` | `matched` |
+| `user_settings.frontend_tui_active_tab_origin_accessor` | `user_settings` | `active_tab_origin` | `classic_user_settings.TuiRememberedState` | `matched` |
+| `user_settings.frontend_tui_results_panel_width_accessor` | `user_settings` | `results_panel_width` | `classic_user_settings.TuiRememberedState` | `matched` |
+| `user_settings.frontend_tui_results_panel_width_origin_accessor` | `user_settings` | `results_panel_width_origin` | `classic_user_settings.TuiRememberedState` | `matched` |
+| `user_settings.frontend_tui_sort_ascending_accessor` | `user_settings` | `sort_ascending` | `classic_user_settings.TuiRememberedState` | `matched` |
+| `user_settings.frontend_tui_sort_ascending_origin_accessor` | `user_settings` | `sort_ascending_origin` | `classic_user_settings.TuiRememberedState` | `matched` |
 | `user_settings.update_with_managed_game` | `user_settings` | `with_managed_game` | `classic_user_settings.UserSettingsUpdate.set_managed_game` | `matched` |
 | `user_settings.update_with_game_root` | `user_settings` | `with_game_root` | `classic_user_settings.UserSettingsUpdate.set_game_root` | `matched` |
 | `user_settings.update_with_game_executable` | `user_settings` | `with_game_executable` | `classic_user_settings.UserSettingsUpdate.set_game_executable` | `matched` |

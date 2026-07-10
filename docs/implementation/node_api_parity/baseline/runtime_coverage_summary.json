@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T01:31:14.909809+00:00",
+  "generated_at_utc": "2026-07-10T02:36:40.432594+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,11 +7,11 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 835,
-    "runtime_verified_total": 835,
+    "tracked_surface_total": 870,
+    "runtime_verified_total": 870,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 807,
+    "tier1_contract_total": 836,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -70,8 +70,8 @@
       "total": 6
     },
     "user_settings": {
-      "runtime_verified": 100,
-      "total": 100
+      "runtime_verified": 135,
+      "total": 135
     },
     "version": {
       "runtime_verified": 13,
@@ -108,7 +108,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-diagnostic",
@@ -127,7 +127,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-document-classification",
@@ -146,7 +146,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-preference-origin",
@@ -165,7 +165,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-revision-type",
@@ -184,7 +184,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-source-type",
@@ -203,7 +203,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-source-location",
@@ -222,7 +222,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-preferences-type",
@@ -241,7 +241,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-snapshot-type",
@@ -260,7 +260,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-classification-accessor",
@@ -279,7 +279,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-diagnostic-code-accessor",
@@ -298,7 +298,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-commit-eligibility-accessor",
@@ -317,7 +317,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-diagnostics-accessor",
@@ -336,7 +336,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-location-accessor",
@@ -355,7 +355,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-diagnostic-message-accessor",
@@ -374,7 +374,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-open",
@@ -393,7 +393,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-original-bytes-accessor",
@@ -412,7 +412,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-path-accessor",
@@ -431,7 +431,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-revision-accessor",
@@ -450,7 +450,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-schema-version-accessor",
@@ -469,7 +469,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-source-accessor",
@@ -488,7 +488,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-check-accessor",
@@ -507,7 +507,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-check-origin-accessor",
@@ -526,7 +526,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-preferences-accessor",
@@ -545,7 +545,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-crash-log-scan-settings-type",
@@ -564,7 +564,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-version-selection-type",
@@ -583,7 +583,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-crash-log-scan-settings-accessor",
@@ -602,7 +602,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-version-as-str",
@@ -621,7 +621,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-version-parse",
@@ -640,7 +640,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-fcx-mode-accessor",
@@ -659,7 +659,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-fcx-mode-origin-accessor",
@@ -678,7 +678,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-simplify-logs-accessor",
@@ -697,7 +697,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-simplify-logs-origin-accessor",
@@ -716,7 +716,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-show-statistics-accessor",
@@ -735,7 +735,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-show-statistics-origin-accessor",
@@ -754,7 +754,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-formid-value-lookup-accessor",
@@ -773,7 +773,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-formid-value-lookup-origin-accessor",
@@ -792,7 +792,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-formid-databases-accessor",
@@ -811,7 +811,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-formid-databases-origin-accessor",
@@ -830,7 +830,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-move-unsolved-logs-accessor",
@@ -849,7 +849,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-move-unsolved-logs-origin-accessor",
@@ -868,7 +868,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-unsolved-logs-destination-accessor",
@@ -887,7 +887,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-unsolved-logs-destination-origin-accessor",
@@ -906,7 +906,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-custom-scan-input-accessor",
@@ -925,7 +925,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-custom-scan-input-origin-accessor",
@@ -944,7 +944,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-version-selection-accessor",
@@ -963,7 +963,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-version-selection-origin-accessor",
@@ -982,7 +982,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-max-concurrent-scans-accessor",
@@ -1001,7 +1001,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-max-concurrent-scans-origin-accessor",
@@ -1020,7 +1020,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-setup-settings-type",
@@ -1039,7 +1039,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-setup-settings-accessor",
@@ -1058,7 +1058,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-managed-game-accessor",
@@ -1077,7 +1077,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-managed-game-origin-accessor",
@@ -1096,7 +1096,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-setup-version-selection-accessor",
@@ -1115,7 +1115,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-setup-version-selection-origin-accessor",
@@ -1134,7 +1134,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-root-accessor",
@@ -1153,7 +1153,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-root-origin-accessor",
@@ -1172,7 +1172,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-executable-accessor",
@@ -1191,7 +1191,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-executable-origin-accessor",
@@ -1210,7 +1210,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-documents-root-accessor",
@@ -1229,7 +1229,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-documents-root-origin-accessor",
@@ -1248,7 +1248,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-ini-folder-accessor",
@@ -1267,7 +1267,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-ini-folder-origin-accessor",
@@ -1286,7 +1286,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-mods-root-accessor",
@@ -1305,7 +1305,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-mods-root-origin-accessor",
@@ -1324,7 +1324,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-setup-custom-scan-input-accessor",
@@ -1343,7 +1343,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-setup-custom-scan-input-origin-accessor",
@@ -1362,7 +1362,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-papyrus-log-accessor",
@@ -1381,7 +1381,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-papyrus-log-origin-accessor",
@@ -1400,7 +1400,558 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-frontend-state-type",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-frontend-state-type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FrontendState",
+      "bindingIdentifier": "JsFrontendState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-frontend-preferences-type",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-frontend-preferences-type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FrontendPreferences",
+      "bindingIdentifier": "JsFrontendPreferences",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-gui-window-geometry-type",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-gui-window-geometry-type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "GuiWindowGeometry",
+      "bindingIdentifier": "JsGuiWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-window-geometry-type",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-window-geometry-type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "WindowGeometry",
+      "bindingIdentifier": "JsWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-tui-remembered-state-type",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-tui-remembered-state-type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "TuiRememberedState",
+      "bindingIdentifier": "JsTuiRememberedState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-frontend-state-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-frontend-state-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "frontend_state",
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-frontend-state-preferences-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-frontend-state-preferences-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "preferences",
+      "bindingIdentifier": "JsFrontendState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-frontend-state-window-geometry-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-frontend-state-window-geometry-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "window_geometry",
+      "bindingIdentifier": "JsFrontendState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-frontend-state-tui-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-frontend-state-tui-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "tui",
+      "bindingIdentifier": "JsFrontendState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-auto-switch-after-scan-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-auto-switch-after-scan-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "auto_switch_after_scan",
+      "bindingIdentifier": "JsFrontendPreferences",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-auto-switch-after-scan-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-auto-switch-after-scan-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "auto_switch_after_scan_origin",
+      "bindingIdentifier": "JsFrontendPreferences",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-auto-refresh-interval-ms-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-auto-refresh-interval-ms-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "auto_refresh_interval_ms",
+      "bindingIdentifier": "JsFrontendPreferences",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-auto-refresh-interval-ms-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-auto-refresh-interval-ms-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "auto_refresh_interval_ms_origin",
+      "bindingIdentifier": "JsFrontendPreferences",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-main-tab-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-main-tab-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "main_tab",
+      "bindingIdentifier": "JsGuiWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-backups-tab-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-backups-tab-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "backups_tab",
+      "bindingIdentifier": "JsGuiWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-articles-tab-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-articles-tab-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "articles_tab",
+      "bindingIdentifier": "JsGuiWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-results-tab-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-results-tab-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "results_tab",
+      "bindingIdentifier": "JsGuiWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-window-maximized-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-window-maximized-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "maximized",
+      "bindingIdentifier": "JsWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-window-maximized-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-window-maximized-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "maximized_origin",
+      "bindingIdentifier": "JsWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-window-width-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-window-width-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "width",
+      "bindingIdentifier": "JsWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-window-width-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-window-width-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "width_origin",
+      "bindingIdentifier": "JsWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-window-height-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-window-height-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "height",
+      "bindingIdentifier": "JsWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-window-height-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-window-height-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "height_origin",
+      "bindingIdentifier": "JsWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-tui-active-tab-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-tui-active-tab-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "active_tab",
+      "bindingIdentifier": "JsTuiRememberedState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-tui-active-tab-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-tui-active-tab-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "active_tab_origin",
+      "bindingIdentifier": "JsTuiRememberedState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-tui-results-panel-width-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-tui-results-panel-width-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "results_panel_width",
+      "bindingIdentifier": "JsTuiRememberedState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-tui-results-panel-width-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-tui-results-panel-width-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "results_panel_width_origin",
+      "bindingIdentifier": "JsTuiRememberedState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-tui-sort-ascending-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-tui-sort-ascending-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "sort_ascending",
+      "bindingIdentifier": "JsTuiRememberedState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "contract:user-settings-tui-sort-ascending-origin-accessor",
+      "trackedType": "contract_row",
+      "contractId": "user-settings-tui-sort-ascending-origin-accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "sort_ascending_origin",
+      "bindingIdentifier": "JsTuiRememberedState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-type",
@@ -1419,7 +1970,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-field-type",
@@ -1438,7 +1989,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-accepted-update-type",
@@ -1457,7 +2008,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-diagnostic-type",
@@ -1476,7 +2027,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-preview-type",
@@ -1495,7 +2046,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-new",
@@ -1514,7 +2065,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-check-builder",
@@ -1533,7 +2084,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-version-selection-builder",
@@ -1552,7 +2103,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-managed-game-builder",
@@ -1571,7 +2122,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-root-builder",
@@ -1590,7 +2141,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-game-executable-builder",
@@ -1609,7 +2160,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-documents-root-builder",
@@ -1628,7 +2179,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-ini-folder-builder",
@@ -1647,7 +2198,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-mods-folder-builder",
@@ -1666,7 +2217,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-papyrus-log-path-builder",
@@ -1685,7 +2236,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-fcx-mode-builder",
@@ -1704,7 +2255,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-simplify-logs-builder",
@@ -1723,7 +2274,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-show-statistics-builder",
@@ -1742,7 +2293,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-formid-value-lookup-builder",
@@ -1761,7 +2312,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-formid-databases-builder",
@@ -1780,7 +2331,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-move-unsolved-logs-builder",
@@ -1799,7 +2350,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-unsolved-logs-destination-builder",
@@ -1818,7 +2369,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-custom-scan-input-builder",
@@ -1837,7 +2388,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-max-concurrent-scans-builder",
@@ -1856,7 +2407,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-field-canonical-path-accessor",
@@ -1875,7 +2426,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-diagnostic-field-path-accessor",
@@ -1894,7 +2445,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-diagnostic-code-accessor",
@@ -1913,7 +2464,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-update-diagnostic-message-accessor",
@@ -1932,7 +2483,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-accepted-update-base-revision-accessor",
@@ -1951,7 +2502,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-accepted-update-fields-accessor",
@@ -1970,7 +2521,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:user-settings-preview-update",
@@ -1989,7 +2540,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "contract:scanlog-analysis-config",
@@ -14769,6 +15320,132 @@
       "testCaseId": "scangame-tier1-parity",
       "fixtureRefs": [],
       "notes": null
+    },
+    {
+      "trackedId": "binding:JsFrontendPreferences",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFrontendPreferences",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "binding:JsFrontendState",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFrontendState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "binding:JsGuiWindowGeometry",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsGuiWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "binding:JsTuiRememberedState",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsTuiRememberedState",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "binding:JsUserSettingsSnapshot",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsUserSettingsSnapshot",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+    },
+    {
+      "trackedId": "binding:JsWindowGeometry",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsWindowGeometry",
+      "coverageId": "node-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
+      "testCaseId": "user-settings-public-runtime",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
     },
     {
       "trackedId": "binding:JsLogCollector",
