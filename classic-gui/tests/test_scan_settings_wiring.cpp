@@ -22,6 +22,8 @@ private slots:
     void scan_worker_defaults_to_batch_for_multi_log_scans();
     void mainwindow_wires_live_crash_scan_progress_updates();
     void mainwindow_does_not_use_deprecated_vr_mode_setting();
+    /// Verifies that MainWindow honors canonical custom-scan reads, writes, and clears.
+    void mainwindow_honors_canonical_custom_scan_path();
     void mainwindow_preserves_legacy_settings_on_failed_migration();
     void update_worker_declares_not_published_classification();
     void mainwindow_handles_not_published_without_error_dialog();
@@ -343,6 +345,45 @@ void ScanSettingsWiringTests::mainwindow_does_not_use_deprecated_vr_mode_setting
     const QString sourceText = QString::fromUtf8(file.readAll());
     QVERIFY2(!sourceText.contains(QStringLiteral("CLASSIC_Settings.VR Mode")),
              "MainWindow should not read deprecated CLASSIC_Settings.VR Mode");
+}
+
+void ScanSettingsWiringTests::mainwindow_honors_canonical_custom_scan_path()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(file.readAll());
+    const auto extractFunctionBody = [&](const QString& signature) -> QString {
+        const QString marker = QStringLiteral("void MainWindow::") + signature;
+        const qsizetype start = sourceText.indexOf(marker);
+        if (start < 0) {
+            return {};
+        }
+
+        const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid MainWindow::"), start + marker.size());
+        const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
+        return sourceText.mid(start, end - start);
+    };
+
+    const QString loadBody = extractFunctionBody(QStringLiteral("loadSettings()"));
+    QVERIFY2(loadBody.contains(QStringLiteral("user_settings_open_crash_log_scan_settings")),
+             "MainWindow should load the effective custom path through typed User Settings precedence");
+    QVERIFY2(loadBody.contains(QStringLiteral("has_custom_scan_input")) &&
+                 loadBody.contains(QStringLiteral("custom_scan_input")),
+             "MainWindow should display the effective canonical-or-alias custom scan path");
+
+    const QString saveBody = extractFunctionBody(QStringLiteral("saveSettings()"));
+    QVERIFY2(saveBody.contains(QStringLiteral("CLASSIC_Settings.SCAN Custom Path")),
+             "MainWindow should persist custom scan edits to the canonical User Settings key");
+    QVERIFY2(!saveBody.contains(QStringLiteral("CLASSIC_Settings.Custom Scan Folder")),
+             "MainWindow should not leave edits only on the lower-precedence GUI-era alias");
+
+    const QString editedBody = extractFunctionBody(QStringLiteral("onCustomFolderEdited()"));
+    QCOMPARE(editedBody.count(QStringLiteral("saveSettings();")), 3);
+    QVERIFY2(!editedBody.contains(QStringLiteral("CLASSIC_Settings.Custom Scan Folder")),
+             "MainWindow should not clear only the GUI-era alias while a canonical value remains active");
 }
 
 void ScanSettingsWiringTests::mainwindow_preserves_legacy_settings_on_failed_migration()

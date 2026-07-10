@@ -900,9 +900,11 @@ void MainWindow::loadSettings()
             m_editStagingFolder->setText(classic::toQString(staging));
         }
 
-        auto custom = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Custom Scan Folder", "");
-        if (!custom.empty()) {
-            m_editCustomFolder->setText(classic::toQString(custom));
+        const auto scanSettings =
+            classic::settings::user_settings_open_crash_log_scan_settings(std::string(m_dataRoot.toUtf8().constData()));
+        if (scanSettings.has_custom_scan_input) {
+            // Rust owns canonical-versus-alias precedence, including explicit canonical clears.
+            m_editCustomFolder->setText(classic::toQString(scanSettings.custom_scan_input));
         }
 
         auto getBool = [&](const char* key, bool fallback) -> bool {
@@ -993,10 +995,8 @@ void MainWindow::saveSettings()
         }
 
         auto customValue = m_editCustomFolder->text();
-        if (!customValue.isEmpty()) {
-            classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Custom Scan Folder",
-                                                           std::string(customValue.toUtf8().constData()));
-        }
+        classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.SCAN Custom Path",
+                                                       std::string(customValue.toUtf8().constData()));
 
         classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
     } catch (const std::exception& e) {
@@ -1525,17 +1525,8 @@ void MainWindow::onCustomFolderEdited()
     QString text = m_editCustomFolder->text().trimmed();
 
     if (text.isEmpty()) {
-        // Clear the setting in YAML
-        if (!m_dataDir.isEmpty()) {
-            QString settingsPath = settingsFilePath(m_dataRoot);
-            try {
-                auto ops = classic::settings::yaml_ops_new();
-                classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Custom Scan Folder", "");
-                classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
-            } catch (...) {
-            }
-        }
+        // saveSettings persists the empty text as an explicit canonical clear.
+        saveSettings();
         initResultsReportDir();
         return;
     }
@@ -1547,17 +1538,8 @@ void MainWindow::onCustomFolderEdited()
         saveSettings();
         initResultsReportDir();
     } else {
-        // Clear YAML setting (UI was already cleared by validateCustomScanFolder)
-        if (!m_dataDir.isEmpty()) {
-            QString settingsPath = settingsFilePath(m_dataRoot);
-            try {
-                auto ops = classic::settings::yaml_ops_new();
-                classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Custom Scan Folder", "");
-                classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
-            } catch (...) {
-            }
-        }
+        // Validation cleared the text box, so persist the canonical clear.
+        saveSettings();
         initResultsReportDir();
     }
 }
