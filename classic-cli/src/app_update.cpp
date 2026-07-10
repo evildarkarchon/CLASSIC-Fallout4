@@ -60,7 +60,10 @@ std::optional<fs::path> resolve_classic_root() {
     if (ec) {
         return std::nullopt;
     }
-    return current_root;
+    if (fs::is_directory(current_root / "CLASSIC Data", ec)) {
+        return current_root;
+    }
+    return std::nullopt;
 }
 
 /// Open the typed Rust group and enforce its already safety-adjusted policy.

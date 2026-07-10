@@ -89,3 +89,25 @@ TEST_CASE("App update fails closed for malformed User Settings",
 
     REQUIRE(exit_code == 0);
 }
+
+TEST_CASE("App update rejects an invalid working-directory fallback",
+          "[cli][update][app]") {
+    const auto unique_suffix =
+        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    const fs::path root =
+        fs::temp_directory_path() / ("classic-cli-app-update-invalid-" + unique_suffix);
+    fs::create_directories(root);
+
+    int exit_code = -1;
+    {
+        const ScopedCurrentPath cwd(root);
+        exit_code = run_check_app_update(CliArgs{});
+    }
+
+    std::error_code ec;
+    fs::remove_all(root, ec);
+
+    // The invalid test version would fail if root resolution reached the
+    // settings and notification pipeline instead of failing closed.
+    REQUIRE(exit_code == 0);
+}

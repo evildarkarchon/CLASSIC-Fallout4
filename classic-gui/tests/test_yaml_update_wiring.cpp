@@ -55,6 +55,10 @@ private slots:
     // and handle the graceful-no-prev return.
     void settings_dialog_rollback_slot_calls_bridge_and_handles_no_prev();
 
+    /// Verifies that YAML worker operations cannot overlap and that rollback
+    /// visibly disables every YAML action until its result handler runs.
+    void settings_dialog_serializes_yaml_update_actions();
+
     // 12.1 + 12.4: the Apply button must start disabled (nothing to apply
     // until a successful Check reveals updates). After a check that returns
     // tag=UpdateAvailable with >=1 compatible file, Apply must be re-enabled.
@@ -246,6 +250,58 @@ void YamlUpdateWiringTests::settings_dialog_rollback_slot_calls_bridge_and_handl
              "YamlUpdateWorker::doRollback should inspect failed_files results");
     QVERIFY2(worker.contains(QStringLiteral("failure_reasons")),
              "YamlUpdateWorker::doRollback should inspect failure_reasons results");
+}
+
+void YamlUpdateWiringTests::settings_dialog_serializes_yaml_update_actions()
+{
+    const QString source = readFile(QStringLiteral("src/app/settingsdialog.cpp"));
+    QVERIFY2(!source.isEmpty(), "settingsdialog.cpp must be readable");
+
+    const auto functionBody = [&source](const QString& signature) {
+        const qsizetype start = source.indexOf(signature);
+        if (start < 0) {
+            return QString{};
+        }
+        const qsizetype next = source.indexOf(QStringLiteral("\nvoid SettingsDialog::"), start + 1);
+        return source.mid(start, (next < 0 ? source.size() : next) - start);
+    };
+
+    const QStringList actionSignatures{
+        QStringLiteral("void SettingsDialog::onCheckForYamlUpdates()"),
+        QStringLiteral("void SettingsDialog::onApplyYamlUpdates()"),
+        QStringLiteral("void SettingsDialog::onRollbackYamlUpdate()"),
+    };
+    for (const auto& signature : actionSignatures) {
+        const QString body = functionBody(signature);
+        QVERIFY2(!body.isEmpty(), qPrintable(signature + QStringLiteral(" must exist")));
+        const qsizetype guardIndex = body.indexOf(QStringLiteral("if (m_yamlUpdateBusy)"));
+        const qsizetype busyStartIndex = body.indexOf(QStringLiteral("m_yamlUpdateBusy = true"));
+        QVERIFY2(guardIndex >= 0,
+                 qPrintable(signature + QStringLiteral(" must reject clicks while another YAML operation is active")));
+        QVERIFY2(busyStartIndex >= 0 && guardIndex < busyStartIndex,
+                 qPrintable(signature + QStringLiteral(" must reject re-entry before starting new worker work")));
+    }
+
+    const QString rollbackBody = functionBody(QStringLiteral("void SettingsDialog::onRollbackYamlUpdate()"));
+    const qsizetype dispatchIndex =
+        rollbackBody.indexOf(QStringLiteral("invokeMethod(m_yamlUpdateWorker, \"doRollback\""));
+    QVERIFY2(dispatchIndex >= 0, "onRollbackYamlUpdate must dispatch to the worker");
+
+    const QString beforeDispatch = rollbackBody.left(dispatchIndex);
+    QVERIFY2(beforeDispatch.contains(QStringLiteral("m_btnCheckYamlUpdates->setEnabled(false)")),
+             "Rollback must disable Check before queueing worker work");
+    QVERIFY2(beforeDispatch.contains(QStringLiteral("m_btnApplyYamlUpdates->setEnabled(false)")),
+             "Rollback must disable Apply before queueing worker work");
+    QVERIFY2(beforeDispatch.contains(QStringLiteral("m_btnRollbackYamlUpdates->setEnabled(false)")),
+             "Rollback must disable itself before queueing worker work");
+
+    const QString finishedBody = functionBody(QStringLiteral("void SettingsDialog::onYamlRollbackFinished"));
+    QVERIFY2(finishedBody.contains(QStringLiteral("m_btnCheckYamlUpdates->setEnabled(true)")),
+             "Rollback completion must restore Check");
+    QVERIFY2(finishedBody.contains(QStringLiteral("m_btnApplyYamlUpdates->setEnabled(hasReviewedDecision)")),
+             "Rollback completion must restore Apply only when a reviewed decision remains valid");
+    QVERIFY2(finishedBody.contains(QStringLiteral("m_btnRollbackYamlUpdates->setEnabled(true)")),
+             "Rollback completion must restore Rollback");
 }
 
 void YamlUpdateWiringTests::settings_dialog_apply_button_starts_disabled_and_re_enables_on_update()

@@ -14,6 +14,7 @@ CLASSIC_Info:
   is_prerelease: false
 
   default_settings: |
+    schema_version: "1.0"
     # This file contains settings for CLASSIC v7.00+, used by both source scripts and the executable.
 
     CLASSIC_Settings:

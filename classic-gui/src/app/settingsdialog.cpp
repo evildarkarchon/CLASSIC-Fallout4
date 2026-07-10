@@ -747,6 +747,13 @@ void SettingsDialog::ensureYamlUpdateWorker()
 
 void SettingsDialog::onCheckForYamlUpdates()
 {
+    // Result handlers are the sole owners of clearing this flag. Refusing
+    // re-entry prevents another operation from being queued behind the active
+    // worker call and clearing the dialog's busy state out of order.
+    if (m_yamlUpdateBusy) {
+        return;
+    }
+
     ensureYamlUpdateWorker();
     m_yamlUpdateBusy = true;
 
@@ -773,6 +780,10 @@ void SettingsDialog::onCheckForYamlUpdates()
 
 void SettingsDialog::onApplyYamlUpdates()
 {
+    if (m_yamlUpdateBusy) {
+        return;
+    }
+
     // Refuse apply until a prior Check populated a reviewed decision.
     // This is the UI-layer counterpart to `DecisionStale` in the core —
     // we never want the user clicking Apply without first seeing the
@@ -816,6 +827,10 @@ void SettingsDialog::onApplyYamlUpdates()
 
 void SettingsDialog::onRollbackYamlUpdate()
 {
+    if (m_yamlUpdateBusy) {
+        return;
+    }
+
     const auto response =
         QMessageBox::question(this, QStringLiteral("Rollback Data Update"),
                               QStringLiteral("Restore the previously installed copy of each data file? "
@@ -828,6 +843,8 @@ void SettingsDialog::onRollbackYamlUpdate()
     ensureYamlUpdateWorker();
     m_yamlUpdateBusy = true;
 
+    m_btnCheckYamlUpdates->setEnabled(false);
+    m_btnApplyYamlUpdates->setEnabled(false);
     m_btnRollbackYamlUpdates->setEnabled(false);
     m_lblYamlUpdateStatus->setText(QStringLiteral("Rolling back data updates..."));
 
@@ -943,5 +960,9 @@ void SettingsDialog::onYamlRollbackFinished(YamlRollbackResult result)
     }
     m_lblYamlUpdateStatus->setText(summary.join(QStringLiteral(" ")));
 
+    m_btnCheckYamlUpdates->setEnabled(true);
+    const bool hasReviewedDecision = !m_approvedReleaseTag.isEmpty() && !m_approvedFileNames.isEmpty() &&
+                                     m_approvedFileSha256.size() == m_approvedFileNames.size();
+    m_btnApplyYamlUpdates->setEnabled(hasReviewedDecision);
     m_btnRollbackYamlUpdates->setEnabled(true);
 }
