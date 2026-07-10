@@ -6,7 +6,11 @@ CLASSIC_Settings:
   Simplify Logs: false
   Show FormID Values: false
   Move Unsolved Logs: ask-me
+  Unsolved Logs Destination: relative/path
+  SCAN Custom Path: relative/logs
   Max Concurrent Scans: -4
+  FormID Databases:
+    "": [""]
 UI:
   window_geometry:
     main_tab:

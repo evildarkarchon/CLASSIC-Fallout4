@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T23:24:27Z",
+  "generated_at_utc": "2026-07-10T00:12:20Z",
   "schema_version": 1,
   "entries": [
     {
@@ -5319,6 +5319,23 @@
       }
     },
     {
+      "id": "142913a8b27dd2d5",
+      "rustSymbol": "user_settings_open_crash_log_scan_settings",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          }
+        ],
+        "returnType": "CrashLogScanSettingsDto"
+      }
+    },
+    {
       "id": "ba33f05b060305af",
       "rustSymbol": "user_settings_open_update_preferences",
       "kind": "function",
@@ -5333,6 +5350,27 @@
           }
         ],
         "returnType": "UpdatePreferencesDto"
+      }
+    },
+    {
+      "id": "03a8fd971064fde1",
+      "rustSymbol": "user_settings_preview_update",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          },
+          {
+            "name": "update",
+            "type": "&UserSettingsUpdateDto"
+          }
+        ],
+        "returnType": "UserSettingsUpdatePreviewDto"
       }
     },
     {
@@ -5705,6 +5743,142 @@
       "blockOrigin": "Rust"
     },
     {
+      "id": "17d1eef26108ac8d",
+      "rustSymbol": "CrashLogScanSettingsDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "fcx_mode",
+          "type": "bool"
+        },
+        {
+          "name": "fcx_mode_origin",
+          "type": "String"
+        },
+        {
+          "name": "simplify_logs",
+          "type": "bool"
+        },
+        {
+          "name": "simplify_logs_origin",
+          "type": "String"
+        },
+        {
+          "name": "show_statistics",
+          "type": "bool"
+        },
+        {
+          "name": "show_statistics_origin",
+          "type": "String"
+        },
+        {
+          "name": "formid_value_lookup",
+          "type": "bool"
+        },
+        {
+          "name": "formid_value_lookup_origin",
+          "type": "String"
+        },
+        {
+          "name": "formid_database_games",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "formid_database_paths",
+          "type": "Vec<FormIdDatabasePathDto>"
+        },
+        {
+          "name": "formid_databases_origin",
+          "type": "String"
+        },
+        {
+          "name": "move_unsolved_logs",
+          "type": "bool"
+        },
+        {
+          "name": "move_unsolved_logs_origin",
+          "type": "String"
+        },
+        {
+          "name": "has_unsolved_logs_destination",
+          "type": "bool"
+        },
+        {
+          "name": "unsolved_logs_destination",
+          "type": "String"
+        },
+        {
+          "name": "unsolved_logs_destination_origin",
+          "type": "String"
+        },
+        {
+          "name": "has_custom_scan_input",
+          "type": "bool"
+        },
+        {
+          "name": "custom_scan_input",
+          "type": "String"
+        },
+        {
+          "name": "custom_scan_input_origin",
+          "type": "String"
+        },
+        {
+          "name": "game_version_selection",
+          "type": "String"
+        },
+        {
+          "name": "game_version_selection_origin",
+          "type": "String"
+        },
+        {
+          "name": "max_concurrent_scans",
+          "type": "u32"
+        },
+        {
+          "name": "max_concurrent_scans_origin",
+          "type": "String"
+        },
+        {
+          "name": "classification",
+          "type": "String"
+        },
+        {
+          "name": "revision",
+          "type": "String"
+        },
+        {
+          "name": "commit_eligibility",
+          "type": "String"
+        },
+        {
+          "name": "diagnostics",
+          "type": "Vec<UserSettingsDiagnosticDto>"
+        }
+      ]
+    },
+    {
+      "id": "af22cdd14c9a5cf1",
+      "rustSymbol": "FormIdDatabasePathDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "game",
+          "type": "String"
+        },
+        {
+          "name": "path",
+          "type": "String"
+        }
+      ]
+    },
+    {
       "id": "310d1c205c55a783",
       "rustSymbol": "SettingsCacheStats",
       "kind": "struct",
@@ -5859,6 +6033,210 @@
         {
           "name": "message",
           "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "1a848f887399dc55",
+      "rustSymbol": "UserSettingsUpdateDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_field_path",
+          "type": "bool"
+        },
+        {
+          "name": "field_path",
+          "type": "String"
+        },
+        {
+          "name": "code",
+          "type": "String"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "3aa44f3905210d92",
+      "rustSymbol": "UserSettingsUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_update_check",
+          "type": "bool"
+        },
+        {
+          "name": "update_check",
+          "type": "bool"
+        },
+        {
+          "name": "has_game_version_selection",
+          "type": "bool"
+        },
+        {
+          "name": "game_version_selection",
+          "type": "String"
+        },
+        {
+          "name": "has_fcx_mode",
+          "type": "bool"
+        },
+        {
+          "name": "fcx_mode",
+          "type": "bool"
+        },
+        {
+          "name": "has_simplify_logs",
+          "type": "bool"
+        },
+        {
+          "name": "simplify_logs",
+          "type": "bool"
+        },
+        {
+          "name": "has_show_statistics",
+          "type": "bool"
+        },
+        {
+          "name": "show_statistics",
+          "type": "bool"
+        },
+        {
+          "name": "has_formid_value_lookup",
+          "type": "bool"
+        },
+        {
+          "name": "formid_value_lookup",
+          "type": "bool"
+        },
+        {
+          "name": "has_formid_databases",
+          "type": "bool"
+        },
+        {
+          "name": "formid_database_games",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "formid_database_paths",
+          "type": "Vec<FormIdDatabasePathDto>"
+        },
+        {
+          "name": "has_move_unsolved_logs",
+          "type": "bool"
+        },
+        {
+          "name": "move_unsolved_logs",
+          "type": "bool"
+        },
+        {
+          "name": "has_unsolved_logs_destination",
+          "type": "bool"
+        },
+        {
+          "name": "has_unsolved_logs_destination_value",
+          "type": "bool"
+        },
+        {
+          "name": "unsolved_logs_destination",
+          "type": "String"
+        },
+        {
+          "name": "has_custom_scan_input",
+          "type": "bool"
+        },
+        {
+          "name": "has_custom_scan_input_value",
+          "type": "bool"
+        },
+        {
+          "name": "custom_scan_input",
+          "type": "String"
+        },
+        {
+          "name": "has_max_concurrent_scans",
+          "type": "bool"
+        },
+        {
+          "name": "max_concurrent_scans",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "id": "2d703c9e9dfcfbde",
+      "rustSymbol": "UserSettingsUpdateFieldDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "field_path",
+          "type": "String"
+        },
+        {
+          "name": "value_kind",
+          "type": "String"
+        },
+        {
+          "name": "bool_value",
+          "type": "bool"
+        },
+        {
+          "name": "has_string_value",
+          "type": "bool"
+        },
+        {
+          "name": "string_value",
+          "type": "String"
+        },
+        {
+          "name": "u32_value",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "id": "8e77def1f30afb1a",
+      "rustSymbol": "UserSettingsUpdatePreviewDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "accepted",
+          "type": "bool"
+        },
+        {
+          "name": "base_revision",
+          "type": "String"
+        },
+        {
+          "name": "accepted_fields",
+          "type": "Vec<UserSettingsUpdateFieldDto>"
+        },
+        {
+          "name": "formid_database_games",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "formid_database_paths",
+          "type": "Vec<FormIdDatabasePathDto>"
+        },
+        {
+          "name": "diagnostics",
+          "type": "Vec<UserSettingsUpdateDiagnosticDto>"
         }
       ]
     },

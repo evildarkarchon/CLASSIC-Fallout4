@@ -307,6 +307,508 @@
       "pythonKind": "class"
     },
     {
+      "id": "user_settings.crash_log_scan_settings_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "CrashLogScanSettings",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.game_version_selection_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "GameVersionSelection",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.accepted_update_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "AcceptedUserSettingsUpdate",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdatePreview",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_diagnostic_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UpdateDiagnostic",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdateDiagnostic",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_request_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsUpdate",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_field_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsUpdateField",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdateField",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_preview_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsUpdatePreview",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdatePreview",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.crash_log_scan_settings_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "crash_log_scan_settings",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_fcx_mode_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fcx_mode",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_fcx_mode_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fcx_mode_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_simplify_logs_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "simplify_logs",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_simplify_logs_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "simplify_logs_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_show_statistics_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "show_statistics",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_show_statistics_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "show_statistics_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_formid_value_lookup_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "formid_value_lookup",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_formid_value_lookup_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "formid_value_lookup_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_formid_databases_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "formid_databases",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_formid_databases_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "formid_databases_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_move_unsolved_logs_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "move_unsolved_logs",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_move_unsolved_logs_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "move_unsolved_logs_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_unsolved_logs_destination_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "unsolved_logs_destination",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_unsolved_logs_destination_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "unsolved_logs_destination_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_custom_scan_input_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "custom_scan_input",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_custom_scan_input_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "custom_scan_input_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_game_version_selection_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_version_selection",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_game_version_selection_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_version_selection_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_max_concurrent_scans_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "max_concurrent_scans",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.scan_max_concurrent_scans_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "max_concurrent_scans_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.game_version_as_str",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "as_str",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.game_version_parse",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "parse",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "CrashLogScanSettings",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_new",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "new",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_with_update_check",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_update_check",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_update_check",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_game_version_selection",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_game_version_selection",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_game_version_selection",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_fcx_mode",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_fcx_mode",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_fcx_mode",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_simplify_logs",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_simplify_logs",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_simplify_logs",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_show_statistics",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_show_statistics",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_show_statistics",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_formid_value_lookup",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_formid_value_lookup",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_formid_value_lookup",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_formid_databases",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_formid_databases",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_formid_databases",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_move_unsolved_logs",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_move_unsolved_logs",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_move_unsolved_logs",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_unsolved_logs_destination",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_unsolved_logs_destination",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_unsolved_logs_destination",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_custom_scan_input",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_custom_scan_input",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_custom_scan_input",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_max_concurrent_scans",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_max_concurrent_scans",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_max_concurrent_scans",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.preview_update",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "preview_update",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot.preview_update",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.accepted_base_revision_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "base_revision",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdatePreview",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.accepted_fields_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fields",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdatePreview",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_field_canonical_path_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "canonical_path",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdateField",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_diagnostic_field_path_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "field_path",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdateDiagnostic",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_diagnostic_code_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "code",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdateDiagnostic",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_diagnostic_message_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "message",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdateDiagnostic",
+      "pythonKind": "class"
+    },
+    {
       "id": "config-classic-config-class",
       "tier": "tier1",
       "ownerModule": "config",

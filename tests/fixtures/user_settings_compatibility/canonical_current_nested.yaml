@@ -16,3 +16,6 @@ CLASSIC_Settings:
   Update Source: GitHub
   Disable CLI Progress: false
   Max Concurrent Scans: 0
+  FormID Databases:
+    Fallout4:
+      - databases/Fallout4 FormIDs.db

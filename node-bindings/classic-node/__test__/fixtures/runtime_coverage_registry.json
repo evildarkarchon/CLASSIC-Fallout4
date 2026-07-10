@@ -11,11 +11,11 @@
         "ownerModule": "user_settings",
         "tier": "tier1"
       },
-      "contractCount": 24,
-      "contractIdsHash": "8b76b25464ccee73a234627ae52a571f5cb7c5d0bd167f9edb849146ff70217a",
+      "contractCount": 73,
+      "contractIdsHash": "4de4c6b1e185b5334baef28adc84aa354d6036081b2d91fde540147e5a16e6da",
       "verificationMode": "direct_call",
       "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-public-runtime",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ]

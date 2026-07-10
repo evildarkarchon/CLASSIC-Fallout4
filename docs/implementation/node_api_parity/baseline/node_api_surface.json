@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T23:25:02.553533+00:00",
+  "generated_at_utc": "2026-07-10T00:13:53.164525+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -283,6 +283,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsConfigIssue {"
+    },
+    {
+      "export": "JsCrashLogScanSettings",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashLogScanSettings {"
     },
     {
       "export": "JsCrashgenCheckResult",
@@ -995,6 +1003,38 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsUserSettingsSnapshot {"
+    },
+    {
+      "export": "JsUserSettingsUpdate",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsUpdate {"
+    },
+    {
+      "export": "JsUserSettingsUpdateDiagnostic",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsUpdateDiagnostic {"
+    },
+    {
+      "export": "JsUserSettingsUpdateField",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsUpdateField {"
+    },
+    {
+      "export": "JsUserSettingsUpdatePreview",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsUpdatePreview {"
     },
     {
       "export": "JsValidationResult",
@@ -2521,6 +2561,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function persistGameLocalPaths(localYamlPath: string, gameRoot?: string | undefined | null, docsRoot?: string | undefined | null): Promise<void>",
       "arity": 3
+    },
+    {
+      "export": "previewUserSettingsUpdate",
+      "kind": "function",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function previewUserSettingsUpdate(classicRoot: string, update: JsUserSettingsUpdate): JsUserSettingsUpdatePreview",
+      "arity": 2
     },
     {
       "export": "processGameLogs",

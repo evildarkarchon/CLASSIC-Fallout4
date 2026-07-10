@@ -137,7 +137,10 @@
         "update_check": true,
         "game_version": "auto",
         "move_unsolved_logs": true,
-        "max_concurrent_scans": 0
+        "max_concurrent_scans": 0,
+        "formid_databases": {
+          "Fallout4": ["databases/Fallout4 FormIDs.db"]
+        }
       },
       "diagnostics": []
     },
@@ -253,7 +256,10 @@
         "invalid_type_update_check",
         "invalid_enum_game_version",
         "invalid_type_move_unsolved_logs",
+        "invalid_path_unsolved_logs_destination",
+        "invalid_path_custom_scan_input",
         "invalid_range_max_concurrent_scans",
+        "invalid_value_formid_databases",
         "invalid_type_gui_geometry_width",
         "invalid_type_gui_geometry_maximized"
       ],
@@ -261,9 +267,35 @@
         {"pointer": "/CLASSIC_Settings/Update Check", "type": "string", "value": "sometimes"},
         {"pointer": "/CLASSIC_Settings/Game Version", "type": "string", "value": "Future"},
         {"pointer": "/CLASSIC_Settings/Move Unsolved Logs", "type": "string", "value": "ask-me"},
+        {"pointer": "/CLASSIC_Settings/Unsolved Logs Destination", "type": "string", "value": "relative/path"},
+        {"pointer": "/CLASSIC_Settings/SCAN Custom Path", "type": "string", "value": "relative/logs"},
         {"pointer": "/CLASSIC_Settings/Max Concurrent Scans", "type": "integer", "value": -4},
+        {"pointer": "/CLASSIC_Settings/FormID Databases/", "type": "sequence", "value": [""]},
         {"pointer": "/UI/window_geometry/main_tab/width", "type": "string", "value": "wide"},
         {"pointer": "/UI/window_geometry/main_tab/maximized", "type": "string", "value": "sometimes"}
+      ]
+    },
+    {
+      "id": "alias_only",
+      "coverage": ["canonical_label_aliases"],
+      "fixture": "alias_only.yaml",
+      "format": "yaml",
+      "parse": "valid",
+      "source": {
+        "classification": "current_with_alias",
+        "location": "classic_root",
+        "relative_path": "CLASSIC Settings.yaml"
+      },
+      "expected_outcomes": ["read_only_open", "proposed_update", "accepted_commit"],
+      "commit_eligible": true,
+      "migration_required": false,
+      "expected_view": {
+        "custom_scan_folder": "E:/Alias Crash Logs"
+      },
+      "diagnostics": [],
+      "ordinary_commit_preserves_aliases": true,
+      "preserve_nodes": [
+        {"pointer": "/CLASSIC_Settings/Custom Scan Folder", "type": "string", "value": "E:/Alias Crash Logs"}
       ]
     },
     {

@@ -1,16 +1,16 @@
 {
-  "generated_at_utc": "2026-07-09T23:25:02.841196+00:00",
+  "generated_at_utc": "2026-07-10T00:18:04.297026+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1273,
-    "runtime_verified_total": 1273,
+    "tracked_surface_total": 1322,
+    "runtime_verified_total": 1322,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 1109,
+    "tier1_contract_total": 1158,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -69,8 +69,8 @@
       "total": 10
     },
     "user_settings": {
-      "runtime_verified": 24,
-      "total": 24
+      "runtime_verified": 73,
+      "total": 73
     },
     "version": {
       "runtime_verified": 15,
@@ -103,11 +103,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.diagnostic",
@@ -122,11 +122,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.document_classification",
@@ -141,11 +141,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.preference_origin",
@@ -160,11 +160,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.revision_type",
@@ -179,11 +179,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.source_type",
@@ -198,11 +198,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.source_location",
@@ -217,11 +217,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.update_preferences_type",
@@ -236,11 +236,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.snapshot_type",
@@ -255,11 +255,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.classification_accessor",
@@ -274,11 +274,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.diagnostic_code_accessor",
@@ -293,11 +293,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.commit_eligibility_accessor",
@@ -312,11 +312,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.diagnostics_accessor",
@@ -331,11 +331,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.location_accessor",
@@ -350,11 +350,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.diagnostic_message_accessor",
@@ -369,11 +369,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.open",
@@ -388,11 +388,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.original_bytes_accessor",
@@ -407,11 +407,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.path_accessor",
@@ -426,11 +426,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.revision_accessor",
@@ -445,11 +445,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.schema_version_accessor",
@@ -464,11 +464,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.source_accessor",
@@ -483,11 +483,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.update_check_accessor",
@@ -502,11 +502,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.update_check_origin_accessor",
@@ -521,11 +521,11 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:user_settings.update_preferences_accessor",
@@ -540,11 +540,942 @@
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": null
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.crash_log_scan_settings_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.crash_log_scan_settings_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "CrashLogScanSettings",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.game_version_selection_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.game_version_selection_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "GameVersionSelection",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.accepted_update_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.accepted_update_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "AcceptedUserSettingsUpdate",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdatePreview",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_diagnostic_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_diagnostic_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "UpdateDiagnostic",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdateDiagnostic",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_request_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_request_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "UserSettingsUpdate",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_field_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_field_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "UserSettingsUpdateField",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdateField",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_preview_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_preview_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "UserSettingsUpdatePreview",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdatePreview",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.crash_log_scan_settings_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.crash_log_scan_settings_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "crash_log_scan_settings",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_fcx_mode_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_fcx_mode_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "fcx_mode",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_fcx_mode_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_fcx_mode_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "fcx_mode_origin",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_simplify_logs_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_simplify_logs_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "simplify_logs",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_simplify_logs_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_simplify_logs_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "simplify_logs_origin",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_show_statistics_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_show_statistics_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "show_statistics",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_show_statistics_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_show_statistics_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "show_statistics_origin",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_formid_value_lookup_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_formid_value_lookup_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "formid_value_lookup",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_formid_value_lookup_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_formid_value_lookup_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "formid_value_lookup_origin",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_formid_databases_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_formid_databases_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "formid_databases",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_formid_databases_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_formid_databases_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "formid_databases_origin",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_move_unsolved_logs_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_move_unsolved_logs_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "move_unsolved_logs",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_move_unsolved_logs_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_move_unsolved_logs_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "move_unsolved_logs_origin",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_unsolved_logs_destination_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_unsolved_logs_destination_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "unsolved_logs_destination",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_unsolved_logs_destination_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_unsolved_logs_destination_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "unsolved_logs_destination_origin",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_custom_scan_input_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_custom_scan_input_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "custom_scan_input",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_custom_scan_input_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_custom_scan_input_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "custom_scan_input_origin",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_game_version_selection_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_game_version_selection_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_version_selection",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_game_version_selection_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_game_version_selection_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "game_version_selection_origin",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_max_concurrent_scans_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_max_concurrent_scans_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "max_concurrent_scans",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.scan_max_concurrent_scans_origin_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.scan_max_concurrent_scans_origin_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "max_concurrent_scans_origin",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.game_version_as_str",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.game_version_as_str",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "as_str",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.game_version_parse",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.game_version_parse",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "parse",
+      "bindingIdentifier": "classic_user_settings.CrashLogScanSettings",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_new",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_new",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "new",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_update_check",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_update_check",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_update_check",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_update_check",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_game_version_selection",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_game_version_selection",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_game_version_selection",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_game_version_selection",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_fcx_mode",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_fcx_mode",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_fcx_mode",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_fcx_mode",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_simplify_logs",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_simplify_logs",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_simplify_logs",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_simplify_logs",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_show_statistics",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_show_statistics",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_show_statistics",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_show_statistics",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_formid_value_lookup",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_formid_value_lookup",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_formid_value_lookup",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_formid_value_lookup",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_formid_databases",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_formid_databases",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_formid_databases",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_formid_databases",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_move_unsolved_logs",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_move_unsolved_logs",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_move_unsolved_logs",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_move_unsolved_logs",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_unsolved_logs_destination",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_unsolved_logs_destination",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_unsolved_logs_destination",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_unsolved_logs_destination",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_custom_scan_input",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_custom_scan_input",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_custom_scan_input",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_custom_scan_input",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_max_concurrent_scans",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_max_concurrent_scans",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_max_concurrent_scans",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_max_concurrent_scans",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.preview_update",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.preview_update",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "preview_update",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot.preview_update",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.accepted_base_revision_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.accepted_base_revision_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "base_revision",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdatePreview",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.accepted_fields_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.accepted_fields_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "fields",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdatePreview",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_field_canonical_path_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_field_canonical_path_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "canonical_path",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdateField",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_diagnostic_field_path_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_diagnostic_field_path_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "field_path",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdateDiagnostic",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_diagnostic_code_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_diagnostic_code_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "code",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdateDiagnostic",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
+    },
+    {
+      "trackedId": "contract:user_settings.update_diagnostic_message_accessor",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_diagnostic_message_accessor",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "message",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdateDiagnostic",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "trackedId": "contract:config-classic-config-class",

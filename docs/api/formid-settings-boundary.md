@@ -1,6 +1,6 @@
 # FormID Settings Boundary
 
-Contributor-facing notes for the current FormID database settings split between [`classic-config-core`](../../business-logic/classic-config-core) and scan-time intake in [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), consumed by [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
+Contributor-facing notes for the current FormID database settings split between [`classic-config-core`](../../business-logic/classic-config-core), typed [`classic-user-settings-core`](../../business-logic/classic-user-settings-core), and scan-time intake in [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), consumed by [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
 This page is intentionally narrow. It documents the active source-backed boundary contributors hit when tracing why configured FormID database paths do or do not affect scan startup.
 
@@ -23,7 +23,7 @@ This page describes behavior visible in active Rust and C++-facing source today.
 
 ## Current Boundary At A Glance
 
-There are two different active representations for per-game FormID database paths.
+There are three active representations for per-game FormID database paths. The typed User Settings representation models the canonical persisted choice, but active scan startup remains on its existing path until the native CLI cutover.
 
 ## `classic-config-core` representation
 
@@ -33,17 +33,29 @@ There are two different active representations for per-game FormID database path
 - YAML key: top-level `formid_databases`
 - shape: snake_case map from game name to zero or more paths
 
+## `classic-user-settings-core` representation
+
+[`business-logic/classic-user-settings-core/src/scan_settings.rs`](../../business-logic/classic-user-settings-core/src/scan_settings.rs) defines:
+
+- `CrashLogScanSettings::formid_databases() -> &BTreeMap<String, Vec<String>>`
+- canonical YAML key: `CLASSIC_Settings.FormID Databases`
+- shape: game-name map from each game to zero or more unnormalized path strings
+- missing or untrusted values: an empty map with `PreferenceOrigin::Default` or `DegradedFallback`
+
+The typed read path retains relative strings exactly; Crash Log Scan preparation remains responsible for resolving them against CLASSIC Data. `UserSettingsUpdate::with_formid_databases(...)` can validate a replacement mapping as part of an all-or-nothing, non-persisting preview. It does not save the mapping.
+
 ## Scan-startup intake representation
 
 [`business-logic/classic-scanlog-core/src/scan_intake.rs`](../../business-logic/classic-scanlog-core/src/scan_intake.rs) reads:
 
 - YAML key path: `CLASSIC_Settings.FormID Databases.{game}`
 - source file path: `CLASSIC Settings.yaml` next to the executable / root install directory
-- shape: legacy nested settings tree read through `YamlOperations`
+- shape: canonical nested User Settings tree read through generic `YamlOperations`
 
 Important contributor takeaway:
 
 - these are not the same YAML key
+- `classic-user-settings-core` now owns the typed canonical projection of the nested key, but active scan startup has not yet been switched to consume that snapshot
 - active scan startup does not currently read `ClassicConfig.formid_databases`
 - `ClassicConfig::load_from_yaml()` does not currently read `CLASSIC_Settings.FormID Databases.{game}` into `formid_databases`
 - `classic-cpp-bridge` keeps the public scan config call shape, but delegates this path selection to scanlog-core intake
@@ -111,7 +123,7 @@ Current settings-read details:
 - absolute user paths are used as-is after normalization
 - existence is not checked during path assembly
 
-Grounded legacy YAML shape consumed by scan startup:
+Grounded canonical User Settings shape consumed by scan startup:
 
 ```yaml
 CLASSIC_Settings:
@@ -152,9 +164,13 @@ Current binding behavior:
 - setters write back into `ClassicConfig.formid_databases`
 - the Node test suite covers round-trip behavior for `Fallout4` and `Skyrim`
 
-These bindings mirror the Rust config model. They do not, in the inspected source, redirect scan startup to the legacy nested key.
+These bindings mirror the Rust config model. They do not, in the inspected source, redirect scan startup to the canonical nested User Settings key.
 
-## Surface that still uses the legacy nested settings path
+## Surfaces that expose typed User Settings FormID databases
+
+The CXX, Node, and Python User Settings adapters expose `CrashLogScanSettings.formid_databases` from the canonical nested document together with its preference origin. Their update-preview adapters validate requested replacement maps without writing. These are typed settings contracts, not an implicit change to which settings object active scan startup consumes.
+
+## Surface that still uses generic operations on the nested User Settings path
 
 [`classic-gui/src/app/settingsdialog.cpp`](../../classic-gui/src/app/settingsdialog.cpp) still reads and writes:
 
@@ -193,7 +209,8 @@ Practical debugging rule:
 These details are source-backed today and matter for contributors, but they should not be treated as an implied future design.
 
 - `classic-scanlog-core` intake currently reads settings YAML directly instead of loading `ClassicConfig`
-- `classic-config-core` currently ignores the legacy nested `CLASSIC_Settings.FormID Databases.{game}` path
+- `classic-user-settings-core` projects the canonical nested FormID database map, but the active native scan adapter does not consume that typed group until its dedicated cutover
+- `classic-config-core` currently ignores the nested `CLASSIC_Settings.FormID Databases.{game}` path
 - `classic-config-core` path validation does not validate FormID database files
 - bridge path normalization uses `path.components().collect()`; it does not canonicalize case or resolve symlinks
 - bridge de-duplication is path-based, not content-based
@@ -205,6 +222,7 @@ These details are source-backed today and matter for contributors, but they shou
 ## Related Docs
 
 - [`classic-config-core.md`](classic-config-core.md) - full Rust config API and runtime settings model
+- [`classic-user-settings-core.md`](classic-user-settings-core.md) - typed canonical User Settings projection and update preview
 - [`classic-scanlog-core.md`](classic-scanlog-core.md) - Crash Log Scan Intake and downstream analysis
 - [`classic-database-core.md`](classic-database-core.md) - database pool initialization and missing-file behavior
 - [`formid-sqlite-conventions.md`](formid-sqlite-conventions.md) - broader fixture, schema, lookup, and path rules for FormID DB work

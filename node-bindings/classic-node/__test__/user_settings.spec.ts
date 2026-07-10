@@ -9,7 +9,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
-import { openUserSettings } from "../index.js";
+import { openUserSettings, previewUserSettingsUpdate } from "../index.js";
 
 const roots: string[] = [];
 const fixtureRoot = join(
@@ -66,6 +66,12 @@ describe("read-only User Settings", () => {
     expect(snapshot.commitEligibility).toBe("eligible");
     expect(snapshot.diagnostics.map((diagnostic) => diagnostic.code)).toEqual([
       "invalid_type_update_check",
+      "invalid_enum_game_version",
+      "invalid_type_move_unsolved_logs",
+      "invalid_path_unsolved_logs_destination",
+      "invalid_path_custom_scan_input",
+      "invalid_range_max_concurrent_scans",
+      "invalid_value_formid_databases",
     ]);
     expect(snapshot.diagnostics[0]?.message.length).toBeGreaterThan(0);
     expect(snapshot.revision.startsWith("sha256:")).toBe(true);
@@ -108,5 +114,193 @@ describe("read-only User Settings", () => {
     const invalidBytesSnapshot = openUserSettings(makeRoot(invalidBytes));
     expect(invalidBytesSnapshot.classification).toBe("malformed");
     expect(invalidBytesSnapshot.originalContent?.equals(invalidBytes)).toBe(true);
+  });
+});
+
+describe("Crash Log Scan User Settings", () => {
+  test("user-settings-crash-log-scan-snapshot", () => {
+    const canonicalContent = fixture("canonical_current_nested.yaml");
+    const canonicalRoot = makeRoot(canonicalContent);
+    const canonical = openUserSettings(canonicalRoot);
+
+    expect(canonical.crashLogScanSettings).toEqual({
+      fcxMode: false,
+      fcxModeOrigin: "document",
+      simplifyLogs: false,
+      simplifyLogsOrigin: "document",
+      showStatistics: false,
+      showStatisticsOrigin: "document",
+      formidValueLookup: false,
+      formidValueLookupOrigin: "document",
+      formidDatabases: {
+        Fallout4: ["databases/Fallout4 FormIDs.db"],
+      },
+      formidDatabasesOrigin: "document",
+      moveUnsolvedLogs: true,
+      moveUnsolvedLogsOrigin: "document",
+      unsolvedLogsDestinationOrigin: "document",
+      customScanInputOrigin: "document",
+      gameVersionSelection: "auto",
+      gameVersionSelectionOrigin: "document",
+      maxConcurrentScans: 0,
+      maxConcurrentScansOrigin: "document",
+    });
+    expect(readFileSync(join(canonicalRoot, "CLASSIC Settings.yaml"))).toEqual(
+      canonicalContent,
+    );
+
+    const aliasContent = fixture("alias_only.yaml");
+    const aliasRoot = makeRoot(aliasContent);
+    const alias = openUserSettings(aliasRoot);
+    expect(alias.crashLogScanSettings.customScanInput).toBe(
+      "E:/Alias Crash Logs",
+    );
+    expect(alias.crashLogScanSettings.customScanInputOrigin).toBe("document");
+    expect(alias.crashLogScanSettings.moveUnsolvedLogs).toBe(true);
+    expect(alias.crashLogScanSettings.moveUnsolvedLogsOrigin).toBe("default");
+    expect(alias.diagnostics).toEqual([]);
+    expect(readFileSync(join(aliasRoot, "CLASSIC Settings.yaml"))).toEqual(
+      aliasContent,
+    );
+
+    const conflict = openUserSettings(
+      makeRoot(fixture("canonical_alias_conflict.yaml")),
+    );
+    expect(conflict.crashLogScanSettings.customScanInput).toBe(
+      "D:/Canonical Crash Logs",
+    );
+    expect(conflict.diagnostics.map((diagnostic) => diagnostic.code)).toEqual([
+      "canonical_alias_conflict_custom_scan_folder",
+    ]);
+
+    const invalidContent = fixture("invalid_known_values.yaml");
+    const invalidRoot = makeRoot(invalidContent);
+    const invalid = openUserSettings(invalidRoot);
+    expect(invalid.crashLogScanSettings.gameVersionSelection).toBe("auto");
+    expect(invalid.crashLogScanSettings.gameVersionSelectionOrigin).toBe(
+      "degradedFallback",
+    );
+    expect(invalid.crashLogScanSettings.moveUnsolvedLogs).toBe(false);
+    expect(invalid.crashLogScanSettings.moveUnsolvedLogsOrigin).toBe(
+      "degradedFallback",
+    );
+    expect(invalid.crashLogScanSettings.unsolvedLogsDestination).toBeUndefined();
+    expect(invalid.crashLogScanSettings.unsolvedLogsDestinationOrigin).toBe(
+      "degradedFallback",
+    );
+    expect(invalid.crashLogScanSettings.customScanInput).toBeUndefined();
+    expect(invalid.crashLogScanSettings.customScanInputOrigin).toBe(
+      "degradedFallback",
+    );
+    expect(invalid.crashLogScanSettings.formidDatabases).toEqual({});
+    expect(invalid.crashLogScanSettings.formidDatabasesOrigin).toBe(
+      "degradedFallback",
+    );
+    expect(invalid.crashLogScanSettings.maxConcurrentScans).toBe(0);
+    expect(invalid.crashLogScanSettings.maxConcurrentScansOrigin).toBe(
+      "degradedFallback",
+    );
+    expect(readFileSync(join(invalidRoot, "CLASSIC Settings.yaml"))).toEqual(
+      invalidContent,
+    );
+
+    const unknownContent = fixture("unknown_entries.yaml");
+    const unknownRoot = makeRoot(unknownContent);
+    const unknown = openUserSettings(unknownRoot);
+    expect(unknown.crashLogScanSettings.gameVersionSelection).toBe("auto");
+    expect(readFileSync(join(unknownRoot, "CLASSIC Settings.yaml"))).toEqual(
+      unknownContent,
+    );
+  });
+});
+
+describe("User Settings Update preview", () => {
+  test("user-settings-update-preview", () => {
+    const content = fixture("unknown_entries.yaml");
+    const root = makeRoot(content);
+    const path = join(root, "CLASSIC Settings.yaml");
+    const revision = openUserSettings(root).revision;
+
+    const accepted = previewUserSettingsUpdate(root, {
+      updateCheck: false,
+      unsolvedLogsDestination: null,
+      customScanInput: null,
+      maxConcurrentScans: 4,
+    });
+
+    expect(accepted).toEqual({
+      accepted: true,
+      baseRevision: revision,
+      fields: [
+        {
+          fieldPath: "/CLASSIC_Settings/Update Check",
+          value: false,
+        },
+        {
+          fieldPath: "/CLASSIC_Settings/Unsolved Logs Destination",
+          value: null,
+        },
+        {
+          fieldPath: "/CLASSIC_Settings/SCAN Custom Path",
+          value: null,
+        },
+        {
+          fieldPath: "/CLASSIC_Settings/Max Concurrent Scans",
+          value: 4,
+        },
+      ],
+      diagnostics: [],
+    });
+    expect(readFileSync(path)).toEqual(content);
+
+    const rejected = previewUserSettingsUpdate(root, {
+      updateCheck: true,
+      gameVersionSelection: "Future",
+      maxConcurrentScans: -9,
+    });
+
+    expect(rejected.accepted).toBe(false);
+    expect(rejected.baseRevision).toBeUndefined();
+    expect(rejected.fields).toEqual([]);
+    expect(rejected.diagnostics).toEqual([
+      {
+        fieldPath: "/CLASSIC_Settings/Game Version",
+        code: "invalid_enum_game_version",
+        message:
+          "Game Version must be auto, Original, NextGen, AnniversaryEdition, or VR",
+      },
+      {
+        fieldPath: "/CLASSIC_Settings/Max Concurrent Scans",
+        code: "invalid_range_max_concurrent_scans",
+        message: "Max Concurrent Scans must be between 0 and 32",
+      },
+    ]);
+    expect(readFileSync(path)).toEqual(content);
+
+    const wideNumberRejected = previewUserSettingsUpdate(root, {
+      updateCheck: true,
+      maxConcurrentScans: 2 ** 32,
+    });
+    expect(wideNumberRejected.accepted).toBe(false);
+    expect(wideNumberRejected.fields).toEqual([]);
+    expect(wideNumberRejected.diagnostics.map(({ code }) => code)).toEqual([
+      "invalid_range_max_concurrent_scans",
+    ]);
+    expect(readFileSync(path)).toEqual(content);
+
+    const conflictContent = fixture("canonical_alias_conflict.yaml");
+    const conflictRoot = makeRoot(conflictContent);
+    const aliasPreserving = previewUserSettingsUpdate(conflictRoot, {
+      maxConcurrentScans: 4,
+    });
+    expect(aliasPreserving.fields).toEqual([
+      {
+        fieldPath: "/CLASSIC_Settings/Max Concurrent Scans",
+        value: 4,
+      },
+    ]);
+    expect(
+      readFileSync(join(conflictRoot, "CLASSIC Settings.yaml")),
+    ).toEqual(conflictContent);
   });
 });

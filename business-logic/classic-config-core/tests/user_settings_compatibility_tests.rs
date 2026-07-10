@@ -256,6 +256,7 @@ mod compatibility_contract_tests {
         assert_eq!(
             coverage,
             BTreeSet::from([
+                "canonical_label_aliases",
                 "canonical_alias_conflicts",
                 "canonical_nested_document",
                 "flat_classic_config_shape",

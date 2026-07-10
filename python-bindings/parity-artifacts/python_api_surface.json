@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T23:34:51.919677+00:00",
+  "generated_at_utc": "2026-07-10T00:35:49.033279+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -8573,6 +8573,16 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "CrashLogScanSettings",
+      "export_path": "CrashLogScanSettings",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class CrashLogScanSettings:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "UpdatePreferences",
       "export_path": "UpdatePreferences",
       "kind": "class",
@@ -8600,6 +8610,202 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "class UserSettingsSnapshot:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "preview_update",
+      "export_path": "UserSettingsSnapshot.preview_update",
+      "parent_class": "UserSettingsSnapshot",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def preview_update(self, update: UserSettingsUpdate) -> UserSettingsUpdatePreview:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsUpdate",
+      "export_path": "UserSettingsUpdate",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsUpdate:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "__init__",
+      "export_path": "UserSettingsUpdate.__init__",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def __init__(self) -> None: ..."
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_custom_scan_input",
+      "export_path": "UserSettingsUpdate.set_custom_scan_input",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_custom_scan_input(self, value: str | None) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_fcx_mode",
+      "export_path": "UserSettingsUpdate.set_fcx_mode",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_fcx_mode(self, value: bool) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_formid_databases",
+      "export_path": "UserSettingsUpdate.set_formid_databases",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_formid_databases(self, value: dict[str, list[str]]) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_formid_value_lookup",
+      "export_path": "UserSettingsUpdate.set_formid_value_lookup",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_formid_value_lookup(self, value: bool) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_game_version_selection",
+      "export_path": "UserSettingsUpdate.set_game_version_selection",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_game_version_selection(self, value: str) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_max_concurrent_scans",
+      "export_path": "UserSettingsUpdate.set_max_concurrent_scans",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_max_concurrent_scans(self, value: int) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_move_unsolved_logs",
+      "export_path": "UserSettingsUpdate.set_move_unsolved_logs",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_move_unsolved_logs(self, value: bool) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_show_statistics",
+      "export_path": "UserSettingsUpdate.set_show_statistics",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_show_statistics(self, value: bool) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_simplify_logs",
+      "export_path": "UserSettingsUpdate.set_simplify_logs",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_simplify_logs(self, value: bool) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_unsolved_logs_destination",
+      "export_path": "UserSettingsUpdate.set_unsolved_logs_destination",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_unsolved_logs_destination(self, value: str | None) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_update_check",
+      "export_path": "UserSettingsUpdate.set_update_check",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_update_check(self, value: bool) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsUpdateDiagnostic",
+      "export_path": "UserSettingsUpdateDiagnostic",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsUpdateDiagnostic:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsUpdateField",
+      "export_path": "UserSettingsUpdateField",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsUpdateField:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsUpdatePreview",
+      "export_path": "UserSettingsUpdatePreview",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsUpdatePreview:"
     },
     {
       "module": "classic_user_settings",

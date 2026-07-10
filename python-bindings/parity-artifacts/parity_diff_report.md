@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-09T23:25:02.834466+00:00`
-- Tier-1 contract rows: **1109**
-- Tier-1 matched: **1109**
+- Generated: `2026-07-10T00:17:50.721349+00:00`
+- Tier-1 contract rows: **1158**
+- Tier-1 matched: **1158**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -36,6 +36,55 @@
 | `user_settings.update_check_accessor` | `user_settings` | `update_check` | `classic_user_settings.UpdatePreferences` | `matched` |
 | `user_settings.update_check_origin_accessor` | `user_settings` | `update_check_origin` | `classic_user_settings.UpdatePreferences` | `matched` |
 | `user_settings.update_preferences_accessor` | `user_settings` | `update_preferences` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.crash_log_scan_settings_type` | `user_settings` | `CrashLogScanSettings` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.game_version_selection_type` | `user_settings` | `GameVersionSelection` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.accepted_update_type` | `user_settings` | `AcceptedUserSettingsUpdate` | `classic_user_settings.UserSettingsUpdatePreview` | `matched` |
+| `user_settings.update_diagnostic_type` | `user_settings` | `UpdateDiagnostic` | `classic_user_settings.UserSettingsUpdateDiagnostic` | `matched` |
+| `user_settings.update_request_type` | `user_settings` | `UserSettingsUpdate` | `classic_user_settings.UserSettingsUpdate` | `matched` |
+| `user_settings.update_field_type` | `user_settings` | `UserSettingsUpdateField` | `classic_user_settings.UserSettingsUpdateField` | `matched` |
+| `user_settings.update_preview_type` | `user_settings` | `UserSettingsUpdatePreview` | `classic_user_settings.UserSettingsUpdatePreview` | `matched` |
+| `user_settings.crash_log_scan_settings_accessor` | `user_settings` | `crash_log_scan_settings` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
+| `user_settings.scan_fcx_mode_accessor` | `user_settings` | `fcx_mode` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_fcx_mode_origin_accessor` | `user_settings` | `fcx_mode_origin` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_simplify_logs_accessor` | `user_settings` | `simplify_logs` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_simplify_logs_origin_accessor` | `user_settings` | `simplify_logs_origin` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_show_statistics_accessor` | `user_settings` | `show_statistics` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_show_statistics_origin_accessor` | `user_settings` | `show_statistics_origin` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_formid_value_lookup_accessor` | `user_settings` | `formid_value_lookup` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_formid_value_lookup_origin_accessor` | `user_settings` | `formid_value_lookup_origin` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_formid_databases_accessor` | `user_settings` | `formid_databases` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_formid_databases_origin_accessor` | `user_settings` | `formid_databases_origin` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_move_unsolved_logs_accessor` | `user_settings` | `move_unsolved_logs` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_move_unsolved_logs_origin_accessor` | `user_settings` | `move_unsolved_logs_origin` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_unsolved_logs_destination_accessor` | `user_settings` | `unsolved_logs_destination` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_unsolved_logs_destination_origin_accessor` | `user_settings` | `unsolved_logs_destination_origin` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_custom_scan_input_accessor` | `user_settings` | `custom_scan_input` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_custom_scan_input_origin_accessor` | `user_settings` | `custom_scan_input_origin` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_game_version_selection_accessor` | `user_settings` | `game_version_selection` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_game_version_selection_origin_accessor` | `user_settings` | `game_version_selection_origin` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_max_concurrent_scans_accessor` | `user_settings` | `max_concurrent_scans` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.scan_max_concurrent_scans_origin_accessor` | `user_settings` | `max_concurrent_scans_origin` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.game_version_as_str` | `user_settings` | `as_str` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.game_version_parse` | `user_settings` | `parse` | `classic_user_settings.CrashLogScanSettings` | `matched` |
+| `user_settings.update_new` | `user_settings` | `new` | `classic_user_settings.UserSettingsUpdate` | `matched` |
+| `user_settings.update_with_update_check` | `user_settings` | `with_update_check` | `classic_user_settings.UserSettingsUpdate.set_update_check` | `matched` |
+| `user_settings.update_with_game_version_selection` | `user_settings` | `with_game_version_selection` | `classic_user_settings.UserSettingsUpdate.set_game_version_selection` | `matched` |
+| `user_settings.update_with_fcx_mode` | `user_settings` | `with_fcx_mode` | `classic_user_settings.UserSettingsUpdate.set_fcx_mode` | `matched` |
+| `user_settings.update_with_simplify_logs` | `user_settings` | `with_simplify_logs` | `classic_user_settings.UserSettingsUpdate.set_simplify_logs` | `matched` |
+| `user_settings.update_with_show_statistics` | `user_settings` | `with_show_statistics` | `classic_user_settings.UserSettingsUpdate.set_show_statistics` | `matched` |
+| `user_settings.update_with_formid_value_lookup` | `user_settings` | `with_formid_value_lookup` | `classic_user_settings.UserSettingsUpdate.set_formid_value_lookup` | `matched` |
+| `user_settings.update_with_formid_databases` | `user_settings` | `with_formid_databases` | `classic_user_settings.UserSettingsUpdate.set_formid_databases` | `matched` |
+| `user_settings.update_with_move_unsolved_logs` | `user_settings` | `with_move_unsolved_logs` | `classic_user_settings.UserSettingsUpdate.set_move_unsolved_logs` | `matched` |
+| `user_settings.update_with_unsolved_logs_destination` | `user_settings` | `with_unsolved_logs_destination` | `classic_user_settings.UserSettingsUpdate.set_unsolved_logs_destination` | `matched` |
+| `user_settings.update_with_custom_scan_input` | `user_settings` | `with_custom_scan_input` | `classic_user_settings.UserSettingsUpdate.set_custom_scan_input` | `matched` |
+| `user_settings.update_with_max_concurrent_scans` | `user_settings` | `with_max_concurrent_scans` | `classic_user_settings.UserSettingsUpdate.set_max_concurrent_scans` | `matched` |
+| `user_settings.preview_update` | `user_settings` | `preview_update` | `classic_user_settings.UserSettingsSnapshot.preview_update` | `matched` |
+| `user_settings.accepted_base_revision_accessor` | `user_settings` | `base_revision` | `classic_user_settings.UserSettingsUpdatePreview` | `matched` |
+| `user_settings.accepted_fields_accessor` | `user_settings` | `fields` | `classic_user_settings.UserSettingsUpdatePreview` | `matched` |
+| `user_settings.update_field_canonical_path_accessor` | `user_settings` | `canonical_path` | `classic_user_settings.UserSettingsUpdateField` | `matched` |
+| `user_settings.update_diagnostic_field_path_accessor` | `user_settings` | `field_path` | `classic_user_settings.UserSettingsUpdateDiagnostic` | `matched` |
+| `user_settings.update_diagnostic_code_accessor` | `user_settings` | `code` | `classic_user_settings.UserSettingsUpdateDiagnostic` | `matched` |
+| `user_settings.update_diagnostic_message_accessor` | `user_settings` | `message` | `classic_user_settings.UserSettingsUpdateDiagnostic` | `matched` |
 | `config-classic-config-class` | `config` | `ClassicConfig` | `classic_config.ClassicConfig` | `matched` |
 | `config-classic-config-get-config-path` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.get_config_path` | `matched` |
 | `config-classic-config-load-from-yaml` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.load_from_yaml` | `matched` |

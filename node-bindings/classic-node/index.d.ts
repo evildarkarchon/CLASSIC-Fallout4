@@ -2653,6 +2653,50 @@ export declare const enum JsCrashgenVersionStatus {
   NoSupportedVersion = 'NoSupportedVersion'
 }
 
+/** Typed Crash Log Scan settings together with per-field provenance. */
+export interface JsCrashLogScanSettings {
+  /** Whether FCX Mode is enabled. */
+  fcxMode: boolean
+  /** Provenance token for FCX Mode. */
+  fcxModeOrigin: string
+  /** Whether Crash Logs should be simplified before analysis. */
+  simplifyLogs: boolean
+  /** Provenance token for Simplify Logs. */
+  simplifyLogsOrigin: string
+  /** Whether scan statistics should be included in output. */
+  showStatistics: boolean
+  /** Provenance token for Show Statistics. */
+  showStatisticsOrigin: string
+  /** Whether FormID Value Lookup is enabled. */
+  formidValueLookup: boolean
+  /** Provenance token for FormID Value Lookup. */
+  formidValueLookupOrigin: string
+  /** FormID database paths keyed by managed game, preserving persisted path spelling. */
+  formidDatabases: Record<string, Array<string>>
+  /** Provenance token for FormID Databases. */
+  formidDatabasesOrigin: string
+  /** Whether a standard scan may move Unsolved Logs. */
+  moveUnsolvedLogs: boolean
+  /** Provenance token for Move Unsolved Logs. */
+  moveUnsolvedLogsOrigin: string
+  /** Persisted Unsolved Logs destination without path normalization. */
+  unsolvedLogsDestination?: string
+  /** Provenance token for Unsolved Logs Destination. */
+  unsolvedLogsDestinationOrigin: string
+  /** Persisted custom scan input without path normalization. */
+  customScanInput?: string
+  /** Provenance token for the custom scan input. */
+  customScanInputOrigin: string
+  /** Canonical game-version selection token. */
+  gameVersionSelection: string
+  /** Provenance token for game-version selection. */
+  gameVersionSelectionOrigin: string
+  /** Requested scan concurrency, where zero selects the adaptive default. */
+  maxConcurrentScans: number
+  /** Provenance token for Max Concurrent Scans. */
+  maxConcurrentScansOrigin: string
+}
+
 /** Result from batch DDS validation for a single file. */
 export interface JsDdsBatchResult {
   /** Path to the DDS file that had issues. */
@@ -3542,6 +3586,8 @@ export interface JsUserSettingsDiagnostic {
 export interface JsUserSettingsSnapshot {
   /** Typed update preferences. */
   updatePreferences: JsUpdatePreferences
+  /** Typed Crash Log Scan settings. */
+  crashLogScanSettings: JsCrashLogScanSettings
   /** Selected source token: `canonical`, `legacy`, or `missing`. */
   sourceLocation: string
   /** Selected source path, absent when the document is missing. */
@@ -3560,6 +3606,62 @@ export interface JsUserSettingsSnapshot {
   diagnostics: Array<JsUserSettingsDiagnostic>
   /** Exact source bytes retained for later semantic preservation. */
   originalContent?: Buffer
+}
+
+/** Caller-authored fields to validate as one non-persisting User Settings Update. */
+export interface JsUserSettingsUpdate {
+  /** Requested Update Check preference. */
+  updateCheck?: boolean
+  /** Requested canonical game-version selection. */
+  gameVersionSelection?: string
+  /** Requested FCX Mode preference. */
+  fcxMode?: boolean
+  /** Requested Simplify Logs preference. */
+  simplifyLogs?: boolean
+  /** Requested Show Statistics preference. */
+  showStatistics?: boolean
+  /** Requested FormID Value Lookup preference. */
+  formidValueLookup?: boolean
+  /** Requested replacement FormID database mapping. */
+  formidDatabases?: Record<string, Array<string>>
+  /** Requested Move Unsolved Logs preference. */
+  moveUnsolvedLogs?: boolean
+  /** Requested Unsolved Logs destination; `null` explicitly selects the default. */
+  unsolvedLogsDestination?: string | null
+  /** Requested custom scan input; `null` explicitly selects automatic discovery. */
+  customScanInput?: string | null
+  /** Requested scan concurrency in the persisted `0..=32` range. */
+  maxConcurrentScans?: number
+}
+
+/** Field-specific reason that a User Settings Update preview was rejected. */
+export interface JsUserSettingsUpdateDiagnostic {
+  /** Rejected canonical field path, absent for a preview-level failure. */
+  fieldPath?: string
+  /** Stable machine-readable diagnostic code. */
+  code: string
+  /** Human-readable rejection context. */
+  message: string
+}
+
+/** One canonical field and value in an accepted User Settings Update preview. */
+export interface JsUserSettingsUpdateField {
+  /** Canonical RFC 6901-style path for the requested field. */
+  fieldPath: string
+  /** Validated requested value. */
+  value: boolean | string | Record<string, Array<string>> | number | null
+}
+
+/** All-or-nothing result of validating a User Settings Update without persistence. */
+export interface JsUserSettingsUpdatePreview {
+  /** Whether every requested field was accepted. */
+  accepted: boolean
+  /** Revision token anchoring an accepted preview, absent when rejected. */
+  baseRevision?: string
+  /** Only the explicitly requested canonical fields, empty when rejected. */
+  fields: Array<JsUserSettingsUpdateField>
+  /** All rejection diagnostics, empty when accepted. */
+  diagnostics: Array<JsUserSettingsUpdateDiagnostic>
 }
 
 /** XSE validation result. */
@@ -4069,6 +4171,12 @@ export declare function parseXseType(typeName: string): JsXseType
  * @throws on directory creation, YAML parsing, or file persistence failures.
  */
 export declare function persistGameLocalPaths(localYamlPath: string, gameRoot?: string | undefined | null, docsRoot?: string | undefined | null): Promise<void>
+
+/**
+ * Opens User Settings relative to an explicit CLASSIC root and validates all
+ * requested update fields as one unit without changing the source document.
+ */
+export declare function previewUserSettingsUpdate(classicRoot: string, update: JsUserSettingsUpdate): JsUserSettingsUpdatePreview
 
 /**
  * Convenience function to process logs without creating a processor instance.

@@ -11,14 +11,15 @@
         "ownerModule": "user_settings",
         "tier": "tier1"
       },
-      "contractCount": 24,
-      "contractIdsHash": "619c9b414771e172316f232d77d3fe2b3608bd2217ef7965e27302974db226ec",
+      "contractCount": 73,
+      "contractIdsHash": "e10322d9156f8b6412760b4f132682a88a4d62e8231a1f09bf4bed0aa0b5ded8",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
-      "testCaseId": "user-settings-read-only-open",
+      "testCaseId": "user-settings-read-scan-preview",
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
-      ]
+      ],
+      "notes": "Direct public-module coverage includes read-only open, typed Crash Log Scan settings with provenance and alias policy, and all-or-nothing accepted/rejected User Settings Update previews."
     },
     {
       "coverageId": "python-tier1-config",

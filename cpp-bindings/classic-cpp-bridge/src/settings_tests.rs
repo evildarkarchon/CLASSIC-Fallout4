@@ -409,3 +409,218 @@ fn test_user_settings_update_preferences_bridge_is_fail_closed_with_diagnostics(
     assert_eq!(preferences.original_content, content.as_bytes());
     assert!(preferences.revision.starts_with("sha256:"));
 }
+
+fn empty_user_settings_update() -> ffi::UserSettingsUpdateDto {
+    ffi::UserSettingsUpdateDto {
+        has_update_check: false,
+        update_check: false,
+        has_game_version_selection: false,
+        game_version_selection: String::new(),
+        has_fcx_mode: false,
+        fcx_mode: false,
+        has_simplify_logs: false,
+        simplify_logs: false,
+        has_show_statistics: false,
+        show_statistics: false,
+        has_formid_value_lookup: false,
+        formid_value_lookup: false,
+        has_formid_databases: false,
+        formid_database_games: Vec::new(),
+        formid_database_paths: Vec::new(),
+        has_move_unsolved_logs: false,
+        move_unsolved_logs: false,
+        has_unsolved_logs_destination: false,
+        has_unsolved_logs_destination_value: false,
+        unsolved_logs_destination: String::new(),
+        has_custom_scan_input: false,
+        has_custom_scan_input_value: false,
+        custom_scan_input: String::new(),
+        has_max_concurrent_scans: false,
+        max_concurrent_scans: 0,
+    }
+}
+
+#[test]
+fn test_user_settings_crash_log_scan_snapshot_is_typed_and_preserves_origins() {
+    let root = tempfile::tempdir().unwrap();
+    let content = concat!(
+        "schema_version: \"1.0\"\n",
+        "CLASSIC_Settings:\n",
+        "  Game Version: NextGen\n",
+        "  FCX Mode: true\n",
+        "  Simplify Logs: false\n",
+        "  Show Statistics: true\n",
+        "  Show FormID Values: true\n",
+        "  Move Unsolved Logs: false\n",
+        "  Unsolved Logs Destination: D:/CLASSIC/Unsolved\n",
+        "  SCAN Custom Path: E:/Crash Logs\n",
+        "  Custom Scan Folder: C:/Conflicting Alias\n",
+        "  Max Concurrent Scans: 6\n",
+        "  FormID Databases:\n",
+        "    Fallout4:\n",
+        "      - databases/Fallout4.db\n",
+        "      - D:/Databases/Community.db\n",
+    );
+    std::fs::write(root.path().join("CLASSIC Settings.yaml"), content).unwrap();
+
+    let snapshot = user_settings_open_crash_log_scan_settings(&root.path().display().to_string());
+
+    assert!(snapshot.fcx_mode);
+    assert_eq!(snapshot.fcx_mode_origin, "document");
+    assert!(!snapshot.simplify_logs);
+    assert_eq!(snapshot.simplify_logs_origin, "document");
+    assert!(snapshot.show_statistics);
+    assert!(snapshot.formid_value_lookup);
+    assert_eq!(snapshot.formid_database_games, vec!["Fallout4"]);
+    assert_eq!(snapshot.formid_database_paths.len(), 2);
+    assert_eq!(snapshot.formid_database_paths[0].game, "Fallout4");
+    assert_eq!(
+        snapshot.formid_database_paths[0].path,
+        "databases/Fallout4.db"
+    );
+    assert_eq!(snapshot.formid_databases_origin, "document");
+    assert!(!snapshot.move_unsolved_logs);
+    assert!(snapshot.has_unsolved_logs_destination);
+    assert_eq!(snapshot.unsolved_logs_destination, "D:/CLASSIC/Unsolved");
+    assert!(snapshot.has_custom_scan_input);
+    assert_eq!(snapshot.custom_scan_input, "E:/Crash Logs");
+    assert_eq!(snapshot.game_version_selection, "NextGen");
+    assert_eq!(snapshot.game_version_selection_origin, "document");
+    assert_eq!(snapshot.max_concurrent_scans, 6);
+    assert_eq!(snapshot.max_concurrent_scans_origin, "document");
+    assert_eq!(snapshot.classification, "current");
+    assert_eq!(snapshot.commit_eligibility, "eligible");
+    assert!(snapshot.revision.starts_with("sha256:"));
+    assert_eq!(snapshot.diagnostics.len(), 1);
+    assert_eq!(
+        snapshot.diagnostics[0].code,
+        "canonical_alias_conflict_custom_scan_folder"
+    );
+}
+
+#[test]
+fn test_user_settings_update_preview_accepts_only_requested_fields_without_writing() {
+    let root = tempfile::tempdir().unwrap();
+    let content = concat!(
+        "schema_version: \"1.0\"\n",
+        "CLASSIC_Settings:\n",
+        "  Update Check: true\n",
+        "  Game Version: auto\n",
+        "  FCX Mode: false\n",
+        "  Simplify Logs: false\n",
+        "  Show Statistics: false\n",
+        "  Show FormID Values: false\n",
+        "  Move Unsolved Logs: true\n",
+        "  SCAN Custom Path: null\n",
+        "  Custom Scan Folder: D:/Legacy Alias\n",
+        "  Max Concurrent Scans: 0\n",
+        "  FormID Databases: {}\n",
+    );
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    std::fs::write(&settings_path, content).unwrap();
+    let mut update = empty_user_settings_update();
+    update.has_fcx_mode = true;
+    update.fcx_mode = true;
+    update.has_formid_databases = true;
+    update.formid_database_games = vec!["Fallout4".to_string()];
+    update.formid_database_paths = vec![ffi::FormIdDatabasePathDto {
+        game: "Fallout4".to_string(),
+        path: "databases/Replacement.db".to_string(),
+    }];
+    update.has_game_version_selection = true;
+    update.game_version_selection = "Original".to_string();
+    update.has_max_concurrent_scans = true;
+    update.max_concurrent_scans = 8;
+
+    let preview = user_settings_preview_update(&root.path().display().to_string(), &update);
+
+    assert!(preview.accepted);
+    assert!(preview.base_revision.starts_with("sha256:"));
+    assert!(preview.diagnostics.is_empty());
+    assert_eq!(preview.accepted_fields.len(), 4);
+    assert_eq!(
+        preview
+            .accepted_fields
+            .iter()
+            .map(|field| field.field_path.as_str())
+            .collect::<Vec<_>>(),
+        vec![
+            "/CLASSIC_Settings/Game Version",
+            "/CLASSIC_Settings/FCX Mode",
+            "/CLASSIC_Settings/FormID Databases",
+            "/CLASSIC_Settings/Max Concurrent Scans",
+        ]
+    );
+    assert_eq!(preview.accepted_fields[0].value_kind, "string");
+    assert_eq!(preview.accepted_fields[0].string_value, "Original");
+    assert_eq!(preview.accepted_fields[1].value_kind, "bool");
+    assert!(preview.accepted_fields[1].bool_value);
+    assert_eq!(preview.accepted_fields[2].value_kind, "formid_databases");
+    assert_eq!(preview.formid_database_games, vec!["Fallout4"]);
+    assert_eq!(preview.formid_database_paths.len(), 1);
+    assert_eq!(preview.formid_database_paths[0].game, "Fallout4");
+    assert_eq!(
+        preview.formid_database_paths[0].path,
+        "databases/Replacement.db"
+    );
+    assert_eq!(preview.accepted_fields[3].value_kind, "u32");
+    assert_eq!(preview.accepted_fields[3].u32_value, 8);
+    assert_eq!(std::fs::read(&settings_path).unwrap(), content.as_bytes());
+}
+
+#[test]
+fn test_user_settings_update_preview_rejects_all_fields_with_specific_diagnostics() {
+    let root = tempfile::tempdir().unwrap();
+    let content = concat!(
+        "schema_version: \"1.0\"\n",
+        "CLASSIC_Settings:\n",
+        "  Update Check: true\n",
+        "  Game Version: auto\n",
+        "  FCX Mode: false\n",
+        "  Simplify Logs: false\n",
+        "  Show Statistics: false\n",
+        "  Show FormID Values: false\n",
+        "  Move Unsolved Logs: true\n",
+        "  SCAN Custom Path: null\n",
+        "  Max Concurrent Scans: 0\n",
+        "  FormID Databases: {}\n",
+    );
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    std::fs::write(&settings_path, content).unwrap();
+    let mut update = empty_user_settings_update();
+    update.has_simplify_logs = true;
+    update.simplify_logs = true;
+    update.has_game_version_selection = true;
+    update.game_version_selection = "AE".to_string();
+    update.has_custom_scan_input = true;
+    update.has_custom_scan_input_value = true;
+    update.custom_scan_input = "relative/logs".to_string();
+    update.has_max_concurrent_scans = true;
+    update.max_concurrent_scans = 33;
+
+    let preview = user_settings_preview_update(&root.path().display().to_string(), &update);
+
+    assert!(!preview.accepted);
+    assert!(preview.base_revision.is_empty());
+    assert!(preview.accepted_fields.is_empty());
+    assert_eq!(preview.diagnostics.len(), 3);
+    assert_eq!(
+        preview
+            .diagnostics
+            .iter()
+            .map(|diagnostic| diagnostic.field_path.as_str())
+            .collect::<Vec<_>>(),
+        vec![
+            "/CLASSIC_Settings/Game Version",
+            "/CLASSIC_Settings/SCAN Custom Path",
+            "/CLASSIC_Settings/Max Concurrent Scans",
+        ]
+    );
+    assert!(
+        preview
+            .diagnostics
+            .iter()
+            .all(|diagnostic| diagnostic.has_field_path)
+    );
+    assert_eq!(std::fs::read(&settings_path).unwrap(), content.as_bytes());
+}

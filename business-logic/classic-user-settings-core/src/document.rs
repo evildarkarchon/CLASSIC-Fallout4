@@ -1,3 +1,4 @@
+use crate::scan_settings::CrashLogScanSettings;
 use classic_settings_core::{
     SchemaVersion, Yaml, YamlSchemaError, extract_schema_version, parse_yaml_content,
 };
@@ -82,7 +83,7 @@ pub struct Diagnostic {
 
 impl Diagnostic {
     /// Creates a structured diagnostic from a stable code and contextual message.
-    fn new(code: &'static str, message: impl Into<String>) -> Self {
+    pub(crate) fn new(code: &'static str, message: impl Into<String>) -> Self {
         Self {
             code,
             message: message.into(),
@@ -146,6 +147,7 @@ pub struct UserSettings {
     schema_version: Option<(u32, u32)>,
     revision: Revision,
     update_preferences: UpdatePreferences,
+    crash_log_scan_settings: CrashLogScanSettings,
     diagnostics: Vec<Diagnostic>,
     original_bytes: Option<Vec<u8>>,
     commit_eligibility: CommitEligibility,
@@ -318,6 +320,12 @@ impl UserSettings {
                 )),
             ),
         };
+        let (crash_log_scan_settings, scan_diagnostics) =
+            if classification == DocumentClassification::LegacyFlat {
+                CrashLogScanSettings::from_legacy_flat_document(&document)
+            } else {
+                CrashLogScanSettings::from_nested_document(&document)
+            };
         let requires_migration = location == SourceLocation::Legacy
             || matches!(
                 classification,
@@ -342,6 +350,7 @@ impl UserSettings {
             Vec::new()
         };
         diagnostics.extend(update_diagnostic);
+        diagnostics.extend(scan_diagnostics);
 
         Self {
             source: SettingsSource {
@@ -355,6 +364,7 @@ impl UserSettings {
                 update_check,
                 update_check_origin,
             },
+            crash_log_scan_settings,
             diagnostics,
             original_bytes: Some(bytes),
             commit_eligibility: if requires_migration {
@@ -379,6 +389,7 @@ impl UserSettings {
                 update_check: true,
                 update_check_origin: PreferenceOrigin::Default,
             },
+            crash_log_scan_settings: CrashLogScanSettings::published_defaults(),
             diagnostics: Vec::new(),
             original_bytes: None,
             commit_eligibility: CommitEligibility::Eligible,
@@ -399,6 +410,7 @@ impl UserSettings {
                 update_check: false,
                 update_check_origin: PreferenceOrigin::DegradedFallback,
             },
+            crash_log_scan_settings: CrashLogScanSettings::degraded_fallbacks(),
             diagnostics: vec![
                 Diagnostic::new("unreadable_document", error.to_string()),
                 Diagnostic::new(
@@ -430,6 +442,7 @@ impl UserSettings {
                 update_check: false,
                 update_check_origin: PreferenceOrigin::DegradedFallback,
             },
+            crash_log_scan_settings: CrashLogScanSettings::degraded_fallbacks(),
             diagnostics: vec![
                 Diagnostic::new("malformed_document", message),
                 Diagnostic::new(
@@ -464,6 +477,7 @@ impl UserSettings {
                 update_check: false,
                 update_check_origin: PreferenceOrigin::DegradedFallback,
             },
+            crash_log_scan_settings: CrashLogScanSettings::degraded_fallbacks(),
             diagnostics: vec![
                 Diagnostic::new(code, message),
                 Diagnostic::new(
@@ -499,6 +513,11 @@ impl UserSettings {
     /// Returns the typed update-preferences group.
     pub fn update_preferences(&self) -> &UpdatePreferences {
         &self.update_preferences
+    }
+
+    /// Returns the typed Crash Log Scan settings group.
+    pub fn crash_log_scan_settings(&self) -> &CrashLogScanSettings {
+        &self.crash_log_scan_settings
     }
 
     /// Returns structured diagnostics in discovery and validation order.

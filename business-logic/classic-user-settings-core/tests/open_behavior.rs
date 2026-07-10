@@ -124,7 +124,7 @@ fn open_malformed_document_returns_a_fail_closed_read_only_view() {
 }
 
 #[test]
-fn open_invalid_update_check_falls_back_safely_without_blocking_other_updates() {
+fn open_invalid_known_values_fall_back_safely_without_blocking_later_updates() {
     let root = tempfile::tempdir().unwrap();
     let path = install_fixture(
         root.path(),
@@ -148,7 +148,15 @@ fn open_invalid_update_check_falls_back_safely_without_blocking_other_updates() 
             .iter()
             .map(|diagnostic| diagnostic.code())
             .collect::<Vec<_>>(),
-        vec!["invalid_type_update_check"]
+        vec![
+            "invalid_type_update_check",
+            "invalid_enum_game_version",
+            "invalid_type_move_unsolved_logs",
+            "invalid_path_unsolved_logs_destination",
+            "invalid_path_custom_scan_input",
+            "invalid_range_max_concurrent_scans",
+            "invalid_value_formid_databases",
+        ]
     );
     assert_eq!(settings.original_bytes(), Some(bytes_before.as_slice()));
     assert_eq!(std::fs::read(&path).unwrap(), bytes_before);

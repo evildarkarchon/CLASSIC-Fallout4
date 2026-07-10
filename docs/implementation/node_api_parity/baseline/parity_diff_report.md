@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-09T23:25:02.554597+00:00`
-- Tier-1 contract rows: **730**
-- Tier-1 matched: **730**
+- Generated: `2026-07-10T00:13:53.166091+00:00`
+- Tier-1 contract rows: **779**
+- Tier-1 matched: **779**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -36,6 +36,55 @@
 | `user-settings-update-check-accessor` | `user_settings` | `update_check` | `JsUpdatePreferences` | `matched` |
 | `user-settings-update-check-origin-accessor` | `user_settings` | `update_check_origin` | `JsUpdatePreferences` | `matched` |
 | `user-settings-update-preferences-accessor` | `user_settings` | `update_preferences` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-crash-log-scan-settings-type` | `user_settings` | `CrashLogScanSettings` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-game-version-selection-type` | `user_settings` | `GameVersionSelection` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-crash-log-scan-settings-accessor` | `user_settings` | `crash_log_scan_settings` | `JsUserSettingsSnapshot` | `matched` |
+| `user-settings-game-version-as-str` | `user_settings` | `as_str` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-game-version-parse` | `user_settings` | `parse` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-fcx-mode-accessor` | `user_settings` | `fcx_mode` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-fcx-mode-origin-accessor` | `user_settings` | `fcx_mode_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-simplify-logs-accessor` | `user_settings` | `simplify_logs` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-simplify-logs-origin-accessor` | `user_settings` | `simplify_logs_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-show-statistics-accessor` | `user_settings` | `show_statistics` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-show-statistics-origin-accessor` | `user_settings` | `show_statistics_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-formid-value-lookup-accessor` | `user_settings` | `formid_value_lookup` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-formid-value-lookup-origin-accessor` | `user_settings` | `formid_value_lookup_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-formid-databases-accessor` | `user_settings` | `formid_databases` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-formid-databases-origin-accessor` | `user_settings` | `formid_databases_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-move-unsolved-logs-accessor` | `user_settings` | `move_unsolved_logs` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-move-unsolved-logs-origin-accessor` | `user_settings` | `move_unsolved_logs_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-unsolved-logs-destination-accessor` | `user_settings` | `unsolved_logs_destination` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-unsolved-logs-destination-origin-accessor` | `user_settings` | `unsolved_logs_destination_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-custom-scan-input-accessor` | `user_settings` | `custom_scan_input` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-custom-scan-input-origin-accessor` | `user_settings` | `custom_scan_input_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-game-version-selection-accessor` | `user_settings` | `game_version_selection` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-game-version-selection-origin-accessor` | `user_settings` | `game_version_selection_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-max-concurrent-scans-accessor` | `user_settings` | `max_concurrent_scans` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-max-concurrent-scans-origin-accessor` | `user_settings` | `max_concurrent_scans_origin` | `JsCrashLogScanSettings` | `matched` |
+| `user-settings-update-type` | `user_settings` | `UserSettingsUpdate` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-update-field-type` | `user_settings` | `UserSettingsUpdateField` | `JsUserSettingsUpdateField` | `matched` |
+| `user-settings-accepted-update-type` | `user_settings` | `AcceptedUserSettingsUpdate` | `JsUserSettingsUpdatePreview` | `matched` |
+| `user-settings-update-diagnostic-type` | `user_settings` | `UpdateDiagnostic` | `JsUserSettingsUpdateDiagnostic` | `matched` |
+| `user-settings-update-preview-type` | `user_settings` | `UserSettingsUpdatePreview` | `JsUserSettingsUpdatePreview` | `matched` |
+| `user-settings-update-new` | `user_settings` | `new` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-update-check-builder` | `user_settings` | `with_update_check` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-game-version-selection-builder` | `user_settings` | `with_game_version_selection` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-fcx-mode-builder` | `user_settings` | `with_fcx_mode` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-simplify-logs-builder` | `user_settings` | `with_simplify_logs` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-show-statistics-builder` | `user_settings` | `with_show_statistics` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-formid-value-lookup-builder` | `user_settings` | `with_formid_value_lookup` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-formid-databases-builder` | `user_settings` | `with_formid_databases` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-move-unsolved-logs-builder` | `user_settings` | `with_move_unsolved_logs` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-unsolved-logs-destination-builder` | `user_settings` | `with_unsolved_logs_destination` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-custom-scan-input-builder` | `user_settings` | `with_custom_scan_input` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-max-concurrent-scans-builder` | `user_settings` | `with_max_concurrent_scans` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-update-field-canonical-path-accessor` | `user_settings` | `canonical_path` | `JsUserSettingsUpdateField` | `matched` |
+| `user-settings-update-diagnostic-field-path-accessor` | `user_settings` | `field_path` | `JsUserSettingsUpdateDiagnostic` | `matched` |
+| `user-settings-update-diagnostic-code-accessor` | `user_settings` | `code` | `JsUserSettingsUpdateDiagnostic` | `matched` |
+| `user-settings-update-diagnostic-message-accessor` | `user_settings` | `message` | `JsUserSettingsUpdateDiagnostic` | `matched` |
+| `user-settings-accepted-update-base-revision-accessor` | `user_settings` | `base_revision` | `JsUserSettingsUpdatePreview` | `matched` |
+| `user-settings-accepted-update-fields-accessor` | `user_settings` | `fields` | `JsUserSettingsUpdatePreview` | `matched` |
+| `user-settings-preview-update` | `user_settings` | `preview_update` | `previewUserSettingsUpdate` | `matched` |
 | `scanlog-analysis-config` | `scanlog` | `AnalysisConfig` | `createAnalysisConfig` | `matched` |
 | `scanlog-process-log` | `scanlog` | `OrchestratorCore` | `processLog` | `matched` |
 | `scanlog-process-batch` | `scanlog` | `OrchestratorCore` | `processLogsBatch` | `matched` |

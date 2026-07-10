@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-09T23:34:51.909419+00:00",
+  "generated_at_utc": "2026-07-10T00:35:49.020201+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -15162,6 +15162,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "AcceptedUserSettingsUpdate",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
+      "source_expr": "update::AcceptedUserSettingsUpdate",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AcceptedUserSettingsUpdate",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub struct AcceptedUserSettingsUpdate",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CommitEligibility",
       "kind": "enum",
       "crate": "classic-user-settings-core",
@@ -15178,6 +15197,25 @@
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
       "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
       "source_expr": "document::CommitEligibility",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanSettings",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use scan_settings::{CrashLogScanSettings, GameVersionSelection};",
+      "source_expr": "scan_settings::CrashLogScanSettings",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanSettings",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub struct CrashLogScanSettings",
       "tier": "tier1"
     },
     {
@@ -15216,6 +15254,25 @@
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
       "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
       "source_expr": "document::DocumentClassification",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameVersionSelection",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub enum GameVersionSelection",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameVersionSelection",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use scan_settings::{CrashLogScanSettings, GameVersionSelection};",
+      "source_expr": "scan_settings::GameVersionSelection",
       "tier": "tier1"
     },
     {
@@ -15295,6 +15352,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "UpdateDiagnostic",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
+      "source_expr": "update::UpdateDiagnostic",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UpdateDiagnostic",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub struct UpdateDiagnostic",
+      "tier": "tier1"
+    },
+    {
       "symbol": "UpdatePreferences",
       "kind": "reexport",
       "crate": "classic-user-settings-core",
@@ -15333,6 +15409,93 @@
       "tier": "tier1"
     },
     {
+      "symbol": "UserSettingsUpdate",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
+      "source_expr": "update::UserSettingsUpdate",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsUpdate",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub struct UserSettingsUpdate",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsUpdateField",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub enum UserSettingsUpdateField",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsUpdateField",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
+      "source_expr": "update::UserSettingsUpdateField",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsUpdatePreview",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub enum UserSettingsUpdatePreview",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsUpdatePreview",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
+      "source_expr": "update::UserSettingsUpdatePreview",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "as_str",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn as_str(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "base_revision",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn base_revision(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "canonical_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn canonical_path(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "classification",
       "kind": "function",
       "arity": 1,
@@ -15353,6 +15516,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "code",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn code(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "commit_eligibility",
       "kind": "function",
       "arity": 1,
@@ -15360,6 +15533,36 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn commit_eligibility(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "crash_log_scan_settings",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn crash_log_scan_settings(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "custom_scan_input",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn custom_scan_input(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "custom_scan_input_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn custom_scan_input_origin(&self)",
       "tier": "tier1"
     },
     {
@@ -15373,6 +15576,106 @@
       "tier": "tier1"
     },
     {
+      "symbol": "fcx_mode",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn fcx_mode(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fcx_mode_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn fcx_mode_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "field_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn field_path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fields",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn fields(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "formid_databases",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn formid_databases(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "formid_databases_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn formid_databases_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "formid_value_lookup",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn formid_value_lookup(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "formid_value_lookup_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn formid_value_lookup_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game_version_selection",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn game_version_selection(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game_version_selection_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn game_version_selection_origin(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "location",
       "kind": "function",
       "arity": 1,
@@ -15383,6 +15686,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "max_concurrent_scans",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn max_concurrent_scans(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "max_concurrent_scans_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn max_concurrent_scans_origin(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "message",
       "kind": "function",
       "arity": 1,
@@ -15390,6 +15713,46 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn message(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn message(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "move_unsolved_logs",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn move_unsolved_logs(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "move_unsolved_logs_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn move_unsolved_logs_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn new()",
       "tier": "tier1"
     },
     {
@@ -15413,6 +15776,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "parse",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn parse(value: &str)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "path",
       "kind": "function",
       "arity": 1,
@@ -15420,6 +15793,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "preview_update",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn preview_update(&self, update: UserSettingsUpdate)",
       "tier": "tier1"
     },
     {
@@ -15443,6 +15826,46 @@
       "tier": "tier1"
     },
     {
+      "symbol": "show_statistics",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn show_statistics(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "show_statistics_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn show_statistics_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "simplify_logs",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn simplify_logs(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "simplify_logs_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn simplify_logs_origin(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "source",
       "kind": "function",
       "arity": 1,
@@ -15450,6 +15873,26 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn source(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "unsolved_logs_destination",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn unsolved_logs_destination(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "unsolved_logs_destination_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/scan_settings.rs",
+      "source_decl": "pub fn unsolved_logs_destination_origin(&self)",
       "tier": "tier1"
     },
     {
@@ -15480,6 +15923,116 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn update_preferences(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_custom_scan_input",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_custom_scan_input(mut self, value: Option<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_fcx_mode",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_fcx_mode(mut self, value: bool)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_formid_databases",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_formid_databases(mut self, value: BTreeMap<String, Vec<String>>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_formid_value_lookup",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_formid_value_lookup(mut self, value: bool)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_game_version_selection",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_game_version_selection(mut self, value: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_max_concurrent_scans",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_max_concurrent_scans(mut self, value: i64)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_move_unsolved_logs",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_move_unsolved_logs(mut self, value: bool)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_show_statistics",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_show_statistics(mut self, value: bool)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_simplify_logs",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_simplify_logs(mut self, value: bool)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_unsolved_logs_destination",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_unsolved_logs_destination(mut self, value: Option<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_update_check",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_update_check(mut self, value: bool)",
       "tier": "tier1"
     },
     {

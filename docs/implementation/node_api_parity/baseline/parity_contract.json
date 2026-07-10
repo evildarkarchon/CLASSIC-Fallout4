@@ -282,6 +282,497 @@
       "nodeKind": "interface"
     },
     {
+      "id": "user-settings-crash-log-scan-settings-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "CrashLogScanSettings",
+      "rustKind": "struct",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-version-selection-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "GameVersionSelection",
+      "rustKind": "enum",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-crash-log-scan-settings-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "crash_log_scan_settings",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsSnapshot",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-version-as-str",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "as_str",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-version-parse",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "parse",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-fcx-mode-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fcx_mode",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-fcx-mode-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fcx_mode_origin",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-simplify-logs-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "simplify_logs",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-simplify-logs-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "simplify_logs_origin",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-show-statistics-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "show_statistics",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-show-statistics-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "show_statistics_origin",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-formid-value-lookup-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "formid_value_lookup",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-formid-value-lookup-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "formid_value_lookup_origin",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-formid-databases-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "formid_databases",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-formid-databases-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "formid_databases_origin",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-move-unsolved-logs-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "move_unsolved_logs",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-move-unsolved-logs-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "move_unsolved_logs_origin",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-unsolved-logs-destination-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "unsolved_logs_destination",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-unsolved-logs-destination-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "unsolved_logs_destination_origin",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-custom-scan-input-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "custom_scan_input",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-custom-scan-input-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "custom_scan_input_origin",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-version-selection-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_version_selection",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-version-selection-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "game_version_selection_origin",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-max-concurrent-scans-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "max_concurrent_scans",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-max-concurrent-scans-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "max_concurrent_scans_origin",
+      "rustKind": "function",
+      "nodeExport": "JsCrashLogScanSettings",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsUpdate",
+      "rustKind": "struct",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-field-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsUpdateField",
+      "rustKind": "enum",
+      "nodeExport": "JsUserSettingsUpdateField",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-accepted-update-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "AcceptedUserSettingsUpdate",
+      "rustKind": "struct",
+      "nodeExport": "JsUserSettingsUpdatePreview",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-diagnostic-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UpdateDiagnostic",
+      "rustKind": "struct",
+      "nodeExport": "JsUserSettingsUpdateDiagnostic",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-preview-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsUpdatePreview",
+      "rustKind": "enum",
+      "nodeExport": "JsUserSettingsUpdatePreview",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-new",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "new",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-check-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_update_check",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-game-version-selection-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_game_version_selection",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-fcx-mode-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_fcx_mode",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-simplify-logs-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_simplify_logs",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-show-statistics-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_show_statistics",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-formid-value-lookup-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_formid_value_lookup",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-formid-databases-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_formid_databases",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-move-unsolved-logs-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_move_unsolved_logs",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-unsolved-logs-destination-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_unsolved_logs_destination",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-custom-scan-input-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_custom_scan_input",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-max-concurrent-scans-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_max_concurrent_scans",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-field-canonical-path-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "canonical_path",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdateField",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-diagnostic-field-path-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "field_path",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdateDiagnostic",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-diagnostic-code-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "code",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdateDiagnostic",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-diagnostic-message-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "message",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdateDiagnostic",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-accepted-update-base-revision-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "base_revision",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdatePreview",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-accepted-update-fields-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fields",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdatePreview",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-preview-update",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "preview_update",
+      "rustKind": "function",
+      "nodeExport": "previewUserSettingsUpdate",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
       "id": "scanlog-analysis-config",
       "tier": "tier1",
       "ownerModule": "scanlog",

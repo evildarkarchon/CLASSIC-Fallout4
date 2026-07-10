@@ -13,9 +13,9 @@
 //! 3. **Validators** (new — D-09): Settings document structure validation,
 //!    per-value type checking, and string-to-typed coercion. Mirrors the
 //!    Python `classic_settings` validator surface 1:1.
-//! 4. **User Settings read path**: Opens the deep User Settings module from an
-//!    explicit CLASSIC root and returns the typed Update Preferences needed by
-//!    native update-check policy.
+//! 4. **User Settings**: Opens the deep User Settings module from an explicit
+//!    CLASSIC root, returns typed Update and Crash Log Scan preferences, and
+//!    previews caller-authored updates without persistence.
 //!
 //! ## CXX type-system exceptions (documented)
 //!
@@ -42,9 +42,11 @@ use classic_settings_core::{
 };
 use classic_user_settings_core::{
     CommitEligibility, DocumentClassification, PreferenceOrigin, Revision, SourceLocation,
-    UserSettings,
+    UserSettings, UserSettingsUpdate as CoreUserSettingsUpdate,
+    UserSettingsUpdateField as CoreUserSettingsUpdateField,
+    UserSettingsUpdatePreview as CoreUserSettingsUpdatePreview,
 };
-use std::path::Path;
+use std::{collections::BTreeMap, path::Path};
 use yaml_rust2::Yaml;
 
 /// Opaque wrapper around `YamlOperations` + a loaded YAML document.
@@ -53,7 +55,7 @@ pub struct YamlOps {
     doc: Option<Yaml>,
 }
 
-// ── Typed User Settings read path ───────────────────────────────────
+// ── Typed User Settings ─────────────────────────────────────────────
 
 /// Opens User Settings at an explicit CLASSIC root and flattens the typed
 /// Update Preferences view into a CXX-compatible diagnostic DTO.
@@ -93,6 +95,247 @@ fn user_settings_open_update_preferences(classic_root: &str) -> ffi::UpdatePrefe
             .collect(),
         has_original_content,
         original_content,
+    }
+}
+
+/// Opens User Settings at an explicit CLASSIC root and returns the safety-adjusted
+/// Crash Log Scan settings group without exposing or reinterpreting raw YAML.
+fn user_settings_open_crash_log_scan_settings(classic_root: &str) -> ffi::CrashLogScanSettingsDto {
+    let settings = UserSettings::open(Path::new(classic_root));
+    let scan = settings.crash_log_scan_settings();
+    let (formid_database_games, formid_database_paths) =
+        flatten_formid_databases(scan.formid_databases());
+    let (has_unsolved_logs_destination, unsolved_logs_destination) = scan
+        .unsolved_logs_destination()
+        .map_or((false, String::new()), |value| (true, value.to_string()));
+    let (has_custom_scan_input, custom_scan_input) = scan
+        .custom_scan_input()
+        .map_or((false, String::new()), |value| (true, value.to_string()));
+
+    ffi::CrashLogScanSettingsDto {
+        fcx_mode: scan.fcx_mode(),
+        fcx_mode_origin: preference_origin_token(scan.fcx_mode_origin()).to_string(),
+        simplify_logs: scan.simplify_logs(),
+        simplify_logs_origin: preference_origin_token(scan.simplify_logs_origin()).to_string(),
+        show_statistics: scan.show_statistics(),
+        show_statistics_origin: preference_origin_token(scan.show_statistics_origin()).to_string(),
+        formid_value_lookup: scan.formid_value_lookup(),
+        formid_value_lookup_origin: preference_origin_token(scan.formid_value_lookup_origin())
+            .to_string(),
+        formid_database_games,
+        formid_database_paths,
+        formid_databases_origin: preference_origin_token(scan.formid_databases_origin())
+            .to_string(),
+        move_unsolved_logs: scan.move_unsolved_logs(),
+        move_unsolved_logs_origin: preference_origin_token(scan.move_unsolved_logs_origin())
+            .to_string(),
+        has_unsolved_logs_destination,
+        unsolved_logs_destination,
+        unsolved_logs_destination_origin: preference_origin_token(
+            scan.unsolved_logs_destination_origin(),
+        )
+        .to_string(),
+        has_custom_scan_input,
+        custom_scan_input,
+        custom_scan_input_origin: preference_origin_token(scan.custom_scan_input_origin())
+            .to_string(),
+        game_version_selection: scan.game_version_selection().as_str().to_string(),
+        game_version_selection_origin: preference_origin_token(
+            scan.game_version_selection_origin(),
+        )
+        .to_string(),
+        max_concurrent_scans: scan.max_concurrent_scans(),
+        max_concurrent_scans_origin: preference_origin_token(scan.max_concurrent_scans_origin())
+            .to_string(),
+        classification: document_classification_token(settings.classification()).to_string(),
+        revision: revision_token(settings.revision()),
+        commit_eligibility: commit_eligibility_token(settings.commit_eligibility()).to_string(),
+        diagnostics: settings
+            .diagnostics()
+            .iter()
+            .map(user_settings_diagnostic_dto)
+            .collect(),
+    }
+}
+
+/// Validates a caller-authored User Settings Update against the current on-disk snapshot
+/// and returns an all-or-nothing preview without persisting any changes.
+fn user_settings_preview_update(
+    classic_root: &str,
+    update: &ffi::UserSettingsUpdateDto,
+) -> ffi::UserSettingsUpdatePreviewDto {
+    let settings = UserSettings::open(Path::new(classic_root));
+    match settings.preview_update(core_user_settings_update(update)) {
+        CoreUserSettingsUpdatePreview::Accepted(accepted) => {
+            let databases = accepted.fields().iter().find_map(|field| match field {
+                CoreUserSettingsUpdateField::FormIdDatabases(databases) => Some(databases),
+                _ => None,
+            });
+            let (formid_database_games, formid_database_paths) =
+                databases.map(flatten_formid_databases).unwrap_or_default();
+
+            ffi::UserSettingsUpdatePreviewDto {
+                accepted: true,
+                base_revision: revision_token(accepted.base_revision()),
+                accepted_fields: accepted
+                    .fields()
+                    .iter()
+                    .map(user_settings_update_field_dto)
+                    .collect(),
+                formid_database_games,
+                formid_database_paths,
+                diagnostics: Vec::new(),
+            }
+        }
+        CoreUserSettingsUpdatePreview::Rejected(diagnostics) => ffi::UserSettingsUpdatePreviewDto {
+            accepted: false,
+            base_revision: String::new(),
+            accepted_fields: Vec::new(),
+            formid_database_games: Vec::new(),
+            formid_database_paths: Vec::new(),
+            diagnostics: diagnostics
+                .iter()
+                .map(|diagnostic| {
+                    let field_path = diagnostic.field_path().unwrap_or_default();
+                    ffi::UserSettingsUpdateDiagnosticDto {
+                        has_field_path: diagnostic.field_path().is_some(),
+                        field_path: field_path.to_string(),
+                        code: diagnostic.code().to_string(),
+                        message: diagnostic.message().to_string(),
+                    }
+                })
+                .collect(),
+        },
+    }
+}
+
+/// Converts the CXX request DTO into the Rust-owned update builder without validating
+/// or normalizing domain values; validation remains in `UserSettings::preview_update`.
+fn core_user_settings_update(update: &ffi::UserSettingsUpdateDto) -> CoreUserSettingsUpdate {
+    let mut core = CoreUserSettingsUpdate::new();
+    if update.has_update_check {
+        core = core.with_update_check(update.update_check);
+    }
+    if update.has_game_version_selection {
+        core = core.with_game_version_selection(update.game_version_selection.clone());
+    }
+    if update.has_fcx_mode {
+        core = core.with_fcx_mode(update.fcx_mode);
+    }
+    if update.has_simplify_logs {
+        core = core.with_simplify_logs(update.simplify_logs);
+    }
+    if update.has_show_statistics {
+        core = core.with_show_statistics(update.show_statistics);
+    }
+    if update.has_formid_value_lookup {
+        core = core.with_formid_value_lookup(update.formid_value_lookup);
+    }
+    if update.has_formid_databases {
+        let mut databases = update
+            .formid_database_games
+            .iter()
+            .cloned()
+            .map(|game| (game, Vec::new()))
+            .collect::<BTreeMap<_, _>>();
+        for entry in &update.formid_database_paths {
+            databases
+                .entry(entry.game.clone())
+                .or_default()
+                .push(entry.path.clone());
+        }
+        core = core.with_formid_databases(databases);
+    }
+    if update.has_move_unsolved_logs {
+        core = core.with_move_unsolved_logs(update.move_unsolved_logs);
+    }
+    if update.has_unsolved_logs_destination {
+        core = core.with_unsolved_logs_destination(
+            update
+                .has_unsolved_logs_destination_value
+                .then(|| update.unsolved_logs_destination.clone()),
+        );
+    }
+    if update.has_custom_scan_input {
+        core = core.with_custom_scan_input(
+            update
+                .has_custom_scan_input_value
+                .then(|| update.custom_scan_input.clone()),
+        );
+    }
+    if update.has_max_concurrent_scans {
+        core = core.with_max_concurrent_scans(update.max_concurrent_scans);
+    }
+    core
+}
+
+/// Flattens game-keyed FormID paths into CXX-safe rows while retaining games whose
+/// configured path list is empty.
+fn flatten_formid_databases(
+    databases: &BTreeMap<String, Vec<String>>,
+) -> (Vec<String>, Vec<ffi::FormIdDatabasePathDto>) {
+    let games = databases.keys().cloned().collect();
+    let paths = databases
+        .iter()
+        .flat_map(|(game, paths)| {
+            paths.iter().map(|path| ffi::FormIdDatabasePathDto {
+                game: game.clone(),
+                path: path.clone(),
+            })
+        })
+        .collect();
+    (games, paths)
+}
+
+/// Converts one accepted typed field into a flat tagged DTO suitable for a CXX vector.
+fn user_settings_update_field_dto(
+    field: &CoreUserSettingsUpdateField,
+) -> ffi::UserSettingsUpdateFieldDto {
+    let (value_kind, bool_value, has_string_value, string_value, u32_value) = match field {
+        CoreUserSettingsUpdateField::UpdateCheck(value)
+        | CoreUserSettingsUpdateField::FcxMode(value)
+        | CoreUserSettingsUpdateField::SimplifyLogs(value)
+        | CoreUserSettingsUpdateField::ShowStatistics(value)
+        | CoreUserSettingsUpdateField::FormIdValueLookup(value)
+        | CoreUserSettingsUpdateField::MoveUnsolvedLogs(value) => {
+            ("bool", *value, false, String::new(), 0)
+        }
+        CoreUserSettingsUpdateField::GameVersionSelection(value) => {
+            ("string", false, true, value.as_str().to_string(), 0)
+        }
+        CoreUserSettingsUpdateField::FormIdDatabases(_) => {
+            ("formid_databases", false, false, String::new(), 0)
+        }
+        CoreUserSettingsUpdateField::UnsolvedLogsDestination(value)
+        | CoreUserSettingsUpdateField::CustomScanInput(value) => (
+            "optional_string",
+            false,
+            value.is_some(),
+            value.clone().unwrap_or_default(),
+            0,
+        ),
+        CoreUserSettingsUpdateField::MaxConcurrentScans(value) => {
+            ("u32", false, false, String::new(), *value)
+        }
+    };
+
+    ffi::UserSettingsUpdateFieldDto {
+        field_path: field.canonical_path().to_string(),
+        value_kind: value_kind.to_string(),
+        bool_value,
+        has_string_value,
+        string_value,
+        u32_value,
+    }
+}
+
+/// Converts one open-time User Settings diagnostic into the shared CXX DTO.
+fn user_settings_diagnostic_dto(
+    diagnostic: &classic_user_settings_core::Diagnostic,
+) -> ffi::UserSettingsDiagnosticDto {
+    ffi::UserSettingsDiagnosticDto {
+        code: diagnostic.code().to_string(),
+        message: diagnostic.message().to_string(),
     }
 }
 
@@ -635,6 +878,119 @@ mod ffi {
         original_content: Vec<u8>,
     }
 
+    /// One flattened FormID database path row.
+    ///
+    /// `CrashLogScanSettingsDto::formid_database_games` separately retains
+    /// configured games whose path list is empty. This avoids CXX's unsupported
+    /// `Vec<StructWithVec>` shape while preserving the complete Rust mapping.
+    struct FormIdDatabasePathDto {
+        game: String,
+        path: String,
+    }
+
+    /// Safety-adjusted Crash Log Scan settings plus their source provenance.
+    ///
+    /// Optional strings use explicit presence flags. Open-time diagnostics are
+    /// returned unchanged so C++ callers can surface canonical/alias conflicts
+    /// and degraded fallbacks without parsing raw YAML.
+    struct CrashLogScanSettingsDto {
+        fcx_mode: bool,
+        fcx_mode_origin: String,
+        simplify_logs: bool,
+        simplify_logs_origin: String,
+        show_statistics: bool,
+        show_statistics_origin: String,
+        formid_value_lookup: bool,
+        formid_value_lookup_origin: String,
+        formid_database_games: Vec<String>,
+        formid_database_paths: Vec<FormIdDatabasePathDto>,
+        formid_databases_origin: String,
+        move_unsolved_logs: bool,
+        move_unsolved_logs_origin: String,
+        has_unsolved_logs_destination: bool,
+        unsolved_logs_destination: String,
+        unsolved_logs_destination_origin: String,
+        has_custom_scan_input: bool,
+        custom_scan_input: String,
+        custom_scan_input_origin: String,
+        game_version_selection: String,
+        game_version_selection_origin: String,
+        max_concurrent_scans: u32,
+        max_concurrent_scans_origin: String,
+        classification: String,
+        revision: String,
+        commit_eligibility: String,
+        diagnostics: Vec<UserSettingsDiagnosticDto>,
+    }
+
+    /// Caller-authored multi-field User Settings Update request.
+    ///
+    /// Each `has_*` flag distinguishes an omitted field from a requested false,
+    /// zero, empty mapping, or null optional string. FormID mappings are flattened
+    /// into game names plus path rows to avoid nested-vector CXX layouts.
+    struct UserSettingsUpdateDto {
+        has_update_check: bool,
+        update_check: bool,
+        has_game_version_selection: bool,
+        game_version_selection: String,
+        has_fcx_mode: bool,
+        fcx_mode: bool,
+        has_simplify_logs: bool,
+        simplify_logs: bool,
+        has_show_statistics: bool,
+        show_statistics: bool,
+        has_formid_value_lookup: bool,
+        formid_value_lookup: bool,
+        has_formid_databases: bool,
+        formid_database_games: Vec<String>,
+        formid_database_paths: Vec<FormIdDatabasePathDto>,
+        has_move_unsolved_logs: bool,
+        move_unsolved_logs: bool,
+        has_unsolved_logs_destination: bool,
+        has_unsolved_logs_destination_value: bool,
+        unsolved_logs_destination: String,
+        has_custom_scan_input: bool,
+        has_custom_scan_input_value: bool,
+        custom_scan_input: String,
+        has_max_concurrent_scans: bool,
+        max_concurrent_scans: i64,
+    }
+
+    /// One typed canonical field in an accepted update preview.
+    ///
+    /// `value_kind` is `bool`, `string`, `optional_string`, `u32`, or
+    /// `formid_databases`. FormID mapping values live on the containing preview
+    /// so this DTO remains safe as an element of `Vec<UserSettingsUpdateFieldDto>`.
+    struct UserSettingsUpdateFieldDto {
+        field_path: String,
+        value_kind: String,
+        bool_value: bool,
+        has_string_value: bool,
+        string_value: String,
+        u32_value: u32,
+    }
+
+    /// One field-specific or preview-level update rejection diagnostic.
+    struct UserSettingsUpdateDiagnosticDto {
+        has_field_path: bool,
+        field_path: String,
+        code: String,
+        message: String,
+    }
+
+    /// All-or-nothing result of validating a User Settings Update without persistence.
+    ///
+    /// Accepted previews contain a base revision and only explicitly requested
+    /// fields. Rejected previews contain no partial fields or base revision.
+    struct UserSettingsUpdatePreviewDto {
+        accepted: bool,
+        base_revision: String,
+        accepted_fields: Vec<UserSettingsUpdateFieldDto>,
+        formid_database_games: Vec<String>,
+        formid_database_paths: Vec<FormIdDatabasePathDto>,
+        diagnostics: Vec<UserSettingsUpdateDiagnosticDto>,
+    }
+
     extern "Rust" {
         type YamlOps;
 
@@ -646,6 +1002,17 @@ mod ffi {
         /// Open User Settings from an explicit CLASSIC root and return the
         /// typed Update Preferences view used by native update-check policy.
         fn user_settings_open_update_preferences(classic_root: &str) -> UpdatePreferencesDto;
+
+        /// Open User Settings and return the complete typed Crash Log Scan group.
+        fn user_settings_open_crash_log_scan_settings(
+            classic_root: &str,
+        ) -> CrashLogScanSettingsDto;
+
+        /// Validate a multi-field User Settings Update without writing to disk.
+        fn user_settings_preview_update(
+            classic_root: &str,
+            update: &UserSettingsUpdateDto,
+        ) -> UserSettingsUpdatePreviewDto;
 
         // Construction
         fn yaml_ops_new() -> Box<YamlOps>;

@@ -151,13 +151,17 @@ This is currently where `classic-config-core`, `classic-database-core`, `classic
 
 (This namespace was renamed from `classic::yaml` during v9.1.0 Phase 1 Plan 2 and expanded with the D-09 settings-core surface in the same change.)
 
-### Typed User Settings Update Preferences
+### Typed User Settings groups and update previews
 
 `user_settings_open_update_preferences(classic_root) -> UpdatePreferencesDto` forwards an explicit CLASSIC root to `classic_user_settings_core::UserSettings::open(...)`. Rust owns canonical/legacy discovery, schema classification, published defaults, fail-closed fallbacks, content revision, commit eligibility, and diagnostics; C++ does not interpret a raw User Settings key path.
 
 `UpdatePreferencesDto.update_check_enabled` is ready for policy use. Missing settings produce the published default `true`; invalid, malformed, unreadable, older-incompatible, and future-major inputs produce `false`. The remaining fields expose provenance, source location/path, document classification, optional schema version, revision token, commit policy, structured diagnostics, and the exact original source bytes when available.
 
-The native CLI `--check-app-update` consumer resolves its CLASSIC root and short-circuits on this DTO before initializing the update runtime or calling `check_app_notification`. The broader CLI scan and YAML Data command migration is intentionally outside this slice.
+`user_settings_open_crash_log_scan_settings(classic_root) -> CrashLogScanSettingsDto` exposes the safety-adjusted FCX, simplification, statistics, FormID Value Lookup/database, Unsolved Logs, custom scan, game-version, and concurrency choices with per-field provenance. FormID database maps cross CXX as a game list plus flattened `{ game, path }` rows so explicit empty game lists survive without using an unsupported nested-vector DTO.
+
+`user_settings_preview_update(classic_root, update) -> UserSettingsUpdatePreviewDto` validates every requested field as one unit and performs no write. Accepted results carry the opened base revision and only requested canonical fields; rejected results contain all field diagnostics and no partial fields. Optional strings and omitted fields use separate presence flags, while accepted field values use an explicit `value_kind` plus typed value members.
+
+The native CLI `--check-app-update` consumer resolves its CLASSIC root and short-circuits on the Update Preferences DTO before initializing the update runtime or calling `check_app_notification`. The typed scan and preview DTOs are available for downstream adapter cutovers, but this change does not make scan preparation or the settings dialog consume them automatically.
 
 ### YAML file-cache helpers
 

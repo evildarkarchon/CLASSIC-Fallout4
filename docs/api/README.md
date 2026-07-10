@@ -14,7 +14,7 @@ Use this directory in this order:
 4. [`classic-registry-core.md`](classic-registry-core.md) - process-wide typed singleton registry and convenience key helpers
 5. [`classic-message-core.md`](classic-message-core.md) - shared message DTOs, routing enums, and startup/log formatting helpers
 6. [`classic-settings-core.md`](classic-settings-core.md) - shared YAML stream parse/merge helpers, settings cache and sync/async loaders, plus the absorbed `YamlOperations` path-backed cache, merge-key resolver, and validator surface
-6a. [`classic-user-settings-core.md`](classic-user-settings-core.md) - typed, preservation-aware User Settings discovery, classification, diagnostics, revision, and read-only Update Preferences
+6a. [`classic-user-settings-core.md`](classic-user-settings-core.md) - typed, preservation-aware User Settings discovery, Update Preferences, Crash Log Scan settings, diagnostics, revision, and non-persisting update previews
 7. [`classic-version-registry-core.md`](classic-version-registry-core.md) - version registry and OG/NG/AE/VR selection metadata
 8. [`classic-version-core.md`](classic-version-core.md) - version parsing, text extraction, and PE-version helpers plus direct Version Registry re-exports
 10. [`classic-web-core.md`](classic-web-core.md) - small URL, user-agent, and mod-site helper layer

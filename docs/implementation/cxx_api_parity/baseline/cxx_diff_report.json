@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 369,
-    "current_total": 369,
-    "matched": 369,
+    "contract_total": 377,
+    "current_total": 377,
+    "matched": 377,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2097,8 +2097,24 @@
       "reason": "-"
     },
     {
+      "id": "142913a8b27dd2d5",
+      "rustSymbol": "user_settings_open_crash_log_scan_settings",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "ba33f05b060305af",
       "rustSymbol": "user_settings_open_update_preferences",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "03a8fd971064fde1",
+      "rustSymbol": "user_settings_preview_update",
       "kind": "function",
       "bridgeModule": "settings",
       "status": "matched",
@@ -2257,6 +2273,22 @@
       "reason": "-"
     },
     {
+      "id": "17d1eef26108ac8d",
+      "rustSymbol": "CrashLogScanSettingsDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "af22cdd14c9a5cf1",
+      "rustSymbol": "FormIdDatabasePathDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "310d1c205c55a783",
       "rustSymbol": "SettingsCacheStats",
       "kind": "struct",
@@ -2291,6 +2323,38 @@
     {
       "id": "0b2551f3acc13938",
       "rustSymbol": "UserSettingsDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1a848f887399dc55",
+      "rustSymbol": "UserSettingsUpdateDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3aa44f3905210d92",
+      "rustSymbol": "UserSettingsUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2d703c9e9dfcfbde",
+      "rustSymbol": "UserSettingsUpdateFieldDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8e77def1f30afb1a",
+      "rustSymbol": "UserSettingsUpdatePreviewDto",
       "kind": "struct",
       "bridgeModule": "settings",
       "status": "matched",
