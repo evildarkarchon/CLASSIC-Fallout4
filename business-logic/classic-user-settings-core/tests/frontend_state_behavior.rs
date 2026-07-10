@@ -213,6 +213,46 @@ UI:
     assert_eq!(nested.original_bytes(), Some(nested_source.as_slice()));
 }
 
+/// Diagnoses a malformed live-GUI alias even when the canonical value can be used.
+#[test]
+fn canonical_frontend_preference_reports_invalid_compatibility_alias() {
+    let root = tempfile::tempdir().expect("create nested CLASSIC root");
+    let source = br#"schema_version: "1.0"
+CLASSIC_Settings:
+  Auto Switch After Scan: sometimes
+UI:
+  preferences:
+    auto_switch_after_scan: false
+"#;
+    fs::write(root.path().join("CLASSIC Settings.yaml"), source)
+        .expect("write nested User Settings fixture");
+
+    let settings = UserSettings::open(root.path());
+
+    assert!(
+        !settings
+            .frontend_state()
+            .preferences()
+            .auto_switch_after_scan()
+    );
+    assert_eq!(
+        settings
+            .frontend_state()
+            .preferences()
+            .auto_switch_after_scan_origin(),
+        PreferenceOrigin::Document
+    );
+    assert_eq!(
+        settings
+            .diagnostics()
+            .iter()
+            .map(|diagnostic| diagnostic.code())
+            .collect::<Vec<_>>(),
+        vec!["invalid_type_frontend_auto_switch_after_scan"]
+    );
+    assert_eq!(settings.original_bytes(), Some(source.as_slice()));
+}
+
 /// Distinguishes published frontend defaults from fallbacks for an untrusted document.
 #[test]
 fn missing_and_untrusted_documents_expose_distinct_frontend_origins() {

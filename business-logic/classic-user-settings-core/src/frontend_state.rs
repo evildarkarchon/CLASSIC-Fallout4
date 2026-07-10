@@ -32,8 +32,7 @@ impl FrontendState {
             &mut diagnostics,
         );
 
-        let preferences_group = child_group(
-            ui,
+        let preferences_group = ui.child_group(
             "preferences",
             "UI.preferences",
             "invalid_type_frontend_preferences",
@@ -50,8 +49,7 @@ impl FrontendState {
             &mut diagnostics,
         );
 
-        let geometry_group = child_group(
-            ui,
+        let geometry_group = ui.child_group(
             "window_geometry",
             "UI.window_geometry",
             "invalid_type_gui_window_geometry",
@@ -60,8 +58,7 @@ impl FrontendState {
         let window_geometry =
             GuiWindowGeometry::from_nested_group(geometry_group, &mut diagnostics);
 
-        let tui_group = child_group(
-            ui,
+        let tui_group = ui.child_group(
             "tui",
             "UI.tui",
             "invalid_type_tui_remembered_state",
@@ -537,17 +534,6 @@ fn group<'a>(
     }
 }
 
-/// Classifies a child namespace of an optional parent namespace.
-fn child_group<'a>(
-    parent: KnownGroup<'a>,
-    key: &str,
-    path: &str,
-    code: &'static str,
-    diagnostics: &mut Vec<Diagnostic>,
-) -> KnownGroup<'a> {
-    parent.child_group(key, path, code, diagnostics)
-}
-
 /// Returns a present mapping child while treating YAML's bad-value sentinel as absent.
 fn child<'a>(mapping: &'a Yaml, key: &str) -> Option<&'a Yaml> {
     match &mapping[key] {
@@ -593,7 +579,14 @@ fn aliased_bool_preference(
             }
             Preference::new(*canonical, PreferenceOrigin::Document)
         }
-        (Some(Yaml::Boolean(value)), _) => Preference::new(*value, PreferenceOrigin::Document),
+        (Some(Yaml::Boolean(value)), Some(_)) => {
+            diagnostics.push(Diagnostic::new(
+                "invalid_type_frontend_auto_switch_after_scan",
+                "CLASSIC_Settings.Auto Switch After Scan must be a boolean",
+            ));
+            Preference::new(*value, PreferenceOrigin::Document)
+        }
+        (Some(Yaml::Boolean(value)), None) => Preference::new(*value, PreferenceOrigin::Document),
         (None, Some(Yaml::Boolean(value))) => Preference::new(*value, PreferenceOrigin::Document),
         (Some(_), Some(Yaml::Boolean(value))) => {
             diagnostics.push(Diagnostic::new(

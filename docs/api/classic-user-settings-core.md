@@ -178,6 +178,7 @@ Stable diagnostic codes currently include:
 - `canonical_alias_conflict_mods_folder`
 - `canonical_alias_conflict_custom_scan_folder`
 - `canonical_alias_conflict_auto_switch_after_scan`
+- `invalid_type_frontend_state`
 - `invalid_type_frontend_preferences`
 - `invalid_type_frontend_auto_switch_after_scan`
 - `invalid_type_frontend_auto_refresh_interval_ms` / `invalid_range_frontend_auto_refresh_interval_ms`
@@ -202,7 +203,7 @@ Stable diagnostic codes currently include:
 - Node: `openUserSettings(classicRoot)` returns `JsUserSettingsSnapshot` with all four typed groups and exact source bytes as `originalContent`; `previewUserSettingsUpdate(classicRoot, update)` validates a `JsUserSettingsUpdate` without writing.
 - Python: `classic_user_settings.open_user_settings(classic_root)` returns `UserSettingsSnapshot` with all four typed groups and exact source bytes; `snapshot.preview_update(UserSettingsUpdate)` validates against that opened snapshot and revision without writing.
 
-The native CLI `--check-app-update` path resolves a CLASSIC root, opens Update Preferences, reports structured diagnostics, and returns before runtime initialization, cache setup, installed-version validation, or network access when the safe value is `false`. Game Setup Intake can now be prepared directly from an already-opened `GameSetupSettings` group; maintained frontend consumer cutovers remain separate work.
+The native CLI `--check-app-update` path resolves a CLASSIC root, opens Update Preferences, reports structured diagnostics, and returns before runtime initialization, cache setup, installed-version validation, or network access when the safe value is `false`. Game Setup Intake can now be prepared directly from an already-opened `GameSetupSettings` group. GUI geometry restoration consumes the typed frontend-state DTO while the existing raw geometry writer remains available until revision-aware commits land; other maintained frontend consumer cutovers remain separate work.
 
 ## Validation
 
