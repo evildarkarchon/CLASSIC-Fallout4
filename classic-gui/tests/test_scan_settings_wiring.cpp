@@ -37,6 +37,8 @@ private slots:
     void scan_controller_uses_exe_dir_and_xse_resolver_for_log_collection();
     void scan_controller_delegates_xse_folder_resolution_to_core();
     void settings_dialog_wires_game_folder_path_controls();
+    /// Verifies that GUI documents-path reads and writes honor the canonical key.
+    void gui_honors_canonical_documents_path();
     void settings_dialog_resets_stale_game_exe_path_when_game_folder_changes();
     void settings_dialog_adds_multiple_formid_databases();
     void mainwindow_enables_drag_and_drop();
@@ -679,6 +681,37 @@ void ScanSettingsWiringTests::settings_dialog_wires_game_folder_path_controls()
              "SettingsDialog should provide browse wiring for Game Folder Path");
     QVERIFY2(sourceText.contains(QStringLiteral("onResetGameFolder")),
              "SettingsDialog should provide reset wiring for Game Folder Path");
+}
+
+void ScanSettingsWiringTests::gui_honors_canonical_documents_path()
+{
+    const QString mainWindowPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile mainWindowFile(mainWindowPath);
+    QVERIFY2(mainWindowFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(mainWindowPath)));
+    const QString mainWindowSource = QString::fromUtf8(mainWindowFile.readAll());
+
+    QVERIFY2(mainWindowSource.count(QStringLiteral("user_settings_open_game_setup_settings(")) >= 2,
+             "MainWindow should use Rust's canonical documents-path projection for setup and scan validation");
+    QVERIFY2(mainWindowSource.count(QStringLiteral("CLASSIC_Settings.Documents Folder Path")) >= 2,
+             "MainWindow should persist detected and manually selected documents paths to the canonical key");
+    QVERIFY2(mainWindowSource.count(QStringLiteral("CLASSIC_Settings.INI Folder Path")) >= 2,
+             "MainWindow should keep the legacy documents-path alias synchronized");
+
+    const QString settingsDialogPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/settingsdialog.cpp");
+    QFile settingsDialogFile(settingsDialogPath);
+    QVERIFY2(settingsDialogFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(settingsDialogPath)));
+    const QString settingsDialogSource = QString::fromUtf8(settingsDialogFile.readAll());
+
+    QVERIFY2(settingsDialogSource.contains(QStringLiteral("user_settings_open_game_setup_settings(")),
+             "SettingsDialog should load Rust's effective canonical documents path");
+    QVERIFY2(settingsDialogSource.contains(QStringLiteral("setupSettings.has_documents_root")),
+             "SettingsDialog should preserve explicit canonical clears instead of falling back to a stale alias");
+    QVERIFY2(settingsDialogSource.contains(QStringLiteral("CLASSIC_Settings.Documents Folder Path")),
+             "SettingsDialog should write and clear the canonical documents-path key");
+    QVERIFY2(settingsDialogSource.contains(QStringLiteral("CLASSIC_Settings.INI Folder Path")),
+             "SettingsDialog should keep the legacy documents-path alias synchronized");
 }
 
 void ScanSettingsWiringTests::settings_dialog_resets_stale_game_exe_path_when_game_folder_changes()

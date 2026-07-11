@@ -1079,9 +1079,11 @@ void MainWindow::checkFirstRunPaths()
             gamePath = classic::toQString(gp);
         }
 
-        auto dp = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.INI Folder Path", "");
-        if (!dp.empty()) {
-            docsPath = classic::toQString(dp);
+        const auto setupSettings = classic::settings::user_settings_open_game_setup_settings(
+            std::string(m_dataRoot.toUtf8().constData()));
+        if (setupSettings.has_documents_root) {
+            // Rust owns canonical Documents Folder Path precedence, including explicit clears.
+            docsPath = classic::toQString(setupSettings.documents_root);
         }
 
         gameVersion =
@@ -1166,6 +1168,8 @@ void MainWindow::checkFirstRunPaths()
             }
 
             if (!docsPath.isEmpty()) {
+                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Documents Folder Path",
+                                                               std::string(docsPath.toUtf8().constData()));
                 classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
                                                                std::string(docsPath.toUtf8().constData()));
             }
@@ -1228,6 +1232,8 @@ void MainWindow::checkFirstRunPaths()
                                                                std::string(finalGamePath.toUtf8().constData()));
             }
             if (needs.needs_docs_path && !finalDocsPath.isEmpty()) {
+                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Documents Folder Path",
+                                                               std::string(finalDocsPath.toUtf8().constData()));
                 classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
                                                                std::string(finalDocsPath.toUtf8().constData()));
             }
@@ -1421,9 +1427,11 @@ bool MainWindow::loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* do
             gamePath = QDir::cleanPath(classic::toQString(root).trimmed());
         }
 
-        auto docs = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.INI Folder Path", "");
-        if (!docs.empty()) {
-            docsPath = QDir::cleanPath(classic::toQString(docs).trimmed());
+        const auto setupSettings = classic::settings::user_settings_open_game_setup_settings(
+            std::string(m_dataRoot.toUtf8().constData()));
+        if (setupSettings.has_documents_root) {
+            // The typed projection preserves canonical precedence over a stale compatibility alias.
+            docsPath = QDir::cleanPath(classic::toQString(setupSettings.documents_root).trimmed());
         }
     } catch (...) {
         return false;

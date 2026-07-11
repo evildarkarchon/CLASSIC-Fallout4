@@ -625,7 +625,14 @@ pub async fn scan_run_execute(
     let simplify_logs = options.simplify_logs.unwrap_or(false);
     let targeted_mode = options.targeted_mode.unwrap_or(false);
     let move_unsolved_logs = options.move_unsolved_logs.unwrap_or(false);
-    let unsolved_logs_destination = options.unsolved_logs_destination.clone();
+    // JavaScript forms use blank strings as an absent optional path; normalize that
+    // sentinel before core validates custom destinations as absolute paths.
+    let unsolved_logs_destination = options
+        .unsolved_logs_destination
+        .as_deref()
+        .map(str::trim)
+        .filter(|destination| !destination.is_empty())
+        .map(PathBuf::from);
     let preserve_order = options.preserve_order.unwrap_or(false);
     let yaml_dir_root = PathBuf::from(&options.yaml_dir_root);
     let yaml_dir_data = PathBuf::from(&options.yaml_dir_data);
@@ -657,7 +664,7 @@ pub async fn scan_run_execute(
                 source,
                 setup_context,
                 move_unsolved_logs,
-                unsolved_logs_destination: unsolved_logs_destination.map(PathBuf::from),
+                unsolved_logs_destination,
                 max_concurrent,
                 cancellation: None,
                 preserve_order,

@@ -510,6 +510,31 @@ describe("scanRunExecute", () => {
     }
   });
 
+  test("blank destination uses the default when standard movement is enabled", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-blank-destination");
+    const logDir = join(root, "Crash Logs");
+    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
+
+    try {
+      mkdirSync(logDir, { recursive: true });
+      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
+
+      const scanResult = await scanRunExecute(
+        [],
+        scanRunOptions(root, {
+          moveUnsolvedLogs: true,
+          unsolvedLogsDestination: "  \t  ",
+        }),
+      );
+
+      expect(scanResult.status).toBe("completed");
+      expect(scanResult.logs).toHaveLength(1);
+      expect(scanResult.logs[0].success).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("relative destination fails setup when standard movement is enabled", async () => {
     const root = writeScanRunDataRoot("classic-node-scan-run-relative-destination");
     const logDir = join(root, "Crash Logs");

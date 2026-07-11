@@ -442,9 +442,12 @@ void SettingsDialog::loadSettings()
             m_editGameFolder->setText(classic::toQString(gameFolder));
         }
 
-        auto iniFolder = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.INI Folder Path", "");
-        if (!iniFolder.empty()) {
-            m_editIniFolder->setText(classic::toQString(iniFolder));
+        const auto setupSettings = classic::settings::user_settings_open_game_setup_settings(
+            std::string(m_dataDir.toUtf8().constData()));
+        m_editIniFolder->clear();
+        if (setupSettings.has_documents_root) {
+            // Rust resolves the canonical documents path and honors explicit canonical clears.
+            m_editIniFolder->setText(classic::toQString(setupSettings.documents_root));
         }
 
         // FormID Databases (game-specific key)
@@ -527,6 +530,9 @@ bool SettingsDialog::saveSettings()
         }
 
         auto iniText = m_editIniFolder->text();
+        // Keep the compatibility alias synchronized so older consumers observe edits and clears too.
+        classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Documents Folder Path",
+                                                       std::string(iniText.toUtf8().constData()));
         classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
                                                        std::string(iniText.toUtf8().constData()));
 
