@@ -53,7 +53,7 @@ Current shape notes:
 - `scanRunExecute` returns a top-level result with `status`, `message`, aggregate counts, optional `discovery`, optional `setup`, and nested `logs`
 - Standard discovery is selected with `targetedMode` false and uses `baseDirectory`, `customScanDirectory`, and `configuredDocumentsRoot`; Targeted discovery is selected with `targetedMode` true and uses `targetedInputs` when present, otherwise the positional `logPaths` argument
 - `status: "no_crash_logs_found"` is a normal result when discovery accepts no logs. Targeted inputs rejected during discovery appear under `discovery.rejectedInputs`, not as per-log failures
-- `scanRunExecute` accepts `JsScanRunOptions.unsolvedLogsDestination?: string`; Targeted runs and Standard runs with `moveUnsolvedLogs` false ignore it, while Standard movement uses it as a custom destination when non-empty
+- `scanRunExecute` accepts `JsScanRunOptions.unsolvedLogsDestination?: string`; the Node boundary trims this JavaScript text-field value and treats empty or whitespace-only input as absent. Targeted runs and Standard runs with `moveUnsolvedLogs` false ignore the normalized value, while Standard movement uses a nonblank value as a custom destination
 - Standard/Targeted discovery, FCX setup result shaping, and Unsolved Logs Destination normalization are core-owned. `maxConcurrent = 0` is folded to the core adaptive default at the scan-run service boundary (equivalent to omitting it)
 - nested per-log results include `reportWriteFailed` so CLI and API callers can count AUTOSCAN write failures separately from scan analysis failures
 
