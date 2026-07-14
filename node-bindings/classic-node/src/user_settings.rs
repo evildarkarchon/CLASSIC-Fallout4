@@ -1,10 +1,10 @@
-//! Thin NAPI adapter for read-only User Settings and non-persisting update previews.
+//! Thin NAPI adapter for User Settings snapshots, update previews, and explicit commits.
 
 use crate::shared::{JsGameId, core_to_js_game_id, js_to_core_game_id};
 use classic_user_settings_core::{
     CommitEligibility, DocumentClassification, PreferenceOrigin, Revision, SourceLocation,
-    UserSettings, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview,
-    WindowGeometry,
+    UserSettings, UserSettingsCommitOutcome, UserSettingsUpdate, UserSettingsUpdateField,
+    UserSettingsUpdatePreview, WindowGeometry,
 };
 use napi::bindgen_prelude::{Buffer, Either, Either5, Null};
 use std::collections::HashMap;
@@ -258,6 +258,21 @@ pub struct JsUserSettingsUpdatePreview {
     pub diagnostics: Vec<JsUserSettingsUpdateDiagnostic>,
 }
 
+/// Structured outcome of explicitly committing a previously accepted User Settings Update.
+#[napi(object)]
+pub struct JsUserSettingsCommitResult {
+    /// Outcome token: `committed`, `conflict`, or `rejected`.
+    pub status: String,
+    /// Revision of the published document, present only when committed.
+    pub revision: Option<String>,
+    /// Caller-supplied revision anchoring the previously accepted preview.
+    pub expected_revision: String,
+    /// Latest document revision, present only when a conflict is detected.
+    pub actual_revision: Option<String>,
+    /// Validation diagnostics, populated only when the update is rejected.
+    pub diagnostics: Vec<JsUserSettingsUpdateDiagnostic>,
+}
+
 /// Read-only User Settings snapshot returned by `openUserSettings`.
 #[napi(object)]
 pub struct JsUserSettingsSnapshot {
@@ -422,6 +437,93 @@ pub fn preview_user_settings_update(
     user_settings_update_preview_to_js(preview)
 }
 
+/// Commits an update that was previously accepted against `base_revision`.
+///
+/// The update is revalidated against the matching snapshot, then the core commit reopens the
+/// document under cross-process coordination to close the remaining comparison/write race.
+/// Revision conflicts and validation rejection are returned as structured data. Operational
+/// failures throw a JavaScript `Error` whose `code` is the stable core commit error code.
+///
+/// @throws an `Error` with a stable `commit_*` code when the source cannot be reopened or durable
+/// publication fails.
+#[napi]
+pub fn commit_user_settings_update(
+    classic_root: String,
+    base_revision: String,
+    update: JsUserSettingsUpdate,
+) -> napi::Result<JsUserSettingsCommitResult, String> {
+    let settings = UserSettings::open(&classic_root);
+    let actual_revision = revision_token(settings.revision());
+    if matches!(settings.revision(), Revision::Unavailable) {
+        return Err(user_settings_commit_error(
+            "commit_source_unavailable",
+            "User Settings could not be reopened before commit validation",
+        ));
+    }
+    if actual_revision != base_revision {
+        return Ok(user_settings_commit_conflict(
+            base_revision,
+            actual_revision,
+        ));
+    }
+
+    let accepted = match settings.preview_update(user_settings_update_to_core(update)) {
+        UserSettingsUpdatePreview::Accepted(accepted) => accepted,
+        UserSettingsUpdatePreview::Rejected(diagnostics) => {
+            return Ok(JsUserSettingsCommitResult {
+                status: "rejected".to_string(),
+                revision: None,
+                expected_revision: base_revision,
+                actual_revision: None,
+                diagnostics: diagnostics
+                    .into_iter()
+                    .map(user_settings_update_diagnostic_to_js)
+                    .collect(),
+            });
+        }
+    };
+
+    match accepted.commit(&classic_root) {
+        Ok(UserSettingsCommitOutcome::Committed { revision }) => Ok(JsUserSettingsCommitResult {
+            status: "committed".to_string(),
+            revision: Some(revision_token(&revision)),
+            expected_revision: base_revision,
+            actual_revision: None,
+            diagnostics: Vec::new(),
+        }),
+        Ok(UserSettingsCommitOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        }) => Ok(user_settings_commit_conflict(
+            revision_token(&expected_revision),
+            revision_token(&actual_revision),
+        )),
+        Err(error) => Err(user_settings_commit_error(error.code(), error.message())),
+    }
+}
+
+/// Converts one operational commit failure into an idiomatic JavaScript exception.
+fn user_settings_commit_error(
+    code: impl Into<String>,
+    message: impl Into<String>,
+) -> napi::Error<String> {
+    napi::Error::new(code.into(), message.into())
+}
+
+/// Builds the shared no-write result for either revision comparison boundary.
+fn user_settings_commit_conflict(
+    expected_revision: String,
+    actual_revision: String,
+) -> JsUserSettingsCommitResult {
+    JsUserSettingsCommitResult {
+        status: "conflict".to_string(),
+        revision: None,
+        expected_revision,
+        actual_revision: Some(actual_revision),
+        diagnostics: Vec::new(),
+    }
+}
+
 /// Converts the Rust-owned Crash Log Scan settings group into its NAPI DTO.
 fn crash_log_scan_settings_to_js(settings: &UserSettings) -> JsCrashLogScanSettings {
     let scan = settings.crash_log_scan_settings();
@@ -565,13 +667,20 @@ fn user_settings_update_preview_to_js(
             fields: Vec::new(),
             diagnostics: diagnostics
                 .into_iter()
-                .map(|diagnostic| JsUserSettingsUpdateDiagnostic {
-                    field_path: diagnostic.field_path().map(ToOwned::to_owned),
-                    code: diagnostic.code().to_string(),
-                    message: diagnostic.message().to_string(),
-                })
+                .map(user_settings_update_diagnostic_to_js)
                 .collect(),
         },
+    }
+}
+
+/// Converts one core update rejection into the shared NAPI diagnostic DTO.
+fn user_settings_update_diagnostic_to_js(
+    diagnostic: classic_user_settings_core::UpdateDiagnostic,
+) -> JsUserSettingsUpdateDiagnostic {
+    JsUserSettingsUpdateDiagnostic {
+        field_path: diagnostic.field_path().map(ToOwned::to_owned),
+        code: diagnostic.code().to_string(),
+        message: diagnostic.message().to_string(),
     }
 }
 

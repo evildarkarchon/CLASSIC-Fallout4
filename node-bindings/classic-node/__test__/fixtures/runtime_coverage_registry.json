@@ -11,15 +11,17 @@
         "ownerModule": "user_settings",
         "tier": "tier1"
       },
-      "contractCount": 129,
-      "contractIdsHash": "3c4a8d5ee23410532a5cee1c1ca08cad49714cd537200f8f97dcece910eb5248",
+      "contractCount": 134,
+      "contractIdsHash": "9a093678ad0c15ec38c0e2130549f95b62aa1834174e2e06ddba09cf12c2e60b",
       "bindingIdentifiers": [
         "JsFrontendPreferences",
         "JsFrontendState",
         "JsGuiWindowGeometry",
         "JsTuiRememberedState",
+        "JsUserSettingsCommitResult",
         "JsUserSettingsSnapshot",
-        "JsWindowGeometry"
+        "JsWindowGeometry",
+        "commitUserSettingsUpdate"
       ],
       "verificationMode": "direct_call",
       "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
@@ -27,7 +29,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path."
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path. User Settings commit coverage verifies accepted publication, structured stale-revision conflicts and validation rejection without writes, and stable NAPI error codes for operational failures."
     },
     {
       "coverageId": "node-tier1-scanlog",

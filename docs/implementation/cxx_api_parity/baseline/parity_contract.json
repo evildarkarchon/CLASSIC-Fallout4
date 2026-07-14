@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T02:25:49Z",
+  "generated_at_utc": "2026-07-14T07:10:58Z",
   "schema_version": 1,
   "entries": [
     {
@@ -5341,6 +5341,31 @@
       }
     },
     {
+      "id": "e2ad1a7f27fb5f5a",
+      "rustSymbol": "user_settings_commit_update",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          },
+          {
+            "name": "base_revision",
+            "type": "&str"
+          },
+          {
+            "name": "update",
+            "type": "&UserSettingsUpdateDto"
+          }
+        ],
+        "returnType": "Result<UserSettingsCommitResultDto>"
+      }
+    },
+    {
       "id": "142913a8b27dd2d5",
       "rustSymbol": "user_settings_open_crash_log_scan_settings",
       "kind": "function",
@@ -6267,6 +6292,36 @@
         {
           "name": "original_content",
           "type": "Vec<u8>"
+        }
+      ]
+    },
+    {
+      "id": "54e7a4cc156c5504",
+      "rustSymbol": "UserSettingsCommitResultDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "revision",
+          "type": "String"
+        },
+        {
+          "name": "expected_revision",
+          "type": "String"
+        },
+        {
+          "name": "actual_revision",
+          "type": "String"
+        },
+        {
+          "name": "diagnostics",
+          "type": "Vec<UserSettingsUpdateDiagnosticDto>"
         }
       ]
     },

@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-10T02:36:40.427709+00:00`
-- Tier-1 contract rows: **836**
-- Tier-1 matched: **836**
+- Generated: `2026-07-14T07:23:53.272725+00:00`
+- Tier-1 contract rows: **841**
+- Tier-1 matched: **841**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -113,6 +113,11 @@
 | `user-settings-update-type` | `user_settings` | `UserSettingsUpdate` | `JsUserSettingsUpdate` | `matched` |
 | `user-settings-update-field-type` | `user_settings` | `UserSettingsUpdateField` | `JsUserSettingsUpdateField` | `matched` |
 | `user-settings-accepted-update-type` | `user_settings` | `AcceptedUserSettingsUpdate` | `JsUserSettingsUpdatePreview` | `matched` |
+| `user-settings-commit-outcome-type` | `user_settings` | `UserSettingsCommitOutcome` | `JsUserSettingsCommitResult` | `matched` |
+| `user-settings-commit-error-type` | `user_settings` | `UserSettingsCommitError` | `commitUserSettingsUpdate` | `matched` |
+| `user-settings-accepted-update-commit` | `user_settings` | `AcceptedUserSettingsUpdate` | `commitUserSettingsUpdate` | `matched` |
+| `user-settings-commit-error-code-accessor` | `user_settings` | `code` | `commitUserSettingsUpdate` | `matched` |
+| `user-settings-commit-error-message-accessor` | `user_settings` | `message` | `commitUserSettingsUpdate` | `matched` |
 | `user-settings-update-diagnostic-type` | `user_settings` | `UpdateDiagnostic` | `JsUserSettingsUpdateDiagnostic` | `matched` |
 | `user-settings-update-preview-type` | `user_settings` | `UserSettingsUpdatePreview` | `JsUserSettingsUpdatePreview` | `matched` |
 | `user-settings-update-new` | `user_settings` | `new` | `JsUserSettingsUpdate` | `matched` |

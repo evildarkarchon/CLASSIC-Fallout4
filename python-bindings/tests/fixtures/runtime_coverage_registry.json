@@ -11,11 +11,14 @@
         "ownerModule": "user_settings",
         "tier": "tier1"
       },
-      "contractCount": 129,
-      "contractIdsHash": "c11d230fe319f269e8ad09307d2f4e5b365e1d70fba45956e936bf518ee698d9",
+      "contractCount": 132,
+      "contractIdsHash": "f02ae4d606e1133d4965d4887b840b9c85d614fa85a6d4f9443254e50190356e",
       "bindingIdentifiers": [
         "classic_user_settings.GameSetupSettings",
         "classic_user_settings.UserSettingsSnapshot.game_setup_settings",
+        "classic_user_settings.UserSettingsCommitError",
+        "classic_user_settings.UserSettingsCommitOutcome",
+        "classic_user_settings.UserSettingsUpdatePreview.commit",
         "classic_user_settings.UserSettingsUpdate.set_managed_game",
         "classic_user_settings.UserSettingsUpdate.set_game_root",
         "classic_user_settings.UserSettingsUpdate.set_game_executable",
@@ -59,7 +62,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; plus all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field."
+      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; the nested frontend-state runtime test covering shared preferences, all GUI tab geometry, namespaced TUI remembered state, provenance, fallbacks, and source-byte preservation; all-or-nothing accepted/rejected User Settings Update previews for every Game Setup field; and accepted update commits covering publication plus structured stale-revision conflicts."
     },
     {
       "coverageId": "python-tier1-config",

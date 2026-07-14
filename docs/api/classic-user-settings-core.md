@@ -4,7 +4,7 @@ Contributor-facing documentation for [`business-logic/classic-user-settings-core
 
 ## Purpose
 
-`classic-user-settings-core` is the deep Rust owner for CLASSIC User Settings. [`UserSettings::open`](../../business-logic/classic-user-settings-core/src/document.rs) takes an explicit CLASSIC root and returns a typed snapshot without creating, moving, repairing, canonicalizing, or touching either supported source file. Callers may also validate an explicit multi-field [`UserSettingsUpdate`](../../business-logic/classic-user-settings-core/src/update.rs) as a non-persisting preview; persistence remains a separate, caller-approved operation.
+`classic-user-settings-core` is the deep Rust owner for CLASSIC User Settings. [`UserSettings::open`](../../business-logic/classic-user-settings-core/src/document.rs) takes an explicit CLASSIC root and returns a typed snapshot without creating, moving, repairing, canonicalizing, or touching either supported source file. Callers validate a multi-field [`UserSettingsUpdate`](../../business-logic/classic-user-settings-core/src/update.rs) as a non-persisting preview, then explicitly commit its accepted artifact through the conflict-safe persistence seam.
 
 This crate is distinct from:
 
@@ -132,7 +132,7 @@ Every leaf has a matching `*_origin()` accessor. A missing leaf uses `Preference
 
 Opening User Settings never probes or imports the TUI's separate platform-config `state.json`; `UI.tui` only establishes its canonical destination. An explicit migration remains responsible for reading, backing up, and importing that legacy document. Unknown `UI` namespaces and unknown entries within `preferences`, `window_geometry`, individual tab mappings, and `tui` remain in `original_bytes()` unchanged. Invalid known nodes are likewise retained rather than repaired during open.
 
-The maintained Qt read path `MainWindow::restoreTabGeometry(...)` consumes the CXX frontend-state DTO. `MainWindow::saveTabGeometry(...)` intentionally remains on the existing raw writer until conflict-safe User Settings commits are available; this slice adds no frontend fields to `UserSettingsUpdate`.
+The maintained Qt read path `MainWindow::restoreTabGeometry(...)` consumes the CXX frontend-state DTO. `MainWindow::saveTabGeometry(...)` remains on the existing raw writer because frontend geometry fields are not yet part of `UserSettingsUpdate`; the conflict-safe commit primitive itself is available for accepted fields.
 
 ## User Settings Update preview
 
@@ -143,7 +143,15 @@ The maintained Qt read path `MainWindow::restoreTabGeometry(...)` consumes the C
 
 An accepted preview is anchored to the opened `Revision` and contains only the requested canonical `UserSettingsUpdateField` values. `canonical_path()` reports names such as `/CLASSIC_Settings/Update Check` and `/CLASSIC_Settings/Max Concurrent Scans`. Existing aliases, unknown entries, unrelated known-invalid values, and non-requested settings are never added as repair or normalization work.
 
-Validation is all-or-nothing. The implementation checks every requested field in one pass and returns each field-specific `UpdateDiagnostic { field_path, code, message }`; otherwise-valid fields are not exposed as a partial preview. The accepted preview is the validation artifact that the later conflict-safe commit workflow consumes.
+Validation is all-or-nothing. The implementation checks every requested field in one pass and returns each field-specific `UpdateDiagnostic { field_path, code, message }`; otherwise-valid fields are not exposed as a partial preview. The accepted preview is the only Rust artifact that can enter the commit workflow.
+
+## Conflict-safe commit
+
+`AcceptedUserSettingsUpdate::commit(classic_root)` holds an exclusive cross-process lock on the persistent `CLASSIC Settings.yaml.commit.lock` sibling, reopens the latest canonical document, and compares its exact-byte SHA-256 `Revision` with the preview revision before doing any patch or publication work. A mismatch returns `UserSettingsCommitOutcome::Conflict { expected_revision, actual_revision }` and leaves the newer document unchanged. A matching revision patches only the accepted canonical fields and returns `Committed { revision }`; rejected previews never produce an accepted artifact and therefore cannot call this operation.
+
+Publication serializes the freshly reopened and semantically preserved YAML tree into a randomized same-directory temporary file, writes and flushes it, calls `sync_all()`, and atomically replaces the canonical path. On write/flush/sync/replace failure it explicitly closes and attempts to remove the temporary file; a removal failure returns `commit_temp_cleanup_failed` with the primary failure retained as context and may leave the artifact for external cleanup. The lock file is intentionally retained so deleting it cannot race another process opening the same coordination path. Directory metadata synchronization is best-effort where the platform exposes it. Comments, quoting, whitespace, and mapping order may change, but unknown structures, compatibility aliases, and untouched invalid known values remain semantically intact.
+
+Operational failures return `UserSettingsCommitError { code, message }`. Stable publication codes are `commit_lock_open_failed`, `commit_lock_failed`, `commit_source_unavailable`, `commit_parse_failed`, `commit_patch_failed`, `commit_serialize_failed`, `commit_temp_create_failed`, `commit_temp_write_failed`, `commit_temp_flush_failed`, `commit_temp_sync_failed`, `commit_replace_failed`, and `commit_temp_cleanup_failed`. A cleanup failure message retains the primary stage failure as context.
 
 Preview-specific rejection codes include `invalid_enum_game_version`, the `invalid_path_*` codes for every optional setup path, `invalid_value_formid_databases`, `invalid_path_unsolved_logs_destination`, `invalid_path_custom_scan_input`, `invalid_range_max_concurrent_scans`, and `update_base_not_commit_eligible`.
 
@@ -199,11 +207,11 @@ Stable diagnostic codes currently include:
 
 ## Binding and native CLI surface
 
-- CXX: `classic::settings::user_settings_open_update_preferences(classic_root)` retains the narrow update-policy DTO; `user_settings_open_crash_log_scan_settings(classic_root)`, `user_settings_open_game_setup_settings(classic_root)`, and `user_settings_open_frontend_state(classic_root)` expose cohesive consumer groups; and `user_settings_preview_update(classic_root, update)` returns an all-or-nothing preview DTO.
-- Node: `openUserSettings(classicRoot)` returns `JsUserSettingsSnapshot` with all four typed groups and exact source bytes as `originalContent`; `previewUserSettingsUpdate(classicRoot, update)` validates a `JsUserSettingsUpdate` without writing.
-- Python: `classic_user_settings.open_user_settings(classic_root)` returns `UserSettingsSnapshot` with all four typed groups and exact source bytes; `snapshot.preview_update(UserSettingsUpdate)` validates against that opened snapshot and revision without writing.
+- CXX: `classic::settings::user_settings_open_update_preferences(classic_root)` retains the narrow update-policy DTO; `user_settings_open_crash_log_scan_settings(classic_root)`, `user_settings_open_game_setup_settings(classic_root)`, and `user_settings_open_frontend_state(classic_root)` expose cohesive consumer groups; `user_settings_preview_update(classic_root, update)` returns an all-or-nothing preview DTO; and `user_settings_commit_update(classic_root, base_revision, update)` revalidates and commits through the locked Rust core.
+- Node: `openUserSettings(classicRoot)` returns `JsUserSettingsSnapshot` with all four typed groups and exact source bytes as `originalContent`; `previewUserSettingsUpdate(classicRoot, update)` validates a `JsUserSettingsUpdate` without writing; and `commitUserSettingsUpdate(classicRoot, baseRevision, update)` returns a committed, conflict, or rejected outcome while throwing operational errors.
+- Python: `classic_user_settings.open_user_settings(classic_root)` returns `UserSettingsSnapshot` with all four typed groups and exact source bytes; `snapshot.preview_update(UserSettingsUpdate)` validates against that opened snapshot and revision without writing, and an accepted preview exposes `commit(classic_root)` on the retained core artifact.
 
-The native CLI `--check-app-update` path resolves a CLASSIC root, opens Update Preferences, reports structured diagnostics, and returns before runtime initialization, cache setup, installed-version validation, or network access when the safe value is `false`. Game Setup Intake can now be prepared directly from an already-opened `GameSetupSettings` group. GUI geometry restoration consumes the typed frontend-state DTO while the existing raw geometry writer remains available until revision-aware commits land; other maintained frontend consumer cutovers remain separate work.
+The native CLI `--check-app-update` path resolves a CLASSIC root, opens Update Preferences, reports structured diagnostics, and returns before runtime initialization, cache setup, installed-version validation, or network access when the safe value is `false`. The destination-setting scan action now uses the CXX commit seam. Game Setup Intake can be prepared directly from an already-opened `GameSetupSettings` group. GUI geometry restoration consumes the typed frontend-state DTO while the existing raw geometry writer remains because geometry fields are not yet part of `UserSettingsUpdate`; other maintained frontend consumer cutovers remain separate work.
 
 ## Validation
 

@@ -42,7 +42,8 @@ use classic_settings_core::{
 };
 use classic_user_settings_core::{
     CommitEligibility, DocumentClassification, PreferenceOrigin, Revision, SourceLocation,
-    UserSettings, UserSettingsUpdate as CoreUserSettingsUpdate,
+    UserSettings, UserSettingsCommitOutcome as CoreUserSettingsCommitOutcome,
+    UserSettingsUpdate as CoreUserSettingsUpdate,
     UserSettingsUpdateField as CoreUserSettingsUpdateField,
     UserSettingsUpdatePreview as CoreUserSettingsUpdatePreview, WindowGeometry,
 };
@@ -318,19 +319,84 @@ fn user_settings_preview_update(
             accepted_fields: Vec::new(),
             formid_database_games: Vec::new(),
             formid_database_paths: Vec::new(),
-            diagnostics: diagnostics
-                .iter()
-                .map(|diagnostic| {
-                    let field_path = diagnostic.field_path().unwrap_or_default();
-                    ffi::UserSettingsUpdateDiagnosticDto {
-                        has_field_path: diagnostic.field_path().is_some(),
-                        field_path: field_path.to_string(),
-                        code: diagnostic.code().to_string(),
-                        message: diagnostic.message().to_string(),
-                    }
-                })
-                .collect(),
+            diagnostics: diagnostics.iter().map(update_diagnostic_dto).collect(),
         },
+    }
+}
+
+/// Commits a previously previewed User Settings Update against its accepted base revision.
+///
+/// The request is revalidated in Rust after confirming the supplied revision still identifies
+/// the current document. The core then reopens under its commit lock to close the remaining race.
+fn user_settings_commit_update(
+    classic_root: &str,
+    base_revision: &str,
+    update: &ffi::UserSettingsUpdateDto,
+) -> Result<ffi::UserSettingsCommitResultDto, String> {
+    let settings = UserSettings::open(Path::new(classic_root));
+    if matches!(settings.revision(), Revision::Unavailable) {
+        return Err(
+            "commit_source_unavailable: User Settings could not be reopened before commit"
+                .to_string(),
+        );
+    }
+    let actual_revision = revision_token(settings.revision());
+    if actual_revision != base_revision {
+        return Ok(ffi::UserSettingsCommitResultDto {
+            status: "conflict".to_string(),
+            revision: String::new(),
+            expected_revision: base_revision.to_string(),
+            actual_revision,
+            diagnostics: Vec::new(),
+        });
+    }
+
+    let accepted = match settings.preview_update(core_user_settings_update(update)) {
+        CoreUserSettingsUpdatePreview::Accepted(accepted) => accepted,
+        CoreUserSettingsUpdatePreview::Rejected(diagnostics) => {
+            return Ok(ffi::UserSettingsCommitResultDto {
+                status: "rejected".to_string(),
+                revision: String::new(),
+                expected_revision: base_revision.to_string(),
+                actual_revision: String::new(),
+                diagnostics: diagnostics.iter().map(update_diagnostic_dto).collect(),
+            });
+        }
+    };
+
+    match accepted.commit(Path::new(classic_root)) {
+        Ok(CoreUserSettingsCommitOutcome::Committed { revision }) => {
+            Ok(ffi::UserSettingsCommitResultDto {
+                status: "committed".to_string(),
+                revision: revision_token(&revision),
+                expected_revision: base_revision.to_string(),
+                actual_revision: String::new(),
+                diagnostics: Vec::new(),
+            })
+        }
+        Ok(CoreUserSettingsCommitOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        }) => Ok(ffi::UserSettingsCommitResultDto {
+            status: "conflict".to_string(),
+            revision: String::new(),
+            expected_revision: revision_token(&expected_revision),
+            actual_revision: revision_token(&actual_revision),
+            diagnostics: Vec::new(),
+        }),
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Converts one update rejection into its shared CXX representation.
+fn update_diagnostic_dto(
+    diagnostic: &classic_user_settings_core::UpdateDiagnostic,
+) -> ffi::UserSettingsUpdateDiagnosticDto {
+    ffi::UserSettingsUpdateDiagnosticDto {
+        has_field_path: diagnostic.field_path().is_some(),
+        field_path: diagnostic.field_path().unwrap_or_default().to_string(),
+        code: diagnostic.code().to_string(),
+        message: diagnostic.message().to_string(),
     }
 }
 
@@ -1262,6 +1328,18 @@ mod ffi {
         diagnostics: Vec<UserSettingsUpdateDiagnosticDto>,
     }
 
+    /// Structured result of committing a previously accepted User Settings Update.
+    ///
+    /// `status` is `committed`, `conflict`, or `rejected`; fields unrelated to the selected
+    /// status are returned empty. Operational failures propagate as `rust::Error`.
+    struct UserSettingsCommitResultDto {
+        status: String,
+        revision: String,
+        expected_revision: String,
+        actual_revision: String,
+        diagnostics: Vec<UserSettingsUpdateDiagnosticDto>,
+    }
+
     extern "Rust" {
         type YamlOps;
 
@@ -1290,6 +1368,13 @@ mod ffi {
             classic_root: &str,
             update: &UserSettingsUpdateDto,
         ) -> UserSettingsUpdatePreviewDto;
+
+        /// Commit a previously accepted User Settings Update under cross-process coordination.
+        fn user_settings_commit_update(
+            classic_root: &str,
+            base_revision: &str,
+            update: &UserSettingsUpdateDto,
+        ) -> Result<UserSettingsCommitResultDto>;
 
         // Construction
         fn yaml_ops_new() -> Box<YamlOps>;

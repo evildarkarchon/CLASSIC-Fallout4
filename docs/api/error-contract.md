@@ -70,6 +70,20 @@ Callers MUST NOT fall back to a raw YAML read on any of these errors — that de
 
 ---
 
+## User Settings commit errors (`conflict-safe-user-settings-commit`)
+
+A stale content revision and a validation rejection are normal commit outcomes rather than operational errors. Operational lock, reopen, parse, serialization, flush, replacement, or cleanup failures retain the stable `classic_user_settings_core::UserSettingsCommitError::code()` token while adapting to each language's hard-error convention.
+
+| Binding | Expected outcome and operational error shape |
+| --- | --- |
+| C++ (CXX) | `user_settings_commit_update(...) -> Result<UserSettingsCommitResultDto>` returns `committed`, `conflict`, or `rejected`; operational failures throw `rust::Error` whose message begins with the stable core code. |
+| Node (NAPI-RS) | `commitUserSettingsUpdate(...)` returns `committed`, `conflict`, or `rejected`; operational failures reject with `napi::Error` whose `code` is the stable core code and whose message carries context. |
+| Python (PyO3) | An accepted `UserSettingsUpdatePreview.commit(...)` returns `UserSettingsCommitOutcome` (`committed` or `conflict`); operational failures raise the typed `classic_user_settings.UserSettingsCommitError`, with the stable code prefixed in its message. Calling `commit` on a rejected preview raises `ValueError` before filesystem work. |
+
+The CXX and Node request adapters compare the supplied preview revision and revalidate the raw update before delegating to the locked core commit, so they never trust flattened preview fields as an accepted Rust artifact. Python retains its exact core `AcceptedUserSettingsUpdate` inside the preview wrapper and calls it directly.
+
+---
+
 ## Notification errors (`app-update-manifest-notification`)
 
 The notification check exposes a different-shape-per-binding failure path while sharing a single underlying Rust error family. Variants on `UpdateError` (`NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, `NotificationCacheIo`) project onto each binding according to the per-language idiom below. Shared manifest-validation variants (`ManifestInvalid`, `ManifestUnsupportedVersion`) can also surface from this channel when a notification manifest violates cross-field invariants or advertises a newer `manifest_version` major; bindings treat those as notification-channel failures while preserving their existing catch-all shape.

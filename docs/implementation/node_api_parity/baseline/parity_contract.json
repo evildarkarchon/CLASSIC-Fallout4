@@ -1052,6 +1052,60 @@
       "nodeKind": "interface"
     },
     {
+      "id": "user-settings-commit-outcome-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsCommitOutcome",
+      "rustKind": "enum",
+      "nodeExport": "JsUserSettingsCommitResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-commit-error-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsCommitError",
+      "rustKind": "struct",
+      "nodeExport": "commitUserSettingsUpdate",
+      "nodeKind": "function",
+      "nodeArity": 3
+    },
+    {
+      "id": "user-settings-accepted-update-commit",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "AcceptedUserSettingsUpdate",
+      "rustKind": "struct",
+      "nodeExport": "commitUserSettingsUpdate",
+      "nodeKind": "function",
+      "nodeArity": 3
+    },
+    {
+      "id": "user-settings-commit-error-code-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "code",
+      "rustKind": "function",
+      "nodeExport": "commitUserSettingsUpdate",
+      "nodeKind": "function",
+      "nodeArity": 3
+    },
+    {
+      "id": "user-settings-commit-error-message-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "message",
+      "rustKind": "function",
+      "nodeExport": "commitUserSettingsUpdate",
+      "nodeKind": "function",
+      "nodeArity": 3
+    },
+    {
       "id": "user-settings-update-diagnostic-type",
       "tier": "tier1",
       "ownerModule": "user_settings",

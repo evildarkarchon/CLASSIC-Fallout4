@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-07-10T02:36:40.427709+00:00",
+  "generated_at_utc": "2026-07-14T07:23:53.272725+00:00",
   "summary": {
-    "tier1_contract_total": 836,
-    "tier1_matched": 836,
+    "tier1_contract_total": 841,
+    "tier1_matched": 841,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -1322,6 +1322,71 @@
       "actual_node_kind": "interface",
       "expected_node_arity": null,
       "actual_node_arity": null
+    },
+    {
+      "id": "user-settings-commit-outcome-type",
+      "tier": "tier1",
+      "owner_module": "user_settings",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "UserSettingsCommitOutcome",
+      "node_export": "JsUserSettingsCommitResult",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "user-settings-commit-error-type",
+      "tier": "tier1",
+      "owner_module": "user_settings",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "UserSettingsCommitError",
+      "node_export": "commitUserSettingsUpdate",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": 3,
+      "actual_node_arity": 3
+    },
+    {
+      "id": "user-settings-accepted-update-commit",
+      "tier": "tier1",
+      "owner_module": "user_settings",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "AcceptedUserSettingsUpdate",
+      "node_export": "commitUserSettingsUpdate",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": 3,
+      "actual_node_arity": 3
+    },
+    {
+      "id": "user-settings-commit-error-code-accessor",
+      "tier": "tier1",
+      "owner_module": "user_settings",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "code",
+      "node_export": "commitUserSettingsUpdate",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": 3,
+      "actual_node_arity": 3
+    },
+    {
+      "id": "user-settings-commit-error-message-accessor",
+      "tier": "tier1",
+      "owner_module": "user_settings",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "message",
+      "node_export": "commitUserSettingsUpdate",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": 3,
+      "actual_node_arity": 3
     },
     {
       "id": "user-settings-update-diagnostic-type",

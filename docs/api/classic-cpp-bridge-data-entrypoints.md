@@ -151,7 +151,7 @@ This is currently where `classic-config-core`, `classic-database-core`, `classic
 
 (This namespace was renamed from `classic::yaml` during v9.1.0 Phase 1 Plan 2 and expanded with the D-09 settings-core surface in the same change.)
 
-### Typed User Settings groups and update previews
+### Typed User Settings groups, update previews, and commits
 
 `user_settings_open_update_preferences(classic_root) -> UpdatePreferencesDto` forwards an explicit CLASSIC root to `classic_user_settings_core::UserSettings::open(...)`. Rust owns canonical/legacy discovery, schema classification, published defaults, fail-closed fallbacks, content revision, commit eligibility, and diagnostics; C++ does not interpret a raw User Settings key path.
 
@@ -161,11 +161,13 @@ This is currently where `classic-config-core`, `classic-database-core`, `classic
 
 `user_settings_open_game_setup_settings(classic_root) -> GameSetupSettingsDto` exposes the managed game, selected version, game root, executable, Documents and INI paths, mods/staging path, custom-scan path, and Papyrus log path with per-field provenance. Rust resolves compatibility labels and retains persisted separator spelling before the DTO is formed.
 
-`user_settings_open_frontend_state(classic_root) -> FrontendStateDto` exposes canonical presentation preferences, the four named GUI tab geometries, and the namespaced TUI remembered state with per-field provenance. The DTO contains primitives and stable tab-name tokens rather than Qt widget types. `MainWindow::restoreTabGeometry(...)` consumes this typed read; its existing raw geometry writer remains available until conflict-safe commits land.
+`user_settings_open_frontend_state(classic_root) -> FrontendStateDto` exposes canonical presentation preferences, the four named GUI tab geometries, and the namespaced TUI remembered state with per-field provenance. The DTO contains primitives and stable tab-name tokens rather than Qt widget types. `MainWindow::restoreTabGeometry(...)` consumes this typed read; its existing raw geometry writer remains because geometry fields are not yet represented by `UserSettingsUpdate`.
 
 `user_settings_preview_update(classic_root, update) -> UserSettingsUpdatePreviewDto` validates every requested field, including Game Setup fields, as one unit and performs no write. Accepted results carry the opened base revision and only requested canonical fields; rejected results contain all field diagnostics and no partial fields. Optional strings and omitted fields use separate presence flags, while accepted field values use an explicit `value_kind` plus typed value members.
 
-The native CLI `--check-app-update` consumer resolves its CLASSIC root and short-circuits on the Update Preferences DTO before initializing the update runtime or calling `check_app_notification`. The typed frontend DTO now drives GUI geometry restoration; the typed scan, setup, and preview DTOs remain available for their downstream adapter cutovers.
+`user_settings_commit_update(classic_root, base_revision, update) -> Result<UserSettingsCommitResultDto>` requires the revision returned by the accepted preview, reopens and compares it before revalidating the request, then delegates publication to the Rust core's locked atomic commit. `status` is `committed`, `conflict`, or `rejected`; the DTO carries the new revision, expected/actual conflict revisions, or rejection diagnostics as appropriate. Operational failures propagate as `rust::Error` with the stable core code prefixed in the message. C++ never reconstructs or trusts an `AcceptedUserSettingsUpdate` from the flattened preview fields.
+
+The native CLI `--check-app-update` consumer resolves its CLASSIC root and short-circuits on the Update Preferences DTO before initializing the update runtime or calling `check_app_notification`. The `--unsolved-logs-destination` and `--reset-unsolved-logs-destination` scan actions now preview and commit through the typed revision-aware CXX seam. The typed frontend DTO drives GUI geometry restoration; the remaining typed scan and setup DTOs stay available for later adapter cutovers.
 
 ### YAML file-cache helpers
 

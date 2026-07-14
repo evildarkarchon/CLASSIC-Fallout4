@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T02:38:46.143423+00:00",
+  "generated_at_utc": "2026-07-14T07:12:17.065034+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -15514,6 +15514,44 @@
       "tier": "tier1"
     },
     {
+      "symbol": "UserSettingsCommitError",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use commit::{UserSettingsCommitError, UserSettingsCommitOutcome};",
+      "source_expr": "commit::UserSettingsCommitError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsCommitError",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/commit.rs",
+      "source_decl": "pub struct UserSettingsCommitError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsCommitOutcome",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/commit.rs",
+      "source_decl": "pub enum UserSettingsCommitOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsCommitOutcome",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use commit::{UserSettingsCommitError, UserSettingsCommitOutcome};",
+      "source_expr": "commit::UserSettingsCommitOutcome",
+      "tier": "tier1"
+    },
+    {
       "symbol": "UserSettingsUpdate",
       "kind": "reexport",
       "crate": "classic-user-settings-core",
@@ -15707,6 +15745,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn classification(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "code",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/commit.rs",
+      "source_decl": "pub fn code(&self)",
       "tier": "tier1"
     },
     {
@@ -16117,6 +16165,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
       "source_decl": "pub fn maximized_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/commit.rs",
+      "source_decl": "pub fn message(&self)",
       "tier": "tier1"
     },
     {

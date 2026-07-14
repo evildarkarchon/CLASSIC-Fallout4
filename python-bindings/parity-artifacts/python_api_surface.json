@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T02:38:46.155778+00:00",
+  "generated_at_utc": "2026-07-14T07:12:17.077926+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -8653,6 +8653,26 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "UserSettingsCommitError",
+      "export_path": "UserSettingsCommitError",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsCommitError(RuntimeError):"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsCommitOutcome",
+      "export_path": "UserSettingsCommitOutcome",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsCommitOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "UserSettingsDiagnostic",
       "export_path": "UserSettingsDiagnostic",
       "kind": "class",
@@ -8950,6 +8970,18 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "class UserSettingsUpdatePreview:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "commit",
+      "export_path": "UserSettingsUpdatePreview.commit",
+      "parent_class": "UserSettingsUpdatePreview",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def commit(self, classic_root: str) -> UserSettingsCommitOutcome:"
     },
     {
       "module": "classic_user_settings",

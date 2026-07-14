@@ -3,6 +3,7 @@
 //! The crate opens User Settings relative to an explicit CLASSIC root and
 //! returns typed preference groups without changing the source document.
 
+mod commit;
 mod document;
 mod frontend_state;
 mod game_setup_settings;
@@ -10,6 +11,7 @@ mod preference;
 mod scan_settings;
 mod update;
 
+pub use commit::{UserSettingsCommitError, UserSettingsCommitOutcome};
 pub use document::{
     CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision,
     SettingsSource, SourceLocation, UpdatePreferences, UserSettings,

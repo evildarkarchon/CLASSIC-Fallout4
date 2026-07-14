@@ -75,6 +75,7 @@ add_executable(classic-cli
     src/progress.cpp
     src/yaml_update.cpp
     src/app_update.cpp
+    src/user_settings_action.cpp
 )
 
 target_include_directories(classic-cli PRIVATE src/)
@@ -206,8 +207,10 @@ if(Catch2_FOUND)
     add_executable(classic-cli-bridge-tests
         tests/test_yaml_update.cpp
         tests/test_app_update.cpp
+        tests/test_user_settings_action.cpp
         src/yaml_update.cpp
         src/app_update.cpp
+        src/user_settings_action.cpp
     )
 
     target_include_directories(classic-cli-bridge-tests PRIVATE src/)

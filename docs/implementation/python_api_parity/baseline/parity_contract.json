@@ -337,6 +337,26 @@
       "pythonKind": "class"
     },
     {
+      "id": "user_settings.commit_outcome_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsCommitOutcome",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsCommitOutcome",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.commit_error_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsCommitError",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsCommitError",
+      "pythonKind": "class"
+    },
+    {
       "id": "user_settings.update_diagnostic_type",
       "tier": "tier1",
       "ownerModule": "user_settings",
@@ -745,6 +765,17 @@
       "rustSymbol": "preview_update",
       "pythonModule": "classic_user_settings",
       "pythonExportPath": "UserSettingsSnapshot.preview_update",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.accepted_commit",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "AcceptedUserSettingsUpdate",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdatePreview.commit",
       "pythonKind": "method",
       "pythonArity": 1
     },

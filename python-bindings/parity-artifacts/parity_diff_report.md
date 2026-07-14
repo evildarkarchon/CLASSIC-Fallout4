@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-10T02:34:18.518201+00:00`
-- Tier-1 contract rows: **1215**
-- Tier-1 matched: **1215**
+- Generated: `2026-07-14T07:12:16.711788+00:00`
+- Tier-1 contract rows: **1218**
+- Tier-1 matched: **1218**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -39,6 +39,8 @@
 | `user_settings.crash_log_scan_settings_type` | `user_settings` | `CrashLogScanSettings` | `classic_user_settings.CrashLogScanSettings` | `matched` |
 | `user_settings.game_version_selection_type` | `user_settings` | `GameVersionSelection` | `classic_user_settings.CrashLogScanSettings` | `matched` |
 | `user_settings.accepted_update_type` | `user_settings` | `AcceptedUserSettingsUpdate` | `classic_user_settings.UserSettingsUpdatePreview` | `matched` |
+| `user_settings.commit_outcome_type` | `user_settings` | `UserSettingsCommitOutcome` | `classic_user_settings.UserSettingsCommitOutcome` | `matched` |
+| `user_settings.commit_error_type` | `user_settings` | `UserSettingsCommitError` | `classic_user_settings.UserSettingsCommitError` | `matched` |
 | `user_settings.update_diagnostic_type` | `user_settings` | `UpdateDiagnostic` | `classic_user_settings.UserSettingsUpdateDiagnostic` | `matched` |
 | `user_settings.update_request_type` | `user_settings` | `UserSettingsUpdate` | `classic_user_settings.UserSettingsUpdate` | `matched` |
 | `user_settings.update_field_type` | `user_settings` | `UserSettingsUpdateField` | `classic_user_settings.UserSettingsUpdateField` | `matched` |
@@ -79,6 +81,7 @@
 | `user_settings.update_with_custom_scan_input` | `user_settings` | `with_custom_scan_input` | `classic_user_settings.UserSettingsUpdate.set_custom_scan_input` | `matched` |
 | `user_settings.update_with_max_concurrent_scans` | `user_settings` | `with_max_concurrent_scans` | `classic_user_settings.UserSettingsUpdate.set_max_concurrent_scans` | `matched` |
 | `user_settings.preview_update` | `user_settings` | `preview_update` | `classic_user_settings.UserSettingsSnapshot.preview_update` | `matched` |
+| `user_settings.accepted_commit` | `user_settings` | `AcceptedUserSettingsUpdate` | `classic_user_settings.UserSettingsUpdatePreview.commit` | `matched` |
 | `user_settings.accepted_base_revision_accessor` | `user_settings` | `base_revision` | `classic_user_settings.UserSettingsUpdatePreview` | `matched` |
 | `user_settings.accepted_fields_accessor` | `user_settings` | `fields` | `classic_user_settings.UserSettingsUpdatePreview` | `matched` |
 | `user_settings.update_field_canonical_path_accessor` | `user_settings` | `canonical_path` | `classic_user_settings.UserSettingsUpdateField` | `matched` |

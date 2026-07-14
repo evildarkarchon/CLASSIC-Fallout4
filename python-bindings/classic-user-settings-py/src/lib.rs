@@ -1,14 +1,23 @@
-//! Thin PyO3 adapter for read-only User Settings and non-persisting update previews.
+//! Thin PyO3 adapter for typed User Settings inspection, update previews, and commits.
 
+use classic_shared::without_gil;
 use classic_user_settings_core::{
-    CommitEligibility, CrashLogScanSettings, DocumentClassification, FrontendPreferences,
-    FrontendState, GameSetupSettings, GuiWindowGeometry, PreferenceOrigin, Revision,
-    SourceLocation, TuiRememberedState, UserSettings, UserSettingsUpdate, UserSettingsUpdateField,
-    UserSettingsUpdatePreview, WindowGeometry,
+    AcceptedUserSettingsUpdate, CommitEligibility, CrashLogScanSettings, DocumentClassification,
+    FrontendPreferences, FrontendState, GameSetupSettings, GuiWindowGeometry, PreferenceOrigin,
+    Revision, SourceLocation, TuiRememberedState, UserSettings, UserSettingsCommitOutcome,
+    UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, WindowGeometry,
 };
+use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict};
 use std::collections::HashMap;
+
+pyo3::create_exception!(
+    classic_user_settings,
+    UserSettingsCommitError,
+    PyRuntimeError,
+    "Operational failure while publishing an accepted User Settings Update."
+);
 
 /// One structured diagnostic produced while opening User Settings.
 #[pyclass(name = "UserSettingsDiagnostic", frozen, skip_from_py_object)]
@@ -446,6 +455,47 @@ pub struct PyUserSettingsUpdatePreview {
     /// Field-specific or preview-level rejection diagnostics.
     #[pyo3(get)]
     diagnostics: Vec<PyUserSettingsUpdateDiagnostic>,
+    /// Accepted core plan retained so commit uses the exact previewed revision and fields.
+    accepted_update: Option<AcceptedUserSettingsUpdate>,
+}
+
+#[pymethods]
+impl PyUserSettingsUpdatePreview {
+    /// Commits this accepted preview against the latest canonical document.
+    ///
+    /// The core holds cross-process coordination while checking the content revision. A stale
+    /// preview returns a structured conflict; operational publication failures raise
+    /// `UserSettingsCommitError` and leave the newer document untouched.
+    fn commit(
+        &self,
+        py: Python<'_>,
+        classic_root: String,
+    ) -> PyResult<PyUserSettingsCommitOutcome> {
+        let accepted = self.accepted_update.clone().ok_or_else(|| {
+            PyValueError::new_err("only an accepted User Settings Update preview can be committed")
+        })?;
+        let outcome = without_gil(py, move || accepted.commit(classic_root)).map_err(|error| {
+            UserSettingsCommitError::new_err(format!("{}: {}", error.code(), error.message()))
+        })?;
+        Ok(commit_outcome_to_py(outcome))
+    }
+}
+
+/// Structured result of committing a previously accepted User Settings Update.
+#[pyclass(name = "UserSettingsCommitOutcome", frozen, skip_from_py_object)]
+pub struct PyUserSettingsCommitOutcome {
+    /// Result token: `committed` or `conflict`.
+    #[pyo3(get)]
+    status: String,
+    /// Newly published revision, present only for `committed`.
+    #[pyo3(get)]
+    revision: Option<String>,
+    /// Preview revision, present only for `conflict`.
+    #[pyo3(get)]
+    expected_revision: Option<String>,
+    /// Latest on-disk revision, present only for `conflict`.
+    #[pyo3(get)]
+    actual_revision: Option<String>,
 }
 
 /// Read-only User Settings snapshot returned by `open_user_settings`.
@@ -695,6 +745,7 @@ fn update_preview_to_py(preview: UserSettingsUpdatePreview) -> PyUserSettingsUpd
             base_revision: Some(revision_token(accepted.base_revision())),
             fields: accepted.fields().iter().map(update_field_to_py).collect(),
             diagnostics: Vec::new(),
+            accepted_update: Some(accepted),
         },
         UserSettingsUpdatePreview::Rejected(diagnostics) => PyUserSettingsUpdatePreview {
             accepted: false,
@@ -708,6 +759,28 @@ fn update_preview_to_py(preview: UserSettingsUpdatePreview) -> PyUserSettingsUpd
                     message: diagnostic.message().to_string(),
                 })
                 .collect(),
+            accepted_update: None,
+        },
+    }
+}
+
+/// Converts the core commit result without flattening a stale revision into an exception.
+fn commit_outcome_to_py(outcome: UserSettingsCommitOutcome) -> PyUserSettingsCommitOutcome {
+    match outcome {
+        UserSettingsCommitOutcome::Committed { revision } => PyUserSettingsCommitOutcome {
+            status: "committed".to_string(),
+            revision: Some(revision_token(&revision)),
+            expected_revision: None,
+            actual_revision: None,
+        },
+        UserSettingsCommitOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        } => PyUserSettingsCommitOutcome {
+            status: "conflict".to_string(),
+            revision: None,
+            expected_revision: Some(revision_token(&expected_revision)),
+            actual_revision: Some(revision_token(&actual_revision)),
         },
     }
 }
@@ -814,7 +887,7 @@ fn revision_token(revision: &Revision) -> String {
     }
 }
 
-/// Python module for typed, read-only User Settings access.
+/// Python module for typed User Settings access and explicit conflict-safe updates.
 #[pymodule]
 fn classic_user_settings(module: &Bound<'_, PyModule>) -> PyResult<()> {
     classic_shared::configure_python_stdio(module.py());
@@ -832,7 +905,12 @@ fn classic_user_settings(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyUserSettingsUpdateDiagnostic>()?;
     module.add_class::<PyUserSettingsUpdateField>()?;
     module.add_class::<PyUserSettingsUpdatePreview>()?;
+    module.add_class::<PyUserSettingsCommitOutcome>()?;
     module.add_class::<PyUserSettingsSnapshot>()?;
+    module.add(
+        "UserSettingsCommitError",
+        module.py().get_type::<UserSettingsCommitError>(),
+    )?;
     module.add_function(wrap_pyfunction!(open_user_settings, module)?)?;
     Ok(())
 }

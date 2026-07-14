@@ -896,3 +896,35 @@ fn test_user_settings_update_preview_rejects_all_fields_with_specific_diagnostic
     );
     assert_eq!(std::fs::read(&settings_path).unwrap(), content.as_bytes());
 }
+
+#[test]
+fn test_user_settings_commit_update_requires_the_accepted_base_revision() {
+    let root = tempfile::tempdir().unwrap();
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    std::fs::write(
+        &settings_path,
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Unsolved Logs Destination: null\n",
+    )
+    .unwrap();
+    let mut update = empty_user_settings_update();
+    update.has_unsolved_logs_destination = true;
+    update.has_unsolved_logs_destination_value = true;
+    update.unsolved_logs_destination = "D:/CLASSIC/Unsolved".to_string();
+    let root_string = root.path().display().to_string();
+    let preview = user_settings_preview_update(&root_string, &update);
+    assert!(preview.accepted);
+
+    let committed =
+        user_settings_commit_update(&root_string, &preview.base_revision, &update).unwrap();
+
+    assert_eq!(committed.status, "committed");
+    assert!(committed.revision.starts_with("sha256:"));
+    assert!(committed.diagnostics.is_empty());
+
+    let stale = user_settings_commit_update(&root_string, &preview.base_revision, &update).unwrap();
+
+    assert_eq!(stale.status, "conflict");
+    assert_eq!(stale.expected_revision, preview.base_revision);
+    assert_eq!(stale.actual_revision, committed.revision);
+    assert!(stale.diagnostics.is_empty());
+}

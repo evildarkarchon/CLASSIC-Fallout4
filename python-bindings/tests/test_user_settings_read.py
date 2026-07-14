@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import classic_user_settings
+import pytest
 
 
 def user_settings_fixture_root() -> Path:
@@ -403,3 +404,84 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
         ),
     ]
     assert settings_path.read_bytes() == source_bytes
+
+
+def test_accepted_user_settings_update_commit_publishes_preserved_document(
+    tmp_path: Path,
+) -> None:
+    """Commit requested fields while retaining unrelated document content."""
+    fixture_root = user_settings_fixture_root()
+    settings_path = tmp_path / "CLASSIC Settings.yaml"
+    settings_path.write_bytes((fixture_root / "unknown_entries.yaml").read_bytes())
+    snapshot = classic_user_settings.open_user_settings(str(tmp_path))
+    update = classic_user_settings.UserSettingsUpdate()
+    update.set_update_check(False)
+    update.set_unsolved_logs_destination("D:/CLASSIC/Unsolved")
+
+    accepted = snapshot.preview_update(update)
+    outcome = accepted.commit(str(tmp_path))
+
+    assert outcome.status == "committed"
+    assert outcome.revision is not None
+    assert outcome.revision.startswith("sha256:")
+    assert outcome.expected_revision is None
+    assert outcome.actual_revision is None
+    committed = classic_user_settings.open_user_settings(str(tmp_path))
+    assert committed.revision == outcome.revision
+    assert committed.update_preferences.update_check is False
+    assert (
+        committed.crash_log_scan_settings.unsolved_logs_destination
+        == "D:/CLASSIC/Unsolved"
+    )
+    committed_content = settings_path.read_text(encoding="utf-8")
+    assert "ThirdPartyPlugin:" in committed_content
+    assert "community_frontend:" in committed_content
+
+
+def test_accepted_user_settings_update_commit_reports_stale_conflict(
+    tmp_path: Path,
+) -> None:
+    """Return revision details without overwriting a concurrent external edit."""
+    fixture_root = user_settings_fixture_root()
+    settings_path = tmp_path / "CLASSIC Settings.yaml"
+    source_bytes = (fixture_root / "unknown_entries.yaml").read_bytes()
+    settings_path.write_bytes(source_bytes)
+    snapshot = classic_user_settings.open_user_settings(str(tmp_path))
+    update = classic_user_settings.UserSettingsUpdate()
+    update.set_update_check(False)
+    accepted = snapshot.preview_update(update)
+    externally_edited = source_bytes + b"\nExternalOwner:\n  generation: 2\n"
+    settings_path.write_bytes(externally_edited)
+
+    outcome = accepted.commit(str(tmp_path))
+
+    assert outcome.status == "conflict"
+    assert outcome.revision is None
+    assert outcome.expected_revision == snapshot.revision
+    assert outcome.actual_revision is not None
+    assert outcome.actual_revision.startswith("sha256:")
+    assert outcome.actual_revision != outcome.expected_revision
+    assert settings_path.read_bytes() == externally_edited
+
+
+def test_user_settings_update_commit_rejects_unaccepted_and_operational_failures(
+    tmp_path: Path,
+) -> None:
+    """Reject invalid previews and raise the typed commit error for I/O failures."""
+    snapshot = classic_user_settings.open_user_settings(str(tmp_path))
+    invalid_update = classic_user_settings.UserSettingsUpdate()
+    invalid_update.set_max_concurrent_scans(-1)
+    rejected = snapshot.preview_update(invalid_update)
+    with pytest.raises(ValueError, match="only an accepted"):
+        rejected.commit(str(tmp_path))
+
+    update = classic_user_settings.UserSettingsUpdate()
+    update.set_update_check(False)
+    accepted = snapshot.preview_update(update)
+    tmp_path.rmdir()
+
+    with pytest.raises(
+        classic_user_settings.UserSettingsCommitError,
+        match="commit_lock_open_failed",
+    ):
+        accepted.commit(str(tmp_path))

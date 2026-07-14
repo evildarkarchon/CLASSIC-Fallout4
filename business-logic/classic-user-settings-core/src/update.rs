@@ -196,25 +196,86 @@ pub enum UserSettingsUpdateField {
 impl UserSettingsUpdateField {
     /// Returns the canonical RFC 6901-style path named by this accepted field.
     pub fn canonical_path(&self) -> &'static str {
+        self.canonical_paths().0
+    }
+
+    /// Returns the dot-separated path used by the shared YAML patch helper.
+    pub(crate) fn canonical_key_path(&self) -> &'static str {
+        self.canonical_paths().1
+    }
+
+    /// Keeps the public pointer and internal YAML path paired in one exhaustive mapping.
+    fn canonical_paths(&self) -> (&'static str, &'static str) {
         match self {
-            Self::UpdateCheck(_) => "/CLASSIC_Settings/Update Check",
-            Self::ManagedGame(_) => "/CLASSIC_Settings/Managed Game",
-            Self::GameVersionSelection(_) => "/CLASSIC_Settings/Game Version",
-            Self::GameRoot(_) => "/CLASSIC_Settings/Game Folder Path",
-            Self::GameExecutable(_) => "/CLASSIC_Settings/Game EXE Path",
-            Self::DocumentsRoot(_) => "/CLASSIC_Settings/Documents Folder Path",
-            Self::IniFolder(_) => "/CLASSIC_Settings/INI Folder Path",
-            Self::ModsFolder(_) => "/CLASSIC_Settings/MODS Folder Path",
-            Self::PapyrusLogPath(_) => "/CLASSIC_Settings/Papyrus Log Path",
-            Self::FcxMode(_) => "/CLASSIC_Settings/FCX Mode",
-            Self::SimplifyLogs(_) => "/CLASSIC_Settings/Simplify Logs",
-            Self::ShowStatistics(_) => "/CLASSIC_Settings/Show Statistics",
-            Self::FormIdValueLookup(_) => "/CLASSIC_Settings/Show FormID Values",
-            Self::FormIdDatabases(_) => "/CLASSIC_Settings/FormID Databases",
-            Self::MoveUnsolvedLogs(_) => "/CLASSIC_Settings/Move Unsolved Logs",
-            Self::UnsolvedLogsDestination(_) => "/CLASSIC_Settings/Unsolved Logs Destination",
-            Self::CustomScanInput(_) => "/CLASSIC_Settings/SCAN Custom Path",
-            Self::MaxConcurrentScans(_) => "/CLASSIC_Settings/Max Concurrent Scans",
+            Self::UpdateCheck(_) => (
+                "/CLASSIC_Settings/Update Check",
+                "CLASSIC_Settings.Update Check",
+            ),
+            Self::ManagedGame(_) => (
+                "/CLASSIC_Settings/Managed Game",
+                "CLASSIC_Settings.Managed Game",
+            ),
+            Self::GameVersionSelection(_) => (
+                "/CLASSIC_Settings/Game Version",
+                "CLASSIC_Settings.Game Version",
+            ),
+            Self::GameRoot(_) => (
+                "/CLASSIC_Settings/Game Folder Path",
+                "CLASSIC_Settings.Game Folder Path",
+            ),
+            Self::GameExecutable(_) => (
+                "/CLASSIC_Settings/Game EXE Path",
+                "CLASSIC_Settings.Game EXE Path",
+            ),
+            Self::DocumentsRoot(_) => (
+                "/CLASSIC_Settings/Documents Folder Path",
+                "CLASSIC_Settings.Documents Folder Path",
+            ),
+            Self::IniFolder(_) => (
+                "/CLASSIC_Settings/INI Folder Path",
+                "CLASSIC_Settings.INI Folder Path",
+            ),
+            Self::ModsFolder(_) => (
+                "/CLASSIC_Settings/MODS Folder Path",
+                "CLASSIC_Settings.MODS Folder Path",
+            ),
+            Self::PapyrusLogPath(_) => (
+                "/CLASSIC_Settings/Papyrus Log Path",
+                "CLASSIC_Settings.Papyrus Log Path",
+            ),
+            Self::FcxMode(_) => ("/CLASSIC_Settings/FCX Mode", "CLASSIC_Settings.FCX Mode"),
+            Self::SimplifyLogs(_) => (
+                "/CLASSIC_Settings/Simplify Logs",
+                "CLASSIC_Settings.Simplify Logs",
+            ),
+            Self::ShowStatistics(_) => (
+                "/CLASSIC_Settings/Show Statistics",
+                "CLASSIC_Settings.Show Statistics",
+            ),
+            Self::FormIdValueLookup(_) => (
+                "/CLASSIC_Settings/Show FormID Values",
+                "CLASSIC_Settings.Show FormID Values",
+            ),
+            Self::FormIdDatabases(_) => (
+                "/CLASSIC_Settings/FormID Databases",
+                "CLASSIC_Settings.FormID Databases",
+            ),
+            Self::MoveUnsolvedLogs(_) => (
+                "/CLASSIC_Settings/Move Unsolved Logs",
+                "CLASSIC_Settings.Move Unsolved Logs",
+            ),
+            Self::UnsolvedLogsDestination(_) => (
+                "/CLASSIC_Settings/Unsolved Logs Destination",
+                "CLASSIC_Settings.Unsolved Logs Destination",
+            ),
+            Self::CustomScanInput(_) => (
+                "/CLASSIC_Settings/SCAN Custom Path",
+                "CLASSIC_Settings.SCAN Custom Path",
+            ),
+            Self::MaxConcurrentScans(_) => (
+                "/CLASSIC_Settings/Max Concurrent Scans",
+                "CLASSIC_Settings.Max Concurrent Scans",
+            ),
         }
     }
 }
@@ -264,7 +325,8 @@ impl UpdateDiagnostic {
 
 /// A validated update plan anchored to the source revision opened by the caller.
 ///
-/// This type contains no persistence operation; issue #99 consumes it for explicit commits.
+/// This is the only Rust artifact that can enter the explicit commit operation; callers cannot
+/// publish a raw or rejected [`UserSettingsUpdate`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AcceptedUserSettingsUpdate {
     base_revision: Revision,

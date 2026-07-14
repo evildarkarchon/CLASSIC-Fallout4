@@ -14,8 +14,6 @@ crate-type = ["rlib"]
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-settings-core = { path = "../classic-settings-core" }
 sha2 = { workspace = true }
-
-[dev-dependencies]
 tempfile = { workspace = true }
 
 [lints.rust]

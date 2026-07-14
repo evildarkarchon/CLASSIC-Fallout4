@@ -9,7 +9,11 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
-import { openUserSettings, previewUserSettingsUpdate } from "../index.js";
+import {
+  commitUserSettingsUpdate,
+  openUserSettings,
+  previewUserSettingsUpdate,
+} from "../index.js";
 
 const roots: string[] = [];
 const fixtureRoot = join(
@@ -500,5 +504,112 @@ describe("User Settings Update preview", () => {
     expect(
       readFileSync(join(conflictRoot, "CLASSIC Settings.yaml")),
     ).toEqual(conflictContent);
+  });
+});
+
+describe("User Settings Update commit", () => {
+  test("user-settings-update-commit-publishes-accepted-fields", () => {
+    const content = fixture("unknown_entries.yaml");
+    const root = makeRoot(content);
+    const path = join(root, "CLASSIC Settings.yaml");
+    const update = {
+      updateCheck: false,
+      unsolvedLogsDestination: "D:/CLASSIC/Unsolved",
+    };
+    const preview = previewUserSettingsUpdate(root, update);
+
+    expect(preview.accepted).toBe(true);
+    const result = commitUserSettingsUpdate(
+      root,
+      preview.baseRevision!,
+      update,
+    );
+
+    expect(result.status).toBe("committed");
+    expect(result.expectedRevision).toBe(preview.baseRevision);
+    expect(result.revision?.startsWith("sha256:")).toBe(true);
+    expect(result.actualRevision).toBeUndefined();
+    expect(result.diagnostics).toEqual([]);
+
+    const committed = openUserSettings(root);
+    expect(committed.updatePreferences.updateCheck).toBe(false);
+    expect(committed.crashLogScanSettings.unsolvedLogsDestination).toBe(
+      "D:/CLASSIC/Unsolved",
+    );
+    expect(committed.revision).toBe(result.revision);
+
+    // Unknown nodes are not projected by the DTO, so verify their semantic payload survived.
+    const published = readFileSync(path, "utf8");
+    expect(published).toContain("Future Scan Knob");
+    expect(published).toContain("community_frontend");
+    expect(published).toContain("ThirdPartyPlugin");
+    expect(published).toContain("threshold: 1.25");
+  });
+
+  test("user-settings-update-commit-refuses-a-stale-preview", () => {
+    const content = fixture("unknown_entries.yaml");
+    const root = makeRoot(content);
+    const path = join(root, "CLASSIC Settings.yaml");
+    const update = { updateCheck: false };
+    const preview = previewUserSettingsUpdate(root, update);
+    expect(preview.accepted).toBe(true);
+
+    const externallyEdited = content
+      .toString("utf8")
+      .replace("retry_count: 3", "retry_count: 4");
+    writeFileSync(path, externallyEdited);
+    const externalRevision = openUserSettings(root).revision;
+
+    const result = commitUserSettingsUpdate(
+      root,
+      preview.baseRevision!,
+      update,
+    );
+
+    expect(result).toEqual({
+      status: "conflict",
+      expectedRevision: preview.baseRevision,
+      actualRevision: externalRevision,
+      diagnostics: [],
+    });
+    expect(readFileSync(path, "utf8")).toBe(externallyEdited);
+    expect(openUserSettings(root).updatePreferences.updateCheck).toBe(true);
+  });
+
+  test("user-settings-update-commit-returns-validation-rejection", () => {
+    const content = fixture("unknown_entries.yaml");
+    const root = makeRoot(content);
+    const path = join(root, "CLASSIC Settings.yaml");
+    const revision = openUserSettings(root).revision;
+
+    const result = commitUserSettingsUpdate(root, revision, {
+      maxConcurrentScans: -1,
+    });
+
+    expect(result.status).toBe("rejected");
+    expect(result.revision).toBeUndefined();
+    expect(result.expectedRevision).toBe(revision);
+    expect(result.actualRevision).toBeUndefined();
+    expect(result.diagnostics.map(({ code }) => code)).toEqual([
+      "invalid_range_max_concurrent_scans",
+    ]);
+    expect(readFileSync(path)).toEqual(content);
+  });
+
+  test("user-settings-update-commit-throws-stable-operational-error", () => {
+    const root = makeRoot();
+    mkdirSync(join(root, "CLASSIC Settings.yaml"));
+    let caught: unknown;
+
+    try {
+      commitUserSettingsUpdate(root, "missing", { updateCheck: false });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    const commitError = caught as Error & { code?: string };
+    expect(commitError.code).toBe("commit_source_unavailable");
+    expect(commitError.message).toContain("could not be reopened");
   });
 });

@@ -1531,6 +1531,19 @@ export declare function clearSettingsCache(): void
 export declare function clearYamlCache(): void
 
 /**
+ * Commits an update that was previously accepted against `base_revision`.
+ *
+ * The update is revalidated against the matching snapshot, then the core commit reopens the
+ * document under cross-process coordination to close the remaining comparison/write race.
+ * Revision conflicts and validation rejection are returned as structured data. Operational
+ * failures throw a JavaScript `Error` whose `code` is the stable core commit error code.
+ *
+ * @throws an `Error` with a stable `commit_*` code when the source cannot be reopened or durable
+ * publication fails.
+ */
+export declare function commitUserSettingsUpdate(classicRoot: string, baseRevision: string, update: JsUserSettingsUpdate): JsUserSettingsCommitResult
+
+/**
  * Compare two version strings.
  *
  * Returns -1 if a < b, 0 if a == b, 1 if a > b.
@@ -3681,6 +3694,20 @@ export interface JsUpdatePreferences {
   updateCheck: boolean
   /** Provenance token: `document`, `default`, or `degradedFallback`. */
   origin: string
+}
+
+/** Structured outcome of explicitly committing a previously accepted User Settings Update. */
+export interface JsUserSettingsCommitResult {
+  /** Outcome token: `committed`, `conflict`, or `rejected`. */
+  status: string
+  /** Revision of the published document, present only when committed. */
+  revision?: string
+  /** Caller-supplied revision anchoring the previously accepted preview. */
+  expectedRevision: string
+  /** Latest document revision, present only when a conflict is detected. */
+  actualRevision?: string
+  /** Validation diagnostics, populated only when the update is rejected. */
+  diagnostics: Array<JsUserSettingsUpdateDiagnostic>
 }
 
 /** One structured diagnostic produced while opening User Settings. */

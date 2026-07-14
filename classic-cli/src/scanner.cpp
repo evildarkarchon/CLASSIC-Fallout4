@@ -1,5 +1,6 @@
 #include "scanner.h"
 #include "progress.h"
+#include "user_settings_action.h"
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -116,26 +117,6 @@ static bool read_bool_setting(const std::string& settings_path, const char* key,
     return default_value;
 }
 
-static bool persist_unsolved_logs_destination_option(const CliArgs& args, const std::string& settings_path) {
-    if (args.unsolved_logs_destination.empty() && !args.reset_unsolved_logs_destination) {
-        return true;
-    }
-
-    try {
-        auto ops = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*ops, settings_path);
-        classic::settings::yaml_ops_set_string_setting(
-            *ops, "CLASSIC_Settings.Unsolved Logs Destination",
-            args.reset_unsolved_logs_destination ? "" : args.unsolved_logs_destination);
-        classic::settings::yaml_ops_save_file(*ops, settings_path);
-        return true;
-    } catch (const rust::Error& e) {
-        fmt::print(stderr, "Error: could not persist Unsolved Logs Destination to {}: {}\n", settings_path,
-                   std::string(e.what()));
-        return false;
-    }
-}
-
 class CliBatchProgressCallback final : public classic::scanner::ScanBatchProgressCallback {
 public:
     explicit CliBatchProgressCallback(ProgressDisplay& progress)
@@ -172,7 +153,7 @@ private:
 static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
                              std::chrono::steady_clock::time_point total_start) {
     const std::string settings_path = settings_file_path(dirs);
-    if (!persist_unsolved_logs_destination_option(args, settings_path)) {
+    if (!persist_unsolved_logs_destination_option(args, dirs.root)) {
         return 1;
     }
     const bool move_unsolved_logs = read_bool_setting(settings_path, "CLASSIC_Settings.Move Unsolved Logs", false);

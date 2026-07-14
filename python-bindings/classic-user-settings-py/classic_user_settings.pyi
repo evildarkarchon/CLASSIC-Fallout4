@@ -1,4 +1,4 @@
-"""Typed, read-only access to CLASSIC User Settings."""
+"""Typed CLASSIC User Settings access with explicit conflict-safe commits."""
 
 from __future__ import annotations
 
@@ -331,6 +331,29 @@ class UserSettingsUpdatePreview:
 
     @property
     def diagnostics(self) -> list[UserSettingsUpdateDiagnostic]: ...
+
+    def commit(self, classic_root: str) -> UserSettingsCommitOutcome:
+        """Commit an accepted preview or return a stale-revision conflict."""
+
+
+class UserSettingsCommitOutcome:
+    """Structured outcome from committing a previously accepted update."""
+
+    @property
+    def status(self) -> str: ...
+
+    @property
+    def revision(self) -> str | None: ...
+
+    @property
+    def expected_revision(self) -> str | None: ...
+
+    @property
+    def actual_revision(self) -> str | None: ...
+
+
+class UserSettingsCommitError(RuntimeError):
+    """Operational failure while publishing an accepted update."""
 
 
 class UserSettingsSnapshot:
