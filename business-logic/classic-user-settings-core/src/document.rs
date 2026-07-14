@@ -1,6 +1,6 @@
 use crate::default_settings::{
-    AUTO_SWITCH_AFTER_SCAN, UPDATE_CHECK, USER_SETTINGS_SCHEMA_MAJOR, USER_SETTINGS_SCHEMA_MINOR,
-    registry_is_valid,
+    AUTO_SWITCH_AFTER_SCAN, UPDATE_CHECK, UPDATE_SOURCE, USER_SETTINGS_SCHEMA_MAJOR,
+    USER_SETTINGS_SCHEMA_MINOR, registry_is_valid,
 };
 use crate::scan_settings::CrashLogScanSettings;
 use crate::{FrontendState, GameSetupSettings};
@@ -126,11 +126,49 @@ impl SettingsSource {
     }
 }
 
-/// Update-related User Settings consumed by update-check policy.
+/// First-party source selected by compatibility User Settings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UpdateSource {
+    /// GitHub releases only.
+    GitHub,
+    /// GitHub releases plus the retired Nexus Mods source.
+    Both,
+}
+
+impl UpdateSource {
+    /// Returns the canonical persisted spelling used by current User Settings.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::GitHub => "GitHub",
+            Self::Both => "Both",
+        }
+    }
+
+    /// Parses canonical and legacy case-insensitive source spellings.
+    pub(crate) fn parse(value: &str) -> Option<Self> {
+        if value.eq_ignore_ascii_case("github") {
+            Some(Self::GitHub)
+        } else if value.eq_ignore_ascii_case("both") {
+            Some(Self::Both)
+        } else {
+            None
+        }
+    }
+
+    /// Returns the Rust-owned published compatibility default.
+    fn published_default() -> Self {
+        Self::parse(UPDATE_SOURCE.default().as_str())
+            .expect("published Update Source default is invalid")
+    }
+}
+
+/// Update-related User Settings consumed by update-check policy and compatibility adapters.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UpdatePreferences {
     update_check: bool,
     update_check_origin: PreferenceOrigin,
+    update_source: UpdateSource,
+    update_source_origin: PreferenceOrigin,
 }
 
 impl UpdatePreferences {
@@ -142,6 +180,16 @@ impl UpdatePreferences {
     /// Returns how the update-check value was obtained.
     pub fn update_check_origin(&self) -> PreferenceOrigin {
         self.update_check_origin
+    }
+
+    /// Returns the compatibility update-source selection.
+    pub fn update_source(&self) -> UpdateSource {
+        self.update_source
+    }
+
+    /// Returns how the compatibility update-source selection was obtained.
+    pub fn update_source_origin(&self) -> PreferenceOrigin {
+        self.update_source_origin
     }
 }
 
@@ -162,6 +210,14 @@ pub struct UserSettings {
 }
 
 impl UserSettings {
+    /// Returns a read-only snapshot containing the Rust-owned published defaults.
+    ///
+    /// The snapshot has missing-source metadata and performs no filesystem access, so interfaces
+    /// can populate reset state without duplicating policy or creating a settings document.
+    pub fn published_defaults() -> Self {
+        Self::missing()
+    }
+
     /// Opens User Settings relative to `classic_root` without creating, moving,
     /// repairing, or otherwise modifying either supported source file.
     pub fn open(classic_root: impl AsRef<Path>) -> Self {
@@ -336,6 +392,42 @@ impl UserSettings {
                 )),
             ),
         };
+        let update_source_node = if classification == DocumentClassification::LegacyFlat {
+            Some(&document["update_source"])
+        } else {
+            match &document[UPDATE_SOURCE.path()[0]] {
+                Yaml::Hash(_) => Some(&document[UPDATE_SOURCE.path()[0]][UPDATE_SOURCE.label()]),
+                Yaml::BadValue => None,
+                _ => unreachable!("nested group shapes were validated before classification"),
+            }
+        };
+        let (update_source, update_source_origin, update_source_diagnostic) =
+            match update_source_node {
+                Some(Yaml::String(value)) => match UpdateSource::parse(value) {
+                    Some(source) => (source, PreferenceOrigin::Document, None),
+                    None => (
+                        UpdateSource::published_default(),
+                        PreferenceOrigin::DegradedFallback,
+                        Some(Diagnostic::new(
+                            "invalid_value_update_source",
+                            format!("{} must be GitHub or Both", UPDATE_SOURCE.dotted_path),
+                        )),
+                    ),
+                },
+                None | Some(Yaml::BadValue) => (
+                    UpdateSource::published_default(),
+                    PreferenceOrigin::Default,
+                    None,
+                ),
+                _ => (
+                    UpdateSource::published_default(),
+                    PreferenceOrigin::DegradedFallback,
+                    Some(Diagnostic::new(
+                        "invalid_type_update_source",
+                        format!("{} must be a string", UPDATE_SOURCE.dotted_path),
+                    )),
+                ),
+            };
         let (crash_log_scan_settings, scan_diagnostics) =
             if classification == DocumentClassification::LegacyFlat {
                 CrashLogScanSettings::from_legacy_flat_document(&document)
@@ -378,6 +470,7 @@ impl UserSettings {
             Vec::new()
         };
         diagnostics.extend(update_diagnostic);
+        diagnostics.extend(update_source_diagnostic);
         diagnostics.extend(game_setup_diagnostics);
         diagnostics.extend(scan_diagnostics);
         diagnostics.extend(frontend_diagnostics);
@@ -393,6 +486,8 @@ impl UserSettings {
             update_preferences: UpdatePreferences {
                 update_check,
                 update_check_origin,
+                update_source,
+                update_source_origin,
             },
             crash_log_scan_settings,
             game_setup_settings,
@@ -420,6 +515,8 @@ impl UserSettings {
             update_preferences: UpdatePreferences {
                 update_check: UPDATE_CHECK.default().as_bool(),
                 update_check_origin: PreferenceOrigin::Default,
+                update_source: UpdateSource::published_default(),
+                update_source_origin: PreferenceOrigin::Default,
             },
             crash_log_scan_settings: CrashLogScanSettings::published_defaults(),
             game_setup_settings: GameSetupSettings::published_defaults(),
@@ -443,6 +540,8 @@ impl UserSettings {
             update_preferences: UpdatePreferences {
                 update_check: false,
                 update_check_origin: PreferenceOrigin::DegradedFallback,
+                update_source: UpdateSource::published_default(),
+                update_source_origin: PreferenceOrigin::DegradedFallback,
             },
             crash_log_scan_settings: CrashLogScanSettings::degraded_fallbacks(),
             game_setup_settings: GameSetupSettings::degraded_fallbacks(),
@@ -477,6 +576,8 @@ impl UserSettings {
             update_preferences: UpdatePreferences {
                 update_check: false,
                 update_check_origin: PreferenceOrigin::DegradedFallback,
+                update_source: UpdateSource::published_default(),
+                update_source_origin: PreferenceOrigin::DegradedFallback,
             },
             crash_log_scan_settings: CrashLogScanSettings::degraded_fallbacks(),
             game_setup_settings: GameSetupSettings::degraded_fallbacks(),
@@ -514,6 +615,8 @@ impl UserSettings {
             update_preferences: UpdatePreferences {
                 update_check: false,
                 update_check_origin: PreferenceOrigin::DegradedFallback,
+                update_source: UpdateSource::published_default(),
+                update_source_origin: PreferenceOrigin::DegradedFallback,
             },
             crash_log_scan_settings: CrashLogScanSettings::degraded_fallbacks(),
             game_setup_settings: GameSetupSettings::degraded_fallbacks(),

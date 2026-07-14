@@ -4,6 +4,8 @@
 #include <QString>
 #include <QStringList>
 
+#include "core/guiusersettings.h"
+
 class SignalHub;
 class ThreadManager;
 class ScanWorker;
@@ -14,11 +16,12 @@ class ScanController : public QObject {
 public:
     explicit ScanController(SignalHub* signalHub, ThreadManager* threadManager, QObject* parent = nullptr);
 
-    void startScan(const QString& yamlRoot, const QString& yamlData, const QString& game, const QString& gameVersion,
-                   bool showFormIdValues, bool fcxMode, bool simplifyLogs, bool moveUnsolvedLogs,
-                   const QString& unsolvedLogsDestination, int maxConcurrentScans, const QString& customFolder,
-                   const QString& setupGameRoot = {}, const QString& setupDocsRoot = {},
-                   const QString& setupGameExePath = {}, const QString& setupXseLogPath = {},
+    /// Starts one scan from an immutable, revision-approved typed settings value object.
+    ///
+    /// `setupXseLogPath` and `targetedInputs` are runtime-only hints. The value object is copied
+    /// into the worker-thread callback, so no User Settings read occurs after launch begins.
+    void startScan(const QString& yamlRoot, const QString& yamlData,
+                   const classic::gui::CrashLogScanLaunchSettings& settings, const QString& setupXseLogPath = {},
                    const QStringList& targetedInputs = {});
     void cancelScan();
     bool isScanning() const;

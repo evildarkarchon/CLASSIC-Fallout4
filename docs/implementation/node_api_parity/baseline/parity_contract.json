@@ -413,6 +413,16 @@
       "nodeKind": "interface"
     },
     {
+      "id": "user-settings-update-source-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UpdateSource",
+      "rustKind": "enum",
+      "nodeExport": "JsUpdatePreferences",
+      "nodeKind": "interface"
+    },
+    {
       "id": "user-settings-snapshot-type",
       "tier": "tier1",
       "ownerModule": "user_settings",
@@ -494,6 +504,17 @@
       "nodeArity": 1
     },
     {
+      "id": "user-settings-published-defaults",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "published_defaults",
+      "rustKind": "function",
+      "nodeExport": "publishedUserSettingsDefaults",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
       "id": "user-settings-original-bytes-accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
@@ -559,6 +580,36 @@
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
       "rustSymbol": "update_check_origin",
+      "rustKind": "function",
+      "nodeExport": "JsUpdatePreferences",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-source-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "update_source",
+      "rustKind": "function",
+      "nodeExport": "JsUpdatePreferences",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-source-origin-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "update_source_origin",
+      "rustKind": "function",
+      "nodeExport": "JsUpdatePreferences",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-source-token-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "as_str",
       "rustKind": "function",
       "nodeExport": "JsUpdatePreferences",
       "nodeKind": "interface"
@@ -1433,6 +1484,26 @@
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
       "rustSymbol": "with_update_check",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-update-source-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_update_source",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsUpdate",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-auto-switch-after-scan-builder",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_auto_switch_after_scan",
       "rustKind": "function",
       "nodeExport": "JsUserSettingsUpdate",
       "nodeKind": "interface"

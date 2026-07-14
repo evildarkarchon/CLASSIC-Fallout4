@@ -16,6 +16,34 @@ def user_settings_fixture_root() -> Path:
     )
 
 
+def test_user_settings_published_defaults_require_no_filesystem_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Return Rust-owned defaults without consulting an implicit working directory."""
+    settings_path = tmp_path / "CLASSIC Settings.yaml"
+    source_bytes = b"not: [valid"
+    settings_path.write_bytes(source_bytes)
+    monkeypatch.chdir(tmp_path)
+
+    snapshot = classic_user_settings.user_settings_published_defaults()
+
+    assert isinstance(snapshot, classic_user_settings.UserSettingsSnapshot)
+    assert snapshot.source_location == "missing"
+    assert snapshot.source_path is None
+    assert snapshot.classification == "missing"
+    assert snapshot.schema_major is None
+    assert snapshot.schema_minor is None
+    assert snapshot.revision == "missing"
+    assert snapshot.commit_eligibility == "eligible"
+    assert snapshot.diagnostics == []
+    assert snapshot.original_content is None
+    assert snapshot.update_preferences.update_check is True
+    assert snapshot.update_preferences.update_source == "GitHub"
+    assert snapshot.crash_log_scan_settings.move_unsolved_logs is True
+    assert snapshot.frontend_state.preferences.auto_switch_after_scan is True
+    assert settings_path.read_bytes() == source_bytes
+
+
 def test_user_settings_read_only_open(tmp_path: Path) -> None:
     """Expose safe typed preferences and retain unknown source content without writing."""
     fixture_root = user_settings_fixture_root()
@@ -27,6 +55,8 @@ def test_user_settings_read_only_open(tmp_path: Path) -> None:
 
     assert snapshot.update_preferences.update_check is False
     assert snapshot.update_preferences.origin == "degraded_fallback"
+    assert snapshot.update_preferences.update_source == "GitHub"
+    assert snapshot.update_preferences.update_source_origin == "default"
     assert snapshot.source_location == "canonical"
     assert snapshot.source_path == str(settings_path)
     assert snapshot.classification == "current"
@@ -79,6 +109,7 @@ def test_user_settings_read_only_open(tmp_path: Path) -> None:
         assert case_snapshot.classification == classification
         assert case_snapshot.update_preferences.update_check is update_check
         assert case_snapshot.update_preferences.origin == origin
+        assert case_snapshot.update_preferences.update_source == "GitHub"
         assert case_snapshot.commit_eligibility == eligibility
 
     legacy_root = tmp_path / "legacy"
@@ -100,6 +131,8 @@ def test_user_settings_read_only_open(tmp_path: Path) -> None:
     assert missing.revision == "missing"
     assert missing.update_preferences.update_check is True
     assert missing.update_preferences.origin == "default"
+    assert missing.update_preferences.update_source == "GitHub"
+    assert missing.update_preferences.update_source_origin == "default"
     assert missing.original_content is None
 
     invalid_bytes_root = tmp_path / "invalid-bytes"
@@ -111,6 +144,34 @@ def test_user_settings_read_only_open(tmp_path: Path) -> None:
     )
     assert invalid_bytes_snapshot.classification == "malformed"
     assert invalid_bytes_snapshot.original_content == invalid_bytes
+
+
+def test_user_settings_update_source_exposes_typed_value_and_fallback(
+    tmp_path: Path,
+) -> None:
+    """Expose Update Source as a canonical token with independent provenance."""
+    settings_path = tmp_path / "CLASSIC Settings.yaml"
+    settings_path.write_text(
+        'schema_version: "1.0"\nCLASSIC_Settings:\n  Update Source: Both\n',
+        encoding="utf-8",
+    )
+
+    snapshot = classic_user_settings.open_user_settings(str(tmp_path))
+
+    assert snapshot.update_preferences.update_source == "Both"
+    assert snapshot.update_preferences.update_source_origin == "document"
+
+    settings_path.write_text(
+        'schema_version: "1.0"\nCLASSIC_Settings:\n  Update Source: Nexus\n',
+        encoding="utf-8",
+    )
+    invalid = classic_user_settings.open_user_settings(str(tmp_path))
+
+    assert invalid.update_preferences.update_source == "GitHub"
+    assert invalid.update_preferences.update_source_origin == "degraded_fallback"
+    assert [diagnostic.code for diagnostic in invalid.diagnostics] == [
+        "invalid_value_update_source"
+    ]
 
 
 def test_user_settings_frontend_state_exposes_nested_values_and_origins(
@@ -308,6 +369,8 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
 
     accepted_update = classic_user_settings.UserSettingsUpdate()
     accepted_update.set_update_check(False)
+    accepted_update.set_update_source("Both")
+    accepted_update.set_auto_switch_after_scan(False)
     accepted_update.set_managed_game("Fallout4VR")
     accepted_update.set_game_version_selection("VR")
     accepted_update.set_game_root(r"Z:\Games\Fallout 4 VR")
@@ -334,6 +397,8 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
     assert accepted.diagnostics == []
     assert [field.canonical_path for field in accepted.fields] == [
         "/CLASSIC_Settings/Update Check",
+        "/CLASSIC_Settings/Update Source",
+        "/UI/preferences/auto_switch_after_scan",
         "/CLASSIC_Settings/Managed Game",
         "/CLASSIC_Settings/Game Version",
         "/CLASSIC_Settings/Game Folder Path",
@@ -353,6 +418,8 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
         "/CLASSIC_Settings/Max Concurrent Scans",
     ]
     assert [field.value for field in accepted.fields] == [
+        False,
+        "Both",
         False,
         "Fallout4VR",
         "VR",
@@ -378,6 +445,7 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
 
     rejected_update = classic_user_settings.UserSettingsUpdate()
     rejected_update.set_update_check(False)
+    rejected_update.set_update_source("Nexus")
     rejected_update.set_managed_game("Morrowind")
     rejected_update.set_game_version_selection("Future")
     rejected_update.set_max_concurrent_scans(-9)
@@ -390,6 +458,10 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
         (diagnostic.field_path, diagnostic.code)
         for diagnostic in rejected.diagnostics
     ] == [
+        (
+            "/CLASSIC_Settings/Update Source",
+            "invalid_enum_update_source",
+        ),
         (
             "/CLASSIC_Settings/Managed Game",
             "invalid_enum_managed_game",
@@ -416,6 +488,8 @@ def test_accepted_user_settings_update_commit_publishes_preserved_document(
     snapshot = classic_user_settings.open_user_settings(str(tmp_path))
     update = classic_user_settings.UserSettingsUpdate()
     update.set_update_check(False)
+    update.set_update_source("Both")
+    update.set_auto_switch_after_scan(False)
     update.set_unsolved_logs_destination("D:/CLASSIC/Unsolved")
 
     accepted = snapshot.preview_update(update)
@@ -429,6 +503,8 @@ def test_accepted_user_settings_update_commit_publishes_preserved_document(
     committed = classic_user_settings.open_user_settings(str(tmp_path))
     assert committed.revision == outcome.revision
     assert committed.update_preferences.update_check is False
+    assert committed.update_preferences.update_source == "Both"
+    assert committed.frontend_state.preferences.auto_switch_after_scan is False
     assert (
         committed.crash_log_scan_settings.unsolved_logs_destination
         == "D:/CLASSIC/Unsolved"

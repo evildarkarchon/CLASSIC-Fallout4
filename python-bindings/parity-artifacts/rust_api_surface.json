@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T11:46:39.455793+00:00",
+  "generated_at_utc": "2026-07-14T13:00:07.558369+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -15273,7 +15273,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::CommitEligibility",
       "tier": "tier1"
     },
@@ -15302,7 +15302,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::Diagnostic",
       "tier": "tier1"
     },
@@ -15330,7 +15330,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::DocumentClassification",
       "tier": "tier1"
     },
@@ -15539,7 +15539,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::PreferenceOrigin",
       "tier": "tier1"
     },
@@ -15558,7 +15558,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::Revision",
       "tier": "tier1"
     },
@@ -15568,7 +15568,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::SettingsSource",
       "tier": "tier1"
     },
@@ -15596,7 +15596,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::SourceLocation",
       "tier": "tier1"
     },
@@ -15644,7 +15644,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::UpdatePreferences",
       "tier": "tier1"
     },
@@ -15658,12 +15658,31 @@
       "tier": "tier1"
     },
     {
+      "symbol": "UpdateSource",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub enum UpdateSource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UpdateSource",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
+      "source_expr": "document::UpdateSource",
+      "tier": "tier1"
+    },
+    {
       "symbol": "UserSettings",
       "kind": "reexport",
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::UserSettings",
       "tier": "tier1"
     },
@@ -16242,6 +16261,15 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/update.rs",
       "source_decl": "pub fn fields(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub const fn",
       "tier": "tier1"
     },
     {
@@ -16860,6 +16888,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "published_defaults",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn published_defaults()",
+      "tier": "tier1"
+    },
+    {
       "symbol": "results_panel_width",
       "kind": "function",
       "arity": 1,
@@ -17080,6 +17118,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "update_source",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn update_source(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "update_source_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn update_source_origin(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "width",
       "kind": "function",
       "arity": 1,
@@ -17107,6 +17165,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
       "source_decl": "pub fn window_geometry(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_auto_switch_after_scan",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_auto_switch_after_scan(mut self, value: bool)",
       "tier": "tier1"
     },
     {
@@ -17287,6 +17355,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/update.rs",
       "source_decl": "pub fn with_update_check(mut self, value: bool)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_update_source",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_update_source(mut self, value: impl Into<String>)",
       "tier": "tier1"
     },
     {

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T02:34:18.516315+00:00",
+  "generated_at_utc": "2026-07-14T12:58:27.857886+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -3909,11 +3909,11 @@
       "export_path": "GameSetupIntake.__init__",
       "parent_class": "GameSetupIntake",
       "kind": "method",
-      "arity": 6,
+      "arity": 9,
       "owner_module": "scangame",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "def __init__( self, game_id: str, game_version: str = ..., game_root: Path | None = ..., docs_root: Path | None = ..., xse_log_path: Path | None = ..., game_exe_path: Path | None = ..., ) -> None:"
+      "signature": "def __init__( self, game_id: str, game_version: str = ..., game_root: Path | None = ..., docs_root: Path | None = ..., xse_log_path: Path | None = ..., game_exe_path: Path | None = ..., mods_root: Path | None = ..., custom_scan_input: Path | None = ..., papyrus_log_path: Path | None = ..., ) -> None:"
     },
     {
       "module": "classic_scangame",
@@ -8653,6 +8653,26 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "UserSettingsCommitError",
+      "export_path": "UserSettingsCommitError",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsCommitError(RuntimeError):"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsCommitOutcome",
+      "export_path": "UserSettingsCommitOutcome",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsCommitOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "UserSettingsDiagnostic",
       "export_path": "UserSettingsDiagnostic",
       "kind": "class",
@@ -8663,6 +8683,142 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "UserSettingsMigrationApplyOutcome",
+      "export_path": "UserSettingsMigrationApplyOutcome",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsMigrationApplyOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsMigrationChange",
+      "export_path": "UserSettingsMigrationChange",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsMigrationChange:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsMigrationDiagnostic",
+      "export_path": "UserSettingsMigrationDiagnostic",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsMigrationDiagnostic:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsMigrationEndpoint",
+      "export_path": "UserSettingsMigrationEndpoint",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsMigrationEndpoint:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsMigrationError",
+      "export_path": "UserSettingsMigrationError",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsMigrationError(RuntimeError):"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsMigrationPlan",
+      "export_path": "UserSettingsMigrationPlan",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsMigrationPlan:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "apply",
+      "export_path": "UserSettingsMigrationPlan.apply",
+      "parent_class": "UserSettingsMigrationPlan",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def apply(self, classic_root: str) -> UserSettingsMigrationApplyOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "reverse_in_memory",
+      "export_path": "UserSettingsMigrationPlan.reverse_in_memory",
+      "parent_class": "UserSettingsMigrationPlan",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def reverse_in_memory(self) -> UserSettingsMigrationPlan:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsMigrationPlanningOutcome",
+      "export_path": "UserSettingsMigrationPlanningOutcome",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsMigrationPlanningOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsMigrationReceipt",
+      "export_path": "UserSettingsMigrationReceipt",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsMigrationReceipt:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "restore",
+      "export_path": "UserSettingsMigrationReceipt.restore",
+      "parent_class": "UserSettingsMigrationReceipt",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def restore(self, classic_root: str) -> UserSettingsMigrationRestoreOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsMigrationRestoreOutcome",
+      "export_path": "UserSettingsMigrationRestoreOutcome",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsMigrationRestoreOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsSchemaVersion",
+      "export_path": "UserSettingsSchemaVersion",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsSchemaVersion:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "UserSettingsSnapshot",
       "export_path": "UserSettingsSnapshot",
       "kind": "class",
@@ -8670,6 +8826,30 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "class UserSettingsSnapshot:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "plan_migration",
+      "export_path": "UserSettingsSnapshot.plan_migration",
+      "parent_class": "UserSettingsSnapshot",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def plan_migration(self) -> UserSettingsMigrationPlanningOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "preview_bootstrap",
+      "export_path": "UserSettingsSnapshot.preview_bootstrap",
+      "parent_class": "UserSettingsSnapshot",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def preview_bootstrap(self, update: UserSettingsUpdate) -> UserSettingsUpdatePreview:"
     },
     {
       "module": "classic_user_settings",
@@ -8704,6 +8884,18 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "def __init__(self) -> None: ..."
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_auto_switch_after_scan",
+      "export_path": "UserSettingsUpdate.set_auto_switch_after_scan",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_auto_switch_after_scan(self, value: bool) -> None:"
     },
     {
       "module": "classic_user_settings",
@@ -8923,6 +9115,18 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "set_update_source",
+      "export_path": "UserSettingsUpdate.set_update_source",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_update_source(self, value: str) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "UserSettingsUpdateDiagnostic",
       "export_path": "UserSettingsUpdateDiagnostic",
       "kind": "class",
@@ -8953,6 +9157,18 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "commit",
+      "export_path": "UserSettingsUpdatePreview.commit",
+      "parent_class": "UserSettingsUpdatePreview",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def commit(self, classic_root: str) -> UserSettingsCommitOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "WindowGeometry",
       "export_path": "WindowGeometry",
       "kind": "class",
@@ -8971,6 +9187,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "def open_user_settings(classic_root: str) -> UserSettingsSnapshot:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "user_settings_published_defaults",
+      "export_path": "user_settings_published_defaults",
+      "kind": "function",
+      "arity": 0,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def user_settings_published_defaults() -> UserSettingsSnapshot:"
     },
     {
       "module": "classic_version",

@@ -77,11 +77,8 @@ ScanController::ScanController(SignalHub* signalHub, ThreadManager* threadManage
 {
 }
 
-void ScanController::startScan(const QString& yamlRoot, const QString& yamlData, const QString& game,
-                               const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
-                               bool moveUnsolvedLogs, const QString& unsolvedLogsDestination, int maxConcurrentScans,
-                               const QString& customFolder, const QString& setupGameRoot, const QString& setupDocsRoot,
-                               const QString& setupGameExePath, const QString& setupXseLogPath,
+void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
+                               const classic::gui::CrashLogScanLaunchSettings& settings, const QString& setupXseLogPath,
                                const QStringList& targetedInputs)
 {
     if (m_scanning) {
@@ -131,8 +128,8 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
             // portable app, so the application directory is expected to be writable and we do
             // not use a separate per-user/AppData fallback here.
             auto collector = classic::files::log_collector_new_for_scan(
-                classic::toRustString(baseDir), classic::toRustString(yamlData), classic::toRustString(game),
-                classic::toRustString(gameVersion), "", classic::toRustString(customFolder));
+                classic::toRustString(baseDir), classic::toRustString(yamlData), classic::toRustString(settings.game),
+                classic::toRustString(settings.gameVersion), "", classic::toRustString(settings.customScanDirectory));
             auto rustPaths = classic::files::log_collector_collect_all(*collector);
 
             logPathsList.reserve(static_cast<int>(rustPaths.size()));
@@ -178,15 +175,12 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
     }
 
     // Start the worker thread and invoke doScan once the thread is running
-    connect(thread, &QThread::started, worker,
-            [worker, logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode, simplifyLogs,
-             moveUnsolvedLogs, unsolvedLogsDestination, maxConcurrentScans, baseDir, customFolder, targetedMode,
-             setupGameRoot, setupDocsRoot, setupGameExePath, setupXseLogPath, targetedInputs]() {
-                worker->doScan(logPathsList, yamlRoot, yamlData, game, gameVersion, showFormIdValues, fcxMode,
-                               simplifyLogs, moveUnsolvedLogs, unsolvedLogsDestination, maxConcurrentScans, baseDir,
-                               customFolder, setupGameRoot, setupDocsRoot, setupGameExePath, setupXseLogPath,
-                               targetedMode, targetedInputs);
-            });
+    connect(
+        thread, &QThread::started, worker,
+        [worker, logPathsList, yamlRoot, yamlData, settings, baseDir, targetedMode, setupXseLogPath, targetedInputs]() {
+            worker->doScan(logPathsList, yamlRoot, yamlData, settings, baseDir, setupXseLogPath, targetedMode,
+                           targetedInputs);
+        });
 
     m_threadManager->startWorker(QStringLiteral("crash_scan"), thread, worker);
 }

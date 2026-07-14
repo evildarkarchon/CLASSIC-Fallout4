@@ -177,6 +177,23 @@ add_classic_gui_qt_test(classic-gui-test-game-setup-user-settings
 )
 link_classic_gui_rust_bridge(classic-gui-test-game-setup-user-settings)
 
+add_classic_gui_qt_test(classic-gui-test-gui-user-settings
+    test_guiusersettings.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/guiusersettings.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-gui-user-settings)
+
+add_classic_gui_qt_test(classic-gui-test-settings-dialog-behavior
+    test_settingsdialog_behavior.cpp
+    ${CMAKE_SOURCE_DIR}/src/app/settingsdialog.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/guiusersettings.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/signalhub.cpp
+    ${CMAKE_SOURCE_DIR}/src/widgets/toggleswitch.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/yamlupdateworker.cpp
+)
+target_link_libraries(classic-gui-test-settings-dialog-behavior PRIVATE Qt6::Network)
+link_classic_gui_rust_bridge(classic-gui-test-settings-dialog-behavior)
+
 add_classic_gui_qt_test(classic-gui-test-scan-settings-wiring
     test_scan_settings_wiring.cpp
 )
@@ -187,9 +204,17 @@ add_classic_gui_qt_test(classic-gui-test-scan-progress-model
 )
 link_classic_gui_rust_bridge(classic-gui-test-scan-progress-model)
 
+add_classic_gui_qt_test(classic-gui-test-scan-request-builder
+    test_scanrequestbuilder.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/guiusersettings.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrequestbuilder.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-scan-request-builder)
+
 add_classic_gui_qt_test(classic-gui-test-scanworker-cancellation
     test_scanworker_cancellation.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrequestbuilder.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
 )
 link_classic_gui_rust_bridge(classic-gui-test-scanworker-cancellation)

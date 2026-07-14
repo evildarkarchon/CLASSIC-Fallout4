@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-14T11:36:47.965634+00:00`
-- Tier-1 contract rows: **870**
-- Tier-1 matched: **870**
+- Generated: `2026-07-14T12:54:26.245577+00:00`
+- Tier-1 contract rows: **877**
+- Tier-1 matched: **877**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -49,6 +49,7 @@
 | `user-settings-source-type` | `user_settings` | `SettingsSource` | `JsUserSettingsSnapshot` | `matched` |
 | `user-settings-source-location` | `user_settings` | `SourceLocation` | `JsUserSettingsSnapshot` | `matched` |
 | `user-settings-update-preferences-type` | `user_settings` | `UpdatePreferences` | `JsUpdatePreferences` | `matched` |
+| `user-settings-update-source-type` | `user_settings` | `UpdateSource` | `JsUpdatePreferences` | `matched` |
 | `user-settings-snapshot-type` | `user_settings` | `UserSettings` | `JsUserSettingsSnapshot` | `matched` |
 | `user-settings-classification-accessor` | `user_settings` | `classification` | `JsUserSettingsSnapshot` | `matched` |
 | `user-settings-diagnostic-code-accessor` | `user_settings` | `code` | `JsUserSettingsDiagnostic` | `matched` |
@@ -57,6 +58,7 @@
 | `user-settings-location-accessor` | `user_settings` | `location` | `JsUserSettingsSnapshot` | `matched` |
 | `user-settings-diagnostic-message-accessor` | `user_settings` | `message` | `JsUserSettingsDiagnostic` | `matched` |
 | `user-settings-open` | `user_settings` | `open` | `openUserSettings` | `matched` |
+| `user-settings-published-defaults` | `user_settings` | `published_defaults` | `publishedUserSettingsDefaults` | `matched` |
 | `user-settings-original-bytes-accessor` | `user_settings` | `original_bytes` | `JsUserSettingsSnapshot` | `matched` |
 | `user-settings-path-accessor` | `user_settings` | `path` | `JsUserSettingsSnapshot` | `matched` |
 | `user-settings-revision-accessor` | `user_settings` | `revision` | `JsUserSettingsSnapshot` | `matched` |
@@ -64,6 +66,9 @@
 | `user-settings-source-accessor` | `user_settings` | `source` | `JsUserSettingsSnapshot` | `matched` |
 | `user-settings-update-check-accessor` | `user_settings` | `update_check` | `JsUpdatePreferences` | `matched` |
 | `user-settings-update-check-origin-accessor` | `user_settings` | `update_check_origin` | `JsUpdatePreferences` | `matched` |
+| `user-settings-update-source-accessor` | `user_settings` | `update_source` | `JsUpdatePreferences` | `matched` |
+| `user-settings-update-source-origin-accessor` | `user_settings` | `update_source_origin` | `JsUpdatePreferences` | `matched` |
+| `user-settings-update-source-token-accessor` | `user_settings` | `as_str` | `JsUpdatePreferences` | `matched` |
 | `user-settings-update-preferences-accessor` | `user_settings` | `update_preferences` | `JsUserSettingsSnapshot` | `matched` |
 | `user-settings-crash-log-scan-settings-type` | `user_settings` | `CrashLogScanSettings` | `JsCrashLogScanSettings` | `matched` |
 | `user-settings-game-version-selection-type` | `user_settings` | `GameVersionSelection` | `JsCrashLogScanSettings` | `matched` |
@@ -151,6 +156,8 @@
 | `user-settings-update-preview-type` | `user_settings` | `UserSettingsUpdatePreview` | `JsUserSettingsUpdatePreview` | `matched` |
 | `user-settings-update-new` | `user_settings` | `new` | `JsUserSettingsUpdate` | `matched` |
 | `user-settings-update-check-builder` | `user_settings` | `with_update_check` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-update-source-builder` | `user_settings` | `with_update_source` | `JsUserSettingsUpdate` | `matched` |
+| `user-settings-auto-switch-after-scan-builder` | `user_settings` | `with_auto_switch_after_scan` | `JsUserSettingsUpdate` | `matched` |
 | `user-settings-game-version-selection-builder` | `user_settings` | `with_game_version_selection` | `JsUserSettingsUpdate` | `matched` |
 | `user-settings-managed-game-builder` | `user_settings` | `with_managed_game` | `JsUserSettingsUpdate` | `matched` |
 | `user-settings-game-root-builder` | `user_settings` | `with_game_root` | `JsUserSettingsUpdate` | `matched` |

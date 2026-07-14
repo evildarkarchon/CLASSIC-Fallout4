@@ -1,7 +1,7 @@
 use crate::game_setup_settings::parse_managed_game;
 use crate::preference::is_absolute_user_path;
 use crate::scan_settings::valid_formid_databases;
-use crate::{CommitEligibility, GameVersionSelection, Revision, UserSettings};
+use crate::{CommitEligibility, GameVersionSelection, Revision, UpdateSource, UserSettings};
 use classic_shared_core::GameId;
 use std::collections::BTreeMap;
 
@@ -12,6 +12,8 @@ use std::collections::BTreeMap;
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct UserSettingsUpdate {
     update_check: Option<bool>,
+    update_source: Option<String>,
+    auto_switch_after_scan: Option<bool>,
     managed_game: Option<String>,
     game_version_selection: Option<String>,
     game_root: Option<Option<String>>,
@@ -40,6 +42,18 @@ impl UserSettingsUpdate {
     /// Requests a new Update Check preference.
     pub fn with_update_check(mut self, value: bool) -> Self {
         self.update_check = Some(value);
+        self
+    }
+
+    /// Requests a canonical or legacy-compatible update-source selection.
+    pub fn with_update_source(mut self, value: impl Into<String>) -> Self {
+        self.update_source = Some(value.into());
+        self
+    }
+
+    /// Requests whether the GUI should switch to Results after a completed scan.
+    pub fn with_auto_switch_after_scan(mut self, value: bool) -> Self {
+        self.auto_switch_after_scan = Some(value);
         self
     }
 
@@ -157,6 +171,10 @@ impl UserSettingsUpdate {
 pub enum UserSettingsUpdateField {
     /// `CLASSIC_Settings.Update Check`.
     UpdateCheck(bool),
+    /// `CLASSIC_Settings.Update Source`.
+    UpdateSource(UpdateSource),
+    /// `UI.preferences.auto_switch_after_scan`.
+    AutoSwitchAfterScan(bool),
     /// `CLASSIC_Settings.Managed Game`.
     ManagedGame(GameId),
     /// `CLASSIC_Settings.Game Version`.
@@ -208,6 +226,8 @@ impl UserSettingsUpdateField {
     fn canonical_paths(&self) -> (&'static str, &'static str) {
         match self {
             Self::UpdateCheck(_) => metadata_paths(UPDATE_CHECK),
+            Self::UpdateSource(_) => metadata_paths(UPDATE_SOURCE),
+            Self::AutoSwitchAfterScan(_) => metadata_paths(AUTO_SWITCH_AFTER_SCAN),
             Self::ManagedGame(_) => metadata_paths(MANAGED_GAME),
             Self::GameVersionSelection(_) => metadata_paths(GAME_VERSION),
             Self::GameRoot(_) => metadata_paths(GAME_FOLDER_PATH),
@@ -362,6 +382,19 @@ impl UserSettings {
 
         if let Some(value) = update.update_check {
             fields.push(UserSettingsUpdateField::UpdateCheck(value));
+        }
+        if let Some(value) = update.update_source {
+            match UpdateSource::parse(&value) {
+                Some(value) => fields.push(UserSettingsUpdateField::UpdateSource(value)),
+                None => diagnostics.push(UpdateDiagnostic::for_field(
+                    UPDATE_SOURCE.pointer_path,
+                    "invalid_enum_update_source",
+                    "Update Source must be GitHub or Both",
+                )),
+            }
+        }
+        if let Some(value) = update.auto_switch_after_scan {
+            fields.push(UserSettingsUpdateField::AutoSwitchAfterScan(value));
         }
         if let Some(value) = update.managed_game {
             match parse_managed_game(&value) {
@@ -545,8 +578,9 @@ fn valid_optional_absolute_path(path: Option<&str>) -> bool {
     is_absolute_user_path(path)
 }
 use crate::default_settings::{
-    DOCUMENTS_FOLDER_PATH, FCX_MODE, FORMID_DATABASES, GAME_EXE_PATH, GAME_FOLDER_PATH,
-    GAME_VERSION, INI_FOLDER_PATH, MANAGED_GAME, MAX_CONCURRENT_SCANS, MODS_FOLDER_PATH,
-    MOVE_UNSOLVED_LOGS, PAPYRUS_LOG_PATH, SCAN_CUSTOM_PATH, SHOW_FORMID_VALUES, SHOW_STATISTICS,
-    SIMPLIFY_LOGS, SettingMetadata, UNSOLVED_LOGS_DESTINATION, UPDATE_CHECK,
+    AUTO_SWITCH_AFTER_SCAN, DOCUMENTS_FOLDER_PATH, FCX_MODE, FORMID_DATABASES, GAME_EXE_PATH,
+    GAME_FOLDER_PATH, GAME_VERSION, INI_FOLDER_PATH, MANAGED_GAME, MAX_CONCURRENT_SCANS,
+    MODS_FOLDER_PATH, MOVE_UNSOLVED_LOGS, PAPYRUS_LOG_PATH, SCAN_CUSTOM_PATH, SHOW_FORMID_VALUES,
+    SHOW_STATISTICS, SIMPLIFY_LOGS, SettingMetadata, UNSOLVED_LOGS_DESTINATION, UPDATE_CHECK,
+    UPDATE_SOURCE,
 };

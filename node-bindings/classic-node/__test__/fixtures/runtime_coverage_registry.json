@@ -11,8 +11,8 @@
         "ownerModule": "user_settings",
         "tier": "tier1"
       },
-      "contractCount": 163,
-      "contractIdsHash": "2080a98a8982aa68a7a98d85af8cd3afb321e71bb732437ae4c968f768feefdd",
+      "contractCount": 170,
+      "contractIdsHash": "cbea9a907c82bb5c4473e495f91ff2a72c7dd4cdf8e5f7a908ddb918ce250a3c",
       "bindingIdentifiers": [
         "JsFrontendPreferences",
         "JsFrontendState",
@@ -30,6 +30,7 @@
         "commitUserSettingsBootstrap",
         "commitUserSettingsUpdate",
         "planUserSettingsMigration",
+        "publishedUserSettingsDefaults",
         "previewUserSettingsBootstrap",
         "reverseUserSettingsMigrationPlan"
       ],
@@ -39,7 +40,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path. Migration planning coverage verifies current, legacy-flat, and unsupported outcomes, reviewable transition DTOs, exact byte payloads, and the non-writing planning path. Migration reversal coverage verifies the proposed-content revision, swapped endpoints and byte payloads, reversed/inverted change rows, operation after source removal, and an exact involutive round trip. User Settings commit coverage verifies accepted publication, structured stale-revision conflicts and validation rejection without writes, and stable NAPI error codes for operational failures. Explicit bootstrap coverage verifies that ordinary update preview rejects a missing document, bootstrap preview remains read-only, and only bootstrap commit publishes the complete Rust-owned defaults document."
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path. The user-settings-published-defaults case verifies the filesystem-free Rust defaults projection through the public Node snapshot shape. Migration planning coverage verifies current, legacy-flat, and unsupported outcomes, reviewable transition DTOs, exact byte payloads, and the non-writing planning path. Migration reversal coverage verifies the proposed-content revision, swapped endpoints and byte payloads, reversed/inverted change rows, operation after source removal, and an exact involutive round trip. User Settings commit coverage verifies accepted publication, structured stale-revision conflicts and validation rejection without writes, and stable NAPI error codes for operational failures. Explicit bootstrap coverage verifies that ordinary update preview rejects a missing document, bootstrap preview remains read-only, and only bootstrap commit publishes the complete Rust-owned defaults document."
     },
     {
       "coverageId": "node-tier1-scanlog",

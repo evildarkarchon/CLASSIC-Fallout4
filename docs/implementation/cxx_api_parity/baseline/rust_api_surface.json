@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T11:21:55Z",
+  "generated_at_utc": "2026-07-14T12:47:59Z",
   "entries": [
     {
       "id": "b0d609f9ed78e468",
@@ -5440,6 +5440,18 @@
       }
     },
     {
+      "id": "c420901386dcb35c",
+      "rustSymbol": "user_settings_gui_published_defaults",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [],
+        "returnType": "GuiSettingsSnapshotDto"
+      }
+    },
+    {
       "id": "684181a2023cb151",
       "rustSymbol": "user_settings_migration_apply_outcome",
       "kind": "function",
@@ -5505,6 +5517,23 @@
           }
         ],
         "returnType": "GameSetupSettingsDto"
+      }
+    },
+    {
+      "id": "99865408ab0b4232",
+      "rustSymbol": "user_settings_open_gui_settings",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          }
+        ],
+        "returnType": "GuiSettingsSnapshotDto"
       }
     },
     {
@@ -6331,6 +6360,32 @@
       ]
     },
     {
+      "id": "6d15af291eab196a",
+      "rustSymbol": "GuiSettingsSnapshotDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "update_preferences",
+          "type": "UpdatePreferencesDto"
+        },
+        {
+          "name": "crash_log_scan",
+          "type": "CrashLogScanSettingsDto"
+        },
+        {
+          "name": "game_setup",
+          "type": "GameSetupSettingsDto"
+        },
+        {
+          "name": "frontend_state",
+          "type": "FrontendStateDto"
+        }
+      ]
+    },
+    {
       "id": "310d1c205c55a783",
       "rustSymbol": "SettingsCacheStats",
       "kind": "struct",
@@ -6422,6 +6477,14 @@
         },
         {
           "name": "update_check_origin",
+          "type": "String"
+        },
+        {
+          "name": "update_source",
+          "type": "String"
+        },
+        {
+          "name": "update_source_origin",
           "type": "String"
         },
         {
@@ -6804,6 +6867,22 @@
         },
         {
           "name": "update_check",
+          "type": "bool"
+        },
+        {
+          "name": "has_update_source",
+          "type": "bool"
+        },
+        {
+          "name": "update_source",
+          "type": "String"
+        },
+        {
+          "name": "has_auto_switch_after_scan",
+          "type": "bool"
+        },
+        {
+          "name": "auto_switch_after_scan",
           "type": "bool"
         },
         {

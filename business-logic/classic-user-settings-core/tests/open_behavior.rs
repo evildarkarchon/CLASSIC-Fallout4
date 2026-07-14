@@ -3,7 +3,7 @@
 use classic_settings_core::parse_yaml_content;
 use classic_user_settings_core::{
     CommitEligibility, DocumentClassification, PreferenceOrigin, Revision, SourceLocation,
-    UserSettings,
+    UpdateSource, UserSettings,
 };
 use std::path::{Path, PathBuf};
 
@@ -35,6 +35,49 @@ fn open_missing_document_uses_published_defaults_without_creating_files() {
     assert!(settings.diagnostics().is_empty());
     assert!(!root.path().join("CLASSIC Settings.yaml").exists());
     assert!(!root.path().join("CLASSIC Data").exists());
+}
+
+#[test]
+fn published_defaults_match_the_missing_projection_without_filesystem_access() {
+    let defaults = UserSettings::published_defaults();
+
+    assert_eq!(defaults.source().location(), SourceLocation::Missing);
+    assert_eq!(defaults.classification(), DocumentClassification::Missing);
+    assert_eq!(defaults.revision(), &Revision::Missing);
+    assert!(defaults.update_preferences().update_check());
+    assert_eq!(
+        defaults.update_preferences().update_source(),
+        UpdateSource::GitHub
+    );
+    assert!(defaults.crash_log_scan_settings().move_unsolved_logs());
+    assert!(
+        defaults
+            .frontend_state()
+            .preferences()
+            .auto_switch_after_scan()
+    );
+    assert_eq!(defaults.commit_eligibility(), CommitEligibility::Eligible);
+}
+
+#[test]
+fn canonical_update_source_is_exposed_as_a_typed_preference() {
+    let root = tempfile::tempdir().unwrap();
+    install_fixture(
+        root.path(),
+        Path::new("CLASSIC Settings.yaml"),
+        "canonical_current_nested.yaml",
+    );
+
+    let settings = UserSettings::open(root.path());
+
+    assert_eq!(
+        settings.update_preferences().update_source(),
+        UpdateSource::GitHub
+    );
+    assert_eq!(
+        settings.update_preferences().update_source_origin(),
+        PreferenceOrigin::Document
+    );
 }
 
 #[test]

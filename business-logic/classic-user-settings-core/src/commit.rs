@@ -195,12 +195,14 @@ fn patch_accepted_fields(
 fn field_yaml_value(field: &UserSettingsUpdateField) -> Yaml {
     match field {
         UserSettingsUpdateField::UpdateCheck(value)
+        | UserSettingsUpdateField::AutoSwitchAfterScan(value)
         | UserSettingsUpdateField::FcxMode(value)
         | UserSettingsUpdateField::SimplifyLogs(value)
         | UserSettingsUpdateField::ShowStatistics(value)
         | UserSettingsUpdateField::FormIdValueLookup(value)
         | UserSettingsUpdateField::MoveUnsolvedLogs(value) => Yaml::Boolean(*value),
         UserSettingsUpdateField::ManagedGame(value) => Yaml::String(value.as_str().to_string()),
+        UserSettingsUpdateField::UpdateSource(value) => Yaml::String(value.as_str().to_string()),
         UserSettingsUpdateField::GameVersionSelection(value) => {
             Yaml::String(value.as_str().to_string())
         }

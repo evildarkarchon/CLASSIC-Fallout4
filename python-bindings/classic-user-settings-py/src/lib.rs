@@ -41,7 +41,7 @@ pub struct PyUserSettingsDiagnostic {
     message: String,
 }
 
-/// Update-related User Settings consumed by update-check policy.
+/// Update-related User Settings consumed by update checks and compatibility adapters.
 #[pyclass(name = "UpdatePreferences", frozen, skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyUpdatePreferences {
@@ -51,6 +51,12 @@ pub struct PyUpdatePreferences {
     /// Provenance token: `document`, `default`, or `degraded_fallback`.
     #[pyo3(get)]
     origin: String,
+    /// Canonical compatibility source token: `GitHub` or `Both`.
+    #[pyo3(get)]
+    update_source: String,
+    /// Provenance of the compatibility update-source selection.
+    #[pyo3(get)]
+    update_source_origin: String,
 }
 
 /// Typed Crash Log Scan settings projected from User Settings.
@@ -296,6 +302,16 @@ impl PyUserSettingsUpdate {
     /// Requests a new Update Check preference.
     fn set_update_check(&mut self, value: bool) {
         self.inner = std::mem::take(&mut self.inner).with_update_check(value);
+    }
+
+    /// Requests a canonical or legacy-compatible Update Source selection.
+    fn set_update_source(&mut self, value: String) {
+        self.inner = std::mem::take(&mut self.inner).with_update_source(value);
+    }
+
+    /// Requests whether the GUI should switch to Results after a completed scan.
+    fn set_auto_switch_after_scan(&mut self, value: bool) {
+        self.inner = std::mem::take(&mut self.inner).with_auto_switch_after_scan(value);
     }
 
     /// Requests a managed-game identifier for validation with the complete preview.
@@ -822,7 +838,17 @@ impl PyUserSettingsSnapshot {
 /// either supported source document.
 #[pyfunction]
 pub fn open_user_settings(classic_root: String) -> PyUserSettingsSnapshot {
-    let settings = UserSettings::open(classic_root);
+    user_settings_snapshot_to_py(UserSettings::open(classic_root))
+}
+
+/// Returns the Rust-owned published defaults without consulting the filesystem.
+#[pyfunction]
+pub fn user_settings_published_defaults() -> PyUserSettingsSnapshot {
+    user_settings_snapshot_to_py(UserSettings::published_defaults())
+}
+
+/// Converts one core User Settings snapshot into the public Python-owned shape.
+fn user_settings_snapshot_to_py(settings: UserSettings) -> PyUserSettingsSnapshot {
     let (schema_major, schema_minor) = settings
         .schema_version()
         .map_or((None, None), |(major, minor)| (Some(major), Some(minor)));
@@ -832,6 +858,15 @@ pub fn open_user_settings(classic_root: String) -> PyUserSettingsSnapshot {
             update_check: settings.update_preferences().update_check(),
             origin: preference_origin_token(settings.update_preferences().update_check_origin())
                 .to_string(),
+            update_source: settings
+                .update_preferences()
+                .update_source()
+                .as_str()
+                .to_string(),
+            update_source_origin: preference_origin_token(
+                settings.update_preferences().update_source_origin(),
+            )
+            .to_string(),
         },
         crash_log_scan_settings: crash_log_scan_settings_to_py(settings.crash_log_scan_settings()),
         game_setup_settings: game_setup_settings_to_py(settings.game_setup_settings()),
@@ -1202,6 +1237,7 @@ fn migration_change_kind_token(kind: MigrationChangeKind) -> &'static str {
 fn update_field_to_py(field: &UserSettingsUpdateField) -> PyUserSettingsUpdateField {
     let value = match field {
         UserSettingsUpdateField::UpdateCheck(value)
+        | UserSettingsUpdateField::AutoSwitchAfterScan(value)
         | UserSettingsUpdateField::FcxMode(value)
         | UserSettingsUpdateField::SimplifyLogs(value)
         | UserSettingsUpdateField::ShowStatistics(value)
@@ -1210,6 +1246,9 @@ fn update_field_to_py(field: &UserSettingsUpdateField) -> PyUserSettingsUpdateFi
             PyUserSettingsUpdateValue::Boolean(*value)
         }
         UserSettingsUpdateField::GameVersionSelection(value) => {
+            PyUserSettingsUpdateValue::String(value.as_str().to_string())
+        }
+        UserSettingsUpdateField::UpdateSource(value) => {
             PyUserSettingsUpdateValue::String(value.as_str().to_string())
         }
         UserSettingsUpdateField::ManagedGame(value) => {
@@ -1338,5 +1377,6 @@ fn classic_user_settings(module: &Bound<'_, PyModule>) -> PyResult<()> {
         module.py().get_type::<UserSettingsMigrationError>(),
     )?;
     module.add_function(wrap_pyfunction!(open_user_settings, module)?)?;
+    module.add_function(wrap_pyfunction!(user_settings_published_defaults, module)?)?;
     Ok(())
 }

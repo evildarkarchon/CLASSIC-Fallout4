@@ -2,7 +2,7 @@
 
 use classic_shared_core::GameId;
 use classic_user_settings_core::{
-    GameVersionSelection, UserSettings, UserSettingsUpdate, UserSettingsUpdateField,
+    GameVersionSelection, UpdateSource, UserSettings, UserSettingsUpdate, UserSettingsUpdateField,
     UserSettingsUpdatePreview,
 };
 use std::collections::BTreeMap;
@@ -127,6 +127,45 @@ fn preview_accepts_a_multi_field_update_without_changing_unknown_entries_or_snap
         std::fs::metadata(&path).unwrap().modified().unwrap(),
         modified_before
     );
+}
+
+#[test]
+fn preview_accepts_a_typed_update_source_without_persisting_it() {
+    let root = tempfile::tempdir().unwrap();
+    let path = install_fixture(root.path(), "canonical_current_nested.yaml");
+    let bytes_before = std::fs::read(&path).unwrap();
+    let settings = UserSettings::open(root.path());
+
+    let preview = settings.preview_update(UserSettingsUpdate::new().with_update_source("Both"));
+
+    let UserSettingsUpdatePreview::Accepted(accepted) = preview else {
+        panic!("a supported update source should produce an accepted preview");
+    };
+    assert_eq!(
+        accepted.fields(),
+        &[UserSettingsUpdateField::UpdateSource(UpdateSource::Both)]
+    );
+    assert_eq!(std::fs::read(path).unwrap(), bytes_before);
+}
+
+#[test]
+fn preview_accepts_the_frontend_auto_switch_preference_without_persisting_it() {
+    let root = tempfile::tempdir().unwrap();
+    let path = install_fixture(root.path(), "canonical_current_nested.yaml");
+    let bytes_before = std::fs::read(&path).unwrap();
+    let settings = UserSettings::open(root.path());
+
+    let preview =
+        settings.preview_update(UserSettingsUpdate::new().with_auto_switch_after_scan(false));
+
+    let UserSettingsUpdatePreview::Accepted(accepted) = preview else {
+        panic!("the frontend auto-switch preference should produce an accepted preview");
+    };
+    assert_eq!(
+        accepted.fields(),
+        &[UserSettingsUpdateField::AutoSwitchAfterScan(false)]
+    );
+    assert_eq!(std::fs::read(path).unwrap(), bytes_before);
 }
 
 #[test]

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T11:46:39.469739+00:00",
+  "generated_at_utc": "2026-07-14T13:00:07.570146+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -8887,6 +8887,18 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "set_auto_switch_after_scan",
+      "export_path": "UserSettingsUpdate.set_auto_switch_after_scan",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_auto_switch_after_scan(self, value: bool) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "set_custom_scan_input",
       "export_path": "UserSettingsUpdate.set_custom_scan_input",
       "parent_class": "UserSettingsUpdate",
@@ -9103,6 +9115,18 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "set_update_source",
+      "export_path": "UserSettingsUpdate.set_update_source",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_update_source(self, value: str) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "UserSettingsUpdateDiagnostic",
       "export_path": "UserSettingsUpdateDiagnostic",
       "kind": "class",
@@ -9163,6 +9187,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "def open_user_settings(classic_root: str) -> UserSettingsSnapshot:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "user_settings_published_defaults",
+      "export_path": "user_settings_published_defaults",
+      "kind": "function",
+      "arity": 0,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def user_settings_published_defaults() -> UserSettingsSnapshot:"
     },
     {
       "module": "classic_version",

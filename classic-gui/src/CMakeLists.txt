@@ -34,6 +34,8 @@ qt_add_executable(ClassicGui WIN32
     core/gamepathutils.h
     core/gamesetupusersettings.h
     core/gamesetupusersettings.cpp
+    core/guiusersettings.h
+    core/guiusersettings.cpp
     core/reportpathkey.h
     core/reportpathkey.cpp
 
@@ -42,6 +44,8 @@ qt_add_executable(ClassicGui WIN32
     workers/scanprogressmodel.cpp
     workers/scanworker.h
     workers/scanworker.cpp
+    workers/scanrequestbuilder.h
+    workers/scanrequestbuilder.cpp
     workers/gamefilesworker.h
     workers/gamefilesworker.cpp
     workers/papyrusworker.h

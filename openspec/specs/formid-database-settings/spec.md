@@ -2,13 +2,13 @@
 
 ## Purpose
 
-TBD
+Define how the native GUI edits per-game additional FormID database paths and carries the accepted typed values into Crash Log Scan startup.
 
 ## Requirements
 
 ### Requirement: Display additional FormID databases per game
 
-The GUI Settings dialog Paths tab SHALL display an "Additional FormID Databases" list of user-managed database paths for the active game, loaded from the game-specific YAML key `CLASSIC_Settings.FormID Databases.<game>`. The built-in Main database is always included at scan time and SHALL NOT appear in this user-managed list.
+The GUI Settings dialog Paths tab SHALL display an "Additional FormID Databases" list of user-managed database paths for the active game, loaded from the typed Crash Log Scan settings group whose canonical persistence path is `CLASSIC_Settings.FormID Databases.<game>`. The built-in Main database is always included at scan time and SHALL NOT appear in this user-managed list.
 
 #### Scenario: List is populated from the active game's settings on open
 
@@ -72,9 +72,9 @@ The "Remove" action SHALL delete the currently selected list entry. When no entr
 - **WHEN** the user activates Remove with no list entry selected
 - **THEN** the list is unchanged
 
-### Requirement: Persist the per-game database list on save
+### Requirement: Persist the per-game database list on accept
 
-On save, the dialog SHALL write the current list entries to the game-specific YAML key `CLASSIC_Settings.FormID Databases.<game>` as a sequence of path strings, so the same list is restored on the next open for that game.
+On accept, the dialog SHALL include the complete per-game database map in the same revision-anchored typed User Settings Update as every other selected dialog change. The update SHALL persist the active game's current entries at the canonical key `CLASSIC_Settings.FormID Databases.<game>` as a sequence of path strings, preserve other games' lists, and restore the same list on the next open for that game.
 
 #### Scenario: Save round-trips added databases
 
@@ -85,6 +85,40 @@ On save, the dialog SHALL write the current list entries to the game-specific YA
 
 - **WHEN** the user removes all additional databases, saves, and reopens the dialog for the same game
 - **THEN** the additional databases list is empty
+
+#### Scenario: Cancel does not persist list edits
+
+- **WHEN** the user changes the additional database list and cancels the Settings dialog
+- **THEN** no User Settings Update is committed and the persisted per-game lists are unchanged
+
+#### Scenario: Another invalid selected setting rejects the complete update
+
+- **WHEN** the database list is changed but another field in the same dialog update fails validation
+- **THEN** no requested field is committed, including the database list
+
+#### Scenario: Concurrent settings change is not overwritten
+
+- **WHEN** User Settings changes after the dialog snapshot was opened and the user accepts a database-list edit
+- **THEN** the dialog reports a revision conflict and the newer persisted document is left unchanged
+
+### Requirement: Carry accepted FormID paths into scan startup
+
+The GUI SHALL select the effective game's FormID database paths from its accepted typed settings snapshot and pass them to Crash Log Scan startup as immutable launch values. Scan launch SHALL NOT reread User Settings or interpret the canonical YAML key through generic settings operations.
+
+#### Scenario: Accepted paths reach the scan request
+
+- **WHEN** a Crash Log Scan starts after a settings snapshot containing additional databases has been accepted
+- **THEN** the selected game's paths are present in `ScanRunRequestDto.formid_database_paths` in their configured order
+
+#### Scenario: Other games remain excluded from the run
+
+- **WHEN** the cohesive settings snapshot contains FormID database lists for multiple games
+- **THEN** the scan request contains only the effective game's user-managed paths
+
+#### Scenario: Scan workers use the launch snapshot
+
+- **WHEN** the controller dispatches a Crash Log Scan to a worker
+- **THEN** the worker receives the immutable typed launch values and does not reopen the User Settings document
 
 ### Requirement: Add dialog file filter and title
 

@@ -3745,12 +3745,16 @@ export interface JsUpdateCheckResult {
   latestRelease: JsGithubRelease
 }
 
-/** Update-related User Settings consumed by update-check policy. */
+/** Update-related User Settings consumed by update-check policy and compatibility adapters. */
 export interface JsUpdatePreferences {
   /** Whether first-party update checks are enabled after safe fallback policy. */
   updateCheck: boolean
   /** Provenance token: `document`, `default`, or `degradedFallback`. */
   origin: string
+  /** Canonical compatibility update-source token: `GitHub` or `Both`. */
+  updateSource: string
+  /** Provenance token for the compatibility update source. */
+  updateSourceOrigin: string
 }
 
 /** Structured outcome of explicitly committing a previously accepted User Settings Update. */
@@ -3899,6 +3903,10 @@ export interface JsUserSettingsSnapshot {
 export interface JsUserSettingsUpdate {
   /** Requested Update Check preference. */
   updateCheck?: boolean
+  /** Requested canonical or legacy-compatible update-source selection. */
+  updateSource?: string
+  /** Requested automatic switch to Results after a completed scan. */
+  autoSwitchAfterScan?: boolean
   /** Requested managed game. */
   managedGame?: JsGameId
   /** Requested canonical game-version selection. */
@@ -4550,6 +4558,12 @@ export declare function processLogWithYamlContent(logPath: string, mainContent: 
 
 /** Process a batch of strings with normalization (trim, lowercase, collapse whitespace). */
 export declare function processStringBatch(values: Array<string>): Array<string>
+
+/**
+ * Returns the Rust-owned published User Settings defaults without accessing
+ * the filesystem or creating a settings document.
+ */
+export declare function publishedUserSettingsDefaults(): JsUserSettingsSnapshot
 
 /**
  * Query Windows registry for a game installation path.

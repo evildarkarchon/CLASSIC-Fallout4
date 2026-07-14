@@ -5,6 +5,7 @@
 #include <QStringList>
 
 #include "classic_cxx_bridge/scanner.h"
+#include "core/guiusersettings.h"
 #include "rust/cxx.h"
 
 #include <atomic>
@@ -15,13 +16,15 @@ class ScanWorker : public QObject {
 public:
     explicit ScanWorker(QObject* parent = nullptr);
 
+    /// Executes one Crash Log Scan from an immutable, revision-approved typed settings value object.
+    ///
+    /// This method runs synchronously on the worker thread, consumes runtime paths separately from
+    /// User Settings, and reports completion or failure through Qt signals without reopening settings.
+    void doScan(const QStringList& logPaths, const QString& yamlRoot, const QString& yamlData,
+                const classic::gui::CrashLogScanLaunchSettings& settings, const QString& baseDirectory,
+                const QString& setupXseLogPath, bool targetedMode, const QStringList& targetedInputs);
+
 public slots:
-    void doScan(const QStringList& logPaths, const QString& yamlRoot, const QString& yamlData, const QString& game,
-                const QString& gameVersion, bool showFormIdValues, bool fcxMode, bool simplifyLogs,
-                bool moveUnsolvedLogs, const QString& unsolvedLogsDestination, int maxConcurrentScans,
-                const QString& baseDirectory, const QString& customFolder, const QString& setupGameRoot,
-                const QString& setupDocsRoot, const QString& setupGameExePath, const QString& setupXseLogPath,
-                bool targetedMode, const QStringList& targetedInputs);
     void requestCancel();
 
 signals:

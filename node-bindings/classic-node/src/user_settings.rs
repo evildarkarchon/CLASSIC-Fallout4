@@ -21,13 +21,17 @@ pub struct JsUserSettingsDiagnostic {
     pub message: String,
 }
 
-/// Update-related User Settings consumed by update-check policy.
+/// Update-related User Settings consumed by update-check policy and compatibility adapters.
 #[napi(object)]
 pub struct JsUpdatePreferences {
     /// Whether first-party update checks are enabled after safe fallback policy.
     pub update_check: bool,
     /// Provenance token: `document`, `default`, or `degradedFallback`.
     pub origin: String,
+    /// Canonical compatibility update-source token: `GitHub` or `Both`.
+    pub update_source: String,
+    /// Provenance token for the compatibility update source.
+    pub update_source_origin: String,
 }
 
 /// Typed Crash Log Scan settings together with per-field provenance.
@@ -192,6 +196,10 @@ pub struct JsFrontendState {
 pub struct JsUserSettingsUpdate {
     /// Requested Update Check preference.
     pub update_check: Option<bool>,
+    /// Requested canonical or legacy-compatible update-source selection.
+    pub update_source: Option<String>,
+    /// Requested automatic switch to Results after a completed scan.
+    pub auto_switch_after_scan: Option<bool>,
     /// Requested managed game.
     pub managed_game: Option<JsGameId>,
     /// Requested canonical game-version selection.
@@ -496,6 +504,19 @@ pub struct JsUserSettingsSnapshot {
 #[napi]
 pub fn open_user_settings(classic_root: String) -> JsUserSettingsSnapshot {
     let settings = UserSettings::open(classic_root);
+    user_settings_snapshot_to_js(&settings)
+}
+
+/// Returns the Rust-owned published User Settings defaults without accessing
+/// the filesystem or creating a settings document.
+#[napi]
+pub fn published_user_settings_defaults() -> JsUserSettingsSnapshot {
+    let settings = UserSettings::published_defaults();
+    user_settings_snapshot_to_js(&settings)
+}
+
+/// Maps one core snapshot into the stable JavaScript snapshot shape.
+fn user_settings_snapshot_to_js(settings: &UserSettings) -> JsUserSettingsSnapshot {
     let (schema_major, schema_minor) = settings
         .schema_version()
         .map_or((None, None), |(major, minor)| (Some(major), Some(minor)));
@@ -505,10 +526,19 @@ pub fn open_user_settings(classic_root: String) -> JsUserSettingsSnapshot {
             update_check: settings.update_preferences().update_check(),
             origin: preference_origin_token(settings.update_preferences().update_check_origin())
                 .to_string(),
+            update_source: settings
+                .update_preferences()
+                .update_source()
+                .as_str()
+                .to_string(),
+            update_source_origin: preference_origin_token(
+                settings.update_preferences().update_source_origin(),
+            )
+            .to_string(),
         },
-        crash_log_scan_settings: crash_log_scan_settings_to_js(&settings),
-        game_setup_settings: game_setup_settings_to_js(&settings),
-        frontend_state: frontend_state_to_js(&settings),
+        crash_log_scan_settings: crash_log_scan_settings_to_js(settings),
+        game_setup_settings: game_setup_settings_to_js(settings),
+        frontend_state: frontend_state_to_js(settings),
         source_location: source_location_token(settings.source().location()).to_string(),
         source_path: settings
             .source()
@@ -1080,6 +1110,12 @@ fn user_settings_update_to_core(update: JsUserSettingsUpdate) -> UserSettingsUpd
     if let Some(value) = update.update_check {
         core = core.with_update_check(value);
     }
+    if let Some(value) = update.update_source {
+        core = core.with_update_source(value);
+    }
+    if let Some(value) = update.auto_switch_after_scan {
+        core = core.with_auto_switch_after_scan(value);
+    }
     if let Some(value) = update.managed_game {
         core = core.with_managed_game(js_to_core_game_id(&value).as_str());
     }
@@ -1196,6 +1232,7 @@ fn user_settings_update_diagnostic_to_js(
 fn user_settings_update_field_to_js(field: &UserSettingsUpdateField) -> JsUserSettingsUpdateField {
     let value = match field {
         UserSettingsUpdateField::UpdateCheck(value)
+        | UserSettingsUpdateField::AutoSwitchAfterScan(value)
         | UserSettingsUpdateField::FcxMode(value)
         | UserSettingsUpdateField::SimplifyLogs(value)
         | UserSettingsUpdateField::ShowStatistics(value)
@@ -1205,6 +1242,7 @@ fn user_settings_update_field_to_js(field: &UserSettingsUpdateField) -> JsUserSe
             Either5::B(value.as_str().to_string())
         }
         UserSettingsUpdateField::ManagedGame(value) => Either5::B(value.as_str().to_string()),
+        UserSettingsUpdateField::UpdateSource(value) => Either5::B(value.as_str().to_string()),
         UserSettingsUpdateField::FormIdDatabases(value) => Either5::C(
             value
                 .iter()

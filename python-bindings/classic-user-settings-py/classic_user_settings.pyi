@@ -14,13 +14,19 @@ class UserSettingsDiagnostic:
 
 
 class UpdatePreferences:
-    """Update-related User Settings consumed by update-check policy."""
+    """Update-related User Settings consumed by update checks and compatibility adapters."""
 
     @property
     def update_check(self) -> bool: ...
 
     @property
     def origin(self) -> str: ...
+
+    @property
+    def update_source(self) -> str: ...
+
+    @property
+    def update_source_origin(self) -> str: ...
 
 
 class CrashLogScanSettings:
@@ -241,6 +247,12 @@ class UserSettingsUpdate:
 
     def set_update_check(self, value: bool) -> None:
         """Request a new Update Check preference."""
+
+    def set_update_source(self, value: str) -> None:
+        """Request a canonical or legacy-compatible Update Source selection."""
+
+    def set_auto_switch_after_scan(self, value: bool) -> None:
+        """Request whether the GUI should switch to Results after a completed scan."""
 
     def set_managed_game(self, value: str) -> None:
         """Request a managed-game identifier for complete preview validation."""
@@ -567,3 +579,7 @@ class UserSettingsSnapshot:
 
 def open_user_settings(classic_root: str) -> UserSettingsSnapshot:
     """Open User Settings relative to an explicit CLASSIC root without writing."""
+
+
+def user_settings_published_defaults() -> UserSettingsSnapshot:
+    """Return the Rust-owned published defaults without filesystem access."""

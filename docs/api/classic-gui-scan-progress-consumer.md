@@ -4,6 +4,8 @@ Contributor-facing documentation for how the active Qt frontend consumes the Rus
 
 - [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp)
 - [`classic-gui/src/workers/scanworker.h`](../../classic-gui/src/workers/scanworker.h)
+- [`classic-gui/src/workers/scanrequestbuilder.cpp`](../../classic-gui/src/workers/scanrequestbuilder.cpp)
+- [`classic-gui/src/workers/scanrequestbuilder.h`](../../classic-gui/src/workers/scanrequestbuilder.h)
 - [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp)
 - [`classic-gui/src/workers/scanprogressmodel.h`](../../classic-gui/src/workers/scanprogressmodel.h)
 - [`classic-gui/src/controllers/scancontroller.cpp`](../../classic-gui/src/controllers/scancontroller.cpp)
@@ -34,7 +36,7 @@ For the bridge-side contract itself, see [`classic-cpp-bridge-scan-progress-call
 
 The callback enters the GUI in the local adapter class `BatchProgressCallback` inside [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp).
 
-`ScanWorker::doScan(...)` uses the callback-enabled `classic::scanner::scan_run_execute(...)` bridge entry point for both single-log and multi-log Crash Log Scan Runs. The bridge callback contract is therefore the current GUI progress path for all selected Crash Logs.
+`ScanWorker::doScan(...)` accepts one immutable `CrashLogScanLaunchSettings` value derived from the revision-cohesive GUI User Settings snapshot. It uses `buildScanRunRequest(...)` to combine those accepted settings with runtime-only inputs, then calls the callback-enabled `classic::scanner::scan_run_execute(...)` bridge entry point for both single-log and multi-log Crash Log Scan Runs. Neither the worker nor the request builder rereads User Settings or interprets raw YAML.
 
 The callback adapter is intentionally small:
 
@@ -60,7 +62,8 @@ Q_EMIT m_worker.progressDetailed(percent, status, completed, total);
 
 Current worker responsibilities:
 
-- pass selected Crash Logs and scan settings to `scan_run_execute(...)` through `ScanRunRequestDto`
+- pass selected Crash Logs and the immutable typed scan-launch settings to `buildScanRunRequest(...)`
+- pass the complete `ScanRunRequestDto` to `scan_run_execute(...)`; configured FormID paths, Unsolved behavior, concurrency, game/version, and setup facts come from the accepted launch object
 - adapt bridge callback events into Qt signals
 - reset and pass the Rust-owned scan cancellation token, then cancel that token from `requestCancel()`
 - map completion-order `ScanRunLogResult` values back to original log rows with `result.input_index`
@@ -104,6 +107,7 @@ The model sums the latest accepted contribution for each known log, divides by `
 Current controller responsibilities in this flow:
 
 - collect candidate crash logs before creating the worker thread
+- retain and forward the `CrashLogScanLaunchSettings` value supplied by `MainWindow` without reopening User Settings
 - emit `scanStarted()` and `scanDiscovered(int)`
 - connect `ScanWorker::progressDetailed` to `ScanController::scanProgress`
 - connect `ScanWorker::logScanned` to `ScanController::scanLogScanned`
@@ -123,6 +127,7 @@ Current controller responsibilities in this flow:
 Current main-window responsibilities:
 
 - start crash-scan UI state in `onScanCrashLogs()`
+- derive one `CrashLogScanLaunchSettings` value from the cached cohesive GUI settings snapshot and pass it to `ScanController`
 - keep `m_crashScanTimer`, `m_crashScanTotalLogs`, and `m_crashScanLogsCompleted`
 - update those counters from structured progress in `onCrashScanProgress(...)`
 - render percent, scanned-log counts, elapsed time, and status text in `onScanProgress(...)`
@@ -205,7 +210,7 @@ It currently asserts that:
 
 ## `test_scan_settings_wiring.cpp`
 
-[`classic-gui/tests/test_scan_settings_wiring.cpp`](../../classic-gui/tests/test_scan_settings_wiring.cpp) uses source-text checks rather than runtime signal assertions, but it still captures the intended wiring.
+[`classic-gui/tests/test_scan_settings_wiring.cpp`](../../classic-gui/tests/test_scan_settings_wiring.cpp) keeps source-text checks for the remaining callback and signal wiring. Typed settings propagation is covered by behavior tests instead of source-string guards.
 
 It currently asserts that:
 
@@ -213,9 +218,12 @@ It currently asserts that:
 - `ScanWorker` calls `scan_run_execute(...)`
 - `ScanWorker` forwards `event.completed` and `event.total` into `progressDetailed(percent, status, completed, total)`
 - `ScanWorker` delegates both single-log and multi-log runs to Rust
-- `ScanController` forwards scan settings into `ScanWorker::doScan(...)`
 - `MainWindow` connects `ScanController::scanProgress` to `MainWindow::onCrashScanProgress(...)`
 - `MainWindow::onCrashScanProgress(...)` receives structured `completed` and `total` counts
+
+## Typed scan-launch behavior tests
+
+[`classic-gui/tests/test_guiusersettings.cpp`](../../classic-gui/tests/test_guiusersettings.cpp) verifies that all GUI-consumed settings groups come from one revision and that the selected game's FormID paths enter an immutable `CrashLogScanLaunchSettings` value. [`classic-gui/tests/test_scanrequestbuilder.cpp`](../../classic-gui/tests/test_scanrequestbuilder.cpp) then verifies the complete request mapping for game/version, FCX, simplification, FormID Value Lookup and database paths, custom input, Unsolved behavior, concurrency, setup paths, targeted inputs, and runtime log paths. Until a fully injectable MainWindow-to-worker behavior seam exists, narrow source guards remain for the three production handoffs: MainWindow to controller, controller callback to worker, and worker to the behavior-tested request builder.
 
 ## `test_mainwindow_geometry.cpp`
 
@@ -234,6 +242,7 @@ It currently asserts that:
 
 - The bridge callback path is used for both single-log and multi-log scans in `ScanWorker` through `scan_run_execute(...)`.
 - `ScanController` and `MainWindow` do not consume raw `BatchProgressEvent`; they only see Qt signals emitted by `ScanWorker`.
+- `MainWindow`, `ScanController`, and `ScanWorker` share one accepted `CrashLogScanLaunchSettings` value for a run; scan launch does not reopen User Settings or rebuild preferences from raw YAML.
 - The GUI uses `event.log_path` as the live status string, so visible status order follows callback arrival order rather than original input order.
 - The GUI uses `event.input_index` only inside `BatchProgressModel` and later for `BatchScanResult` correlation; `MainWindow` never sees that key directly.
 - Visible percent and visible completed-log counts come from different sources: percent is the weighted aggregate from `BatchProgressModel`, while completed counts come from bridge `event.completed` and later `logScanned(...)`/`finished(...)` signals.

@@ -17,7 +17,7 @@ mod update;
 pub use commit::{UserSettingsCommitError, UserSettingsCommitOutcome};
 pub use document::{
     CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision,
-    SettingsSource, SourceLocation, UpdatePreferences, UserSettings,
+    SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings,
 };
 pub use frontend_state::{
     FrontendPreferences, FrontendState, GuiWindowGeometry, TuiRememberedState, WindowGeometry,

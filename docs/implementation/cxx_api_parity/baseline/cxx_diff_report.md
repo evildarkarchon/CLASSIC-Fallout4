@@ -1,8 +1,8 @@
 # CXX Parity Diff Report
 
-- Contract total: **399**
-- Current total: **399**
-- Matched: **399**
+- Contract total: **402**
+- Current total: **402**
+- Matched: **402**
 - Missing from current: **0**
 - Missing from contract: **0**
 - Signature mismatch: **0**

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/guiusersettings.h"
 #include "widgets/adaptiveprogressbar.h"
 #include <QElapsedTimer>
 #include <QLabel>
@@ -52,7 +53,7 @@ private:
     /// Read-only opens never repair or persist the settings document.
     void loadSettings();
 
-    /// Commits the editable staging and custom-scan paths as one revision-checked User Settings update.
+    /// Commits editable staging and custom-scan paths, then refreshes the accepted typed snapshot.
     void saveSettings();
     void initResultsReportDir();
 
@@ -157,15 +158,9 @@ private:
     // Data root paths
     QString m_dataRoot;
     QString m_dataDir;
-    bool m_updateCheckOnStartup = true;
-    bool m_autoSwitchToResultsAfterScan = true;
-    QString m_gameVersion = QStringLiteral("auto");
-    bool m_showFormIdValues = false;
-    bool m_fcxMode = false;
-    bool m_simplifyLogs = false;
-    bool m_moveUnsolvedLogs = false;
-    QString m_unsolvedLogsDestination;
-    int m_maxConcurrentScans = 0;
+    classic::gui::GuiUserSettingsSnapshot m_guiSettings;
+    bool m_updateCheckOnStartup{};
+    bool m_autoSwitchToResultsAfterScan{};
     QElapsedTimer m_crashScanTimer;
     int m_crashScanTotalLogs = 0;
     int m_crashScanLogsCompleted = 0;

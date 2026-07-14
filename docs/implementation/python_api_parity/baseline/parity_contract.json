@@ -146,6 +146,26 @@
       "pythonKind": "class"
     },
     {
+      "id": "user_settings.update_source_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UpdateSource",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UpdatePreferences",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_source_as_str",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "as_str",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UpdatePreferences",
+      "pythonKind": "class"
+    },
+    {
       "id": "user_settings.snapshot_type",
       "tier": "tier1",
       "ownerModule": "user_settings",
@@ -227,6 +247,17 @@
       "pythonArity": 1
     },
     {
+      "id": "user_settings.published_defaults",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "published_defaults",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "user_settings_published_defaults",
+      "pythonKind": "function",
+      "pythonArity": 0
+    },
+    {
       "id": "user_settings.original_bytes_accessor",
       "tier": "tier1",
       "ownerModule": "user_settings",
@@ -292,6 +323,26 @@
       "ownerModule": "user_settings",
       "rustCrate": "classic-user-settings-core",
       "rustSymbol": "update_check_origin",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UpdatePreferences",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_source_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "update_source",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UpdatePreferences",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.update_source_origin_accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "update_source_origin",
       "pythonModule": "classic_user_settings",
       "pythonExportPath": "UpdatePreferences",
       "pythonKind": "class"
@@ -644,6 +695,28 @@
       "rustSymbol": "with_update_check",
       "pythonModule": "classic_user_settings",
       "pythonExportPath": "UserSettingsUpdate.set_update_check",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_update_source",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_update_source",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_update_source",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_auto_switch_after_scan",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_auto_switch_after_scan",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_auto_switch_after_scan",
       "pythonKind": "method",
       "pythonArity": 1
     },

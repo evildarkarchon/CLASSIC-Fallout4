@@ -39,6 +39,7 @@
 #include "controllers/scancontroller.h"
 #include "core/gamepathutils.h"
 #include "core/gamesetupusersettings.h"
+#include "core/guiusersettings.h"
 #include "core/rust_qt_bridge.h"
 #include "core/signalhub.h"
 #include "core/threadmanager.h"
@@ -858,15 +859,9 @@ void MainWindow::connectSignals()
 
 void MainWindow::loadSettings()
 {
-    m_updateCheckOnStartup = true;
-    m_autoSwitchToResultsAfterScan = true;
-    m_gameVersion = QStringLiteral("auto");
-    m_showFormIdValues = false;
-    m_fcxMode = false;
-    m_simplifyLogs = false;
-    m_moveUnsolvedLogs = false;
-    m_unsolvedLogsDestination.clear();
-    m_maxConcurrentScans = 0;
+    m_guiSettings = classic::gui::GuiUserSettings::publishedDefaults();
+    m_updateCheckOnStartup = m_guiSettings.update.updateCheck;
+    m_autoSwitchToResultsAfterScan = m_guiSettings.frontend.autoSwitchAfterScan;
 
     m_dataRoot = findDataRoot();
     if (m_dataRoot.isEmpty()) {
@@ -914,57 +909,22 @@ void MainWindow::loadSettings()
         setStatusMessage(QStringLiteral("Ignore file bootstrap failed: ") + bootstrapError);
     }
 
-    m_editStagingFolder->setText(setup.modsRoot.value_or(QString{}));
-    m_editCustomFolder->setText(setup.customScanInput.value_or(QString{}));
-    m_gameVersion = setup.gameVersionSelection;
-    if (setup.gameRoot.has_value() && m_backupController) {
-        m_backupController->setGameRoot(*setup.gameRoot);
-    }
-
-    // Remaining scan preferences migrate in issue #105; setup paths already use the typed adapter.
-    const QString settingsPath = settingsFilePath(m_dataRoot);
-    if (QFile::exists(settingsPath)) {
-        try {
-            auto ops = classic::settings::yaml_ops_new();
-            classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-
-            auto getBool = [&](const char* key, bool fallback) -> bool {
-                auto value = classic::settings::yaml_ops_get_setting_value(*ops, key);
-                if (value.value_type == "bool") {
-                    return value.value == "true";
-                }
-                return fallback;
-            };
-            auto getInt = [&](const char* key, int fallback) -> int {
-                auto value = classic::settings::yaml_ops_get_setting_value(*ops, key);
-                if (value.value_type == "integer") {
-                    bool ok = false;
-                    const int parsed = QString::fromStdString(std::string(value.value)).toInt(&ok);
-                    if (ok) {
-                        return parsed;
-                    }
-                }
-                return fallback;
-            };
-
-            m_updateCheckOnStartup = getBool("CLASSIC_Settings.Update Check", true);
-            m_autoSwitchToResultsAfterScan = getBool("CLASSIC_Settings.Auto Switch After Scan", true);
-            m_showFormIdValues = getBool("CLASSIC_Settings.Show FormID Values", false);
-            m_fcxMode = getBool("CLASSIC_Settings.FCX Mode", false);
-            m_simplifyLogs = getBool("CLASSIC_Settings.Simplify Logs", false);
-            m_moveUnsolvedLogs = getBool("CLASSIC_Settings.Move Unsolved Logs", false);
-            m_unsolvedLogsDestination = classic::toQString(
-                classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Unsolved Logs Destination", ""));
-            m_maxConcurrentScans = qMax(0, getInt("CLASSIC_Settings.Max Concurrent Scans", 0));
-            if (m_resultsController) {
-                m_resultsController->setAutoSwitchToResults(m_autoSwitchToResultsAfterScan);
-            }
-
-        } catch (const std::exception& e) {
-            setStatusMessage(QStringLiteral("Settings load failed: ") + QString::fromUtf8(e.what()));
-        } catch (...) {
-            setStatusMessage(QStringLiteral("Settings load failed: unknown error"));
+    try {
+        m_guiSettings = classic::gui::GuiUserSettings::open(m_dataRoot);
+        m_updateCheckOnStartup = m_guiSettings.update.updateCheck;
+        m_autoSwitchToResultsAfterScan = m_guiSettings.frontend.autoSwitchAfterScan;
+        m_editStagingFolder->setText(m_guiSettings.gameSetup.modsRoot.value_or(QString{}));
+        m_editCustomFolder->setText(m_guiSettings.scan.customScanInput.value_or(QString{}));
+        if (m_guiSettings.gameSetup.gameRoot.has_value() && m_backupController) {
+            m_backupController->setGameRoot(*m_guiSettings.gameSetup.gameRoot);
         }
+        if (m_resultsController) {
+            m_resultsController->setAutoSwitchToResults(m_autoSwitchToResultsAfterScan);
+        }
+    } catch (const std::exception& e) {
+        setStatusMessage(QStringLiteral("Settings load failed: ") + QString::fromUtf8(e.what()));
+    } catch (...) {
+        setStatusMessage(QStringLiteral("Settings load failed: unknown error"));
     }
 
     // Restore per-tab window geometry for the current tab
@@ -1016,6 +976,8 @@ void MainWindow::saveSettings()
             setStatusMessage(QStringLiteral("Settings save rejected: ") + diagnostics.join(QLatin1Char(' ')));
             return;
         }
+        // Only refresh the launch cache after Rust confirms the complete path update committed.
+        m_guiSettings = classic::gui::GuiUserSettings::open(m_dataRoot);
     } catch (const std::exception& e) {
         setStatusMessage(QStringLiteral("Settings save failed: ") + QString::fromUtf8(e.what()));
         return;
@@ -1341,24 +1303,21 @@ bool MainWindow::loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* do
         return false;
     }
 
-    try {
-        const auto setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
-        const QString gamePath = QDir::cleanPath(setup.gameRoot.value_or(QString{}).trimmed());
-        const QString docsPath = QDir::cleanPath(setup.documentsRoot.value_or(QString{}).trimmed());
+    const QString rawGamePath = m_guiSettings.gameSetup.gameRoot.value_or(QString{}).trimmed();
+    const QString rawDocsPath = m_guiSettings.gameSetup.documentsRoot.value_or(QString{}).trimmed();
+    const QString gamePath = rawGamePath.isEmpty() ? QString() : QDir::cleanPath(rawGamePath);
+    const QString docsPath = rawDocsPath.isEmpty() ? QString() : QDir::cleanPath(rawDocsPath);
 
-        const bool gameValid = !gamePath.isEmpty() && QDir(gamePath).exists();
-        const bool docsValid = !docsPath.isEmpty() && QDir(docsPath).exists();
+    const bool gameValid = !gamePath.isEmpty() && QDir(gamePath).exists();
+    const bool docsValid = !docsPath.isEmpty() && QDir(docsPath).exists();
 
-        if (gamePathOut) {
-            *gamePathOut = gamePath;
-        }
-        if (docsPathOut) {
-            *docsPathOut = docsPath;
-        }
-        return gameValid && docsValid;
-    } catch (...) {
-        return false;
+    if (gamePathOut) {
+        *gamePathOut = gamePath;
     }
+    if (docsPathOut) {
+        *docsPathOut = docsPath;
+    }
+    return gameValid && docsValid;
 }
 
 // ── Slot implementations ───────────────────────────────────────────
@@ -1485,11 +1444,12 @@ void MainWindow::onScanCrashLogs()
         return;
     }
 
+    auto launchSettings = m_guiSettings.scanLaunchSettings(m_guiSettings.gameSetup.managedGame);
     QString setupGameRoot;
     QString setupDocsPath;
     QString setupGameExePath;
     QString setupXseLogPath;
-    if (m_fcxMode) {
+    if (launchSettings.fcxMode) {
         if (!loadValidatedGameAndDocsPaths(&setupGameRoot, &setupDocsPath)) {
             QMessageBox::warning(this, QStringLiteral("FCX Mode Requires Paths"),
                                  QStringLiteral("FCX mode requires valid game and INI folder paths.\n\n"
@@ -1497,16 +1457,13 @@ void MainWindow::onScanCrashLogs()
             return;
         }
 
-        try {
-            const auto setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
-            setupGameExePath = QDir::cleanPath(setup.gameExecutable.value_or(QString{}).trimmed());
-        } catch (const std::exception&) {
-            // Fall through -- default exe path below.
-        }
-
+        setupGameExePath = QDir::cleanPath(launchSettings.setupGameExecutable.trimmed());
         setupGameExePath = classic::gui::normalizeGameExecutablePath(setupGameExePath, setupGameRoot);
         setupXseLogPath =
-            resolveExistingXseLogPath(m_dataDir, QStringLiteral("Fallout4"), m_gameVersion, setupDocsPath);
+            resolveExistingXseLogPath(m_dataDir, launchSettings.game, launchSettings.gameVersion, setupDocsPath);
+        launchSettings.setupGameRoot = setupGameRoot;
+        launchSettings.setupDocumentsRoot = setupDocsPath;
+        launchSettings.setupGameExecutable = setupGameExePath;
     }
 
     m_btnScanCrashLogs->setEnabled(false);
@@ -1519,10 +1476,7 @@ void MainWindow::onScanCrashLogs()
     setStatusMessage(QStringLiteral("Scanning crash logs... 0 logs scanned | elapsed %1s")
                          .arg(format_elapsed_seconds(m_crashScanTimer)));
 
-    m_scanController->startScan(m_dataRoot, m_dataDir, QStringLiteral("Fallout4"), m_gameVersion, m_showFormIdValues,
-                                m_fcxMode, m_simplifyLogs, m_moveUnsolvedLogs, m_unsolvedLogsDestination,
-                                m_maxConcurrentScans, m_editCustomFolder->text(), setupGameRoot, setupDocsPath,
-                                setupGameExePath, setupXseLogPath, m_targetedInputPaths);
+    m_scanController->startScan(m_dataRoot, m_dataDir, launchSettings, setupXseLogPath, m_targetedInputPaths);
 }
 
 void MainWindow::onScanGameFiles()

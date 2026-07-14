@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-14T11:35:10.174133+00:00`
-- Tier-1 contract rows: **1237**
-- Tier-1 matched: **1237**
+- Generated: `2026-07-14T12:58:27.860285+00:00`
+- Tier-1 contract rows: **1244**
+- Tier-1 matched: **1244**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -20,6 +20,8 @@
 | `user_settings.source_type` | `user_settings` | `SettingsSource` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `user_settings.source_location` | `user_settings` | `SourceLocation` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `user_settings.update_preferences_type` | `user_settings` | `UpdatePreferences` | `classic_user_settings.UpdatePreferences` | `matched` |
+| `user_settings.update_source_type` | `user_settings` | `UpdateSource` | `classic_user_settings.UpdatePreferences` | `matched` |
+| `user_settings.update_source_as_str` | `user_settings` | `as_str` | `classic_user_settings.UpdatePreferences` | `matched` |
 | `user_settings.snapshot_type` | `user_settings` | `UserSettings` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `user_settings.classification_accessor` | `user_settings` | `classification` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `user_settings.diagnostic_code_accessor` | `user_settings` | `code` | `classic_user_settings.UserSettingsDiagnostic` | `matched` |
@@ -28,6 +30,7 @@
 | `user_settings.location_accessor` | `user_settings` | `location` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `user_settings.diagnostic_message_accessor` | `user_settings` | `message` | `classic_user_settings.UserSettingsDiagnostic` | `matched` |
 | `user_settings.open` | `user_settings` | `open` | `classic_user_settings.open_user_settings` | `matched` |
+| `user_settings.published_defaults` | `user_settings` | `published_defaults` | `classic_user_settings.user_settings_published_defaults` | `matched` |
 | `user_settings.original_bytes_accessor` | `user_settings` | `original_bytes` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `user_settings.path_accessor` | `user_settings` | `path` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `user_settings.revision_accessor` | `user_settings` | `revision` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
@@ -35,6 +38,8 @@
 | `user_settings.source_accessor` | `user_settings` | `source` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `user_settings.update_check_accessor` | `user_settings` | `update_check` | `classic_user_settings.UpdatePreferences` | `matched` |
 | `user_settings.update_check_origin_accessor` | `user_settings` | `update_check_origin` | `classic_user_settings.UpdatePreferences` | `matched` |
+| `user_settings.update_source_accessor` | `user_settings` | `update_source` | `classic_user_settings.UpdatePreferences` | `matched` |
+| `user_settings.update_source_origin_accessor` | `user_settings` | `update_source_origin` | `classic_user_settings.UpdatePreferences` | `matched` |
 | `user_settings.update_preferences_accessor` | `user_settings` | `update_preferences` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `user_settings.crash_log_scan_settings_type` | `user_settings` | `CrashLogScanSettings` | `classic_user_settings.CrashLogScanSettings` | `matched` |
 | `user_settings.game_version_selection_type` | `user_settings` | `GameVersionSelection` | `classic_user_settings.CrashLogScanSettings` | `matched` |
@@ -70,6 +75,8 @@
 | `user_settings.game_version_parse` | `user_settings` | `parse` | `classic_user_settings.CrashLogScanSettings` | `matched` |
 | `user_settings.update_new` | `user_settings` | `new` | `classic_user_settings.UserSettingsUpdate` | `matched` |
 | `user_settings.update_with_update_check` | `user_settings` | `with_update_check` | `classic_user_settings.UserSettingsUpdate.set_update_check` | `matched` |
+| `user_settings.update_with_update_source` | `user_settings` | `with_update_source` | `classic_user_settings.UserSettingsUpdate.set_update_source` | `matched` |
+| `user_settings.update_with_auto_switch_after_scan` | `user_settings` | `with_auto_switch_after_scan` | `classic_user_settings.UserSettingsUpdate.set_auto_switch_after_scan` | `matched` |
 | `user_settings.update_with_game_version_selection` | `user_settings` | `with_game_version_selection` | `classic_user_settings.UserSettingsUpdate.set_game_version_selection` | `matched` |
 | `user_settings.update_with_fcx_mode` | `user_settings` | `with_fcx_mode` | `classic_user_settings.UserSettingsUpdate.set_fcx_mode` | `matched` |
 | `user_settings.update_with_simplify_logs` | `user_settings` | `with_simplify_logs` | `classic_user_settings.UserSettingsUpdate.set_simplify_logs` | `matched` |

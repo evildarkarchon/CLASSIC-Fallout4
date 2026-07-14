@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 399,
-    "current_total": 399,
-    "matched": 399,
+    "contract_total": 402,
+    "current_total": 402,
+    "matched": 402,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2137,6 +2137,14 @@
       "reason": "-"
     },
     {
+      "id": "c420901386dcb35c",
+      "rustSymbol": "user_settings_gui_published_defaults",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "684181a2023cb151",
       "rustSymbol": "user_settings_migration_apply_outcome",
       "kind": "function",
@@ -2163,6 +2171,14 @@
     {
       "id": "be7beecfe544998c",
       "rustSymbol": "user_settings_open_game_setup_settings",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "99865408ab0b4232",
+      "rustSymbol": "user_settings_open_gui_settings",
       "kind": "function",
       "bridgeModule": "settings",
       "status": "matched",
@@ -2403,6 +2419,14 @@
     {
       "id": "5bf9e83ee7c33813",
       "rustSymbol": "GameSetupSettingsDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6d15af291eab196a",
+      "rustSymbol": "GuiSettingsSnapshotDto",
       "kind": "struct",
       "bridgeModule": "settings",
       "status": "matched",

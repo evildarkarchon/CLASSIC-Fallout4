@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T02:34:18.504614+00:00",
+  "generated_at_utc": "2026-07-14T12:58:27.844733+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -8087,6 +8087,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "with_custom_scan_input",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn with_custom_scan_input(mut self, path: impl Into<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "with_docs_root",
       "kind": "function",
       "arity": 2,
@@ -8114,6 +8124,26 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
       "source_decl": "pub fn with_game_root(mut self, path: impl Into<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_mods_root",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn with_mods_root(mut self, path: impl Into<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_papyrus_log_path",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn with_papyrus_log_path(mut self, path: impl Into<PathBuf>)",
       "tier": "tier1"
     },
     {
@@ -8355,12 +8385,31 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CrashLogScanFacts",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
+      "source_expr": "scan_intake::CrashLogScanFacts",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanFacts",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_intake.rs",
+      "source_decl": "pub struct CrashLogScanFacts",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CrashLogScanIntake",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::CrashLogScanIntake",
       "tier": "tier1"
     },
@@ -8379,7 +8428,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::CrashLogScanIntakePaths",
       "tier": "tier1"
     },
@@ -8398,7 +8447,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::CrashLogScanOptions",
       "tier": "tier1"
     },
@@ -8892,7 +8941,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::FormIdReadiness",
       "tier": "tier1"
     },
@@ -9288,7 +9337,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::SHORT_SCAN_CACHE_PROFILE",
       "tier": "tier1"
     },
@@ -9354,7 +9403,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::ScanReadyAnalysis",
       "tier": "tier1"
     },
@@ -9392,7 +9441,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::ShortScanCacheProfile",
       "tier": "tier1"
     },
@@ -10821,7 +10870,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::load_simplify_remove_list",
       "tier": "tier1"
     },
@@ -11343,18 +11392,8 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::resolve_formid_database_paths",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "resolve_user_formid_database_paths",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
-      "source_expr": "scan_intake::resolve_user_formid_database_paths",
       "tier": "tier1"
     },
     {
@@ -11629,6 +11668,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/report.rs",
       "source_decl": "pub fn with_header(&self, header_lines: Vec<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_scan_facts",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_intake.rs",
+      "source_decl": "pub fn with_scan_facts(mut self, scan_facts: CrashLogScanFacts)",
       "tier": "tier1"
     },
     {
@@ -15191,6 +15240,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CURRENT_USER_SETTINGS_SCHEMA_VERSION",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub const CURRENT_USER_SETTINGS_SCHEMA_VERSION",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CURRENT_USER_SETTINGS_SCHEMA_VERSION",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use migration::{ CURRENT_USER_SETTINGS_SCHEMA_VERSION, MigrationChange, MigrationChangeKind, MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome, UserSettingsMigrationPlan, UserSettingsSchemaVersion, };",
+      "source_expr": "migration::CURRENT_USER_SETTINGS_SCHEMA_VERSION",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CommitEligibility",
       "kind": "enum",
       "crate": "classic-user-settings-core",
@@ -15205,7 +15273,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::CommitEligibility",
       "tier": "tier1"
     },
@@ -15234,7 +15302,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::Diagnostic",
       "tier": "tier1"
     },
@@ -15262,7 +15330,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::DocumentClassification",
       "tier": "tier1"
     },
@@ -15362,6 +15430,101 @@
       "tier": "tier1"
     },
     {
+      "symbol": "MigrationChange",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use migration::{ CURRENT_USER_SETTINGS_SCHEMA_VERSION, MigrationChange, MigrationChangeKind, MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome, UserSettingsMigrationPlan, UserSettingsSchemaVersion, };",
+      "source_expr": "migration::MigrationChange",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MigrationChange",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub struct MigrationChange",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MigrationChangeKind",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub enum MigrationChangeKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MigrationChangeKind",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use migration::{ CURRENT_USER_SETTINGS_SCHEMA_VERSION, MigrationChange, MigrationChangeKind, MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome, UserSettingsMigrationPlan, UserSettingsSchemaVersion, };",
+      "source_expr": "migration::MigrationChangeKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MigrationDiagnostic",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use migration::{ CURRENT_USER_SETTINGS_SCHEMA_VERSION, MigrationChange, MigrationChangeKind, MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome, UserSettingsMigrationPlan, UserSettingsSchemaVersion, };",
+      "source_expr": "migration::MigrationDiagnostic",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MigrationDiagnostic",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub struct MigrationDiagnostic",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MigrationEndpoint",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use migration::{ CURRENT_USER_SETTINGS_SCHEMA_VERSION, MigrationChange, MigrationChangeKind, MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome, UserSettingsMigrationPlan, UserSettingsSchemaVersion, };",
+      "source_expr": "migration::MigrationEndpoint",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MigrationEndpoint",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub struct MigrationEndpoint",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MigrationPlanningOutcome",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub enum MigrationPlanningOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "MigrationPlanningOutcome",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use migration::{ CURRENT_USER_SETTINGS_SCHEMA_VERSION, MigrationChange, MigrationChangeKind, MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome, UserSettingsMigrationPlan, UserSettingsSchemaVersion, };",
+      "source_expr": "migration::MigrationPlanningOutcome",
+      "tier": "tier1"
+    },
+    {
       "symbol": "PreferenceOrigin",
       "kind": "enum",
       "crate": "classic-user-settings-core",
@@ -15376,7 +15539,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::PreferenceOrigin",
       "tier": "tier1"
     },
@@ -15395,7 +15558,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::Revision",
       "tier": "tier1"
     },
@@ -15405,7 +15568,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::SettingsSource",
       "tier": "tier1"
     },
@@ -15433,7 +15596,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::SourceLocation",
       "tier": "tier1"
     },
@@ -15481,7 +15644,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::UpdatePreferences",
       "tier": "tier1"
     },
@@ -15495,12 +15658,31 @@
       "tier": "tier1"
     },
     {
+      "symbol": "UpdateSource",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub enum UpdateSource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UpdateSource",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
+      "source_expr": "document::UpdateSource",
+      "tier": "tier1"
+    },
+    {
       "symbol": "UserSettings",
       "kind": "reexport",
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UserSettings, };",
+      "source_decl": "pub use document::{ CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision, SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings, };",
       "source_expr": "document::UserSettings",
       "tier": "tier1"
     },
@@ -15511,6 +15693,158 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub struct UserSettings",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsCommitError",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use commit::{UserSettingsCommitError, UserSettingsCommitOutcome};",
+      "source_expr": "commit::UserSettingsCommitError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsCommitError",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/commit.rs",
+      "source_decl": "pub struct UserSettingsCommitError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsCommitOutcome",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/commit.rs",
+      "source_decl": "pub enum UserSettingsCommitOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsCommitOutcome",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use commit::{UserSettingsCommitError, UserSettingsCommitOutcome};",
+      "source_expr": "commit::UserSettingsCommitOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsMigrationApplyOutcome",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub enum UserSettingsMigrationApplyOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsMigrationApplyOutcome",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use migration_persistence::{ UserSettingsMigrationApplyOutcome, UserSettingsMigrationError, UserSettingsMigrationReceipt, UserSettingsMigrationRestoreOutcome, };",
+      "source_expr": "migration_persistence::UserSettingsMigrationApplyOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsMigrationError",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use migration_persistence::{ UserSettingsMigrationApplyOutcome, UserSettingsMigrationError, UserSettingsMigrationReceipt, UserSettingsMigrationRestoreOutcome, };",
+      "source_expr": "migration_persistence::UserSettingsMigrationError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsMigrationError",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub struct UserSettingsMigrationError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsMigrationPlan",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use migration::{ CURRENT_USER_SETTINGS_SCHEMA_VERSION, MigrationChange, MigrationChangeKind, MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome, UserSettingsMigrationPlan, UserSettingsSchemaVersion, };",
+      "source_expr": "migration::UserSettingsMigrationPlan",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsMigrationPlan",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub struct UserSettingsMigrationPlan",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsMigrationReceipt",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use migration_persistence::{ UserSettingsMigrationApplyOutcome, UserSettingsMigrationError, UserSettingsMigrationReceipt, UserSettingsMigrationRestoreOutcome, };",
+      "source_expr": "migration_persistence::UserSettingsMigrationReceipt",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsMigrationReceipt",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub struct UserSettingsMigrationReceipt",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsMigrationRestoreOutcome",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub enum UserSettingsMigrationRestoreOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsMigrationRestoreOutcome",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use migration_persistence::{ UserSettingsMigrationApplyOutcome, UserSettingsMigrationError, UserSettingsMigrationReceipt, UserSettingsMigrationRestoreOutcome, };",
+      "source_expr": "migration_persistence::UserSettingsMigrationRestoreOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsSchemaVersion",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use migration::{ CURRENT_USER_SETTINGS_SCHEMA_VERSION, MigrationChange, MigrationChangeKind, MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome, UserSettingsMigrationPlan, UserSettingsSchemaVersion, };",
+      "source_expr": "migration::UserSettingsSchemaVersion",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsSchemaVersion",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub struct UserSettingsSchemaVersion",
       "tier": "tier1"
     },
     {
@@ -15610,6 +15944,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "after",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub fn after(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "articles_tab",
       "kind": "function",
       "arity": 1,
@@ -15670,6 +16014,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "backup_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub fn backup_path(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "backups_tab",
       "kind": "function",
       "arity": 1,
@@ -15685,8 +16039,28 @@
       "arity": 1,
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub fn base_revision(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "base_revision",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/update.rs",
       "source_decl": "pub fn base_revision(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "before",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub fn before(&self)",
       "tier": "tier1"
     },
     {
@@ -15700,6 +16074,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "changes",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub fn changes(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "classification",
       "kind": "function",
       "arity": 1,
@@ -15707,6 +16091,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn classification(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "code",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/commit.rs",
+      "source_decl": "pub fn code(&self)",
       "tier": "tier1"
     },
     {
@@ -15790,6 +16184,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "destination_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub fn destination_path(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "diagnostics",
       "kind": "function",
       "arity": 1,
@@ -15857,6 +16261,150 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/update.rs",
       "source_decl": "pub fn fields(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub const fn",
       "tier": "tier1"
     },
     {
@@ -16125,7 +16673,37 @@
       "arity": 1,
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/commit.rs",
+      "source_decl": "pub fn message(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn message(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub fn message(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
       "source_decl": "pub fn message(&self)",
       "tier": "tier1"
     },
@@ -16210,6 +16788,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "original_bytes",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub fn original_bytes(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "papyrus_log",
       "kind": "function",
       "arity": 1,
@@ -16250,6 +16838,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "plan_migration",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub fn plan_migration(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "preferences",
       "kind": "function",
       "arity": 1,
@@ -16260,6 +16858,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "preview_bootstrap",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn preview_bootstrap(&self, update: UserSettingsUpdate)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "preview_update",
       "kind": "function",
       "arity": 2,
@@ -16267,6 +16875,26 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/update.rs",
       "source_decl": "pub fn preview_update(&self, update: UserSettingsUpdate)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "proposed_bytes",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub fn proposed_bytes(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "published_defaults",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn published_defaults()",
       "tier": "tier1"
     },
     {
@@ -16297,6 +16925,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
       "source_decl": "pub fn results_tab(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "reverse_in_memory",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub fn reverse_in_memory(&self)",
       "tier": "tier1"
     },
     {
@@ -16390,6 +17028,36 @@
       "tier": "tier1"
     },
     {
+      "symbol": "source_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub fn source_path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "source_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub fn source_path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "target_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
+      "source_decl": "pub fn target_path(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "tui",
       "kind": "function",
       "arity": 1,
@@ -16450,6 +17118,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "update_source",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn update_source(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "update_source_origin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn update_source_origin(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "width",
       "kind": "function",
       "arity": 1,
@@ -16477,6 +17165,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
       "source_decl": "pub fn window_geometry(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_auto_switch_after_scan",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_auto_switch_after_scan(mut self, value: bool)",
       "tier": "tier1"
     },
     {
@@ -16657,6 +17355,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/update.rs",
       "source_decl": "pub fn with_update_check(mut self, value: bool)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_update_source",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_update_source(mut self, value: impl Into<String>)",
       "tier": "tier1"
     },
     {

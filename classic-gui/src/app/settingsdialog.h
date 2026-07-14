@@ -11,6 +11,8 @@
 #include <QStringList>
 #include <QTabWidget>
 
+#include "core/guiusersettings.h"
+
 // Qt's MOC-generated slot trampolines read queued-signal arguments out of
 // QGenericArgument and pass them by value to the matching slot. That
 // requires the complete definition of every slot argument type here, not
@@ -37,6 +39,11 @@ protected:
     void closeEvent(QCloseEvent* event) override;
     void reject() override;
 
+    /// Opens the platform file picker for additional FormID databases.
+    ///
+    /// The virtual seam keeps the modal picker replaceable in GUI behavior tests without changing production flow.
+    virtual QStringList selectFormIdDatabaseFiles();
+
 private:
     bool canCloseDialog();
     void setupUi();
@@ -44,8 +51,21 @@ private:
     void setupScanningTab(QTabWidget* tabs);
     void setupPathsTab(QTabWidget* tabs);
     void setupUpdatesTab(QTabWidget* tabs);
+    /// Loads one revision-cohesive typed snapshot and applies it to every User Settings widget.
     void loadSettings();
+
+    /// Previews and atomically commits all widget values against the loaded revision.
+    ///
+    /// Returns false without writing when validation rejects the update or another process changed the document.
     bool saveSettings();
+
+    /// Applies one typed snapshot to all User Settings widgets without persistence.
+    void applySettingsToWidgets(const classic::gui::GuiUserSettingsSnapshot& settings);
+
+    /// Repopulates widgets from Rust-owned published defaults without writing User Settings.
+    ///
+    /// The originally loaded revision remains the base for the later atomic save, so Reset followed by Cancel
+    /// changes nothing and Reset followed by OK still detects concurrent edits.
     void resetToDefaults();
 
     /// Lazily construct the YAML-update worker + its QThread on first use.
@@ -78,13 +98,16 @@ private slots:
 private:
     QString m_dataDir;
     SignalHub* m_signalHub;
+    classic::gui::GuiUserSettingsSnapshot m_settingsSnapshot;
 
     // General tab
     QComboBox* m_comboGameVersion = nullptr;
+    QComboBox* m_comboUpdateSource = nullptr;
 
     // Scanning tab
     QCheckBox* m_chkFcxMode = nullptr;
     QCheckBox* m_chkSimplifyLogs = nullptr;
+    QCheckBox* m_chkShowStatistics = nullptr;
     QCheckBox* m_chkShowFormIdValues = nullptr;
     QCheckBox* m_chkMoveUnsolvedLogs = nullptr;
     QLineEdit* m_editUnsolvedLogsDestination = nullptr;

@@ -16,6 +16,7 @@ import {
   commitUserSettingsUpdate,
   openUserSettings,
   planUserSettingsMigration,
+  publishedUserSettingsDefaults,
   previewUserSettingsBootstrap,
   previewUserSettingsUpdate,
   reverseUserSettingsMigrationPlan,
@@ -59,6 +60,61 @@ afterEach(() => {
 });
 
 describe("read-only User Settings", () => {
+  test("user-settings-published-defaults", () => {
+    const snapshot = publishedUserSettingsDefaults();
+
+    expect(snapshot.sourceLocation).toBe("missing");
+    expect(snapshot.sourcePath).toBeUndefined();
+    expect(snapshot.classification).toBe("missing");
+    expect(snapshot.revision).toBe("missing");
+    expect(snapshot.commitEligibility).toBe("eligible");
+    expect(snapshot.diagnostics).toEqual([]);
+    expect(snapshot.originalContent).toBeUndefined();
+    expect(snapshot.updatePreferences).toEqual({
+      updateCheck: true,
+      origin: "default",
+      updateSource: "GitHub",
+      updateSourceOrigin: "default",
+    });
+    expect(snapshot.crashLogScanSettings.moveUnsolvedLogs).toBe(true);
+    expect(snapshot.crashLogScanSettings.moveUnsolvedLogsOrigin).toBe(
+      "default",
+    );
+    expect(snapshot.gameSetupSettings.managedGame).toBe("Fallout4");
+    expect(snapshot.gameSetupSettings.managedGameOrigin).toBe("default");
+    expect(snapshot.frontendState.preferences.autoSwitchAfterScan).toBe(true);
+    expect(
+      snapshot.frontendState.preferences.autoSwitchAfterScanOrigin,
+    ).toBe("default");
+  });
+
+  test("user-settings-update-source-snapshot", () => {
+    const snapshot = openUserSettings(
+      makeRoot(fixture("canonical_current_nested.yaml")),
+    );
+
+    expect(snapshot.updatePreferences.updateSource).toBe("GitHub");
+    expect(snapshot.updatePreferences.updateSourceOrigin).toBe("document");
+
+    const missing = openUserSettings(makeRoot());
+    expect(missing.updatePreferences.updateSource).toBe("GitHub");
+    expect(missing.updatePreferences.updateSourceOrigin).toBe("default");
+
+    const invalid = openUserSettings(
+      makeRoot(`schema_version: "1.0"
+CLASSIC_Settings:
+  Update Source: Nexus
+`),
+    );
+    expect(invalid.updatePreferences.updateSource).toBe("GitHub");
+    expect(invalid.updatePreferences.updateSourceOrigin).toBe(
+      "degradedFallback",
+    );
+    expect(invalid.diagnostics.map(({ code }) => code)).toContain(
+      "invalid_value_update_source",
+    );
+  });
+
   test("user-settings-read-only-open", () => {
     const content = fixture("invalid_known_values.yaml");
     const root = makeRoot(content);
@@ -624,6 +680,8 @@ describe("User Settings Update preview", () => {
 
     const accepted = previewUserSettingsUpdate(root, {
       updateCheck: false,
+      updateSource: "Both",
+      autoSwitchAfterScan: true,
       unsolvedLogsDestination: null,
       customScanInput: null,
       maxConcurrentScans: 4,
@@ -636,6 +694,14 @@ describe("User Settings Update preview", () => {
         {
           fieldPath: "/CLASSIC_Settings/Update Check",
           value: false,
+        },
+        {
+          fieldPath: "/CLASSIC_Settings/Update Source",
+          value: "Both",
+        },
+        {
+          fieldPath: "/UI/preferences/auto_switch_after_scan",
+          value: true,
         },
         {
           fieldPath: "/CLASSIC_Settings/Unsolved Logs Destination",
@@ -698,6 +764,7 @@ describe("User Settings Update preview", () => {
 
     const rejected = previewUserSettingsUpdate(root, {
       updateCheck: true,
+      updateSource: "Nexus",
       gameVersionSelection: "Future",
       maxConcurrentScans: -9,
     });
@@ -706,6 +773,11 @@ describe("User Settings Update preview", () => {
     expect(rejected.baseRevision).toBeUndefined();
     expect(rejected.fields).toEqual([]);
     expect(rejected.diagnostics).toEqual([
+      {
+        fieldPath: "/CLASSIC_Settings/Update Source",
+        code: "invalid_enum_update_source",
+        message: "Update Source must be GitHub or Both",
+      },
       {
         fieldPath: "/CLASSIC_Settings/Game Version",
         code: "invalid_enum_game_version",
@@ -755,6 +827,8 @@ describe("User Settings Update commit", () => {
     const path = join(root, "CLASSIC Settings.yaml");
     const update = {
       updateCheck: false,
+      updateSource: "Both",
+      autoSwitchAfterScan: true,
       unsolvedLogsDestination: "D:/CLASSIC/Unsolved",
     };
     const preview = previewUserSettingsUpdate(root, update);
@@ -774,6 +848,8 @@ describe("User Settings Update commit", () => {
 
     const committed = openUserSettings(root);
     expect(committed.updatePreferences.updateCheck).toBe(false);
+    expect(committed.updatePreferences.updateSource).toBe("Both");
+    expect(committed.frontendState.preferences.autoSwitchAfterScan).toBe(true);
     expect(committed.crashLogScanSettings.unsolvedLogsDestination).toBe(
       "D:/CLASSIC/Unsolved",
     );

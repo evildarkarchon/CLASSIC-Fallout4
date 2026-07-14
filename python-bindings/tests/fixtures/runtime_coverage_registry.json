@@ -11,14 +11,19 @@
         "ownerModule": "user_settings",
         "tier": "tier1"
       },
-      "contractCount": 151,
-      "contractIdsHash": "9963fa9b4abfeedd0dcf1a06cf27f0c2db8e10ec349de5d652dfb9378c6887a2",
+      "contractCount": 158,
+      "contractIdsHash": "d0425539e43d2db627227539c9dfc0ac5ed92106b7a872432f5478251b6a820d",
       "bindingIdentifiers": [
+        "classic_user_settings.user_settings_published_defaults",
+        "classic_user_settings.UpdatePreferences.update_source",
+        "classic_user_settings.UpdatePreferences.update_source_origin",
         "classic_user_settings.GameSetupSettings",
         "classic_user_settings.UserSettingsSnapshot.game_setup_settings",
         "classic_user_settings.UserSettingsCommitError",
         "classic_user_settings.UserSettingsCommitOutcome",
         "classic_user_settings.UserSettingsUpdatePreview.commit",
+        "classic_user_settings.UserSettingsUpdate.set_update_source",
+        "classic_user_settings.UserSettingsUpdate.set_auto_switch_after_scan",
         "classic_user_settings.UserSettingsUpdate.set_managed_game",
         "classic_user_settings.UserSettingsUpdate.set_game_root",
         "classic_user_settings.UserSettingsUpdate.set_game_executable",
@@ -70,7 +75,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Direct public-module coverage includes read-only open; typed Crash Log Scan and Game Setup settings; nested frontend state; all-or-nothing update previews and conflict-safe commits; plus python-bindings/tests/test_user_settings_migration_planning.py coverage for deterministic flat and previous-location plans, schema/location/change DTOs, exact in-memory reversal, current no-op outcomes, unsupported version-gap diagnostics, and no-write behavior."
+      "notes": "Direct public-module coverage includes the filesystem-free published-defaults projection; read-only open; typed Crash Log Scan and Game Setup settings; nested frontend state; all-or-nothing update previews and conflict-safe commits; plus python-bindings/tests/test_user_settings_migration_planning.py coverage for deterministic flat and previous-location plans, schema/location/change DTOs, exact in-memory reversal, current no-op outcomes, unsupported version-gap diagnostics, and no-write behavior."
     },
     {
       "coverageId": "python-tier1-config",

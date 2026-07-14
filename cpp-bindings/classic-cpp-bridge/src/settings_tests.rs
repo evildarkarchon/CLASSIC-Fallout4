@@ -834,6 +834,10 @@ fn empty_user_settings_update() -> ffi::UserSettingsUpdateDto {
     ffi::UserSettingsUpdateDto {
         has_update_check: false,
         update_check: false,
+        has_update_source: false,
+        update_source: String::new(),
+        has_auto_switch_after_scan: false,
+        auto_switch_after_scan: false,
         has_managed_game: false,
         managed_game: String::new(),
         has_game_version_selection: false,
@@ -1010,6 +1014,79 @@ fn test_user_settings_crash_log_scan_snapshot_is_typed_and_preserves_origins() {
         snapshot.diagnostics[0].code,
         "canonical_alias_conflict_custom_scan_folder"
     );
+}
+
+#[test]
+fn test_user_settings_gui_snapshot_opens_every_typed_group_at_one_revision() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "canonical_current_nested.yaml");
+
+    let snapshot = user_settings_open_gui_settings(&root.path().display().to_string());
+
+    assert_eq!(snapshot.update_preferences.update_source, "GitHub");
+    assert!(snapshot.frontend_state.auto_switch_after_scan);
+    assert_eq!(
+        snapshot.update_preferences.revision,
+        snapshot.crash_log_scan.revision
+    );
+    assert_eq!(
+        snapshot.crash_log_scan.revision,
+        snapshot.game_setup.revision
+    );
+    assert_eq!(
+        snapshot.game_setup.revision,
+        snapshot.frontend_state.revision
+    );
+}
+
+#[test]
+fn test_user_settings_gui_published_defaults_do_not_require_a_root() {
+    let defaults = user_settings_gui_published_defaults();
+
+    assert_eq!(defaults.update_preferences.classification, "missing");
+    assert_eq!(defaults.update_preferences.revision, "missing");
+    assert!(defaults.update_preferences.update_check_enabled);
+    assert_eq!(defaults.update_preferences.update_source, "GitHub");
+    assert_eq!(defaults.crash_log_scan.game_version_selection, "auto");
+    assert!(defaults.crash_log_scan.move_unsolved_logs);
+    assert_eq!(defaults.crash_log_scan.max_concurrent_scans, 0);
+    assert!(defaults.frontend_state.auto_switch_after_scan);
+    assert!(!defaults.game_setup.has_game_root);
+    assert!(!defaults.game_setup.has_game_executable);
+}
+
+#[test]
+fn test_user_settings_gui_preferences_round_trip_through_one_typed_update() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "canonical_current_nested.yaml");
+    let root_string = root.path().display().to_string();
+    let mut update = empty_user_settings_update();
+    update.has_update_source = true;
+    update.update_source = "Both".to_string();
+    update.has_auto_switch_after_scan = true;
+    update.auto_switch_after_scan = false;
+
+    let preview = user_settings_preview_update(&root_string, &update);
+
+    assert!(preview.accepted);
+    assert_eq!(
+        preview
+            .accepted_fields
+            .iter()
+            .map(|field| (field.field_path.as_str(), field.value_kind.as_str()))
+            .collect::<Vec<_>>(),
+        vec![
+            ("/CLASSIC_Settings/Update Source", "string"),
+            ("/UI/preferences/auto_switch_after_scan", "bool"),
+        ]
+    );
+    let committed =
+        user_settings_commit_update(&root_string, &preview.base_revision, &update).unwrap();
+    assert_eq!(committed.status, "committed");
+
+    let reopened = user_settings_open_gui_settings(&root_string);
+    assert_eq!(reopened.update_preferences.update_source, "Both");
+    assert!(!reopened.frontend_state.auto_switch_after_scan);
 }
 
 #[test]

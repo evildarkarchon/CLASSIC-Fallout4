@@ -23,7 +23,7 @@ This page describes behavior visible in active Rust and C++-facing source today.
 
 ## Current Boundary At A Glance
 
-There are three active representations for per-game FormID database paths. Typed User Settings is the canonical persisted choice, and native CLI scan startup now projects the selected game's entries into explicit scan facts. `ClassicConfig.formid_databases` remains a separate compatibility representation.
+There are three active representations for per-game FormID database paths. Typed User Settings is the canonical persisted choice, and the native CLI and GUI scan adapters project the selected game's entries into explicit scan facts. `ClassicConfig.formid_databases` remains a separate compatibility representation.
 
 ## `classic-config-core` representation
 
@@ -55,7 +55,7 @@ The typed read path retains relative strings exactly; Crash Log Scan preparation
 Important contributor takeaway:
 
 - these are not the same persisted representation
-- `classic-user-settings-core` owns the typed canonical projection; the native CLI selects the effective game and copies only that game's rows into `ScanRunRequestDto.formid_database_paths`
+- `classic-user-settings-core` owns the typed canonical projection; the native CLI and GUI select the effective game and copy only that game's rows into `ScanRunRequestDto.formid_database_paths`
 - active scan startup does not currently read `ClassicConfig.formid_databases`
 - `ClassicConfig::load_from_yaml()` does not currently read `CLASSIC_Settings.FormID Databases.{game}` into `formid_databases`
 - `classic-cpp-bridge` converts the request vector into `CrashLogScanFacts`; scanlog-core owns path resolution, built-in ordering, and de-duplication
@@ -100,7 +100,7 @@ Practical limit:
 
 ## What Crash Log Scan Intake Reads At Scan Startup Today
 
-Native CLI scan startup opens `CrashLogScanSettingsDto`, selects the flattened rows for the effective game, and sends them through `ScanRunRequestDto.formid_database_paths`. The C++ bridge creates `CrashLogScanFacts`, then `CrashLogScanRunService` attaches those facts to `CrashLogScanIntake::from_yaml_paths(...).prepare()`.
+Native CLI scan startup opens `CrashLogScanSettingsDto`, selects the flattened rows for the effective game, and sends them through `ScanRunRequestDto.formid_database_paths`. Native GUI settings load opens one `GuiSettingsSnapshotDto`; at scan startup its Qt adapter creates an immutable `CrashLogScanLaunchSettings` from that accepted revision, selecting the effective game's FormID rows. `buildScanRunRequest(...)` copies those rows into the same request field. The C++ bridge creates `CrashLogScanFacts`, then `CrashLogScanRunService` attaches those facts to `CrashLogScanIntake::from_yaml_paths(...).prepare()`.
 
 Current path assembly order is:
 
@@ -118,12 +118,12 @@ Current hardcoded extras:
 Current typed-facts details:
 
 - Crash Log Scan Intake never opens or persists User Settings
-- the native CLI gets paths from the Rust-typed `CrashLogScanSettingsDto`, not generic YAML operations
+- the native CLI gets paths from the Rust-typed `CrashLogScanSettingsDto`, and the native GUI gets them from the cohesive `GuiSettingsSnapshotDto`; neither scan-launch path uses generic YAML operations
 - relative configured paths are resolved against `yaml_dir_data` (`CLASSIC Data`)
 - absolute configured paths are used as-is after normalization
 - existence is not checked during path assembly
 
-Grounded canonical User Settings shape projected by the native CLI adapter:
+Grounded canonical User Settings shape projected by both native adapters:
 
 ```yaml
 CLASSIC_Settings:
@@ -144,6 +144,7 @@ Intake and bridge adapter tests cover contributor-relevant cases:
 - an empty typed path list still yields main DB plus hardcoded `FOLON FormIDs.db`
 - a configured entry that duplicates the hardcoded FOLON path is removed by de-duplication
 - a sentinel User Settings document with values that would fail the old raw reader is not opened by intake
+- the GUI request-builder behavior test forwards both relative and absolute configured FormID rows from one typed launch object without opening User Settings
 - the preserved lower-level `build_full_scan_config()` shape can still prepare config and create an orchestrator with built-in paths only
 
 ---
@@ -169,21 +170,21 @@ These bindings mirror the Rust config model. They do not, in the inspected sourc
 
 ## Surfaces that expose typed User Settings FormID databases
 
-The CXX, Node, and Python User Settings adapters expose `CrashLogScanSettings.formid_databases` from the canonical nested document together with its preference origin. Their update-preview adapters validate requested replacement maps without writing. The native CLI now consumes the CXX typed snapshot; other scan adapters must likewise project explicit `CrashLogScanFacts` rather than relying on hidden scan-sidecar I/O.
+The CXX, Node, and Python User Settings adapters expose `CrashLogScanSettings.formid_databases` from the canonical nested document together with its preference origin. Their update-preview adapters validate requested replacement maps without writing. The native CLI consumes the narrow CXX typed group. The native GUI consumes the aggregate `GuiSettingsSnapshotDto`, whose four settings groups come from one source revision, then projects explicit `CrashLogScanFacts` through its immutable launch object.
 
-## Surface that still uses generic operations on the nested User Settings path
+## Native GUI typed edit and scan-launch surface
 
-[`classic-gui/src/app/settingsdialog.cpp`](../../classic-gui/src/app/settingsdialog.cpp) still reads and writes:
-
-- `CLASSIC_Settings.FormID Databases.{game}`
+[`classic-gui/src/core/guiusersettings.cpp`](../../classic-gui/src/core/guiusersettings.cpp) is the Qt-facing adapter for the cohesive CXX snapshot. [`classic-gui/src/app/settingsdialog.cpp`](../../classic-gui/src/app/settingsdialog.cpp) loads the additional-database list from that typed snapshot and submits the full per-game map through the revision-aware User Settings Update seam.
 
 Contributor-visible GUI details:
 
-- the list is labeled `Additional FormID Databases`
-- helper text says the built-in database is always included
-- load and save both use `yaml_ops_get_vec()` / `yaml_ops_set_vec_setting()` against the legacy nested key
+- the list is still labeled `Additional FormID Databases`
+- helper text still says the built-in database is always included
+- accepting the dialog previews and commits FormID rows with every other selected setting as one atomic update
+- cancel performs no update; rejection writes nothing; a stale revision reports a conflict and preserves the newer document
+- the preservation-aware Rust patch retains unknown keys, unrelated known-invalid values, and other games' FormID lists
 
-That raw GUI writer remains a separate cutover surface. Scanlog-core will not rediscover the written node; a maintained scan adapter must reopen typed User Settings and pass the projected rows explicitly.
+[`classic-gui/src/workers/scanrequestbuilder.cpp`](../../classic-gui/src/workers/scanrequestbuilder.cpp) is the GUI's separate scan-request boundary. `MainWindow` derives `CrashLogScanLaunchSettings` from the accepted cached snapshot, and the controller and worker forward that immutable value. Scan launch neither reopens User Settings nor reads `CLASSIC_Settings.FormID Databases.{game}` through generic YAML operations.
 
 ---
 
@@ -194,7 +195,7 @@ This split is the main source-backed reason a contributor can see "saved" FormID
 Common failure patterns:
 
 - a path saved through `ClassicConfig::save_to_yaml()` appears under top-level `formid_databases`, but native scan startup ignores it because the CLI consumes typed User Settings instead
-- a path saved through the GUI appears under `CLASSIC_Settings.FormID Databases.{game}`, but a caller that reuses an old/default typed snapshot will not see it until User Settings is reopened
+- a path accepted by the GUI appears under `CLASSIC_Settings.FormID Databases.{game}` and is reflected in the newly accepted typed snapshot; scan launch deliberately uses that snapshot rather than reopening or rediscovering the key
 - a relative path may look correct in YAML but resolves under `yaml_dir_data` (`CLASSIC Data`), not relative to the settings file itself
 - a missing DB file may not fail scan startup loudly because `DatabasePool::initialize()` later skips nonexistent files with a warning instead of a hard error
 
@@ -210,7 +211,7 @@ Practical debugging rule:
 These details are source-backed today and matter for contributors, but they should not be treated as an implied future design.
 
 - `classic-scanlog-core` intake has no User Settings discovery or raw-key behavior; callers must provide configured paths explicitly
-- the native CLI consumes the typed group, while other adapters remain responsible for projecting their own `CrashLogScanFacts`
+- the native CLI consumes the typed group and the native GUI consumes the cohesive typed snapshot; other adapters remain responsible for projecting their own `CrashLogScanFacts`
 - `classic-config-core` currently ignores the nested `CLASSIC_Settings.FormID Databases.{game}` path
 - `classic-config-core` path validation does not validate FormID database files
 - bridge path normalization uses `path.components().collect()`; it does not canonicalize case or resolve symlinks

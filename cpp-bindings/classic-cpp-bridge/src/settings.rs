@@ -84,6 +84,11 @@ enum UserSettingsMigrationApplyState {
 /// Update Preferences view into a CXX-compatible diagnostic DTO.
 fn user_settings_open_update_preferences(classic_root: &str) -> ffi::UpdatePreferencesDto {
     let settings = UserSettings::open(Path::new(classic_root));
+    user_settings_update_preferences_dto(&settings)
+}
+
+/// Projects Update Preferences from an already-opened cohesive User Settings snapshot.
+fn user_settings_update_preferences_dto(settings: &UserSettings) -> ffi::UpdatePreferencesDto {
     let source = settings.source();
     let (has_schema_version, schema_major, schema_minor) = settings
         .schema_version()
@@ -96,6 +101,15 @@ fn user_settings_open_update_preferences(classic_root: &str) -> ffi::UpdatePrefe
         update_check_enabled: settings.update_preferences().update_check(),
         update_check_origin: preference_origin_token(
             settings.update_preferences().update_check_origin(),
+        )
+        .to_string(),
+        update_source: settings
+            .update_preferences()
+            .update_source()
+            .as_str()
+            .to_string(),
+        update_source_origin: preference_origin_token(
+            settings.update_preferences().update_source_origin(),
         )
         .to_string(),
         source_location: source_location_token(source.location()).to_string(),
@@ -475,6 +489,13 @@ fn user_settings_migration_change_dto(
 /// Crash Log Scan settings group without exposing or reinterpreting raw YAML.
 fn user_settings_open_crash_log_scan_settings(classic_root: &str) -> ffi::CrashLogScanSettingsDto {
     let settings = UserSettings::open(Path::new(classic_root));
+    user_settings_crash_log_scan_settings_dto(&settings)
+}
+
+/// Projects Crash Log Scan settings from an already-opened cohesive User Settings snapshot.
+fn user_settings_crash_log_scan_settings_dto(
+    settings: &UserSettings,
+) -> ffi::CrashLogScanSettingsDto {
     let scan = settings.crash_log_scan_settings();
     let (formid_database_games, formid_database_paths) =
         flatten_formid_databases(scan.formid_databases());
@@ -535,6 +556,11 @@ fn user_settings_open_crash_log_scan_settings(classic_root: &str) -> ffi::CrashL
 /// preservation-aware Game Setup group with per-field provenance.
 fn user_settings_open_game_setup_settings(classic_root: &str) -> ffi::GameSetupSettingsDto {
     let settings = UserSettings::open(Path::new(classic_root));
+    user_settings_game_setup_settings_dto(&settings)
+}
+
+/// Projects Game Setup settings from an already-opened cohesive User Settings snapshot.
+fn user_settings_game_setup_settings_dto(settings: &UserSettings) -> ffi::GameSetupSettingsDto {
     let setup = settings.game_setup_settings();
     let (has_game_root, game_root) = setup
         .game_root()
@@ -603,6 +629,11 @@ fn user_settings_open_game_setup_settings(classic_root: &str) -> ffi::GameSetupS
 /// widget-independent frontend state with per-field provenance.
 fn user_settings_open_frontend_state(classic_root: &str) -> ffi::FrontendStateDto {
     let settings = UserSettings::open(Path::new(classic_root));
+    user_settings_frontend_state_dto(&settings)
+}
+
+/// Projects frontend state from an already-opened cohesive User Settings snapshot.
+fn user_settings_frontend_state_dto(settings: &UserSettings) -> ffi::FrontendStateDto {
     let frontend = settings.frontend_state();
     let preferences = frontend.preferences();
     let geometry = frontend.window_geometry();
@@ -640,6 +671,28 @@ fn user_settings_open_frontend_state(classic_root: &str) -> ffi::FrontendStateDt
             .iter()
             .map(user_settings_diagnostic_dto)
             .collect(),
+    }
+}
+
+/// Opens every GUI-consumed typed group from one revision-cohesive User Settings snapshot.
+fn user_settings_open_gui_settings(classic_root: &str) -> ffi::GuiSettingsSnapshotDto {
+    let settings = UserSettings::open(Path::new(classic_root));
+    user_settings_gui_snapshot_dto(&settings)
+}
+
+/// Returns every GUI-consumed published default without reading or creating User Settings.
+fn user_settings_gui_published_defaults() -> ffi::GuiSettingsSnapshotDto {
+    let settings = UserSettings::published_defaults();
+    user_settings_gui_snapshot_dto(&settings)
+}
+
+/// Projects the GUI aggregate from one already-opened or default-only core snapshot.
+fn user_settings_gui_snapshot_dto(settings: &UserSettings) -> ffi::GuiSettingsSnapshotDto {
+    ffi::GuiSettingsSnapshotDto {
+        update_preferences: user_settings_update_preferences_dto(settings),
+        crash_log_scan: user_settings_crash_log_scan_settings_dto(settings),
+        game_setup: user_settings_game_setup_settings_dto(settings),
+        frontend_state: user_settings_frontend_state_dto(settings),
     }
 }
 
@@ -827,6 +880,12 @@ fn core_user_settings_update(update: &ffi::UserSettingsUpdateDto) -> CoreUserSet
     if update.has_update_check {
         core = core.with_update_check(update.update_check);
     }
+    if update.has_update_source {
+        core = core.with_update_source(update.update_source.clone());
+    }
+    if update.has_auto_switch_after_scan {
+        core = core.with_auto_switch_after_scan(update.auto_switch_after_scan);
+    }
     if update.has_managed_game {
         core = core.with_managed_game(update.managed_game.clone());
     }
@@ -945,6 +1004,7 @@ fn user_settings_update_field_dto(
 ) -> ffi::UserSettingsUpdateFieldDto {
     let (value_kind, bool_value, has_string_value, string_value, u32_value) = match field {
         CoreUserSettingsUpdateField::UpdateCheck(value)
+        | CoreUserSettingsUpdateField::AutoSwitchAfterScan(value)
         | CoreUserSettingsUpdateField::FcxMode(value)
         | CoreUserSettingsUpdateField::SimplifyLogs(value)
         | CoreUserSettingsUpdateField::ShowStatistics(value)
@@ -953,6 +1013,9 @@ fn user_settings_update_field_dto(
             ("bool", *value, false, String::new(), 0)
         }
         CoreUserSettingsUpdateField::ManagedGame(value) => {
+            ("string", false, true, value.as_str().to_string(), 0)
+        }
+        CoreUserSettingsUpdateField::UpdateSource(value) => {
             ("string", false, true, value.as_str().to_string(), 0)
         }
         CoreUserSettingsUpdateField::GameVersionSelection(value) => {
@@ -1648,6 +1711,8 @@ mod ffi {
     struct UpdatePreferencesDto {
         update_check_enabled: bool,
         update_check_origin: String,
+        update_source: String,
+        update_source_origin: String,
         source_location: String,
         source_path: String,
         classification: String,
@@ -1780,6 +1845,17 @@ mod ffi {
         diagnostics: Vec<UserSettingsDiagnosticDto>,
     }
 
+    /// Revision-cohesive typed groups consumed by the native GUI settings and scan flows.
+    ///
+    /// Every nested DTO is projected from one `UserSettings::open`, so their revision and
+    /// diagnostics describe the same source bytes even when another process edits concurrently.
+    struct GuiSettingsSnapshotDto {
+        update_preferences: UpdatePreferencesDto,
+        crash_log_scan: CrashLogScanSettingsDto,
+        game_setup: GameSetupSettingsDto,
+        frontend_state: FrontendStateDto,
+    }
+
     /// Caller-authored multi-field User Settings Update request.
     ///
     /// Each `has_*` flag distinguishes an omitted field from a requested false,
@@ -1788,6 +1864,10 @@ mod ffi {
     struct UserSettingsUpdateDto {
         has_update_check: bool,
         update_check: bool,
+        has_update_source: bool,
+        update_source: String,
+        has_auto_switch_after_scan: bool,
+        auto_switch_after_scan: bool,
         has_managed_game: bool,
         managed_game: String,
         has_game_version_selection: bool,
@@ -1930,6 +2010,12 @@ mod ffi {
 
         /// Open User Settings and return the complete typed frontend-state group.
         fn user_settings_open_frontend_state(classic_root: &str) -> FrontendStateDto;
+
+        /// Open every GUI-consumed typed group from one revision-cohesive snapshot.
+        fn user_settings_open_gui_settings(classic_root: &str) -> GuiSettingsSnapshotDto;
+
+        /// Return every GUI-consumed Rust-owned published default without filesystem access.
+        fn user_settings_gui_published_defaults() -> GuiSettingsSnapshotDto;
 
         /// Validate a multi-field User Settings Update without writing to disk.
         fn user_settings_preview_update(
