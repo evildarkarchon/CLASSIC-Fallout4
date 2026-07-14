@@ -1,11 +1,11 @@
 //! Path-backed scan sidecar settings for Crash Log Scan Intake.
 //!
-//! This module keeps YAML Data sidecar file names, legacy settings keys,
-//! compatibility database paths, path normalization, and fail-soft loading local
-//! to scan readiness instead of spreading those details through intake callers.
+//! This module keeps YAML Data sidecar file names, compatibility database paths,
+//! path normalization, and fail-soft loading local to scan readiness instead of
+//! spreading those details through intake callers.
 
 use crate::error::{Result, ScanLogError};
-use crate::scan_intake::CrashLogScanIntakePaths;
+use crate::scan_intake::{CrashLogScanFacts, CrashLogScanIntakePaths};
 use classic_settings_core::YamlOperations;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -22,64 +22,75 @@ pub(crate) struct ScanSidecarSettings {
 }
 
 impl ScanSidecarSettings {
-    /// Load all path-backed scan sidecar settings for the selected game.
+    /// Load YAML Data sidecars and combine them with caller-provided scan facts.
     ///
-    /// Missing or unreadable sidecar YAML preserves the existing fail-soft scan
-    /// startup behavior: optional lists become empty instead of causing setup
-    /// failure. A configured Unsolved Logs Destination is still validated because
-    /// scan-run movement needs an absolute destination to be unambiguous.
+    /// Missing or unreadable YAML Data preserves the existing fail-soft scan
+    /// startup behavior. A configured Unsolved Logs Destination is still
+    /// validated because scan-run movement needs an absolute destination.
     ///
     /// # Errors
     ///
-    /// Returns `ScanLogError::InvalidInput` when `CLASSIC Settings.yaml`
-    /// contains a non-empty relative Unsolved Logs Destination.
-    pub(crate) fn load(paths: &CrashLogScanIntakePaths, game: &str) -> Result<Self> {
+    /// Returns `ScanLogError::InvalidInput` when the typed facts contain a
+    /// relative Unsolved Logs Destination.
+    pub(crate) fn load(
+        paths: &CrashLogScanIntakePaths,
+        game: &str,
+        scan_facts: &CrashLogScanFacts,
+    ) -> Result<Self> {
+        let unsolved_logs_destination =
+            validate_unsolved_logs_destination(scan_facts.unsolved_logs_destination.clone())?;
         Ok(Self {
             remove_list: load_simplify_remove_list(&paths.yaml_dir_data),
             formid_database_paths: resolve_formid_database_paths(
-                &paths.yaml_dir_root,
                 &paths.yaml_dir_data,
                 game,
+                &scan_facts.formid_database_paths,
             ),
-            unsolved_logs_destination: resolve_configured_unsolved_logs_destination(
-                &paths.yaml_dir_root,
-            )?,
+            unsolved_logs_destination,
         })
     }
 
-    /// Return a sidecar-free settings set for in-memory YAML intake without paths.
-    #[must_use]
-    pub(crate) fn empty() -> Self {
-        Self::default()
+    /// Preserve typed facts for in-memory YAML intake that has no path roots.
+    ///
+    /// Without `yaml_dir_data`, configured relative FormID paths cannot be
+    /// rebased. Callers that supply them must also supply
+    /// [`CrashLogScanIntakePaths`].
+    ///
+    /// # Errors
+    ///
+    /// Returns `ScanLogError::InvalidInput` when the typed facts contain a
+    /// relative Unsolved Logs Destination or a configured relative FormID path
+    /// that cannot be resolved without `yaml_dir_data`.
+    pub(crate) fn from_scan_facts(scan_facts: &CrashLogScanFacts) -> Result<Self> {
+        if let Some(path) = scan_facts
+            .formid_database_paths
+            .iter()
+            .find(|path| path.is_relative())
+        {
+            return Err(ScanLogError::InvalidInput(format!(
+                "configured FormID database path requires yaml_dir_data: {}",
+                path.display()
+            )));
+        }
+
+        Ok(Self {
+            remove_list: Vec::new(),
+            formid_database_paths: dedupe_paths(scan_facts.formid_database_paths.clone()),
+            unsolved_logs_destination: validate_unsolved_logs_destination(
+                scan_facts.unsolved_logs_destination.clone(),
+            )?,
+        })
     }
 }
 
-/// Resolve the persistent Unsolved Logs Destination from `CLASSIC Settings.yaml`.
+/// Validates and normalizes an optional typed Unsolved Logs Destination.
 ///
-/// Missing or empty settings mean callers should use the canonical destination.
-/// Non-empty values must be absolute and are not created during intake.
-pub(crate) fn resolve_configured_unsolved_logs_destination(
-    yaml_dir_root: impl AsRef<Path>,
-) -> Result<Option<PathBuf>> {
-    let settings_path = yaml_dir_root.as_ref().join("CLASSIC Settings.yaml");
-
-    if !settings_path.exists() {
+/// Empty input remains absent. Absolute paths are normalized without touching the
+/// filesystem; relative paths return [`ScanLogError::InvalidInput`].
+fn validate_unsolved_logs_destination(destination: Option<PathBuf>) -> Result<Option<PathBuf>> {
+    let Some(destination) = destination else {
         return Ok(None);
-    }
-
-    let ops = YamlOperations::new();
-    let doc = match ops.load_yaml_file(&settings_path) {
-        Ok(doc) => doc,
-        Err(_) => return Ok(None),
     };
-    let raw = ops.get_string_value(&doc, "CLASSIC_Settings.Unsolved Logs Destination", "");
-    let trimmed = raw.trim();
-
-    if trimmed.is_empty() {
-        return Ok(None);
-    }
-
-    let destination = PathBuf::from(trimmed);
     if !destination.is_absolute() {
         return Err(ScanLogError::InvalidInput(format!(
             "Unsolved Logs Destination must be an absolute path: {}",
@@ -93,12 +104,12 @@ pub(crate) fn resolve_configured_unsolved_logs_destination(
 /// Resolve all FormID database paths needed for a scan.
 ///
 /// The order preserves existing behavior: main game database, hardcoded
-/// compatibility databases, then user-configured databases from settings.
+/// compatibility databases, then caller-provided configured databases.
 #[must_use]
 pub(crate) fn resolve_formid_database_paths(
-    yaml_dir_root: impl AsRef<Path>,
     yaml_dir_data: impl AsRef<Path>,
     game: &str,
+    configured_paths: &[PathBuf],
 ) -> Vec<PathBuf> {
     let data_dir = yaml_dir_data.as_ref();
     let main_db = data_dir
@@ -110,49 +121,19 @@ pub(crate) fn resolve_formid_database_paths(
         .map(|rel| data_dir.join(rel))
         .collect::<Vec<_>>();
 
-    let user_paths = resolve_user_formid_database_paths(yaml_dir_root, yaml_dir_data, game);
+    let configured_paths = configured_paths.iter().cloned().map(|path| {
+        if path.is_absolute() {
+            normalize_path(path)
+        } else {
+            normalize_path(data_dir.join(path))
+        }
+    });
 
-    let mut all_paths = Vec::with_capacity(1 + hardcoded.len() + user_paths.len());
+    let mut all_paths = Vec::with_capacity(1 + hardcoded.len() + configured_paths.len());
     all_paths.push(main_db);
     all_paths.extend(hardcoded);
-    all_paths.extend(user_paths);
+    all_paths.extend(configured_paths);
     dedupe_paths(all_paths)
-}
-
-/// Resolve user-configured FormID database paths from `CLASSIC Settings.yaml`.
-///
-/// Relative paths are interpreted under `yaml_dir_data`, matching the legacy
-/// native bridge behavior.
-#[must_use]
-pub(crate) fn resolve_user_formid_database_paths(
-    yaml_dir_root: impl AsRef<Path>,
-    yaml_dir_data: impl AsRef<Path>,
-    game: &str,
-) -> Vec<PathBuf> {
-    let settings_path = yaml_dir_root.as_ref().join("CLASSIC Settings.yaml");
-
-    if !settings_path.exists() {
-        return Vec::new();
-    }
-
-    let ops = YamlOperations::new();
-    let doc = match ops.load_yaml_file(&settings_path) {
-        Ok(doc) => doc,
-        Err(_) => return Vec::new(),
-    };
-
-    let key_path = format!("CLASSIC_Settings.FormID Databases.{game}");
-    ops.get_vec_value(&doc, &key_path)
-        .into_iter()
-        .map(PathBuf::from)
-        .map(|path| {
-            if path.is_absolute() {
-                normalize_path(path)
-            } else {
-                normalize_path(yaml_dir_data.as_ref().join(path))
-            }
-        })
-        .collect()
 }
 
 /// Load simplify-log removal rules from `CLASSIC Main.yaml`.

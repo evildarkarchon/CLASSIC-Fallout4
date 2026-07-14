@@ -19,12 +19,13 @@ use classic_scanlog_core::parser::LogParser;
 use classic_scanlog_core::segment_key;
 use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};
 use classic_scanlog_core::{
-    CrashLogScanDiscoveryResult, CrashLogScanOptions, CrashLogScanOutcome,
+    CrashLogScanDiscoveryResult, CrashLogScanFacts, CrashLogScanOptions, CrashLogScanOutcome,
     CrashLogScanRunLogOutcome, CrashLogScanRunResult, CrashLogScanRunService,
     CrashLogScanRunServiceRequest, CrashLogScanSetupContext, CrashLogScanSetupResult,
     CrashLogScanSource, OrchestratorCore, StandardCrashLogScanSource, TargetedCrashLogScanSource,
 };
 use classic_shared_core::GameId;
+use classic_user_settings_core::UserSettings;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
@@ -627,7 +628,7 @@ pub async fn scan_run_execute(
     let move_unsolved_logs = options.move_unsolved_logs.unwrap_or(false);
     // JavaScript forms use blank strings as an absent optional path; normalize that
     // sentinel before core validates custom destinations as absolute paths.
-    let unsolved_logs_destination = options
+    let requested_unsolved_logs_destination = options
         .unsolved_logs_destination
         .as_deref()
         .map(str::trim)
@@ -636,6 +637,17 @@ pub async fn scan_run_execute(
     let preserve_order = options.preserve_order.unwrap_or(false);
     let yaml_dir_root = PathBuf::from(&options.yaml_dir_root);
     let yaml_dir_data = PathBuf::from(&options.yaml_dir_data);
+    let user_settings = UserSettings::open(&yaml_dir_root);
+    let scan_settings = user_settings.crash_log_scan_settings();
+    let formid_database_paths = scan_settings
+        .formid_databases()
+        .get(&options.game)
+        .into_iter()
+        .flatten()
+        .map(PathBuf::from)
+        .collect();
+    let unsolved_logs_destination = requested_unsolved_logs_destination
+        .or_else(|| scan_settings.unsolved_logs_destination().map(PathBuf::from));
 
     let result = handle
         .spawn(async move {
@@ -664,7 +676,10 @@ pub async fn scan_run_execute(
                 source,
                 setup_context,
                 move_unsolved_logs,
-                unsolved_logs_destination,
+                scan_facts: CrashLogScanFacts {
+                    formid_database_paths,
+                    unsolved_logs_destination,
+                },
                 max_concurrent,
                 cancellation: None,
                 preserve_order,

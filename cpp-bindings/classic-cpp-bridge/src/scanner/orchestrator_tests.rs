@@ -194,8 +194,7 @@ fn test_resolve_formid_db_paths_includes_main_and_hardcoded_folon() {
     )
     .unwrap();
 
-    let paths =
-        resolve_formid_db_paths(&root.to_string_lossy(), &data.to_string_lossy(), "Fallout4");
+    let paths = resolve_formid_db_paths(&data.to_string_lossy(), "Fallout4", &[]);
     let main = data.join("databases").join("Fallout4 FormIDs Main.db");
     let folon = data.join("databases").join("FOLON FormIDs.db");
 
@@ -210,11 +209,11 @@ fn test_resolve_formid_db_paths_deduplicates_hardcoded_and_user_paths() {
     std::fs::create_dir_all(data.join("databases")).unwrap();
     let custom = data.join("databases").join("custom.db");
 
-    let settings_yaml = "CLASSIC_Settings:\n  FormID Databases:\n    Fallout4:\n      - databases/FOLON FormIDs.db\n      - databases/custom.db\n";
-    std::fs::write(root.join("CLASSIC Settings.yaml"), settings_yaml).unwrap();
-
-    let paths =
-        resolve_formid_db_paths(&root.to_string_lossy(), &data.to_string_lossy(), "Fallout4");
+    let configured = vec![
+        PathBuf::from("databases/FOLON FormIDs.db"),
+        PathBuf::from("databases/custom.db"),
+    ];
+    let paths = resolve_formid_db_paths(&data.to_string_lossy(), "Fallout4", &configured);
     let main = data.join("databases").join("Fallout4 FormIDs Main.db");
     let folon = data.join("databases").join("FOLON FormIDs.db");
 
@@ -222,7 +221,7 @@ fn test_resolve_formid_db_paths_deduplicates_hardcoded_and_user_paths() {
 }
 
 #[test]
-fn test_load_user_formid_db_paths_ignores_legacy_underscore_settings_filename() {
+fn test_resolve_formid_db_paths_does_not_open_user_settings() {
     let temp = tempdir().unwrap();
     let root = temp.path();
     let data = root.join("CLASSIC Data");
@@ -230,12 +229,13 @@ fn test_load_user_formid_db_paths_ignores_legacy_underscore_settings_filename() 
 
     let settings_yaml =
         "CLASSIC_Settings:\n  FormID Databases:\n    Fallout4:\n      - databases/custom.db\n";
-    std::fs::write(root.join("CLASSIC_Settings.yaml"), settings_yaml).unwrap();
+    std::fs::write(root.join("CLASSIC Settings.yaml"), settings_yaml).unwrap();
 
-    let paths =
-        load_user_formid_db_paths(&root.to_string_lossy(), &data.to_string_lossy(), "Fallout4");
+    let paths = resolve_formid_db_paths(&data.to_string_lossy(), "Fallout4", &[]);
+    let main = data.join("databases").join("Fallout4 FormIDs Main.db");
+    let folon = data.join("databases").join("FOLON FormIDs.db");
 
-    assert!(paths.is_empty());
+    assert_eq!(paths, vec![main, folon]);
 }
 
 #[test]

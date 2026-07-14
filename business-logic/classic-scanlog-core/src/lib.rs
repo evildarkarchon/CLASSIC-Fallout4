@@ -71,9 +71,9 @@ pub use record_scanner::{
 };
 pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
 pub use scan_intake::{
-    CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness,
-    SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list,
-    resolve_formid_database_paths, resolve_user_formid_database_paths,
+    CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions,
+    FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile,
+    load_simplify_remove_list, resolve_formid_database_paths,
 };
 pub use scan_run::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome,

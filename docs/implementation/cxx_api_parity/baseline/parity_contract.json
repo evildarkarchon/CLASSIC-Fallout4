@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T08:47:23Z",
+  "generated_at_utc": "2026-07-14T10:31:21Z",
   "schema_version": 1,
   "entries": [
     {
@@ -4873,6 +4873,10 @@
         {
           "name": "show_formid_values",
           "type": "bool"
+        },
+        {
+          "name": "formid_database_paths",
+          "type": "Vec<String>"
         },
         {
           "name": "fcx_mode",

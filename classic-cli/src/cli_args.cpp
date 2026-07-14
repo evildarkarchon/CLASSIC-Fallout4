@@ -24,12 +24,13 @@ CliArgs parse_args(int argc, char* argv[]) {
 
     CLI::App app{"CLASSIC - Crash Log Auto Scanner & Setup Integrity Checker"};
 
-    app.add_option("--game", args.game, "Game to scan (Fallout4, Skyrim)")
+    auto* game_option = app.add_option("--game", args.game, "Game to scan (Fallout4, Skyrim)")
         ->default_val("Fallout4")
         ->check(CLI::IsMember({"Fallout4", "Skyrim"}));
 
-    app.add_option("--game-version", args.game_version,
-                   "Game version mode (auto, Original, NextGen, AnniversaryEdition/AE, VR)")
+    auto* game_version_option = app.add_option(
+        "--game-version", args.game_version,
+        "Game version mode (auto, Original, NextGen, AnniversaryEdition/AE, VR)")
         ->default_val("auto")
         ->check(CLI::IsMember({"auto", "Original", "NextGen", "AnniversaryEdition", "AE", "VR"}));
     app.add_flag("--fcx-mode", args.fcx_mode, "Enable FCX local file checks and enhanced analysis");
@@ -44,9 +45,10 @@ CliArgs parse_args(int argc, char* argv[]) {
 
     auto cpu_count = std::thread::hardware_concurrency();
     auto recommended = auto_concurrency_for_cpu_count(cpu_count);
-    app.add_option("--max-concurrent", args.max_concurrent,
-                   "Max parallel scans (0=auto, recommended: " + std::to_string(recommended) + " for " +
-                       std::to_string(cpu_count) + " cores)")
+    auto* max_concurrent_option = app.add_option(
+        "--max-concurrent", args.max_concurrent,
+        "Max parallel scans (0=auto, recommended: " + std::to_string(recommended) + " for " +
+            std::to_string(cpu_count) + " cores)")
         ->default_val(0)
         ->check(CLI::Range(0u, 32u));
 
@@ -89,6 +91,12 @@ CliArgs parse_args(int argc, char* argv[]) {
     if (args.game_version == "AE") {
         args.game_version = "AnniversaryEdition";
     }
+
+    // CLI11 applies default values before returning, so retain presence separately
+    // to distinguish an explicit override from a value that should come from User Settings.
+    args.game_was_explicit = game_option->count() > 0;
+    args.game_version_was_explicit = game_version_option->count() > 0;
+    args.max_concurrent_was_explicit = max_concurrent_option->count() > 0;
 
     return args;
 }

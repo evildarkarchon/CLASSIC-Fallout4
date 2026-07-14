@@ -1093,6 +1093,7 @@ dependencies = [
  "classic-scanlog-core",
  "classic-shared-core",
  "classic-shared-py",
+ "classic-user-settings-core",
  "criterion 0.5.1",
  "futures",
  "indexmap",

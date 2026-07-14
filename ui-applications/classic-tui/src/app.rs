@@ -7,9 +7,9 @@ use classic_config_core::ClassicConfig;
 use classic_file_io_core::BackupType;
 use classic_path_core::validate_custom_scan_path;
 use classic_scanlog_core::{
-    CrashLogScanOptions, CrashLogScanRunEvent, CrashLogScanRunEventKind, CrashLogScanRunService,
-    CrashLogScanRunServiceRequest, CrashLogScanRunStatus, CrashLogScanSetupContext,
-    CrashLogScanSource, StandardCrashLogScanSource,
+    CrashLogScanFacts, CrashLogScanOptions, CrashLogScanRunEvent, CrashLogScanRunEventKind,
+    CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus,
+    CrashLogScanSetupContext, CrashLogScanSource, StandardCrashLogScanSource,
 };
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
@@ -602,6 +602,12 @@ impl App {
         let simplify_logs = self.config.simplify_logs;
         let move_unsolved_logs = self.config.move_unsolved_logs;
         let unsolved_logs_destination = self.config.unsolved_logs_destination.clone();
+        let formid_database_paths = self
+            .config
+            .formid_databases
+            .get("Fallout4")
+            .cloned()
+            .unwrap_or_default();
         let yaml_dir_root = std::env::current_dir().unwrap_or_default();
         let yaml_dir_data = yaml_dir_root.join("CLASSIC Data");
         let base_folder = yaml_dir_root.clone();
@@ -636,7 +642,10 @@ impl App {
                 }),
                 setup_context,
                 move_unsolved_logs,
-                unsolved_logs_destination,
+                scan_facts: CrashLogScanFacts {
+                    formid_database_paths,
+                    unsolved_logs_destination,
+                },
                 max_concurrent: None,
                 cancellation: Some(cancellation),
                 preserve_order: false,

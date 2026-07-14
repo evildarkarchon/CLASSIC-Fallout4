@@ -74,16 +74,6 @@ int main(int argc, char* argv[]) {
         return run_check_app_update(args);
     }
 
-    // Print banner
-    std::string mode_suffix;
-    if (args.game_version != "auto") {
-        mode_suffix += " " + args.game_version;
-    }
-    if (args.fcx_mode)
-        mode_suffix += " [FCX]";
-
-    fmt::print("CLASSIC v{} - Crash Log Scanner ({}{})\n\n", CLASSIC_CLI_VERSION, args.game, mode_suffix);
-
     // Run the scan pipeline
     return run_scan(args);
 }

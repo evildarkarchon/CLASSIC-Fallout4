@@ -71,21 +71,17 @@ fn path_backed_and_in_memory_yaml_prepare_equivalent_scan_ready_payloads() {
     let root = temp.path();
     let data = root.join("CLASSIC Data");
     write_minimal_yaml_tree(root, &data);
-    std::fs::write(
-        root.join("CLASSIC Settings.yaml"),
-        concat!(
-            "CLASSIC_Settings:\n",
-            "  FormID Databases:\n",
-            "    Fallout4:\n",
-            "      - databases/custom.db\n",
-        ),
-    )
-    .expect("settings YAML should be written");
     let options = CrashLogScanOptions::new(true, true, true);
+    let scan_facts = CrashLogScanFacts {
+        formid_database_paths: vec![PathBuf::from("databases/custom.db")],
+        unsolved_logs_destination: None,
+    };
 
     let path_ready = classic_shared_core::get_runtime()
         .block_on(
-            CrashLogScanIntake::from_yaml_paths(root, &data, "Fallout4", "auto", options).prepare(),
+            CrashLogScanIntake::from_yaml_paths(root, &data, "Fallout4", "auto", options)
+                .with_scan_facts(scan_facts.clone())
+                .prepare(),
         )
         .expect("path-backed intake should prepare");
     let yaml = classic_shared_core::get_runtime()
@@ -104,6 +100,7 @@ fn path_backed_and_in_memory_yaml_prepare_equivalent_scan_ready_payloads() {
                 "auto",
                 options,
             )
+            .with_scan_facts(scan_facts)
             .prepare(),
         )
         .expect("in-memory intake should prepare");
@@ -239,24 +236,18 @@ fn missing_unsolved_logs_destination_produces_no_configured_destination() {
 }
 
 #[test]
-fn empty_unsolved_logs_destination_produces_no_configured_destination() {
+fn typed_none_unsolved_logs_destination_produces_no_configured_destination() {
     let temp = tempdir().expect("tempdir should be created");
     let root = temp.path();
     let data = root.join("CLASSIC Data");
     write_minimal_yaml_tree(root, &data);
-    std::fs::write(
-        root.join("CLASSIC Settings.yaml"),
-        "CLASSIC_Settings:\n  Unsolved Logs Destination:\n",
-    )
-    .expect("settings YAML should be written");
-
     let ready = prepare_path_backed(root, &data).expect("intake should prepare");
 
     assert!(ready.unsolved_logs_destination().is_none());
 }
 
 #[test]
-fn malformed_settings_yaml_preserves_fail_soft_destination_resolution() {
+fn malformed_user_settings_is_not_opened_during_intake() {
     let temp = tempdir().expect("tempdir should be created");
     let root = temp.path();
     let data = root.join("CLASSIC Data");
@@ -270,22 +261,28 @@ fn malformed_settings_yaml_preserves_fail_soft_destination_resolution() {
 }
 
 #[test]
-fn absolute_unsolved_logs_destination_is_stored_without_existing() {
+fn typed_absolute_unsolved_logs_destination_is_stored_without_existing() {
     let temp = tempdir().expect("tempdir should be created");
     let root = temp.path();
     let data = root.join("CLASSIC Data");
     let destination = root.join("custom unsolved logs");
     write_minimal_yaml_tree(root, &data);
-    std::fs::write(
-        root.join("CLASSIC Settings.yaml"),
-        format!(
-            "CLASSIC_Settings:\n  Unsolved Logs Destination: '{}'\n",
-            destination.display()
-        ),
-    )
-    .expect("settings YAML should be written");
-
-    let ready = prepare_path_backed(root, &data).expect("intake should prepare");
+    let ready = classic_shared_core::get_runtime()
+        .block_on(
+            CrashLogScanIntake::from_yaml_paths(
+                root,
+                &data,
+                "Fallout4",
+                "auto",
+                CrashLogScanOptions::default(),
+            )
+            .with_scan_facts(CrashLogScanFacts {
+                formid_database_paths: Vec::new(),
+                unsolved_logs_destination: Some(destination.clone()),
+            })
+            .prepare(),
+        )
+        .expect("intake should prepare");
 
     assert_eq!(
         ready.unsolved_logs_destination(),
@@ -295,18 +292,26 @@ fn absolute_unsolved_logs_destination_is_stored_without_existing() {
 }
 
 #[test]
-fn relative_unsolved_logs_destination_fails_setup() {
+fn typed_relative_unsolved_logs_destination_fails_setup() {
     let temp = tempdir().expect("tempdir should be created");
     let root = temp.path();
     let data = root.join("CLASSIC Data");
     write_minimal_yaml_tree(root, &data);
-    std::fs::write(
-        root.join("CLASSIC Settings.yaml"),
-        "CLASSIC_Settings:\n  Unsolved Logs Destination: relative/path\n",
-    )
-    .expect("settings YAML should be written");
-
-    let error = match prepare_path_backed(root, &data) {
+    let result = classic_shared_core::get_runtime().block_on(
+        CrashLogScanIntake::from_yaml_paths(
+            root,
+            &data,
+            "Fallout4",
+            "auto",
+            CrashLogScanOptions::default(),
+        )
+        .with_scan_facts(CrashLogScanFacts {
+            formid_database_paths: Vec::new(),
+            unsolved_logs_destination: Some(PathBuf::from("relative/path")),
+        })
+        .prepare(),
+    );
+    let error = match result {
         Ok(_) => panic!("relative destination should fail"),
         Err(error) => error,
     };
@@ -322,19 +327,14 @@ fn resolve_formid_database_paths_preserves_existing_order_and_dedupes() {
     std::fs::create_dir_all(data.join("databases")).expect("database dir should be created");
     let custom = data.join("databases").join("custom.db");
 
-    std::fs::write(
-        root.join("CLASSIC Settings.yaml"),
-        concat!(
-            "CLASSIC_Settings:\n",
-            "  FormID Databases:\n",
-            "    Fallout4:\n",
-            "      - databases/FOLON FormIDs.db\n",
-            "      - databases/custom.db\n",
-        ),
-    )
-    .expect("settings YAML should be written");
-
-    let paths = resolve_formid_database_paths(root, &data, "Fallout4");
+    let paths = resolve_formid_database_paths(
+        &data,
+        "Fallout4",
+        &[
+            PathBuf::from("databases/FOLON FormIDs.db"),
+            PathBuf::from("databases/custom.db"),
+        ],
+    );
     let main = data.join("databases").join("Fallout4 FormIDs Main.db");
     let folon = data.join("databases").join("FOLON FormIDs.db");
 

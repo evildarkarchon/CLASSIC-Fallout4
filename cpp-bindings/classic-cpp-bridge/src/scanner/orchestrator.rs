@@ -1,14 +1,13 @@
 use crate::runtime_support::{block_on, block_on_result};
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
-    AnalysisConfig, BatchScanEventKind, BatchScanOptions, CrashLogScanIntake, CrashLogScanOptions,
-    CrashLogScanRunEventKind, CrashLogScanRunService, CrashLogScanRunServiceRequest,
-    CrashLogScanSetupContext, CrashLogScanSource, FcxModeHandler, FcxResetError,
-    GLOBAL_FCX_HANDLER, OrchestratorCore, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis,
-    StandardCrashLogScanSource, TargetedCrashLogScanSource,
+    AnalysisConfig, BatchScanEventKind, BatchScanOptions, CrashLogScanFacts, CrashLogScanIntake,
+    CrashLogScanOptions, CrashLogScanRunEventKind, CrashLogScanRunService,
+    CrashLogScanRunServiceRequest, CrashLogScanSetupContext, CrashLogScanSource, FcxModeHandler,
+    FcxResetError, GLOBAL_FCX_HANDLER, OrchestratorCore, SHORT_SCAN_CACHE_PROFILE,
+    ScanReadyAnalysis, StandardCrashLogScanSource, TargetedCrashLogScanSource,
     load_simplify_remove_list as core_load_simplify_remove_list,
     resolve_formid_database_paths as core_resolve_formid_database_paths,
-    resolve_user_formid_database_paths as core_resolve_user_formid_database_paths,
 };
 use log::info;
 use std::path::{Path, PathBuf};
@@ -397,7 +396,14 @@ pub(crate) fn scan_run_execute(
         source,
         setup_context,
         move_unsolved_logs: request.move_unsolved_logs,
-        unsolved_logs_destination: optional_path(&request.unsolved_logs_destination),
+        scan_facts: CrashLogScanFacts {
+            formid_database_paths: request
+                .formid_database_paths
+                .iter()
+                .map(|path| PathBuf::from(path.as_str()))
+                .collect(),
+            unsolved_logs_destination: optional_path(&request.unsolved_logs_destination),
+        },
         // Core folds the `Some(0)` sentinel to the adaptive default.
         max_concurrent: Some(request.max_concurrent as usize),
         cancellation: Some(Arc::clone(&cancellation_token.cancelled)),
@@ -458,16 +464,16 @@ fn scan_setup_context_from_request(
 
 // ── FormID database path resolution ─────────────────────────────────
 
-fn load_user_formid_db_paths(yaml_dir_root: &str, yaml_dir_data: &str, game: &str) -> Vec<PathBuf> {
-    core_resolve_user_formid_database_paths(yaml_dir_root, yaml_dir_data, game)
-}
-
 fn load_exclude_log_records(yaml_dir_data: &str) -> Vec<String> {
     core_load_simplify_remove_list(yaml_dir_data)
 }
 
-fn resolve_formid_db_paths(yaml_dir_root: &str, yaml_dir_data: &str, game: &str) -> Vec<PathBuf> {
-    core_resolve_formid_database_paths(yaml_dir_root, yaml_dir_data, game)
+fn resolve_formid_db_paths(
+    yaml_dir_data: &str,
+    game: &str,
+    configured_paths: &[PathBuf],
+) -> Vec<PathBuf> {
+    core_resolve_formid_database_paths(yaml_dir_data, game, configured_paths)
 }
 
 #[cfg(test)]

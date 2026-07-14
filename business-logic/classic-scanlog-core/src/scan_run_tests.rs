@@ -97,7 +97,7 @@ fn service_request(
         source,
         setup_context: None,
         move_unsolved_logs: false,
-        unsolved_logs_destination: None,
+        scan_facts: CrashLogScanFacts::default(),
         max_concurrent: Some(1),
         cancellation: None,
         preserve_order: true,

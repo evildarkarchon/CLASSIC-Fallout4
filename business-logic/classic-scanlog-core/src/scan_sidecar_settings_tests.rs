@@ -1,5 +1,5 @@
 use super::*;
-use crate::scan_intake::CrashLogScanIntakePaths;
+use crate::scan_intake::{CrashLogScanFacts, CrashLogScanIntakePaths};
 use tempfile::tempdir;
 
 fn make_paths(root: &std::path::Path) -> CrashLogScanIntakePaths {
@@ -27,16 +27,16 @@ fn load_collects_typed_sidecar_settings() {
         "exclude_log_records:\n  - '(void*)'\n  - 'Basic Render Driver'\n",
     )
     .expect("main YAML should be written");
-    std::fs::write(
-        temp.path().join("CLASSIC Settings.yaml"),
-        format!(
-            "CLASSIC_Settings:\n  Unsolved Logs Destination: '{}'\n  FormID Databases:\n    Fallout4:\n      - databases/FOLON FormIDs.db\n      - databases/custom.db\n",
-            destination.display()
-        ),
-    )
-    .expect("settings YAML should be written");
+    let scan_facts = CrashLogScanFacts {
+        formid_database_paths: vec![
+            "databases/FOLON FormIDs.db".into(),
+            "databases/custom.db".into(),
+        ],
+        unsolved_logs_destination: Some(destination.clone()),
+    };
 
-    let sidecars = ScanSidecarSettings::load(&paths, "Fallout4").expect("sidecars should load");
+    let sidecars =
+        ScanSidecarSettings::load(&paths, "Fallout4", &scan_facts).expect("sidecars should load");
 
     assert_eq!(
         sidecars.remove_list,
@@ -61,7 +61,11 @@ fn load_collects_typed_sidecar_settings() {
 
 #[test]
 fn empty_has_no_sidecar_values() {
-    assert_eq!(ScanSidecarSettings::empty(), ScanSidecarSettings::default());
+    assert_eq!(
+        ScanSidecarSettings::from_scan_facts(&CrashLogScanFacts::default())
+            .expect("empty facts should be valid"),
+        ScanSidecarSettings::default()
+    );
 }
 
 #[test]
@@ -78,14 +82,8 @@ fn malformed_sidecar_yaml_preserves_fail_soft_settings() {
         "exclude_log_records: [\n",
     )
     .expect("main YAML should be written");
-    std::fs::write(
-        temp.path().join("CLASSIC Settings.yaml"),
-        "CLASSIC_Settings: [\n",
-    )
-    .expect("settings YAML should be written");
-
-    let sidecars =
-        ScanSidecarSettings::load(&paths, "Fallout4").expect("sidecars should load fail-soft");
+    let sidecars = ScanSidecarSettings::load(&paths, "Fallout4", &CrashLogScanFacts::default())
+        .expect("sidecars should load fail-soft");
 
     assert!(sidecars.remove_list.is_empty());
     assert_eq!(
@@ -109,14 +107,15 @@ fn relative_unsolved_logs_destination_is_rejected() {
     let temp = tempdir().expect("tempdir should be created");
     let paths = make_paths(temp.path());
     create_database_dir(&paths);
-    std::fs::write(
-        temp.path().join("CLASSIC Settings.yaml"),
-        "CLASSIC_Settings:\n  Unsolved Logs Destination: relative/path\n",
+    let error = ScanSidecarSettings::load(
+        &paths,
+        "Fallout4",
+        &CrashLogScanFacts {
+            formid_database_paths: Vec::new(),
+            unsolved_logs_destination: Some("relative/path".into()),
+        },
     )
-    .expect("settings YAML should be written");
-
-    let error = ScanSidecarSettings::load(&paths, "Fallout4")
-        .expect_err("relative destination should fail setup");
+    .expect_err("relative destination should fail setup");
 
     assert!(matches!(error, ScanLogError::InvalidInput(_)));
 }

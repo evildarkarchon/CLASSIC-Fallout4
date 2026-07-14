@@ -156,6 +156,7 @@ mod ffi {
         custom_scan_directory: String,
         configured_documents_root: String,
         show_formid_values: bool,
+        formid_database_paths: Vec<String>,
         fcx_mode: bool,
         simplify_logs: bool,
         move_unsolved_logs: bool,

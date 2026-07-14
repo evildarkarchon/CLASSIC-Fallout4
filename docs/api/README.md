@@ -69,7 +69,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `classic-path-core` handles game-path discovery, documents-folder checks, path validation, and versioned backups
 - `classic-xse-core` builds on path/version helpers to resolve XSE Folder paths, detect XSE installation state, and parse XSE versions
 - `game-setup-workflow.md` explains how current setup/install validation is split across path, XSE, scangame, and Version Registry crates
-- `formid-settings-boundary.md` documents the current split between `ClassicConfig.formid_databases` and the legacy scan-startup settings path still used by the C++ bridge
+- `formid-settings-boundary.md` documents the typed FormID settings boundary shared by scan callers and the C++ bridge
 - `classic-file-io-core` provides shared file-system, decoding, hashing, and log collection helpers used by higher layers
 - `classic-resource-core` provides lightweight resource classification and enumeration helpers used alongside broader file and scan workflows
 - `classic-database-core` manages async SQLite pools and FormID lookups for analysis consumers

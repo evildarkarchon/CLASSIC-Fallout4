@@ -8,8 +8,9 @@ use crate::error::{Result, ScanLogError};
 use crate::report::autoscan_report_path;
 use crate::{
     AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, ConfigIssue,
-    CrashLogScanIntake, CrashLogScanOptions, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER,
-    IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, ScanReadyAnalysis,
+    CrashLogScanFacts, CrashLogScanIntake, CrashLogScanOptions, FcxModeHandler, FcxResetError,
+    GLOBAL_FCX_HANDLER, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase,
+    ScanReadyAnalysis,
 };
 use classic_database_core::DatabasePool;
 use classic_file_io_core::{LogCollector, RejectedInput, resolve_targeted_inputs};
@@ -78,13 +79,17 @@ impl CrashLogScanRunService {
             request.game_version.clone(),
             request.options,
         )
+        .with_scan_facts(request.scan_facts.clone())
         .prepare()
         .await?;
 
+        let configured_unsolved_logs_destination = ready
+            .unsolved_logs_destination()
+            .map(std::path::Path::to_path_buf);
         let intent = CrashLogScanRunIntent::from_configured_flags(
             matches!(request.source, CrashLogScanSource::Targeted(_)),
             request.move_unsolved_logs,
-            request.unsolved_logs_destination.clone(),
+            configured_unsolved_logs_destination,
         );
         let run_request = CrashLogScanRunRequest {
             logs: discovery.accepted_logs.clone(),
@@ -121,8 +126,8 @@ pub struct CrashLogScanRunServiceRequest {
     pub setup_context: Option<CrashLogScanSetupContext>,
     /// Whether failed Standard runs move logs and reports to Unsolved Logs.
     pub move_unsolved_logs: bool,
-    /// Optional absolute custom Unsolved Logs destination.
-    pub unsolved_logs_destination: Option<PathBuf>,
+    /// Typed User Settings facts supplied by the caller's settings adapter.
+    pub scan_facts: CrashLogScanFacts,
     /// Optional maximum number of concurrently processed Crash Logs.
     pub max_concurrent: Option<usize>,
     /// Optional cooperative cancellation flag.

@@ -29,6 +29,8 @@ TEST_CASE("CliArgs defaults", "[cli_args]") {
 
     REQUIRE(args.game == "Fallout4");
     REQUIRE(args.game_version == "auto");
+    REQUIRE_FALSE(args.game_was_explicit);
+    REQUIRE_FALSE(args.game_version_was_explicit);
     REQUIRE(args.fcx_mode == false);
     REQUIRE(args.show_fid_values == false);
     REQUIRE(args.simplify_logs == false);
@@ -36,6 +38,7 @@ TEST_CASE("CliArgs defaults", "[cli_args]") {
     REQUIRE(args.unsolved_logs_destination.empty());
     REQUIRE(args.reset_unsolved_logs_destination == false);
     REQUIRE(args.max_concurrent == 0);
+    REQUIRE_FALSE(args.max_concurrent_was_explicit);
     REQUIRE(args.version_flag == false);
     REQUIRE(args.check_yaml_updates == false);
     REQUIRE(args.apply_yaml_updates == false);
@@ -60,12 +63,14 @@ TEST_CASE("CliArgs game selection", "[cli_args]") {
         ArgvBuilder ab({"classic-cli", "--game", "Fallout4"});
         CliArgs args = parse_args(ab.argc(), ab.argv());
         REQUIRE(args.game == "Fallout4");
+        REQUIRE(args.game_was_explicit);
     }
 
     SECTION("Skyrim") {
         ArgvBuilder ab({"classic-cli", "--game", "Skyrim"});
         CliArgs args = parse_args(ab.argc(), ab.argv());
         REQUIRE(args.game == "Skyrim");
+        REQUIRE(args.game_was_explicit);
     }
 
     // NOTE: Invalid --game values cause CLI11 to call std::exit(),
@@ -78,6 +83,7 @@ TEST_CASE("CliArgs boolean flags", "[cli_args]") {
         ArgvBuilder ab({"classic-cli", "--game-version", "VR"});
         CliArgs args = parse_args(ab.argc(), ab.argv());
         REQUIRE(args.game_version == "VR");
+        REQUIRE(args.game_version_was_explicit);
     }
 
     SECTION("--fcx-mode enables FCX") {
@@ -134,6 +140,7 @@ TEST_CASE("CliArgs scan-path and max-concurrent", "[cli_args]") {
         ArgvBuilder ab({"classic-cli", "--max-concurrent", "8"});
         CliArgs args = parse_args(ab.argc(), ab.argv());
         REQUIRE(args.max_concurrent == 8);
+        REQUIRE(args.max_concurrent_was_explicit);
     }
 
     SECTION("--unsolved-logs-destination sets persistent destination") {

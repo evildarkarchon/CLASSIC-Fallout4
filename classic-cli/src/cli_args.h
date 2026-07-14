@@ -8,12 +8,15 @@
 struct CliArgs {
     std::string game = "Fallout4";
     std::string game_version = "auto";
+    bool game_was_explicit = false;
+    bool game_version_was_explicit = false;
     bool fcx_mode = false;
     bool show_fid_values = false;
     bool simplify_logs = false;
     std::string scan_path;                 // Empty = auto-detect
     std::string unsolved_logs_destination; // Empty = use configured/canonical destination
     uint32_t max_concurrent = 0;           // 0 = auto (cpu_count - 2, min 2, max 32)
+    bool max_concurrent_was_explicit = false;
     bool version_flag = false;
     bool reset_unsolved_logs_destination = false;
     std::vector<std::string> input_paths; // Explicit crash-log files or directories

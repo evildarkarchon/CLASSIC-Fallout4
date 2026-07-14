@@ -6,13 +6,14 @@ use classic_config_core::{
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
     AnalysisConfig, AnalysisResult, BatchScanEventKind, BatchScanOptions,
-    CrashLogScanDiscoveryResult, CrashLogScanOptions, CrashLogScanOutcome,
+    CrashLogScanDiscoveryResult, CrashLogScanFacts, CrashLogScanOptions, CrashLogScanOutcome,
     CrashLogScanRunLogOutcome, CrashLogScanRunResult, CrashLogScanRunService,
     CrashLogScanRunServiceRequest, CrashLogScanSetupContext, CrashLogScanSetupResult,
     CrashLogScanSource, OrchestratorCore, StandardCrashLogScanSource, TargetedCrashLogScanSource,
     build_analysis_config_from_yaml,
 };
 use classic_shared::without_gil_block_on;
+use classic_user_settings_core::UserSettings;
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
@@ -1486,6 +1487,17 @@ pub fn scan_run_execute(
 ) -> PyResult<PyScanRunResult> {
     let yaml_dir_root = PathBuf::from(yaml_dir_root);
     let yaml_dir_data = PathBuf::from(yaml_dir_data);
+    let user_settings = UserSettings::open(&yaml_dir_root);
+    let scan_settings = user_settings.crash_log_scan_settings();
+    let formid_database_paths = scan_settings
+        .formid_databases()
+        .get(&game)
+        .into_iter()
+        .flatten()
+        .map(PathBuf::from)
+        .collect();
+    let unsolved_logs_destination = optional_string_to_path(unsolved_logs_destination)
+        .or_else(|| scan_settings.unsolved_logs_destination().map(PathBuf::from));
     let cancellation = cancellation_token.map(|token| token.inner.clone());
     let source = if targeted_mode {
         let inputs = targeted_inputs.unwrap_or(log_paths);
@@ -1513,7 +1525,10 @@ pub fn scan_run_execute(
                 source,
                 setup_context,
                 move_unsolved_logs,
-                unsolved_logs_destination: optional_string_to_path(unsolved_logs_destination),
+                scan_facts: CrashLogScanFacts {
+                    formid_database_paths,
+                    unsolved_logs_destination,
+                },
                 max_concurrent,
                 cancellation,
                 preserve_order,

@@ -98,25 +98,6 @@ static std::string startup_correlation_id() {
     return correlation_id;
 }
 
-static std::string settings_file_path(const DataDirs& dirs) {
-    return (fs::path(dirs.root) / "CLASSIC Settings.yaml").string();
-}
-
-static bool read_bool_setting(const std::string& settings_path, const char* key, bool default_value) {
-    try {
-        auto ops = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*ops, settings_path);
-        auto value = classic::settings::yaml_ops_get_setting_value(*ops, key);
-        if (value.value_type == "bool") {
-            return value.value == "true";
-        }
-    } catch (const rust::Error& e) {
-        fmt::print(stderr, "Warning: could not read {} from {}: {}\n", key, settings_path, std::string(e.what()));
-    }
-
-    return default_value;
-}
-
 class CliBatchProgressCallback final : public classic::scanner::ScanBatchProgressCallback {
 public:
     explicit CliBatchProgressCallback(ProgressDisplay& progress)
@@ -152,18 +133,27 @@ private:
 
 static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
                              std::chrono::steady_clock::time_point total_start) {
-    const std::string settings_path = settings_file_path(dirs);
-    if (!persist_unsolved_logs_destination_option(args, dirs.root)) {
+    const auto prepared = prepare_scan_user_settings(args, dirs.root);
+    if (!prepared.has_value()) {
         return 1;
     }
-    const bool move_unsolved_logs = read_bool_setting(settings_path, "CLASSIC_Settings.Move Unsolved Logs", false);
+
+    classic::registry::registry_set_game(prepared->game);
+    std::string mode_suffix;
+    if (prepared->game_version != "auto") {
+        mode_suffix += " " + prepared->game_version;
+    }
+    if (prepared->fcx_mode) {
+        mode_suffix += " [FCX]";
+    }
+    fmt::print("CLASSIC v{} - Crash Log Scanner ({}{})\n\n", CLASSIC_CLI_VERSION, prepared->game, mode_suffix);
 
     // Discover crash logs -- targeted mode or standard discovery
     rust::Vec<rust::String> log_paths;
     const bool targeted_mode = !args.input_paths.empty();
     std::error_code ec;
     const std::string base_dir = fs::current_path(ec).string();
-    const std::string custom_dir = args.scan_path;
+    const std::string custom_dir = prepared->custom_scan_directory;
 
     if (targeted_mode) {
         // Targeted mode: resolve explicit user-supplied paths
@@ -187,8 +177,9 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
             fmt::print("\n");
         }
     } else {
-        auto collector = classic::files::log_collector_new_for_scan(base_dir, dirs.data, args.game, args.game_version,
-                                                                    "", custom_dir);
+        auto collector = classic::files::log_collector_new_for_scan(
+            base_dir, dirs.data, prepared->game, prepared->game_version,
+            prepared->configured_documents_root, custom_dir);
         log_paths = classic::files::log_collector_collect_all(*collector);
 
     }
@@ -199,10 +190,10 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
     }
 
     // Scan all logs through the Rust Crash Log Scan Run seam.
-    auto concurrency = effective_concurrency(args.max_concurrent, std::thread::hardware_concurrency());
+    auto concurrency = effective_concurrency(prepared->max_concurrent, std::thread::hardware_concurrency());
     fmt::print("Scanning with {} concurrent scan{}\n\n", concurrency, concurrency == 1 ? "" : "s");
 
-    ProgressDisplay progress(total_logs, args.game);
+    ProgressDisplay progress(total_logs, prepared->game);
     CliBatchProgressCallback progress_callback(progress);
     auto cancellation_token = classic::scanner::scan_cancellation_token_new();
 
@@ -226,21 +217,24 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
             classic::scanner::ScanRunRequestDto request{};
             request.yaml_dir_root = rust::String(dirs.root);
             request.yaml_dir_data = rust::String(dirs.data);
-            request.game = rust::String(args.game);
-            request.game_version = rust::String(args.game_version);
+            request.game = rust::String(prepared->game);
+            request.game_version = rust::String(prepared->game_version);
             request.base_directory = rust::String(base_dir);
             request.custom_scan_directory = rust::String(custom_dir);
-            request.configured_documents_root = rust::String("");
-            request.show_formid_values = args.show_fid_values;
-            request.fcx_mode = args.fcx_mode;
-            request.simplify_logs = args.simplify_logs;
-            request.move_unsolved_logs = move_unsolved_logs;
-            request.unsolved_logs_destination = rust::String(args.unsolved_logs_destination);
+            request.configured_documents_root = rust::String(prepared->configured_documents_root);
+            request.show_formid_values = prepared->show_formid_values;
+            for (const auto& path : prepared->formid_database_paths) {
+                request.formid_database_paths.push_back(rust::String(path));
+            }
+            request.fcx_mode = prepared->fcx_mode;
+            request.simplify_logs = prepared->simplify_logs;
+            request.move_unsolved_logs = prepared->move_unsolved_logs;
+            request.unsolved_logs_destination = rust::String(prepared->unsolved_logs_destination);
             request.targeted_mode = targeted_mode;
-            request.setup_game_root = rust::String("");
-            request.setup_docs_root = rust::String("");
-            request.setup_game_exe_path = rust::String("");
-            request.setup_xse_log_path = rust::String("");
+            request.setup_game_root = rust::String(prepared->setup_game_root);
+            request.setup_docs_root = rust::String(prepared->setup_docs_root);
+            request.setup_game_exe_path = rust::String(prepared->setup_game_exe_path);
+            request.setup_xse_log_path = rust::String(prepared->setup_xse_log_path);
             request.max_concurrent = concurrency;
             for (const auto& input : args.input_paths) {
                 request.targeted_inputs.push_back(rust::String(input));
@@ -363,9 +357,6 @@ int run_scan(const CliArgs& args) {
         fmt::print(stderr, "Fatal: failed to initialize runtime: {}\n", std::string(e.what()));
         return 2;
     }
-
-    // Set game in global registry
-    classic::registry::registry_set_game(args.game);
 
     // Find data root
     auto dirs = find_data_root();

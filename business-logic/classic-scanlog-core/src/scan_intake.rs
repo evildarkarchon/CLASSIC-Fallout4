@@ -49,10 +49,26 @@ impl CrashLogScanOptions {
 /// Path roots used by path-backed YAML Data and scan sidecar settings.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CrashLogScanIntakePaths {
-    /// Root directory containing user settings and ignore YAML.
+    /// Root directory containing ignore YAML and the canonical backup layout.
     pub yaml_dir_root: PathBuf,
     /// `CLASSIC Data` directory containing shippable YAML databases.
     pub yaml_dir_data: PathBuf,
+}
+
+/// Typed User Settings facts supplied by a Crash Log Scan adapter.
+///
+/// Crash Log Scan Intake consumes these values but never opens or persists User
+/// Settings. Callers retain ownership of settings discovery, diagnostics, and
+/// accepted updates.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct CrashLogScanFacts {
+    /// Additional FormID database paths configured for the selected game.
+    ///
+    /// Relative paths are resolved under `yaml_dir_data` before intake appends
+    /// them after the main and compatibility databases and removes duplicates.
+    pub formid_database_paths: Vec<PathBuf>,
+    /// Configured absolute Unsolved Logs Destination, when present.
+    pub unsolved_logs_destination: Option<PathBuf>,
 }
 
 impl CrashLogScanIntakePaths {
@@ -208,6 +224,7 @@ pub struct CrashLogScanIntake<'a> {
     selected_game_version: String,
     options: CrashLogScanOptions,
     paths: Option<CrashLogScanIntakePaths>,
+    scan_facts: CrashLogScanFacts,
     yaml_source: YamlDataSource<'a>,
 }
 
@@ -215,8 +232,8 @@ impl<'a> CrashLogScanIntake<'a> {
     /// Creates intake for YAML Data loaded from the standard path-backed layout.
     ///
     /// The returned intake loads `YamlDataCore` from `yaml_dir_root` and
-    /// `yaml_dir_data`, then resolves simplify-log and FormID sidecar settings
-    /// from the same roots.
+    /// `yaml_dir_data`, then loads simplify-log rules from YAML Data. FormID and
+    /// Unsolved Logs settings must be supplied through [`Self::with_scan_facts`].
     #[must_use]
     pub fn from_yaml_paths(
         yaml_dir_root: impl Into<PathBuf>,
@@ -230,14 +247,16 @@ impl<'a> CrashLogScanIntake<'a> {
             selected_game_version: selected_game_version.into(),
             options,
             paths: Some(CrashLogScanIntakePaths::new(yaml_dir_root, yaml_dir_data)),
+            scan_facts: CrashLogScanFacts::default(),
             yaml_source: YamlDataSource::PathBacked,
         }
     }
 
     /// Creates intake from already-loaded in-memory YAML Data.
     ///
-    /// Supplying `paths` lets in-memory tests or adapters resolve the same
-    /// simplify-log and FormID sidecar settings as path-backed production input.
+    /// Supplying `paths` lets in-memory tests or adapters load the same
+    /// simplify-log rules and resolve the same typed FormID paths as path-backed
+    /// production input.
     #[must_use]
     pub fn from_yaml_data(
         yaml: &'a YamlDataCore,
@@ -251,20 +270,32 @@ impl<'a> CrashLogScanIntake<'a> {
             selected_game_version: selected_game_version.into(),
             options,
             paths,
+            scan_facts: CrashLogScanFacts::default(),
             yaml_source: YamlDataSource::InMemory(yaml),
         }
+    }
+
+    /// Supplies typed scan facts already projected by the caller's User Settings adapter.
+    ///
+    /// These values replace all scan-intake interpretation of User Settings files.
+    #[must_use]
+    pub fn with_scan_facts(mut self, scan_facts: CrashLogScanFacts) -> Self {
+        self.scan_facts = scan_facts;
+        self
     }
 
     /// Builds a scan-ready payload without starting analysis.
     ///
     /// This centralizes current readiness behavior and intentionally preserves
-    /// fail-soft sidecar loading: missing simplify-log settings or FormID user
-    /// settings produce empty sidecar lists rather than new hard failures.
+    /// fail-soft YAML Data sidecar loading: missing simplify-log rules produce an
+    /// empty removal list rather than a new hard failure.
     ///
     /// # Errors
     ///
     /// Returns `ScanLogError::ConfigError` when path-backed YAML Data fails to
-    /// load or parse through `classic-config-core`.
+    /// load or parse through `classic-config-core`, or
+    /// `ScanLogError::InvalidInput` when the typed Unsolved Logs Destination is
+    /// relative.
     pub async fn prepare(&self) -> Result<ScanReadyAnalysis> {
         let loaded_yaml = match self.yaml_source {
             YamlDataSource::PathBacked => {
@@ -295,8 +326,8 @@ impl<'a> CrashLogScanIntake<'a> {
         };
 
         let sidecar_settings = match self.paths.as_ref() {
-            Some(paths) => ScanSidecarSettings::load(paths, &self.game)?,
-            None => ScanSidecarSettings::empty(),
+            Some(paths) => ScanSidecarSettings::load(paths, &self.game, &self.scan_facts)?,
+            None => ScanSidecarSettings::from_scan_facts(&self.scan_facts)?,
         };
         let ScanSidecarSettings {
             remove_list,
@@ -331,30 +362,15 @@ impl<'a> CrashLogScanIntake<'a> {
 /// Resolve all FormID database paths needed for a scan.
 ///
 /// The order preserves existing behavior: main game database, hardcoded
-/// compatibility databases, then user-configured databases from settings. This
-/// compatibility helper delegates to the typed sidecar settings module that owns
-/// the YAML path/key implementation details.
+/// compatibility databases, then caller-provided configured databases. Relative
+/// configured paths are resolved under `yaml_dir_data` before deduplication.
 #[must_use]
 pub fn resolve_formid_database_paths(
-    yaml_dir_root: impl AsRef<Path>,
     yaml_dir_data: impl AsRef<Path>,
     game: &str,
+    configured_paths: &[PathBuf],
 ) -> Vec<PathBuf> {
-    scan_sidecar_settings::resolve_formid_database_paths(yaml_dir_root, yaml_dir_data, game)
-}
-
-/// Resolve user-configured FormID database paths from `CLASSIC Settings.yaml`.
-///
-/// Relative paths are interpreted under `yaml_dir_data`, matching the legacy
-/// native bridge behavior. This compatibility helper delegates to the typed
-/// sidecar settings module that owns the YAML path/key implementation details.
-#[must_use]
-pub fn resolve_user_formid_database_paths(
-    yaml_dir_root: impl AsRef<Path>,
-    yaml_dir_data: impl AsRef<Path>,
-    game: &str,
-) -> Vec<PathBuf> {
-    scan_sidecar_settings::resolve_user_formid_database_paths(yaml_dir_root, yaml_dir_data, game)
+    scan_sidecar_settings::resolve_formid_database_paths(yaml_dir_data, game, configured_paths)
 }
 
 /// Load simplify-log removal rules from `CLASSIC Main.yaml`.

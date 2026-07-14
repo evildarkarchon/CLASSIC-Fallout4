@@ -46,12 +46,13 @@ Crash Log Scan Intake prepares an existing Crash Log for analysis before orchest
 
 - `CrashLogScanIntake` - path-backed or in-memory intake builder
 - `CrashLogScanOptions` - caller scan flags for FormID values, FCX mode, and simplify logs
-- `CrashLogScanIntakePaths` - root/data paths used for path-backed YAML Data and sidecar settings
+- `CrashLogScanFacts` - typed FormID and Unsolved Logs facts projected by the caller's User Settings adapter
+- `CrashLogScanIntakePaths` - root/data paths used for path-backed YAML Data and canonical backup placement
 - `ScanReadyAnalysis` - scan-ready payload containing `AnalysisConfig`, FormID readiness, and cache profile choice
 - `FormIdReadiness` - whether FormID databases should initialize and which paths to use
 - `ShortScanCacheProfile`, `SHORT_SCAN_CACHE_PROFILE` - short native-scan DB cache profile selected by intake
-- `load_simplify_remove_list()`, `resolve_formid_database_paths()`, `resolve_user_formid_database_paths()` - characterization-friendly helpers for sidecar readiness rules
-- `scan_sidecar_settings` - crate-private implementation that keeps sidecar YAML file names, legacy key paths, compatibility fallback, normalization, and fail-soft behavior local to intake
+- `load_simplify_remove_list()`, `resolve_formid_database_paths()` - characterization-friendly helpers for YAML Data and typed-path readiness rules
+- `scan_sidecar_settings` - crate-private implementation that keeps YAML Data sidecar names, compatibility paths, normalization, validation, and fail-soft behavior local to intake
 
 ### `orchestrator`
 
@@ -152,20 +153,21 @@ Important constructors/helpers:
 
 - `CrashLogScanIntake::from_yaml_paths(yaml_dir_root, yaml_dir_data, game, selected_game_version, options)`
 - `CrashLogScanIntake::from_yaml_data(yaml, paths, game, selected_game_version, options)`
+- `CrashLogScanIntake::with_scan_facts(CrashLogScanFacts)`
 - `CrashLogScanIntake::prepare().await -> Result<ScanReadyAnalysis, ScanLogError>`
 - `CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs)`
-- `resolve_formid_database_paths(yaml_dir_root, yaml_dir_data, game)`
+- `resolve_formid_database_paths(yaml_dir_data, game, configured_paths)`
 - `load_simplify_remove_list(yaml_dir_data)`
 
 Behavior worth knowing:
 
 - Path-backed intake loads YAML Data through `classic-config-core::YamlDataCore::load_from_yaml_files()`.
 - In-memory intake accepts an already-loaded `YamlDataCore` so tests and later adapters can use the same readiness seam without unnecessary file setup.
-- Supplying paths to in-memory intake lets it resolve the same `CLASSIC Main.yaml` `exclude_log_records` and `CLASSIC Settings.yaml` FormID database sidecars as path-backed intake.
-- Missing or unreadable sidecar settings preserve existing fail-soft behavior: simplify-log removal and user FormID database lists become empty instead of new hard failures.
-- `ScanReadyAnalysis` stores path roots and the parsed `CLASSIC_Settings.Unsolved Logs Destination` for scan-run destination resolution. Missing or empty destination means canonical behavior; a non-empty relative destination is a setup error.
-- FormID database path order is main game DB, hardcoded Fallout 4/Fallout 4 VR FOLON DB, then user-configured paths, with normalized path de-duplication preserving first occurrence.
-- The crate-private sidecar settings module owns those file names and legacy key paths; the public helper functions remain compatibility wrappers for existing callers and tests.
+- `CrashLogScanFacts` carries caller-projected configured FormID database paths and the optional Unsolved Logs Destination. Intake never discovers, opens, previews, or persists User Settings.
+- Supplying paths to in-memory intake lets it resolve the same YAML Data-owned `CLASSIC Main.yaml` `exclude_log_records` sidecar as path-backed intake. Missing or unreadable simplify-log data remains fail-soft.
+- `ScanReadyAnalysis` stores path roots and the caller-provided Unsolved Logs Destination for scan-run destination resolution. `None` means canonical behavior; a non-empty relative destination is a setup error.
+- FormID database path order is main game DB, hardcoded Fallout 4/Fallout 4 VR FOLON DB, then caller-provided configured paths. Relative configured paths resolve under `yaml_dir_data`, and normalized path de-duplication preserves first occurrence.
+- The crate-private sidecar settings module owns only YAML Data sidecar names, compatibility database paths, normalization, and validation. It has no User Settings file or key-path knowledge.
 - Intake chooses the short-scan cache profile, but `classic-database-core` still owns pool initialization, cache bounds, connection behavior, and lookup mechanics.
 
 ## `AnalysisConfig`
@@ -303,7 +305,7 @@ Behavior worth knowing:
 - `CrashLogScanRunRequest.max_concurrent = Some(0)` is treated as the adaptive default at the scan-run seam, identical to `None`. `run` folds `Some(0) -> None` before building batch options; only positive values pin the concurrency. This fold lives at the scan-run seam only and does not change `resolve_batch_concurrency`, which keeps `Some(0) -> 1` (serial) for the analysis-batch callers.
 - `Standard` runs may move failed Crash Logs and sibling Autoscan Reports to Unsolved Logs when their intent requests movement.
 - `Targeted` runs never move Crash Logs or Autoscan Reports to Unsolved Logs.
-- `MoveToConfiguredOrDefault` uses the prepared `CLASSIC_Settings.Unsolved Logs Destination` when non-empty, otherwise the canonical `CLASSIC Backup/Unsolved Logs` directory under path-backed intake roots.
+- `MoveToConfiguredOrDefault` uses the typed destination supplied through `CrashLogScanFacts` when present, otherwise the canonical `CLASSIC Backup/Unsolved Logs` directory under path-backed intake roots.
 - `MoveToCustom(path)` requires an absolute path and fails setup before analysis when the path is relative. It does not create the directory during setup.
 - Missing path roots with `MoveToConfiguredOrDefault` and no configured destination are setup errors. Invalid or unwritable absolute destinations remain per-log movement failures.
 - Autoscan Report paths are derived as sibling `{stem}-AUTOSCAN.md` paths and written by this module when analysis succeeds and report lines are present.
@@ -476,8 +478,8 @@ Binding expectation:
 
 The main contributor-facing pipeline looks like this:
 
-1. Prepare Crash Log Scan Intake with `CrashLogScanIntake::from_yaml_paths(...)` or `CrashLogScanIntake::from_yaml_data(...)`.
-2. Use `prepare().await` to produce `ScanReadyAnalysis`.
+1. Prepare Crash Log Scan Intake with `CrashLogScanIntake::from_yaml_paths(...)` or `CrashLogScanIntake::from_yaml_data(...)` and attach caller-projected `CrashLogScanFacts` when User Settings affect the run.
+2. Use `prepare().await` to produce `ScanReadyAnalysis`; intake reads YAML Data but does not open or persist User Settings.
 3. For a full Crash Log Scan Run, construct `CrashLogScanRun::new(scan_ready)` and call `run(...)` with selected Crash Logs.
 4. Inside the module, `OrchestratorCore` reads each file with [`classic-file-io-core`](../../business-logic/classic-file-io-core) and preprocesses lines with `reformat_crash_data_inline()`.
 5. `LogParser::parse_all_sections_arc()` builds named sections.
@@ -563,7 +565,7 @@ Notes:
 ## Related Crates And Integration Points
 
 - [`classic-config-core`](../../business-logic/classic-config-core) - provides `YamlDataCore`, crashgen registry source data used by `build_analysis_config_from_yaml()`, and the typed Crashgen Expectation model/evaluator at `classic_config_core::crashgen_rules::*` used by `SettingsValidator`
-- [`classic-settings-core`](../../business-logic/classic-settings-core) - provides `YamlOperations` used by intake for small path-backed sidecar reads such as simplify-log removal rules and legacy FormID database settings
+- [`classic-settings-core`](../../business-logic/classic-settings-core) - provides `YamlOperations` used by intake only for YAML Data-owned simplify-log removal rules
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - resolves game-version matches and valid crashgen versions
 - [`classic-database-core`](../../business-logic/classic-database-core) - optional FormID description lookups through `DatabasePool`
 - [`classic-file-io-core`](../../business-logic/classic-file-io-core) - async file reads and writes used by the orchestrator
@@ -580,6 +582,7 @@ This example follows the intended contributor flow for a full Crash Log Scan Run
 
 ```rust
 use classic_scanlog_core::{
+    CrashLogScanFacts,
     CrashLogScanRun,
     CrashLogScanRunIntent,
     CrashLogScanRunRequest,
@@ -601,7 +604,11 @@ let intake = CrashLogScanIntake::from_yaml_paths(
         false,      // fcx_mode
         false,      // simplify_logs
     ),
-);
+)
+.with_scan_facts(CrashLogScanFacts {
+    formid_database_paths: vec![PathBuf::from("databases/custom.db")],
+    unsolved_logs_destination: Some(PathBuf::from("C:/CLASSIC/Unsolved Logs")),
+});
 
 let scan_ready = intake.prepare().await?;
 let run = CrashLogScanRun::new(scan_ready);

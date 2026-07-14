@@ -41,24 +41,20 @@ constexpr std::uint32_t kYamlTagError = 4u;
 // ── Data-root discovery ───────────────────────────────────────────────
 //
 // A trimmed variant of `find_data_root()` in scanner.cpp — we only need the
-// path to the settings file. Duplicated here instead of pulled out of
+// CLASSIC root used by the typed User Settings boundary. Duplicated here instead of pulled out of
 // scanner.cpp because scanner.cpp is a heavier translation unit that also
 // wires the thread pool; sharing a tiny helper is cheaper than a header
 // dependency.
 
 struct SettingsPaths {
     std::string data_root;
-    std::string settings_file;
 };
 
 SettingsPaths resolve_settings_paths() {
     std::error_code ec;
     fs::path cwd = fs::current_path(ec);
 
-    auto try_root = [&](const fs::path& candidate) -> SettingsPaths {
-        const fs::path settings = candidate / "CLASSIC Settings.yaml";
-        return {candidate.string(), settings.string()};
-    };
+    auto try_root = [](const fs::path& candidate) -> SettingsPaths { return {candidate.string()}; };
 
 #ifdef _WIN32
     wchar_t buf[MAX_PATH];
@@ -75,47 +71,24 @@ SettingsPaths resolve_settings_paths() {
         return try_root(cwd);
     }
 
-    // Fall back to cwd; yaml_ops_load_file will fail loudly if missing.
+    // Missing settings are represented by Rust-owned typed defaults.
     return try_root(cwd);
 }
 
-bool read_update_check_setting(const std::string& settings_path) {
-    // Bridge pattern taken from mainwindow.cpp:858 — construct ops, load file,
-    // read the boolean with a `true` default (matches `CLASSIC Main.yaml`
-    // default for `Update Check`).
-    //
-    // Fail-closed on load/parse/permission failures: a user who has disabled
-    // `CLASSIC_Settings.Update Check` must still have their opt-out honored
-    // when the settings file is missing, unreadable, or malformed. Defaulting
-    // to `true` on failure lets the YAML-update commands reach the network
-    // against the user's expressed preference. Regression for the Codex
-    // adversarial review finding "CLI falls back to enabled when the settings
-    // file cannot be read".
-    try {
-        auto ops = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*ops, settings_path);
-        auto value = classic::settings::yaml_ops_get_setting_value(*ops, "CLASSIC_Settings.Update Check");
-        if (value.value_type == "bool") {
-            return value.value == "true";
-        }
-        // Key absent or non-bool: the merged-YAML loader resolves the
-        // `CLASSIC Main.yaml` default (`true`) when the user's file doesn't
-        // override. Preserve that here so a first-run user isn't silently
-        // opted out of updates they never disabled.
-        return true;
-    } catch (const rust::Error& e) {
-        fmt::print(stderr,
-                   "Warning: could not read Update Check setting from {}: {}\n"
-                   "Treating as disabled to honor any prior opt-out.\n",
-                   settings_path, std::string(e.what()));
-        return false;
-    } catch (const std::exception& e) {
-        fmt::print(stderr,
-                   "Warning: could not read Update Check setting from {}: {}\n"
-                   "Treating as disabled to honor any prior opt-out.\n",
-                   settings_path, e.what());
-        return false;
+/// Opens the typed update-policy snapshot and surfaces any read or migration diagnostics.
+bool read_update_check_setting(const std::string& classic_root) {
+    const auto preferences = classic::settings::user_settings_open_update_preferences(classic_root);
+    for (const auto& diagnostic : preferences.diagnostics) {
+        fmt::print(stderr, "User Settings warning [{}]: {}\n", std::string(diagnostic.code),
+                   std::string(diagnostic.message));
     }
+    if (std::string(preferences.commit_eligibility) == "requires_migration") {
+        fmt::print(stderr,
+                   "User Settings notice: this {} document must be explicitly migrated before "
+                   "updates can be committed; the YAML Data command is using its typed read-only policy.\n",
+                   std::string(preferences.classification));
+    }
+    return preferences.update_check_enabled;
 }
 
 // ── Runtime bootstrap ─────────────────────────────────────────────────
@@ -139,8 +112,8 @@ bool init_runtime_for_yaml_update() {
 int report_status(const classic::update::YamlUpdateStatusDto& status) {
     switch (status.tag) {
     case kYamlTagDisabled:
-        fmt::print("Data update check is disabled (CLASSIC_Settings.Update Check = false).\n"
-                   "Enable it in CLASSIC Settings.yaml to receive data updates.\n");
+        fmt::print("Data update check is disabled by User Settings.\n"
+                   "Enable the Update Check preference to receive data updates.\n");
         return 0;
     case kYamlTagUpdateAvailable: {
         fmt::print("Data update available in release {}.\n", std::string(status.release_tag));
@@ -240,7 +213,7 @@ int run_check_yaml_updates(const CliArgs& /*args*/) {
     }
 
     const auto paths = resolve_settings_paths();
-    const bool enabled = read_update_check_setting(paths.settings_file);
+    const bool enabled = read_update_check_setting(paths.data_root);
 
     int exit_code;
     try {
@@ -264,7 +237,7 @@ int run_apply_yaml_updates(const CliArgs& /*args*/) {
     }
 
     const auto paths = resolve_settings_paths();
-    const bool enabled = read_update_check_setting(paths.settings_file);
+    const bool enabled = read_update_check_setting(paths.data_root);
 
     int exit_code = 0;
     try {

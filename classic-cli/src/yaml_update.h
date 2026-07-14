@@ -8,7 +8,7 @@
 /// `--apply-yaml-updates`, or `--rollback-yaml-updates` is supplied — the
 /// normal scan pipeline is skipped in that case. Each handler initialises the
 /// Rust runtime and returns a process exit code. Check/apply honor
-/// `CLASSIC_Settings.Update Check: false`; rollback is local-only and does
+/// the typed User Settings Update Check preference; rollback is local-only and does
 /// not require network/update-check policy.
 ///
 /// Returns:

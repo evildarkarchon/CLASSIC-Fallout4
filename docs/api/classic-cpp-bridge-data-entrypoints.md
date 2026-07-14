@@ -175,7 +175,9 @@ This is currently where `classic-config-core`, `classic-database-core`, `classic
 
 `user_settings_commit_update(classic_root, base_revision, update) -> Result<UserSettingsCommitResultDto>` requires the revision returned by the accepted preview, reopens and compares it before revalidating the request, then delegates publication to the Rust core's locked atomic commit. `status` is `committed`, `conflict`, or `rejected`; the DTO carries the new revision, expected/actual conflict revisions, or rejection diagnostics as appropriate. Operational failures propagate as `rust::Error` with the stable core code prefixed in the message. C++ never reconstructs or trusts an `AcceptedUserSettingsUpdate` from the flattened preview fields.
 
-The native CLI `--check-app-update` consumer resolves its CLASSIC root and short-circuits on the Update Preferences DTO before initializing the update runtime or calling `check_app_notification`. The `--unsolved-logs-destination` and `--reset-unsolved-logs-destination` scan actions now preview and commit through the typed revision-aware CXX seam. The typed frontend DTO drives GUI geometry restoration; the remaining typed scan and setup DTOs stay available for later adapter cutovers.
+The native CLI scan adapter opens the Crash Log Scan and Game Setup DTOs once, reports their structured diagnostics and migration/blocked-commit state, then builds explicit scan facts. Saved values supply game/version, FCX Mode, Simplify Logs, FormID Value Lookup and configured databases, custom scan input, concurrency, setup paths, and Unsolved Logs policy; explicitly present CLI options override the corresponding saved value. `--unsolved-logs-destination` and `--reset-unsolved-logs-destination` preview and commit through the typed revision-aware CXX seam before the scan snapshot is reopened.
+
+The native CLI YAML Data check/apply commands and `--check-app-update` both consume `UpdatePreferencesDto` rather than a raw key path. Disabled or degraded policy short-circuits before network work with the command's established exit behavior, while migration and validation diagnostics remain visible. The typed frontend DTO separately drives GUI geometry restoration.
 
 ### YAML file-cache helpers
 
@@ -506,18 +508,17 @@ The bridge does not expose `get_stats()`, `optimize()`, `rebalance_connections()
 Forwards to:
 
 - `classic_scanlog_core::CrashLogScanIntake::from_yaml_paths(...)`
-- `CrashLogScanIntake::prepare()`, which loads path-backed `YamlDataCore`, resolves simplify-log removal rules, builds `AnalysisConfig`, and selects FormID readiness
+- `CrashLogScanIntake::prepare()`, which loads path-backed `YamlDataCore`, resolves YAML Data-owned simplify-log removal rules, builds `AnalysisConfig`, and selects built-in FormID readiness
 
 Current bridge behavior that matters:
 
 - `remove_list` comes from `CLASSIC Main.yaml` key `exclude_log_records`, not from the public `classic::config` surface
-- FormID DB paths are selected by scanlog-core intake from three sources: main DB, hardcoded FOLON DB for Fallout 4 and Fallout 4 VR, and user settings entries from `CLASSIC Settings.yaml`
-- relative user DB paths are resolved relative to `yaml_dir_data`
+- this compatibility constructor supplies no caller-projected FormID paths, so its DB list contains the main DB plus the hardcoded FOLON DB for Fallout 4 and Fallout 4 VR
 - paths are deduplicated before pool initialization
 
 Important boundary:
 
-- the public CXX call shape is preserved, but the scan-readiness decisions now live in `classic-scanlog-core`; intake still reads legacy `CLASSIC Settings.yaml` FormID settings instead of `ClassicConfig.formid_databases`
+- the public CXX call shape is preserved for lower-level callers, but it does not open User Settings. Native full scans should use `scan_run_execute(...)` and provide configured paths through its typed request.
 
 ### `orchestrator_new(config) -> Result<Box<Orchestrator>>`
 
@@ -632,6 +633,7 @@ C++ callers populate `ScanRunRequestDto` and pass it by reference. Request field
 - `game`
 - `game_version`
 - `show_formid_values`
+- `formid_database_paths` (caller-projected configured paths; relative values resolve under `yaml_dir_data`)
 - `fcx_mode`
 - `simplify_logs`
 - `base_directory`
@@ -653,7 +655,7 @@ Current bridge behavior:
 - builds a typed `CrashLogScanSource::Standard` from `base_directory`, `custom_scan_directory`, and `configured_documents_root` when `targeted_mode = false`
 - builds a typed `CrashLogScanSource::Targeted` from `targeted_inputs` when present, falling back to `log_paths` for older callers when `targeted_mode = true`
 - forwards optional FCX setup facts through `CrashLogScanSetupContext`; FCX setup failures are returned as `ScanRunResult.status = "setup_failed"` with `setup` data rather than as per-log failures
-- the bridge forwards movement and concurrency facts unchanged; request normalization is core-owned. It passes `move_unsolved_logs`, `unsolved_logs_destination`, and `max_concurrent` through to the service. The core owns the resulting behavior:
+- the bridge packages `formid_database_paths` and `unsolved_logs_destination` as `CrashLogScanFacts` and forwards movement and concurrency facts unchanged; request normalization is core-owned. The core owns the resulting behavior:
 - `request.max_concurrent == 0` is folded to the core adaptive concurrency default at the scan-run seam (equivalent to `None`)
 - `request.targeted_mode = true` creates a Targeted Crash Log Scan Run and ignores `move_unsolved_logs` plus `unsolved_logs_destination`
 - `request.targeted_mode = false` creates a Standard Crash Log Scan Run
@@ -661,7 +663,7 @@ Current bridge behavior:
 - Targeted discovery returns rejected inputs under `ScanRunResult.discovery.rejected_paths` and `rejected_reasons`; rejected Targeted inputs are not per-log analysis failures
 - Standard requests with `move_unsolved_logs = false` leave failed logs in place and ignore `unsolved_logs_destination`
 - Standard requests with `move_unsolved_logs = true` and non-empty `unsolved_logs_destination` request that custom destination (the core trims the string and treats empty/whitespace as not supplied); Rust rejects relative paths as setup errors
-- Standard requests with `move_unsolved_logs = true` and empty `unsolved_logs_destination` use Rust destination resolution from `CLASSIC_Settings.Unsolved Logs Destination`, falling back to canonical `CLASSIC Backup/Unsolved Logs` under path-backed intake roots
+- Standard requests with `move_unsolved_logs = true` and empty `unsolved_logs_destination` use the canonical `CLASSIC Backup/Unsolved Logs` directory under path-backed intake roots; native adapters put a configured destination into the typed request when one exists
 - Rust writes Autoscan Reports before returning per-log results; C++ callers no longer receive `report_lines` from this entry point
 - infrastructure failures and prepared-run setup errors such as a relative custom Unsolved Logs destination return a CXX `Result` error; per-log analysis, Autoscan Report write, and invalid or unwritable absolute Unsolved Logs movement failures are represented in nested `ScanRunLogResult` values
 - progress uses the existing `ScanBatchProgressCallback` and `BatchProgressEvent` DTO shape
@@ -884,7 +886,7 @@ When Papyrus monitoring looks stale:
 - `src/files.rs::discover_report_files()` is bridge-local, non-recursive, and fail-soft on unreadable directories
 - `src/database.rs::db_pool_get_entry()` cannot distinguish miss, closed pool, and query failure
 - `src/database.rs::db_pool_get_entries_batch()` fixes batch size at `50` and flattens `formid:plugin` keys into tab-delimited strings
-- `src/scanner.rs` delegates scan-readiness sidecar reads to `classic-scanlog-core`; intake still consumes `CLASSIC Settings.yaml` for user FormID DB paths
+- `src/scanner.rs` delegates scan-readiness path ordering and YAML Data sidecars to `classic-scanlog-core`; configured FormID paths and Unsolved Logs destination cross as explicit `CrashLogScanFacts`
 - scanlog-core intake hardcodes `databases/FOLON FormIDs.db` for `Fallout4` and `Fallout4VR`
 - `src/scanner.rs` exposes only FCX reset control in C++; FCX issue inspection remains out of scope for this phase
 - `src/scanner.rs::orchestrator_process_logs_batch_with_progress()` is bridge-local coordination on top of per-log crate calls, not a direct wrapper over one lower-level batch API
