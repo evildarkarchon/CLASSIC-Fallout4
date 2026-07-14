@@ -1,9 +1,12 @@
-//! Thin NAPI adapter for User Settings snapshots, update previews, and explicit commits.
+//! Thin NAPI adapter for User Settings snapshots, migration plans, updates, and commits.
 
 use crate::shared::{JsGameId, core_to_js_game_id, js_to_core_game_id};
 use classic_user_settings_core::{
-    CommitEligibility, DocumentClassification, PreferenceOrigin, Revision, SourceLocation,
-    UserSettings, UserSettingsCommitOutcome, UserSettingsUpdate, UserSettingsUpdateField,
+    CommitEligibility, DocumentClassification, MigrationChange, MigrationChangeKind,
+    MigrationEndpoint, MigrationPlanningOutcome, PreferenceOrigin, Revision, SourceLocation,
+    UserSettings, UserSettingsCommitOutcome, UserSettingsMigrationApplyOutcome,
+    UserSettingsMigrationPlan, UserSettingsMigrationReceipt, UserSettingsMigrationRestoreOutcome,
+    UserSettingsSchemaVersion, UserSettingsUpdate, UserSettingsUpdateField,
     UserSettingsUpdatePreview, WindowGeometry,
 };
 use napi::bindgen_prelude::{Buffer, Either, Either5, Null};
@@ -273,6 +276,190 @@ pub struct JsUserSettingsCommitResult {
     pub diagnostics: Vec<JsUserSettingsUpdateDiagnostic>,
 }
 
+/// Explicit major/minor User Settings schema version.
+#[napi(object)]
+pub struct JsUserSettingsSchemaVersion {
+    /// Breaking-change component.
+    pub major: u32,
+    /// Additive-change component.
+    pub minor: u32,
+}
+
+/// One endpoint in a proposed User Settings version/location transition.
+#[napi(object)]
+pub struct JsUserSettingsMigrationEndpoint {
+    /// Root-relative location token: `canonical`, `legacy`, or `missing`.
+    pub location: String,
+    /// Explicit schema version, absent for a legacy unversioned form.
+    pub schema_version: Option<JsUserSettingsSchemaVersion>,
+}
+
+/// One ordered, reversible change in a User Settings migration plan.
+#[napi(object)]
+pub struct JsUserSettingsMigrationChange {
+    /// Stable change-kind token.
+    pub kind: String,
+    /// Source RFC 6901 pointer or relative path, when applicable.
+    pub source_path: Option<String>,
+    /// Target RFC 6901 pointer or relative path, when applicable.
+    pub target_path: Option<String>,
+    /// Deterministic YAML/text value before the change, when applicable.
+    pub before: Option<String>,
+    /// Deterministic YAML/text value after the change, when applicable.
+    pub after: Option<String>,
+}
+
+/// Structured reason that a User Settings migration plan could not be produced.
+#[napi(object)]
+pub struct JsUserSettingsMigrationDiagnostic {
+    /// Stable machine-readable diagnostic code.
+    pub code: String,
+    /// Human-readable diagnostic context.
+    pub message: String,
+}
+
+/// Immutable proposal for an explicit, side-effect-free User Settings migration.
+#[napi(object)]
+pub struct JsUserSettingsMigrationPlan {
+    /// Whether compatibility requires this plan before ordinary commits.
+    pub required: bool,
+    /// Revision token anchoring the plan to the opened source bytes.
+    pub base_revision: String,
+    /// Current version/location endpoint.
+    pub source: JsUserSettingsMigrationEndpoint,
+    /// Proposed version/location endpoint.
+    pub target: JsUserSettingsMigrationEndpoint,
+    /// Ordered review rows describing every proposed transition.
+    pub changes: Vec<JsUserSettingsMigrationChange>,
+    /// Exact opened bytes retained for review and reversal.
+    pub original_content: Buffer,
+    /// Deterministic proposed document bytes without publication.
+    pub proposed_content: Buffer,
+}
+
+/// Structured outcome of side-effect-free User Settings migration planning.
+#[napi(object)]
+pub struct JsUserSettingsMigrationPlanningResult {
+    /// Outcome token: `notRequired`, `planned`, or `unsupported`.
+    pub status: String,
+    /// Proposed plan, present only for the `planned` outcome.
+    pub plan: Option<JsUserSettingsMigrationPlan>,
+    /// Planning diagnostics, populated only for the `unsupported` outcome.
+    pub diagnostics: Vec<JsUserSettingsMigrationDiagnostic>,
+}
+
+/// Result of explicitly applying a caller-approved User Settings migration.
+#[napi(object, object_from_js = false)]
+pub struct JsUserSettingsMigrationApplyResult {
+    /// Outcome token: `applied` or `conflict`.
+    pub status: String,
+    /// Verified native receipt, present only after a successful apply.
+    pub receipt: Option<JsUserSettingsMigrationReceipt>,
+    /// Revision against which the caller approved the migration.
+    pub expected_revision: String,
+    /// Latest document revision, present only when a conflict is detected.
+    pub actual_revision: Option<String>,
+}
+
+/// Result of explicitly restoring a successfully applied User Settings migration.
+#[napi(object)]
+pub struct JsUserSettingsMigrationRestoreResult {
+    /// Outcome token: `restored` or `conflict`.
+    pub status: String,
+    /// Restored document revision, present only after successful restoration.
+    pub revision: Option<String>,
+    /// Migrated revision that had to remain current for restoration.
+    pub expected_revision: String,
+    /// Latest document revision, present only when a conflict is detected.
+    pub actual_revision: Option<String>,
+}
+
+/// Opaque native handle to a verified User Settings migration receipt.
+///
+/// JavaScript can inspect the attested paths, endpoints, and revisions, but cannot
+/// reconstruct or mutate the Rust receipt used by the conflict-safe restore seam.
+#[napi]
+pub struct JsUserSettingsMigrationReceipt {
+    inner: UserSettingsMigrationReceipt,
+}
+
+#[napi]
+impl JsUserSettingsMigrationReceipt {
+    /// Returns the document path selected when the migration was applied.
+    #[napi(getter)]
+    pub fn source_path(&self) -> String {
+        self.inner.source_path().display().to_string()
+    }
+
+    /// Returns the canonical path at which the migrated document was published.
+    #[napi(getter)]
+    pub fn destination_path(&self) -> String {
+        self.inner.destination_path().display().to_string()
+    }
+
+    /// Returns the retained, byte-exact backup path verified before publication.
+    #[napi(getter)]
+    pub fn backup_path(&self) -> String {
+        self.inner.backup_path().display().to_string()
+    }
+
+    /// Returns the source version/location endpoint recorded by the approved plan.
+    #[napi(getter)]
+    pub fn source(&self) -> JsUserSettingsMigrationEndpoint {
+        migration_endpoint_to_js(self.inner.source())
+    }
+
+    /// Returns the destination version/location endpoint recorded by the approved plan.
+    #[napi(getter)]
+    pub fn target(&self) -> JsUserSettingsMigrationEndpoint {
+        migration_endpoint_to_js(self.inner.target())
+    }
+
+    /// Returns the exact-byte revision attested by the retained backup.
+    #[napi(getter)]
+    pub fn backup_revision(&self) -> String {
+        revision_token(self.inner.backup_revision())
+    }
+
+    /// Returns the exact-byte revision verified after migrated publication.
+    #[napi(getter)]
+    pub fn published_revision(&self) -> String {
+        revision_token(self.inner.published_revision())
+    }
+
+    /// Explicitly restores this receipt's retained backup under core coordination.
+    ///
+    /// Conflicts are returned as data. Backup, publication, and verification failures
+    /// are raised as JavaScript errors with the core's stable error code.
+    #[napi]
+    pub fn restore(
+        &self,
+        classic_root: String,
+    ) -> napi::Result<JsUserSettingsMigrationRestoreResult, String> {
+        let expected_revision = revision_token(self.inner.published_revision());
+        match self.inner.restore(classic_root) {
+            Ok(UserSettingsMigrationRestoreOutcome::Restored { revision }) => {
+                Ok(JsUserSettingsMigrationRestoreResult {
+                    status: "restored".to_string(),
+                    revision: Some(revision_token(&revision)),
+                    expected_revision,
+                    actual_revision: None,
+                })
+            }
+            Ok(UserSettingsMigrationRestoreOutcome::Conflict {
+                expected_revision,
+                actual_revision,
+            }) => Ok(JsUserSettingsMigrationRestoreResult {
+                status: "conflict".to_string(),
+                revision: None,
+                expected_revision: revision_token(&expected_revision),
+                actual_revision: Some(revision_token(&actual_revision)),
+            }),
+            Err(error) => Err(user_settings_migration_error(error.code(), error.message())),
+        }
+    }
+}
+
 /// Read-only User Settings snapshot returned by `openUserSettings`.
 #[napi(object)]
 pub struct JsUserSettingsSnapshot {
@@ -343,6 +530,263 @@ pub fn open_user_settings(classic_root: String) -> JsUserSettingsSnapshot {
         original_content: settings
             .original_bytes()
             .map(|content| Buffer::from(content.to_vec())),
+    }
+}
+
+/// Produces a deterministic User Settings migration plan without changing files,
+/// directories, timestamps, or backups under the supplied CLASSIC root.
+#[napi]
+pub fn plan_user_settings_migration(classic_root: String) -> JsUserSettingsMigrationPlanningResult {
+    let settings = UserSettings::open(classic_root);
+    match settings.plan_migration() {
+        MigrationPlanningOutcome::NotRequired => JsUserSettingsMigrationPlanningResult {
+            status: "notRequired".to_string(),
+            plan: None,
+            diagnostics: Vec::new(),
+        },
+        MigrationPlanningOutcome::Planned(plan) => JsUserSettingsMigrationPlanningResult {
+            status: "planned".to_string(),
+            plan: Some(user_settings_migration_plan_to_js(&plan)),
+            diagnostics: Vec::new(),
+        },
+        MigrationPlanningOutcome::Unsupported(diagnostics) => {
+            JsUserSettingsMigrationPlanningResult {
+                status: "unsupported".to_string(),
+                plan: None,
+                diagnostics: diagnostics
+                    .into_iter()
+                    .map(|diagnostic| JsUserSettingsMigrationDiagnostic {
+                        code: diagnostic.code().to_string(),
+                        message: diagnostic.message().to_string(),
+                    })
+                    .collect(),
+            }
+        }
+    }
+}
+
+/// Builds the exact inverse of a User Settings migration plan entirely in memory.
+///
+/// The DTO is reconstructed as an unattested core review plan, so Rust core owns endpoint,
+/// byte, revision, and review-row reversal semantics while the adapter remains unable to
+/// authorize persistence. The operation performs no filesystem access.
+#[napi]
+pub fn reverse_user_settings_migration_plan(
+    plan: JsUserSettingsMigrationPlan,
+) -> napi::Result<JsUserSettingsMigrationPlan, String> {
+    let review_plan = user_settings_migration_plan_from_js(plan)?;
+    Ok(user_settings_migration_plan_to_js(
+        &review_plan.reverse_in_memory(),
+    ))
+}
+
+/// Explicitly applies a caller-approved User Settings migration proposal.
+///
+/// The adapter reopens and re-plans from Rust-owned bytes, compares both the caller's
+/// approved base revision and exact proposed content, and passes only that fresh core
+/// plan to the persistence seam. Caller-owned DTO bytes are never published directly.
+#[napi]
+pub fn apply_user_settings_migration(
+    classic_root: String,
+    approved_base_revision: String,
+    approved_proposed_content: Buffer,
+) -> napi::Result<JsUserSettingsMigrationApplyResult, String> {
+    let settings = UserSettings::open(&classic_root);
+    let actual_revision = revision_token(settings.revision());
+    if actual_revision != approved_base_revision {
+        return Ok(user_settings_migration_apply_conflict(
+            approved_base_revision,
+            actual_revision,
+        ));
+    }
+
+    let plan = match settings.plan_migration() {
+        MigrationPlanningOutcome::Planned(plan) => plan,
+        MigrationPlanningOutcome::NotRequired => {
+            return Err(user_settings_migration_error(
+                "migration_plan_not_available",
+                "the reopened User Settings document no longer requires or offers a migration plan",
+            ));
+        }
+        MigrationPlanningOutcome::Unsupported(diagnostics) => {
+            let message = diagnostics
+                .iter()
+                .map(|diagnostic| format!("{}: {}", diagnostic.code(), diagnostic.message()))
+                .collect::<Vec<_>>()
+                .join("; ");
+            return Err(user_settings_migration_error(
+                "migration_plan_not_available",
+                if message.is_empty() {
+                    "the reopened User Settings document cannot produce a migration plan"
+                        .to_string()
+                } else {
+                    message
+                },
+            ));
+        }
+    };
+    if revision_token(plan.base_revision()) != approved_base_revision {
+        return Ok(user_settings_migration_apply_conflict(
+            approved_base_revision,
+            revision_token(plan.base_revision()),
+        ));
+    }
+    if plan.proposed_bytes() != approved_proposed_content.as_ref() {
+        return Err(user_settings_migration_error(
+            "migration_plan_approval_mismatch",
+            "the approved proposed content does not match the fresh Rust-owned migration plan",
+        ));
+    }
+
+    match plan.apply(&classic_root) {
+        Ok(UserSettingsMigrationApplyOutcome::Applied(receipt)) => {
+            Ok(JsUserSettingsMigrationApplyResult {
+                status: "applied".to_string(),
+                receipt: Some(JsUserSettingsMigrationReceipt { inner: receipt }),
+                expected_revision: approved_base_revision,
+                actual_revision: None,
+            })
+        }
+        Ok(UserSettingsMigrationApplyOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        }) => Ok(user_settings_migration_apply_conflict(
+            revision_token(&expected_revision),
+            revision_token(&actual_revision),
+        )),
+        Err(error) => Err(user_settings_migration_error(error.code(), error.message())),
+    }
+}
+
+/// Converts an operational migration failure into an idiomatic JavaScript exception.
+fn user_settings_migration_error(
+    code: impl Into<String>,
+    message: impl Into<String>,
+) -> napi::Error<String> {
+    napi::Error::new(code.into(), message.into())
+}
+
+/// Builds the shared no-write apply result for either revision comparison boundary.
+fn user_settings_migration_apply_conflict(
+    expected_revision: String,
+    actual_revision: String,
+) -> JsUserSettingsMigrationApplyResult {
+    JsUserSettingsMigrationApplyResult {
+        status: "conflict".to_string(),
+        receipt: None,
+        expected_revision,
+        actual_revision: Some(actual_revision),
+    }
+}
+
+/// Reconstructs a JavaScript DTO as an unattested core review plan.
+///
+/// The core deliberately prevents plans created through this conversion from authorizing
+/// persistence; it exists only so adapters can delegate domain transformations such as reversal.
+fn user_settings_migration_plan_from_js(
+    plan: JsUserSettingsMigrationPlan,
+) -> napi::Result<UserSettingsMigrationPlan, String> {
+    let source = (
+        source_location_from_token(&plan.source.location)?,
+        plan.source
+            .schema_version
+            .map(|version| UserSettingsSchemaVersion::new(version.major, version.minor)),
+    );
+    let target = (
+        source_location_from_token(&plan.target.location)?,
+        plan.target
+            .schema_version
+            .map(|version| UserSettingsSchemaVersion::new(version.major, version.minor)),
+    );
+    let changes = plan
+        .changes
+        .into_iter()
+        .map(|change| {
+            Ok((
+                migration_change_kind_from_token(&change.kind)?,
+                change.source_path,
+                change.target_path,
+                change.before,
+                change.after,
+            ))
+        })
+        .collect::<napi::Result<Vec<_>, String>>()?;
+
+    Ok(UserSettingsMigrationPlan::from((
+        plan.required,
+        source,
+        target,
+        changes,
+        plan.original_content.to_vec(),
+        plan.proposed_content.to_vec(),
+    )))
+}
+
+/// Converts one core migration plan into its reviewable NAPI representation.
+fn user_settings_migration_plan_to_js(
+    plan: &UserSettingsMigrationPlan,
+) -> JsUserSettingsMigrationPlan {
+    JsUserSettingsMigrationPlan {
+        required: plan.required(),
+        base_revision: revision_token(plan.base_revision()),
+        source: migration_endpoint_to_js(plan.source()),
+        target: migration_endpoint_to_js(plan.target()),
+        changes: plan.changes().iter().map(migration_change_to_js).collect(),
+        original_content: Buffer::from(plan.original_bytes().to_vec()),
+        proposed_content: Buffer::from(plan.proposed_bytes().to_vec()),
+    }
+}
+
+/// Converts one migration endpoint without interpreting its compatibility policy.
+fn migration_endpoint_to_js(endpoint: &MigrationEndpoint) -> JsUserSettingsMigrationEndpoint {
+    JsUserSettingsMigrationEndpoint {
+        location: source_location_token(endpoint.location()).to_string(),
+        schema_version: endpoint.schema_version().map(schema_version_to_js),
+    }
+}
+
+/// Converts an explicit core schema version into JavaScript number fields.
+fn schema_version_to_js(version: UserSettingsSchemaVersion) -> JsUserSettingsSchemaVersion {
+    JsUserSettingsSchemaVersion {
+        major: version.major(),
+        minor: version.minor(),
+    }
+}
+
+/// Converts one ordered migration review row into a plain NAPI object.
+fn migration_change_to_js(change: &MigrationChange) -> JsUserSettingsMigrationChange {
+    JsUserSettingsMigrationChange {
+        kind: migration_change_kind_token(change.kind()).to_string(),
+        source_path: change.source_path().map(ToOwned::to_owned),
+        target_path: change.target_path().map(ToOwned::to_owned),
+        before: change.before().map(ToOwned::to_owned),
+        after: change.after().map(ToOwned::to_owned),
+    }
+}
+
+/// Returns the JavaScript token for one reviewable migration change category.
+fn migration_change_kind_token(kind: MigrationChangeKind) -> &'static str {
+    match kind {
+        MigrationChangeKind::LocationTransition => "locationTransition",
+        MigrationChangeKind::SchemaVersionTransition => "schemaVersionTransition",
+        MigrationChangeKind::FieldTransition => "fieldTransition",
+        MigrationChangeKind::AliasCanonicalization => "aliasCanonicalization",
+        MigrationChangeKind::KnownValueCanonicalization => "knownValueCanonicalization",
+    }
+}
+
+/// Parses one stable JavaScript migration-change token for review-only core reconstruction.
+fn migration_change_kind_from_token(token: &str) -> napi::Result<MigrationChangeKind, String> {
+    match token {
+        "locationTransition" => Ok(MigrationChangeKind::LocationTransition),
+        "schemaVersionTransition" => Ok(MigrationChangeKind::SchemaVersionTransition),
+        "fieldTransition" => Ok(MigrationChangeKind::FieldTransition),
+        "aliasCanonicalization" => Ok(MigrationChangeKind::AliasCanonicalization),
+        "knownValueCanonicalization" => Ok(MigrationChangeKind::KnownValueCanonicalization),
+        _ => Err(user_settings_migration_error(
+            "migration_plan_review_invalid",
+            format!("unsupported User Settings migration change kind: {token}"),
+        )),
     }
 }
 
@@ -738,6 +1182,19 @@ fn source_location_token(location: SourceLocation) -> &'static str {
         SourceLocation::Canonical => "canonical",
         SourceLocation::Legacy => "legacy",
         SourceLocation::Missing => "missing",
+    }
+}
+
+/// Parses one stable JavaScript source-location token for review-only core reconstruction.
+fn source_location_from_token(token: &str) -> napi::Result<SourceLocation, String> {
+    match token {
+        "canonical" => Ok(SourceLocation::Canonical),
+        "legacy" => Ok(SourceLocation::Legacy),
+        "missing" => Ok(SourceLocation::Missing),
+        _ => Err(user_settings_migration_error(
+            "migration_plan_review_invalid",
+            format!("unsupported User Settings source location: {token}"),
+        )),
     }
 }
 

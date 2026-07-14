@@ -84,6 +84,20 @@ The CXX and Node request adapters compare the supplied preview revision and reva
 
 ---
 
+## User Settings migration persistence errors (`apply-and-restore-user-settings-migration`)
+
+Stale apply and restore revisions are normal conflict outcomes, not operational errors. Backup creation/reread verification, atomic publication, reopen verification, rollback, receipt-root mismatch, and restore failures retain the stable `classic_user_settings_core::UserSettingsMigrationError::code()` token while adapting to each language's hard-error convention.
+
+| Binding | Expected outcome and operational error shape |
+| --- | --- |
+| C++ (CXX) | `user_settings_apply_migration(...)` retains an opaque receipt handle and `user_settings_migration_apply_outcome(...)` reports `applied` or `conflict`; `user_settings_restore_migration(...)` reports `restored` or `conflict`. Invalid approvals and operational failures throw `rust::Error` whose message begins with the stable adapter/core code. |
+| Node (NAPI-RS) | `applyUserSettingsMigration(...)` and `JsUserSettingsMigrationReceipt.restore(...)` return conflict data. Mutated approvals reject with `error.code == "migration_plan_approval_mismatch"`; malformed review DTO tokens reject with `error.code == "migration_plan_review_invalid"`; core operational failures reject with `error.code` set to the stable migration code. |
+| Python (PyO3) | `UserSettingsMigrationPlan.apply(...)` and `UserSettingsMigrationReceipt.restore(...)` return applied/restored or conflict outcomes. Operational failures raise the typed `classic_user_settings.UserSettingsMigrationError`, with the stable code prefixed in its message. |
+
+CXX and Node reopen and reproduce the plan from the supplied root, approved base revision, and exact proposed content; caller-owned DTO bytes are never published. Python retains the immutable core plan and receipt directly. A reversed in-memory plan is review data and cannot substitute for the verified receipt required by restore.
+
+---
+
 ## Notification errors (`app-update-manifest-notification`)
 
 The notification check exposes a different-shape-per-binding failure path while sharing a single underlying Rust error family. Variants on `UpdateError` (`NotificationFetchFailed`, `NotificationDecode`, `NotificationInstalledVersionParse`, `NotificationCacheIo`) project onto each binding according to the per-language idiom below. Shared manifest-validation variants (`ManifestInvalid`, `ManifestUnsupportedVersion`) can also surface from this channel when a notification manifest violates cross-field invariants or advertises a newer `manifest_version` major; bindings treat those as notification-channel failures while preserving their existing catch-all shape.

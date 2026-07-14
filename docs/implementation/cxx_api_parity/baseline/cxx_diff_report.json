@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 385,
-    "current_total": 385,
-    "matched": 385,
+    "contract_total": 396,
+    "current_total": 396,
+    "matched": 396,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2105,8 +2105,24 @@
       "reason": "-"
     },
     {
+      "id": "79201417da3a7764",
+      "rustSymbol": "user_settings_apply_migration",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "e2ad1a7f27fb5f5a",
       "rustSymbol": "user_settings_commit_update",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "684181a2023cb151",
+      "rustSymbol": "user_settings_migration_apply_outcome",
       "kind": "function",
       "bridgeModule": "settings",
       "status": "matched",
@@ -2145,8 +2161,32 @@
       "reason": "-"
     },
     {
+      "id": "ceb7da066f8d0590",
+      "rustSymbol": "user_settings_plan_migration",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "03a8fd971064fde1",
       "rustSymbol": "user_settings_preview_update",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d1781f505576ec4d",
+      "rustSymbol": "user_settings_restore_migration",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c4407f3d73622218",
+      "rustSymbol": "user_settings_reverse_migration_plan",
       "kind": "function",
       "bridgeModule": "settings",
       "status": "matched",
@@ -2297,6 +2337,14 @@
       "reason": "-"
     },
     {
+      "id": "630aada96fe224e1",
+      "rustSymbol": "UserSettingsMigrationApplyHandle",
+      "kind": "opaque",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "4c363ee3786a32b3",
       "rustSymbol": "YamlOps",
       "kind": "opaque",
@@ -2379,6 +2427,46 @@
     {
       "id": "0b2551f3acc13938",
       "rustSymbol": "UserSettingsDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "9d40cb5a9aea78c0",
+      "rustSymbol": "UserSettingsMigrationApplyOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c7e58b7da3dde86d",
+      "rustSymbol": "UserSettingsMigrationChangeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "45e78cb86f84aa12",
+      "rustSymbol": "UserSettingsMigrationPlanningOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "351a1f899d3760aa",
+      "rustSymbol": "UserSettingsMigrationReceiptDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "96a863c46ca1a913",
+      "rustSymbol": "UserSettingsMigrationRestoreOutcomeDto",
       "kind": "struct",
       "bridgeModule": "settings",
       "status": "matched",

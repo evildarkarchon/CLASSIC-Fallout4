@@ -1065,6 +1065,36 @@ export declare class JsUnpackedScanner {
 }
 
 /**
+ * Opaque native handle to a verified User Settings migration receipt.
+ *
+ * JavaScript can inspect the attested paths, endpoints, and revisions, but cannot
+ * reconstruct or mutate the Rust receipt used by the conflict-safe restore seam.
+ */
+export declare class JsUserSettingsMigrationReceipt {
+  /** Returns the document path selected when the migration was applied. */
+  get sourcePath(): string
+  /** Returns the canonical path at which the migrated document was published. */
+  get destinationPath(): string
+  /** Returns the retained, byte-exact backup path verified before publication. */
+  get backupPath(): string
+  /** Returns the source version/location endpoint recorded by the approved plan. */
+  get source(): JsUserSettingsMigrationEndpoint
+  /** Returns the destination version/location endpoint recorded by the approved plan. */
+  get target(): JsUserSettingsMigrationEndpoint
+  /** Returns the exact-byte revision attested by the retained backup. */
+  get backupRevision(): string
+  /** Returns the exact-byte revision verified after migrated publication. */
+  get publishedRevision(): string
+  /**
+   * Explicitly restores this receipt's retained backup under core coordination.
+   *
+   * Conflicts are returned as data. Backup, publication, and verification failures
+   * are raised as JavaScript errors with the core's stable error code.
+   */
+  restore(classicRoot: string): JsUserSettingsMigrationRestoreResult
+}
+
+/**
  * Wrye Bash ModChecker.html report parser.
  *
  * Extracts sections (h3 headers) and their associated plugin lists from
@@ -1305,6 +1335,15 @@ export declare class YamlDocument {
  * @returns A `JsPapyrusStats` object with the analysis results.
  */
 export declare function analyzePapyrusLog(logPath: string): JsPapyrusStats
+
+/**
+ * Explicitly applies a caller-approved User Settings migration proposal.
+ *
+ * The adapter reopens and re-plans from Rust-owned bytes, compares both the caller's
+ * approved base revision and exact proposed content, and passes only that fresh core
+ * plan to the persistence seam. Caller-owned DTO bytes are never published directly.
+ */
+export declare function applyUserSettingsMigration(classicRoot: string, approvedBaseRevision: string, approvedProposedContent: Buffer): JsUserSettingsMigrationApplyResult
 
 /**
  * Fetch + download + atomically install the files the user approved at
@@ -3718,6 +3757,96 @@ export interface JsUserSettingsDiagnostic {
   message: string
 }
 
+/** Result of explicitly applying a caller-approved User Settings migration. */
+export interface JsUserSettingsMigrationApplyResult {
+  /** Outcome token: `applied` or `conflict`. */
+  status: string
+  /** Verified native receipt, present only after a successful apply. */
+  receipt?: JsUserSettingsMigrationReceipt
+  /** Revision against which the caller approved the migration. */
+  expectedRevision: string
+  /** Latest document revision, present only when a conflict is detected. */
+  actualRevision?: string
+}
+
+/** One ordered, reversible change in a User Settings migration plan. */
+export interface JsUserSettingsMigrationChange {
+  /** Stable change-kind token. */
+  kind: string
+  /** Source RFC 6901 pointer or relative path, when applicable. */
+  sourcePath?: string
+  /** Target RFC 6901 pointer or relative path, when applicable. */
+  targetPath?: string
+  /** Deterministic YAML/text value before the change, when applicable. */
+  before?: string
+  /** Deterministic YAML/text value after the change, when applicable. */
+  after?: string
+}
+
+/** Structured reason that a User Settings migration plan could not be produced. */
+export interface JsUserSettingsMigrationDiagnostic {
+  /** Stable machine-readable diagnostic code. */
+  code: string
+  /** Human-readable diagnostic context. */
+  message: string
+}
+
+/** One endpoint in a proposed User Settings version/location transition. */
+export interface JsUserSettingsMigrationEndpoint {
+  /** Root-relative location token: `canonical`, `legacy`, or `missing`. */
+  location: string
+  /** Explicit schema version, absent for a legacy unversioned form. */
+  schemaVersion?: JsUserSettingsSchemaVersion
+}
+
+/** Immutable proposal for an explicit, side-effect-free User Settings migration. */
+export interface JsUserSettingsMigrationPlan {
+  /** Whether compatibility requires this plan before ordinary commits. */
+  required: boolean
+  /** Revision token anchoring the plan to the opened source bytes. */
+  baseRevision: string
+  /** Current version/location endpoint. */
+  source: JsUserSettingsMigrationEndpoint
+  /** Proposed version/location endpoint. */
+  target: JsUserSettingsMigrationEndpoint
+  /** Ordered review rows describing every proposed transition. */
+  changes: Array<JsUserSettingsMigrationChange>
+  /** Exact opened bytes retained for review and reversal. */
+  originalContent: Buffer
+  /** Deterministic proposed document bytes without publication. */
+  proposedContent: Buffer
+}
+
+/** Structured outcome of side-effect-free User Settings migration planning. */
+export interface JsUserSettingsMigrationPlanningResult {
+  /** Outcome token: `notRequired`, `planned`, or `unsupported`. */
+  status: string
+  /** Proposed plan, present only for the `planned` outcome. */
+  plan?: JsUserSettingsMigrationPlan
+  /** Planning diagnostics, populated only for the `unsupported` outcome. */
+  diagnostics: Array<JsUserSettingsMigrationDiagnostic>
+}
+
+/** Result of explicitly restoring a successfully applied User Settings migration. */
+export interface JsUserSettingsMigrationRestoreResult {
+  /** Outcome token: `restored` or `conflict`. */
+  status: string
+  /** Restored document revision, present only after successful restoration. */
+  revision?: string
+  /** Migrated revision that had to remain current for restoration. */
+  expectedRevision: string
+  /** Latest document revision, present only when a conflict is detected. */
+  actualRevision?: string
+}
+
+/** Explicit major/minor User Settings schema version. */
+export interface JsUserSettingsSchemaVersion {
+  /** Breaking-change component. */
+  major: number
+  /** Additive-change component. */
+  minor: number
+}
+
 /** Read-only User Settings snapshot returned by `openUserSettings`. */
 export interface JsUserSettingsSnapshot {
   /** Typed update preferences. */
@@ -4343,6 +4472,12 @@ export declare function parseXseType(typeName: string): JsXseType
 export declare function persistGameLocalPaths(localYamlPath: string, gameRoot?: string | undefined | null, docsRoot?: string | undefined | null): Promise<void>
 
 /**
+ * Produces a deterministic User Settings migration plan without changing files,
+ * directories, timestamps, or backups under the supplied CLASSIC root.
+ */
+export declare function planUserSettingsMigration(classicRoot: string): JsUserSettingsMigrationPlanningResult
+
+/**
  * Opens User Settings relative to an explicit CLASSIC root and validates all
  * requested update fields as one unit without changing the source document.
  */
@@ -4502,6 +4637,15 @@ export interface ResourceInfo {
   /** File size in bytes (0 if unknown) */
   size: number
 }
+
+/**
+ * Builds the exact inverse of a User Settings migration plan entirely in memory.
+ *
+ * The DTO is reconstructed as an unattested core review plan, so Rust core owns endpoint,
+ * byte, revision, and review-row reversal semantics while the adapter remains unable to
+ * authorize persistence. The operation performs no filesystem access.
+ */
+export declare function reverseUserSettingsMigrationPlan(plan: JsUserSettingsMigrationPlan): JsUserSettingsMigrationPlan
 
 /**
  * Swap the cached YAML file with its `.prev` sibling (if any).

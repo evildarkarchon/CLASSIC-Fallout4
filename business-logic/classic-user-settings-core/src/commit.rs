@@ -3,6 +3,7 @@
 use crate::{AcceptedUserSettingsUpdate, Revision, UserSettings, UserSettingsUpdateField};
 use classic_settings_core::{Yaml, YamlOperations, parse_yaml_content};
 use sha2::{Digest, Sha256};
+use std::cell::Cell;
 use std::fmt;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
@@ -74,7 +75,7 @@ impl AcceptedUserSettingsUpdate {
         &self,
         classic_root: impl AsRef<Path>,
     ) -> Result<UserSettingsCommitOutcome, UserSettingsCommitError> {
-        self.commit_with_publisher(classic_root.as_ref(), &SystemPublisher { fail_at: None })
+        self.commit_with_publisher(classic_root.as_ref(), &SystemPublisher::system())
     }
 
     /// Runs the commit algorithm through an injectable publication boundary.
@@ -115,7 +116,7 @@ impl AcceptedUserSettingsUpdate {
 }
 
 /// Opens and exclusively locks the persistent sibling coordination file.
-fn acquire_commit_lock(target: &Path) -> Result<File, UserSettingsCommitError> {
+pub(crate) fn acquire_commit_lock(target: &Path) -> Result<File, UserSettingsCommitError> {
     let mut lock_name = target.as_os_str().to_os_string();
     lock_name.push(COMMIT_LOCK_SUFFIX);
     let lock_path = PathBuf::from(lock_name);
@@ -222,19 +223,21 @@ fn field_yaml_value(field: &UserSettingsUpdateField) -> Yaml {
 }
 
 /// Injectable boundary for durable, atomic document publication.
-trait Publisher {
+pub(crate) trait Publisher {
     /// Publishes `bytes` at `target` or returns a stage-specific failure before replacement.
     fn publish(&self, target: &Path, bytes: &[u8]) -> Result<(), UserSettingsCommitError>;
 }
 
 /// Production publisher backed by a randomized same-directory temporary file.
-struct SystemPublisher {
+pub(crate) struct SystemPublisher {
     fail_at: Option<PublicationStage>,
+    fail_on_publication: Option<usize>,
+    publication_count: Cell<usize>,
 }
 
 /// Fallible publication stages exposed only to the internal fault-injection seam.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum PublicationStage {
+pub(crate) enum PublicationStage {
     Create,
     Write,
     Flush,
@@ -256,17 +259,42 @@ impl PublicationStage {
 }
 
 impl SystemPublisher {
+    /// Builds the production durable publisher without fault injection.
+    pub(crate) const fn system() -> Self {
+        Self {
+            fail_at: None,
+            fail_on_publication: None,
+            publication_count: Cell::new(0),
+        }
+    }
+
     /// Builds a publisher that deterministically fails before one requested stage.
     #[cfg(test)]
-    fn failing_at(stage: PublicationStage) -> Self {
+    pub(crate) fn failing_at(stage: PublicationStage) -> Self {
         Self {
             fail_at: Some(stage),
+            fail_on_publication: Some(1),
+            publication_count: Cell::new(0),
+        }
+    }
+
+    /// Builds a publisher that fails at one stage of the selected publication call.
+    #[cfg(test)]
+    pub(crate) fn failing_at_publication(stage: PublicationStage, publication: usize) -> Self {
+        Self {
+            fail_at: Some(stage),
+            fail_on_publication: Some(publication),
+            publication_count: Cell::new(0),
         }
     }
 
     /// Returns the injected failure before the stage mutates publication state.
-    fn before(&self, stage: PublicationStage) -> Result<(), UserSettingsCommitError> {
-        if self.fail_at == Some(stage) {
+    fn before(
+        &self,
+        stage: PublicationStage,
+        publication: usize,
+    ) -> Result<(), UserSettingsCommitError> {
+        if self.fail_at == Some(stage) && self.fail_on_publication == Some(publication) {
             return Err(UserSettingsCommitError::new(
                 stage.error_code(),
                 format!("injected {stage:?} failure"),
@@ -278,13 +306,15 @@ impl SystemPublisher {
 
 impl Publisher for SystemPublisher {
     fn publish(&self, target: &Path, bytes: &[u8]) -> Result<(), UserSettingsCommitError> {
+        let publication = self.publication_count.get() + 1;
+        self.publication_count.set(publication);
         let parent = target.parent().ok_or_else(|| {
             UserSettingsCommitError::new(
                 "commit_temp_create_failed",
                 format!("target has no parent: {}", target.display()),
             )
         })?;
-        self.before(PublicationStage::Create)?;
+        self.before(PublicationStage::Create, publication)?;
         let mut temp = tempfile::Builder::new()
             .prefix(".classic-user-settings-")
             .suffix(".tmp")
@@ -293,19 +323,19 @@ impl Publisher for SystemPublisher {
                 UserSettingsCommitError::new("commit_temp_create_failed", error.to_string())
             })?;
         let staged = (|| {
-            self.before(PublicationStage::Write)?;
+            self.before(PublicationStage::Write, publication)?;
             temp.write_all(bytes).map_err(|error| {
                 UserSettingsCommitError::new("commit_temp_write_failed", error.to_string())
             })?;
-            self.before(PublicationStage::Flush)?;
+            self.before(PublicationStage::Flush, publication)?;
             temp.flush().map_err(|error| {
                 UserSettingsCommitError::new("commit_temp_flush_failed", error.to_string())
             })?;
-            self.before(PublicationStage::Sync)?;
+            self.before(PublicationStage::Sync, publication)?;
             temp.as_file().sync_all().map_err(|error| {
                 UserSettingsCommitError::new("commit_temp_sync_failed", error.to_string())
             })?;
-            self.before(PublicationStage::Replace)
+            self.before(PublicationStage::Replace, publication)
         })();
         if let Err(error) = staged {
             return Err(cleanup_failed_publication(temp, error));

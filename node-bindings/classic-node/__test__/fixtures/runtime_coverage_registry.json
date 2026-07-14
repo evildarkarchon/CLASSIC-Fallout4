@@ -11,17 +11,25 @@
         "ownerModule": "user_settings",
         "tier": "tier1"
       },
-      "contractCount": 134,
-      "contractIdsHash": "9a093678ad0c15ec38c0e2130549f95b62aa1834174e2e06ddba09cf12c2e60b",
+      "contractCount": 163,
+      "contractIdsHash": "2080a98a8982aa68a7a98d85af8cd3afb321e71bb732437ae4c968f768feefdd",
       "bindingIdentifiers": [
         "JsFrontendPreferences",
         "JsFrontendState",
         "JsGuiWindowGeometry",
         "JsTuiRememberedState",
         "JsUserSettingsCommitResult",
+        "JsUserSettingsMigrationChange",
+        "JsUserSettingsMigrationDiagnostic",
+        "JsUserSettingsMigrationEndpoint",
+        "JsUserSettingsMigrationPlan",
+        "JsUserSettingsMigrationPlanningResult",
+        "JsUserSettingsSchemaVersion",
         "JsUserSettingsSnapshot",
         "JsWindowGeometry",
-        "commitUserSettingsUpdate"
+        "commitUserSettingsUpdate",
+        "planUserSettingsMigration",
+        "reverseUserSettingsMigrationPlan"
       ],
       "verificationMode": "direct_call",
       "testSuite": "node-bindings/classic-node/__test__/user_settings.spec.ts",
@@ -29,7 +37,7 @@
       "fixtureRefs": [
         "tests/fixtures/user_settings_compatibility"
       ],
-      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path. User Settings commit coverage verifies accepted publication, structured stale-revision conflicts and validation rejection without writes, and stable NAPI error codes for operational failures."
+      "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path. Migration planning coverage verifies current, legacy-flat, and unsupported outcomes, reviewable transition DTOs, exact byte payloads, and the non-writing planning path. Migration reversal coverage verifies the proposed-content revision, swapped endpoints and byte payloads, reversed/inverted change rows, operation after source removal, and an exact involutive round trip. User Settings commit coverage verifies accepted publication, structured stale-revision conflicts and validation rejection without writes, and stable NAPI error codes for operational failures."
     },
     {
       "coverageId": "node-tier1-scanlog",

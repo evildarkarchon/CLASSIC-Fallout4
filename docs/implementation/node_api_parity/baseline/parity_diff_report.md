@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-14T07:23:53.272725+00:00`
-- Tier-1 contract rows: **841**
-- Tier-1 matched: **841**
+- Generated: `2026-07-14T09:09:19.027555+00:00`
+- Tier-1 contract rows: **870**
+- Tier-1 matched: **870**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -12,6 +12,35 @@
 
 | ID | Owner Module | Rust Symbol | Node Export | Status |
 |---|---|---|---|---|
+| `user-settings-current-schema-version` | `user_settings` | `CURRENT_USER_SETTINGS_SCHEMA_VERSION` | `JsUserSettingsSchemaVersion` | `matched` |
+| `user-settings-schema-version-type` | `user_settings` | `UserSettingsSchemaVersion` | `JsUserSettingsSchemaVersion` | `matched` |
+| `user-settings-migration-endpoint-type` | `user_settings` | `MigrationEndpoint` | `JsUserSettingsMigrationEndpoint` | `matched` |
+| `user-settings-migration-change-kind-type` | `user_settings` | `MigrationChangeKind` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-change-type` | `user_settings` | `MigrationChange` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-diagnostic-type` | `user_settings` | `MigrationDiagnostic` | `JsUserSettingsMigrationDiagnostic` | `matched` |
+| `user-settings-migration-plan-type` | `user_settings` | `UserSettingsMigrationPlan` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-planning-outcome-type` | `user_settings` | `MigrationPlanningOutcome` | `JsUserSettingsMigrationPlanningResult` | `matched` |
+| `user-settings-schema-version-constructor` | `user_settings` | `fn` | `JsUserSettingsSchemaVersion` | `matched` |
+| `user-settings-schema-version-major-accessor` | `user_settings` | `fn` | `JsUserSettingsSchemaVersion` | `matched` |
+| `user-settings-schema-version-minor-accessor` | `user_settings` | `fn` | `JsUserSettingsSchemaVersion` | `matched` |
+| `user-settings-migration-endpoint-location-accessor` | `user_settings` | `fn` | `JsUserSettingsMigrationEndpoint` | `matched` |
+| `user-settings-migration-endpoint-schema-version-accessor` | `user_settings` | `fn` | `JsUserSettingsMigrationEndpoint` | `matched` |
+| `user-settings-migration-change-kind-accessor` | `user_settings` | `fn` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-diagnostic-code-accessor` | `user_settings` | `fn` | `JsUserSettingsMigrationDiagnostic` | `matched` |
+| `user-settings-migration-plan-required-accessor` | `user_settings` | `fn` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-plan-source-accessor` | `user_settings` | `fn` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-plan-target-accessor` | `user_settings` | `fn` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-change-source-path-accessor` | `user_settings` | `source_path` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-change-target-path-accessor` | `user_settings` | `target_path` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-change-before-accessor` | `user_settings` | `before` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-change-after-accessor` | `user_settings` | `after` | `JsUserSettingsMigrationChange` | `matched` |
+| `user-settings-migration-diagnostic-message-accessor` | `user_settings` | `message` | `JsUserSettingsMigrationDiagnostic` | `matched` |
+| `user-settings-migration-plan-base-revision-accessor` | `user_settings` | `base_revision` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-plan-changes-accessor` | `user_settings` | `changes` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-plan-original-bytes-accessor` | `user_settings` | `original_bytes` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-migration-plan-proposed-bytes-accessor` | `user_settings` | `proposed_bytes` | `JsUserSettingsMigrationPlan` | `matched` |
+| `user-settings-plan-migration` | `user_settings` | `plan_migration` | `planUserSettingsMigration` | `matched` |
+| `user-settings-migration-plan-reverse-in-memory` | `user_settings` | `reverse_in_memory` | `reverseUserSettingsMigrationPlan` | `matched` |
 | `user-settings-commit-eligibility` | `user_settings` | `CommitEligibility` | `JsUserSettingsSnapshot` | `matched` |
 | `user-settings-diagnostic` | `user_settings` | `Diagnostic` | `JsUserSettingsDiagnostic` | `matched` |
 | `user-settings-document-classification` | `user_settings` | `DocumentClassification` | `JsUserSettingsSnapshot` | `matched` |

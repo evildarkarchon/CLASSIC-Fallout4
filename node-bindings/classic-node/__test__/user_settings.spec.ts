@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import {
   mkdirSync,
   mkdtempSync,
@@ -10,9 +11,12 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 import {
+  applyUserSettingsMigration,
   commitUserSettingsUpdate,
   openUserSettings,
+  planUserSettingsMigration,
   previewUserSettingsUpdate,
+  reverseUserSettingsMigrationPlan,
 } from "../index.js";
 
 const roots: string[] = [];
@@ -120,6 +124,241 @@ describe("read-only User Settings", () => {
     const invalidBytesSnapshot = openUserSettings(makeRoot(invalidBytes));
     expect(invalidBytesSnapshot.classification).toBe("malformed");
     expect(invalidBytesSnapshot.originalContent?.equals(invalidBytes)).toBe(true);
+  });
+});
+
+describe("User Settings migration planning", () => {
+  test("user-settings-migration-planning-current-document", () => {
+    const content = fixture("canonical_current_nested.yaml");
+    const root = makeRoot(content);
+    const path = join(root, "CLASSIC Settings.yaml");
+
+    const result = planUserSettingsMigration(root);
+
+    expect(result).toEqual({
+      status: "notRequired",
+      diagnostics: [],
+    });
+    expect(readFileSync(path)).toEqual(content);
+  });
+
+  test("user-settings-migration-planning-flat-document", () => {
+    const content = fixture("flat_classic_config.yaml");
+    const root = makeRoot(content);
+    const path = join(root, "CLASSIC Settings.yaml");
+    const revision = openUserSettings(root).revision;
+
+    const result = planUserSettingsMigration(root);
+
+    expect(result.status).toBe("planned");
+    expect(result.diagnostics).toEqual([]);
+    expect(result.plan?.required).toBe(true);
+    expect(result.plan?.baseRevision).toBe(revision);
+    expect(result.plan?.source).toEqual({
+      location: "canonical",
+    });
+    expect(result.plan?.target).toEqual({
+      location: "canonical",
+      schemaVersion: { major: 1, minor: 0 },
+    });
+    expect(result.plan?.changes[0]).toEqual({
+      kind: "schemaVersionTransition",
+      targetPath: "/schema_version",
+      after: "1.0",
+    });
+    expect(result.plan?.changes).toContainEqual({
+      kind: "fieldTransition",
+      sourcePath: "/fcx_mode",
+      targetPath: "/CLASSIC_Settings/FCX Mode",
+      before: "---\ntrue",
+      after: "---\ntrue",
+    });
+    expect(result.plan?.originalContent).toEqual(content);
+    expect(result.plan?.proposedContent.toString("utf8")).toContain(
+      'schema_version: "1.0"',
+    );
+    expect(result.plan?.proposedContent.toString("utf8")).toContain(
+      "CLASSIC_Settings:",
+    );
+    expect(readFileSync(path)).toEqual(content);
+  });
+
+  test("user-settings-migration-planning-unsupported-document", () => {
+    const content = fixture("newer_major_schema.yaml");
+    const root = makeRoot(content);
+    const path = join(root, "CLASSIC Settings.yaml");
+
+    const result = planUserSettingsMigration(root);
+
+    expect(result.status).toBe("unsupported");
+    expect(result.plan).toBeUndefined();
+    expect(result.diagnostics.map(({ code }) => code)).toEqual([
+      "future_major_schema_read_only",
+    ]);
+    expect(readFileSync(path)).toEqual(content);
+  });
+
+  test("user-settings-migration-plan-reversal-is-pure-and-involutive", () => {
+    const content = fixture("flat_classic_config.yaml");
+    const root = makeRoot(content);
+    const outcome = planUserSettingsMigration(root);
+    expect(outcome.status).toBe("planned");
+    expect(outcome.plan).toBeDefined();
+    const plan = outcome.plan!;
+    const expectedReverseRevision = `sha256:${createHash("sha256")
+      .update(plan.proposedContent)
+      .digest("hex")}`;
+
+    rmSync(root, { recursive: true, force: true });
+    const reversed = reverseUserSettingsMigrationPlan(plan);
+
+    expect(reversed.required).toBe(plan.required);
+    expect(reversed.baseRevision).toBe(expectedReverseRevision);
+    expect(reversed.source).toEqual(plan.target);
+    expect(reversed.target).toEqual(plan.source);
+    expect(reversed.originalContent).toEqual(plan.proposedContent);
+    expect(reversed.proposedContent).toEqual(plan.originalContent);
+    expect(reversed.changes[0]).toEqual({
+      kind: "fieldTransition",
+      sourcePath: "/UI/preferences/auto_refresh_interval_ms",
+      targetPath: "/auto_refresh_interval_ms",
+      before: "---\n2500",
+      after: "---\n2500",
+    });
+    expect(reverseUserSettingsMigrationPlan(reversed)).toEqual(plan);
+  });
+
+  test("user-settings-migration-plan-reversal-rejects-invalid-review-tokens", () => {
+    const root = makeRoot(fixture("flat_classic_config.yaml"));
+    const plan = planUserSettingsMigration(root).plan!;
+    plan.source.location = "callerMutation";
+    let caught: unknown;
+
+    try {
+      reverseUserSettingsMigrationPlan(plan);
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error & { code?: string }).code).toBe(
+      "migration_plan_review_invalid",
+    );
+  });
+});
+
+describe("User Settings migration persistence", () => {
+  test("user-settings-migration-apply-and-explicit-restore", () => {
+    const content = fixture("flat_classic_config.yaml");
+    const root = makeRoot(content);
+    const path = join(root, "CLASSIC Settings.yaml");
+    const outcome = planUserSettingsMigration(root);
+    expect(outcome.status).toBe("planned");
+    const plan = outcome.plan!;
+
+    const applied = applyUserSettingsMigration(
+      root,
+      plan.baseRevision,
+      plan.proposedContent,
+    );
+
+    expect(applied.status).toBe("applied");
+    expect(applied.expectedRevision).toBe(plan.baseRevision);
+    expect(applied.actualRevision).toBeUndefined();
+    expect(applied.receipt).toBeDefined();
+    const receipt = applied.receipt!;
+    expect(receipt.sourcePath).toBe(path);
+    expect(receipt.destinationPath).toBe(path);
+    expect(receipt.source).toEqual(plan.source);
+    expect(receipt.target).toEqual(plan.target);
+    expect(receipt.backupRevision).toBe(plan.baseRevision);
+    expect(receipt.publishedRevision.startsWith("sha256:")).toBe(true);
+    expect(readFileSync(receipt.backupPath)).toEqual(content);
+    expect(readFileSync(path)).toEqual(plan.proposedContent);
+
+    const restored = receipt.restore(root);
+
+    expect(restored).toEqual({
+      status: "restored",
+      revision: plan.baseRevision,
+      expectedRevision: receipt.publishedRevision,
+    });
+    expect(readFileSync(path)).toEqual(content);
+  });
+
+  test("user-settings-migration-apply-refuses-stale-and-mutated-approvals", () => {
+    const content = fixture("flat_classic_config.yaml");
+    const staleRoot = makeRoot(content);
+    const stalePath = join(staleRoot, "CLASSIC Settings.yaml");
+    const stalePlan = planUserSettingsMigration(staleRoot).plan!;
+    const externallyEdited = Buffer.from(
+      content.toString("utf8").replace("fcx_mode: true", "fcx_mode: false"),
+    );
+    writeFileSync(stalePath, externallyEdited);
+    const actualRevision = openUserSettings(staleRoot).revision;
+
+    expect(
+      applyUserSettingsMigration(
+        staleRoot,
+        stalePlan.baseRevision,
+        stalePlan.proposedContent,
+      ),
+    ).toEqual({
+      status: "conflict",
+      expectedRevision: stalePlan.baseRevision,
+      actualRevision,
+    });
+    expect(readFileSync(stalePath)).toEqual(externallyEdited);
+
+    const mutatedRoot = makeRoot(content);
+    const mutatedPath = join(mutatedRoot, "CLASSIC Settings.yaml");
+    const mutatedPlan = planUserSettingsMigration(mutatedRoot).plan!;
+    const unapproved = Buffer.concat([
+      mutatedPlan.proposedContent,
+      Buffer.from("# caller mutation\n"),
+    ]);
+    let caught: unknown;
+
+    try {
+      applyUserSettingsMigration(
+        mutatedRoot,
+        mutatedPlan.baseRevision,
+        unapproved,
+      );
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    expect((caught as Error & { code?: string }).code).toBe(
+      "migration_plan_approval_mismatch",
+    );
+    expect(readFileSync(mutatedPath)).toEqual(content);
+  });
+
+  test("user-settings-migration-restore-refuses-a-newer-document", () => {
+    const content = fixture("flat_classic_config.yaml");
+    const root = makeRoot(content);
+    const path = join(root, "CLASSIC Settings.yaml");
+    const plan = planUserSettingsMigration(root).plan!;
+    const receipt = applyUserSettingsMigration(
+      root,
+      plan.baseRevision,
+      plan.proposedContent,
+    ).receipt!;
+    const externallyEdited = Buffer.concat([
+      readFileSync(path),
+      Buffer.from("# external edit\n"),
+    ]);
+    writeFileSync(path, externallyEdited);
+    const actualRevision = openUserSettings(root).revision;
+
+    expect(receipt.restore(root)).toEqual({
+      status: "conflict",
+      expectedRevision: receipt.publishedRevision,
+      actualRevision,
+    });
+    expect(readFileSync(path)).toEqual(externallyEdited);
   });
 });
 

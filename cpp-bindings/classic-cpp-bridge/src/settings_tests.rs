@@ -21,6 +21,321 @@ fn install_user_settings_fixture(root: &Path, name: &str) {
         .expect("install User Settings fixture");
 }
 
+#[test]
+fn test_user_settings_migration_plan_bridge_maps_flat_plan_without_writing() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "flat_classic_config.yaml");
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let before = std::fs::read(&settings_path).unwrap();
+    let before_modified = std::fs::metadata(&settings_path)
+        .unwrap()
+        .modified()
+        .unwrap();
+
+    let plan = user_settings_plan_migration(&root.path().display().to_string());
+
+    assert_eq!(plan.status, "planned");
+    assert!(plan.required);
+    assert!(plan.has_plan);
+    assert!(plan.base_revision.starts_with("sha256:"));
+    assert_eq!(plan.source_location, "canonical");
+    assert!(!plan.has_source_schema_version);
+    assert_eq!(plan.target_location, "canonical");
+    assert!(plan.has_target_schema_version);
+    assert_eq!((plan.target_schema_major, plan.target_schema_minor), (1, 0));
+    assert!(plan.has_original_content);
+    assert_eq!(plan.original_content, before);
+    assert!(plan.has_proposed_content);
+    let proposed = String::from_utf8(plan.proposed_content.clone()).unwrap();
+    assert!(proposed.contains("schema_version"));
+    assert!(proposed.contains("CLASSIC_Settings"));
+    assert!(plan.diagnostics.is_empty());
+    assert_eq!(plan.changes[0].kind, "schema_version_transition");
+    assert!(!plan.changes[0].has_source_path);
+    assert!(plan.changes[0].has_target_path);
+    assert_eq!(plan.changes[0].target_path, "/schema_version");
+    assert!(!plan.changes[0].has_before);
+    assert!(plan.changes[0].has_after);
+    assert_eq!(plan.changes[0].after, "1.0");
+    assert!(
+        plan.changes
+            .iter()
+            .any(|change| change.kind == "field_transition"
+                && change.source_path == "/fcx_mode"
+                && change.target_path == "/CLASSIC_Settings/FCX Mode")
+    );
+    assert_eq!(std::fs::read(&settings_path).unwrap(), before);
+    assert_eq!(
+        std::fs::metadata(&settings_path)
+            .unwrap()
+            .modified()
+            .unwrap(),
+        before_modified
+    );
+}
+
+#[test]
+fn test_user_settings_migration_plan_bridge_reverses_entire_plan_in_memory() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "flat_classic_config.yaml");
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let before = std::fs::read(&settings_path).unwrap();
+    let before_modified = std::fs::metadata(&settings_path)
+        .unwrap()
+        .modified()
+        .unwrap();
+    let forward = user_settings_plan_migration(&root.path().display().to_string());
+
+    let reversed = user_settings_reverse_migration_plan(&forward).unwrap();
+
+    assert_eq!(reversed.status, "planned");
+    assert_eq!(reversed.required, forward.required);
+    assert!(reversed.has_plan);
+    assert_eq!(reversed.source_location, forward.target_location);
+    assert_eq!(reversed.target_location, forward.source_location);
+    assert_eq!(
+        (
+            reversed.has_source_schema_version,
+            reversed.source_schema_major,
+            reversed.source_schema_minor,
+        ),
+        (
+            forward.has_target_schema_version,
+            forward.target_schema_major,
+            forward.target_schema_minor,
+        )
+    );
+    assert_eq!(reversed.original_content, forward.proposed_content);
+    assert_eq!(reversed.proposed_content, forward.original_content);
+    assert!(reversed.base_revision.starts_with("sha256:"));
+    assert_eq!(reversed.base_revision.len(), "sha256:".len() + 64);
+    assert_eq!(reversed.changes.len(), forward.changes.len());
+    let forward_last = forward.changes.last().unwrap();
+    let reverse_first = &reversed.changes[0];
+    assert_eq!(reverse_first.kind, forward_last.kind);
+    assert_eq!(reverse_first.has_source_path, forward_last.has_target_path);
+    assert_eq!(reverse_first.source_path, forward_last.target_path);
+    assert_eq!(reverse_first.has_target_path, forward_last.has_source_path);
+    assert_eq!(reverse_first.target_path, forward_last.source_path);
+    assert_eq!(reverse_first.has_before, forward_last.has_after);
+    assert_eq!(reverse_first.before, forward_last.after);
+    assert_eq!(reverse_first.has_after, forward_last.has_before);
+    assert_eq!(reverse_first.after, forward_last.before);
+
+    let round_trip = user_settings_reverse_migration_plan(&reversed).unwrap();
+
+    assert_eq!(round_trip.base_revision, forward.base_revision);
+    assert_eq!(round_trip.source_location, forward.source_location);
+    assert_eq!(round_trip.target_location, forward.target_location);
+    assert_eq!(round_trip.original_content, forward.original_content);
+    assert_eq!(round_trip.proposed_content, forward.proposed_content);
+    assert_eq!(round_trip.changes.len(), forward.changes.len());
+    for (actual, expected) in round_trip.changes.iter().zip(&forward.changes) {
+        assert_eq!(actual.kind, expected.kind);
+        assert_eq!(actual.has_source_path, expected.has_source_path);
+        assert_eq!(actual.source_path, expected.source_path);
+        assert_eq!(actual.has_target_path, expected.has_target_path);
+        assert_eq!(actual.target_path, expected.target_path);
+        assert_eq!(actual.has_before, expected.has_before);
+        assert_eq!(actual.before, expected.before);
+        assert_eq!(actual.has_after, expected.has_after);
+        assert_eq!(actual.after, expected.after);
+    }
+    assert_eq!(std::fs::read(&settings_path).unwrap(), before);
+    assert_eq!(
+        std::fs::metadata(&settings_path)
+            .unwrap()
+            .modified()
+            .unwrap(),
+        before_modified
+    );
+}
+
+#[test]
+fn test_user_settings_migration_plan_bridge_maps_location_transition() {
+    let root = tempfile::tempdir().unwrap();
+    let legacy_dir = root.path().join("CLASSIC Data");
+    std::fs::create_dir(&legacy_dir).unwrap();
+    let legacy_path = legacy_dir.join("CLASSIC Settings.yaml");
+    let before =
+        std::fs::read(user_settings_fixture_path("previous_location_nested.yaml")).unwrap();
+    std::fs::write(&legacy_path, &before).unwrap();
+
+    let plan = user_settings_plan_migration(&root.path().display().to_string());
+
+    assert_eq!(plan.status, "planned");
+    assert!(plan.required);
+    assert_eq!(plan.source_location, "legacy");
+    assert_eq!(plan.target_location, "canonical");
+    assert_eq!(plan.changes[0].kind, "location_transition");
+    assert_eq!(
+        plan.changes[0].source_path,
+        "CLASSIC Data/CLASSIC Settings.yaml"
+    );
+    assert_eq!(plan.changes[0].target_path, "CLASSIC Settings.yaml");
+    assert_eq!(std::fs::read(&legacy_path).unwrap(), before);
+    assert!(!root.path().join("CLASSIC Settings.yaml").exists());
+}
+
+#[test]
+fn test_user_settings_migration_plan_bridge_maps_terminal_outcomes() {
+    let current_root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(current_root.path(), "canonical_current_nested.yaml");
+
+    let current = user_settings_plan_migration(&current_root.path().display().to_string());
+
+    assert_eq!(current.status, "not_required");
+    assert!(!current.required);
+    assert!(!current.has_plan);
+    assert!(current.base_revision.is_empty());
+    assert!(current.changes.is_empty());
+    assert!(!current.has_original_content);
+    assert!(!current.has_proposed_content);
+    assert!(current.diagnostics.is_empty());
+
+    let future_root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(future_root.path(), "newer_major_schema.yaml");
+    let future_path = future_root.path().join("CLASSIC Settings.yaml");
+    let before = std::fs::read(&future_path).unwrap();
+
+    let unsupported = user_settings_plan_migration(&future_root.path().display().to_string());
+
+    assert_eq!(unsupported.status, "unsupported");
+    assert!(!unsupported.required);
+    assert!(!unsupported.has_plan);
+    assert!(unsupported.changes.is_empty());
+    assert_eq!(unsupported.diagnostics.len(), 1);
+    assert_eq!(
+        unsupported.diagnostics[0].code,
+        "future_major_schema_read_only"
+    );
+    assert!(!unsupported.diagnostics[0].message.is_empty());
+    assert_eq!(std::fs::read(&future_path).unwrap(), before);
+}
+
+#[test]
+fn test_user_settings_migration_apply_bridge_exposes_receipt_and_restores_explicitly() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "flat_classic_config.yaml");
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let original = std::fs::read(&settings_path).unwrap();
+    let root_string = root.path().display().to_string();
+    let approved = user_settings_plan_migration(&root_string);
+
+    let handle = user_settings_apply_migration(&root_string, &approved).unwrap();
+    let outcome = user_settings_migration_apply_outcome(&handle);
+
+    assert_eq!(outcome.status, "applied");
+    assert!(outcome.expected_revision.is_empty());
+    assert!(outcome.actual_revision.is_empty());
+    assert!(outcome.has_receipt);
+    assert_eq!(PathBuf::from(&outcome.receipt.source_path), settings_path);
+    assert_eq!(
+        PathBuf::from(&outcome.receipt.destination_path),
+        settings_path
+    );
+    assert!(PathBuf::from(&outcome.receipt.backup_path).starts_with(root.path()));
+    assert_eq!(outcome.receipt.source_location, "canonical");
+    assert!(!outcome.receipt.has_source_schema_version);
+    assert_eq!(outcome.receipt.target_location, "canonical");
+    assert!(outcome.receipt.has_target_schema_version);
+    assert_eq!(
+        (
+            outcome.receipt.target_schema_major,
+            outcome.receipt.target_schema_minor,
+        ),
+        (1, 0)
+    );
+    assert_eq!(outcome.receipt.backup_revision, approved.base_revision);
+    assert!(outcome.receipt.published_revision.starts_with("sha256:"));
+    assert_eq!(
+        std::fs::read(&outcome.receipt.backup_path).unwrap(),
+        original
+    );
+    assert_eq!(
+        std::fs::read(&settings_path).unwrap(),
+        approved.proposed_content
+    );
+
+    let restored = user_settings_restore_migration(&root_string, &handle).unwrap();
+
+    assert_eq!(restored.status, "restored");
+    assert_eq!(restored.revision, approved.base_revision);
+    assert!(restored.expected_revision.is_empty());
+    assert!(restored.actual_revision.is_empty());
+    assert_eq!(std::fs::read(&settings_path).unwrap(), original);
+}
+
+#[test]
+fn test_user_settings_migration_apply_bridge_maps_stale_revision_as_conflict_data() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "flat_classic_config.yaml");
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let root_string = root.path().display().to_string();
+    let approved = user_settings_plan_migration(&root_string);
+    let changed = b"schema_version: \"1.0\"\nCLASSIC_Settings: {}\n";
+    std::fs::write(&settings_path, changed).unwrap();
+
+    let handle = user_settings_apply_migration(&root_string, &approved).unwrap();
+    let outcome = user_settings_migration_apply_outcome(&handle);
+
+    assert_eq!(outcome.status, "conflict");
+    assert_eq!(outcome.expected_revision, approved.base_revision);
+    assert!(outcome.actual_revision.starts_with("sha256:"));
+    assert_ne!(outcome.actual_revision, outcome.expected_revision);
+    assert!(!outcome.has_receipt);
+    assert!(outcome.receipt.backup_path.is_empty());
+    assert_eq!(std::fs::read(&settings_path).unwrap(), changed);
+    assert!(!root.path().join("CLASSIC Backup").exists());
+    assert!(user_settings_restore_migration(&root_string, &handle).is_err());
+}
+
+#[test]
+fn test_user_settings_migration_apply_bridge_rejects_mutated_proposed_bytes() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "flat_classic_config.yaml");
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let original = std::fs::read(&settings_path).unwrap();
+    let root_string = root.path().display().to_string();
+    let mut approved = user_settings_plan_migration(&root_string);
+    approved
+        .proposed_content
+        .extend_from_slice(b"# unapproved\n");
+
+    let error = user_settings_apply_migration(&root_string, &approved)
+        .err()
+        .expect("mutated proposed bytes must be rejected");
+
+    assert!(error.starts_with("migration_approval_mismatch:"));
+    assert_eq!(std::fs::read(&settings_path).unwrap(), original);
+    assert!(!root.path().join("CLASSIC Backup").exists());
+}
+
+#[test]
+fn test_user_settings_migration_restore_bridge_maps_newer_document_as_conflict_data() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "flat_classic_config.yaml");
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let root_string = root.path().display().to_string();
+    let approved = user_settings_plan_migration(&root_string);
+    let handle = user_settings_apply_migration(&root_string, &approved).unwrap();
+    let applied = user_settings_migration_apply_outcome(&handle);
+    let changed = b"schema_version: \"1.0\"\nCLASSIC_Settings:\n  FCX Mode: false\n";
+    std::fs::write(&settings_path, changed).unwrap();
+
+    let restored = user_settings_restore_migration(&root_string, &handle).unwrap();
+
+    assert_eq!(restored.status, "conflict");
+    assert!(restored.revision.is_empty());
+    assert_eq!(
+        restored.expected_revision,
+        applied.receipt.published_revision
+    );
+    assert!(restored.actual_revision.starts_with("sha256:"));
+    assert_ne!(restored.actual_revision, restored.expected_revision);
+    assert_eq!(std::fs::read(&settings_path).unwrap(), changed);
+}
+
 // ── YAML ops tests (pre-existing) ──────────────────────────────
 
 #[test]

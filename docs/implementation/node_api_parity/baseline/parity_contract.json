@@ -1,7 +1,7 @@
 {
   "contractVersion": "1.0.0",
   "phase": "phase1",
-  "description": "Live one-tier 807-row Node vs Rust parity contract for high-level APIs, preserving the 706-row enforcement floor.",
+  "description": "Live one-tier 870-row Node vs Rust parity contract for high-level APIs, preserving the 706-row enforcement floor.",
   "tierDefinitions": {
     "tier1": "Must-have high-level APIs required by app workflows and cross-language integration."
   },
@@ -40,6 +40,298 @@
     }
   },
   "tier1Mappings": [
+    {
+      "id": "user-settings-current-schema-version",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "CURRENT_USER_SETTINGS_SCHEMA_VERSION",
+      "rustKind": "const",
+      "nodeExport": "JsUserSettingsSchemaVersion",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-schema-version-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsSchemaVersion",
+      "rustKind": "struct",
+      "nodeExport": "JsUserSettingsSchemaVersion",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-endpoint-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "MigrationEndpoint",
+      "rustKind": "struct",
+      "nodeExport": "JsUserSettingsMigrationEndpoint",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-change-kind-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "MigrationChangeKind",
+      "rustKind": "enum",
+      "nodeExport": "JsUserSettingsMigrationChange",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-change-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "MigrationChange",
+      "rustKind": "struct",
+      "nodeExport": "JsUserSettingsMigrationChange",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-diagnostic-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "MigrationDiagnostic",
+      "rustKind": "struct",
+      "nodeExport": "JsUserSettingsMigrationDiagnostic",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-plan-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsMigrationPlan",
+      "rustKind": "struct",
+      "nodeExport": "JsUserSettingsMigrationPlan",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-planning-outcome-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "MigrationPlanningOutcome",
+      "rustKind": "enum",
+      "nodeExport": "JsUserSettingsMigrationPlanningResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-schema-version-constructor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fn",
+      "rustKind": "const",
+      "nodeExport": "JsUserSettingsSchemaVersion",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-schema-version-major-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fn",
+      "rustKind": "const",
+      "nodeExport": "JsUserSettingsSchemaVersion",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-schema-version-minor-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fn",
+      "rustKind": "const",
+      "nodeExport": "JsUserSettingsSchemaVersion",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-endpoint-location-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fn",
+      "rustKind": "const",
+      "nodeExport": "JsUserSettingsMigrationEndpoint",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-endpoint-schema-version-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fn",
+      "rustKind": "const",
+      "nodeExport": "JsUserSettingsMigrationEndpoint",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-change-kind-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fn",
+      "rustKind": "const",
+      "nodeExport": "JsUserSettingsMigrationChange",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-diagnostic-code-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fn",
+      "rustKind": "const",
+      "nodeExport": "JsUserSettingsMigrationDiagnostic",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-plan-required-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fn",
+      "rustKind": "const",
+      "nodeExport": "JsUserSettingsMigrationPlan",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-plan-source-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fn",
+      "rustKind": "const",
+      "nodeExport": "JsUserSettingsMigrationPlan",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-plan-target-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "fn",
+      "rustKind": "const",
+      "nodeExport": "JsUserSettingsMigrationPlan",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-change-source-path-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "source_path",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsMigrationChange",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-change-target-path-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "target_path",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsMigrationChange",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-change-before-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "before",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsMigrationChange",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-change-after-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "after",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsMigrationChange",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-diagnostic-message-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "message",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsMigrationDiagnostic",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-plan-base-revision-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "base_revision",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsMigrationPlan",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-plan-changes-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "changes",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsMigrationPlan",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-plan-original-bytes-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "original_bytes",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsMigrationPlan",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-migration-plan-proposed-bytes-accessor",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "proposed_bytes",
+      "rustKind": "function",
+      "nodeExport": "JsUserSettingsMigrationPlan",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-plan-migration",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "plan_migration",
+      "rustKind": "function",
+      "nodeExport": "planUserSettingsMigration",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "user-settings-migration-plan-reverse-in-memory",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "reverse_in_memory",
+      "rustKind": "function",
+      "nodeExport": "reverseUserSettingsMigrationPlan",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
     {
       "id": "user-settings-commit-eligibility",
       "tier": "tier1",

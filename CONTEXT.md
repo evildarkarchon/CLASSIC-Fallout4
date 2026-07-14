@@ -64,6 +64,18 @@ _Avoid_: user config, raw settings keys, frontend settings
 A proposed change to one or more User Settings. Producing an update does not persist it; a caller accepts or rejects the update before it is committed.
 _Avoid_: implicit save, raw settings mutation, auto-persist
 
+**User Settings Migration Plan**:
+A deterministic, revision-anchored proposal that describes how one supported legacy User Settings document would change schema version, location, shape, or aliases. Planning is reversible in memory and never writes, backs up, or relocates files; applying or restoring a plan is a separate explicit operation.
+_Avoid_: automatic migration, migration write, settings cleanup
+
+**User Settings Migration Receipt**:
+The opaque result of explicitly applying a caller-approved User Settings Migration Plan. It attests the source and destination endpoints, the reopened migrated revision, and a retained byte-exact backup that was durably published and reread before migration publication.
+_Avoid_: backup path string, mutable restore request, migration result DTO
+
+**User Settings Migration Restore**:
+An explicit, receipt-authorized operation that conflict-checks the currently migrated revision, re-verifies the retained backup, restores it through User Settings coordination, and reopens the restored source before reporting success.
+_Avoid_: automatic rollback, raw backup copy, force restore
+
 **Mod Guidance**:
 An Autoscan Report Contribution based on YAML Data about installed mods, mod combinations, or mod-related remediation. It is distinct from crash evidence that mentions a plugin.
 _Avoid_: mod finding, plugin finding, load-order output

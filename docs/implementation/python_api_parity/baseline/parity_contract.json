@@ -1407,6 +1407,198 @@
       "pythonArity": 1
     },
     {
+      "id": "user_settings.migration_current_schema_version",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "CURRENT_USER_SETTINGS_SCHEMA_VERSION",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSchemaVersion",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_schema_version",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsSchemaVersion",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSchemaVersion",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_endpoint",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "MigrationEndpoint",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationEndpoint",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_change_kind",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "MigrationChangeKind",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationChange",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_change",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "MigrationChange",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationChange",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_diagnostic",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "MigrationDiagnostic",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationDiagnostic",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_plan",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsMigrationPlan",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationPlan",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_planning_outcome",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "MigrationPlanningOutcome",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationPlanningOutcome",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_plan_migration",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "plan_migration",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot.plan_migration",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "user_settings.migration_reverse_in_memory",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "reverse_in_memory",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationPlan.reverse_in_memory",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "user_settings.migration_plan_base_revision",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "base_revision",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationPlan",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_plan_changes",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "changes",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationPlan",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_plan_original_bytes",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "original_bytes",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationPlan",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_plan_proposed_bytes",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "proposed_bytes",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationPlan",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_change_source_path",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "source_path",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationChange",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_change_target_path",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "target_path",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationChange",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_change_before",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "before",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationChange",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_change_after",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "after",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationChange",
+      "pythonKind": "class"
+    },
+    {
+      "id": "user_settings.migration_diagnostic_message",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "message",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsMigrationDiagnostic",
+      "pythonKind": "class"
+    },
+    {
       "id": "config-classic-config-class",
       "tier": "tier1",
       "ownerModule": "config",

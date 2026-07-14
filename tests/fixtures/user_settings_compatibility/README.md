@@ -1,6 +1,6 @@
 # User Settings compatibility corpus
 
-This directory is the executable prefactoring contract for ADR-0004. It records the persisted forms and decisions that `classic-user-settings-core` must preserve when that Rust seam is introduced. The corpus does not change or exercise production User Settings behavior by itself.
+This directory is the executable compatibility contract for ADR-0004. It records the persisted forms and decisions that `classic-user-settings-core` must preserve across read-only open, explicit update, migration planning, apply, and restore work. The corpus does not change production User Settings behavior by itself.
 
 `expectations.json` is the machine-readable source of truth. The integration test at `business-logic/classic-config-core/tests/user_settings_compatibility_tests.rs` verifies that every required case and outcome is represented, that valid inputs parse, that malformed input does not parse, and that preservation examples retain their semantic values and YAML types. Its operation scenarios also execute golden before/after checks for no-write outcomes, accepted-node patches, stale-revision conflicts, complete flat migrations, byte-exact backups, and restores.
 
@@ -17,6 +17,8 @@ cargo test -p classic-config-core --test user_settings_compatibility_tests
 - `canonical_defaults` exactly records the published `CLASSIC_Info.default_settings` values. It intentionally does not inherit divergent `ClassicConfig::default()` values.
 - `degraded_fallbacks` is a separate safety policy. In particular, an untrusted Update Check value falls back to `false` even though its published default is `true`.
 - Ordinary opens and commits do not canonicalize aliases, repair invalid values, or migrate locations. Those transformations require an explicit migration.
+- Migration planning is read-only, deterministic, revision-anchored, and reversible in memory. A plan may describe an optional alias cleanup without marking a current document as migration-required.
+- Applying a migration is explicit and revision-checked. It retains and rereads a byte-exact backup before atomically publishing and reopening the approved document; restore is an explicit conflict-checked operation on the resulting opaque receipt.
 - Semantic losslessness preserves unknown keys and values, nested structures, scalar types, and untouched invalid values. Comments, quoting, and whitespace are outside this compatibility contract.
 
 ## Fixtures
@@ -30,7 +32,8 @@ cargo test -p classic-config-core --test user_settings_compatibility_tests
 | `missing_document` | No file at either supported source location and no open-time creation |
 | `malformed.yaml` | Syntax-invalid YAML, degraded view, and blocked commit |
 | `invalid_known_values.yaml` | Per-setting fallbacks while invalid source nodes remain untouched |
-| `canonical_alias_conflict.yaml` | Valid canonical path labels winning over conflicting GUI-era aliases |
+| `alias_only.yaml` | A current document whose GUI-era alias can be reviewed as an optional explicit canonicalization plan |
+| `canonical_alias_conflict.yaml` | Valid canonical path labels winning over conflicting GUI-era aliases, with optional explicit alias cleanup |
 | `unknown_entries.yaml` | Unknown root and nested data across mapping, sequence, null, boolean, numeric, and string types |
 | `unknown_entries_after_update.yaml` | Accepted one-field commit whose semantic diff proves every unrelated unknown node survived |
 | `newer_major_schema.yaml` | Future-major document that remains degraded and read-only |
@@ -38,4 +41,4 @@ cargo test -p classic-config-core --test user_settings_compatibility_tests
 | `tui_state.json` | Separate legacy TUI remembered state available only to explicit import/migration |
 | `concurrent_revision_conflict` | Stale open versus `concurrent_external_edit.yaml`, producing a conflict without overwrite |
 
-The operation scenarios collectively distinguish and validate read-only open, degraded fallback, proposed update, accepted commit, rejected commit, conflict, migration, and restore. Later User Settings implementation tests should consume the same fixtures through the new module's public interface and compare its typed views, diagnostics, preservation behavior, and persistence decisions to these golden documents.
+The operation scenarios collectively distinguish and validate read-only open, degraded fallback, proposed update, accepted commit, rejected commit, conflict, migration, and restore. User Settings implementation tests consume the same fixtures through the public core interface and compare its typed views, diagnostics, preservation behavior, verified backups, and persistence decisions to these golden documents.

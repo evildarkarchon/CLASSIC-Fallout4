@@ -286,7 +286,7 @@
         "location": "classic_root",
         "relative_path": "CLASSIC Settings.yaml"
       },
-      "expected_outcomes": ["read_only_open", "proposed_update", "accepted_commit"],
+      "expected_outcomes": ["read_only_open", "proposed_update", "accepted_commit", "migration"],
       "commit_eligible": true,
       "migration_required": false,
       "expected_view": {
@@ -294,6 +294,8 @@
       },
       "diagnostics": [],
       "ordinary_commit_preserves_aliases": true,
+      "migration_plan_required": false,
+      "explicit_migration_canonicalizes_aliases": true,
       "preserve_nodes": [
         {"pointer": "/CLASSIC_Settings/Custom Scan Folder", "type": "string", "value": "E:/Alias Crash Logs"}
       ]
@@ -321,6 +323,8 @@
         "canonical_alias_conflict_custom_scan_folder"
       ],
       "ordinary_commit_preserves_aliases": true,
+      "migration_plan_required": false,
+      "explicit_migration_canonicalizes_aliases": true,
       "preserve_nodes": [
         {"pointer": "/CLASSIC_Settings/Staging Mods Folder", "type": "string", "value": "E:/Alias Mods"},
         {"pointer": "/CLASSIC_Settings/Custom Scan Folder", "type": "string", "value": "E:/Alias Crash Logs"}

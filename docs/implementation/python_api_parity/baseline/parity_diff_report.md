@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-14T07:12:16.711788+00:00`
-- Tier-1 contract rows: **1218**
-- Tier-1 matched: **1218**
+- Generated: `2026-07-14T07:56:34.055765+00:00`
+- Tier-1 contract rows: **1237**
+- Tier-1 matched: **1237**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -144,6 +144,25 @@
 | `user_settings.update_with_ini_folder` | `user_settings` | `with_ini_folder` | `classic_user_settings.UserSettingsUpdate.set_ini_folder` | `matched` |
 | `user_settings.update_with_mods_folder` | `user_settings` | `with_mods_folder` | `classic_user_settings.UserSettingsUpdate.set_mods_folder` | `matched` |
 | `user_settings.update_with_papyrus_log_path` | `user_settings` | `with_papyrus_log_path` | `classic_user_settings.UserSettingsUpdate.set_papyrus_log_path` | `matched` |
+| `user_settings.migration_current_schema_version` | `user_settings` | `CURRENT_USER_SETTINGS_SCHEMA_VERSION` | `classic_user_settings.UserSettingsSchemaVersion` | `matched` |
+| `user_settings.migration_schema_version` | `user_settings` | `UserSettingsSchemaVersion` | `classic_user_settings.UserSettingsSchemaVersion` | `matched` |
+| `user_settings.migration_endpoint` | `user_settings` | `MigrationEndpoint` | `classic_user_settings.UserSettingsMigrationEndpoint` | `matched` |
+| `user_settings.migration_change_kind` | `user_settings` | `MigrationChangeKind` | `classic_user_settings.UserSettingsMigrationChange` | `matched` |
+| `user_settings.migration_change` | `user_settings` | `MigrationChange` | `classic_user_settings.UserSettingsMigrationChange` | `matched` |
+| `user_settings.migration_diagnostic` | `user_settings` | `MigrationDiagnostic` | `classic_user_settings.UserSettingsMigrationDiagnostic` | `matched` |
+| `user_settings.migration_plan` | `user_settings` | `UserSettingsMigrationPlan` | `classic_user_settings.UserSettingsMigrationPlan` | `matched` |
+| `user_settings.migration_planning_outcome` | `user_settings` | `MigrationPlanningOutcome` | `classic_user_settings.UserSettingsMigrationPlanningOutcome` | `matched` |
+| `user_settings.migration_plan_migration` | `user_settings` | `plan_migration` | `classic_user_settings.UserSettingsSnapshot.plan_migration` | `matched` |
+| `user_settings.migration_reverse_in_memory` | `user_settings` | `reverse_in_memory` | `classic_user_settings.UserSettingsMigrationPlan.reverse_in_memory` | `matched` |
+| `user_settings.migration_plan_base_revision` | `user_settings` | `base_revision` | `classic_user_settings.UserSettingsMigrationPlan` | `matched` |
+| `user_settings.migration_plan_changes` | `user_settings` | `changes` | `classic_user_settings.UserSettingsMigrationPlan` | `matched` |
+| `user_settings.migration_plan_original_bytes` | `user_settings` | `original_bytes` | `classic_user_settings.UserSettingsMigrationPlan` | `matched` |
+| `user_settings.migration_plan_proposed_bytes` | `user_settings` | `proposed_bytes` | `classic_user_settings.UserSettingsMigrationPlan` | `matched` |
+| `user_settings.migration_change_source_path` | `user_settings` | `source_path` | `classic_user_settings.UserSettingsMigrationChange` | `matched` |
+| `user_settings.migration_change_target_path` | `user_settings` | `target_path` | `classic_user_settings.UserSettingsMigrationChange` | `matched` |
+| `user_settings.migration_change_before` | `user_settings` | `before` | `classic_user_settings.UserSettingsMigrationChange` | `matched` |
+| `user_settings.migration_change_after` | `user_settings` | `after` | `classic_user_settings.UserSettingsMigrationChange` | `matched` |
+| `user_settings.migration_diagnostic_message` | `user_settings` | `message` | `classic_user_settings.UserSettingsMigrationDiagnostic` | `matched` |
 | `config-classic-config-class` | `config` | `ClassicConfig` | `classic_config.ClassicConfig` | `matched` |
 | `config-classic-config-get-config-path` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.get_config_path` | `matched` |
 | `config-classic-config-load-from-yaml` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.load_from_yaml` | `matched` |

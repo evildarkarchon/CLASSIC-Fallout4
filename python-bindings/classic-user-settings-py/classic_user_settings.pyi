@@ -356,6 +356,163 @@ class UserSettingsCommitError(RuntimeError):
     """Operational failure while publishing an accepted update."""
 
 
+class UserSettingsSchemaVersion:
+    """Explicit major/minor User Settings schema version."""
+
+    @property
+    def major(self) -> int: ...
+
+    @property
+    def minor(self) -> int: ...
+
+
+class UserSettingsMigrationEndpoint:
+    """One version/location endpoint in a proposed migration."""
+
+    @property
+    def location(self) -> str: ...
+
+    @property
+    def schema_version(self) -> UserSettingsSchemaVersion | None: ...
+
+
+class UserSettingsMigrationChange:
+    """One ordered, reviewable transition in a migration plan."""
+
+    @property
+    def kind(self) -> str: ...
+
+    @property
+    def source_path(self) -> str | None: ...
+
+    @property
+    def target_path(self) -> str | None: ...
+
+    @property
+    def before(self) -> str | None: ...
+
+    @property
+    def after(self) -> str | None: ...
+
+
+class UserSettingsMigrationDiagnostic:
+    """Structured reason that a migration plan cannot be produced."""
+
+    @property
+    def code(self) -> str: ...
+
+    @property
+    def message(self) -> str: ...
+
+
+class UserSettingsMigrationPlan:
+    """Immutable, revision-anchored proposal for an explicit migration."""
+
+    @property
+    def required(self) -> bool: ...
+
+    @property
+    def base_revision(self) -> str: ...
+
+    @property
+    def source(self) -> UserSettingsMigrationEndpoint: ...
+
+    @property
+    def target(self) -> UserSettingsMigrationEndpoint: ...
+
+    @property
+    def changes(self) -> list[UserSettingsMigrationChange]: ...
+
+    @property
+    def original_content(self) -> bytes: ...
+
+    @property
+    def proposed_content(self) -> bytes: ...
+
+    def reverse_in_memory(self) -> UserSettingsMigrationPlan:
+        """Build the exact inverse plan without accessing the filesystem."""
+
+    def apply(self, classic_root: str) -> UserSettingsMigrationApplyOutcome:
+        """Explicitly apply this approved plan or return a stale-revision conflict."""
+
+
+class UserSettingsMigrationApplyOutcome:
+    """Structured outcome from explicitly applying an approved migration plan."""
+
+    @property
+    def status(self) -> str: ...
+
+    @property
+    def receipt(self) -> UserSettingsMigrationReceipt | None: ...
+
+    @property
+    def expected_revision(self) -> str | None: ...
+
+    @property
+    def actual_revision(self) -> str | None: ...
+
+
+class UserSettingsMigrationReceipt:
+    """Opaque verified record of one successfully applied migration."""
+
+    @property
+    def source_path(self) -> str: ...
+
+    @property
+    def destination_path(self) -> str: ...
+
+    @property
+    def backup_path(self) -> str: ...
+
+    @property
+    def source(self) -> UserSettingsMigrationEndpoint: ...
+
+    @property
+    def target(self) -> UserSettingsMigrationEndpoint: ...
+
+    @property
+    def backup_revision(self) -> str: ...
+
+    @property
+    def published_revision(self) -> str: ...
+
+    def restore(self, classic_root: str) -> UserSettingsMigrationRestoreOutcome:
+        """Explicitly restore this receipt's verified backup or return a conflict."""
+
+
+class UserSettingsMigrationRestoreOutcome:
+    """Structured outcome from explicitly restoring a verified migration receipt."""
+
+    @property
+    def status(self) -> str: ...
+
+    @property
+    def revision(self) -> str | None: ...
+
+    @property
+    def expected_revision(self) -> str | None: ...
+
+    @property
+    def actual_revision(self) -> str | None: ...
+
+
+class UserSettingsMigrationError(RuntimeError):
+    """Operational failure while applying or restoring a User Settings migration."""
+
+
+class UserSettingsMigrationPlanningOutcome:
+    """Result of planning an explicit User Settings migration."""
+
+    @property
+    def status(self) -> str: ...
+
+    @property
+    def plan(self) -> UserSettingsMigrationPlan | None: ...
+
+    @property
+    def diagnostics(self) -> list[UserSettingsMigrationDiagnostic]: ...
+
+
 class UserSettingsSnapshot:
     """Read-only User Settings snapshot from an explicit CLASSIC root."""
 
@@ -400,6 +557,9 @@ class UserSettingsSnapshot:
 
     def preview_update(self, update: UserSettingsUpdate) -> UserSettingsUpdatePreview:
         """Validate every requested field as one unit without writing."""
+
+    def plan_migration(self) -> UserSettingsMigrationPlanningOutcome:
+        """Produce a deterministic, reversible plan without filesystem access."""
 
 
 def open_user_settings(classic_root: str) -> UserSettingsSnapshot:

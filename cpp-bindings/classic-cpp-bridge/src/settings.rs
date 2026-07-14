@@ -15,7 +15,8 @@
 //!    Python `classic_settings` validator surface 1:1.
 //! 4. **User Settings**: Opens the deep User Settings module from an explicit
 //!    CLASSIC root, returns typed Update, Crash Log Scan, and Game Setup groups,
-//!    and previews caller-authored updates without persistence.
+//!    previews caller-authored updates, and plans, applies, or explicitly restores
+//!    conflict-safe migrations.
 //!
 //! ## CXX type-system exceptions (documented)
 //!
@@ -41,9 +42,13 @@ use classic_settings_core::{
     YamlOperations, must_not_be_none as core_must_not_be_none, yaml_cache_stats,
 };
 use classic_user_settings_core::{
-    CommitEligibility, DocumentClassification, PreferenceOrigin, Revision, SourceLocation,
-    UserSettings, UserSettingsCommitOutcome as CoreUserSettingsCommitOutcome,
-    UserSettingsUpdate as CoreUserSettingsUpdate,
+    CommitEligibility, DocumentClassification, MigrationChangeKind, MigrationPlanningOutcome,
+    PreferenceOrigin, Revision, SourceLocation, UserSettings,
+    UserSettingsCommitOutcome as CoreUserSettingsCommitOutcome,
+    UserSettingsMigrationApplyOutcome as CoreUserSettingsMigrationApplyOutcome,
+    UserSettingsMigrationPlan, UserSettingsMigrationReceipt as CoreUserSettingsMigrationReceipt,
+    UserSettingsMigrationRestoreOutcome as CoreUserSettingsMigrationRestoreOutcome,
+    UserSettingsSchemaVersion, UserSettingsUpdate as CoreUserSettingsUpdate,
     UserSettingsUpdateField as CoreUserSettingsUpdateField,
     UserSettingsUpdatePreview as CoreUserSettingsUpdatePreview, WindowGeometry,
 };
@@ -54,6 +59,23 @@ use yaml_rust2::Yaml;
 pub struct YamlOps {
     ops: YamlOperations,
     doc: Option<Yaml>,
+}
+
+/// Opaque owner of a migration apply outcome and its unforgeable Rust receipt.
+///
+/// C++ callers can inspect the flattened outcome and may request restoration, but
+/// only the receipt returned by the conflict-safe Rust core can authorize restore.
+pub struct UserSettingsMigrationApplyHandle {
+    state: UserSettingsMigrationApplyState,
+}
+
+/// Internal representation of either an applied core receipt or a preflight/core conflict.
+enum UserSettingsMigrationApplyState {
+    Applied(CoreUserSettingsMigrationReceipt),
+    Conflict {
+        expected_revision: String,
+        actual_revision: String,
+    },
 }
 
 // ── Typed User Settings ─────────────────────────────────────────────
@@ -96,6 +118,356 @@ fn user_settings_open_update_preferences(classic_root: &str) -> ffi::UpdatePrefe
             .collect(),
         has_original_content,
         original_content,
+    }
+}
+
+/// Opens User Settings and returns a deterministic migration-planning outcome.
+///
+/// The Rust core plans exclusively from retained snapshot bytes, so this adapter
+/// only flattens the result and performs no file creation, relocation, or backup work.
+fn user_settings_plan_migration(
+    classic_root: &str,
+) -> ffi::UserSettingsMigrationPlanningOutcomeDto {
+    let settings = UserSettings::open(Path::new(classic_root));
+    match settings.plan_migration() {
+        MigrationPlanningOutcome::NotRequired => {
+            empty_migration_planning_outcome("not_required", Vec::new())
+        }
+        MigrationPlanningOutcome::Unsupported(diagnostics) => empty_migration_planning_outcome(
+            "unsupported",
+            diagnostics
+                .into_iter()
+                .map(|diagnostic| ffi::UserSettingsDiagnosticDto {
+                    code: diagnostic.code().to_string(),
+                    message: diagnostic.message().to_string(),
+                })
+                .collect(),
+        ),
+        MigrationPlanningOutcome::Planned(plan) => user_settings_migration_plan_dto(&plan),
+    }
+}
+
+/// Returns the exact inverse of a planned CXX migration DTO entirely in memory.
+///
+/// The DTO is reconstructed as an unattested core review plan, so Rust owns endpoint,
+/// byte, revision, and review-row reversal semantics while the adapter remains unable
+/// to authorize persistence. No filesystem API is called.
+fn user_settings_reverse_migration_plan(
+    plan: &ffi::UserSettingsMigrationPlanningOutcomeDto,
+) -> Result<ffi::UserSettingsMigrationPlanningOutcomeDto, String> {
+    if plan.status != "planned"
+        || !plan.has_plan
+        || !plan.has_original_content
+        || !plan.has_proposed_content
+    {
+        return Err("only a complete planned User Settings migration can be reversed".to_string());
+    }
+
+    let review_plan = user_settings_migration_plan_from_dto(plan)?;
+    Ok(user_settings_migration_plan_dto(
+        &review_plan.reverse_in_memory(),
+    ))
+}
+
+/// Applies a caller-approved migration after reopening and reproducing its core plan.
+///
+/// The adapter compares the approved base revision and exact proposed bytes with a
+/// fresh plan. It never constructs persistence input from mutable CXX DTO bytes.
+/// Stale document revisions are returned as conflict data; malformed or mismatched
+/// approvals and operational persistence failures are returned as `rust::Error`.
+fn user_settings_apply_migration(
+    classic_root: &str,
+    approved: &ffi::UserSettingsMigrationPlanningOutcomeDto,
+) -> Result<Box<UserSettingsMigrationApplyHandle>, String> {
+    if approved.status != "planned" || !approved.has_plan || !approved.has_proposed_content {
+        return Err(
+            "migration_approval_invalid: only a complete planned migration can be applied"
+                .to_string(),
+        );
+    }
+
+    let root = Path::new(classic_root);
+    let reopened = UserSettings::open(root);
+    let actual_revision = revision_token(reopened.revision());
+    if actual_revision != approved.base_revision {
+        return Ok(Box::new(UserSettingsMigrationApplyHandle {
+            state: UserSettingsMigrationApplyState::Conflict {
+                expected_revision: approved.base_revision.clone(),
+                actual_revision,
+            },
+        }));
+    }
+
+    let fresh_plan = match reopened.plan_migration() {
+        MigrationPlanningOutcome::Planned(plan) => plan,
+        MigrationPlanningOutcome::NotRequired => {
+            return Err(
+                "migration_approval_invalid: the reopened revision has no migration plan"
+                    .to_string(),
+            );
+        }
+        MigrationPlanningOutcome::Unsupported(diagnostics) => {
+            let detail = diagnostics
+                .first()
+                .map_or("the reopened revision cannot be migrated", |diagnostic| {
+                    diagnostic.message()
+                });
+            return Err(format!("migration_approval_invalid: {detail}"));
+        }
+    };
+    if revision_token(fresh_plan.base_revision()) != approved.base_revision {
+        return Ok(Box::new(UserSettingsMigrationApplyHandle {
+            state: UserSettingsMigrationApplyState::Conflict {
+                expected_revision: approved.base_revision.clone(),
+                actual_revision: revision_token(fresh_plan.base_revision()),
+            },
+        }));
+    }
+    if fresh_plan.proposed_bytes() != approved.proposed_content {
+        return Err(
+            "migration_approval_mismatch: approved proposed content does not match the fresh plan"
+                .to_string(),
+        );
+    }
+
+    let state = match fresh_plan.apply(root).map_err(|error| error.to_string())? {
+        CoreUserSettingsMigrationApplyOutcome::Applied(receipt) => {
+            UserSettingsMigrationApplyState::Applied(receipt)
+        }
+        CoreUserSettingsMigrationApplyOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        } => UserSettingsMigrationApplyState::Conflict {
+            expected_revision: revision_token(&expected_revision),
+            actual_revision: revision_token(&actual_revision),
+        },
+    };
+    Ok(Box::new(UserSettingsMigrationApplyHandle { state }))
+}
+
+/// Flattens an apply handle without exposing or reconstructing its core receipt.
+fn user_settings_migration_apply_outcome(
+    handle: &UserSettingsMigrationApplyHandle,
+) -> ffi::UserSettingsMigrationApplyOutcomeDto {
+    match &handle.state {
+        UserSettingsMigrationApplyState::Applied(receipt) => {
+            ffi::UserSettingsMigrationApplyOutcomeDto {
+                status: "applied".to_string(),
+                expected_revision: String::new(),
+                actual_revision: String::new(),
+                has_receipt: true,
+                receipt: user_settings_migration_receipt_dto(receipt),
+            }
+        }
+        UserSettingsMigrationApplyState::Conflict {
+            expected_revision,
+            actual_revision,
+        } => ffi::UserSettingsMigrationApplyOutcomeDto {
+            status: "conflict".to_string(),
+            expected_revision: expected_revision.clone(),
+            actual_revision: actual_revision.clone(),
+            has_receipt: false,
+            receipt: empty_user_settings_migration_receipt_dto(),
+        },
+    }
+}
+
+/// Explicitly restores an applied migration through its retained core receipt.
+///
+/// Conflicts remain ordinary outcome data. Missing receipts and operational core
+/// failures are returned as `rust::Error`; no caller-provided receipt fields are used.
+fn user_settings_restore_migration(
+    classic_root: &str,
+    handle: &UserSettingsMigrationApplyHandle,
+) -> Result<ffi::UserSettingsMigrationRestoreOutcomeDto, String> {
+    let UserSettingsMigrationApplyState::Applied(receipt) = &handle.state else {
+        return Err(
+            "migration_restore_receipt_unavailable: a conflicted migration has no receipt"
+                .to_string(),
+        );
+    };
+    match receipt
+        .restore(Path::new(classic_root))
+        .map_err(|error| error.to_string())?
+    {
+        CoreUserSettingsMigrationRestoreOutcome::Restored { revision } => {
+            Ok(ffi::UserSettingsMigrationRestoreOutcomeDto {
+                status: "restored".to_string(),
+                revision: revision_token(&revision),
+                expected_revision: String::new(),
+                actual_revision: String::new(),
+            })
+        }
+        CoreUserSettingsMigrationRestoreOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        } => Ok(ffi::UserSettingsMigrationRestoreOutcomeDto {
+            status: "conflict".to_string(),
+            revision: String::new(),
+            expected_revision: revision_token(&expected_revision),
+            actual_revision: revision_token(&actual_revision),
+        }),
+    }
+}
+
+/// Flattens every attested receipt field for C++ presentation and audit logging.
+fn user_settings_migration_receipt_dto(
+    receipt: &CoreUserSettingsMigrationReceipt,
+) -> ffi::UserSettingsMigrationReceiptDto {
+    let source_version = receipt.source().schema_version();
+    let target_version = receipt.target().schema_version();
+    ffi::UserSettingsMigrationReceiptDto {
+        source_path: receipt.source_path().display().to_string(),
+        destination_path: receipt.destination_path().display().to_string(),
+        backup_path: receipt.backup_path().display().to_string(),
+        source_location: source_location_token(receipt.source().location()).to_string(),
+        has_source_schema_version: source_version.is_some(),
+        source_schema_major: source_version.map_or(0, |version| version.major()),
+        source_schema_minor: source_version.map_or(0, |version| version.minor()),
+        target_location: source_location_token(receipt.target().location()).to_string(),
+        has_target_schema_version: target_version.is_some(),
+        target_schema_major: target_version.map_or(0, |version| version.major()),
+        target_schema_minor: target_version.map_or(0, |version| version.minor()),
+        backup_revision: revision_token(receipt.backup_revision()),
+        published_revision: revision_token(receipt.published_revision()),
+    }
+}
+
+/// Builds the absent receipt payload used by conflict outcomes.
+fn empty_user_settings_migration_receipt_dto() -> ffi::UserSettingsMigrationReceiptDto {
+    ffi::UserSettingsMigrationReceiptDto {
+        source_path: String::new(),
+        destination_path: String::new(),
+        backup_path: String::new(),
+        source_location: String::new(),
+        has_source_schema_version: false,
+        source_schema_major: 0,
+        source_schema_minor: 0,
+        target_location: String::new(),
+        has_target_schema_version: false,
+        target_schema_major: 0,
+        target_schema_minor: 0,
+        backup_revision: String::new(),
+        published_revision: String::new(),
+    }
+}
+
+/// Reconstructs a flattened CXX plan as an unattested core review plan.
+///
+/// The core deliberately prevents plans created through this conversion from authorizing
+/// persistence; it exists only so adapters can delegate domain transformations such as reversal.
+fn user_settings_migration_plan_from_dto(
+    plan: &ffi::UserSettingsMigrationPlanningOutcomeDto,
+) -> Result<UserSettingsMigrationPlan, String> {
+    let source = (
+        source_location_from_token(&plan.source_location)?,
+        plan.has_source_schema_version.then(|| {
+            UserSettingsSchemaVersion::new(plan.source_schema_major, plan.source_schema_minor)
+        }),
+    );
+    let target = (
+        source_location_from_token(&plan.target_location)?,
+        plan.has_target_schema_version.then(|| {
+            UserSettingsSchemaVersion::new(plan.target_schema_major, plan.target_schema_minor)
+        }),
+    );
+    let changes = plan
+        .changes
+        .iter()
+        .map(|change| {
+            Ok((
+                migration_change_kind_from_token(&change.kind)?,
+                change.has_source_path.then(|| change.source_path.clone()),
+                change.has_target_path.then(|| change.target_path.clone()),
+                change.has_before.then(|| change.before.clone()),
+                change.has_after.then(|| change.after.clone()),
+            ))
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+
+    Ok(UserSettingsMigrationPlan::from((
+        plan.required,
+        source,
+        target,
+        changes,
+        plan.original_content.clone(),
+        plan.proposed_content.clone(),
+    )))
+}
+
+/// Flattens one core migration plan without reinterpreting its domain semantics.
+fn user_settings_migration_plan_dto(
+    plan: &UserSettingsMigrationPlan,
+) -> ffi::UserSettingsMigrationPlanningOutcomeDto {
+    let source_version = plan.source().schema_version();
+    let target_version = plan.target().schema_version();
+    ffi::UserSettingsMigrationPlanningOutcomeDto {
+        status: "planned".to_string(),
+        required: plan.required(),
+        has_plan: true,
+        base_revision: revision_token(plan.base_revision()),
+        source_location: source_location_token(plan.source().location()).to_string(),
+        has_source_schema_version: source_version.is_some(),
+        source_schema_major: source_version.map_or(0, |version| version.major()),
+        source_schema_minor: source_version.map_or(0, |version| version.minor()),
+        target_location: source_location_token(plan.target().location()).to_string(),
+        has_target_schema_version: target_version.is_some(),
+        target_schema_major: target_version.map_or(0, |version| version.major()),
+        target_schema_minor: target_version.map_or(0, |version| version.minor()),
+        changes: plan
+            .changes()
+            .iter()
+            .map(user_settings_migration_change_dto)
+            .collect(),
+        has_original_content: true,
+        original_content: plan.original_bytes().to_vec(),
+        has_proposed_content: true,
+        proposed_content: plan.proposed_bytes().to_vec(),
+        diagnostics: Vec::new(),
+    }
+}
+
+/// Builds one terminal planning outcome with every plan-only field absent.
+fn empty_migration_planning_outcome(
+    status: &str,
+    diagnostics: Vec<ffi::UserSettingsDiagnosticDto>,
+) -> ffi::UserSettingsMigrationPlanningOutcomeDto {
+    ffi::UserSettingsMigrationPlanningOutcomeDto {
+        status: status.to_string(),
+        required: false,
+        has_plan: false,
+        base_revision: String::new(),
+        source_location: String::new(),
+        has_source_schema_version: false,
+        source_schema_major: 0,
+        source_schema_minor: 0,
+        target_location: String::new(),
+        has_target_schema_version: false,
+        target_schema_major: 0,
+        target_schema_minor: 0,
+        changes: Vec::new(),
+        has_original_content: false,
+        original_content: Vec::new(),
+        has_proposed_content: false,
+        proposed_content: Vec::new(),
+        diagnostics,
+    }
+}
+
+/// Converts one ordered migration review row without collapsing optional values.
+fn user_settings_migration_change_dto(
+    change: &classic_user_settings_core::MigrationChange,
+) -> ffi::UserSettingsMigrationChangeDto {
+    ffi::UserSettingsMigrationChangeDto {
+        kind: migration_change_kind_token(change.kind()).to_string(),
+        has_source_path: change.source_path().is_some(),
+        source_path: change.source_path().unwrap_or_default().to_string(),
+        has_target_path: change.target_path().is_some(),
+        target_path: change.target_path().unwrap_or_default().to_string(),
+        has_before: change.before().is_some(),
+        before: change.before().unwrap_or_default().to_string(),
+        has_after: change.after().is_some(),
+        after: change.after().unwrap_or_default().to_string(),
     }
 }
 
@@ -600,6 +972,43 @@ fn source_location_token(location: SourceLocation) -> &'static str {
     }
 }
 
+/// Parses one stable CXX source-location token for review-only core reconstruction.
+fn source_location_from_token(token: &str) -> Result<SourceLocation, String> {
+    match token {
+        "canonical" => Ok(SourceLocation::Canonical),
+        "legacy" => Ok(SourceLocation::Legacy),
+        "missing" => Ok(SourceLocation::Missing),
+        _ => Err(format!(
+            "unsupported User Settings source location: {token}"
+        )),
+    }
+}
+
+/// Returns the stable cross-language token for one migration review-row category.
+fn migration_change_kind_token(kind: MigrationChangeKind) -> &'static str {
+    match kind {
+        MigrationChangeKind::LocationTransition => "location_transition",
+        MigrationChangeKind::SchemaVersionTransition => "schema_version_transition",
+        MigrationChangeKind::FieldTransition => "field_transition",
+        MigrationChangeKind::AliasCanonicalization => "alias_canonicalization",
+        MigrationChangeKind::KnownValueCanonicalization => "known_value_canonicalization",
+    }
+}
+
+/// Parses one stable CXX migration-change token for review-only core reconstruction.
+fn migration_change_kind_from_token(token: &str) -> Result<MigrationChangeKind, String> {
+    match token {
+        "location_transition" => Ok(MigrationChangeKind::LocationTransition),
+        "schema_version_transition" => Ok(MigrationChangeKind::SchemaVersionTransition),
+        "field_transition" => Ok(MigrationChangeKind::FieldTransition),
+        "alias_canonicalization" => Ok(MigrationChangeKind::AliasCanonicalization),
+        "known_value_canonicalization" => Ok(MigrationChangeKind::KnownValueCanonicalization),
+        _ => Err(format!(
+            "unsupported User Settings migration change kind: {token}"
+        )),
+    }
+}
+
 /// Returns the stable cross-language token for document classification.
 fn document_classification_token(classification: DocumentClassification) -> &'static str {
     match classification {
@@ -1100,6 +1509,91 @@ mod ffi {
         message: String,
     }
 
+    /// One ordered, reversible review row in a User Settings migration plan.
+    ///
+    /// Presence flags distinguish an inapplicable value from a meaningful empty
+    /// string while keeping the shared layout usable through CXX.
+    struct UserSettingsMigrationChangeDto {
+        kind: String,
+        has_source_path: bool,
+        source_path: String,
+        has_target_path: bool,
+        target_path: String,
+        has_before: bool,
+        before: String,
+        has_after: bool,
+        after: String,
+    }
+
+    /// Side-effect-free result of planning an explicit User Settings migration.
+    ///
+    /// `status` is `not_required`, `planned`, or `unsupported`. Plan-only fields
+    /// are populated only when `has_plan` is true; unsupported results carry
+    /// structured diagnostics and never expose partial proposed content.
+    struct UserSettingsMigrationPlanningOutcomeDto {
+        status: String,
+        required: bool,
+        has_plan: bool,
+        base_revision: String,
+        source_location: String,
+        has_source_schema_version: bool,
+        source_schema_major: u32,
+        source_schema_minor: u32,
+        target_location: String,
+        has_target_schema_version: bool,
+        target_schema_major: u32,
+        target_schema_minor: u32,
+        changes: Vec<UserSettingsMigrationChangeDto>,
+        has_original_content: bool,
+        original_content: Vec<u8>,
+        has_proposed_content: bool,
+        proposed_content: Vec<u8>,
+        diagnostics: Vec<UserSettingsDiagnosticDto>,
+    }
+
+    /// Verified receipt fields from a successfully applied migration.
+    ///
+    /// These fields are presentation-only. Restore uses the opaque Rust apply
+    /// handle so native callers cannot forge a receipt or bypass its invariants.
+    struct UserSettingsMigrationReceiptDto {
+        source_path: String,
+        destination_path: String,
+        backup_path: String,
+        source_location: String,
+        has_source_schema_version: bool,
+        source_schema_major: u32,
+        source_schema_minor: u32,
+        target_location: String,
+        has_target_schema_version: bool,
+        target_schema_major: u32,
+        target_schema_minor: u32,
+        backup_revision: String,
+        published_revision: String,
+    }
+
+    /// Inspectable result of applying an approved migration.
+    ///
+    /// `status` is `applied` or `conflict`. Conflict revisions are data rather
+    /// than errors, while `receipt` is populated only when `has_receipt` is true.
+    struct UserSettingsMigrationApplyOutcomeDto {
+        status: String,
+        expected_revision: String,
+        actual_revision: String,
+        has_receipt: bool,
+        receipt: UserSettingsMigrationReceiptDto,
+    }
+
+    /// Result of explicitly restoring an applied migration receipt.
+    ///
+    /// `status` is `restored` or `conflict`; operational failures propagate as
+    /// `rust::Error` and conflict revisions remain ordinary data.
+    struct UserSettingsMigrationRestoreOutcomeDto {
+        status: String,
+        revision: String,
+        expected_revision: String,
+        actual_revision: String,
+    }
+
     /// Typed Update Preferences plus User Settings source and diagnostic metadata.
     ///
     /// The boolean is already safety-adjusted by Rust: missing settings use the
@@ -1342,6 +1836,7 @@ mod ffi {
 
     extern "Rust" {
         type YamlOps;
+        type UserSettingsMigrationApplyHandle;
 
         fn yaml_file_as_str(f: YamlFile) -> String;
         fn yaml_file_description(f: YamlFile) -> String;
@@ -1351,6 +1846,33 @@ mod ffi {
         /// Open User Settings from an explicit CLASSIC root and return the
         /// typed Update Preferences view used by native update-check policy.
         fn user_settings_open_update_preferences(classic_root: &str) -> UpdatePreferencesDto;
+
+        /// Plan an explicit User Settings migration without changing the filesystem.
+        fn user_settings_plan_migration(
+            classic_root: &str,
+        ) -> UserSettingsMigrationPlanningOutcomeDto;
+
+        /// Reverse a complete migration plan entirely in memory.
+        fn user_settings_reverse_migration_plan(
+            plan: &UserSettingsMigrationPlanningOutcomeDto,
+        ) -> Result<UserSettingsMigrationPlanningOutcomeDto>;
+
+        /// Reopen, reproduce, and apply an explicitly approved migration plan.
+        fn user_settings_apply_migration(
+            classic_root: &str,
+            approved: &UserSettingsMigrationPlanningOutcomeDto,
+        ) -> Result<Box<UserSettingsMigrationApplyHandle>>;
+
+        /// Inspect the apply status, conflict revisions, and verified receipt fields.
+        fn user_settings_migration_apply_outcome(
+            handle: &UserSettingsMigrationApplyHandle,
+        ) -> UserSettingsMigrationApplyOutcomeDto;
+
+        /// Explicitly restore through the verified receipt retained by the apply handle.
+        fn user_settings_restore_migration(
+            classic_root: &str,
+            handle: &UserSettingsMigrationApplyHandle,
+        ) -> Result<UserSettingsMigrationRestoreOutcomeDto>;
 
         /// Open User Settings and return the complete typed Crash Log Scan group.
         fn user_settings_open_crash_log_scan_settings(

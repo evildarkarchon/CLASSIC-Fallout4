@@ -4,7 +4,7 @@ Contributor-facing documentation for [`business-logic/classic-user-settings-core
 
 ## Purpose
 
-`classic-user-settings-core` is the deep Rust owner for CLASSIC User Settings. [`UserSettings::open`](../../business-logic/classic-user-settings-core/src/document.rs) takes an explicit CLASSIC root and returns a typed snapshot without creating, moving, repairing, canonicalizing, or touching either supported source file. Callers validate a multi-field [`UserSettingsUpdate`](../../business-logic/classic-user-settings-core/src/update.rs) as a non-persisting preview, then explicitly commit its accepted artifact through the conflict-safe persistence seam.
+`classic-user-settings-core` is the deep Rust owner for CLASSIC User Settings. [`UserSettings::open`](../../business-logic/classic-user-settings-core/src/document.rs) takes an explicit CLASSIC root and returns a typed snapshot without creating, moving, repairing, canonicalizing, or touching either supported source file. [`UserSettings::plan_migration`](../../business-logic/classic-user-settings-core/src/migration.rs) derives a deterministic, reversible proposal from that retained snapshot without touching disk; callers explicitly apply an approved plan and may explicitly restore its verified retained backup. Callers separately validate a multi-field [`UserSettingsUpdate`](../../business-logic/classic-user-settings-core/src/update.rs) as a non-persisting preview, then explicitly commit its accepted artifact through the same conflict-safe persistence seam.
 
 This crate is distinct from:
 
@@ -39,6 +39,7 @@ Open reads bytes directly and never uses `Path::exists()`, so permission failure
 - `diagnostics()` — ordered structured `Diagnostic { code, message }` values
 - `original_bytes()` — exact source content retained for later semantic preservation and byte-exact migration backups
 - `commit_eligibility()` — `Eligible`, `RequiresMigration`, or `BlockedUntrusted`
+- `plan_migration()` — `NotRequired`, a revision-anchored `UserSettingsMigrationPlan`, or structured unsupported diagnostics
 
 Retaining exact bytes keeps unknown root and nested mappings, sequences, nulls, booleans, numbers, strings, and untouched invalid known values available to later User Settings Update commits. Semantic preservation does not promise to retain comments, quoting style, or whitespace after a future explicit commit.
 
@@ -56,6 +57,8 @@ The current schema is `1.0`.
 | `Older` | schema major older than `1` | degraded safe fallbacks | `BlockedUntrusted` |
 | `FutureMajor` | schema major newer than `1` | degraded safe fallbacks | `BlockedUntrusted` |
 | `Malformed` | unreadable, invalid UTF-8/YAML/schema, or wrong document count | degraded safe fallbacks | `BlockedUntrusted` |
+
+The Rust API publishes `CURRENT_USER_SETTINGS_SCHEMA_VERSION` as an explicit `UserSettingsSchemaVersion { major, minor }`. There are currently no supported older versioned schema edges: recognized unversioned nested documents and the flat `ClassicConfig` shape are supported legacy origins, while an explicit `0.x` document returns `unsupported_schema_version_gap`. Same-major newer documents retain their installed minor version and are never downgraded.
 
 Legacy-location documents also require migration even when their content is otherwise understood.
 
@@ -134,6 +137,46 @@ Opening User Settings never probes or imports the TUI's separate platform-config
 
 The maintained Qt read path `MainWindow::restoreTabGeometry(...)` consumes the CXX frontend-state DTO. `MainWindow::saveTabGeometry(...)` remains on the existing raw writer because frontend geometry fields are not yet part of `UserSettingsUpdate`; the conflict-safe commit primitive itself is available for accepted fields.
 
+## User Settings Migration Plan
+
+`UserSettings::plan_migration()` operates only on the opened snapshot's retained bytes and revision. It performs no filesystem reads after open and never creates directories, writes or relocates documents, changes timestamps, or creates backups. Applying and restoring a caller-approved plan are separate explicit persistence operations.
+
+The planning outcome is one of:
+
+- `NotRequired` for missing settings, canonical current documents, and same-major newer documents with no explicit cleanup to propose
+- `Planned(UserSettingsMigrationPlan)` for the previous location, recognized unversioned nested documents, the flat `ClassicConfig` shape, or optional explicit alias/value canonicalization
+- `Unsupported(Vec<MigrationDiagnostic>)` for malformed/unreadable sources, future-major documents, and older version gaps with no registered transition
+
+A plan reports whether migration is required before ordinary commits, its base `Revision`, source and target `MigrationEndpoint` values, ordered `MigrationChange` rows, exact original bytes, and deterministic proposed bytes. `reverse_in_memory()` swaps endpoints and byte payloads and reverses the ordered changes without I/O; it is a review tool, not a restore credential. Binding adapters may reconstruct this review data through the plan's standard `From` conversion so reversal remains core-owned. Such reconstructed plans are deliberately unattested and `apply()` rejects them; only a plan produced by `UserSettings::plan_migration()` can authorize persistence.
+
+Required plans target `<CLASSIC root>/CLASSIC Settings.yaml`. Unversioned and flat inputs target schema `1.0`; a legacy-location document that already carries a supported `1.x` schema retains that version. Flat planning maps every characterized leaf to the golden nested document. Optional plans canonicalize known key aliases (`Staging Mods Folder`, `Custom Scan Folder`, and GUI-era `Auto Switch After Scan`) and recognized enum spellings without changing ordinary open or commit behavior. The transitional `INI Folder Path` fact remains preserved because the current flat golden contract still carries both INI and Documents paths.
+
+Stable migration-planning diagnostics are `unsupported_schema_version_gap`, `future_major_schema_read_only`, `migration_source_untrusted`, `migration_source_unavailable`, and `migration_plan_failed`.
+
+## Apply, verified backup, and restore
+
+`UserSettingsMigrationPlan::apply(classic_root)` is the only core operation that begins a migration. It holds the same persistent `CLASSIC Settings.yaml.commit.lock` used by accepted User Settings Updates, reopens the selected source, and compares both its exact-byte revision and location before creating any backup. A stale plan returns `UserSettingsMigrationApplyOutcome::Conflict { expected_revision, actual_revision }`; it creates no backup and performs no publication.
+
+For a matching plan, apply publishes the exact original bytes to a content-addressed file under `<CLASSIC root>/CLASSIC Backup/User Settings/Migrations/`, durably flushes it, and rereads it byte-for-byte. Only then does it atomically publish the approved proposed bytes at the canonical destination. Success is reported only after `UserSettings::open` returns the expected destination location, exact bytes, and SHA-256 revision. A post-publication verification failure restores the last accepted source before returning an error.
+
+`UserSettingsMigrationApplyOutcome::Applied` carries an opaque `UserSettingsMigrationReceipt`. Its getters report the concrete source, destination, and backup paths; source and target version/location endpoints; verified backup revision; and reopened published revision. The receipt is bound to the CLASSIC root that produced those paths and is the only restore credential.
+
+`UserSettingsMigrationReceipt::restore(classic_root)` reacquires the same lock, refuses a migrated revision conflict, rereads and verifies the retained backup, and restores it through the same durable atomic publisher. Canonical-to-canonical restore republishes the backup over the current document. For a legacy-to-canonical migration, restore also verifies the dormant legacy source has not changed, republishes the verified bytes there, retires the canonical winner, and reopens from the legacy location. The retained backup is never deleted. A stale document or legacy source returns `UserSettingsMigrationRestoreOutcome::Conflict` rather than overwriting newer bytes.
+
+Operational apply/restore failures return `UserSettingsMigrationError { code, message }`. Stable code families are:
+
+- `migration_plan_unattested` / `migration_plan_direction_unsupported`
+- `migration_lock_open_failed` / `migration_lock_failed`
+- `migration_backup_directory_failed`, `migration_backup_{create,write,flush,sync,replace,cleanup,verify}_failed`
+- `migration_publish_{create,write,flush,sync,replace,cleanup}_failed`
+- `migration_reopen_verify_failed`, `migration_rollback_failed`, and `migration_rollback_verify_failed`
+- `migration_restore_root_mismatch`, `migration_restore_source_unavailable`, and `migration_restore_source_read_failed`
+- `migration_restore_backup_read_failed` / `migration_restore_backup_verify_failed`
+- `migration_restore_{create,write,flush,sync,replace,cleanup}_failed`
+- `migration_restore_remove_destination_failed`, `migration_restore_reopen_verify_failed`, `migration_restore_rollback_failed`, and `migration_restore_rollback_verify_failed`
+
+Backup, publication, verification, or restore interruption leaves the last accepted active document intact. A successfully created backup may remain after a later publication failure because it is a valid recovery artifact, not temporary state.
+
 ## User Settings Update preview
 
 `UserSettingsUpdate` is an explicit request builder covering Update Check plus every field in `CrashLogScanSettings` and `GameSetupSettings`. `UserSettings::preview_update(update)` performs no I/O and returns exactly one of:
@@ -207,9 +250,11 @@ Stable diagnostic codes currently include:
 
 ## Binding and native CLI surface
 
-- CXX: `classic::settings::user_settings_open_update_preferences(classic_root)` retains the narrow update-policy DTO; `user_settings_open_crash_log_scan_settings(classic_root)`, `user_settings_open_game_setup_settings(classic_root)`, and `user_settings_open_frontend_state(classic_root)` expose cohesive consumer groups; `user_settings_preview_update(classic_root, update)` returns an all-or-nothing preview DTO; and `user_settings_commit_update(classic_root, base_revision, update)` revalidates and commits through the locked Rust core.
-- Node: `openUserSettings(classicRoot)` returns `JsUserSettingsSnapshot` with all four typed groups and exact source bytes as `originalContent`; `previewUserSettingsUpdate(classicRoot, update)` validates a `JsUserSettingsUpdate` without writing; and `commitUserSettingsUpdate(classicRoot, baseRevision, update)` returns a committed, conflict, or rejected outcome while throwing operational errors.
-- Python: `classic_user_settings.open_user_settings(classic_root)` returns `UserSettingsSnapshot` with all four typed groups and exact source bytes; `snapshot.preview_update(UserSettingsUpdate)` validates against that opened snapshot and revision without writing, and an accepted preview exposes `commit(classic_root)` on the retained core artifact.
+- CXX: `classic::settings::user_settings_open_update_preferences(classic_root)` retains the narrow update-policy DTO; `user_settings_open_crash_log_scan_settings(classic_root)`, `user_settings_open_game_setup_settings(classic_root)`, and `user_settings_open_frontend_state(classic_root)` expose cohesive consumer groups; `user_settings_preview_update(classic_root, update)` returns an all-or-nothing preview DTO; and `user_settings_commit_update(classic_root, base_revision, update)` revalidates and commits through the locked Rust core. Migration persistence uses `user_settings_apply_migration(...)`, the opaque `UserSettingsMigrationApplyHandle`, `user_settings_migration_apply_outcome(...)`, and `user_settings_restore_migration(...)`.
+- Node: `openUserSettings(classicRoot)` returns `JsUserSettingsSnapshot` with all four typed groups and exact source bytes as `originalContent`; `previewUserSettingsUpdate(classicRoot, update)` validates a `JsUserSettingsUpdate` without writing; and `commitUserSettingsUpdate(classicRoot, baseRevision, update)` returns a committed, conflict, or rejected outcome while throwing operational errors. `applyUserSettingsMigration(...)` returns an opaque `JsUserSettingsMigrationReceipt` on success, and `receipt.restore(...)` performs explicit restoration.
+- Python: `classic_user_settings.open_user_settings(classic_root)` returns `UserSettingsSnapshot` with all four typed groups and exact source bytes; `snapshot.preview_update(UserSettingsUpdate)` validates against that opened snapshot and revision without writing, and an accepted preview exposes `commit(classic_root)` on the retained core artifact. `UserSettingsMigrationPlan.apply(...)` retains the opaque core receipt in `UserSettingsMigrationReceipt`, whose `restore(...)` method performs explicit restoration.
+
+All maintained bindings expose the pure migration planner: CXX uses `user_settings_plan_migration(classic_root)`, Node uses `planUserSettingsMigration(classicRoot)`, and Python uses `UserSettingsSnapshot.plan_migration()`. Their result DTOs carry status, requiredness, version/location endpoints, ordered changes, exact original/proposed content, and structured diagnostics. CXX `user_settings_reverse_migration_plan(...)`, Node `reverseUserSettingsMigrationPlan(...)`, and Python `UserSettingsMigrationPlan.reverse_in_memory()` expose the same pure inverse review operation. Each binding also exposes explicit apply and opaque-receipt restore adapters; CXX and Node reopen and compare the caller-approved base revision plus exact proposed content before they invoke the core plan, while Python retains the immutable core plan directly.
 
 The native CLI `--check-app-update` path resolves a CLASSIC root, opens Update Preferences, reports structured diagnostics, and returns before runtime initialization, cache setup, installed-version validation, or network access when the safe value is `false`. The destination-setting scan action now uses the CXX commit seam. Game Setup Intake can be prepared directly from an already-opened `GameSetupSettings` group. GUI geometry restoration consumes the typed frontend-state DTO while the existing raw geometry writer remains because geometry fields are not yet part of `UserSettingsUpdate`; other maintained frontend consumer cutovers remain separate work.
 
@@ -220,6 +265,8 @@ Focused checks:
 ```powershell
 $env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 cargo test -p classic-user-settings-core
+cargo test -p classic-user-settings-core --test migration_planning_behavior
+cargo test -p classic-user-settings-core --test migration_persistence_behavior
 cargo test -p classic-config-core --test user_settings_compatibility_tests
 cargo test -p classic-cpp-bridge test_user_settings_frontend_state_bridge
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "App update honors disabled typed User Settings before checking the network,App update fails closed for malformed User Settings"

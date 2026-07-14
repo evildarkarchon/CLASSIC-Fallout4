@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T07:10:58Z",
+  "generated_at_utc": "2026-07-14T08:47:23Z",
   "entries": [
     {
       "id": "b0d609f9ed78e468",
@@ -5340,6 +5340,27 @@
       }
     },
     {
+      "id": "79201417da3a7764",
+      "rustSymbol": "user_settings_apply_migration",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          },
+          {
+            "name": "approved",
+            "type": "&UserSettingsMigrationPlanningOutcomeDto"
+          }
+        ],
+        "returnType": "Result<Box<UserSettingsMigrationApplyHandle>>"
+      }
+    },
+    {
       "id": "e2ad1a7f27fb5f5a",
       "rustSymbol": "user_settings_commit_update",
       "kind": "function",
@@ -5362,6 +5383,23 @@
           }
         ],
         "returnType": "Result<UserSettingsCommitResultDto>"
+      }
+    },
+    {
+      "id": "684181a2023cb151",
+      "rustSymbol": "user_settings_migration_apply_outcome",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "handle",
+            "type": "&UserSettingsMigrationApplyHandle"
+          }
+        ],
+        "returnType": "UserSettingsMigrationApplyOutcomeDto"
       }
     },
     {
@@ -5433,6 +5471,23 @@
       }
     },
     {
+      "id": "ceb7da066f8d0590",
+      "rustSymbol": "user_settings_plan_migration",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          }
+        ],
+        "returnType": "UserSettingsMigrationPlanningOutcomeDto"
+      }
+    },
+    {
       "id": "03a8fd971064fde1",
       "rustSymbol": "user_settings_preview_update",
       "kind": "function",
@@ -5451,6 +5506,44 @@
           }
         ],
         "returnType": "UserSettingsUpdatePreviewDto"
+      }
+    },
+    {
+      "id": "d1781f505576ec4d",
+      "rustSymbol": "user_settings_restore_migration",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          },
+          {
+            "name": "handle",
+            "type": "&UserSettingsMigrationApplyHandle"
+          }
+        ],
+        "returnType": "Result<UserSettingsMigrationRestoreOutcomeDto>"
+      }
+    },
+    {
+      "id": "c4407f3d73622218",
+      "rustSymbol": "user_settings_reverse_migration_plan",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "plan",
+            "type": "&UserSettingsMigrationPlanningOutcomeDto"
+          }
+        ],
+        "returnType": "Result<UserSettingsMigrationPlanningOutcomeDto>"
       }
     },
     {
@@ -5813,6 +5906,14 @@
         ],
         "returnType": "Result<()>"
       }
+    },
+    {
+      "id": "630aada96fe224e1",
+      "rustSymbol": "UserSettingsMigrationApplyHandle",
+      "kind": "opaque",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust"
     },
     {
       "id": "4c363ee3786a32b3",
@@ -6338,6 +6439,252 @@
         },
         {
           "name": "message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "9d40cb5a9aea78c0",
+      "rustSymbol": "UserSettingsMigrationApplyOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "expected_revision",
+          "type": "String"
+        },
+        {
+          "name": "actual_revision",
+          "type": "String"
+        },
+        {
+          "name": "has_receipt",
+          "type": "bool"
+        },
+        {
+          "name": "receipt",
+          "type": "UserSettingsMigrationReceiptDto"
+        }
+      ]
+    },
+    {
+      "id": "c7e58b7da3dde86d",
+      "rustSymbol": "UserSettingsMigrationChangeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "kind",
+          "type": "String"
+        },
+        {
+          "name": "has_source_path",
+          "type": "bool"
+        },
+        {
+          "name": "source_path",
+          "type": "String"
+        },
+        {
+          "name": "has_target_path",
+          "type": "bool"
+        },
+        {
+          "name": "target_path",
+          "type": "String"
+        },
+        {
+          "name": "has_before",
+          "type": "bool"
+        },
+        {
+          "name": "before",
+          "type": "String"
+        },
+        {
+          "name": "has_after",
+          "type": "bool"
+        },
+        {
+          "name": "after",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "45e78cb86f84aa12",
+      "rustSymbol": "UserSettingsMigrationPlanningOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "required",
+          "type": "bool"
+        },
+        {
+          "name": "has_plan",
+          "type": "bool"
+        },
+        {
+          "name": "base_revision",
+          "type": "String"
+        },
+        {
+          "name": "source_location",
+          "type": "String"
+        },
+        {
+          "name": "has_source_schema_version",
+          "type": "bool"
+        },
+        {
+          "name": "source_schema_major",
+          "type": "u32"
+        },
+        {
+          "name": "source_schema_minor",
+          "type": "u32"
+        },
+        {
+          "name": "target_location",
+          "type": "String"
+        },
+        {
+          "name": "has_target_schema_version",
+          "type": "bool"
+        },
+        {
+          "name": "target_schema_major",
+          "type": "u32"
+        },
+        {
+          "name": "target_schema_minor",
+          "type": "u32"
+        },
+        {
+          "name": "changes",
+          "type": "Vec<UserSettingsMigrationChangeDto>"
+        },
+        {
+          "name": "has_original_content",
+          "type": "bool"
+        },
+        {
+          "name": "original_content",
+          "type": "Vec<u8>"
+        },
+        {
+          "name": "has_proposed_content",
+          "type": "bool"
+        },
+        {
+          "name": "proposed_content",
+          "type": "Vec<u8>"
+        },
+        {
+          "name": "diagnostics",
+          "type": "Vec<UserSettingsDiagnosticDto>"
+        }
+      ]
+    },
+    {
+      "id": "351a1f899d3760aa",
+      "rustSymbol": "UserSettingsMigrationReceiptDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "source_path",
+          "type": "String"
+        },
+        {
+          "name": "destination_path",
+          "type": "String"
+        },
+        {
+          "name": "backup_path",
+          "type": "String"
+        },
+        {
+          "name": "source_location",
+          "type": "String"
+        },
+        {
+          "name": "has_source_schema_version",
+          "type": "bool"
+        },
+        {
+          "name": "source_schema_major",
+          "type": "u32"
+        },
+        {
+          "name": "source_schema_minor",
+          "type": "u32"
+        },
+        {
+          "name": "target_location",
+          "type": "String"
+        },
+        {
+          "name": "has_target_schema_version",
+          "type": "bool"
+        },
+        {
+          "name": "target_schema_major",
+          "type": "u32"
+        },
+        {
+          "name": "target_schema_minor",
+          "type": "u32"
+        },
+        {
+          "name": "backup_revision",
+          "type": "String"
+        },
+        {
+          "name": "published_revision",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "96a863c46ca1a913",
+      "rustSymbol": "UserSettingsMigrationRestoreOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "revision",
+          "type": "String"
+        },
+        {
+          "name": "expected_revision",
+          "type": "String"
+        },
+        {
+          "name": "actual_revision",
           "type": "String"
         }
       ]

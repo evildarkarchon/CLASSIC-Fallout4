@@ -151,11 +151,19 @@ This is currently where `classic-config-core`, `classic-database-core`, `classic
 
 (This namespace was renamed from `classic::yaml` during v9.1.0 Phase 1 Plan 2 and expanded with the D-09 settings-core surface in the same change.)
 
-### Typed User Settings groups, update previews, and commits
+### Typed User Settings groups, migration plans, update previews, and commits
 
 `user_settings_open_update_preferences(classic_root) -> UpdatePreferencesDto` forwards an explicit CLASSIC root to `classic_user_settings_core::UserSettings::open(...)`. Rust owns canonical/legacy discovery, schema classification, published defaults, fail-closed fallbacks, content revision, commit eligibility, and diagnostics; C++ does not interpret a raw User Settings key path.
 
 `UpdatePreferencesDto.update_check_enabled` is ready for policy use. Missing settings produce the published default `true`; invalid, malformed, unreadable, older-incompatible, and future-major inputs produce `false`. The remaining fields expose provenance, source location/path, document classification, optional schema version, revision token, commit policy, structured diagnostics, and the exact original source bytes when available.
+
+`user_settings_plan_migration(classic_root) -> UserSettingsMigrationPlanningOutcomeDto` returns `not_required`, `planned`, or `unsupported` without writing, relocating, or backing up files. A planned result carries requiredness, the base revision, source/target location and optional major/minor versions, ordered reversible change rows, and exact original/proposed bytes. CXX presence flags distinguish absent endpoints and values from meaningful empty strings; unsupported results carry structured diagnostics and no partial plan.
+
+`user_settings_reverse_migration_plan(plan) -> Result<UserSettingsMigrationPlanningOutcomeDto>` validates a complete planned DTO, reconstructs it as an unattested core review plan, and delegates its exact in-memory inverse to Rust. The core swaps endpoints and byte payloads, reverses and inverts every review row, and anchors the inverse to the SHA-256 revision of the forward proposed bytes; invalid tokens or terminal outcome DTOs return an error rather than fabricating a partial inverse.
+
+`user_settings_apply_migration(classic_root, approved) -> Result<Box<UserSettingsMigrationApplyHandle>>` explicitly applies a caller-approved planned DTO without trusting its mutable bytes as persistence input. The adapter reopens and replans through Rust, returns a stale base revision as conflict data, rejects proposed-content mismatches as approval errors, and passes only the fresh core plan to the locked apply seam. `user_settings_migration_apply_outcome(handle)` reports `applied` or `conflict`; an applied result includes inspectable source, destination, backup, endpoint, and revision fields while the unforgeable core receipt remains inside the opaque handle.
+
+`user_settings_restore_migration(classic_root, handle) -> Result<UserSettingsMigrationRestoreOutcomeDto>` explicitly restores through that retained receipt. `restored` and `conflict` are normal DTO statuses. A conflicted apply handle has no receipt and returns an error; backup verification, publication, reopen, and rollback failures propagate as `rust::Error` with the stable core code in the message.
 
 `user_settings_open_crash_log_scan_settings(classic_root) -> CrashLogScanSettingsDto` exposes the safety-adjusted FCX, simplification, statistics, FormID Value Lookup/database, Unsolved Logs, custom scan, game-version, and concurrency choices with per-field provenance. FormID database maps cross CXX as a game list plus flattened `{ game, path }` rows so explicit empty game lists survive without using an unsupported nested-vector DTO.
 

@@ -3,8 +3,11 @@
 use classic_shared::without_gil;
 use classic_user_settings_core::{
     AcceptedUserSettingsUpdate, CommitEligibility, CrashLogScanSettings, DocumentClassification,
-    FrontendPreferences, FrontendState, GameSetupSettings, GuiWindowGeometry, PreferenceOrigin,
-    Revision, SourceLocation, TuiRememberedState, UserSettings, UserSettingsCommitOutcome,
+    FrontendPreferences, FrontendState, GameSetupSettings, GuiWindowGeometry, MigrationChange,
+    MigrationChangeKind, MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome,
+    PreferenceOrigin, Revision, SourceLocation, TuiRememberedState, UserSettings,
+    UserSettingsCommitOutcome, UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan,
+    UserSettingsMigrationReceipt, UserSettingsMigrationRestoreOutcome, UserSettingsSchemaVersion,
     UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, WindowGeometry,
 };
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
@@ -17,6 +20,13 @@ pyo3::create_exception!(
     UserSettingsCommitError,
     PyRuntimeError,
     "Operational failure while publishing an accepted User Settings Update."
+);
+
+pyo3::create_exception!(
+    classic_user_settings,
+    UserSettingsMigrationError,
+    PyRuntimeError,
+    "Operational failure while applying or restoring a User Settings migration."
 );
 
 /// One structured diagnostic produced while opening User Settings.
@@ -498,6 +508,235 @@ pub struct PyUserSettingsCommitOutcome {
     actual_revision: Option<String>,
 }
 
+/// Explicit major/minor User Settings schema version proposed by a migration plan.
+#[pyclass(name = "UserSettingsSchemaVersion", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyUserSettingsSchemaVersion {
+    /// Breaking-change component.
+    #[pyo3(get)]
+    major: u32,
+    /// Additive-change component.
+    #[pyo3(get)]
+    minor: u32,
+}
+
+/// One version/location endpoint in a proposed User Settings migration.
+#[pyclass(name = "UserSettingsMigrationEndpoint", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyUserSettingsMigrationEndpoint {
+    /// Root-relative source-location token.
+    #[pyo3(get)]
+    location: String,
+    /// Explicit version, absent for a legacy unversioned form.
+    #[pyo3(get)]
+    schema_version: Option<PyUserSettingsSchemaVersion>,
+}
+
+/// One ordered, reviewable transition in a User Settings migration plan.
+#[pyclass(name = "UserSettingsMigrationChange", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyUserSettingsMigrationChange {
+    /// Stable change-kind token.
+    #[pyo3(get)]
+    kind: String,
+    /// Source pointer or root-relative path, when applicable.
+    #[pyo3(get)]
+    source_path: Option<String>,
+    /// Target pointer or root-relative path, when applicable.
+    #[pyo3(get)]
+    target_path: Option<String>,
+    /// Deterministic value representation before the change, when applicable.
+    #[pyo3(get)]
+    before: Option<String>,
+    /// Deterministic value representation after the change, when applicable.
+    #[pyo3(get)]
+    after: Option<String>,
+}
+
+/// Structured reason that a User Settings migration plan cannot be produced.
+#[pyclass(name = "UserSettingsMigrationDiagnostic", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyUserSettingsMigrationDiagnostic {
+    /// Stable machine-readable diagnostic code.
+    #[pyo3(get)]
+    code: String,
+    /// Human-readable diagnostic context.
+    #[pyo3(get)]
+    message: String,
+}
+
+/// Immutable, revision-anchored proposal for an explicit User Settings migration.
+#[pyclass(name = "UserSettingsMigrationPlan", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyUserSettingsMigrationPlan {
+    /// Whether compatibility requires this plan before ordinary commits.
+    #[pyo3(get)]
+    required: bool,
+    /// Exact content revision against which the plan was produced.
+    #[pyo3(get)]
+    base_revision: String,
+    /// Current version/location endpoint.
+    #[pyo3(get)]
+    source: PyUserSettingsMigrationEndpoint,
+    /// Proposed version/location endpoint.
+    #[pyo3(get)]
+    target: PyUserSettingsMigrationEndpoint,
+    /// Ordered review rows describing the proposed transition.
+    #[pyo3(get)]
+    changes: Vec<PyUserSettingsMigrationChange>,
+    /// Exact opened bytes retained for reversal and later backup verification.
+    original_content: Vec<u8>,
+    /// Deterministic proposed document bytes; planning does not publish them.
+    proposed_content: Vec<u8>,
+    /// Core plan retained so reversal preserves the exact domain contract.
+    inner: UserSettingsMigrationPlan,
+}
+
+#[pymethods]
+impl PyUserSettingsMigrationPlan {
+    /// Returns the exact opened document bytes.
+    #[getter]
+    fn original_content<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
+        PyBytes::new(py, &self.original_content)
+    }
+
+    /// Returns the deterministic proposed document bytes.
+    #[getter]
+    fn proposed_content<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
+        PyBytes::new(py, &self.proposed_content)
+    }
+
+    /// Builds the exact inverse plan in memory without accessing the filesystem.
+    fn reverse_in_memory(&self) -> Self {
+        migration_plan_to_py(self.inner.reverse_in_memory())
+    }
+
+    /// Explicitly applies this caller-approved plan against the opened revision.
+    ///
+    /// Conflicts are returned as data; backup or publication failures raise
+    /// `UserSettingsMigrationError` without flattening the core diagnostic code.
+    fn apply(
+        &self,
+        py: Python<'_>,
+        classic_root: String,
+    ) -> PyResult<PyUserSettingsMigrationApplyOutcome> {
+        let plan = self.inner.clone();
+        let outcome = without_gil(py, move || plan.apply(classic_root)).map_err(|error| {
+            UserSettingsMigrationError::new_err(format!("{}: {}", error.code(), error.message()))
+        })?;
+        Ok(migration_apply_outcome_to_py(outcome))
+    }
+}
+
+/// Structured outcome from explicitly applying an approved migration plan.
+#[pyclass(
+    name = "UserSettingsMigrationApplyOutcome",
+    frozen,
+    skip_from_py_object
+)]
+pub struct PyUserSettingsMigrationApplyOutcome {
+    /// Result token: `applied` or `conflict`.
+    #[pyo3(get)]
+    status: String,
+    /// Verified migration receipt, present only when `status` is `applied`.
+    #[pyo3(get)]
+    receipt: Option<PyUserSettingsMigrationReceipt>,
+    /// Approved plan revision, present only when `status` is `conflict`.
+    #[pyo3(get)]
+    expected_revision: Option<String>,
+    /// Latest on-disk revision, present only when `status` is `conflict`.
+    #[pyo3(get)]
+    actual_revision: Option<String>,
+}
+
+/// Opaque verified record of one successfully applied User Settings migration.
+#[pyclass(name = "UserSettingsMigrationReceipt", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyUserSettingsMigrationReceipt {
+    /// Document path selected when the migration was approved and applied.
+    #[pyo3(get)]
+    source_path: String,
+    /// Canonical path at which the migrated document was published.
+    #[pyo3(get)]
+    destination_path: String,
+    /// Retained byte-exact backup verified before publication.
+    #[pyo3(get)]
+    backup_path: String,
+    /// Source version/location endpoint recorded by the approved plan.
+    #[pyo3(get)]
+    source: PyUserSettingsMigrationEndpoint,
+    /// Destination version/location endpoint recorded by the approved plan.
+    #[pyo3(get)]
+    target: PyUserSettingsMigrationEndpoint,
+    /// Exact-byte revision attested by the retained backup.
+    #[pyo3(get)]
+    backup_revision: String,
+    /// Exact-byte revision verified after migration publication.
+    #[pyo3(get)]
+    published_revision: String,
+    /// Core receipt retained so restoration cannot be fabricated from public fields.
+    inner: UserSettingsMigrationReceipt,
+}
+
+#[pymethods]
+impl PyUserSettingsMigrationReceipt {
+    /// Explicitly restores this receipt's verified backup under core coordination.
+    ///
+    /// Conflicts are returned as data; backup verification or publication failures raise
+    /// `UserSettingsMigrationError` with the stable core diagnostic code.
+    fn restore(
+        &self,
+        py: Python<'_>,
+        classic_root: String,
+    ) -> PyResult<PyUserSettingsMigrationRestoreOutcome> {
+        let receipt = self.inner.clone();
+        let outcome = without_gil(py, move || receipt.restore(classic_root)).map_err(|error| {
+            UserSettingsMigrationError::new_err(format!("{}: {}", error.code(), error.message()))
+        })?;
+        Ok(migration_restore_outcome_to_py(outcome))
+    }
+}
+
+/// Structured outcome from explicitly restoring a verified migration receipt.
+#[pyclass(
+    name = "UserSettingsMigrationRestoreOutcome",
+    frozen,
+    skip_from_py_object
+)]
+pub struct PyUserSettingsMigrationRestoreOutcome {
+    /// Result token: `restored` or `conflict`.
+    #[pyo3(get)]
+    status: String,
+    /// Restored byte-exact revision, present only when `status` is `restored`.
+    #[pyo3(get)]
+    revision: Option<String>,
+    /// Published migration revision, present only when `status` is `conflict`.
+    #[pyo3(get)]
+    expected_revision: Option<String>,
+    /// Latest on-disk revision, present only when `status` is `conflict`.
+    #[pyo3(get)]
+    actual_revision: Option<String>,
+}
+
+/// Result of planning an explicit User Settings migration.
+#[pyclass(
+    name = "UserSettingsMigrationPlanningOutcome",
+    frozen,
+    skip_from_py_object
+)]
+#[derive(Clone)]
+pub struct PyUserSettingsMigrationPlanningOutcome {
+    /// Result token: `not_required`, `planned`, or `unsupported`.
+    #[pyo3(get)]
+    status: String,
+    /// Proposed migration, present only when `status` is `planned`.
+    #[pyo3(get)]
+    plan: Option<PyUserSettingsMigrationPlan>,
+    /// Planning diagnostics, populated only when the source is unsupported.
+    #[pyo3(get)]
+    diagnostics: Vec<PyUserSettingsMigrationDiagnostic>,
+}
+
 /// Read-only User Settings snapshot returned by `open_user_settings`.
 #[pyclass(name = "UserSettingsSnapshot", frozen)]
 pub struct PyUserSettingsSnapshot {
@@ -559,6 +798,11 @@ impl PyUserSettingsSnapshot {
         update: PyRef<'_, PyUserSettingsUpdate>,
     ) -> PyUserSettingsUpdatePreview {
         update_preview_to_py(self.inner.preview_update(update.inner.clone()))
+    }
+
+    /// Produces a deterministic, reversible plan without accessing the filesystem.
+    fn plan_migration(&self) -> PyUserSettingsMigrationPlanningOutcome {
+        migration_planning_outcome_to_py(self.inner.plan_migration())
     }
 }
 
@@ -785,6 +1029,163 @@ fn commit_outcome_to_py(outcome: UserSettingsCommitOutcome) -> PyUserSettingsCom
     }
 }
 
+/// Converts the core planning result into one stable Python outcome shape.
+fn migration_planning_outcome_to_py(
+    outcome: MigrationPlanningOutcome,
+) -> PyUserSettingsMigrationPlanningOutcome {
+    match outcome {
+        MigrationPlanningOutcome::NotRequired => PyUserSettingsMigrationPlanningOutcome {
+            status: "not_required".to_string(),
+            plan: None,
+            diagnostics: Vec::new(),
+        },
+        MigrationPlanningOutcome::Planned(plan) => PyUserSettingsMigrationPlanningOutcome {
+            status: "planned".to_string(),
+            plan: Some(migration_plan_to_py(plan)),
+            diagnostics: Vec::new(),
+        },
+        MigrationPlanningOutcome::Unsupported(diagnostics) => {
+            PyUserSettingsMigrationPlanningOutcome {
+                status: "unsupported".to_string(),
+                plan: None,
+                diagnostics: diagnostics.iter().map(migration_diagnostic_to_py).collect(),
+            }
+        }
+    }
+}
+
+/// Converts an immutable core migration plan while retaining it for exact reversal.
+fn migration_plan_to_py(plan: UserSettingsMigrationPlan) -> PyUserSettingsMigrationPlan {
+    PyUserSettingsMigrationPlan {
+        required: plan.required(),
+        base_revision: revision_token(plan.base_revision()),
+        source: migration_endpoint_to_py(plan.source()),
+        target: migration_endpoint_to_py(plan.target()),
+        changes: plan.changes().iter().map(migration_change_to_py).collect(),
+        original_content: plan.original_bytes().to_vec(),
+        proposed_content: plan.proposed_bytes().to_vec(),
+        inner: plan,
+    }
+}
+
+/// Converts core apply success and conflict variants without turning expected conflicts into errors.
+fn migration_apply_outcome_to_py(
+    outcome: UserSettingsMigrationApplyOutcome,
+) -> PyUserSettingsMigrationApplyOutcome {
+    match outcome {
+        UserSettingsMigrationApplyOutcome::Applied(receipt) => {
+            PyUserSettingsMigrationApplyOutcome {
+                status: "applied".to_string(),
+                receipt: Some(migration_receipt_to_py(receipt)),
+                expected_revision: None,
+                actual_revision: None,
+            }
+        }
+        UserSettingsMigrationApplyOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        } => PyUserSettingsMigrationApplyOutcome {
+            status: "conflict".to_string(),
+            receipt: None,
+            expected_revision: Some(revision_token(&expected_revision)),
+            actual_revision: Some(revision_token(&actual_revision)),
+        },
+    }
+}
+
+/// Converts a verified core receipt while retaining its opaque restoration authority.
+fn migration_receipt_to_py(
+    receipt: UserSettingsMigrationReceipt,
+) -> PyUserSettingsMigrationReceipt {
+    PyUserSettingsMigrationReceipt {
+        source_path: receipt.source_path().display().to_string(),
+        destination_path: receipt.destination_path().display().to_string(),
+        backup_path: receipt.backup_path().display().to_string(),
+        source: migration_endpoint_to_py(receipt.source()),
+        target: migration_endpoint_to_py(receipt.target()),
+        backup_revision: revision_token(receipt.backup_revision()),
+        published_revision: revision_token(receipt.published_revision()),
+        inner: receipt,
+    }
+}
+
+/// Converts core restore success and conflict variants without hiding revision evidence.
+fn migration_restore_outcome_to_py(
+    outcome: UserSettingsMigrationRestoreOutcome,
+) -> PyUserSettingsMigrationRestoreOutcome {
+    match outcome {
+        UserSettingsMigrationRestoreOutcome::Restored { revision } => {
+            PyUserSettingsMigrationRestoreOutcome {
+                status: "restored".to_string(),
+                revision: Some(revision_token(&revision)),
+                expected_revision: None,
+                actual_revision: None,
+            }
+        }
+        UserSettingsMigrationRestoreOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        } => PyUserSettingsMigrationRestoreOutcome {
+            status: "conflict".to_string(),
+            revision: None,
+            expected_revision: Some(revision_token(&expected_revision)),
+            actual_revision: Some(revision_token(&actual_revision)),
+        },
+    }
+}
+
+/// Converts one core migration endpoint into Python-owned location and version values.
+fn migration_endpoint_to_py(endpoint: &MigrationEndpoint) -> PyUserSettingsMigrationEndpoint {
+    PyUserSettingsMigrationEndpoint {
+        location: source_location_token(endpoint.location()).to_string(),
+        schema_version: endpoint
+            .schema_version()
+            .map(user_settings_schema_version_to_py),
+    }
+}
+
+/// Converts one explicit core User Settings schema version.
+fn user_settings_schema_version_to_py(
+    version: UserSettingsSchemaVersion,
+) -> PyUserSettingsSchemaVersion {
+    PyUserSettingsSchemaVersion {
+        major: version.major(),
+        minor: version.minor(),
+    }
+}
+
+/// Converts one ordered core migration change into a reviewable Python row.
+fn migration_change_to_py(change: &MigrationChange) -> PyUserSettingsMigrationChange {
+    PyUserSettingsMigrationChange {
+        kind: migration_change_kind_token(change.kind()).to_string(),
+        source_path: change.source_path().map(str::to_string),
+        target_path: change.target_path().map(str::to_string),
+        before: change.before().map(str::to_string),
+        after: change.after().map(str::to_string),
+    }
+}
+
+/// Converts one structured planning diagnostic.
+fn migration_diagnostic_to_py(
+    diagnostic: &MigrationDiagnostic,
+) -> PyUserSettingsMigrationDiagnostic {
+    PyUserSettingsMigrationDiagnostic {
+        code: diagnostic.code().to_string(),
+        message: diagnostic.message().to_string(),
+    }
+}
+
+/// Returns the Python token for one stable migration change category.
+fn migration_change_kind_token(kind: MigrationChangeKind) -> &'static str {
+    match kind {
+        MigrationChangeKind::LocationTransition => "location_transition",
+        MigrationChangeKind::SchemaVersionTransition => "schema_version_transition",
+        MigrationChangeKind::FieldTransition => "field_transition",
+        MigrationChangeKind::AliasCanonicalization => "alias_canonicalization",
+        MigrationChangeKind::KnownValueCanonicalization => "known_value_canonicalization",
+    }
+}
+
 /// Converts one accepted core field while preserving its typed requested value.
 fn update_field_to_py(field: &UserSettingsUpdateField) -> PyUserSettingsUpdateField {
     let value = match field {
@@ -906,10 +1307,23 @@ fn classic_user_settings(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyUserSettingsUpdateField>()?;
     module.add_class::<PyUserSettingsUpdatePreview>()?;
     module.add_class::<PyUserSettingsCommitOutcome>()?;
+    module.add_class::<PyUserSettingsSchemaVersion>()?;
+    module.add_class::<PyUserSettingsMigrationEndpoint>()?;
+    module.add_class::<PyUserSettingsMigrationChange>()?;
+    module.add_class::<PyUserSettingsMigrationDiagnostic>()?;
+    module.add_class::<PyUserSettingsMigrationPlan>()?;
+    module.add_class::<PyUserSettingsMigrationApplyOutcome>()?;
+    module.add_class::<PyUserSettingsMigrationReceipt>()?;
+    module.add_class::<PyUserSettingsMigrationRestoreOutcome>()?;
+    module.add_class::<PyUserSettingsMigrationPlanningOutcome>()?;
     module.add_class::<PyUserSettingsSnapshot>()?;
     module.add(
         "UserSettingsCommitError",
         module.py().get_type::<UserSettingsCommitError>(),
+    )?;
+    module.add(
+        "UserSettingsMigrationError",
+        module.py().get_type::<UserSettingsMigrationError>(),
     )?;
     module.add_function(wrap_pyfunction!(open_user_settings, module)?)?;
     Ok(())
