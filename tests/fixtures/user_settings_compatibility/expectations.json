@@ -47,31 +47,47 @@
     }
   },
   "canonical_defaults": {
-    "source": "CLASSIC Data/databases/CLASSIC Main.yaml#CLASSIC_Info.default_settings",
+    "source": "business-logic/classic-user-settings-core/src/default_settings.rs#MIRROR_SETTINGS",
+    "generated_mirror": "CLASSIC Data/databases/CLASSIC Main.yaml#CLASSIC_Info.default_settings",
+    "compatibility_only_fields": [
+      "CLASSIC_Settings.INI Folder Path",
+      "CLASSIC_Settings.Audio Notifications",
+      "CLASSIC_Settings.Update Source",
+      "CLASSIC_Settings.Disable CLI Progress"
+    ],
     "CLASSIC_Settings": {
       "Managed Game": "Fallout 4",
       "Update Check": true,
       "Game Version": "auto",
+      "Game Folder Path": null,
+      "Game EXE Path": null,
+      "Documents Folder Path": null,
+      "INI Folder Path": null,
+      "MODS Folder Path": null,
+      "SCAN Custom Path": null,
+      "Papyrus Log Path": null,
       "FCX Mode": false,
       "Simplify Logs": false,
       "Show Statistics": false,
       "Show FormID Values": false,
+      "FormID Databases": {},
       "Move Unsolved Logs": true,
       "Unsolved Logs Destination": null,
-      "INI Folder Path": null,
-      "MODS Folder Path": null,
-      "SCAN Custom Path": null,
       "Audio Notifications": false,
       "Update Source": "GitHub",
       "Disable CLI Progress": false,
       "Max Concurrent Scans": 0
-    }
-  },
-  "frontend_defaults": {
+    },
     "UI": {
       "preferences": {
         "auto_switch_after_scan": true,
         "auto_refresh_interval_ms": 5000
+      },
+      "window_geometry": {
+        "main_tab": {"maximized": false, "width": 640, "height": 500},
+        "backups_tab": {"maximized": false, "width": 750, "height": 580},
+        "articles_tab": {"maximized": false, "width": 550, "height": 350},
+        "results_tab": {"maximized": false, "width": 750, "height": 450}
       },
       "tui": {
         "active_tab": 0,

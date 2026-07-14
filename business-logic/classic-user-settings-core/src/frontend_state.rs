@@ -1,17 +1,14 @@
+use crate::default_settings::{
+    ARTICLES_TAB_DEFAULT, ARTICLES_TAB_HEIGHT, ARTICLES_TAB_MAXIMIZED, ARTICLES_TAB_WIDTH,
+    AUTO_REFRESH_INTERVAL_MS, AUTO_SWITCH_AFTER_SCAN, BACKUPS_TAB_DEFAULT, BACKUPS_TAB_HEIGHT,
+    BACKUPS_TAB_MAXIMIZED, BACKUPS_TAB_WIDTH, MAIN_TAB_DEFAULT, MAIN_TAB_HEIGHT,
+    MAIN_TAB_MAXIMIZED, MAIN_TAB_WIDTH, MANAGED_GAME, RESULTS_TAB_DEFAULT, RESULTS_TAB_HEIGHT,
+    RESULTS_TAB_MAXIMIZED, RESULTS_TAB_WIDTH, SettingMetadata, TUI_ACTIVE_TAB,
+    TUI_RESULTS_PANEL_WIDTH, TUI_SORT_ASCENDING,
+};
 use crate::document::{Diagnostic, PreferenceOrigin};
 use crate::preference::Preference;
 use classic_settings_core::Yaml;
-
-const DEFAULT_AUTO_SWITCH_AFTER_SCAN: bool = true;
-const DEFAULT_AUTO_REFRESH_INTERVAL_MS: u64 = 5_000;
-const DEFAULT_TUI_ACTIVE_TAB: u8 = 0;
-const DEFAULT_TUI_RESULTS_PANEL_WIDTH: u16 = 30;
-const DEFAULT_TUI_SORT_ASCENDING: bool = false;
-
-const MAIN_TAB_DEFAULT: (u32, u32) = (640, 500);
-const BACKUPS_TAB_DEFAULT: (u32, u32) = (750, 580);
-const ARTICLES_TAB_DEFAULT: (u32, u32) = (550, 350);
-const RESULTS_TAB_DEFAULT: (u32, u32) = (750, 450);
 
 /// Cohesive, widget-independent User Settings state remembered by frontends.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -25,20 +22,22 @@ impl FrontendState {
     /// Projects frontend state from the canonical nested User Settings document.
     pub(crate) fn from_nested_document(document: &Yaml) -> (Self, Vec<Diagnostic>) {
         let mut diagnostics = Vec::new();
+        let ui_root = AUTO_SWITCH_AFTER_SCAN.path[0];
         let ui = group(
-            &document["UI"],
-            "UI",
+            &document[ui_root],
+            ui_root,
             "invalid_type_frontend_state",
             &mut diagnostics,
         );
 
+        let preferences_path = dotted_prefix(AUTO_SWITCH_AFTER_SCAN, 2);
         let preferences_group = ui.child_group(
-            "preferences",
-            "UI.preferences",
+            AUTO_SWITCH_AFTER_SCAN.path[1],
+            &preferences_path,
             "invalid_type_frontend_preferences",
             &mut diagnostics,
         );
-        let legacy_auto_switch = match &document["CLASSIC_Settings"] {
+        let legacy_auto_switch = match &document[MANAGED_GAME.path[0]] {
             settings @ Yaml::Hash(_) => child(settings, "Auto Switch After Scan"),
             Yaml::BadValue => None,
             _ => unreachable!("nested group shapes were validated before frontend projection"),
@@ -49,18 +48,20 @@ impl FrontendState {
             &mut diagnostics,
         );
 
+        let geometry_path = dotted_prefix(MAIN_TAB_WIDTH, 2);
         let geometry_group = ui.child_group(
-            "window_geometry",
-            "UI.window_geometry",
+            MAIN_TAB_WIDTH.path[1],
+            &geometry_path,
             "invalid_type_gui_window_geometry",
             &mut diagnostics,
         );
         let window_geometry =
             GuiWindowGeometry::from_nested_group(geometry_group, &mut diagnostics);
 
+        let tui_path = dotted_prefix(TUI_ACTIVE_TAB, 2);
         let tui_group = ui.child_group(
-            "tui",
-            "UI.tui",
+            TUI_ACTIVE_TAB.path[1],
+            &tui_path,
             "invalid_type_tui_remembered_state",
             &mut diagnostics,
         );
@@ -82,7 +83,7 @@ impl FrontendState {
         let preferences = FrontendPreferences {
             auto_switch_after_scan: bool_preference(
                 child(document, "auto_switch_to_results"),
-                DEFAULT_AUTO_SWITCH_AFTER_SCAN,
+                AUTO_SWITCH_AFTER_SCAN.default().as_bool(),
                 PreferenceOrigin::Default,
                 "invalid_type_frontend_auto_switch_after_scan",
                 "auto_switch_to_results must be a boolean",
@@ -90,7 +91,7 @@ impl FrontendState {
             ),
             auto_refresh_interval_ms: positive_u64_preference(
                 child(document, "auto_refresh_interval_ms"),
-                DEFAULT_AUTO_REFRESH_INTERVAL_MS,
+                AUTO_REFRESH_INTERVAL_MS.default().as_integer() as u64,
                 PreferenceOrigin::Default,
                 "invalid_type_frontend_auto_refresh_interval_ms",
                 "invalid_range_frontend_auto_refresh_interval_ms",
@@ -158,21 +159,21 @@ impl FrontendPreferences {
         diagnostics: &mut Vec<Diagnostic>,
     ) -> Self {
         let missing_origin = group.missing_origin();
-        let canonical_auto_switch = group.child("auto_switch_after_scan");
+        let canonical_auto_switch = group.child(AUTO_SWITCH_AFTER_SCAN.label());
         let auto_switch_after_scan = aliased_bool_preference(
             canonical_auto_switch,
             legacy_auto_switch,
-            DEFAULT_AUTO_SWITCH_AFTER_SCAN,
+            AUTO_SWITCH_AFTER_SCAN.default().as_bool(),
             missing_origin,
             diagnostics,
         );
         let auto_refresh_interval_ms = positive_u64_preference(
-            group.child("auto_refresh_interval_ms"),
-            DEFAULT_AUTO_REFRESH_INTERVAL_MS,
+            group.child(AUTO_REFRESH_INTERVAL_MS.label()),
+            AUTO_REFRESH_INTERVAL_MS.default().as_integer() as u64,
             missing_origin,
             "invalid_type_frontend_auto_refresh_interval_ms",
             "invalid_range_frontend_auto_refresh_interval_ms",
-            "UI.preferences.auto_refresh_interval_ms",
+            AUTO_REFRESH_INTERVAL_MS.dotted_path,
             diagnostics,
         );
         Self {
@@ -184,8 +185,14 @@ impl FrontendPreferences {
     /// Builds the preference group with one provenance for every default.
     fn with_origin(origin: PreferenceOrigin) -> Self {
         Self {
-            auto_switch_after_scan: Preference::new(DEFAULT_AUTO_SWITCH_AFTER_SCAN, origin),
-            auto_refresh_interval_ms: Preference::new(DEFAULT_AUTO_REFRESH_INTERVAL_MS, origin),
+            auto_switch_after_scan: Preference::new(
+                AUTO_SWITCH_AFTER_SCAN.default().as_bool(),
+                origin,
+            ),
+            auto_refresh_interval_ms: Preference::new(
+                AUTO_REFRESH_INTERVAL_MS.default().as_integer() as u64,
+                origin,
+            ),
         }
     }
 
@@ -225,46 +232,50 @@ impl GuiWindowGeometry {
         Self {
             main_tab: WindowGeometry::from_group(
                 group.child_group(
-                    "main_tab",
-                    "UI.window_geometry.main_tab",
+                    MAIN_TAB_WIDTH.path[2],
+                    &dotted_prefix(MAIN_TAB_WIDTH, 3),
                     "invalid_type_gui_geometry_tab",
                     diagnostics,
                 ),
-                "main_tab",
-                MAIN_TAB_DEFAULT,
+                MAIN_TAB_MAXIMIZED,
+                MAIN_TAB_WIDTH,
+                MAIN_TAB_HEIGHT,
                 diagnostics,
             ),
             backups_tab: WindowGeometry::from_group(
                 group.child_group(
-                    "backups_tab",
-                    "UI.window_geometry.backups_tab",
+                    BACKUPS_TAB_WIDTH.path[2],
+                    &dotted_prefix(BACKUPS_TAB_WIDTH, 3),
                     "invalid_type_gui_geometry_tab",
                     diagnostics,
                 ),
-                "backups_tab",
-                BACKUPS_TAB_DEFAULT,
+                BACKUPS_TAB_MAXIMIZED,
+                BACKUPS_TAB_WIDTH,
+                BACKUPS_TAB_HEIGHT,
                 diagnostics,
             ),
             articles_tab: WindowGeometry::from_group(
                 group.child_group(
-                    "articles_tab",
-                    "UI.window_geometry.articles_tab",
+                    ARTICLES_TAB_WIDTH.path[2],
+                    &dotted_prefix(ARTICLES_TAB_WIDTH, 3),
                     "invalid_type_gui_geometry_tab",
                     diagnostics,
                 ),
-                "articles_tab",
-                ARTICLES_TAB_DEFAULT,
+                ARTICLES_TAB_MAXIMIZED,
+                ARTICLES_TAB_WIDTH,
+                ARTICLES_TAB_HEIGHT,
                 diagnostics,
             ),
             results_tab: WindowGeometry::from_group(
                 group.child_group(
-                    "results_tab",
-                    "UI.window_geometry.results_tab",
+                    RESULTS_TAB_WIDTH.path[2],
+                    &dotted_prefix(RESULTS_TAB_WIDTH, 3),
                     "invalid_type_gui_geometry_tab",
                     diagnostics,
                 ),
-                "results_tab",
-                RESULTS_TAB_DEFAULT,
+                RESULTS_TAB_MAXIMIZED,
+                RESULTS_TAB_WIDTH,
+                RESULTS_TAB_HEIGHT,
                 diagnostics,
             ),
         }
@@ -273,10 +284,22 @@ impl GuiWindowGeometry {
     /// Builds every geometry entry with its tab-specific default dimensions.
     fn with_origin(origin: PreferenceOrigin) -> Self {
         Self {
-            main_tab: WindowGeometry::with_origin(MAIN_TAB_DEFAULT, origin),
-            backups_tab: WindowGeometry::with_origin(BACKUPS_TAB_DEFAULT, origin),
-            articles_tab: WindowGeometry::with_origin(ARTICLES_TAB_DEFAULT, origin),
-            results_tab: WindowGeometry::with_origin(RESULTS_TAB_DEFAULT, origin),
+            main_tab: WindowGeometry::with_origin(MAIN_TAB_MAXIMIZED, MAIN_TAB_DEFAULT, origin),
+            backups_tab: WindowGeometry::with_origin(
+                BACKUPS_TAB_MAXIMIZED,
+                BACKUPS_TAB_DEFAULT,
+                origin,
+            ),
+            articles_tab: WindowGeometry::with_origin(
+                ARTICLES_TAB_MAXIMIZED,
+                ARTICLES_TAB_DEFAULT,
+                origin,
+            ),
+            results_tab: WindowGeometry::with_origin(
+                RESULTS_TAB_MAXIMIZED,
+                RESULTS_TAB_DEFAULT,
+                origin,
+            ),
         }
     }
 
@@ -313,35 +336,36 @@ impl WindowGeometry {
     /// Projects one named tab while retaining valid siblings when a leaf is invalid.
     fn from_group(
         group: KnownGroup<'_>,
-        tab_name: &str,
-        default_size: (u32, u32),
+        maximized_setting: SettingMetadata,
+        width_setting: SettingMetadata,
+        height_setting: SettingMetadata,
         diagnostics: &mut Vec<Diagnostic>,
     ) -> Self {
         let missing_origin = group.missing_origin();
         let width = positive_u32_preference(
-            group.child("width"),
-            default_size.0,
+            group.child(width_setting.label()),
+            width_setting.default().as_integer() as u32,
             missing_origin,
             "invalid_type_gui_geometry_width",
             "invalid_range_gui_geometry_width",
-            &format!("UI.window_geometry.{tab_name}.width"),
+            width_setting.dotted_path,
             diagnostics,
         );
         let height = positive_u32_preference(
-            group.child("height"),
-            default_size.1,
+            group.child(height_setting.label()),
+            height_setting.default().as_integer() as u32,
             missing_origin,
             "invalid_type_gui_geometry_height",
             "invalid_range_gui_geometry_height",
-            &format!("UI.window_geometry.{tab_name}.height"),
+            height_setting.dotted_path,
             diagnostics,
         );
         let maximized = bool_preference(
-            group.child("maximized"),
-            false,
+            group.child(maximized_setting.label()),
+            maximized_setting.default().as_bool(),
             missing_origin,
             "invalid_type_gui_geometry_maximized",
-            format!("UI.window_geometry.{tab_name}.maximized must be a boolean"),
+            format!("{} must be a boolean", maximized_setting.dotted_path),
             diagnostics,
         );
         Self {
@@ -351,10 +375,14 @@ impl WindowGeometry {
         }
     }
 
-    /// Builds one tab geometry from its published dimensions.
-    fn with_origin(default_size: (u32, u32), origin: PreferenceOrigin) -> Self {
+    /// Builds one tab geometry from its published maximized state and dimensions.
+    fn with_origin(
+        maximized_setting: SettingMetadata,
+        default_size: (u32, u32),
+        origin: PreferenceOrigin,
+    ) -> Self {
         Self {
-            maximized: Preference::new(false, origin),
+            maximized: Preference::new(maximized_setting.default().as_bool(), origin),
             width: Preference::new(default_size.0, origin),
             height: Preference::new(default_size.1, origin),
         }
@@ -405,30 +433,30 @@ impl TuiRememberedState {
         let missing_origin = group.missing_origin();
         Self {
             active_tab: bounded_u8_preference(
-                group.child("active_tab"),
-                DEFAULT_TUI_ACTIVE_TAB,
+                group.child(TUI_ACTIVE_TAB.label()),
+                TUI_ACTIVE_TAB.default().as_integer() as u8,
                 3,
                 missing_origin,
                 "invalid_type_tui_active_tab",
                 "invalid_range_tui_active_tab",
-                "UI.tui.active_tab",
+                TUI_ACTIVE_TAB.dotted_path,
                 diagnostics,
             ),
             results_panel_width: u16_preference(
-                group.child("results_panel_width"),
-                DEFAULT_TUI_RESULTS_PANEL_WIDTH,
+                group.child(TUI_RESULTS_PANEL_WIDTH.label()),
+                TUI_RESULTS_PANEL_WIDTH.default().as_integer() as u16,
                 missing_origin,
                 "invalid_type_tui_results_panel_width",
                 "invalid_range_tui_results_panel_width",
-                "UI.tui.results_panel_width",
+                TUI_RESULTS_PANEL_WIDTH.dotted_path,
                 diagnostics,
             ),
             sort_ascending: bool_preference(
-                group.child("sort_ascending"),
-                DEFAULT_TUI_SORT_ASCENDING,
+                group.child(TUI_SORT_ASCENDING.label()),
+                TUI_SORT_ASCENDING.default().as_bool(),
                 missing_origin,
                 "invalid_type_tui_sort_ascending",
-                "UI.tui.sort_ascending must be a boolean",
+                format!("{} must be a boolean", TUI_SORT_ASCENDING.dotted_path),
                 diagnostics,
             ),
         }
@@ -437,9 +465,12 @@ impl TuiRememberedState {
     /// Builds the TUI namespace with its published defaults.
     fn with_origin(origin: PreferenceOrigin) -> Self {
         Self {
-            active_tab: Preference::new(DEFAULT_TUI_ACTIVE_TAB, origin),
-            results_panel_width: Preference::new(DEFAULT_TUI_RESULTS_PANEL_WIDTH, origin),
-            sort_ascending: Preference::new(DEFAULT_TUI_SORT_ASCENDING, origin),
+            active_tab: Preference::new(TUI_ACTIVE_TAB.default().as_integer() as u8, origin),
+            results_panel_width: Preference::new(
+                TUI_RESULTS_PANEL_WIDTH.default().as_integer() as u16,
+                origin,
+            ),
+            sort_ascending: Preference::new(TUI_SORT_ASCENDING.default().as_bool(), origin),
         }
     }
 
@@ -515,6 +546,11 @@ impl<'a> KnownGroup<'a> {
     }
 }
 
+/// Joins a registry path prefix for group diagnostics without duplicating its labels.
+fn dotted_prefix(setting: SettingMetadata, component_count: usize) -> String {
+    setting.path[..component_count].join(".")
+}
+
 /// Classifies one known namespace without interpreting unknown siblings.
 fn group<'a>(
     node: &'a Yaml,
@@ -574,7 +610,10 @@ fn aliased_bool_preference(
             if canonical != alias {
                 diagnostics.push(Diagnostic::new(
                     "canonical_alias_conflict_auto_switch_after_scan",
-                    "UI.preferences.auto_switch_after_scan conflicts with CLASSIC_Settings.Auto Switch After Scan; the canonical value wins",
+                    format!(
+                        "{} conflicts with CLASSIC_Settings.Auto Switch After Scan; the canonical value wins",
+                        AUTO_SWITCH_AFTER_SCAN.dotted_path
+                    ),
                 ));
             }
             Preference::new(*canonical, PreferenceOrigin::Document)
@@ -591,14 +630,14 @@ fn aliased_bool_preference(
         (Some(_), Some(Yaml::Boolean(value))) => {
             diagnostics.push(Diagnostic::new(
                 "invalid_type_frontend_auto_switch_after_scan",
-                "UI.preferences.auto_switch_after_scan must be a boolean",
+                format!("{} must be a boolean", AUTO_SWITCH_AFTER_SCAN.dotted_path),
             ));
             Preference::new(*value, PreferenceOrigin::Document)
         }
         (Some(_), _) => {
             diagnostics.push(Diagnostic::new(
                 "invalid_type_frontend_auto_switch_after_scan",
-                "UI.preferences.auto_switch_after_scan must be a boolean",
+                format!("{} must be a boolean", AUTO_SWITCH_AFTER_SCAN.dotted_path),
             ));
             Preference::new(default, PreferenceOrigin::DegradedFallback)
         }

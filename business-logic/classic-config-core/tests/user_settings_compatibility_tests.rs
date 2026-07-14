@@ -202,27 +202,19 @@ mod compatibility_contract_tests {
             serde_json::json!(["comments", "quoting", "whitespace"])
         );
 
-        let canonical_defaults = &expectations["canonical_defaults"]["CLASSIC_Settings"];
+        let published_defaults = &expectations["canonical_defaults"];
         assert_eq!(
-            canonical_defaults,
-            &serde_json::json!({
-                "Managed Game": "Fallout 4",
-                "Update Check": true,
-                "Game Version": "auto",
-                "FCX Mode": false,
-                "Simplify Logs": false,
-                "Show Statistics": false,
-                "Show FormID Values": false,
-                "Move Unsolved Logs": true,
-                "Unsolved Logs Destination": null,
-                "INI Folder Path": null,
-                "MODS Folder Path": null,
-                "SCAN Custom Path": null,
-                "Audio Notifications": false,
-                "Update Source": "GitHub",
-                "Disable CLI Progress": false,
-                "Max Concurrent Scans": 0
-            })
+            published_defaults["source"],
+            "business-logic/classic-user-settings-core/src/default_settings.rs#MIRROR_SETTINGS"
+        );
+        assert_eq!(
+            published_defaults["generated_mirror"],
+            "CLASSIC Data/databases/CLASSIC Main.yaml#CLASSIC_Info.default_settings"
+        );
+        assert!(published_defaults["CLASSIC_Settings"]["Documents Folder Path"].is_null());
+        assert_eq!(
+            published_defaults["UI"]["window_geometry"]["main_tab"]["width"],
+            640
         );
 
         // Degraded safety policy is deliberately separate from published defaults:
@@ -232,7 +224,7 @@ mod compatibility_contract_tests {
         assert_eq!(degraded["Update Check"]["policy"], "fail_closed");
         assert_ne!(
             degraded["Update Check"]["value"],
-            canonical_defaults["Update Check"]
+            published_defaults["CLASSIC_Settings"]["Update Check"]
         );
     }
 

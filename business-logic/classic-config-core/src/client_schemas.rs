@@ -33,6 +33,9 @@
 //! - **MAIN_YAML 2.0 → 2.1 (2026-07)** — `CLASSIC_Settings.Unsolved Logs
 //!   Destination` was added as an optional default setting. Current clients
 //!   still accept 2.0 because the key is not required to parse or scan.
+//! - **MAIN_YAML 2.1 → 2.2 (2026-07)** — the embedded default-settings scalar
+//!   became the complete Rust-generated compatibility mirror. Its added Game
+//!   Setup and frontend fields remain optional to older 2.x clients.
 
 use crate::shippable::ShippableFile;
 use classic_settings_core::SchemaCompat;

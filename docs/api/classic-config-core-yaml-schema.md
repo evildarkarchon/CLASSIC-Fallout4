@@ -122,7 +122,9 @@ If the local YAML file does not exist, the method returns `Ok(())` and leaves th
 | `catch_log_records` | sequence of strings | populates `classic_records_list` |
 | `CLASSIC_Interface.autoscan_text_<Game>` | string | populates `autoscan_text` using the caller-provided game name |
 
-`CLASSIC Main.yaml` `schema_version: "2.1"` adds optional `CLASSIC_Settings.Unsolved Logs Destination` to the shipped `CLASSIC_Info.default_settings` template. Crash Log Scan Intake reads that nested setting when resolving the Rust-owned Unsolved Logs destination; the flat `ClassicConfig.unsolved_logs_destination` field is only the TUI-local persisted equivalent.
+`CLASSIC Main.yaml` `schema_version: "2.1"` added optional `CLASSIC_Settings.Unsolved Logs Destination` to the shipped `CLASSIC_Info.default_settings` template. Crash Log Scan Intake reads that nested setting when resolving the Rust-owned Unsolved Logs destination; the flat `ClassicConfig.unsolved_logs_destination` field is only the TUI-local persisted equivalent.
+
+`schema_version: "2.2"` makes that template a deterministic compatibility mirror of the Rust-owned User Settings registry. It additively includes all canonical Crash Log Scan, Game Setup, and frontend defaults while retaining the compatibility-only fields required by older clients. `classic-config-core` may expose or copy the scalar for legacy consumers, but it does not own its labels, defaults, schema, or guidance; regenerate and check the artifact through the `classic-user-settings-core` generator documented in [`classic-user-settings-core.md`](classic-user-settings-core.md#published-default-registry-and-compatibility-mirror).
 
 #### `CLASSIC_Info.version` bare-SemVer contract
 

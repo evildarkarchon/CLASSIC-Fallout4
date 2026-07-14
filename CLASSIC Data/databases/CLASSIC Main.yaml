@@ -3,7 +3,7 @@
 # File schema version (MAJOR.MINOR). See docs/api/yaml-update-delivery.md.
 # - MAJOR bumps are breaking (renamed/removed keys, changed value shapes)
 # - MINOR bumps are additive (new optional keys older clients ignore)
-schema_version: "2.1"
+schema_version: "2.2"
 
 CLASSIC_Info:
   # ========================================================================================
@@ -15,69 +15,140 @@ CLASSIC_Info:
 
   default_settings: |
     schema_version: "1.0"
-    # This file contains settings for CLASSIC v7.00+, used by both source scripts and the executable.
+    # Generated from classic-user-settings-core; do not edit this mirror by hand.
 
     CLASSIC_Settings:
 
-    # Set the game that you want CLASSIC to currently manage. (Fallout 4 | Skyrim SE | Starfield)
+      # Set the game that CLASSIC should currently manage.
       Managed Game: Fallout 4
 
-    # Set to true if you want CLASSIC to periodically check for its own updates online through GitHub.
+      # Periodically check GitHub for first-party CLASSIC updates.
       Update Check: true
 
-    # Select which game version mode CLASSIC should target. (auto | Original | NextGen | VR)
+      # Select the managed game version mode: auto, Original, NextGen, AnniversaryEdition, or VR.
       Game Version: auto
 
-    # FCX - File Check eXtended | Set to true if you want CLASSIC to check the integrity of your game files and core mods.
+      # Optional absolute path to the managed game installation folder.
+      Game Folder Path: null
+
+      # Optional absolute path to a managed game executable override.
+      Game EXE Path: null
+
+      # Optional absolute path to the managed game's Documents folder.
+      Documents Folder Path: null
+
+      # Compatibility alias for Documents Folder Path used by older clients.
+      INI Folder Path: null
+
+      # Optional absolute path to the mod-manager staging or extracted-mods folder.
+      MODS Folder Path: null
+
+      # Optional absolute folder containing Crash Logs to scan.
+      SCAN Custom Path: null
+
+      # Optional absolute path to the managed game's Papyrus log.
+      Papyrus Log Path: null
+
+      # Enable File Check eXtended integrity checks for game files and core mods.
       FCX Mode: false
 
-    # Set to true if you want CLASSIC to remove some unnecessary lines and redundant information from your crash log files.
-    # CAUTION: Changes will be permanent for each crash log you scan after. May hide info useful for debugger programs.
+      # Remove redundant Crash Log lines before analysis.
+      # Caution: simplifying changes each scanned Crash Log permanently.
       Simplify Logs: false
 
-    # Set to true if you want CLASSIC to show extra stats about scanned logs in the command line / terminal window.
-    # NOTICE: This setting currently has no effect, crash log stats will be fully implemented in a future update.
+      # Show additional Crash Log Scan statistics when supported by the frontend.
       Show Statistics: false
 
-    # Set to true if you want CLASSIC to look up FormID values (names) automatically while scanning crash logs.
-    # This will show some extra details for Possible FormID Suspects at the expense of longer scanning times.
+      # Look up FormID value names while scanning at the cost of additional work.
       Show FormID Values: false
 
-    # Set to true if you want CLASSIC to move all unsolved crash logs and their autoscans to CLASSIC UNSOLVED folder.
-    # Unsolved logs are all crash logs that are incomplete or in the wrong format.
+      # Optional game-keyed lists of additional FormID database paths.
+      FormID Databases: {}
+
+      # Move Unsolved Logs and their Autoscan Reports after Standard scans.
       Move Unsolved Logs: true
 
-    # Optional absolute folder for Unsolved Logs relocation. Leave empty to use CLASSIC Backup/Unsolved Logs.
-      Unsolved Logs Destination:
+      # Optional absolute destination; null uses CLASSIC Backup/Unsolved Logs.
+      Unsolved Logs Destination: null
 
-    # Copy-paste your INI folder path below, where your main game INI files are located (Documents\My Games\*game*)
-    # If you are using MO2, I recommend disabling Profile Specific Game INI Files, located in Tools > Profiles
-    # This is only required if CLASSIC has problems detecting your game files or is scanning the wrong game.
-      INI Folder Path:
-
-    # Copy-paste your staging mods folder path below. (Folder where your mod manager keeps all extracted mod files).
-    # MO2 Ex. MODS Folder Path: C:\Mod Organizer 2\*game*\mods | Vortex Ex. MODS Folder Path: C:\Vortex Mods\*game*
-    # You can also set this path to your game's Data folder, but then the scan results will be much less accurate.
-      MODS Folder Path:
-
-    # Copy-paste your custom crash logs folder path below. Ex. SCAN Custom Path: C:\My Crash Logs
-    # Crash logs are generated in Documents\My Games\*game*\XSE folder by default. If no path is set,
-    # crash logs from that Scrip Extender folder and where the CLASSIC.exe is located will be scanned.
-      SCAN Custom Path:
-
-    # Toggle audio notifications for when CLASSIC finishes scanning your crash logs and mod files.
+      # Compatibility default for older clients that play scan-completion audio.
       Audio Notifications: false
 
-    # Set the source where CLASSIC will check for updates. (Nexus | GitHub)
+      # Compatibility default for older clients that select an update source.
       Update Source: GitHub
 
-    # Set to true if you want CLASSIC to disable progress bars when running in command line mode.
-    # This can be useful for cleaner output when running CLASSIC in scripts or automated environments.
+      # Compatibility default for older clients that suppress terminal progress bars.
       Disable CLI Progress: false
 
-    # Maximum number of concurrent crash log scans. 0 = Automatic (uses CPU-based detection).
-    # Recommended: Number of CPU cores minus 2, minimum 2.
+      # Maximum concurrent scans; zero selects adaptive CPU-based detection.
       Max Concurrent Scans: 0
+
+    UI:
+
+      preferences:
+
+        # Select the Results presentation after a successful scan.
+        auto_switch_after_scan: true
+
+        # Frontend refresh interval in milliseconds.
+        auto_refresh_interval_ms: 5000
+
+      window_geometry:
+
+        main_tab:
+
+          # Remember whether this GUI tab was maximized.
+          maximized: false
+
+          # Remember this GUI tab's normal-state width in pixels.
+          width: 640
+
+          # Remember this GUI tab's normal-state height in pixels.
+          height: 500
+
+        backups_tab:
+
+          # Remember whether this GUI tab was maximized.
+          maximized: false
+
+          # Remember this GUI tab's normal-state width in pixels.
+          width: 750
+
+          # Remember this GUI tab's normal-state height in pixels.
+          height: 580
+
+        articles_tab:
+
+          # Remember whether this GUI tab was maximized.
+          maximized: false
+
+          # Remember this GUI tab's normal-state width in pixels.
+          width: 550
+
+          # Remember this GUI tab's normal-state height in pixels.
+          height: 350
+
+        results_tab:
+
+          # Remember whether this GUI tab was maximized.
+          maximized: false
+
+          # Remember this GUI tab's normal-state width in pixels.
+          width: 750
+
+          # Remember this GUI tab's normal-state height in pixels.
+          height: 450
+
+      tui:
+
+        # Remember the TUI's zero-based active tab ordinal.
+        active_tab: 0
+
+        # Remember the TUI Results list-panel width.
+        results_panel_width: 30
+
+        # Remember whether TUI Results are sorted in ascending order.
+        sort_ascending: false
 
   default_localyaml: |
     Game_Info:

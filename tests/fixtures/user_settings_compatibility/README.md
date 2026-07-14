@@ -2,7 +2,7 @@
 
 This directory is the executable compatibility contract for ADR-0004. It records the persisted forms and decisions that `classic-user-settings-core` must preserve across read-only open, explicit update, migration planning, apply, and restore work. The corpus does not change production User Settings behavior by itself.
 
-`expectations.json` is the machine-readable source of truth. The integration test at `business-logic/classic-config-core/tests/user_settings_compatibility_tests.rs` verifies that every required case and outcome is represented, that valid inputs parse, that malformed input does not parse, and that preservation examples retain their semantic values and YAML types. Its operation scenarios also execute golden before/after checks for no-write outcomes, accepted-node patches, stale-revision conflicts, complete flat migrations, byte-exact backups, and restores.
+`expectations.json` is the machine-readable source of truth for compatibility cases and outcomes. Rust's `classic-user-settings-core` default registry is the sole authority for canonical labels, schema metadata, published defaults, and guidance; the defaults repeated here are compatibility evidence, not generator input. The integration test at `business-logic/classic-config-core/tests/user_settings_compatibility_tests.rs` verifies that every required case and outcome is represented, that valid inputs parse, that malformed input does not parse, and that preservation examples retain their semantic values and YAML types. Its operation scenarios also execute golden before/after checks for no-write outcomes, accepted-node patches, stale-revision conflicts, complete flat migrations, byte-exact backups, and restores.
 
 Run the characterization with:
 
@@ -14,7 +14,7 @@ cargo test -p classic-config-core --test user_settings_compatibility_tests
 
 - The first dedicated User Settings schema is characterized here as `schema_version: "1.0"`. Existing nested documents without that key are legacy/unversioned inputs; changing this baseline requires an intentional corpus update before implementation.
 - An open is always read-only. A successful `read_only_open` does not by itself block a later explicit commit. `malformed_document` and `newer_major_schema` instead produce `degraded_fallback` views and block commits.
-- `canonical_defaults` exactly records the published `CLASSIC_Info.default_settings` values. It intentionally does not inherit divergent `ClassicConfig::default()` values.
+- `canonical_defaults` records the Rust-owned published defaults and identifies `CLASSIC_Info.default_settings` as their checked-in generated compatibility mirror. It intentionally does not inherit divergent `ClassicConfig::default()` values.
 - `degraded_fallbacks` is a separate safety policy. In particular, an untrusted Update Check value falls back to `false` even though its published default is `true`.
 - Ordinary opens and commits do not canonicalize aliases, repair invalid values, or migrate locations. Those transformations require an explicit migration.
 - Migration planning is read-only, deterministic, revision-anchored, and reversible in memory. A plan may describe an optional alias cleanup without marking a current document as migration-required.

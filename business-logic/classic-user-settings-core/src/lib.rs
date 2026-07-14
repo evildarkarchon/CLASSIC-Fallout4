@@ -4,6 +4,7 @@
 //! returns typed preference groups without changing the source document.
 
 mod commit;
+mod default_settings;
 mod document;
 mod frontend_state;
 mod game_setup_settings;

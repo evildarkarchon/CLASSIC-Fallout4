@@ -1,5 +1,12 @@
 //! Deterministic, side-effect-free planning for explicit User Settings migrations.
 
+use crate::default_settings::{
+    AUTO_REFRESH_INTERVAL_MS, AUTO_SWITCH_AFTER_SCAN, DOCUMENTS_FOLDER_PATH, FCX_MODE,
+    FORMID_DATABASES, GAME_FOLDER_PATH, GAME_VERSION, INI_FOLDER_PATH, MANAGED_GAME,
+    MODS_FOLDER_PATH, MOVE_UNSOLVED_LOGS, SCAN_CUSTOM_PATH, SHOW_FORMID_VALUES, SHOW_STATISTICS,
+    SIMPLIFY_LOGS, UNSOLVED_LOGS_DESTINATION, UPDATE_CHECK, UPDATE_SOURCE,
+    USER_SETTINGS_SCHEMA_MAJOR, USER_SETTINGS_SCHEMA_MINOR,
+};
 use crate::{DocumentClassification, Revision, SourceLocation, UserSettings};
 use classic_settings_core::{Yaml, YamlOperations, parse_yaml_content};
 use sha2::{Digest, Sha256};
@@ -10,7 +17,7 @@ const LEGACY_RELATIVE_PATH: &str = "CLASSIC Data/CLASSIC Settings.yaml";
 
 /// The current User Settings schema understood by this client.
 pub const CURRENT_USER_SETTINGS_SCHEMA_VERSION: UserSettingsSchemaVersion =
-    UserSettingsSchemaVersion::new(1, 0);
+    UserSettingsSchemaVersion::new(USER_SETTINGS_SCHEMA_MAJOR, USER_SETTINGS_SCHEMA_MINOR);
 
 /// Explicit major/minor User Settings schema version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -467,86 +474,78 @@ fn migrate_flat_document(
     });
 
     let mappings: &[(&[&str], &str, &str)] = &[
-        (&["fcx_mode"], "/fcx_mode", "CLASSIC_Settings.FCX Mode"),
+        (&["fcx_mode"], "/fcx_mode", FCX_MODE.dotted_path),
         (
             &["show_formid_values"],
             "/show_formid_values",
-            "CLASSIC_Settings.Show FormID Values",
+            SHOW_FORMID_VALUES.dotted_path,
         ),
         (
             &["stat_logging"],
             "/stat_logging",
-            "CLASSIC_Settings.Show Statistics",
+            SHOW_STATISTICS.dotted_path,
         ),
         (
             &["move_unsolved_logs"],
             "/move_unsolved_logs",
-            "CLASSIC_Settings.Move Unsolved Logs",
+            MOVE_UNSOLVED_LOGS.dotted_path,
         ),
         (
             &["unsolved_logs_destination"],
             "/unsolved_logs_destination",
-            "CLASSIC_Settings.Unsolved Logs Destination",
+            UNSOLVED_LOGS_DESTINATION.dotted_path,
         ),
         (
             &["simplify_logs"],
             "/simplify_logs",
-            "CLASSIC_Settings.Simplify Logs",
+            SIMPLIFY_LOGS.dotted_path,
         ),
-        (
-            &["update_check"],
-            "/update_check",
-            "CLASSIC_Settings.Update Check",
-        ),
-        (
-            &["game_version"],
-            "/game_version",
-            "CLASSIC_Settings.Game Version",
-        ),
+        (&["update_check"], "/update_check", UPDATE_CHECK.dotted_path),
+        (&["game_version"], "/game_version", GAME_VERSION.dotted_path),
         (
             &["update_source"],
             "/update_source",
-            "CLASSIC_Settings.Update Source",
+            UPDATE_SOURCE.dotted_path,
         ),
         (
             &["paths", "ini_folder"],
             "/paths/ini_folder",
-            "CLASSIC_Settings.INI Folder Path",
+            INI_FOLDER_PATH.dotted_path,
         ),
         (
             &["paths", "docs_root"],
             "/paths/docs_root",
-            "CLASSIC_Settings.Documents Folder Path",
+            DOCUMENTS_FOLDER_PATH.dotted_path,
         ),
         (
             &["paths", "scan_custom"],
             "/paths/scan_custom",
-            "CLASSIC_Settings.SCAN Custom Path",
+            SCAN_CUSTOM_PATH.dotted_path,
         ),
         (
             &["paths", "mods_folder"],
             "/paths/mods_folder",
-            "CLASSIC_Settings.MODS Folder Path",
+            MODS_FOLDER_PATH.dotted_path,
         ),
         (
             &["paths", "game_root"],
             "/paths/game_root",
-            "CLASSIC_Settings.Game Folder Path",
+            GAME_FOLDER_PATH.dotted_path,
         ),
         (
             &["formid_databases"],
             "/formid_databases",
-            "CLASSIC_Settings.FormID Databases",
+            FORMID_DATABASES.dotted_path,
         ),
         (
             &["auto_switch_to_results"],
             "/auto_switch_to_results",
-            "UI.preferences.auto_switch_after_scan",
+            AUTO_SWITCH_AFTER_SCAN.dotted_path,
         ),
         (
             &["auto_refresh_interval_ms"],
             "/auto_refresh_interval_ms",
-            "UI.preferences.auto_refresh_interval_ms",
+            AUTO_REFRESH_INTERVAL_MS.dotted_path,
         ),
     ];
 
@@ -609,21 +608,21 @@ fn migrate_nested_document(
     changed |= canonicalize_key_alias(
         document,
         &["CLASSIC_Settings", "Staging Mods Folder"],
-        &["CLASSIC_Settings", "MODS Folder Path"],
+        MODS_FOLDER_PATH.path,
         optional_string_yaml(settings.game_setup_settings().mods_root()),
         changes,
     )?;
     changed |= canonicalize_key_alias(
         document,
         &["CLASSIC_Settings", "Custom Scan Folder"],
-        &["CLASSIC_Settings", "SCAN Custom Path"],
+        SCAN_CUSTOM_PATH.path,
         optional_string_yaml(settings.game_setup_settings().custom_scan_input()),
         changes,
     )?;
     changed |= canonicalize_key_alias(
         document,
         &["CLASSIC_Settings", "Auto Switch After Scan"],
-        &["UI", "preferences", "auto_switch_after_scan"],
+        AUTO_SWITCH_AFTER_SCAN.path,
         Yaml::Boolean(
             settings
                 .frontend_state()
@@ -634,13 +633,13 @@ fn migrate_nested_document(
     )?;
     changed |= canonicalize_scalar_alias(
         document,
-        &["CLASSIC_Settings", "Game Version"],
+        GAME_VERSION.path,
         &[("Auto", "auto"), ("AE", "AnniversaryEdition")],
         changes,
     )?;
     changed |= canonicalize_scalar_alias(
         document,
-        &["CLASSIC_Settings", "Managed Game"],
+        MANAGED_GAME.path,
         &[
             ("Fallout4", "Fallout 4"),
             ("Fallout4VR", "Fallout 4 VR"),

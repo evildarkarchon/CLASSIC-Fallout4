@@ -1,3 +1,8 @@
+use crate::default_settings::{
+    FCX_MODE, FORMID_DATABASES, GAME_VERSION, MAX_CONCURRENT_SCANS, MOVE_UNSOLVED_LOGS,
+    SCAN_CUSTOM_PATH, SHOW_FORMID_VALUES, SHOW_STATISTICS, SIMPLIFY_LOGS, SettingMetadata,
+    UNSOLVED_LOGS_DESTINATION,
+};
 use crate::document::{Diagnostic, PreferenceOrigin};
 use crate::preference::{
     OptionalPathField, Preference, aliased_optional_absolute_path_preference,
@@ -5,13 +10,6 @@ use crate::preference::{
 };
 use classic_settings_core::Yaml;
 use std::collections::BTreeMap;
-
-const DEFAULT_FCX_MODE: bool = false;
-const DEFAULT_SIMPLIFY_LOGS: bool = false;
-const DEFAULT_SHOW_STATISTICS: bool = false;
-const DEFAULT_FORMID_VALUE_LOOKUP: bool = false;
-const DEFAULT_MOVE_UNSOLVED_LOGS: bool = true;
-const DEFAULT_MAX_CONCURRENT_SCANS: u32 = 0;
 
 /// Saved game-version selection used while preparing a Crash Log Scan.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -59,6 +57,12 @@ impl GameVersionSelection {
             "VR" => Some(Self::Vr),
             _ => None,
         }
+    }
+
+    /// Converts the registry's canonical scalar into the typed published default.
+    pub(crate) fn published_default() -> Self {
+        Self::parse_canonical(GAME_VERSION.default().as_str())
+            .expect("Rust-owned Game Version default must remain canonical")
     }
 }
 
@@ -182,7 +186,10 @@ impl CrashLogScanSettings {
 
     /// Builds the group from the Rust-owned published defaults.
     pub(crate) fn published_defaults() -> Self {
-        Self::with_origin(PreferenceOrigin::Default, DEFAULT_MOVE_UNSOLVED_LOGS)
+        Self::with_origin(
+            PreferenceOrigin::Default,
+            MOVE_UNSOLVED_LOGS.default().as_bool(),
+        )
     }
 
     /// Builds the group from risk-sensitive fallbacks for an untrusted document.
@@ -192,52 +199,52 @@ impl CrashLogScanSettings {
 
     /// Projects a trusted nested User Settings mapping and returns per-field diagnostics.
     pub(crate) fn from_nested_document(document: &Yaml) -> (Self, Vec<Diagnostic>) {
-        let group = &document["CLASSIC_Settings"];
+        let group = &document[FCX_MODE.path()[0]];
         let mut diagnostics = Vec::new();
         let game_version_selection =
-            game_version_preference(&group["Game Version"], &mut diagnostics);
+            game_version_preference(&group[GAME_VERSION.label()], &mut diagnostics);
         let fcx_mode = bool_preference(
-            &group["FCX Mode"],
-            DEFAULT_FCX_MODE,
+            &group[FCX_MODE.label()],
+            FCX_MODE.default().as_bool(),
             false,
             "invalid_type_fcx_mode",
             "CLASSIC_Settings.FCX Mode must be a boolean",
             &mut diagnostics,
         );
         let simplify_logs = bool_preference(
-            &group["Simplify Logs"],
-            DEFAULT_SIMPLIFY_LOGS,
+            &group[SIMPLIFY_LOGS.label()],
+            SIMPLIFY_LOGS.default().as_bool(),
             false,
             "invalid_type_simplify_logs",
             "CLASSIC_Settings.Simplify Logs must be a boolean",
             &mut diagnostics,
         );
         let show_statistics = bool_preference(
-            &group["Show Statistics"],
-            DEFAULT_SHOW_STATISTICS,
+            &group[SHOW_STATISTICS.label()],
+            SHOW_STATISTICS.default().as_bool(),
             false,
             "invalid_type_show_statistics",
             "CLASSIC_Settings.Show Statistics must be a boolean",
             &mut diagnostics,
         );
         let formid_value_lookup = bool_preference(
-            &group["Show FormID Values"],
-            DEFAULT_FORMID_VALUE_LOOKUP,
+            &group[SHOW_FORMID_VALUES.label()],
+            SHOW_FORMID_VALUES.default().as_bool(),
             false,
             "invalid_type_show_formid_values",
             "CLASSIC_Settings.Show FormID Values must be a boolean",
             &mut diagnostics,
         );
         let move_unsolved_logs = bool_preference(
-            &group["Move Unsolved Logs"],
-            DEFAULT_MOVE_UNSOLVED_LOGS,
+            &group[MOVE_UNSOLVED_LOGS.label()],
+            MOVE_UNSOLVED_LOGS.default().as_bool(),
             false,
             "invalid_type_move_unsolved_logs",
             "CLASSIC_Settings.Move Unsolved Logs must be a boolean",
             &mut diagnostics,
         );
         let unsolved_logs_destination = optional_absolute_path_preference(
-            &group["Unsolved Logs Destination"],
+            &group[UNSOLVED_LOGS_DESTINATION.label()],
             OptionalPathField::new(
                 "CLASSIC_Settings.Unsolved Logs Destination",
                 "invalid_type_unsolved_logs_destination",
@@ -247,9 +254,9 @@ impl CrashLogScanSettings {
         );
         let custom_scan_input = custom_scan_input_preference(group, &mut diagnostics);
         let max_concurrent_scans =
-            concurrency_preference(&group["Max Concurrent Scans"], &mut diagnostics);
+            concurrency_preference(&group[MAX_CONCURRENT_SCANS.label()], &mut diagnostics);
         let formid_databases =
-            formid_databases_preference(&group["FormID Databases"], &mut diagnostics);
+            formid_databases_preference(&group[FORMID_DATABASES.label()], &mut diagnostics);
 
         (
             Self {
@@ -273,7 +280,7 @@ impl CrashLogScanSettings {
         let mut diagnostics = Vec::new();
         let fcx_mode = bool_preference(
             &document["fcx_mode"],
-            DEFAULT_FCX_MODE,
+            FCX_MODE.default().as_bool(),
             false,
             "invalid_type_fcx_mode",
             "fcx_mode must be a boolean",
@@ -281,7 +288,7 @@ impl CrashLogScanSettings {
         );
         let simplify_logs = bool_preference(
             &document["simplify_logs"],
-            DEFAULT_SIMPLIFY_LOGS,
+            SIMPLIFY_LOGS.default().as_bool(),
             false,
             "invalid_type_simplify_logs",
             "simplify_logs must be a boolean",
@@ -289,7 +296,7 @@ impl CrashLogScanSettings {
         );
         let show_statistics = bool_preference(
             &document["stat_logging"],
-            DEFAULT_SHOW_STATISTICS,
+            SHOW_STATISTICS.default().as_bool(),
             false,
             "invalid_type_show_statistics",
             "stat_logging must be a boolean",
@@ -297,7 +304,7 @@ impl CrashLogScanSettings {
         );
         let formid_value_lookup = bool_preference(
             &document["show_formid_values"],
-            DEFAULT_FORMID_VALUE_LOOKUP,
+            SHOW_FORMID_VALUES.default().as_bool(),
             false,
             "invalid_type_show_formid_values",
             "show_formid_values must be a boolean",
@@ -305,7 +312,7 @@ impl CrashLogScanSettings {
         );
         let move_unsolved_logs = bool_preference(
             &document["move_unsolved_logs"],
-            DEFAULT_MOVE_UNSOLVED_LOGS,
+            MOVE_UNSOLVED_LOGS.default().as_bool(),
             false,
             "invalid_type_move_unsolved_logs",
             "move_unsolved_logs must be a boolean",
@@ -331,8 +338,10 @@ impl CrashLogScanSettings {
         );
         let game_version_selection =
             game_version_preference(&document["game_version"], &mut diagnostics);
-        let max_concurrent_scans =
-            Preference::new(DEFAULT_MAX_CONCURRENT_SCANS, PreferenceOrigin::Default);
+        let max_concurrent_scans = Preference::new(
+            MAX_CONCURRENT_SCANS.default().as_integer() as u32,
+            PreferenceOrigin::Default,
+        );
         let formid_databases =
             formid_databases_preference(&document["formid_databases"], &mut diagnostics);
 
@@ -356,16 +365,25 @@ impl CrashLogScanSettings {
     /// Builds a complete group whose fields share one provenance.
     fn with_origin(origin: PreferenceOrigin, move_unsolved_logs: bool) -> Self {
         Self {
-            fcx_mode: Preference::new(false, origin),
-            simplify_logs: Preference::new(false, origin),
-            show_statistics: Preference::new(false, origin),
-            formid_value_lookup: Preference::new(false, origin),
-            formid_databases: Preference::new(BTreeMap::new(), origin),
+            fcx_mode: Preference::new(FCX_MODE.default().as_bool(), origin),
+            simplify_logs: Preference::new(SIMPLIFY_LOGS.default().as_bool(), origin),
+            show_statistics: Preference::new(SHOW_STATISTICS.default().as_bool(), origin),
+            formid_value_lookup: Preference::new(SHOW_FORMID_VALUES.default().as_bool(), origin),
+            formid_databases: Preference::new(published_formid_databases(), origin),
             move_unsolved_logs: Preference::new(move_unsolved_logs, origin),
-            unsolved_logs_destination: Preference::new(None, origin),
-            custom_scan_input: Preference::new(None, origin),
-            game_version_selection: Preference::new(GameVersionSelection::Auto, origin),
-            max_concurrent_scans: Preference::new(DEFAULT_MAX_CONCURRENT_SCANS, origin),
+            unsolved_logs_destination: Preference::new(
+                published_optional_string(UNSOLVED_LOGS_DESTINATION),
+                origin,
+            ),
+            custom_scan_input: Preference::new(published_optional_string(SCAN_CUSTOM_PATH), origin),
+            game_version_selection: Preference::new(
+                GameVersionSelection::published_default(),
+                origin,
+            ),
+            max_concurrent_scans: Preference::new(
+                MAX_CONCURRENT_SCANS.default().as_integer() as u32,
+                origin,
+            ),
         }
     }
 }
@@ -395,7 +413,7 @@ fn custom_scan_input_preference(
     diagnostics: &mut Vec<Diagnostic>,
 ) -> Preference<Option<String>> {
     aliased_optional_absolute_path_preference(
-        &group["SCAN Custom Path"],
+        &group[SCAN_CUSTOM_PATH.label()],
         &group["Custom Scan Folder"],
         OptionalPathField::new(
             "CLASSIC_Settings.SCAN Custom Path",
@@ -412,6 +430,17 @@ fn custom_scan_input_preference(
         diagnostics,
     )
     .resolved
+}
+
+/// Converts one registry string/null value into an owned optional runtime default.
+fn published_optional_string(setting: SettingMetadata) -> Option<String> {
+    setting.default().as_optional_str().map(str::to_string)
+}
+
+/// Creates the typed collection represented by the registry's empty FormID mapping.
+fn published_formid_databases() -> BTreeMap<String, Vec<String>> {
+    FORMID_DATABASES.default().assert_empty_mapping();
+    BTreeMap::new()
 }
 
 /// Projects the game-version selection with `auto` as its safe fallback.
@@ -433,7 +462,10 @@ fn game_version_preference(
                 )
             }
         },
-        Yaml::BadValue => Preference::new(GameVersionSelection::Auto, PreferenceOrigin::Default),
+        Yaml::BadValue => Preference::new(
+            GameVersionSelection::published_default(),
+            PreferenceOrigin::Default,
+        ),
         _ => {
             diagnostics.push(Diagnostic::new(
                 "invalid_enum_game_version",
@@ -459,18 +491,21 @@ fn concurrency_preference(node: &Yaml, diagnostics: &mut Vec<Diagnostic>) -> Pre
                 "CLASSIC_Settings.Max Concurrent Scans must be between 0 and 32",
             ));
             Preference::new(
-                DEFAULT_MAX_CONCURRENT_SCANS,
+                MAX_CONCURRENT_SCANS.default().as_integer() as u32,
                 PreferenceOrigin::DegradedFallback,
             )
         }
-        Yaml::BadValue => Preference::new(DEFAULT_MAX_CONCURRENT_SCANS, PreferenceOrigin::Default),
+        Yaml::BadValue => Preference::new(
+            MAX_CONCURRENT_SCANS.default().as_integer() as u32,
+            PreferenceOrigin::Default,
+        ),
         _ => {
             diagnostics.push(Diagnostic::new(
                 "invalid_type_max_concurrent_scans",
                 "CLASSIC_Settings.Max Concurrent Scans must be an integer",
             ));
             Preference::new(
-                DEFAULT_MAX_CONCURRENT_SCANS,
+                MAX_CONCURRENT_SCANS.default().as_integer() as u32,
                 PreferenceOrigin::DegradedFallback,
             )
         }
@@ -484,7 +519,7 @@ fn formid_databases_preference(
 ) -> Preference<BTreeMap<String, Vec<String>>> {
     let Yaml::Hash(mapping) = node else {
         if matches!(node, Yaml::BadValue) {
-            return Preference::new(BTreeMap::new(), PreferenceOrigin::Default);
+            return Preference::new(published_formid_databases(), PreferenceOrigin::Default);
         }
         diagnostics.push(Diagnostic::new(
             "invalid_type_formid_databases",

@@ -207,77 +207,31 @@ impl UserSettingsUpdateField {
     /// Keeps the public pointer and internal YAML path paired in one exhaustive mapping.
     fn canonical_paths(&self) -> (&'static str, &'static str) {
         match self {
-            Self::UpdateCheck(_) => (
-                "/CLASSIC_Settings/Update Check",
-                "CLASSIC_Settings.Update Check",
-            ),
-            Self::ManagedGame(_) => (
-                "/CLASSIC_Settings/Managed Game",
-                "CLASSIC_Settings.Managed Game",
-            ),
-            Self::GameVersionSelection(_) => (
-                "/CLASSIC_Settings/Game Version",
-                "CLASSIC_Settings.Game Version",
-            ),
-            Self::GameRoot(_) => (
-                "/CLASSIC_Settings/Game Folder Path",
-                "CLASSIC_Settings.Game Folder Path",
-            ),
-            Self::GameExecutable(_) => (
-                "/CLASSIC_Settings/Game EXE Path",
-                "CLASSIC_Settings.Game EXE Path",
-            ),
-            Self::DocumentsRoot(_) => (
-                "/CLASSIC_Settings/Documents Folder Path",
-                "CLASSIC_Settings.Documents Folder Path",
-            ),
-            Self::IniFolder(_) => (
-                "/CLASSIC_Settings/INI Folder Path",
-                "CLASSIC_Settings.INI Folder Path",
-            ),
-            Self::ModsFolder(_) => (
-                "/CLASSIC_Settings/MODS Folder Path",
-                "CLASSIC_Settings.MODS Folder Path",
-            ),
-            Self::PapyrusLogPath(_) => (
-                "/CLASSIC_Settings/Papyrus Log Path",
-                "CLASSIC_Settings.Papyrus Log Path",
-            ),
-            Self::FcxMode(_) => ("/CLASSIC_Settings/FCX Mode", "CLASSIC_Settings.FCX Mode"),
-            Self::SimplifyLogs(_) => (
-                "/CLASSIC_Settings/Simplify Logs",
-                "CLASSIC_Settings.Simplify Logs",
-            ),
-            Self::ShowStatistics(_) => (
-                "/CLASSIC_Settings/Show Statistics",
-                "CLASSIC_Settings.Show Statistics",
-            ),
-            Self::FormIdValueLookup(_) => (
-                "/CLASSIC_Settings/Show FormID Values",
-                "CLASSIC_Settings.Show FormID Values",
-            ),
-            Self::FormIdDatabases(_) => (
-                "/CLASSIC_Settings/FormID Databases",
-                "CLASSIC_Settings.FormID Databases",
-            ),
-            Self::MoveUnsolvedLogs(_) => (
-                "/CLASSIC_Settings/Move Unsolved Logs",
-                "CLASSIC_Settings.Move Unsolved Logs",
-            ),
-            Self::UnsolvedLogsDestination(_) => (
-                "/CLASSIC_Settings/Unsolved Logs Destination",
-                "CLASSIC_Settings.Unsolved Logs Destination",
-            ),
-            Self::CustomScanInput(_) => (
-                "/CLASSIC_Settings/SCAN Custom Path",
-                "CLASSIC_Settings.SCAN Custom Path",
-            ),
-            Self::MaxConcurrentScans(_) => (
-                "/CLASSIC_Settings/Max Concurrent Scans",
-                "CLASSIC_Settings.Max Concurrent Scans",
-            ),
+            Self::UpdateCheck(_) => metadata_paths(UPDATE_CHECK),
+            Self::ManagedGame(_) => metadata_paths(MANAGED_GAME),
+            Self::GameVersionSelection(_) => metadata_paths(GAME_VERSION),
+            Self::GameRoot(_) => metadata_paths(GAME_FOLDER_PATH),
+            Self::GameExecutable(_) => metadata_paths(GAME_EXE_PATH),
+            Self::DocumentsRoot(_) => metadata_paths(DOCUMENTS_FOLDER_PATH),
+            Self::IniFolder(_) => metadata_paths(INI_FOLDER_PATH),
+            Self::ModsFolder(_) => metadata_paths(MODS_FOLDER_PATH),
+            Self::PapyrusLogPath(_) => metadata_paths(PAPYRUS_LOG_PATH),
+            Self::FcxMode(_) => metadata_paths(FCX_MODE),
+            Self::SimplifyLogs(_) => metadata_paths(SIMPLIFY_LOGS),
+            Self::ShowStatistics(_) => metadata_paths(SHOW_STATISTICS),
+            Self::FormIdValueLookup(_) => metadata_paths(SHOW_FORMID_VALUES),
+            Self::FormIdDatabases(_) => metadata_paths(FORMID_DATABASES),
+            Self::MoveUnsolvedLogs(_) => metadata_paths(MOVE_UNSOLVED_LOGS),
+            Self::UnsolvedLogsDestination(_) => metadata_paths(UNSOLVED_LOGS_DESTINATION),
+            Self::CustomScanInput(_) => metadata_paths(SCAN_CUSTOM_PATH),
+            Self::MaxConcurrentScans(_) => metadata_paths(MAX_CONCURRENT_SCANS),
         }
     }
+}
+
+/// Returns the paired pointer and dotted representations derived by the metadata registry.
+fn metadata_paths(setting: SettingMetadata) -> (&'static str, &'static str) {
+    (setting.pointer_path, setting.dotted_path)
 }
 
 /// Field-specific reason that a User Settings Update preview was rejected.
@@ -377,7 +331,7 @@ impl UserSettings {
             match parse_managed_game(&value) {
                 Some(value) => fields.push(UserSettingsUpdateField::ManagedGame(value)),
                 None => diagnostics.push(UpdateDiagnostic::for_field(
-                    "/CLASSIC_Settings/Managed Game",
+                    MANAGED_GAME.pointer_path,
                     "invalid_enum_managed_game",
                     "Managed Game must be Fallout 4, Fallout 4 VR, Skyrim SE, or Starfield",
                 )),
@@ -389,7 +343,7 @@ impl UserSettings {
                     fields.push(UserSettingsUpdateField::GameVersionSelection(value));
                 }
                 None => diagnostics.push(UpdateDiagnostic::for_field(
-                    "/CLASSIC_Settings/Game Version",
+                    GAME_VERSION.pointer_path,
                     "invalid_enum_game_version",
                     "Game Version must be auto, Original, NextGen, AnniversaryEdition, or VR",
                 )),
@@ -397,7 +351,7 @@ impl UserSettings {
         }
         validate_optional_path_update(
             update.game_root,
-            "/CLASSIC_Settings/Game Folder Path",
+            GAME_FOLDER_PATH.pointer_path,
             "invalid_path_game_root",
             "Game Folder Path must be empty or an absolute path",
             UserSettingsUpdateField::GameRoot,
@@ -406,7 +360,7 @@ impl UserSettings {
         );
         validate_optional_path_update(
             update.game_executable,
-            "/CLASSIC_Settings/Game EXE Path",
+            GAME_EXE_PATH.pointer_path,
             "invalid_path_game_executable",
             "Game EXE Path must be empty or an absolute path",
             UserSettingsUpdateField::GameExecutable,
@@ -415,7 +369,7 @@ impl UserSettings {
         );
         validate_optional_path_update(
             update.documents_root,
-            "/CLASSIC_Settings/Documents Folder Path",
+            DOCUMENTS_FOLDER_PATH.pointer_path,
             "invalid_path_documents_root",
             "Documents Folder Path must be empty or an absolute path",
             UserSettingsUpdateField::DocumentsRoot,
@@ -424,7 +378,7 @@ impl UserSettings {
         );
         validate_optional_path_update(
             update.ini_folder,
-            "/CLASSIC_Settings/INI Folder Path",
+            INI_FOLDER_PATH.pointer_path,
             "invalid_path_ini_folder",
             "INI Folder Path must be empty or an absolute path",
             UserSettingsUpdateField::IniFolder,
@@ -433,7 +387,7 @@ impl UserSettings {
         );
         validate_optional_path_update(
             update.mods_folder,
-            "/CLASSIC_Settings/MODS Folder Path",
+            MODS_FOLDER_PATH.pointer_path,
             "invalid_path_mods_folder",
             "MODS Folder Path must be empty or an absolute path",
             UserSettingsUpdateField::ModsFolder,
@@ -457,7 +411,7 @@ impl UserSettings {
                 fields.push(UserSettingsUpdateField::FormIdDatabases(value));
             } else {
                 diagnostics.push(UpdateDiagnostic::for_field(
-                    "/CLASSIC_Settings/FormID Databases",
+                    FORMID_DATABASES.pointer_path,
                     "invalid_value_formid_databases",
                     "FormID Databases game names and path strings must not be empty",
                 ));
@@ -471,7 +425,7 @@ impl UserSettings {
                 fields.push(UserSettingsUpdateField::UnsolvedLogsDestination(value));
             } else {
                 diagnostics.push(UpdateDiagnostic::for_field(
-                    "/CLASSIC_Settings/Unsolved Logs Destination",
+                    UNSOLVED_LOGS_DESTINATION.pointer_path,
                     "invalid_path_unsolved_logs_destination",
                     "Unsolved Logs Destination must be empty or an absolute path",
                 ));
@@ -482,7 +436,7 @@ impl UserSettings {
                 fields.push(UserSettingsUpdateField::CustomScanInput(value));
             } else {
                 diagnostics.push(UpdateDiagnostic::for_field(
-                    "/CLASSIC_Settings/SCAN Custom Path",
+                    SCAN_CUSTOM_PATH.pointer_path,
                     "invalid_path_custom_scan_input",
                     "SCAN Custom Path must be empty or an absolute path",
                 ));
@@ -490,7 +444,7 @@ impl UserSettings {
         }
         validate_optional_path_update(
             update.papyrus_log_path,
-            "/CLASSIC_Settings/Papyrus Log Path",
+            PAPYRUS_LOG_PATH.pointer_path,
             "invalid_path_papyrus_log",
             "Papyrus Log Path must be empty or an absolute path",
             UserSettingsUpdateField::PapyrusLogPath,
@@ -504,7 +458,7 @@ impl UserSettings {
                 fields.push(UserSettingsUpdateField::MaxConcurrentScans(value));
             } else {
                 diagnostics.push(UpdateDiagnostic::for_field(
-                    "/CLASSIC_Settings/Max Concurrent Scans",
+                    MAX_CONCURRENT_SCANS.pointer_path,
                     "invalid_range_max_concurrent_scans",
                     "Max Concurrent Scans must be between 0 and 32",
                 ));
@@ -553,3 +507,9 @@ fn valid_optional_absolute_path(path: Option<&str>) -> bool {
 
     is_absolute_user_path(path)
 }
+use crate::default_settings::{
+    DOCUMENTS_FOLDER_PATH, FCX_MODE, FORMID_DATABASES, GAME_EXE_PATH, GAME_FOLDER_PATH,
+    GAME_VERSION, INI_FOLDER_PATH, MANAGED_GAME, MAX_CONCURRENT_SCANS, MODS_FOLDER_PATH,
+    MOVE_UNSOLVED_LOGS, PAPYRUS_LOG_PATH, SCAN_CUSTOM_PATH, SHOW_FORMID_VALUES, SHOW_STATISTICS,
+    SIMPLIFY_LOGS, SettingMetadata, UNSOLVED_LOGS_DESTINATION, UPDATE_CHECK,
+};

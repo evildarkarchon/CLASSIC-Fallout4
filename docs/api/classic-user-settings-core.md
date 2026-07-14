@@ -12,6 +12,21 @@ This crate is distinct from:
 - `classic-config-core::ClassicConfig`, which remains a transitional legacy flat-schema adapter until the later breaking cutovers
 - YAML Data, which is curated application data rather than persisted user choices
 
+## Published-default registry and compatibility mirror
+
+[`src/default_settings.rs`](../../business-logic/classic-user-settings-core/src/default_settings.rs) is the single Rust authority for the current User Settings schema metadata, canonical paths and labels, published defaults, and default-file guidance. Typed open paths consume the same registry values used by the renderer, including Crash Log Scan, Game Setup, and frontend defaults. The registry marks `INI Folder Path`, `Audio Notifications`, `Update Source`, and `Disable CLI Progress` as compatibility-only entries so older clients retain their expected template fields without presenting those fields as current canonical runtime inputs.
+
+`CLASSIC_Info.default_settings` in [`CLASSIC Main.yaml`](../../CLASSIC%20Data/databases/CLASSIC%20Main.yaml) is a checked-in generated compatibility mirror. Regenerate or verify it from the repository root with:
+
+```powershell
+cargo run -p classic-user-settings-core --bin generate-user-settings-default-mirror
+cargo run -p classic-user-settings-core --bin generate-user-settings-default-mirror -- --check
+```
+
+Generation replaces only the literal-scalar body, preserves the outer YAML's newline convention and all surrounding bytes, and is byte-idempotent. `--check` first parses and semantically compares every canonical registered path and YAML value, then requires the checked-in text—including generated ordering and guidance—to match exactly. The crate's integration test runs this check against the real repository so Rust CI fails on drift.
+
+The compatibility direction is deliberately one-way: registry → generated mirror. `UserSettings::open` never reads `CLASSIC Main.yaml` or `CLASSIC_Info.default_settings`; it still probes only the canonical and legacy User Settings documents below. The legacy GUI bootstrap may continue consuming the mirror until its separate User Settings cutover, but it cannot redefine Rust-owned defaults.
+
 ## Root-relative discovery
 
 Open probes sources in this order:

@@ -1,3 +1,7 @@
+use crate::default_settings::{
+    AUTO_SWITCH_AFTER_SCAN, UPDATE_CHECK, USER_SETTINGS_SCHEMA_MAJOR, USER_SETTINGS_SCHEMA_MINOR,
+    registry_is_valid,
+};
 use crate::scan_settings::CrashLogScanSettings;
 use crate::{FrontendState, GameSetupSettings};
 use classic_settings_core::{
@@ -8,7 +12,8 @@ use std::path::{Path, PathBuf};
 
 const CANONICAL_RELATIVE_PATH: &str = "CLASSIC Settings.yaml";
 const LEGACY_RELATIVE_PATH: &str = "CLASSIC Data/CLASSIC Settings.yaml";
-const CURRENT_SCHEMA_VERSION: SchemaVersion = SchemaVersion::new(1, 0);
+const CURRENT_SCHEMA_VERSION: SchemaVersion =
+    SchemaVersion::new(USER_SETTINGS_SCHEMA_MAJOR, USER_SETTINGS_SCHEMA_MINOR);
 
 /// Root-relative location from which User Settings were opened.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -160,6 +165,10 @@ impl UserSettings {
     /// Opens User Settings relative to `classic_root` without creating, moving,
     /// repairing, or otherwise modifying either supported source file.
     pub fn open(classic_root: impl AsRef<Path>) -> Self {
+        debug_assert!(
+            registry_is_valid(),
+            "User Settings metadata registry is invalid"
+        );
         let canonical_path = classic_root.as_ref().join(CANONICAL_RELATIVE_PATH);
         let legacy_path = classic_root.as_ref().join(LEGACY_RELATIVE_PATH);
         let (path, location, bytes) = match std::fs::read(&canonical_path) {
@@ -305,21 +314,25 @@ impl UserSettings {
         let update_check_node = if classification == DocumentClassification::LegacyFlat {
             Some(&document["update_check"])
         } else {
-            match &document["CLASSIC_Settings"] {
-                Yaml::Hash(_) => Some(&document["CLASSIC_Settings"]["Update Check"]),
+            match &document[UPDATE_CHECK.path()[0]] {
+                Yaml::Hash(_) => Some(&document[UPDATE_CHECK.path()[0]][UPDATE_CHECK.label()]),
                 Yaml::BadValue => None,
                 _ => unreachable!("nested group shapes were validated before classification"),
             }
         };
         let (update_check, update_check_origin, update_diagnostic) = match update_check_node {
             Some(Yaml::Boolean(value)) => (*value, PreferenceOrigin::Document, None),
-            None | Some(Yaml::BadValue) => (true, PreferenceOrigin::Default, None),
+            None | Some(Yaml::BadValue) => (
+                UPDATE_CHECK.default().as_bool(),
+                PreferenceOrigin::Default,
+                None,
+            ),
             _ => (
                 false,
                 PreferenceOrigin::DegradedFallback,
                 Some(Diagnostic::new(
                     "invalid_type_update_check",
-                    "CLASSIC_Settings.Update Check must be a boolean",
+                    format!("{} must be a boolean", UPDATE_CHECK.dotted_path),
                 )),
             ),
         };
@@ -405,7 +418,7 @@ impl UserSettings {
             schema_version: None,
             revision: Revision::Missing,
             update_preferences: UpdatePreferences {
-                update_check: true,
+                update_check: UPDATE_CHECK.default().as_bool(),
                 update_check_origin: PreferenceOrigin::Default,
             },
             crash_log_scan_settings: CrashLogScanSettings::published_defaults(),
@@ -589,14 +602,14 @@ fn is_legacy_flat_document(document: &Yaml) -> bool {
 
 /// Returns the first known nested group whose value is not a mapping.
 fn invalid_nested_group(document: &Yaml) -> Option<&'static str> {
-    ["CLASSIC_Settings", "UI"]
+    [UPDATE_CHECK.path[0], AUTO_SWITCH_AFTER_SCAN.path[0]]
         .into_iter()
         .find(|key| !matches!(&document[*key], Yaml::BadValue | Yaml::Hash(_)))
 }
 
 /// Returns whether an unversioned document contains a recognized nested group.
 fn is_recognized_nested_document(document: &Yaml) -> bool {
-    ["CLASSIC_Settings", "UI"]
+    [UPDATE_CHECK.path[0], AUTO_SWITCH_AFTER_SCAN.path[0]]
         .into_iter()
         .any(|key| matches!(&document[key], Yaml::Hash(_)))
 }
