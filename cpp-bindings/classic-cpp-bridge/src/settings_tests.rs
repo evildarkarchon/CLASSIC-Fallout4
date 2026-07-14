@@ -1086,6 +1086,23 @@ fn test_user_settings_update_preview_maps_all_game_setup_fields() {
 }
 
 #[test]
+fn test_user_settings_bootstrap_preview_is_explicit_and_does_not_write() {
+    let root = tempfile::tempdir().unwrap();
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let update = empty_user_settings_update();
+
+    let preview = user_settings_preview_bootstrap(&root.path().display().to_string(), &update);
+
+    assert!(preview.accepted);
+    assert_eq!(preview.base_revision, "missing");
+    assert!(preview.diagnostics.is_empty());
+    assert!(
+        !settings_path.exists(),
+        "previewing the explicit bootstrap must not create User Settings"
+    );
+}
+
+#[test]
 fn test_user_settings_update_preview_accepts_only_requested_fields_without_writing() {
     let root = tempfile::tempdir().unwrap();
     let content = concat!(

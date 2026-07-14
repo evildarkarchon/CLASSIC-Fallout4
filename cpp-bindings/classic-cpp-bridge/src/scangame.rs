@@ -8,6 +8,7 @@ use classic_scangame_core::{
     GameSetupCheck, GameSetupIntake, GameSetupIntakeResult,
     game_setup_needs_path_detection as core_game_setup_needs_path_detection,
 };
+use classic_user_settings_core::UserSettings;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -66,8 +67,25 @@ fn run_game_setup_intake(
             path_updates: Vec::new(),
             game_root: String::new(),
             docs_root: String::new(),
+            game_executable: String::new(),
         },
     }
+}
+
+/// Opens typed User Settings and runs Game Setup Intake without mutating the snapshot or disk.
+///
+/// The optional XSE log remains an explicit caller fact because it is not persisted as part of
+/// the Game Setup settings group. Blank input means that no detection hint was supplied.
+fn run_game_setup_intake_from_user_settings(
+    classic_root: &str,
+    xse_log_path: &str,
+) -> ffi::GameSetupIntakeDto {
+    let settings = UserSettings::open(Path::new(classic_root));
+    let mut intake = GameSetupIntake::from_user_settings(settings.game_setup_settings());
+    if !xse_log_path.trim().is_empty() {
+        intake = intake.with_xse_log_path(PathBuf::from(xse_log_path));
+    }
+    game_setup_result_to_dto(intake.run())
 }
 
 fn game_setup_intake_checks(
@@ -174,6 +192,11 @@ fn game_setup_result_to_dto(result: GameSetupIntakeResult) -> ffi::GameSetupInta
         docs_root: result
             .paths
             .docs_root
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        game_executable: result
+            .paths
+            .game_exe_path
             .map(|path| path.to_string_lossy().into_owned())
             .unwrap_or_default(),
     }
@@ -652,6 +675,7 @@ mod ffi {
         path_updates: Vec<GameSetupPathUpdateDto>,
         game_root: String,
         docs_root: String,
+        game_executable: String,
     }
 
     struct GameSetupCheckDto {
@@ -816,6 +840,12 @@ mod ffi {
             docs_path: &str,
             xse_log_path: &str,
             game_exe_path: &str,
+        ) -> GameSetupIntakeDto;
+
+        /// Open typed User Settings and run setup intake without writing any settings.
+        fn run_game_setup_intake_from_user_settings(
+            classic_root: &str,
+            xse_log_path: &str,
         ) -> GameSetupIntakeDto;
 
         fn game_setup_intake_checks(

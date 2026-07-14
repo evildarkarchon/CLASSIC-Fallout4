@@ -285,6 +285,7 @@ impl UpdateDiagnostic {
 pub struct AcceptedUserSettingsUpdate {
     base_revision: Revision,
     fields: Vec<UserSettingsUpdateField>,
+    bootstrap: bool,
 }
 
 impl AcceptedUserSettingsUpdate {
@@ -296,6 +297,11 @@ impl AcceptedUserSettingsUpdate {
     /// Returns only the canonical fields explicitly requested and accepted by the preview.
     pub fn fields(&self) -> &[UserSettingsUpdateField] {
         &self.fields
+    }
+
+    /// Returns whether this artifact was accepted through the missing-document bootstrap seam.
+    pub(crate) const fn is_bootstrap(&self) -> bool {
+        self.bootstrap
     }
 }
 
@@ -314,12 +320,43 @@ impl UserSettings {
     /// Every requested field is checked in one pass. Any rejection discards all otherwise-valid
     /// fields so callers can only accept a complete, revision-anchored update.
     pub fn preview_update(&self, update: UserSettingsUpdate) -> UserSettingsUpdatePreview {
+        if matches!(self.revision(), Revision::Missing) {
+            return UserSettingsUpdatePreview::Rejected(vec![UpdateDiagnostic::for_preview(
+                "update_base_requires_bootstrap",
+                "Missing User Settings must be created through an explicit bootstrap preview",
+            )]);
+        }
         if self.commit_eligibility() != CommitEligibility::Eligible {
             return UserSettingsUpdatePreview::Rejected(vec![UpdateDiagnostic::for_preview(
                 "update_base_not_commit_eligible",
                 "User Settings must be current and trusted before an update can be previewed",
             )]);
         }
+
+        self.preview_eligible_update(update, false)
+    }
+
+    /// Validates an explicit first-run update against a missing User Settings snapshot.
+    ///
+    /// Bootstrap preview performs no I/O. An accepted artifact commits a complete document from
+    /// Rust-owned published defaults, with the requested fields applied as one atomic update.
+    pub fn preview_bootstrap(&self, update: UserSettingsUpdate) -> UserSettingsUpdatePreview {
+        if !matches!(self.revision(), Revision::Missing) {
+            return UserSettingsUpdatePreview::Rejected(vec![UpdateDiagnostic::for_preview(
+                "bootstrap_base_not_missing",
+                "User Settings bootstrap requires a trusted missing-document snapshot",
+            )]);
+        }
+
+        self.preview_eligible_update(update, true)
+    }
+
+    /// Validates fields after the caller-specific base-state policy has been satisfied.
+    fn preview_eligible_update(
+        &self,
+        update: UserSettingsUpdate,
+        bootstrap: bool,
+    ) -> UserSettingsUpdatePreview {
 
         let mut fields = Vec::new();
         let mut diagnostics = Vec::new();
@@ -469,6 +506,7 @@ impl UserSettings {
             UserSettingsUpdatePreview::Accepted(AcceptedUserSettingsUpdate {
                 base_revision: self.revision().clone(),
                 fields,
+                bootstrap,
             })
         } else {
             UserSettingsUpdatePreview::Rejected(diagnostics)

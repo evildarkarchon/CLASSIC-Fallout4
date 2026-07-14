@@ -24,6 +24,65 @@ fn install_fixture(root: &Path, fixture: &str) -> PathBuf {
 }
 
 #[test]
+fn ordinary_update_preview_rejects_a_missing_document_without_creating_it() {
+    let root = tempfile::tempdir().unwrap();
+    let settings = UserSettings::open(root.path());
+
+    let preview =
+        settings.preview_update(UserSettingsUpdate::new().with_update_check(false));
+
+    let UserSettingsUpdatePreview::Rejected(diagnostics) = preview else {
+        panic!("a missing document must require the explicit bootstrap path");
+    };
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].field_path(), None);
+    assert_eq!(diagnostics[0].code(), "update_base_requires_bootstrap");
+    assert!(!root.path().join("CLASSIC Settings.yaml").exists());
+}
+
+#[test]
+fn bootstrap_preview_only_accepts_a_missing_trusted_snapshot() {
+    let missing_root = tempfile::tempdir().unwrap();
+    let missing = UserSettings::open(missing_root.path());
+    let missing_preview =
+        missing.preview_bootstrap(UserSettingsUpdate::new().with_update_check(false));
+    let UserSettingsUpdatePreview::Accepted(accepted) = missing_preview else {
+        panic!("a missing trusted snapshot should produce an accepted bootstrap preview");
+    };
+    assert!(matches!(
+        accepted.fields(),
+        [UserSettingsUpdateField::UpdateCheck(false)]
+    ));
+    assert!(!missing_root.path().join("CLASSIC Settings.yaml").exists());
+
+    let current_root = tempfile::tempdir().unwrap();
+    install_fixture(current_root.path(), "canonical_current_nested.yaml");
+    let current = UserSettings::open(current_root.path());
+    let UserSettingsUpdatePreview::Rejected(current_diagnostics) =
+        current.preview_bootstrap(UserSettingsUpdate::new())
+    else {
+        panic!("an existing document must not be overwritten through bootstrap");
+    };
+    assert_eq!(current_diagnostics.len(), 1);
+    assert_eq!(current_diagnostics[0].code(), "bootstrap_base_not_missing");
+
+    let malformed_root = tempfile::tempdir().unwrap();
+    std::fs::write(
+        malformed_root.path().join("CLASSIC Settings.yaml"),
+        "CLASSIC_Settings: [\n",
+    )
+    .unwrap();
+    let malformed = UserSettings::open(malformed_root.path());
+    let UserSettingsUpdatePreview::Rejected(malformed_diagnostics) =
+        malformed.preview_bootstrap(UserSettingsUpdate::new())
+    else {
+        panic!("an untrusted source must not be replaced through bootstrap");
+    };
+    assert_eq!(malformed_diagnostics.len(), 1);
+    assert_eq!(malformed_diagnostics[0].code(), "bootstrap_base_not_missing");
+}
+
+#[test]
 fn preview_accepts_a_multi_field_update_without_changing_unknown_entries_or_snapshot_values() {
     let root = tempfile::tempdir().unwrap();
     let path = install_fixture(root.path(), "unknown_entries.yaml");

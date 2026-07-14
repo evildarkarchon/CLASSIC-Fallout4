@@ -663,7 +663,26 @@ fn user_settings_preview_update(
     update: &ffi::UserSettingsUpdateDto,
 ) -> ffi::UserSettingsUpdatePreviewDto {
     let settings = UserSettings::open(Path::new(classic_root));
-    match settings.preview_update(core_user_settings_update(update)) {
+    user_settings_update_preview_dto(settings.preview_update(core_user_settings_update(update)))
+}
+
+/// Explicitly previews first-run User Settings creation from Rust-owned published defaults.
+///
+/// This operation never persists the missing document. The returned accepted preview remains
+/// revision-anchored and must be passed through the ordinary explicit commit operation.
+fn user_settings_preview_bootstrap(
+    classic_root: &str,
+    update: &ffi::UserSettingsUpdateDto,
+) -> ffi::UserSettingsUpdatePreviewDto {
+    let settings = UserSettings::open(Path::new(classic_root));
+    user_settings_update_preview_dto(settings.preview_bootstrap(core_user_settings_update(update)))
+}
+
+/// Flattens a core update preview into the shared CXX representation.
+fn user_settings_update_preview_dto(
+    preview: CoreUserSettingsUpdatePreview,
+) -> ffi::UserSettingsUpdatePreviewDto {
+    match preview {
         CoreUserSettingsUpdatePreview::Accepted(accepted) => {
             let databases = accepted.fields().iter().find_map(|field| match field {
                 CoreUserSettingsUpdateField::FormIdDatabases(databases) => Some(databases),
@@ -1887,6 +1906,12 @@ mod ffi {
 
         /// Validate a multi-field User Settings Update without writing to disk.
         fn user_settings_preview_update(
+            classic_root: &str,
+            update: &UserSettingsUpdateDto,
+        ) -> UserSettingsUpdatePreviewDto;
+
+        /// Preview explicit first-run creation from Rust-owned defaults without writing.
+        fn user_settings_preview_bootstrap(
             classic_root: &str,
             update: &UserSettingsUpdateDto,
         ) -> UserSettingsUpdatePreviewDto;
