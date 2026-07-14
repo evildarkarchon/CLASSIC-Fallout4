@@ -16,14 +16,13 @@ public:
     explicit GameFilesWorker(QObject* parent = nullptr);
 
 public slots:
-    /// Run Game Setup Intake via the CXX bridge.
+    /// Run Game Setup Intake from a read-only typed User Settings snapshot via CXX.
     ///
     /// Called from the QThread once it starts. Emits progress/finished/error
     /// signals back to the controller on the main thread.
-    /// @param gameExePath Saved or caller-validated game executable path.
-    /// @param gameVersion Saved game-version selection forwarded to setup intake.
-    void doScan(const QString& gameExePath, const QString& gameRoot, const QString& docsPath, const QString& gameName,
-                const QString& gameVersion);
+    /// @param classicRoot CLASSIC root used by Rust to open User Settings.
+    /// @param xseLogPath Optional script-extender log used as a detection hint.
+    void doScan(const QString& classicRoot, const QString& xseLogPath);
 
 signals:
     /// Emitted periodically to indicate scan progress.

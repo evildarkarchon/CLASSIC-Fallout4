@@ -1,8 +1,8 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-07-14T09:09:19.033481+00:00`
-- Tracked surfaces: **914**
-- Runtime verified: **914**
+- Generated: `2026-07-14T11:36:47.974198+00:00`
+- Tracked surfaces: **916**
+- Runtime verified: **916**
 - Contract mapped only: **0**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
@@ -24,7 +24,7 @@
 | `settings` | 47 | 0 | 0 | 47 |
 | `shared` | 10 | 0 | 0 | 10 |
 | `update` | 6 | 0 | 0 | 6 |
-| `user_settings` | 179 | 0 | 0 | 179 |
+| `user_settings` | 181 | 0 | 0 | 181 |
 | `version` | 13 | 0 | 0 | 13 |
 | `version_registry` | 89 | 0 | 0 | 89 |
 | `web` | 15 | 0 | 0 | 15 |

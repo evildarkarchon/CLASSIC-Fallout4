@@ -18,7 +18,6 @@
 #include <QLayout>
 #include <QMessageBox>
 #include <QMimeData>
-#include <QSaveFile>
 #include <QSet>
 #include <QSizePolicy>
 #include <QSpacerItem>
@@ -39,6 +38,7 @@
 #include "controllers/resultscontroller.h"
 #include "controllers/scancontroller.h"
 #include "core/gamepathutils.h"
+#include "core/gamesetupusersettings.h"
 #include "core/rust_qt_bridge.h"
 #include "core/signalhub.h"
 #include "core/threadmanager.h"
@@ -56,7 +56,6 @@
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/scangame.h"
 #include "classic_cxx_bridge/settings.h"
-#include "classic_cxx_bridge/shared.h"
 #include "classic_cxx_bridge/xse.h"
 #include "rust/cxx.h"
 
@@ -122,117 +121,6 @@ QString ignoreFilePath(const QString& dataRoot)
 QString localYamlFilePath(const QString& dataDir, const QString& game)
 {
     return dataDir + QStringLiteral("/CLASSIC %1 Local.yaml").arg(game);
-}
-
-bool ensureSettingsFileExists(const QString& dataRoot, const QString& dataDir, QString* errorOut,
-                              bool* migrationFailed = nullptr)
-{
-    if (migrationFailed) {
-        *migrationFailed = false;
-    }
-    if (dataRoot.isEmpty()) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("CLASSIC root directory path is empty.");
-        }
-        return false;
-    }
-    if (dataDir.isEmpty()) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("CLASSIC Data directory path is empty.");
-        }
-        return false;
-    }
-
-    const QString settingsPath = settingsFilePath(dataRoot);
-    if (QFile::exists(settingsPath)) {
-        return true;
-    }
-
-    // Attempt to migrate settings from legacy location (CLASSIC Data/CLASSIC Settings.yaml).
-    // Older builds wrote the settings file under CLASSIC Data/; try to move it to the
-    // current root-level location before falling back to default generation.
-    const QString legacySettingsPath = dataDir + QStringLiteral("/CLASSIC Settings.yaml");
-    if (QFile::exists(legacySettingsPath)) {
-        bool moved = QFile::rename(legacySettingsPath, settingsPath);
-        if (!moved) {
-            // Preserve the legacy file unless the destination can be published atomically.
-            QFile legacySettingsFile(legacySettingsPath);
-            if (legacySettingsFile.open(QIODevice::ReadOnly)) {
-                QSaveFile migratedSettingsFile(settingsPath);
-                migratedSettingsFile.setDirectWriteFallback(false);
-                if (migratedSettingsFile.open(QIODevice::WriteOnly)) {
-                    const QByteArray legacyContents = legacySettingsFile.readAll();
-                    if (legacySettingsFile.error() == QFileDevice::NoError &&
-                        migratedSettingsFile.write(legacyContents) == legacyContents.size() &&
-                        migratedSettingsFile.commit()) {
-                        moved = true;
-                    } else {
-                        migratedSettingsFile.cancelWriting();
-                    }
-                }
-            }
-        }
-
-        if (moved && QFile::exists(settingsPath)) {
-            QFile::remove(legacySettingsPath);
-            return true;
-        }
-        // Migration failed — fall through to generate defaults, but flag the caller.
-        if (migrationFailed) {
-            *migrationFailed = true;
-        }
-    }
-
-    const QString mainYamlPath = dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
-    if (!QFile::exists(mainYamlPath)) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("Missing template file: ") + mainYamlPath;
-        }
-        return false;
-    }
-
-    try {
-        auto mainOps = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*mainOps, std::string(mainYamlPath.toUtf8().constData()));
-
-        auto defaultSettings = classic::settings::yaml_ops_get_string(*mainOps, "CLASSIC_Info.default_settings", "");
-        if (defaultSettings.empty()) {
-            if (errorOut) {
-                *errorOut = QStringLiteral("CLASSIC_Info.default_settings is missing in CLASSIC Main.yaml.");
-            }
-            return false;
-        }
-
-        QFile outFile(settingsPath);
-        if (!outFile.open(QFile::WriteOnly | QFile::Text | QFile::Truncate)) {
-            if (errorOut) {
-                *errorOut = QStringLiteral("Cannot create file: ") + settingsPath + QStringLiteral(" (") +
-                            outFile.errorString() + QStringLiteral(")");
-            }
-            return false;
-        }
-
-        const auto content = classic::toQString(defaultSettings).toUtf8();
-        if (outFile.write(content) == -1) {
-            if (errorOut) {
-                *errorOut = QStringLiteral("Failed writing file: ") + settingsPath + QStringLiteral(" (") +
-                            outFile.errorString() + QStringLiteral(")");
-            }
-            return false;
-        }
-        return true;
-
-    } catch (const std::exception& e) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("Template parse failed: ") + QString::fromUtf8(e.what());
-        }
-        return false;
-    } catch (...) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("Unknown error creating default settings.");
-        }
-        return false;
-    }
 }
 
 bool ensureIgnoreFileExists(const QString& dataRoot, const QString& dataDir, QString* errorOut)
@@ -336,6 +224,122 @@ bool saveLocalYamlPaths(const QString& dataDir, const QString& game, const QStri
         return false;
     }
 }
+
+/// Formats the structured diagnostics retained by the typed Game Setup snapshot.
+QString formatUserSettingsDiagnostics(const classic::gui::GameSetupUserSettingsSnapshot& snapshot)
+{
+    QStringList lines;
+    for (const auto& diagnostic : snapshot.diagnostics) {
+        lines.append(QStringLiteral("[%1] %2").arg(diagnostic.code, diagnostic.message));
+    }
+    return lines.join(QLatin1Char('\n'));
+}
+
+/// Presents degraded User Settings state without attempting repair or persistence.
+void presentDegradedUserSettings(QWidget* parent, const classic::gui::GameSetupUserSettingsSnapshot& snapshot)
+{
+    if (snapshot.commitEligibility != QStringLiteral("blocked_untrusted")) {
+        return;
+    }
+
+    QString detail = formatUserSettingsDiagnostics(snapshot);
+    if (!detail.isEmpty()) {
+        detail.prepend(QStringLiteral("\n\n"));
+    }
+    QMessageBox::warning(parent, QStringLiteral("User Settings Need Attention"),
+                         QStringLiteral("The %1 User Settings document could not be trusted. "
+                                        "CLASSIC will use safety-adjusted values and will not write to it.%2")
+                             .arg(snapshot.classification, detail));
+}
+
+/// Offers the revision-anchored migration plan and applies or restores it only after explicit user actions.
+bool offerUserSettingsMigration(QWidget* parent, const QString& classicRoot)
+{
+    const std::string root(classicRoot.toUtf8().constData());
+    const auto plan = classic::settings::user_settings_plan_migration(root);
+    if (!plan.has_plan) {
+        QStringList diagnostics;
+        for (const auto& diagnostic : plan.diagnostics) {
+            diagnostics.append(QStringLiteral("[%1] %2").arg(classic::toQString(diagnostic.code),
+                                                             classic::toQString(diagnostic.message)));
+        }
+        QMessageBox::warning(parent, QStringLiteral("User Settings Migration"),
+                             QStringLiteral("CLASSIC could not prepare a safe migration plan.\n\n%1")
+                                 .arg(diagnostics.join(QLatin1Char('\n'))));
+        return false;
+    }
+
+    QStringList changes;
+    for (const auto& change : plan.changes) {
+        QString row = classic::toQString(change.kind);
+        if (change.has_source_path || change.has_target_path) {
+            row += QStringLiteral(": %1 -> %2")
+                       .arg(change.has_source_path ? classic::toQString(change.source_path) : QStringLiteral("(none)"),
+                            change.has_target_path ? classic::toQString(change.target_path) : QStringLiteral("(none)"));
+        }
+        changes.append(row);
+    }
+
+    const QString question =
+        QStringLiteral(
+            "This User Settings document requires an explicit migration before updates can be saved. "
+            "CLASSIC will retain and verify a byte-exact backup before publishing the migrated file.\n\n%1\n\n"
+            "Apply this migration now?")
+            .arg(changes.join(QLatin1Char('\n')));
+    if (QMessageBox::question(parent, QStringLiteral("User Settings Migration"), question, QMessageBox::Yes,
+                              QMessageBox::No) != QMessageBox::Yes) {
+        return false;
+    }
+
+    try {
+        auto handle = classic::settings::user_settings_apply_migration(root, plan);
+        const auto outcome = classic::settings::user_settings_migration_apply_outcome(*handle);
+        if (classic::toQString(outcome.status) == QStringLiteral("conflict")) {
+            QMessageBox::warning(
+                parent, QStringLiteral("User Settings Changed"),
+                QStringLiteral(
+                    "User Settings changed before the migration could be committed.\n\nExpected: %1\nFound: %2")
+                    .arg(classic::toQString(outcome.expected_revision), classic::toQString(outcome.actual_revision)));
+            return false;
+        }
+        if (!outcome.has_receipt) {
+            QMessageBox::warning(parent, QStringLiteral("User Settings Migration"),
+                                 QStringLiteral("Migration completed without a verified restore receipt."));
+            return false;
+        }
+
+        QMessageBox completed(parent);
+        completed.setIcon(QMessageBox::Information);
+        completed.setWindowTitle(QStringLiteral("User Settings Migrated"));
+        completed.setText(QStringLiteral("User Settings were migrated and reopened successfully."));
+        completed.setInformativeText(QStringLiteral("Verified backup: %1\nBackup revision: %2\nPublished revision: %3")
+                                         .arg(classic::toQString(outcome.receipt.backup_path),
+                                              classic::toQString(outcome.receipt.backup_revision),
+                                              classic::toQString(outcome.receipt.published_revision)));
+        completed.addButton(QStringLiteral("Keep Migrated Settings"), QMessageBox::AcceptRole);
+        auto* restoreButton =
+            completed.addButton(QStringLiteral("Restore Verified Backup"), QMessageBox::DestructiveRole);
+        completed.exec();
+
+        if (completed.clickedButton() == restoreButton) {
+            const auto restored = classic::settings::user_settings_restore_migration(root, *handle);
+            if (classic::toQString(restored.status) == QStringLiteral("conflict")) {
+                QMessageBox::warning(
+                    parent, QStringLiteral("User Settings Restore Conflict"),
+                    QStringLiteral("The migrated document changed before restore.\n\nExpected: %1\nFound: %2")
+                        .arg(classic::toQString(restored.expected_revision),
+                             classic::toQString(restored.actual_revision)));
+                return false;
+            }
+            QMessageBox::information(parent, QStringLiteral("User Settings Restored"),
+                                     QStringLiteral("The verified pre-migration document was restored successfully."));
+        }
+        return true;
+    } catch (const rust::Error& error) {
+        QMessageBox::warning(parent, QStringLiteral("User Settings Migration Failed"), QString::fromUtf8(error.what()));
+        return false;
+    }
+}
 } // namespace
 
 // ── Construction / Destruction ─────────────────────────────────────
@@ -354,7 +358,9 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
-    saveSettings();
+    if (m_geometryInitialized && m_lastTabIndex >= 0) {
+        saveTabGeometry(m_lastTabIndex);
+    }
 }
 
 void MainWindow::initializeControllers()
@@ -869,92 +875,96 @@ void MainWindow::loadSettings()
     }
     m_dataDir = m_dataRoot + QStringLiteral("/CLASSIC Data");
 
+    auto setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
+    if (setup.classification == QStringLiteral("missing")) {
+        const auto choice = QMessageBox::question(
+            this, QStringLiteral("Create User Settings"),
+            QStringLiteral(
+                "No User Settings document exists. Create one from Rust-owned published defaults?\n\n"
+                "Choosing No leaves the filesystem unchanged; CLASSIC can continue with in-memory defaults."),
+            QMessageBox::Yes, QMessageBox::No);
+        if (choice == QMessageBox::Yes) {
+            const auto result = classic::gui::GameSetupUserSettings::bootstrap(m_dataRoot);
+            if (result.status == QStringLiteral("committed")) {
+                setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
+            } else if (result.status == QStringLiteral("conflict")) {
+                QMessageBox::warning(
+                    this, QStringLiteral("User Settings Changed"),
+                    QStringLiteral("Another process created User Settings before bootstrap completed.\n\n"
+                                   "Expected: %1\nFound: %2")
+                        .arg(result.expectedRevision, result.actualRevision));
+                setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
+            } else {
+                QStringList diagnostics;
+                for (const auto& diagnostic : result.diagnostics) {
+                    diagnostics.append(QStringLiteral("[%1] %2").arg(diagnostic.code, diagnostic.message));
+                }
+                QMessageBox::warning(this, QStringLiteral("User Settings Bootstrap Failed"),
+                                     diagnostics.join(QLatin1Char('\n')));
+            }
+        }
+    } else if (setup.commitEligibility == QStringLiteral("requires_migration")) {
+        offerUserSettingsMigration(this, m_dataRoot);
+        setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
+    }
+    presentDegradedUserSettings(this, setup);
+
     QString bootstrapError;
-    bool settingsMigrationFailed = false;
-    if (!ensureSettingsFileExists(m_dataRoot, m_dataDir, &bootstrapError, &settingsMigrationFailed)) {
-        setStatusMessage(QStringLiteral("Settings bootstrap failed: ") + bootstrapError);
-    }
-    if (settingsMigrationFailed) {
-        QMessageBox::warning(this, QStringLiteral("Settings Migration"),
-                             QStringLiteral("A settings file was found at the previous location "
-                                            "(CLASSIC Data/CLASSIC Settings.yaml), but migration to the "
-                                            "new location failed.\n\n"
-                                            "Your settings have been reverted to defaults. "
-                                            "Please reconfigure your paths and options in Settings."));
-    }
     if (!ensureIgnoreFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
         setStatusMessage(QStringLiteral("Ignore file bootstrap failed: ") + bootstrapError);
     }
 
-    // Load CLASSIC Settings.yaml via CXX YAML bridge
-    QString settingsPath = settingsFilePath(m_dataRoot);
-    try {
-        auto ops = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+    m_editStagingFolder->setText(setup.modsRoot.value_or(QString{}));
+    m_editCustomFolder->setText(setup.customScanInput.value_or(QString{}));
+    m_gameVersion = setup.gameVersionSelection;
+    if (setup.gameRoot.has_value() && m_backupController) {
+        m_backupController->setGameRoot(*setup.gameRoot);
+    }
 
-        m_editStagingFolder->clear();
-        m_editCustomFolder->clear();
+    // Remaining scan preferences migrate in issue #105; setup paths already use the typed adapter.
+    const QString settingsPath = settingsFilePath(m_dataRoot);
+    if (QFile::exists(settingsPath)) {
+        try {
+            auto ops = classic::settings::yaml_ops_new();
+            classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
-        auto staging = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Staging Mods Folder", "");
-        if (!staging.empty()) {
-            m_editStagingFolder->setText(classic::toQString(staging));
-        }
-
-        const auto scanSettings =
-            classic::settings::user_settings_open_crash_log_scan_settings(std::string(m_dataRoot.toUtf8().constData()));
-        if (scanSettings.has_custom_scan_input) {
-            // Rust owns canonical-versus-alias precedence, including explicit canonical clears.
-            m_editCustomFolder->setText(classic::toQString(scanSettings.custom_scan_input));
-        }
-
-        auto getBool = [&](const char* key, bool fallback) -> bool {
-            auto value = classic::settings::yaml_ops_get_setting_value(*ops, key);
-            if (value.value_type == "bool") {
-                return value.value == "true";
-            }
-            return fallback;
-        };
-        auto getInt = [&](const char* key, int fallback) -> int {
-            auto value = classic::settings::yaml_ops_get_setting_value(*ops, key);
-            if (value.value_type == "integer") {
-                bool ok = false;
-                const int parsed = QString::fromStdString(std::string(value.value)).toInt(&ok);
-                if (ok) {
-                    return parsed;
+            auto getBool = [&](const char* key, bool fallback) -> bool {
+                auto value = classic::settings::yaml_ops_get_setting_value(*ops, key);
+                if (value.value_type == "bool") {
+                    return value.value == "true";
                 }
+                return fallback;
+            };
+            auto getInt = [&](const char* key, int fallback) -> int {
+                auto value = classic::settings::yaml_ops_get_setting_value(*ops, key);
+                if (value.value_type == "integer") {
+                    bool ok = false;
+                    const int parsed = QString::fromStdString(std::string(value.value)).toInt(&ok);
+                    if (ok) {
+                        return parsed;
+                    }
+                }
+                return fallback;
+            };
+
+            m_updateCheckOnStartup = getBool("CLASSIC_Settings.Update Check", true);
+            m_autoSwitchToResultsAfterScan = getBool("CLASSIC_Settings.Auto Switch After Scan", true);
+            m_showFormIdValues = getBool("CLASSIC_Settings.Show FormID Values", false);
+            m_fcxMode = getBool("CLASSIC_Settings.FCX Mode", false);
+            m_simplifyLogs = getBool("CLASSIC_Settings.Simplify Logs", false);
+            m_moveUnsolvedLogs = getBool("CLASSIC_Settings.Move Unsolved Logs", false);
+            m_unsolvedLogsDestination = classic::toQString(
+                classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Unsolved Logs Destination", ""));
+            m_maxConcurrentScans = qMax(0, getInt("CLASSIC_Settings.Max Concurrent Scans", 0));
+            if (m_resultsController) {
+                m_resultsController->setAutoSwitchToResults(m_autoSwitchToResultsAfterScan);
             }
-            return fallback;
-        };
 
-        m_updateCheckOnStartup = getBool("CLASSIC_Settings.Update Check", true);
-        m_autoSwitchToResultsAfterScan = getBool("CLASSIC_Settings.Auto Switch After Scan", true);
-
-        auto gameVersion = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto");
-        m_gameVersion = classic::toQString(gameVersion);
-
-        m_showFormIdValues = getBool("CLASSIC_Settings.Show FormID Values", false);
-        m_fcxMode = getBool("CLASSIC_Settings.FCX Mode", false);
-        m_simplifyLogs = getBool("CLASSIC_Settings.Simplify Logs", false);
-        m_moveUnsolvedLogs = getBool("CLASSIC_Settings.Move Unsolved Logs", false);
-        m_unsolvedLogsDestination = classic::toQString(
-            classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Unsolved Logs Destination", ""));
-        m_maxConcurrentScans = qMax(0, getInt("CLASSIC_Settings.Max Concurrent Scans", 0));
-        if (m_resultsController) {
-            m_resultsController->setAutoSwitchToResults(m_autoSwitchToResultsAfterScan);
+        } catch (const std::exception& e) {
+            setStatusMessage(QStringLiteral("Settings load failed: ") + QString::fromUtf8(e.what()));
+        } catch (...) {
+            setStatusMessage(QStringLiteral("Settings load failed: unknown error"));
         }
-
-        // Update backup controller with the game root from settings.
-        // Guard against the first call during construction (before
-        // m_backupController is created).
-        auto gameRoot = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Folder Path", "");
-        if (!gameRoot.empty() && m_backupController) {
-            m_backupController->setGameRoot(classic::toQString(gameRoot));
-        }
-
-    } catch (const std::exception& e) {
-        setStatusMessage(QStringLiteral("Settings load failed: ") + QString::fromUtf8(e.what()));
-    } catch (...) {
-        setStatusMessage(QStringLiteral("Settings load failed: unknown error"));
     }
 
     // Restore per-tab window geometry for the current tab
@@ -973,41 +983,46 @@ void MainWindow::loadSettings()
 
 void MainWindow::saveSettings()
 {
-    if (m_dataDir.isEmpty()) {
+    if (m_dataRoot.isEmpty()) {
         return;
     }
 
-    QString bootstrapError;
-    if (!ensureSettingsFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
-        setStatusMessage(QStringLiteral("Settings save failed: ") + bootstrapError);
-        return;
-    }
-
-    QString settingsPath = settingsFilePath(m_dataRoot);
     try {
-        auto ops = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        const auto snapshot = classic::gui::GameSetupUserSettings::open(m_dataRoot);
+        classic::gui::GameSetupPathChanges changes;
+        changes.modsRoot.selected = true;
+        changes.modsRoot.value = m_editStagingFolder->text().trimmed().isEmpty()
+                                     ? std::nullopt
+                                     : std::optional<QString>{QDir::cleanPath(m_editStagingFolder->text().trimmed())};
+        changes.customScanInput.selected = true;
+        changes.customScanInput.value =
+            m_editCustomFolder->text().trimmed().isEmpty()
+                ? std::nullopt
+                : std::optional<QString>{QDir::cleanPath(m_editCustomFolder->text().trimmed())};
 
-        auto stagingValue = m_editStagingFolder->text();
-        if (!stagingValue.isEmpty()) {
-            classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Staging Mods Folder",
-                                                           std::string(stagingValue.toUtf8().constData()));
+        const auto result =
+            classic::gui::GameSetupUserSettings::commitSelectedPaths(m_dataRoot, snapshot.revision, changes);
+        if (result.status == QStringLiteral("conflict")) {
+            QMessageBox::warning(this, QStringLiteral("User Settings Changed"),
+                                 QStringLiteral("User Settings changed before the selected paths could be saved. "
+                                                "Reload Settings and try again.\n\nExpected: %1\nFound: %2")
+                                     .arg(result.expectedRevision, result.actualRevision));
+            return;
+        } else if (result.status != QStringLiteral("committed")) {
+            QStringList diagnostics;
+            for (const auto& diagnostic : result.diagnostics) {
+                diagnostics.append(QStringLiteral("[%1] %2").arg(diagnostic.code, diagnostic.message));
+            }
+            setStatusMessage(QStringLiteral("Settings save rejected: ") + diagnostics.join(QLatin1Char(' ')));
+            return;
         }
-
-        auto customValue = m_editCustomFolder->text();
-        classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.SCAN Custom Path",
-                                                       std::string(customValue.toUtf8().constData()));
-
-        classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
     } catch (const std::exception& e) {
         setStatusMessage(QStringLiteral("Settings save failed: ") + QString::fromUtf8(e.what()));
+        return;
     } catch (...) {
         setStatusMessage(QStringLiteral("Settings save failed: unknown error"));
+        return;
     }
-
-    // Save per-tab window geometry (uses its own YAML load/save cycle)
-    int currentTab = m_tabWidget ? m_tabWidget->currentIndex() : 0;
-    saveTabGeometry(currentTab);
 }
 
 void MainWindow::initResultsReportDir()
@@ -1065,196 +1080,101 @@ void MainWindow::checkFirstRunPaths()
         return;
     }
 
-    // Read current game and docs paths from YAML settings
-    QString gamePath;
-    QString docsPath;
-    QString gameVersion = QStringLiteral("auto");
-    QString settingsPath = settingsFilePath(m_dataRoot);
     try {
-        auto ops = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        auto snapshot = classic::gui::GameSetupUserSettings::open(m_dataRoot);
+        const QString configuredDocs = snapshot.documentsRoot.value_or(QString{});
+        const QString xseLogPath =
+            resolveExistingXseLogPath(m_dataDir, snapshot.managedGame, snapshot.gameVersionSelection, configuredDocs);
+        auto intake = classic::gui::GameSetupUserSettings::runIntake(m_dataRoot, xseLogPath);
+        classic::gui::GameSetupPathChanges changes;
+        bool hasAcceptedChanges = false;
 
-        auto gp = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Folder Path", "");
-        if (!gp.empty()) {
-            gamePath = classic::toQString(gp);
-        }
+        const auto commitChanges = [this, &snapshot](const classic::gui::GameSetupPathChanges& changes) {
+            const auto outcome =
+                snapshot.classification == QStringLiteral("missing")
+                    ? classic::gui::GameSetupUserSettings::bootstrapWithSelectedPaths(m_dataRoot, changes)
+                    : classic::gui::GameSetupUserSettings::commitSelectedPaths(m_dataRoot, snapshot.revision, changes);
+            if (outcome.status == QStringLiteral("committed")) {
+                return true;
+            }
+            if (outcome.status == QStringLiteral("conflict")) {
+                QMessageBox::warning(this, QStringLiteral("User Settings Changed"),
+                                     QStringLiteral("User Settings changed while the accepted setup paths were being "
+                                                    "committed. No paths were written.\n\nExpected: %1\nFound: %2")
+                                         .arg(outcome.expectedRevision, outcome.actualRevision));
+            } else {
+                QStringList diagnostics;
+                for (const auto& diagnostic : outcome.diagnostics) {
+                    diagnostics.append(QStringLiteral("[%1] %2").arg(diagnostic.code, diagnostic.message));
+                }
+                QMessageBox::warning(this, QStringLiteral("Setup Paths Not Saved"),
+                                     diagnostics.join(QLatin1Char('\n')));
+            }
+            return false;
+        };
 
-        const auto setupSettings = classic::settings::user_settings_open_game_setup_settings(
-            std::string(m_dataRoot.toUtf8().constData()));
-        if (setupSettings.has_documents_root) {
-            // Rust owns canonical Documents Folder Path precedence, including explicit clears.
-            docsPath = classic::toQString(setupSettings.documents_root);
-        }
-
-        gameVersion =
-            classic::toQString(classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Version", "auto"));
-
-    } catch (...) {
-        // If settings can't be read, fall through to path detection
-    }
-
-    // Treat invalid non-directory paths as unresolved too.
-    if (!gamePath.isEmpty() && !QDir(gamePath).exists()) {
-        gamePath.clear();
-    }
-    if (!docsPath.isEmpty() && !QDir(docsPath).exists()) {
-        docsPath.clear();
-    }
-
-    // Fallback: import detected paths from CLASSIC Fallout4 Local.yaml if
-    // settings file does not contain them yet.
-    bool resolvedFromFallbacks = false;
-    if (gamePath.isEmpty() || docsPath.isEmpty()) {
-        const QString localYamlPath = m_dataDir + QStringLiteral("/CLASSIC Fallout4 Local.yaml");
-        try {
-            auto localOps = classic::settings::yaml_ops_new();
-            classic::settings::yaml_ops_load_file(*localOps, std::string(localYamlPath.toUtf8().constData()));
-
-            if (gamePath.isEmpty()) {
-                auto gp = classic::settings::yaml_ops_get_string(*localOps, "Game_Info.Root_Folder_Game", "");
-                if (!gp.empty()) {
-                    gamePath = classic::toQString(gp);
-                    resolvedFromFallbacks = true;
+        if (!intake.pathUpdates.empty()) {
+            QStringList proposals;
+            for (const auto& proposal : intake.pathUpdates) {
+                proposals.append(QStringLiteral("%1: %2").arg(proposal.kind, proposal.path));
+                if (proposal.kind == QStringLiteral("game_root")) {
+                    changes.gameRoot = {true, proposal.path};
+                    if (!intake.gameExecutable.isEmpty()) {
+                        changes.gameExecutable = {true, intake.gameExecutable};
+                    }
+                } else if (proposal.kind == QStringLiteral("docs_root")) {
+                    changes.documentsRoot = {true, proposal.path};
                 }
             }
 
-            if (docsPath.isEmpty()) {
-                auto dp = classic::settings::yaml_ops_get_string(*localOps, "Game_Info.Root_Folder_Docs", "");
-                if (!dp.empty()) {
-                    docsPath = classic::toQString(dp);
-                    resolvedFromFallbacks = true;
-                }
+            const auto choice = QMessageBox::question(
+                this, QStringLiteral("Game Setup Paths Detected"),
+                QStringLiteral("Game Setup Intake found these path updates. Save all accepted paths as one User "
+                               "Settings update?\n\n%1")
+                    .arg(proposals.join(QLatin1Char('\n'))),
+                QMessageBox::Yes, QMessageBox::No);
+            if (choice != QMessageBox::Yes) {
+                return;
             }
-        } catch (...) {
-            // Local YAML import is optional.
-        }
-    }
-
-    // Fallback: use Rust auto-detection (registry / docs discovery).
-    if (gamePath.isEmpty()) {
-        auto detected = classic::path::detect_fallout4_game_path(std::string(gamePath.toUtf8().constData()),
-                                                                 std::string(gameVersion.toUtf8().constData()));
-        if (!detected.empty()) {
-            gamePath = classic::toQString(detected);
-            resolvedFromFallbacks = true;
-        }
-    }
-    if (docsPath.isEmpty()) {
-        auto detected = classic::path::detect_fallout4_docs_path(std::string(docsPath.toUtf8().constData()),
-                                                                 std::string(gameVersion.toUtf8().constData()));
-        if (!detected.empty()) {
-            docsPath = classic::toQString(detected);
-            resolvedFromFallbacks = true;
-        }
-    }
-
-    if (resolvedFromFallbacks) {
-        try {
-            auto ops = classic::settings::yaml_ops_new();
-            classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-
-            if (!gamePath.isEmpty()) {
-                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Folder Path",
-                                                               std::string(gamePath.toUtf8().constData()));
-
-                auto exePath = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
-                if (exePath.empty()) {
-                    auto exeName =
-                        classic::path::resolve_fallout4_exe_name(std::string(gameVersion.toUtf8().constData()));
-                    auto defaultExe = gamePath + QStringLiteral("/") + classic::toQString(exeName);
-                    classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game EXE Path",
-                                                                   std::string(defaultExe.toUtf8().constData()));
-                }
-            }
-
-            if (!docsPath.isEmpty()) {
-                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Documents Folder Path",
-                                                               std::string(docsPath.toUtf8().constData()));
-                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
-                                                               std::string(docsPath.toUtf8().constData()));
-            }
-
-            classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
-
-            if (m_backupController && !gamePath.isEmpty()) {
-                m_backupController->setGameRoot(gamePath);
-            }
-        } catch (...) {
-            // Keep going; manual prompt below remains fallback.
-        }
-    }
-
-    // Re-validate detected/imported values before final need-check.
-    if (!gamePath.isEmpty() && !QDir(gamePath).exists()) {
-        gamePath.clear();
-    }
-    if (!docsPath.isEmpty() && !QDir(docsPath).exists()) {
-        docsPath.clear();
-    }
-
-    // Ask Rust whether Game Setup Intake path detection is needed.
-    try {
-        auto needs = classic::scangame::game_setup_needs_path_detection(classic::toRustString(gamePath),
-                                                                        classic::toRustString(docsPath));
-
-        if (!needs.needs_game_path && !needs.needs_docs_path) {
-            if (resolvedFromFallbacks) {
-                QString localYamlError;
-                if (!saveLocalYamlPaths(m_dataDir, QStringLiteral("Fallout4"), gamePath, docsPath, &localYamlError)) {
-                    setStatusMessage(QStringLiteral("Local YAML sync failed: ") + localYamlError);
-                }
-            }
-            return; // All paths are detected -- nothing to do
+            hasAcceptedChanges = true;
         }
 
-        // Show the manual path dialog
-        ManualPathDialog dlg(needs.needs_game_path, needs.needs_docs_path, this);
-        if (dlg.exec() != QDialog::Accepted) {
-            if (resolvedFromFallbacks) {
-                QString localYamlError;
-                if (!saveLocalYamlPaths(m_dataDir, QStringLiteral("Fallout4"), gamePath, docsPath, &localYamlError)) {
-                    setStatusMessage(QStringLiteral("Local YAML sync failed: ") + localYamlError);
-                }
+        QString gamePath = intake.gameRoot;
+        QString docsPath = intake.documentsRoot;
+        const bool needsGame = gamePath.isEmpty() || !QDir(gamePath).exists();
+        const bool needsDocs = docsPath.isEmpty() || !QDir(docsPath).exists();
+        if (needsGame || needsDocs) {
+            ManualPathDialog dialog(needsGame, needsDocs, this);
+            if (dialog.exec() != QDialog::Accepted) {
+                return;
             }
-            return; // User cancelled -- they can set paths later via Settings
+
+            if (needsGame) {
+                gamePath = dialog.gamePath();
+                changes.gameRoot = {true, gamePath};
+                const auto exeName = classic::path::resolve_fallout4_exe_name(
+                    std::string(snapshot.gameVersionSelection.toUtf8().constData()));
+                changes.gameExecutable = {true, QDir(gamePath).filePath(classic::toQString(exeName))};
+            }
+            if (needsDocs) {
+                docsPath = dialog.docsPath();
+                changes.documentsRoot = {true, docsPath};
+            }
+            hasAcceptedChanges = true;
         }
 
-        const QString finalGamePath = needs.needs_game_path ? dlg.gamePath() : gamePath;
-        const QString finalDocsPath = needs.needs_docs_path ? dlg.docsPath() : docsPath;
-
-        // Save the user-provided paths to YAML settings
-        try {
-            auto ops = classic::settings::yaml_ops_new();
-            classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-
-            if (needs.needs_game_path && !finalGamePath.isEmpty()) {
-                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Game Folder Path",
-                                                               std::string(finalGamePath.toUtf8().constData()));
-            }
-            if (needs.needs_docs_path && !finalDocsPath.isEmpty()) {
-                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.Documents Folder Path",
-                                                               std::string(finalDocsPath.toUtf8().constData()));
-                classic::settings::yaml_ops_set_string_setting(*ops, "CLASSIC_Settings.INI Folder Path",
-                                                               std::string(finalDocsPath.toUtf8().constData()));
-            }
-
-            classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
-
-            QString manualLocalYamlError;
-            if (!saveLocalYamlPaths(m_dataDir, QStringLiteral("Fallout4"), finalGamePath, finalDocsPath,
-                                    &manualLocalYamlError)) {
-                setStatusMessage(QStringLiteral("Local YAML sync failed: ") + manualLocalYamlError);
-            }
-
-            // Reload settings so the rest of the app sees the new paths
-            loadSettings();
-
-        } catch (const std::exception& e) {
-            setStatusMessage(QStringLiteral("Failed to save paths: ") + QString::fromUtf8(e.what()));
+        if (hasAcceptedChanges && !commitChanges(changes)) {
+            return;
         }
 
+        QString localYamlError;
+        if (!saveLocalYamlPaths(m_dataDir, QStringLiteral("Fallout4"), gamePath, docsPath, &localYamlError)) {
+            setStatusMessage(QStringLiteral("Local YAML sync failed: ") + localYamlError);
+        }
+        if (m_backupController && !gamePath.isEmpty()) {
+            m_backupController->setGameRoot(gamePath);
+        }
     } catch (const std::exception& e) {
-        // Path detection failure is not fatal
         setStatusMessage(QStringLiteral("Path detection failed: ") + QString::fromUtf8(e.what()));
     } catch (...) {
         setStatusMessage(QStringLiteral("Path detection failed: unknown error"));
@@ -1298,6 +1218,12 @@ void MainWindow::saveTabGeometry(int tabIndex)
         return;
     }
 
+    const auto setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
+    if (setup.classification != QStringLiteral("current") || setup.commitEligibility != QStringLiteral("eligible")) {
+        // Geometry still uses the legacy writer until issue #105; never let it bypass migration or repair policy.
+        return;
+    }
+
     QString settingsPath = settingsFilePath(m_dataRoot);
     try {
         auto ops = classic::settings::yaml_ops_new();
@@ -1338,8 +1264,8 @@ void MainWindow::restoreTabGeometry(int tabIndex)
     bool wasMax = false;
 
     try {
-        const auto frontendState = classic::settings::user_settings_open_frontend_state(
-            std::string(m_dataRoot.toUtf8().constData()));
+        const auto frontendState =
+            classic::settings::user_settings_open_frontend_state(std::string(m_dataRoot.toUtf8().constData()));
         const std::string targetTab = kTabNames[tabIndex];
         const auto toWidgetDimension = [](std::uint32_t value) {
             const auto maximum = static_cast<std::uint32_t>(std::numeric_limits<int>::max());
@@ -1415,39 +1341,24 @@ bool MainWindow::loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* do
         return false;
     }
 
-    QString gamePath;
-    QString docsPath;
-    const QString settingsPath = settingsFilePath(m_dataRoot);
     try {
-        auto ops = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        const auto setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
+        const QString gamePath = QDir::cleanPath(setup.gameRoot.value_or(QString{}).trimmed());
+        const QString docsPath = QDir::cleanPath(setup.documentsRoot.value_or(QString{}).trimmed());
 
-        auto root = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game Folder Path", "");
-        if (!root.empty()) {
-            gamePath = QDir::cleanPath(classic::toQString(root).trimmed());
-        }
+        const bool gameValid = !gamePath.isEmpty() && QDir(gamePath).exists();
+        const bool docsValid = !docsPath.isEmpty() && QDir(docsPath).exists();
 
-        const auto setupSettings = classic::settings::user_settings_open_game_setup_settings(
-            std::string(m_dataRoot.toUtf8().constData()));
-        if (setupSettings.has_documents_root) {
-            // The typed projection preserves canonical precedence over a stale compatibility alias.
-            docsPath = QDir::cleanPath(classic::toQString(setupSettings.documents_root).trimmed());
+        if (gamePathOut) {
+            *gamePathOut = gamePath;
         }
+        if (docsPathOut) {
+            *docsPathOut = docsPath;
+        }
+        return gameValid && docsValid;
     } catch (...) {
         return false;
     }
-
-    const bool gameValid = !gamePath.isEmpty() && QDir(gamePath).exists();
-    const bool docsValid = !docsPath.isEmpty() && QDir(docsPath).exists();
-
-    if (gamePathOut) {
-        *gamePathOut = gamePath;
-    }
-    if (docsPathOut) {
-        *docsPathOut = docsPath;
-    }
-
-    return gameValid && docsValid;
 }
 
 // ── Slot implementations ───────────────────────────────────────────
@@ -1568,11 +1479,6 @@ void MainWindow::onScanCrashLogs()
     }
 
     QString bootstrapError;
-    if (!ensureSettingsFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
-        QMessageBox::warning(this, QStringLiteral("Error"),
-                             QStringLiteral("Failed to initialize CLASSIC Settings.yaml:\n") + bootstrapError);
-        return;
-    }
     if (!ensureIgnoreFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
         QMessageBox::warning(this, QStringLiteral("Error"),
                              QStringLiteral("Failed to initialize CLASSIC Ignore.yaml:\n") + bootstrapError);
@@ -1591,22 +1497,16 @@ void MainWindow::onScanCrashLogs()
             return;
         }
 
-        const QString settingsPath = settingsFilePath(m_dataRoot);
         try {
-            auto ops = classic::settings::yaml_ops_new();
-            classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-
-            auto exePath = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
-            if (!exePath.empty()) {
-                setupGameExePath = QDir::cleanPath(classic::toQString(exePath).trimmed());
-            }
+            const auto setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
+            setupGameExePath = QDir::cleanPath(setup.gameExecutable.value_or(QString{}).trimmed());
         } catch (const std::exception&) {
             // Fall through -- default exe path below.
         }
 
         setupGameExePath = classic::gui::normalizeGameExecutablePath(setupGameExePath, setupGameRoot);
-        setupXseLogPath = resolveExistingXseLogPath(m_dataDir, QStringLiteral("Fallout4"), m_gameVersion,
-                                                    setupDocsPath);
+        setupXseLogPath =
+            resolveExistingXseLogPath(m_dataDir, QStringLiteral("Fallout4"), m_gameVersion, setupDocsPath);
     }
 
     m_btnScanCrashLogs->setEnabled(false);
@@ -1620,9 +1520,9 @@ void MainWindow::onScanCrashLogs()
                          .arg(format_elapsed_seconds(m_crashScanTimer)));
 
     m_scanController->startScan(m_dataRoot, m_dataDir, QStringLiteral("Fallout4"), m_gameVersion, m_showFormIdValues,
-                                 m_fcxMode, m_simplifyLogs, m_moveUnsolvedLogs, m_unsolvedLogsDestination,
-                                 m_maxConcurrentScans, m_editCustomFolder->text(), setupGameRoot, setupDocsPath,
-                                 setupGameExePath, setupXseLogPath, m_targetedInputPaths);
+                                m_fcxMode, m_simplifyLogs, m_moveUnsolvedLogs, m_unsolvedLogsDestination,
+                                m_maxConcurrentScans, m_editCustomFolder->text(), setupGameRoot, setupDocsPath,
+                                setupGameExePath, setupXseLogPath, m_targetedInputPaths);
 }
 
 void MainWindow::onScanGameFiles()
@@ -1634,17 +1534,8 @@ void MainWindow::onScanGameFiles()
         return;
     }
 
-    // Read game paths from YAML settings for the scan
-    QString gameExePath;
     QString gameRoot;
     QString docsPath;
-    // D-11 / CXXS-01 consumer migration: use the bridged GameId helper instead
-    // of hardcoding the literal "Fallout4". This proves classic::shared is
-    // callable from production C++ code.
-    auto gameIdRustStr = classic::shared::game_id_as_str(classic::shared::GameId::Fallout4);
-    QString gameName = QString::fromUtf8(gameIdRustStr.data(), static_cast<int>(gameIdRustStr.size()));
-
-    const QString settingsPath = settingsFilePath(m_dataRoot);
     if (!loadValidatedGameAndDocsPaths(&gameRoot, &docsPath)) {
         QMessageBox::warning(
             this, QStringLiteral("Missing Paths"),
@@ -1653,19 +1544,9 @@ void MainWindow::onScanGameFiles()
         return;
     }
 
-    try {
-        auto ops = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-
-        auto exePath = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Game EXE Path", "");
-        if (!exePath.empty()) {
-            gameExePath = QDir::cleanPath(classic::toQString(exePath).trimmed());
-        }
-    } catch (const std::exception&) {
-        // Fall through -- default exe path below.
-    }
-
-    gameExePath = classic::gui::normalizeGameExecutablePath(gameExePath, gameRoot);
+    const auto setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
+    const QString xseLogPath =
+        resolveExistingXseLogPath(m_dataDir, setup.managedGame, setup.gameVersionSelection, docsPath);
 
     m_btnScanGameFiles->setEnabled(false);
     m_btnScanGameFiles->setText(QStringLiteral("SCANNING..."));
@@ -1674,12 +1555,14 @@ void MainWindow::onScanGameFiles()
     // Update backup controller with the game root (may have changed)
     m_backupController->setGameRoot(gameRoot);
 
-    m_gameFilesController->startScan(gameExePath, gameRoot, docsPath, gameName, m_gameVersion);
+    m_gameFilesController->startScan(m_dataRoot, xseLogPath);
 }
 
 void MainWindow::onExit()
 {
-    saveSettings();
+    if (m_geometryInitialized && m_lastTabIndex >= 0) {
+        saveTabGeometry(m_lastTabIndex);
+    }
     QApplication::quit();
 }
 
@@ -2056,16 +1939,11 @@ void MainWindow::onTogglePapyrusMonitor()
         }
 
         QString papyrusLogPath;
-        QString settingsPath = settingsFilePath(m_dataRoot);
         try {
-            auto ops = classic::settings::yaml_ops_new();
-            classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-            auto logPath = classic::settings::yaml_ops_get_string(*ops, "CLASSIC_Settings.Papyrus Log Path", "");
-            if (!logPath.empty()) {
-                papyrusLogPath = classic::toQString(logPath);
-            }
+            const auto setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
+            papyrusLogPath = setup.papyrusLog.value_or(QString{});
         } catch (...) {
-            // Ignore
+            // The warning below explains the unavailable typed path to the user.
         }
 
         if (papyrusLogPath.isEmpty()) {

@@ -669,7 +669,7 @@ fn user_settings_preview_update(
 /// Explicitly previews first-run User Settings creation from Rust-owned published defaults.
 ///
 /// This operation never persists the missing document. The returned accepted preview remains
-/// revision-anchored and must be passed through the ordinary explicit commit operation.
+/// revision-anchored and must be passed through the explicit bootstrap commit operation.
 fn user_settings_preview_bootstrap(
     classic_root: &str,
     update: &ffi::UserSettingsUpdateDto,
@@ -724,6 +724,28 @@ fn user_settings_commit_update(
     base_revision: &str,
     update: &ffi::UserSettingsUpdateDto,
 ) -> Result<ffi::UserSettingsCommitResultDto, String> {
+    commit_user_settings_update(classic_root, base_revision, update, false)
+}
+
+/// Commits an explicitly previewed first-run bootstrap against a missing revision.
+///
+/// Keeping this operation separate prevents an ordinary CXX update commit from creating a
+/// missing document merely because the caller supplied the `missing` revision token.
+fn user_settings_commit_bootstrap(
+    classic_root: &str,
+    base_revision: &str,
+    update: &ffi::UserSettingsUpdateDto,
+) -> Result<ffi::UserSettingsCommitResultDto, String> {
+    commit_user_settings_update(classic_root, base_revision, update, true)
+}
+
+/// Reopens, revalidates, and commits one ordinary or bootstrap update request.
+fn commit_user_settings_update(
+    classic_root: &str,
+    base_revision: &str,
+    update: &ffi::UserSettingsUpdateDto,
+    bootstrap: bool,
+) -> Result<ffi::UserSettingsCommitResultDto, String> {
     let settings = UserSettings::open(Path::new(classic_root));
     if matches!(settings.revision(), Revision::Unavailable) {
         return Err(
@@ -742,7 +764,12 @@ fn user_settings_commit_update(
         });
     }
 
-    let accepted = match settings.preview_update(core_user_settings_update(update)) {
+    let preview = if bootstrap {
+        settings.preview_bootstrap(core_user_settings_update(update))
+    } else {
+        settings.preview_update(core_user_settings_update(update))
+    };
+    let accepted = match preview {
         CoreUserSettingsUpdatePreview::Accepted(accepted) => accepted,
         CoreUserSettingsUpdatePreview::Rejected(diagnostics) => {
             return Ok(ffi::UserSettingsCommitResultDto {
@@ -1918,6 +1945,13 @@ mod ffi {
 
         /// Commit a previously accepted User Settings Update under cross-process coordination.
         fn user_settings_commit_update(
+            classic_root: &str,
+            base_revision: &str,
+            update: &UserSettingsUpdateDto,
+        ) -> Result<UserSettingsCommitResultDto>;
+
+        /// Commit an explicitly previewed missing-document bootstrap.
+        fn user_settings_commit_bootstrap(
             classic_root: &str,
             base_revision: &str,
             update: &UserSettingsUpdateDto,

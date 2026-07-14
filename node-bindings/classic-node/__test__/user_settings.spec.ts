@@ -12,9 +12,11 @@ import { dirname, join } from "node:path";
 
 import {
   applyUserSettingsMigration,
+  commitUserSettingsBootstrap,
   commitUserSettingsUpdate,
   openUserSettings,
   planUserSettingsMigration,
+  previewUserSettingsBootstrap,
   previewUserSettingsUpdate,
   reverseUserSettingsMigrationPlan,
 } from "../index.js";
@@ -850,5 +852,53 @@ describe("User Settings Update commit", () => {
     const commitError = caught as Error & { code?: string };
     expect(commitError.code).toBe("commit_source_unavailable");
     expect(commitError.message).toContain("could not be reopened");
+  });
+});
+
+describe("User Settings bootstrap", () => {
+  test("user-settings-bootstrap-requires-explicit-preview-and-commit", () => {
+    const root = makeRoot();
+    const path = join(root, "CLASSIC Settings.yaml");
+    const update = {
+      managedGame: "Fallout4",
+      gameRoot: "C:/Games/Fallout 4",
+    };
+
+    const ordinaryPreview = previewUserSettingsUpdate(root, update);
+    expect(ordinaryPreview.accepted).toBe(false);
+    expect(ordinaryPreview.diagnostics.map(({ code }) => code)).toEqual([
+      "update_base_requires_bootstrap",
+    ]);
+    expect(() => readFileSync(path)).toThrow();
+
+    const ordinaryCommit = commitUserSettingsUpdate(root, "missing", update);
+    expect(ordinaryCommit.status).toBe("rejected");
+    expect(ordinaryCommit.diagnostics.map(({ code }) => code)).toEqual([
+      "update_base_requires_bootstrap",
+    ]);
+    expect(() => readFileSync(path)).toThrow();
+
+    const bootstrapPreview = previewUserSettingsBootstrap(root, update);
+    expect(bootstrapPreview.accepted).toBe(true);
+    expect(bootstrapPreview.baseRevision).toBe("missing");
+    expect(() => readFileSync(path)).toThrow();
+
+    const result = commitUserSettingsBootstrap(
+      root,
+      bootstrapPreview.baseRevision!,
+      update,
+    );
+    expect(result.status).toBe("committed");
+    expect(result.expectedRevision).toBe("missing");
+    expect(result.revision?.startsWith("sha256:")).toBe(true);
+    expect(result.diagnostics).toEqual([]);
+
+    const published = readFileSync(path, "utf8");
+    expect(published).toContain("CLASSIC_Settings:");
+    expect(published).toContain("Update Check:");
+    expect(published).toContain("Max Concurrent Scans:");
+    expect(openUserSettings(root).gameSetupSettings.gameRoot).toBe(
+      "C:/Games/Fallout 4",
+    );
   });
 });

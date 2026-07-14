@@ -65,13 +65,13 @@ The first-party C++ helpers centralize the Pages URL, `yaml-data-v*` tag namespa
 
 ### C++ (CXX)
 
-The C++ surface in [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/lib.rs) uses CXX shared structs for DTOs, opaque Rust types behind `Box` pointers, and `block_on()` for async-to-sync conversion. Fail-soft returns often use empty-string sentinels (e.g., `""` when a lookup misses) because Qt callers check `.isEmpty()` rather than catching exceptions. The bridge is compiled behind `#[cfg(windows)]` and produces a static library linked into `classic-cli` and `classic-gui`.
+The C++ surface in [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge/src/lib.rs) uses CXX shared structs for DTOs, opaque Rust types behind `Box` pointers, and `block_on()` for async-to-sync conversion. Fail-soft returns often use empty-string sentinels (e.g., `""` when a lookup misses) because Qt callers check `.isEmpty()` rather than catching exceptions. User Settings distinguishes ordinary update preview from explicit missing-document bootstrap preview, while `run_game_setup_intake_from_user_settings` keeps GUI setup preparation inside typed Rust groups. The bridge is compiled behind `#[cfg(windows)]` and produces a static library linked into `classic-cli` and `classic-gui`.
 
 See: [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md), [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md).
 
 ### Node (NAPI-RS)
 
-The Node surface in [`classic-node`](../../node-bindings/classic-node/src/lib.rs) uses `#[napi(object)]` structs for DTOs, `JsXxx` wrapper types with `inner:` fields holding core Rust types, and async Rust functions that map naturally to JavaScript promises. NAPI-RS auto-converts `snake_case` Rust identifiers to `camelCase` at the JS boundary. The committed [`index.d.ts`](../../node-bindings/classic-node/index.d.ts) is the tracked generated contract artifact.
+The Node surface in [`classic-node`](../../node-bindings/classic-node/src/lib.rs) uses `#[napi(object)]` structs for DTOs, `JsXxx` wrapper types with `inner:` fields holding core Rust types, and async Rust functions that map naturally to JavaScript promises. NAPI-RS auto-converts `snake_case` Rust identifiers to `camelCase` at the JS boundary. User Settings exposes separate ordinary-update and explicit-bootstrap preview/commit pairs, and Game Setup Intake accepts the complete typed setup path context. The committed [`index.d.ts`](../../node-bindings/classic-node/index.d.ts) is the tracked generated contract artifact.
 
 See: [`node-python-contract-map.md`](node-python-contract-map.md).
 

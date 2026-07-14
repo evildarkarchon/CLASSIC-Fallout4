@@ -95,6 +95,32 @@ fn from_config_uses_ini_folder_as_legacy_docs_fallback() {
 }
 
 #[test]
+fn optional_setup_fact_builders_preserve_paths_and_ignore_empty_values() {
+    let intake = GameSetupIntake::new(GameId::Fallout4, "auto")
+        .with_mods_root("D:/Mods")
+        .with_custom_scan_input("D:/Crash Logs")
+        .with_papyrus_log_path("C:/Logs/Papyrus.0.log");
+
+    assert_eq!(intake.mods_root.as_deref(), Some(Path::new("D:/Mods")));
+    assert_eq!(
+        intake.custom_scan_input.as_deref(),
+        Some(Path::new("D:/Crash Logs"))
+    );
+    assert_eq!(
+        intake.papyrus_log_path.as_deref(),
+        Some(Path::new("C:/Logs/Papyrus.0.log"))
+    );
+
+    let blank = GameSetupIntake::new(GameId::Fallout4, "auto")
+        .with_mods_root("")
+        .with_custom_scan_input("")
+        .with_papyrus_log_path("");
+    assert!(blank.mods_root.is_none());
+    assert!(blank.custom_scan_input.is_none());
+    assert!(blank.papyrus_log_path.is_none());
+}
+
+#[test]
 fn from_user_settings_prepares_typed_facts_without_loading_or_writing() {
     let root = tempfile::tempdir().expect("temporary CLASSIC root");
     let settings_path = root.path().join("CLASSIC Settings.yaml");
@@ -131,6 +157,15 @@ fn from_user_settings_prepares_typed_facts_without_loading_or_writing() {
         intake.docs_root.as_deref(),
         Some(Path::new("C:/Users/Test/Documents/My Games/Fallout4"))
     );
+    assert_eq!(intake.mods_root.as_deref(), Some(Path::new("D:/Mods")));
+    assert_eq!(
+        intake.custom_scan_input.as_deref(),
+        Some(Path::new("D:/Crash Logs"))
+    );
+    assert_eq!(
+        intake.papyrus_log_path.as_deref(),
+        Some(Path::new("C:/Logs/Papyrus.0.log"))
+    );
     assert_eq!(
         fs::read(settings_path).expect("read fixture after preparation"),
         bytes_before
@@ -149,6 +184,9 @@ fn from_missing_user_settings_still_builds_intake_for_path_detection() {
     assert_eq!(intake.game_root, None);
     assert_eq!(intake.game_exe_path, None);
     assert_eq!(intake.docs_root, None);
+    assert_eq!(intake.mods_root, None);
+    assert_eq!(intake.custom_scan_input, None);
+    assert_eq!(intake.papyrus_log_path, None);
     assert!(!root.path().join("CLASSIC Settings.yaml").exists());
 }
 

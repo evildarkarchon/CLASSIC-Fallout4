@@ -1556,6 +1556,12 @@ pub struct JsGameSetupIntakeOptions {
     pub game_exe_path: Option<String>,
     /// Optional documents root.
     pub docs_root: Option<String>,
+    /// Optional mods or staging root retained as typed setup context.
+    pub mods_root: Option<String>,
+    /// Optional custom Crash Log Scan input retained as typed setup context.
+    pub custom_scan_input: Option<String>,
+    /// Optional Papyrus log path retained as typed setup context.
+    pub papyrus_log_path: Option<String>,
     /// Optional XSE log path for loader version detection.
     pub xse_log_path: Option<String>,
 }
@@ -1646,6 +1652,15 @@ fn build_game_setup_intake(options: JsGameSetupIntakeOptions) -> Result<GameSetu
     }
     if let Some(docs_root) = optional_path(options.docs_root) {
         intake = intake.with_docs_root(docs_root);
+    }
+    if let Some(mods_root) = optional_path(options.mods_root) {
+        intake = intake.with_mods_root(mods_root);
+    }
+    if let Some(custom_scan_input) = optional_path(options.custom_scan_input) {
+        intake = intake.with_custom_scan_input(custom_scan_input);
+    }
+    if let Some(papyrus_log_path) = optional_path(options.papyrus_log_path) {
+        intake = intake.with_papyrus_log_path(papyrus_log_path);
     }
     if let Some(xse_log_path) = optional_path(options.xse_log_path) {
         intake = intake.with_xse_log_path(xse_log_path);

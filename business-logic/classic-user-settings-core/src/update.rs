@@ -357,7 +357,6 @@ impl UserSettings {
         update: UserSettingsUpdate,
         bootstrap: bool,
     ) -> UserSettingsUpdatePreview {
-
         let mut fields = Vec::new();
         let mut diagnostics = Vec::new();
 

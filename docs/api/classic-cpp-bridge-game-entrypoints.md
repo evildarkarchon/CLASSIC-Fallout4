@@ -66,6 +66,7 @@ This is currently the main bridge file where multiple crates meet.
 This file exposes Game Setup Intake plus the broader scanner/checker bridge functions in this namespace.
 
 - `run_game_setup_intake(...) -> GameSetupIntakeDto`
+- `run_game_setup_intake_from_user_settings(classic_root, xse_log_path) -> GameSetupIntakeDto`
 - `game_setup_intake_checks(...) -> Result<Vec<GameSetupCheckDto>>`
 - `game_setup_needs_path_detection(game_path, docs_path) -> GameSetupPathDetectionNeeds`
 
@@ -363,6 +364,7 @@ Bridge DTO shape:
 - `path_update_count`
 - `path_updates: Vec<GameSetupPathUpdateDto>` with ordered `kind` and `path` proposals; UTF-8-representable paths are exact, while other native paths follow the CXX bridge's established lossy string conversion
 - `game_root`
+- `game_executable`
 - `docs_root`
 
 Current bridge behavior that matters:
@@ -372,6 +374,10 @@ Current bridge behavior that matters:
 - non-empty `game_exe_path` is forwarded to intake for root fallback, auto-version detection, executable checks, and install-location checks
 - invalid `game_id` returns a fatal DTO rather than throwing across CXX
 - setup diagnostics come from Rust core and include registry-backed executable, documents, and XSE checks where metadata exists
+
+### `run_game_setup_intake_from_user_settings(classic_root, xse_log_path) -> GameSetupIntakeDto`
+
+This is the cohesive GUI adapter. Rust opens `UserSettings` read-only, builds `GameSetupIntake` with `from_user_settings(...)`, optionally adds the XSE-log detection hint, and returns the same DTO shape as the positional compatibility entry point. Opening and running intake never creates, migrates, or updates User Settings; returned path proposals still require caller consent and one later explicit update commit.
 
 ### `game_setup_intake_checks(game_id, game_version, game_root, docs_path, xse_log_path, game_exe_path) -> Result<Vec<GameSetupCheckDto>>`
 
@@ -428,7 +434,7 @@ Those DTOs still flatten the underlying Rust models heavily.
 
 ## 3. Rendered text plus typed setup DTOs
 
-`classic::scangame::run_game_setup_intake()` returns Rust-rendered report text, summary counts, and ordered typed path proposals for caller review. UTF-8-representable paths cross exactly; other native paths use the CXX bridge's established lossy string transport. Returning a proposal does not preview or persist User Settings.
+`classic::scangame::run_game_setup_intake()` and `run_game_setup_intake_from_user_settings()` return Rust-rendered report text, summary counts, the resolved executable, and ordered typed path proposals for caller review. UTF-8-representable paths cross exactly; other native paths use the CXX bridge's established lossy string transport. Returning a proposal does not preview or persist User Settings.
 
 `classic::scangame::game_setup_intake_checks()` exposes typed check records for callers that need structured state and propagates intake setup errors.
 

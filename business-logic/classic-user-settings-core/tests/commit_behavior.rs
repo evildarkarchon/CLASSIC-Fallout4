@@ -29,6 +29,20 @@ fn parsed_document(path: &Path) -> Yaml {
     documents.remove(0)
 }
 
+/// Parses the checked-in compatibility mirror generated from the Rust-owned default registry.
+fn published_defaults_document() -> Yaml {
+    let main_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .join("CLASSIC Data/databases/CLASSIC Main.yaml");
+    let main = parsed_document(&main_path);
+    let defaults = main["CLASSIC_Info"]["default_settings"]
+        .as_str()
+        .expect("default_settings must remain a YAML document literal");
+    let mut documents = parse_yaml_content("published User Settings defaults", defaults).unwrap();
+    assert_eq!(documents.len(), 1);
+    documents.remove(0)
+}
+
 /// Returns the accepted artifact for one valid Update Check change.
 fn accepted_update(
     settings: &UserSettings,
@@ -38,6 +52,19 @@ fn accepted_update(
         settings.preview_update(UserSettingsUpdate::new().with_update_check(value))
     else {
         panic!("valid Update Check change should be accepted");
+    };
+    accepted
+}
+
+/// Returns an accepted first-run artifact for one explicit Update Check override.
+fn accepted_bootstrap(
+    settings: &UserSettings,
+    value: bool,
+) -> classic_user_settings_core::AcceptedUserSettingsUpdate {
+    let UserSettingsUpdatePreview::Accepted(accepted) =
+        settings.preview_bootstrap(UserSettingsUpdate::new().with_update_check(value))
+    else {
+        panic!("a missing trusted snapshot should accept an explicit bootstrap preview");
     };
     accepted
 }
@@ -208,9 +235,31 @@ fn commit_preserves_untouched_invalid_values_and_legacy_aliases_semantically() {
 }
 
 #[test]
-fn missing_document_commit_creates_current_yaml_but_loses_to_a_concurrent_creator() {
+fn bootstrap_commit_renders_the_complete_published_default_registry() {
+    let root = tempfile::tempdir().unwrap();
+    let settings = UserSettings::open(root.path());
+    let UserSettingsUpdatePreview::Accepted(accepted) =
+        settings.preview_bootstrap(UserSettingsUpdate::new())
+    else {
+        panic!("a missing trusted snapshot should accept an explicit bootstrap preview");
+    };
+
+    let outcome = accepted.commit(root.path()).unwrap();
+
+    assert!(matches!(
+        outcome,
+        UserSettingsCommitOutcome::Committed { .. }
+    ));
+    assert_eq!(
+        parsed_document(&root.path().join("CLASSIC Settings.yaml")),
+        published_defaults_document()
+    );
+}
+
+#[test]
+fn bootstrap_commit_applies_requested_fields_but_loses_to_a_concurrent_creator() {
     let committed_root = tempfile::tempdir().unwrap();
-    let committed = accepted_update(&UserSettings::open(committed_root.path()), false);
+    let committed = accepted_bootstrap(&UserSettings::open(committed_root.path()), false);
 
     let outcome = committed.commit(committed_root.path()).unwrap();
 
@@ -226,7 +275,7 @@ fn missing_document_commit_creates_current_yaml_but_loses_to_a_concurrent_creato
     );
 
     let conflict_root = tempfile::tempdir().unwrap();
-    let stale = accepted_update(&UserSettings::open(conflict_root.path()), false);
+    let stale = accepted_bootstrap(&UserSettings::open(conflict_root.path()), false);
     let external = "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Update Check: true\n";
     let path = conflict_root.path().join("CLASSIC Settings.yaml");
     std::fs::write(&path, external).unwrap();

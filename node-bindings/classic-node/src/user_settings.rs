@@ -881,6 +881,21 @@ pub fn preview_user_settings_update(
     user_settings_update_preview_to_js(preview)
 }
 
+/// Opens User Settings relative to an explicit CLASSIC root and previews an
+/// explicit missing-document bootstrap without changing the filesystem.
+///
+/// Existing or unavailable documents are rejected with structured diagnostics;
+/// callers must use the returned `missing` revision for the matching commit.
+#[napi]
+pub fn preview_user_settings_bootstrap(
+    classic_root: String,
+    update: JsUserSettingsUpdate,
+) -> JsUserSettingsUpdatePreview {
+    let settings = UserSettings::open(classic_root);
+    let preview = settings.preview_bootstrap(user_settings_update_to_core(update));
+    user_settings_update_preview_to_js(preview)
+}
+
 /// Commits an update that was previously accepted against `base_revision`.
 ///
 /// The update is revalidated against the matching snapshot, then the core commit reopens the
@@ -895,6 +910,50 @@ pub fn commit_user_settings_update(
     classic_root: String,
     base_revision: String,
     update: JsUserSettingsUpdate,
+) -> napi::Result<JsUserSettingsCommitResult, String> {
+    commit_user_settings(
+        classic_root,
+        base_revision,
+        update,
+        UserSettingsCommitKind::Update,
+    )
+}
+
+/// Commits an explicitly previewed bootstrap against the `missing` revision.
+///
+/// The bootstrap publishes the complete Rust-owned defaults document plus the
+/// accepted update. Existing documents return a structured revision conflict,
+/// while validation rejection is returned without writing.
+///
+/// @throws an `Error` with a stable `commit_*` code when the source cannot be reopened or durable
+/// publication fails.
+#[napi]
+pub fn commit_user_settings_bootstrap(
+    classic_root: String,
+    base_revision: String,
+    update: JsUserSettingsUpdate,
+) -> napi::Result<JsUserSettingsCommitResult, String> {
+    commit_user_settings(
+        classic_root,
+        base_revision,
+        update,
+        UserSettingsCommitKind::Bootstrap,
+    )
+}
+
+/// Selects which core preview contract must be revalidated immediately before commit.
+#[derive(Clone, Copy)]
+enum UserSettingsCommitKind {
+    Update,
+    Bootstrap,
+}
+
+/// Reopens, revision-checks, revalidates, and commits one typed User Settings operation.
+fn commit_user_settings(
+    classic_root: String,
+    base_revision: String,
+    update: JsUserSettingsUpdate,
+    kind: UserSettingsCommitKind,
 ) -> napi::Result<JsUserSettingsCommitResult, String> {
     let settings = UserSettings::open(&classic_root);
     let actual_revision = revision_token(settings.revision());
@@ -911,7 +970,12 @@ pub fn commit_user_settings_update(
         ));
     }
 
-    let accepted = match settings.preview_update(user_settings_update_to_core(update)) {
+    let core_update = user_settings_update_to_core(update);
+    let preview = match kind {
+        UserSettingsCommitKind::Update => settings.preview_update(core_update),
+        UserSettingsCommitKind::Bootstrap => settings.preview_bootstrap(core_update),
+    };
+    let accepted = match preview {
         UserSettingsUpdatePreview::Accepted(accepted) => accepted,
         UserSettingsUpdatePreview::Rejected(diagnostics) => {
             return Ok(JsUserSettingsCommitResult {

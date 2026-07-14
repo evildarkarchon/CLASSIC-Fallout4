@@ -558,6 +558,9 @@ class UserSettingsSnapshot:
     def preview_update(self, update: UserSettingsUpdate) -> UserSettingsUpdatePreview:
         """Validate every requested field as one unit without writing."""
 
+    def preview_bootstrap(self, update: UserSettingsUpdate) -> UserSettingsUpdatePreview:
+        """Preview explicit creation of a missing document from Rust-owned defaults."""
+
     def plan_migration(self) -> UserSettingsMigrationPlanningOutcome:
         """Produce a deterministic, reversible plan without filesystem access."""
 

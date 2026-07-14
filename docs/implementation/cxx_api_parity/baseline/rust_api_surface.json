@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T10:31:21Z",
+  "generated_at_utc": "2026-07-14T11:21:55Z",
   "entries": [
     {
       "id": "b0d609f9ed78e468",
@@ -3680,6 +3680,27 @@
       }
     },
     {
+      "id": "f476636ba97cee6c",
+      "rustSymbol": "run_game_setup_intake_from_user_settings",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          },
+          {
+            "name": "xse_log_path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "GameSetupIntakeDto"
+      }
+    },
+    {
       "id": "ce2b902774c4ab1d",
       "rustSymbol": "wrye_parse_html_rows",
       "kind": "function",
@@ -3880,6 +3901,10 @@
         },
         {
           "name": "docs_root",
+          "type": "String"
+        },
+        {
+          "name": "game_executable",
           "type": "String"
         }
       ]
@@ -5365,6 +5390,31 @@
       }
     },
     {
+      "id": "e076f2617c474b29",
+      "rustSymbol": "user_settings_commit_bootstrap",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          },
+          {
+            "name": "base_revision",
+            "type": "&str"
+          },
+          {
+            "name": "update",
+            "type": "&UserSettingsUpdateDto"
+          }
+        ],
+        "returnType": "Result<UserSettingsCommitResultDto>"
+      }
+    },
+    {
       "id": "e2ad1a7f27fb5f5a",
       "rustSymbol": "user_settings_commit_update",
       "kind": "function",
@@ -5489,6 +5539,27 @@
           }
         ],
         "returnType": "UserSettingsMigrationPlanningOutcomeDto"
+      }
+    },
+    {
+      "id": "f114c6437912ff97",
+      "rustSymbol": "user_settings_preview_bootstrap",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          },
+          {
+            "name": "update",
+            "type": "&UserSettingsUpdateDto"
+          }
+        ],
+        "returnType": "UserSettingsUpdatePreviewDto"
       }
     },
     {

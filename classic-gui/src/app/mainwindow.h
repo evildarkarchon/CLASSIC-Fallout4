@@ -47,15 +47,27 @@ private:
     void initializeControllers();
     void connectSignals();
     void runStartupWorkflows();
+
+    /// Opens typed Game Setup User Settings, offers explicit bootstrap or migration, and refreshes the UI.
+    /// Read-only opens never repair or persist the settings document.
     void loadSettings();
+
+    /// Commits the editable staging and custom-scan paths as one revision-checked User Settings update.
     void saveSettings();
     void initResultsReportDir();
+
+    /// Runs typed Game Setup Intake and commits only paths explicitly accepted by the user.
+    /// Declined proposals and cancelled manual entry leave User Settings unchanged.
     void checkFirstRunPaths();
     QString findDataRoot() const;
+
+    /// Persists legacy geometry only when User Settings is trusted, current, and update-eligible.
     void saveTabGeometry(int tabIndex);
     void restoreTabGeometry(int tabIndex);
     bool validateCustomScanFolder(const QString& path);
     QString readCrashLogsDir() const;
+
+    /// Loads and validates the typed saved game and documents roots without interpreting raw settings keys.
     bool loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* docsPathOut) const;
     void checkForUpdates(bool explicitCheck);
     void updateTargetedInputUi();
@@ -78,6 +90,8 @@ private slots:
     void onBrowseCustom();
     void onCustomFolderEdited();
     void onScanCrashLogs();
+
+    /// Runs background Game Setup Intake from the typed User Settings projection and an XSE hint.
     void onScanGameFiles();
     void onExit();
     void onCrashScanProgress(float percent, const QString& status, int completed, int total);

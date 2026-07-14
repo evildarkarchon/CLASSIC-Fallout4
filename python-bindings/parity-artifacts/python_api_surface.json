@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T09:10:03.540598+00:00",
+  "generated_at_utc": "2026-07-14T11:46:39.469739+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -3909,11 +3909,11 @@
       "export_path": "GameSetupIntake.__init__",
       "parent_class": "GameSetupIntake",
       "kind": "method",
-      "arity": 6,
+      "arity": 9,
       "owner_module": "scangame",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
-      "signature": "def __init__( self, game_id: str, game_version: str = ..., game_root: Path | None = ..., docs_root: Path | None = ..., xse_log_path: Path | None = ..., game_exe_path: Path | None = ..., ) -> None:"
+      "signature": "def __init__( self, game_id: str, game_version: str = ..., game_root: Path | None = ..., docs_root: Path | None = ..., xse_log_path: Path | None = ..., game_exe_path: Path | None = ..., mods_root: Path | None = ..., custom_scan_input: Path | None = ..., papyrus_log_path: Path | None = ..., ) -> None:"
     },
     {
       "module": "classic_scangame",
@@ -8838,6 +8838,18 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "def plan_migration(self) -> UserSettingsMigrationPlanningOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "preview_bootstrap",
+      "export_path": "UserSettingsSnapshot.preview_bootstrap",
+      "parent_class": "UserSettingsSnapshot",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def preview_bootstrap(self, update: UserSettingsUpdate) -> UserSettingsUpdatePreview:"
     },
     {
       "module": "classic_user_settings",

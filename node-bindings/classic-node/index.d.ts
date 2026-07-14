@@ -1570,6 +1570,18 @@ export declare function clearSettingsCache(): void
 export declare function clearYamlCache(): void
 
 /**
+ * Commits an explicitly previewed bootstrap against the `missing` revision.
+ *
+ * The bootstrap publishes the complete Rust-owned defaults document plus the
+ * accepted update. Existing documents return a structured revision conflict,
+ * while validation rejection is returned without writing.
+ *
+ * @throws an `Error` with a stable `commit_*` code when the source cannot be reopened or durable
+ * publication fails.
+ */
+export declare function commitUserSettingsBootstrap(classicRoot: string, baseRevision: string, update: JsUserSettingsUpdate): JsUserSettingsCommitResult
+
+/**
  * Commits an update that was previously accepted against `base_revision`.
  *
  * The update is revalidated against the matching snapshot, then the core commit reopens the
@@ -2952,6 +2964,12 @@ export interface JsGameSetupIntakeOptions {
   gameExePath?: string
   /** Optional documents root. */
   docsRoot?: string
+  /** Optional mods or staging root retained as typed setup context. */
+  modsRoot?: string
+  /** Optional custom Crash Log Scan input retained as typed setup context. */
+  customScanInput?: string
+  /** Optional Papyrus log path retained as typed setup context. */
+  papyrusLogPath?: string
   /** Optional XSE log path for loader version detection. */
   xseLogPath?: string
 }
@@ -4476,6 +4494,15 @@ export declare function persistGameLocalPaths(localYamlPath: string, gameRoot?: 
  * directories, timestamps, or backups under the supplied CLASSIC root.
  */
 export declare function planUserSettingsMigration(classicRoot: string): JsUserSettingsMigrationPlanningResult
+
+/**
+ * Opens User Settings relative to an explicit CLASSIC root and previews an
+ * explicit missing-document bootstrap without changing the filesystem.
+ *
+ * Existing or unavailable documents are rejected with structured diagnostics;
+ * callers must use the returned `missing` revision for the matching commit.
+ */
+export declare function previewUserSettingsBootstrap(classicRoot: string, update: JsUserSettingsUpdate): JsUserSettingsUpdatePreview
 
 /**
  * Opens User Settings relative to an explicit CLASSIC root and validates all

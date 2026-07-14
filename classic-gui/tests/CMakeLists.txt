@@ -171,6 +171,12 @@ add_classic_gui_qt_test(classic-gui-test-gamepathutils
     test_gamepathutils.cpp
 )
 
+add_classic_gui_qt_test(classic-gui-test-game-setup-user-settings
+    test_gamesetupusersettings.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/gamesetupusersettings.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-game-setup-user-settings)
+
 add_classic_gui_qt_test(classic-gui-test-scan-settings-wiring
     test_scan_settings_wiring.cpp
 )

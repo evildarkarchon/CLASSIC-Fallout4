@@ -24,6 +24,10 @@ private slots:
     void mainwindow_does_not_use_deprecated_vr_mode_setting();
     /// Verifies that MainWindow honors canonical custom-scan reads, writes, and clears.
     void mainwindow_honors_canonical_custom_scan_path();
+    /// Verifies that detected and manual paths reach one final consent-gated commit.
+    void mainwindow_defers_setup_commit_until_manual_completion();
+    /// Verifies that legacy geometry persistence cannot bypass User Settings migration policy.
+    void geometry_writer_refuses_non_current_user_settings();
     void mainwindow_preserves_legacy_settings_on_failed_migration();
     void update_worker_declares_not_published_classification();
     void mainwindow_handles_not_published_without_error_dialog();
@@ -78,8 +82,7 @@ void ScanSettingsWiringTests::scan_worker_forwards_runtime_flags_to_rust_config(
              "ScanWorker should forward gameVersion to scan_run_execute()");
     QVERIFY2(sourceText.contains(QStringLiteral("showFormIdValues")),
              "ScanWorker should forward showFormIdValues to scan_run_execute()");
-    QVERIFY2(sourceText.contains(QStringLiteral("fcxMode")),
-             "ScanWorker should forward fcxMode to scan_run_execute()");
+    QVERIFY2(sourceText.contains(QStringLiteral("fcxMode")), "ScanWorker should forward fcxMode to scan_run_execute()");
     QVERIFY2(sourceText.contains(QStringLiteral("simplifyLogs")),
              "ScanWorker should forward simplifyLogs to scan_run_execute()");
     QVERIFY2(sourceText.contains(QStringLiteral("request.setup_xse_log_path = classic::toRustString(setupXseLogPath)")),
@@ -100,14 +103,12 @@ void ScanSettingsWiringTests::scan_controller_forwards_flags_to_worker()
     const qsizetype callEnd = sourceText.indexOf(QStringLiteral(");"), callStart);
     QVERIFY2(callEnd > callStart, "ScanController should have a complete ScanWorker::doScan() call");
     const QString call = sourceText.mid(callStart, callEnd - callStart);
-    for (const QString& expected : {QStringLiteral("gameVersion"), QStringLiteral("showFormIdValues"),
-                                    QStringLiteral("fcxMode"), QStringLiteral("simplifyLogs"),
-                                    QStringLiteral("moveUnsolvedLogs"), QStringLiteral("unsolvedLogsDestination"),
-                                    QStringLiteral("maxConcurrentScans"), QStringLiteral("baseDir"),
-                                    QStringLiteral("customFolder"), QStringLiteral("setupGameRoot"),
-                                    QStringLiteral("setupDocsRoot"), QStringLiteral("setupGameExePath"),
-                                    QStringLiteral("setupXseLogPath"), QStringLiteral("targetedMode"),
-                                    QStringLiteral("targetedInputs")}) {
+    for (const QString& expected :
+         {QStringLiteral("gameVersion"), QStringLiteral("showFormIdValues"), QStringLiteral("fcxMode"),
+          QStringLiteral("simplifyLogs"), QStringLiteral("moveUnsolvedLogs"), QStringLiteral("unsolvedLogsDestination"),
+          QStringLiteral("maxConcurrentScans"), QStringLiteral("baseDir"), QStringLiteral("customFolder"),
+          QStringLiteral("setupGameRoot"), QStringLiteral("setupDocsRoot"), QStringLiteral("setupGameExePath"),
+          QStringLiteral("setupXseLogPath"), QStringLiteral("targetedMode"), QStringLiteral("targetedInputs")}) {
         QVERIFY2(call.contains(expected),
                  qPrintable(QStringLiteral("ScanController should pass %1 to ScanWorker::doScan()").arg(expected)));
     }
@@ -177,10 +178,10 @@ void ScanSettingsWiringTests::mainwindow_forwards_game_version_to_game_files_con
 
     const QString sourceText = QString::fromUtf8(file.readAll());
 
-    const QRegularExpression callRegex(QStringLiteral(
-        R"(m_gameFilesController->startScan\(\s*gameExePath,\s*gameRoot,\s*docsPath,\s*gameName,\s*m_gameVersion\s*\))"));
+    const QRegularExpression callRegex(
+        QStringLiteral(R"(m_gameFilesController->startScan\(\s*m_dataRoot,\s*xseLogPath\s*\))"));
     QVERIFY2(callRegex.match(sourceText).hasMatch(),
-             "MainWindow should forward the saved game version to GameFilesController::startScan()");
+             "MainWindow should let Rust reopen the cohesive typed Game Setup group for game-file intake");
 }
 
 void ScanSettingsWiringTests::game_files_controller_forwards_game_version_to_worker()
@@ -192,12 +193,11 @@ void ScanSettingsWiringTests::game_files_controller_forwards_game_version_to_wor
 
     const QString sourceText = QString::fromUtf8(file.readAll());
 
-    QVERIFY2(sourceText.contains(QStringLiteral("const QString& gameVersion")),
-             "GameFilesController::startScan() should receive the selected game version");
-    const QRegularExpression workerCallRegex(
-        QStringLiteral(R"(worker->doScan\((?:.|\n)*?gameName,\s*gameVersion\s*\))"));
+    QVERIFY2(sourceText.contains(QStringLiteral("const QString& classicRoot")),
+             "GameFilesController::startScan() should receive the CLASSIC root for typed settings open");
+    const QRegularExpression workerCallRegex(QStringLiteral(R"(worker->doScan\(classicRoot,\s*xseLogPath\))"));
     QVERIFY2(workerCallRegex.match(sourceText).hasMatch(),
-             "GameFilesController should pass gameVersion through to GameFilesWorker::doScan()");
+             "GameFilesController should pass the typed-open root and detection hint to its worker");
 }
 
 void ScanSettingsWiringTests::game_files_worker_forwards_game_version_to_setup_intake()
@@ -209,16 +209,12 @@ void ScanSettingsWiringTests::game_files_worker_forwards_game_version_to_setup_i
 
     const QString sourceText = QString::fromUtf8(file.readAll());
 
-    QVERIFY2(sourceText.contains(QStringLiteral("const QString& gameVersion")),
-             "GameFilesWorker::doScan() should receive the selected game version");
-    QVERIFY2(!sourceText.contains(QStringLiteral("Q_UNUSED(gameExePath)")),
-             "GameFilesWorker should not discard the configured executable path");
-    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(gameVersion)")),
-             "GameFilesWorker should forward gameVersion to run_game_setup_intake()");
-    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(gameExePath)")),
-             "GameFilesWorker should forward the configured executable path to setup intake");
-    QVERIFY2(!sourceText.contains(QStringLiteral("::rust::Str(\"auto\", 4)")),
-             "GameFilesWorker should not force setup intake back to auto detection");
+    QVERIFY2(sourceText.contains(QStringLiteral("run_game_setup_intake_from_user_settings")),
+             "GameFilesWorker should invoke the cohesive typed User Settings intake adapter");
+    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(classicRoot)")),
+             "GameFilesWorker should let Rust open User Settings at the selected CLASSIC root");
+    QVERIFY2(!sourceText.contains(QStringLiteral("run_game_setup_intake(")),
+             "GameFilesWorker should not rebuild Game Setup facts from positional GUI strings");
 }
 
 void ScanSettingsWiringTests::game_files_worker_marks_required_actions_as_attention()
@@ -263,13 +259,13 @@ void ScanSettingsWiringTests::scan_worker_handles_move_unsolved_and_max_concurre
 
     const QString sourceText = QString::fromUtf8(file.readAll());
     QVERIFY2(sourceText.contains(QStringLiteral("moveUnsolvedLogs")),
-              "ScanWorker should receive moveUnsolvedLogs setting");
+             "ScanWorker should receive moveUnsolvedLogs setting");
     QVERIFY2(sourceText.contains(QStringLiteral("unsolvedLogsDestination")),
              "ScanWorker should receive the custom Unsolved Logs Destination setting");
     QVERIFY2(sourceText.contains(QStringLiteral("request.unsolved_logs_destination")),
              "ScanWorker should forward the custom Unsolved Logs Destination to Rust");
     QVERIFY2(sourceText.contains(QStringLiteral("maxConcurrentScans")),
-              "ScanWorker should receive maxConcurrentScans setting");
+             "ScanWorker should receive maxConcurrentScans setting");
 }
 
 void ScanSettingsWiringTests::scan_worker_uses_progress_enabled_batch_api()
@@ -370,22 +366,64 @@ void ScanSettingsWiringTests::mainwindow_honors_canonical_custom_scan_path()
     };
 
     const QString loadBody = extractFunctionBody(QStringLiteral("loadSettings()"));
-    QVERIFY2(loadBody.contains(QStringLiteral("user_settings_open_crash_log_scan_settings")),
-             "MainWindow should load the effective custom path through typed User Settings precedence");
-    QVERIFY2(loadBody.contains(QStringLiteral("has_custom_scan_input")) &&
-                 loadBody.contains(QStringLiteral("custom_scan_input")),
-             "MainWindow should display the effective canonical-or-alias custom scan path");
+    QVERIFY2(loadBody.contains(QStringLiteral("GameSetupUserSettings::open")) &&
+                 loadBody.contains(QStringLiteral("setup.customScanInput")),
+             "MainWindow should display Rust's canonical-or-alias custom scan projection");
 
     const QString saveBody = extractFunctionBody(QStringLiteral("saveSettings()"));
-    QVERIFY2(saveBody.contains(QStringLiteral("CLASSIC_Settings.SCAN Custom Path")),
-             "MainWindow should persist custom scan edits to the canonical User Settings key");
-    QVERIFY2(!saveBody.contains(QStringLiteral("CLASSIC_Settings.Custom Scan Folder")),
-             "MainWindow should not leave edits only on the lower-precedence GUI-era alias");
+    QVERIFY2(saveBody.contains(QStringLiteral("changes.customScanInput")) &&
+                 saveBody.contains(QStringLiteral("commitSelectedPaths")),
+             "MainWindow should save custom scan edits through one typed User Settings Update");
+    QVERIFY2(!saveBody.contains(QStringLiteral("CLASSIC_Settings.")),
+             "MainWindow should not interpret raw User Settings keys while saving setup paths");
 
     const QString editedBody = extractFunctionBody(QStringLiteral("onCustomFolderEdited()"));
     QCOMPARE(editedBody.count(QStringLiteral("saveSettings();")), 3);
     QVERIFY2(!editedBody.contains(QStringLiteral("CLASSIC_Settings.Custom Scan Folder")),
              "MainWindow should not clear only the GUI-era alias while a canonical value remains active");
+}
+
+void ScanSettingsWiringTests::mainwindow_defers_setup_commit_until_manual_completion()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString source = QString::fromUtf8(file.readAll());
+    const qsizetype start = source.indexOf(QStringLiteral("void MainWindow::checkFirstRunPaths()"));
+    const qsizetype end = source.indexOf(QStringLiteral("\nQString MainWindow::findDataRoot()"), start);
+    QVERIFY2(start >= 0 && end > start, "checkFirstRunPaths should be readable as one function body");
+    const QString body = source.mid(start, end - start);
+
+    QCOMPARE(body.count(QStringLiteral("commitChanges(changes)")), 1);
+    const qsizetype manualDialog = body.indexOf(QStringLiteral("ManualPathDialog dialog"));
+    const qsizetype finalCommit = body.indexOf(QStringLiteral("commitChanges(changes)"));
+    QVERIFY2(manualDialog >= 0 && finalCommit > manualDialog,
+             "Accepted detected paths must wait for manual completion before the single commit");
+    QVERIFY2(body.contains(QStringLiteral("bootstrapWithSelectedPaths")) &&
+                 body.contains(QStringLiteral("commitSelectedPaths")),
+             "Missing and existing documents should use distinct explicitly named commit operations");
+}
+
+void ScanSettingsWiringTests::geometry_writer_refuses_non_current_user_settings()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString source = QString::fromUtf8(file.readAll());
+    const qsizetype start = source.indexOf(QStringLiteral("void MainWindow::saveTabGeometry("));
+    const qsizetype end = source.indexOf(QStringLiteral("\nvoid MainWindow::restoreTabGeometry("), start);
+    QVERIFY2(start >= 0 && end > start, "saveTabGeometry should be readable as one function body");
+    const QString body = source.mid(start, end - start);
+
+    const qsizetype eligibilityGuard = body.indexOf(QStringLiteral("setup.commitEligibility"));
+    const qsizetype rawSave = body.indexOf(QStringLiteral("yaml_ops_save_file"));
+    QVERIFY2(body.contains(QStringLiteral("setup.classification")) && eligibilityGuard >= 0,
+             "Geometry writes must require a trusted current User Settings snapshot");
+    QVERIFY2(rawSave > eligibilityGuard, "Migration eligibility must be checked before the legacy geometry writer");
 }
 
 void ScanSettingsWiringTests::mainwindow_preserves_legacy_settings_on_failed_migration()
@@ -396,16 +434,16 @@ void ScanSettingsWiringTests::mainwindow_preserves_legacy_settings_on_failed_mig
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
-    const QRegularExpression successOnlyRemovalRegex(QStringLiteral(
-        R"(if\s*\(moved\s*&&\s*QFile::exists\(settingsPath\)\)\s*\{\s*QFile::remove\(legacySettingsPath\);(?:.|\n)*?return\s+true;\s*\})"));
-    QVERIFY2(successOnlyRemovalRegex.match(sourceText).hasMatch(),
-             "MainWindow settings bootstrap should only remove the legacy settings file after migration succeeds");
-    const QRegularExpression atomicFallbackRegex(QStringLiteral(
-        R"(QSaveFile\s+\w+\(settingsPath\);(?:.|\n)*?setDirectWriteFallback\(false\);(?:.|\n)*?commit\(\))"));
-    QVERIFY2(atomicFallbackRegex.match(sourceText).hasMatch(),
-             "MainWindow settings bootstrap should use QSaveFile for an atomic publish when rename fails");
-    QVERIFY2(!sourceText.contains(QStringLiteral("QFile::copy(legacySettingsPath, settingsPath)")),
-             "MainWindow settings bootstrap should not use QFile::copy directly for legacy settings migration");
+    QVERIFY2(sourceText.contains(QStringLiteral("user_settings_plan_migration")) &&
+                 sourceText.contains(QStringLiteral("QMessageBox::question")),
+             "MainWindow should present a pure migration plan before any migration write");
+    QVERIFY2(sourceText.contains(QStringLiteral("user_settings_apply_migration")) &&
+                 sourceText.contains(QStringLiteral("receipt.backup_revision")),
+             "MainWindow should apply migration through the verified backup receipt contract");
+    QVERIFY2(sourceText.contains(QStringLiteral("user_settings_restore_migration")),
+             "MainWindow should offer explicit restoration through the retained migration receipt");
+    QVERIFY2(!sourceText.contains(QStringLiteral("QFile::rename")) && !sourceText.contains(QStringLiteral("QSaveFile")),
+             "MainWindow should not implement migration publication itself");
 }
 
 void ScanSettingsWiringTests::update_worker_declares_not_published_classification()
@@ -489,8 +527,7 @@ void ScanSettingsWiringTests::settings_dialog_handles_not_published_as_benign()
     const QString branch = sourceText.mid(branchStart, nextBranch - branchStart);
     QVERIFY2(branch.contains(QStringLiteral("No update information available.")),
              "SettingsDialog should show a benign not_published message");
-    QVERIFY2(!branch.contains(QStringLiteral("Error:")),
-             "SettingsDialog must not render not_published as an error");
+    QVERIFY2(!branch.contains(QStringLiteral("Error:")), "SettingsDialog must not render not_published as an error");
 }
 
 void ScanSettingsWiringTests::mainwindow_blocks_game_files_scan_when_paths_unresolved()
@@ -550,9 +587,9 @@ void ScanSettingsWiringTests::mainwindow_blocks_crash_logs_scan_when_fcx_enabled
     QVERIFY2(
         guardRegex.match(body).hasMatch(),
         "MainWindow crash-log scan should gate FCX mode on validated paths inside onScanCrashLogs() and return early");
-    QVERIFY2(body.contains(
-                 QStringLiteral("classic::gui::normalizeGameExecutablePath(setupGameExePath, setupGameRoot)")),
-             "MainWindow FCX scan should use the shared executable normalization rule");
+    QVERIFY2(
+        body.contains(QStringLiteral("classic::gui::normalizeGameExecutablePath(setupGameExePath, setupGameRoot)")),
+        "MainWindow FCX scan should use the shared executable normalization rule");
 }
 
 void ScanSettingsWiringTests::mainwindow_resets_stale_game_exe_path_outside_selected_root()
@@ -577,8 +614,11 @@ void ScanSettingsWiringTests::mainwindow_resets_stale_game_exe_path_outside_sele
 
     const QString body = extractFunctionBody(QStringLiteral("onScanGameFiles()"));
     QVERIFY2(!body.isEmpty(), "MainWindow game-file scan slot should exist");
-    QVERIFY2(body.contains(QStringLiteral("classic::gui::normalizeGameExecutablePath(gameExePath, gameRoot)")),
-             "MainWindow should use the shared executable normalization rule");
+    QVERIFY2(body.contains(QStringLiteral("GameSetupUserSettings::open")) &&
+                 body.contains(QStringLiteral("startScan(m_dataRoot, xseLogPath)")),
+             "MainWindow should delegate executable and path interpretation to typed Rust intake");
+    QVERIFY2(!body.contains(QStringLiteral("yaml_ops")) && !body.contains(QStringLiteral("CLASSIC_Settings.")),
+             "MainWindow game-file scan should not reinterpret raw setup settings");
 }
 
 void ScanSettingsWiringTests::mainwindow_uses_exe_relative_crash_logs_dir()
@@ -691,12 +731,12 @@ void ScanSettingsWiringTests::gui_honors_canonical_documents_path()
              qPrintable(QStringLiteral("Unable to read %1").arg(mainWindowPath)));
     const QString mainWindowSource = QString::fromUtf8(mainWindowFile.readAll());
 
-    QVERIFY2(mainWindowSource.count(QStringLiteral("user_settings_open_game_setup_settings(")) >= 2,
-             "MainWindow should use Rust's canonical documents-path projection for setup and scan validation");
-    QVERIFY2(mainWindowSource.count(QStringLiteral("CLASSIC_Settings.Documents Folder Path")) >= 2,
-             "MainWindow should persist detected and manually selected documents paths to the canonical key");
-    QVERIFY2(mainWindowSource.count(QStringLiteral("CLASSIC_Settings.INI Folder Path")) >= 2,
-             "MainWindow should keep the legacy documents-path alias synchronized");
+    QVERIFY2(mainWindowSource.contains(QStringLiteral("GameSetupUserSettings::open")) &&
+                 mainWindowSource.contains(QStringLiteral("changes.documentsRoot")),
+             "MainWindow should read and update documents paths through the typed Game Setup adapter");
+    QVERIFY2(!mainWindowSource.contains(QStringLiteral("CLASSIC_Settings.Documents Folder Path")) &&
+                 !mainWindowSource.contains(QStringLiteral("CLASSIC_Settings.INI Folder Path")),
+             "MainWindow should not interpret canonical or legacy documents-path keys");
 
     const QString settingsDialogPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/settingsdialog.cpp");
     QFile settingsDialogFile(settingsDialogPath);
@@ -1170,13 +1210,14 @@ void ScanSettingsWiringTests::scan_worker_skips_unsolved_relocation_for_targeted
 
     const QString sourceText = QString::fromUtf8(sourceFile.readAll());
     QVERIFY2(sourceText.contains(QStringLiteral("request.move_unsolved_logs = moveUnsolvedLogs")),
-              "ScanWorker should pass the unsolved relocation setting to Rust");
-    QVERIFY2(sourceText.contains(QStringLiteral("request.unsolved_logs_destination = classic::toRustString(unsolvedLogsDestination)")),
+             "ScanWorker should pass the unsolved relocation setting to Rust");
+    QVERIFY2(sourceText.contains(
+                 QStringLiteral("request.unsolved_logs_destination = classic::toRustString(unsolvedLogsDestination)")),
              "ScanWorker should pass the destination setting to Rust without constructing the canonical path");
     QVERIFY2(sourceText.contains(QStringLiteral("request.targeted_mode = targetedMode")),
              "ScanWorker should pass targetedMode to Rust");
-    const QRegularExpression scanRunCallRegex(QStringLiteral(
-        R"(scan_run_execute\(\s*request,\s*progress_callback,\s*\*m_cancellationToken\s*\))"));
+    const QRegularExpression scanRunCallRegex(
+        QStringLiteral(R"(scan_run_execute\(\s*request,\s*progress_callback,\s*\*m_cancellationToken\s*\))"));
     QVERIFY2(scanRunCallRegex.match(sourceText).hasMatch(),
              "ScanWorker should pass the scan request and cancellation token to Rust");
     QVERIFY2(sourceText.contains(QStringLiteral("scan_cancellation_token_cancel(*m_cancellationToken)")),
@@ -1200,8 +1241,8 @@ void ScanSettingsWiringTests::scan_worker_counts_per_log_failures_without_scan_l
 
     const qsizetype outerCatchStart = sourceText.indexOf(QStringLiteral("} catch (const rust::Error& e) {"));
     QVERIFY2(outerCatchStart > 0, "ScanWorker should have an outer rust::Error handler for setup failures");
-    const qsizetype outerCatchEnd = sourceText.indexOf(QStringLiteral("} catch (const std::exception& e)"),
-                                                       outerCatchStart);
+    const qsizetype outerCatchEnd =
+        sourceText.indexOf(QStringLiteral("} catch (const std::exception& e)"), outerCatchStart);
     const QString outerCatchBlock = sourceText.mid(outerCatchStart, outerCatchEnd - outerCatchStart);
     QVERIFY2(outerCatchBlock.contains(QStringLiteral("emit error(")),
              "ScanWorker should reserve scan-level error emission for setup failures outside per-log work");

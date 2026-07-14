@@ -929,8 +929,16 @@ def test_scangame_game_setup_intake_helpers_smoke() -> None:
             str(docs_root),
             None,
             str(configured_exe),
+            fixture_root / "Mods",
+            fixture_root / "Crash Logs",
+            docs_root / "Logs" / "Script" / "Papyrus.0.log",
         )
         assert intake.game_exe_path == str(configured_exe)
+        assert intake.mods_root == str(fixture_root / "Mods")
+        assert intake.custom_scan_input == str(fixture_root / "Crash Logs")
+        assert intake.papyrus_log_path == str(
+            docs_root / "Logs" / "Script" / "Papyrus.0.log"
+        )
         result = classic_scangame.run_game_setup_intake(intake)
 
     assert isinstance(result, classic_scangame.GameSetupIntakeResult)

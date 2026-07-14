@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T07:56:34.055765+00:00",
+  "generated_at_utc": "2026-07-14T11:35:10.174133+00:00",
   "summary": {
     "tier1_contract_total": 1237,
     "tier1_matched": 1237,
@@ -18458,7 +18458,7 @@
       "expected_python_kind": "method",
       "actual_python_kind": "method",
       "expected_python_arity": null,
-      "actual_python_arity": 6
+      "actual_python_arity": 9
     },
     {
       "id": "scangame.setup.GameSetupCheck",

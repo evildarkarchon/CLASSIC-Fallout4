@@ -238,17 +238,20 @@ void MainWindowGeometryTests::first_run_bootstraps_and_updates_local_yaml()
     const QString firstRunBody = extractFunctionBody(QStringLiteral("checkFirstRunPaths()"));
     QVERIFY2(!firstRunBody.isEmpty(), "Could not locate MainWindow::checkFirstRunPaths()");
 
-    const qsizetype needsCheck = firstRunBody.indexOf(QStringLiteral("game_setup_needs_path_detection"));
+    const qsizetype intakeRun = firstRunBody.indexOf(QStringLiteral("GameSetupUserSettings::runIntake"));
+    const qsizetype acceptedCommit = firstRunBody.indexOf(QStringLiteral("commitSelectedPaths"));
     const qsizetype firstLocalYamlSync = firstRunBody.indexOf(QStringLiteral("saveLocalYamlPaths"));
-    const qsizetype dialogExec = firstRunBody.indexOf(QStringLiteral("dlg.exec()"));
-    const qsizetype finalLocalYamlSync = firstRunBody.lastIndexOf(QStringLiteral("saveLocalYamlPaths"));
 
     QVERIFY2(firstLocalYamlSync >= 0,
              "First-run path detection should persist the Fallout 4 Local YAML after successful path resolution");
-    QVERIFY2(needsCheck >= 0 && firstLocalYamlSync > needsCheck,
-             "First-run path detection should wait until path detection completes before syncing Local YAML");
-    QVERIFY2(dialogExec < 0 || finalLocalYamlSync > dialogExec,
-             "Manual path entry should sync Local YAML only after the dialog result is known");
+    QVERIFY2(intakeRun >= 0 && acceptedCommit > intakeRun && firstLocalYamlSync > acceptedCommit,
+             "First-run setup should run typed intake and commit accepted paths before syncing Local YAML");
+    QVERIFY2(firstRunBody.contains(QStringLiteral("if (choice != QMessageBox::Yes)")),
+             "Rejecting detected paths should return before either User Settings or Local YAML is written");
+    QVERIFY2(firstRunBody.contains(QStringLiteral("if (hasAcceptedChanges && !commitChanges(changes))")),
+             "Accepted detected and manual paths should enter one final atomic commit");
+    QVERIFY2(!firstRunBody.contains(QStringLiteral("CLASSIC_Settings.")),
+             "First-run setup should not interpret raw User Settings keys");
 }
 
 void MainWindowGeometryTests::manual_path_dialog_validates_before_accepting()

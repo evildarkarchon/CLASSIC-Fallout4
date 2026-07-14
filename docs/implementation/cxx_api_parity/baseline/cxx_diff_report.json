@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 396,
-    "current_total": 396,
-    "matched": 396,
+    "contract_total": 399,
+    "current_total": 399,
+    "matched": 399,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -1545,6 +1545,14 @@
       "reason": "-"
     },
     {
+      "id": "f476636ba97cee6c",
+      "rustSymbol": "run_game_setup_intake_from_user_settings",
+      "kind": "function",
+      "bridgeModule": "scangame",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "ce2b902774c4ab1d",
       "rustSymbol": "wrye_parse_html_rows",
       "kind": "function",
@@ -2113,6 +2121,14 @@
       "reason": "-"
     },
     {
+      "id": "e076f2617c474b29",
+      "rustSymbol": "user_settings_commit_bootstrap",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "e2ad1a7f27fb5f5a",
       "rustSymbol": "user_settings_commit_update",
       "kind": "function",
@@ -2163,6 +2179,14 @@
     {
       "id": "ceb7da066f8d0590",
       "rustSymbol": "user_settings_plan_migration",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f114c6437912ff97",
+      "rustSymbol": "user_settings_preview_bootstrap",
       "kind": "function",
       "bridgeModule": "settings",
       "status": "matched",

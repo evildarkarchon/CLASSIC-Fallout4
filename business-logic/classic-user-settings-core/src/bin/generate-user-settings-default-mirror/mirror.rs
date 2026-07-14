@@ -2,7 +2,8 @@
 
 use super::default_settings::{
     ARTICLES_TAB_DEFAULT, BACKUPS_TAB_DEFAULT, MAIN_TAB_DEFAULT, MIRROR_SETTINGS, PublishedDefault,
-    RESULTS_TAB_DEFAULT, USER_SETTINGS_SCHEMA_MAJOR, USER_SETTINGS_SCHEMA_MINOR, registry_is_valid,
+    RESULTS_TAB_DEFAULT, USER_SETTINGS_SCHEMA_MAJOR, USER_SETTINGS_SCHEMA_MINOR,
+    published_defaults_document, registry_is_valid,
 };
 use classic_settings_core::{Yaml, parse_yaml_content};
 
@@ -23,6 +24,7 @@ fn render_compatibility_mirror() -> String {
     debug_assert_eq!(BACKUPS_TAB_DEFAULT, geometry_default("backups_tab"));
     debug_assert_eq!(ARTICLES_TAB_DEFAULT, geometry_default("articles_tab"));
     debug_assert_eq!(RESULTS_TAB_DEFAULT, geometry_default("results_tab"));
+    debug_assert!(published_defaults_document().is_ok());
     let mut output =
         format!("schema_version: \"{USER_SETTINGS_SCHEMA_MAJOR}.{USER_SETTINGS_SCHEMA_MINOR}\"\n");
     output.push_str(

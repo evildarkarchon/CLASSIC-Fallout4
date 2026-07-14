@@ -438,6 +438,42 @@ def test_accepted_user_settings_update_commit_publishes_preserved_document(
     assert "community_frontend:" in committed_content
 
 
+def test_missing_user_settings_requires_explicit_bootstrap_preview(
+    tmp_path: Path,
+) -> None:
+    """Create the complete Rust-owned defaults only through explicit bootstrap."""
+    settings_path = tmp_path / "CLASSIC Settings.yaml"
+    snapshot = classic_user_settings.open_user_settings(str(tmp_path))
+    update = classic_user_settings.UserSettingsUpdate()
+    update.set_game_version_selection("VR")
+
+    ordinary = snapshot.preview_update(update)
+
+    assert ordinary.accepted is False
+    assert [diagnostic.code for diagnostic in ordinary.diagnostics] == [
+        "update_base_requires_bootstrap"
+    ]
+    assert not settings_path.exists()
+
+    bootstrap = snapshot.preview_bootstrap(update)
+
+    assert bootstrap.accepted is True
+    assert bootstrap.base_revision == "missing"
+    assert not settings_path.exists()
+
+    outcome = bootstrap.commit(str(tmp_path))
+
+    assert outcome.status == "committed"
+    document = settings_path.read_text(encoding="utf-8")
+    assert "schema_version:" in document
+    assert "CLASSIC_Settings:" in document
+    assert "Game Version: VR" in document
+    assert "FormID Databases:" in document
+    assert "UI:" in document
+    assert "window_geometry:" in document
+    assert "tui:" in document
+
+
 def test_accepted_user_settings_update_commit_reports_stale_conflict(
     tmp_path: Path,
 ) -> None:
@@ -477,7 +513,7 @@ def test_user_settings_update_commit_rejects_unaccepted_and_operational_failures
 
     update = classic_user_settings.UserSettingsUpdate()
     update.set_update_check(False)
-    accepted = snapshot.preview_update(update)
+    accepted = snapshot.preview_bootstrap(update)
     tmp_path.rmdir()
 
     with pytest.raises(

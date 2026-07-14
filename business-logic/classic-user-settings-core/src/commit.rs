@@ -1,5 +1,6 @@
 //! Conflict-safe publication of accepted User Settings Updates.
 
+use crate::default_settings::published_defaults_document;
 use crate::{AcceptedUserSettingsUpdate, Revision, UserSettings, UserSettingsUpdateField};
 use classic_settings_core::{Yaml, YamlOperations, parse_yaml_content};
 use sha2::{Digest, Sha256};
@@ -100,7 +101,7 @@ impl AcceptedUserSettingsUpdate {
                 actual_revision: latest.revision().clone(),
             });
         }
-        let document = latest_document(&latest)?;
+        let document = latest_document(&latest, self.is_bootstrap())?;
         let patched = patch_accepted_fields(document, self.fields())?;
         let serialized = YamlOperations::new().dump_yaml(&patched).map_err(|error| {
             UserSettingsCommitError::new("commit_serialize_failed", error.to_string())
@@ -142,15 +143,21 @@ pub(crate) fn acquire_commit_lock(target: &Path) -> Result<File, UserSettingsCom
 }
 
 /// Reconstructs the latest trusted YAML document, including first-run missing state.
-fn latest_document(settings: &UserSettings) -> Result<Yaml, UserSettingsCommitError> {
+fn latest_document(
+    settings: &UserSettings,
+    bootstrap: bool,
+) -> Result<Yaml, UserSettingsCommitError> {
     let Some(bytes) = settings.original_bytes() else {
         if matches!(settings.revision(), Revision::Missing) {
-            let empty = Yaml::Hash(Default::default());
-            return YamlOperations::new()
-                .set_setting(&empty, "schema_version", Yaml::String("1.0".to_string()))
-                .map_err(|error| {
-                    UserSettingsCommitError::new("commit_patch_failed", error.to_string())
+            if bootstrap {
+                return published_defaults_document().map_err(|error| {
+                    UserSettingsCommitError::new("commit_bootstrap_defaults_failed", error)
                 });
+            }
+            return Err(UserSettingsCommitError::new(
+                "commit_missing_requires_bootstrap",
+                "Missing User Settings cannot be created by an ordinary update",
+            ));
         }
         return Err(UserSettingsCommitError::new(
             "commit_source_unavailable",

@@ -1169,6 +1169,9 @@ class GameSetupIntake:
         docs_root: Path | None = ...,
         xse_log_path: Path | None = ...,
         game_exe_path: Path | None = ...,
+        mods_root: Path | None = ...,
+        custom_scan_input: Path | None = ...,
+        papyrus_log_path: Path | None = ...,
     ) -> None:
         """Create a new Game Setup Intake request."""
 
@@ -1191,6 +1194,18 @@ class GameSetupIntake:
     @property
     def docs_root(self) -> str | None:
         """Saved or caller-provided documents root."""
+
+    @property
+    def mods_root(self) -> str | None:
+        """Saved mods or staging root retained as typed setup context."""
+
+    @property
+    def custom_scan_input(self) -> str | None:
+        """Saved custom Crash Log Scan input retained as typed setup context."""
+
+    @property
+    def papyrus_log_path(self) -> str | None:
+        """Saved Papyrus log path retained as typed setup context."""
 
     @property
     def xse_log_path(self) -> str | None:

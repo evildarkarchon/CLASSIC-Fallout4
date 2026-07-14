@@ -860,6 +860,9 @@ describe("runGameSetupIntake", () => {
   test("returns exact proposed path updates without persisting them", () => {
     const gameRoot = join(tempDir, "Fallout4");
     const docsRoot = join(tempDir, "Documents");
+    const modsRoot = join(tempDir, "Mods");
+    const customScanInput = join(tempDir, "Crash Logs");
+    const papyrusLogPath = join(docsRoot, "Logs", "Script", "Papyrus.0.log");
     const gameExecutable = join(gameRoot, "Fallout4.exe");
     mkdirSync(gameRoot, { recursive: true });
     mkdirSync(docsRoot, { recursive: true });
@@ -870,6 +873,9 @@ describe("runGameSetupIntake", () => {
       gameVersion: "Original",
       gameExePath: gameExecutable,
       docsRoot,
+      modsRoot,
+      customScanInput,
+      papyrusLogPath,
     });
 
     expect(result.pathUpdates).toEqual([

@@ -32,6 +32,8 @@ qt_add_executable(ClassicGui WIN32
     core/threadmanager.h
     core/threadmanager.cpp
     core/gamepathutils.h
+    core/gamesetupusersettings.h
+    core/gamesetupusersettings.cpp
     core/reportpathkey.h
     core/reportpathkey.cpp
 

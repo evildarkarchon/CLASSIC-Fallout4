@@ -800,6 +800,18 @@ impl PyUserSettingsSnapshot {
         update_preview_to_py(self.inner.preview_update(update.inner.clone()))
     }
 
+    /// Validates an explicit missing-document bootstrap without writing to disk.
+    ///
+    /// This seam accepts only a trusted missing snapshot. The returned preview retains the
+    /// bootstrap marker so `commit` publishes the complete Rust-owned default document before
+    /// applying the requested fields.
+    fn preview_bootstrap(
+        &self,
+        update: PyRef<'_, PyUserSettingsUpdate>,
+    ) -> PyUserSettingsUpdatePreview {
+        update_preview_to_py(self.inner.preview_bootstrap(update.inner.clone()))
+    }
+
     /// Produces a deterministic, reversible plan without accessing the filesystem.
     fn plan_migration(&self) -> PyUserSettingsMigrationPlanningOutcome {
         migration_planning_outcome_to_py(self.inner.plan_migration())

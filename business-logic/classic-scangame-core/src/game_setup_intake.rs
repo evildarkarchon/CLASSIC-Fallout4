@@ -253,6 +253,12 @@ pub struct GameSetupIntake {
     pub game_root: Option<PathBuf>,
     /// Saved or caller-provided documents root.
     pub docs_root: Option<PathBuf>,
+    /// Saved mods or staging root retained as a typed setup fact.
+    pub mods_root: Option<PathBuf>,
+    /// Saved custom Crash Log Scan input retained as a typed setup fact.
+    pub custom_scan_input: Option<PathBuf>,
+    /// Saved Papyrus log path retained as a typed setup fact.
+    pub papyrus_log_path: Option<PathBuf>,
     /// Optional XSE log path used as a game-root detection hint.
     pub xse_log_path: Option<PathBuf>,
 }
@@ -270,6 +276,9 @@ impl GameSetupIntake {
             game_exe_path: None,
             game_root: None,
             docs_root: None,
+            mods_root: None,
+            custom_scan_input: None,
+            papyrus_log_path: None,
             xse_log_path: None,
         }
     }
@@ -321,6 +330,15 @@ impl GameSetupIntake {
         if let Some(path) = settings.documents_root() {
             intake = intake.with_docs_root(path);
         }
+        if let Some(path) = settings.mods_root() {
+            intake = intake.with_mods_root(path);
+        }
+        if let Some(path) = settings.custom_scan_input() {
+            intake = intake.with_custom_scan_input(path);
+        }
+        if let Some(path) = settings.papyrus_log() {
+            intake = intake.with_papyrus_log_path(path);
+        }
         intake
     }
 
@@ -342,6 +360,27 @@ impl GameSetupIntake {
     #[must_use]
     pub fn with_docs_root(mut self, path: impl Into<PathBuf>) -> Self {
         self.docs_root = non_empty_pathbuf(path.into());
+        self
+    }
+
+    /// Set a saved mods or staging root retained as typed setup context.
+    #[must_use]
+    pub fn with_mods_root(mut self, path: impl Into<PathBuf>) -> Self {
+        self.mods_root = non_empty_pathbuf(path.into());
+        self
+    }
+
+    /// Set a saved custom Crash Log Scan input retained as typed setup context.
+    #[must_use]
+    pub fn with_custom_scan_input(mut self, path: impl Into<PathBuf>) -> Self {
+        self.custom_scan_input = non_empty_pathbuf(path.into());
+        self
+    }
+
+    /// Set a saved Papyrus log path retained as typed setup context.
+    #[must_use]
+    pub fn with_papyrus_log_path(mut self, path: impl Into<PathBuf>) -> Self {
+        self.papyrus_log_path = non_empty_pathbuf(path.into());
         self
     }
 

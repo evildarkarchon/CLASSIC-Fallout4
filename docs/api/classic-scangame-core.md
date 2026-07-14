@@ -247,6 +247,9 @@ Important items:
 - `GameSetupIntake::with_game_root(path)`
 - `GameSetupIntake::with_game_exe_path(path)`
 - `GameSetupIntake::with_docs_root(path)`
+- `GameSetupIntake::with_mods_root(path)`
+- `GameSetupIntake::with_custom_scan_input(path)`
+- `GameSetupIntake::with_papyrus_log_path(path)`
 - `GameSetupIntake::with_xse_log_path(path)`
 - `GameSetupIntake::run() -> GameSetupIntakeResult`
 - `normalize_game_setup_version_selection(value)`
@@ -265,7 +268,7 @@ Important items:
 Behavior worth knowing:
 
 - Game Setup Intake is read-only; detected paths are returned as proposed updates instead of being persisted.
-- `from_user_settings(game_setup_settings)` copies typed facts from an already-opened snapshot, performs no settings I/O, and consumes the effective documents root after User Settings has applied canonical-before-INI alias precedence.
+- `from_user_settings(game_setup_settings)` copies every typed Game Setup fact from an already-opened snapshot—including mods/staging, custom-scan, and Papyrus paths—performs no settings I/O, and consumes the effective documents root after User Settings has applied canonical-before-INI alias precedence.
 - `auto` mode reads executable PE version metadata and attempts a Version Registry match.
 - a caller-provided executable path is used for root fallback, auto-version detection, executable version checks, hash checks, and installation-location checks.
 - `from_config(config, game_id)` returns `None` when no saved game root exists and uses `docs_root` before falling back to legacy `ini_folder`.

@@ -71,10 +71,9 @@ private slots:
     // handlers.
     void cli_registers_yaml_update_flags_and_dispatches_before_scan();
 
-    // 12.4 (CLI): the CLI handler must read `CLASSIC_Settings.Update Check`
-    // from the YAML settings file and pass it through to the bridge's
-    // `enabled` argument. Without this, the CLI would always hit the network
-    // regardless of user opt-out.
+    // 12.4 (CLI): the CLI handler must read the typed Update Check preference
+    // and pass it through to the bridge's `enabled` argument. Without this,
+    // the CLI would always hit the network regardless of user opt-out.
     void cli_handler_reads_update_check_setting_and_forwards_to_bridge();
 
     // Native callers must use first-party bridge helpers instead of duplicating
@@ -358,8 +357,10 @@ void YamlUpdateWiringTests::cli_handler_reads_update_check_setting_and_forwards_
     const QString handlerSource = readFile(QStringLiteral("../classic-cli/src/yaml_update.cpp"));
     QVERIFY2(!handlerSource.isEmpty(), "classic-cli/src/yaml_update.cpp must be readable");
 
-    QVERIFY2(handlerSource.contains(QStringLiteral("CLASSIC_Settings.Update Check")),
-             "CLI YAML update handler must read the CLASSIC_Settings.Update Check setting");
+    QVERIFY2(handlerSource.contains(QStringLiteral("user_settings_open_update_preferences")),
+             "CLI YAML update handler must read the typed User Settings update preferences");
+    QVERIFY2(handlerSource.contains(QStringLiteral("preferences.update_check")),
+             "CLI YAML update handler must use the typed Update Check preference");
     QVERIFY2(handlerSource.contains(QStringLiteral("read_update_check_setting")),
              "CLI handler should use a dedicated setting-reader helper");
 

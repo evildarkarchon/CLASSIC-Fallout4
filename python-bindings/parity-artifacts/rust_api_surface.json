@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T09:10:03.527004+00:00",
+  "generated_at_utc": "2026-07-14T11:46:39.455793+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -8087,6 +8087,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "with_custom_scan_input",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn with_custom_scan_input(mut self, path: impl Into<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "with_docs_root",
       "kind": "function",
       "arity": 2,
@@ -8114,6 +8124,26 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
       "source_decl": "pub fn with_game_root(mut self, path: impl Into<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_mods_root",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn with_mods_root(mut self, path: impl Into<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_papyrus_log_path",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn with_papyrus_log_path(mut self, path: impl Into<PathBuf>)",
       "tier": "tier1"
     },
     {
@@ -8355,12 +8385,31 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CrashLogScanFacts",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
+      "source_expr": "scan_intake::CrashLogScanFacts",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashLogScanFacts",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_intake.rs",
+      "source_decl": "pub struct CrashLogScanFacts",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CrashLogScanIntake",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::CrashLogScanIntake",
       "tier": "tier1"
     },
@@ -8379,7 +8428,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::CrashLogScanIntakePaths",
       "tier": "tier1"
     },
@@ -8398,7 +8447,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::CrashLogScanOptions",
       "tier": "tier1"
     },
@@ -8892,7 +8941,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::FormIdReadiness",
       "tier": "tier1"
     },
@@ -9288,7 +9337,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::SHORT_SCAN_CACHE_PROFILE",
       "tier": "tier1"
     },
@@ -9354,7 +9403,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::ScanReadyAnalysis",
       "tier": "tier1"
     },
@@ -9392,7 +9441,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::ShortScanCacheProfile",
       "tier": "tier1"
     },
@@ -10821,7 +10870,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::load_simplify_remove_list",
       "tier": "tier1"
     },
@@ -11343,18 +11392,8 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
+      "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::resolve_formid_database_paths",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "resolve_user_formid_database_paths",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use scan_intake::{ CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, resolve_user_formid_database_paths, };",
-      "source_expr": "scan_intake::resolve_user_formid_database_paths",
       "tier": "tier1"
     },
     {
@@ -11629,6 +11668,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/report.rs",
       "source_decl": "pub fn with_header(&self, header_lines: Vec<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_scan_facts",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_intake.rs",
+      "source_decl": "pub fn with_scan_facts(mut self, scan_facts: CrashLogScanFacts)",
       "tier": "tier1"
     },
     {
@@ -16778,6 +16827,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
       "source_decl": "pub fn preferences(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "preview_bootstrap",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn preview_bootstrap(&self, update: UserSettingsUpdate)",
       "tier": "tier1"
     },
     {

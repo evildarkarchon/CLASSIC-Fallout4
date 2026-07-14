@@ -28,8 +28,7 @@ fn ordinary_update_preview_rejects_a_missing_document_without_creating_it() {
     let root = tempfile::tempdir().unwrap();
     let settings = UserSettings::open(root.path());
 
-    let preview =
-        settings.preview_update(UserSettingsUpdate::new().with_update_check(false));
+    let preview = settings.preview_update(UserSettingsUpdate::new().with_update_check(false));
 
     let UserSettingsUpdatePreview::Rejected(diagnostics) = preview else {
         panic!("a missing document must require the explicit bootstrap path");
@@ -79,7 +78,10 @@ fn bootstrap_preview_only_accepts_a_missing_trusted_snapshot() {
         panic!("an untrusted source must not be replaced through bootstrap");
     };
     assert_eq!(malformed_diagnostics.len(), 1);
-    assert_eq!(malformed_diagnostics[0].code(), "bootstrap_base_not_missing");
+    assert_eq!(
+        malformed_diagnostics[0].code(),
+        "bootstrap_base_not_missing"
+    );
 }
 
 #[test]
@@ -220,6 +222,8 @@ fn preview_does_not_include_or_repair_an_unrelated_conflicting_alias() {
 #[test]
 fn preview_carries_every_requested_scan_field_without_normalizing_values() {
     let root = tempfile::tempdir().unwrap();
+    let path = install_fixture(root.path(), "canonical_current_nested.yaml");
+    let bytes_before = std::fs::read(&path).unwrap();
     let settings = UserSettings::open(root.path());
     let databases = BTreeMap::from([(
         "Fallout4".to_string(),
@@ -258,7 +262,7 @@ fn preview_carries_every_requested_scan_field_without_normalizing_values() {
             UserSettingsUpdateField::MaxConcurrentScans(8),
         ]
     );
-    assert!(!root.path().join("CLASSIC Settings.yaml").exists());
+    assert_eq!(std::fs::read(path).unwrap(), bytes_before);
 }
 
 #[test]

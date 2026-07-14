@@ -17,14 +17,10 @@ class GameFilesController : public QObject {
 public:
     explicit GameFilesController(SignalHub* signalHub, ThreadManager* threadManager, QObject* parent = nullptr);
 
-    /// Start a game file scan in a background thread.
-    /// @param gameExePath Full path to the game executable (e.g. Fallout4.exe).
-    /// @param gameRoot    Root directory of the game installation.
-    /// @param docsPath    Documents/INI folder path used for docs checks.
-    /// @param gameName    Game identifier string (e.g. "Fallout4").
-    /// @param gameVersion Saved game-version selection (e.g. "auto", "Original", or "VR").
-    void startScan(const QString& gameExePath, const QString& gameRoot, const QString& docsPath,
-                   const QString& gameName, const QString& gameVersion);
+    /// Start a read-only Game Setup Intake run in a background thread.
+    /// @param classicRoot CLASSIC root used by Rust to open the typed User Settings snapshot.
+    /// @param xseLogPath Optional script-extender log used only as a detection hint.
+    void startScan(const QString& classicRoot, const QString& xseLogPath);
 
     /// @return true if a scan is currently in progress.
     bool isScanning() const;

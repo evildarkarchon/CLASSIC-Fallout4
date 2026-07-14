@@ -52,6 +52,9 @@ Important public items:
 - `with_game_root(path)`
 - `with_game_exe_path(path)`
 - `with_docs_root(path)`
+- `with_mods_root(path)`
+- `with_custom_scan_input(path)`
+- `with_papyrus_log_path(path)`
 - `with_xse_log_path(path)`
 - `run() -> GameSetupIntakeResult`
 - `normalize_game_setup_version_selection(value)`
@@ -109,7 +112,7 @@ let settings = UserSettings::open(classic_root);
 let intake = GameSetupIntake::from_user_settings(settings.game_setup_settings());
 ```
 
-This copies the typed managed game, selected version, game root, executable, and effective documents path. `GameSetupSettings` has already resolved the canonical `Documents Folder Path` ahead of the `INI Folder Path` compatibility alias, including explicit null/empty clears, so intake does not reapply fallback logic. Mods/staging, custom-scan, and Papyrus facts remain available to their own consumers and are not misrouted into unrelated intake fields. The temporary `from_config` adapter remains available during the expand phase.
+This copies the typed managed game, selected version, game root, executable, effective documents path, mods/staging root, custom-scan input, and Papyrus log path. `GameSetupSettings` has already resolved canonical labels ahead of compatibility aliases, including explicit null/empty clears, so intake does not reapply fallback logic. The last three facts remain read-only context for setup adapters even when a particular check does not consume them yet. The temporary `from_config` adapter remains available during the expand phase.
 
 ## 2a. Review Proposed Path Updates
 
@@ -208,9 +211,9 @@ saved settings / frontend inputs
 
 Current binding surfaces should stay thin:
 
-- C++ bridge: `classic::scangame::run_game_setup_intake(...)`, `game_setup_intake_checks(...)`, and `game_setup_needs_path_detection(...)`
-- Node binding: `runGameSetupIntake(...)`, `normalizeGameSetupVersionSelection(...)`, and `gameSetupNeedsPathDetection(...)`; `runGameSetupIntake` accepts `gameExePath` when the caller has a saved executable path.
-- Python binding: `GameSetupIntake`, `run_game_setup_intake(...)`, `normalize_game_setup_version_selection(...)`, and `game_setup_needs_path_detection(...)`; `GameSetupIntake` accepts `game_exe_path` when the caller has a saved executable path.
+- C++ bridge: `classic::scangame::run_game_setup_intake_from_user_settings(classic_root, xse_log_path)` is the cohesive GUI path; the positional `run_game_setup_intake(...)`, `game_setup_intake_checks(...)`, and `game_setup_needs_path_detection(...)` remain compatibility entry points.
+- Node binding: `runGameSetupIntake(...)`, `normalizeGameSetupVersionSelection(...)`, and `gameSetupNeedsPathDetection(...)`; `runGameSetupIntake` accepts `gameExePath`, `modsRoot`, `customScanInput`, and `papyrusLogPath` so saved typed setup facts cross the binding without raw settings-key interpretation.
+- Python binding: `GameSetupIntake`, `run_game_setup_intake(...)`, `normalize_game_setup_version_selection(...)`, and `game_setup_needs_path_detection(...)`; `GameSetupIntake` accepts `game_exe_path`, `mods_root`, `custom_scan_input`, and `papyrus_log_path` so the saved typed setup facts cross the binding without raw settings-key interpretation.
 
 Adapters should not rebuild executable-hash, XSE, Address Library, or documents logic locally. If a setup diagnostic needs to change, change `classic-scangame-core::game_setup_intake`.
 

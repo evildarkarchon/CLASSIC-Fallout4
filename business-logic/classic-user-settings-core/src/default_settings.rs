@@ -1,5 +1,6 @@
 //! Rust-owned User Settings metadata shared by runtime projection and mirror generation.
 
+use classic_settings_core::{Yaml, YamlOperations};
 use std::collections::BTreeSet;
 
 pub(crate) const USER_SETTINGS_SCHEMA_MAJOR: u32 = 1;
@@ -411,6 +412,45 @@ pub(crate) const MIRROR_SETTINGS: &[SettingMetadata] = &[
     TUI_RESULTS_PANEL_WIDTH,
     TUI_SORT_ASCENDING,
 ];
+
+/// Builds the complete current User Settings document from the Rust-owned default registry.
+///
+/// The returned tree includes compatibility entries because first-run documents must preserve
+/// the same complete contract published through the generated compatibility mirror.
+pub(crate) fn published_defaults_document() -> Result<Yaml, String> {
+    debug_assert!(
+        registry_is_valid(),
+        "User Settings metadata registry is invalid"
+    );
+    let mut fields = Vec::with_capacity(MIRROR_SETTINGS.len() + 1);
+    fields.push((
+        "schema_version",
+        Yaml::String(format!(
+            "{USER_SETTINGS_SCHEMA_MAJOR}.{USER_SETTINGS_SCHEMA_MINOR}"
+        )),
+    ));
+    fields.extend(MIRROR_SETTINGS.iter().map(|setting| {
+        (
+            setting.dotted_path,
+            published_default_yaml(setting.default()),
+        )
+    }));
+
+    YamlOperations::new()
+        .set_settings_batch(&Yaml::Hash(Default::default()), &fields)
+        .map_err(|error| error.to_string())
+}
+
+/// Converts one registry default into its canonical YAML value.
+fn published_default_yaml(default: PublishedDefault) -> Yaml {
+    match default {
+        PublishedDefault::Bool(value) => Yaml::Boolean(value),
+        PublishedDefault::Integer(value) => Yaml::Integer(value),
+        PublishedDefault::String(value) => Yaml::String(value.to_string()),
+        PublishedDefault::Null => Yaml::Null,
+        PublishedDefault::EmptyMapping => Yaml::Hash(Default::default()),
+    }
+}
 
 /// Verifies registry uniqueness and the derived dotted/JSON-pointer path representations.
 pub(crate) fn registry_is_valid() -> bool {

@@ -1103,6 +1103,38 @@ fn test_user_settings_bootstrap_preview_is_explicit_and_does_not_write() {
 }
 
 #[test]
+fn test_user_settings_bootstrap_preview_commits_only_through_explicit_bootstrap_seam() {
+    let root = tempfile::tempdir().unwrap();
+    let root_string = root.path().display().to_string();
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let update = empty_user_settings_update();
+    let preview = user_settings_preview_bootstrap(&root_string, &update);
+    assert!(preview.accepted);
+
+    let ordinary =
+        user_settings_commit_update(&root_string, &preview.base_revision, &update).unwrap();
+    assert_eq!(ordinary.status, "rejected");
+    assert!(
+        !settings_path.exists(),
+        "ordinary commit must not create missing User Settings"
+    );
+
+    let committed =
+        user_settings_commit_bootstrap(&root_string, &preview.base_revision, &update).unwrap();
+
+    assert_eq!(committed.status, "committed");
+    assert!(committed.revision.starts_with("sha256:"));
+    let content = std::fs::read_to_string(settings_path).expect("bootstrapped User Settings");
+    assert!(
+        content.contains("schema_version: '1.0'") || content.contains("schema_version: \"1.0\"")
+    );
+    assert!(
+        content.contains("CLASSIC_Settings:"),
+        "bootstrap commit should render Rust-owned published defaults"
+    );
+}
+
+#[test]
 fn test_user_settings_update_preview_accepts_only_requested_fields_without_writing() {
     let root = tempfile::tempdir().unwrap();
     let content = concat!(

@@ -36,8 +36,13 @@ impl PyGameSetupIntake {
     ///     docs_root: Optional documents root.
     ///     xse_log_path: Optional XSE log path used as a detection hint.
     ///     game_exe_path: Optional game executable path.
+    ///     mods_root: Optional mods or staging root retained as typed setup context.
+    ///     custom_scan_input: Optional custom Crash Log Scan input.
+    ///     papyrus_log_path: Optional Papyrus log path.
+    // Keep the established flat Python constructor; grouping these facts would break its public signature.
+    #[allow(clippy::too_many_arguments)]
     #[new]
-    #[pyo3(signature = (game_id, game_version="auto".to_string(), game_root=None, docs_root=None, xse_log_path=None, game_exe_path=None))]
+    #[pyo3(signature = (game_id, game_version="auto".to_string(), game_root=None, docs_root=None, xse_log_path=None, game_exe_path=None, mods_root=None, custom_scan_input=None, papyrus_log_path=None))]
     fn new(
         game_id: String,
         game_version: String,
@@ -45,6 +50,9 @@ impl PyGameSetupIntake {
         docs_root: Option<PathBuf>,
         xse_log_path: Option<PathBuf>,
         game_exe_path: Option<PathBuf>,
+        mods_root: Option<PathBuf>,
+        custom_scan_input: Option<PathBuf>,
+        papyrus_log_path: Option<PathBuf>,
     ) -> PyResult<Self> {
         let parsed_game_id = GameId::from_str(&game_id).map_err(PyValueError::new_err)?;
         let mut intake = GameSetupIntake::new(parsed_game_id, game_version);
@@ -59,6 +67,15 @@ impl PyGameSetupIntake {
         }
         if let Some(path) = xse_log_path {
             intake = intake.with_xse_log_path(path);
+        }
+        if let Some(path) = mods_root {
+            intake = intake.with_mods_root(path);
+        }
+        if let Some(path) = custom_scan_input {
+            intake = intake.with_custom_scan_input(path);
+        }
+        if let Some(path) = papyrus_log_path {
+            intake = intake.with_papyrus_log_path(path);
         }
         Ok(Self { inner: intake })
     }
@@ -98,6 +115,33 @@ impl PyGameSetupIntake {
     fn docs_root(&self) -> Option<String> {
         self.inner
             .docs_root
+            .as_ref()
+            .map(|path| path.to_string_lossy().into_owned())
+    }
+
+    /// Saved mods or staging root retained as typed setup context.
+    #[getter]
+    fn mods_root(&self) -> Option<String> {
+        self.inner
+            .mods_root
+            .as_ref()
+            .map(|path| path.to_string_lossy().into_owned())
+    }
+
+    /// Saved custom Crash Log Scan input retained as typed setup context.
+    #[getter]
+    fn custom_scan_input(&self) -> Option<String> {
+        self.inner
+            .custom_scan_input
+            .as_ref()
+            .map(|path| path.to_string_lossy().into_owned())
+    }
+
+    /// Saved Papyrus log path retained as typed setup context.
+    #[getter]
+    fn papyrus_log_path(&self) -> Option<String> {
+        self.inner
+            .papyrus_log_path
             .as_ref()
             .map(|path| path.to_string_lossy().into_owned())
     }

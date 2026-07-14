@@ -9,17 +9,15 @@ GameFilesWorker::GameFilesWorker(QObject* parent)
 {
 }
 
-void GameFilesWorker::doScan(const QString& gameExePath, const QString& gameRoot, const QString& docsPath,
-                             const QString& gameName, const QString& gameVersion)
+void GameFilesWorker::doScan(const QString& classicRoot, const QString& xseLogPath)
 {
     // Emit indeterminate progress -- the Rust side does not provide
     // granular progress callbacks for Game Setup Intake.
     emit progress(-1.0f, QStringLiteral("Running game setup intake..."));
 
     try {
-        auto result = classic::scangame::run_game_setup_intake(
-            classic::toRustString(gameName), classic::toRustString(gameVersion), classic::toRustString(gameRoot),
-            classic::toRustString(docsPath), ::rust::Str("", 0), classic::toRustString(gameExePath));
+        auto result = classic::scangame::run_game_setup_intake_from_user_settings(classic::toRustString(classicRoot),
+                                                                                  classic::toRustString(xseLogPath));
         const bool requiresAttention = result.has_errors ||
                                        classic::toQString(result.status) != QStringLiteral("ready") ||
                                        result.action_count > 0;
