@@ -45,7 +45,19 @@ QByteArray completeSettings()
                              "    keep: true\n"
                              "UI:\n"
                              "  preferences:\n"
-                             "    auto_switch_after_scan: true\n");
+                             "    auto_switch_after_scan: true\n"
+                             "  window_geometry:\n"
+                             "    main_tab:\n"
+                             "      maximized: false\n"
+                             "      width: 640\n"
+                             "      height: 500\n"
+                             "      future_leaf: retained\n"
+                             "    results_tab:\n"
+                             "      maximized: true\n"
+                             "      width: 750\n"
+                             "      height: 450\n"
+                             "  community_frontend:\n"
+                             "    theme: amber\n");
 }
 
 } // namespace
@@ -59,6 +71,8 @@ private slots:
     void invalid_change_rejects_every_requested_field_without_writing();
     void stale_revision_reports_actionable_conflict_without_overwrite();
     void malformed_concurrent_change_still_reports_revision_conflict();
+    /// A stale geometry transition replays once in Rust and refreshes the Qt snapshot after commit.
+    void frontend_transition_retries_once_and_refreshes_the_consumed_snapshot();
 };
 
 void GuiUserSettingsTests::open_returns_every_gui_group_from_one_revision()
@@ -72,6 +86,10 @@ void GuiUserSettingsTests::open_returns_every_gui_group_from_one_revision()
     QVERIFY(snapshot.update.updateCheck);
     QCOMPARE(snapshot.update.updateSource, QStringLiteral("GitHub"));
     QVERIFY(snapshot.frontend.autoSwitchAfterScan);
+    const auto mainGeometry = snapshot.frontend.windowGeometry.value(classic::gui::GuiWindow::Main);
+    QCOMPARE(mainGeometry.width, 640);
+    QCOMPARE(mainGeometry.height, 500);
+    QVERIFY(!mainGeometry.maximized);
     QCOMPARE(snapshot.scan.gameVersion, QStringLiteral("Original"));
     QVERIFY(snapshot.scan.showStatistics);
     QCOMPARE(snapshot.scan.maxConcurrentScans, 2);
@@ -96,6 +114,8 @@ void GuiUserSettingsTests::accepted_changes_commit_as_one_preservation_aware_upd
     classic::gui::GuiUserSettingsChanges changes;
     changes.updateCheck = false;
     changes.autoSwitchAfterScan = false;
+    changes.windowGeometry =
+        classic::gui::GuiWindowGeometryChange{classic::gui::GuiWindow::Results, {false, 1280, 720}};
     changes.gameVersion = QStringLiteral("NextGen");
     changes.fcxMode = true;
     changes.simplifyLogs = true;
@@ -116,6 +136,10 @@ void GuiUserSettingsTests::accepted_changes_commit_as_one_preservation_aware_upd
     const auto after = classic::gui::GuiUserSettings::open(root.path());
     QVERIFY(!after.update.updateCheck);
     QVERIFY(!after.frontend.autoSwitchAfterScan);
+    const auto resultsGeometry = after.frontend.windowGeometry.value(classic::gui::GuiWindow::Results);
+    QCOMPARE(resultsGeometry.width, 1280);
+    QCOMPARE(resultsGeometry.height, 720);
+    QVERIFY(!resultsGeometry.maximized);
     QCOMPARE(after.scan.gameVersion, QStringLiteral("NextGen"));
     QVERIFY(after.scan.fcxMode);
     QVERIFY(after.scan.simplifyLogs);
@@ -135,6 +159,9 @@ void GuiUserSettingsTests::accepted_changes_commit_as_one_preservation_aware_upd
     QVERIFY(content.contains("keep: true"));
     QVERIFY(content.contains("Audio Notifications:"));
     QVERIFY(content.contains("- preserve"));
+    QVERIFY(content.contains("community_frontend:"));
+    QVERIFY(content.contains("theme: amber"));
+    QVERIFY(content.contains("future_leaf: retained"));
 }
 
 void GuiUserSettingsTests::invalid_change_rejects_every_requested_field_without_writing()
@@ -172,13 +199,18 @@ void GuiUserSettingsTests::stale_revision_reports_actionable_conflict_without_ov
     const auto newer = classic::gui::GuiUserSettings::open(root.path());
 
     classic::gui::GuiUserSettingsChanges second;
-    second.maxConcurrentScans = 12;
+    second.windowGeometry = classic::gui::GuiWindowGeometryChange{classic::gui::GuiWindow::Main, {true, 1600, 900}};
     const auto outcome = classic::gui::GuiUserSettings::commit(root.path(), stale.revision, second);
 
     QCOMPARE(outcome.status, QStringLiteral("conflict"));
     QCOMPARE(outcome.expectedRevision, stale.revision);
     QCOMPARE(outcome.actualRevision, newer.revision);
     QCOMPARE(classic::gui::GuiUserSettings::open(root.path()).scan.maxConcurrentScans, 4);
+    const auto geometry =
+        classic::gui::GuiUserSettings::open(root.path()).frontend.windowGeometry.value(classic::gui::GuiWindow::Main);
+    QCOMPARE(geometry.width, 640);
+    QCOMPARE(geometry.height, 500);
+    QVERIFY(!geometry.maximized);
 }
 
 void GuiUserSettingsTests::malformed_concurrent_change_still_reports_revision_conflict()
@@ -196,6 +228,31 @@ void GuiUserSettingsTests::malformed_concurrent_change_still_reports_revision_co
     QCOMPARE(outcome.status, QStringLiteral("conflict"));
     QCOMPARE(outcome.expectedRevision, stale.revision);
     QVERIFY(!outcome.actualRevision.isEmpty());
+}
+
+void GuiUserSettingsTests::frontend_transition_retries_once_and_refreshes_the_consumed_snapshot()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    writeSettings(root.path(), completeSettings());
+    auto displayed = classic::gui::GuiUserSettings::open(root.path());
+
+    classic::gui::GuiUserSettingsChanges concurrentChange;
+    concurrentChange.maxConcurrentScans = 6;
+    QCOMPARE(classic::gui::GuiUserSettings::commit(root.path(), displayed.revision, concurrentChange).status,
+             QStringLiteral("committed"));
+
+    const classic::gui::GuiWindowGeometryChange acceptedTransition{classic::gui::GuiWindow::Main, {true, 1440, 900}};
+    const auto outcome =
+        classic::gui::GuiUserSettings::commitFrontendTransition(root.path(), displayed, acceptedTransition);
+
+    QCOMPARE(outcome.status, QStringLiteral("committed"));
+    QCOMPARE(displayed.scan.maxConcurrentScans, 6);
+    const auto geometry = displayed.frontend.windowGeometry.value(classic::gui::GuiWindow::Main);
+    QVERIFY(geometry.maximized);
+    QCOMPARE(geometry.width, 1440);
+    QCOMPARE(geometry.height, 900);
+    QCOMPARE(displayed.revision, classic::gui::GuiUserSettings::open(root.path()).revision);
 }
 
 QTEST_MAIN(GuiUserSettingsTests)

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T12:58:27.857886+00:00",
+  "generated_at_utc": "2026-07-14T21:39:09.662509+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -9124,6 +9124,18 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "def set_update_source(self, value: str) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_window_geometry",
+      "export_path": "UserSettingsUpdate.set_window_geometry",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 4,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_window_geometry( self, tab: str, maximized: bool, width: int, height: int ) -> None:"
     },
     {
       "module": "classic_user_settings",

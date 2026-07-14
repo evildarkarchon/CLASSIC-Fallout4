@@ -7,7 +7,8 @@ class MainWindowGeometryTests : public QObject {
 
 private slots:
     void main_tab_minimum_geometry_constant_matches_default_layout();
-    void restore_tab_geometry_reads_typed_user_settings();
+    /// GUI production code never constructs or writes raw first-party geometry paths.
+    void gui_production_has_no_raw_user_settings_geometry_paths();
     void tab_bar_configuration_is_responsive_for_narrow_windows();
     void custom_folder_handlers_refresh_results_directories();
     void entering_results_tab_forces_report_reload();
@@ -33,7 +34,7 @@ void MainWindowGeometryTests::main_tab_minimum_geometry_constant_matches_default
     QCOMPARE(match.captured(2).toInt(), 500);
 }
 
-void MainWindowGeometryTests::restore_tab_geometry_reads_typed_user_settings()
+void MainWindowGeometryTests::gui_production_has_no_raw_user_settings_geometry_paths()
 {
     const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
     QFile file(sourcePath);
@@ -41,23 +42,12 @@ void MainWindowGeometryTests::restore_tab_geometry_reads_typed_user_settings()
              qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
 
     const QString sourceText = QString::fromUtf8(file.readAll());
-    const QString marker = QStringLiteral("void MainWindow::restoreTabGeometry(int tabIndex)");
-    const qsizetype start = sourceText.indexOf(marker);
-    QVERIFY2(start >= 0, "Could not locate MainWindow::restoreTabGeometry(int tabIndex)");
-    const qsizetype nextFunction = sourceText.indexOf(QStringLiteral("\nvoid MainWindow::"), start + marker.size());
-    const qsizetype end = (nextFunction < 0) ? sourceText.size() : nextFunction;
-    const QString body = sourceText.mid(start, end - start);
-
-    QVERIFY2(body.contains(QStringLiteral("user_settings_open_frontend_state")),
-             "Geometry restore should consume the typed User Settings frontend-state group");
-    QVERIFY2(!body.contains(QStringLiteral("yaml_ops_load_file")),
-             "Geometry restore should not reinterpret raw User Settings key paths");
-
-    const qsizetype saveStart = sourceText.indexOf(QStringLiteral("void MainWindow::saveTabGeometry(int tabIndex)"));
-    const qsizetype restoreStart = sourceText.indexOf(marker, saveStart);
-    const QString saveBody = sourceText.mid(saveStart, restoreStart - saveStart);
-    QVERIFY2(saveBody.contains(QStringLiteral("yaml_ops_save_file")),
-             "The existing geometry writer remains available until conflict-safe commits land");
+    QVERIFY2(!sourceText.contains(QStringLiteral("UI.window_geometry.")),
+             "GUI production code must not construct raw first-party geometry paths");
+    QVERIFY2(!sourceText.contains(QStringLiteral("yaml_ops_set_bool_setting")) &&
+                 !sourceText.contains(QStringLiteral("yaml_ops_set_integer_setting")) &&
+                 !sourceText.contains(QStringLiteral("yaml_ops_save_file")),
+             "GUI production code must not mutate first-party User Settings through generic YAML operations");
 }
 
 void MainWindowGeometryTests::tab_bar_configuration_is_responsive_for_narrow_windows()
@@ -248,8 +238,11 @@ void MainWindowGeometryTests::first_run_bootstraps_and_updates_local_yaml()
              "First-run setup should run typed intake and commit accepted paths before syncing Local YAML");
     QVERIFY2(firstRunBody.contains(QStringLiteral("if (choice != QMessageBox::Yes)")),
              "Rejecting detected paths should return before either User Settings or Local YAML is written");
-    QVERIFY2(firstRunBody.contains(QStringLiteral("if (hasAcceptedChanges && !commitChanges(changes))")),
+    QVERIFY2(firstRunBody.contains(QStringLiteral("if (hasAcceptedChanges)")) &&
+                 firstRunBody.contains(QStringLiteral("if (!commitChanges(changes))")),
              "Accepted detected and manual paths should enter one final atomic commit");
+    QVERIFY2(firstRunBody.contains(QStringLiteral("m_guiSettings = classic::gui::GuiUserSettings::open(m_dataRoot)")),
+             "A successful startup-path commit should refresh the same-session GUI snapshot");
     QVERIFY2(!firstRunBody.contains(QStringLiteral("CLASSIC_Settings.")),
              "First-run setup should not interpret raw User Settings keys");
 }

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T13:00:07.570146+00:00",
+  "generated_at_utc": "2026-07-14T23:05:32.536146+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -8633,6 +8633,58 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "LegacyTuiStateImportError",
+      "export_path": "LegacyTuiStateImportError",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class LegacyTuiStateImportError(RuntimeError):"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "LegacyTuiStateImportOutcome",
+      "export_path": "LegacyTuiStateImportOutcome",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class LegacyTuiStateImportOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "LegacyTuiStateImportReceipt",
+      "export_path": "LegacyTuiStateImportReceipt",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class LegacyTuiStateImportReceipt:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "restore",
+      "export_path": "LegacyTuiStateImportReceipt.restore",
+      "parent_class": "LegacyTuiStateImportReceipt",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def restore(self, classic_root: str) -> LegacyTuiStateImportRestoreOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "LegacyTuiStateImportRestoreOutcome",
+      "export_path": "LegacyTuiStateImportRestoreOutcome",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class LegacyTuiStateImportRestoreOutcome:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "TuiRememberedState",
       "export_path": "TuiRememberedState",
       "kind": "class",
@@ -8680,6 +8732,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "class UserSettingsDiagnostic:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "UserSettingsFrontendTransitionOutcome",
+      "export_path": "UserSettingsFrontendTransitionOutcome",
+      "kind": "class",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "class UserSettingsFrontendTransitionOutcome:"
     },
     {
       "module": "classic_user_settings",
@@ -8826,6 +8888,18 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "class UserSettingsSnapshot:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "commit_frontend_geometry_transition",
+      "export_path": "UserSettingsSnapshot.commit_frontend_geometry_transition",
+      "parent_class": "UserSettingsSnapshot",
+      "kind": "method",
+      "arity": 5,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def commit_frontend_geometry_transition( self, classic_root: str, tab: str, maximized: bool, width: int, height: int, ) -> UserSettingsFrontendTransitionOutcome:"
     },
     {
       "module": "classic_user_settings",
@@ -9091,6 +9165,18 @@
     },
     {
       "module": "classic_user_settings",
+      "export": "set_tui_remembered_state",
+      "export_path": "UserSettingsUpdate.set_tui_remembered_state",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 3,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_tui_remembered_state( self, active_tab: int, results_panel_width: int, sort_ascending: bool ) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
       "export": "set_unsolved_logs_destination",
       "export_path": "UserSettingsUpdate.set_unsolved_logs_destination",
       "parent_class": "UserSettingsUpdate",
@@ -9124,6 +9210,18 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "def set_update_source(self, value: str) -> None:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "set_window_geometry",
+      "export_path": "UserSettingsUpdate.set_window_geometry",
+      "parent_class": "UserSettingsUpdate",
+      "kind": "method",
+      "arity": 4,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def set_window_geometry( self, tab: str, maximized: bool, width: int, height: int ) -> None:"
     },
     {
       "module": "classic_user_settings",
@@ -9176,6 +9274,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
       "signature": "class WindowGeometry:"
+    },
+    {
+      "module": "classic_user_settings",
+      "export": "import_legacy_tui_state_into_user_settings",
+      "export_path": "import_legacy_tui_state_into_user_settings",
+      "kind": "function",
+      "arity": 2,
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-user-settings-py/classic_user_settings.pyi",
+      "signature": "def import_legacy_tui_state_into_user_settings( classic_root: str, legacy_state_path: str ) -> LegacyTuiStateImportOutcome:"
     },
     {
       "module": "classic_user_settings",

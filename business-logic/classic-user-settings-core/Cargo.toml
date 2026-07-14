@@ -13,6 +13,7 @@ crate-type = ["rlib"]
 [dependencies]
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-settings-core = { path = "../classic-settings-core" }
+serde_json = { workspace = true }
 sha2 = { workspace = true }
 tempfile = { workspace = true }
 

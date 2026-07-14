@@ -2,7 +2,8 @@
 
 use classic_settings_core::{Yaml, parse_yaml_content};
 use classic_user_settings_core::{
-    UserSettings, UserSettingsCommitOutcome, UserSettingsUpdate, UserSettingsUpdatePreview,
+    GuiWindow, UserSettings, UserSettingsCommitOutcome, UserSettingsFrontendTransitionOutcome,
+    UserSettingsUpdate, UserSettingsUpdatePreview,
 };
 use std::path::{Path, PathBuf};
 
@@ -147,6 +148,54 @@ fn stale_commit_leaves_a_newer_external_document_byte_for_byte_unchanged() {
 }
 
 #[test]
+fn frontend_geometry_transition_replays_once_without_losing_a_newer_setting() {
+    let root = tempfile::tempdir().unwrap();
+    let path = root.path().join("CLASSIC Settings.yaml");
+    std::fs::write(
+        &path,
+        concat!(
+            "schema_version: \"1.0\"\n",
+            "CLASSIC_Settings:\n",
+            "  Update Check: true\n",
+            "UI:\n",
+            "  window_geometry:\n",
+            "    main_tab:\n",
+            "      maximized: false\n",
+            "      width: 640\n",
+            "      height: 500\n",
+        ),
+    )
+    .unwrap();
+    let displayed = UserSettings::open(root.path());
+    let newer = accepted_update(&displayed, false);
+    assert!(matches!(
+        newer.commit(root.path()).unwrap(),
+        UserSettingsCommitOutcome::Committed { .. }
+    ));
+
+    let outcome = UserSettings::commit_frontend_geometry_transition(
+        root.path(),
+        displayed.revision(),
+        GuiWindow::Main,
+        true,
+        1440,
+        900,
+    )
+    .unwrap();
+
+    assert!(matches!(
+        outcome,
+        UserSettingsFrontendTransitionOutcome::Committed { .. }
+    ));
+    let current = UserSettings::open(root.path());
+    assert!(!current.update_preferences().update_check());
+    let geometry = current.frontend_state().window_geometry().main_tab();
+    assert!(geometry.maximized());
+    assert_eq!(geometry.width(), 1440);
+    assert_eq!(geometry.height(), 900);
+}
+
+#[test]
 fn commit_patches_only_the_requested_node_in_a_document_with_unrelated_external_content() {
     let root = tempfile::tempdir().unwrap();
     let path = install_fixture(root.path(), "unknown_entries.yaml");
@@ -169,6 +218,115 @@ fn commit_patches_only_the_requested_node_in_a_document_with_unrelated_external_
     assert_eq!(
         actual["CLASSIC_Settings"]["Update Check"],
         Yaml::Boolean(false)
+    );
+}
+
+#[test]
+fn geometry_commit_updates_only_the_selected_window_and_preserves_unknown_frontend_content() {
+    let root = tempfile::tempdir().unwrap();
+    let path = root.path().join("CLASSIC Settings.yaml");
+    let source = br#"schema_version: "1.0"
+CLASSIC_Settings:
+  Update Check: true
+UI:
+  window_geometry:
+    main_tab:
+      maximized: false
+      width: 640
+      height: 500
+    future_tab:
+      layout: ultrawide
+  community_frontend:
+    theme: amber
+"#;
+    std::fs::write(&path, source).unwrap();
+    let settings = UserSettings::open(root.path());
+    let UserSettingsUpdatePreview::Accepted(accepted) = settings.preview_update(
+        UserSettingsUpdate::new().with_window_geometry(GuiWindow::Main, true, 1024, 768),
+    ) else {
+        panic!("valid geometry should be accepted");
+    };
+
+    let outcome = accepted.commit(root.path()).unwrap();
+
+    assert!(matches!(
+        outcome,
+        UserSettingsCommitOutcome::Committed { .. }
+    ));
+    let actual = parsed_document(&path);
+    assert_eq!(
+        actual["UI"]["window_geometry"]["main_tab"]["maximized"],
+        Yaml::Boolean(true)
+    );
+    assert_eq!(
+        actual["UI"]["window_geometry"]["main_tab"]["width"],
+        Yaml::Integer(1024)
+    );
+    assert_eq!(
+        actual["UI"]["window_geometry"]["main_tab"]["height"],
+        Yaml::Integer(768)
+    );
+    assert_eq!(
+        actual["UI"]["window_geometry"]["future_tab"]["layout"],
+        Yaml::String("ultrawide".to_string())
+    );
+    assert_eq!(
+        actual["UI"]["community_frontend"]["theme"],
+        Yaml::String("amber".to_string())
+    );
+    assert_eq!(
+        actual["CLASSIC_Settings"]["Update Check"],
+        Yaml::Boolean(true)
+    );
+}
+
+#[test]
+fn tui_state_commit_updates_one_complete_transition_and_preserves_unknown_frontend_content() {
+    let root = tempfile::tempdir().unwrap();
+    let path = root.path().join("CLASSIC Settings.yaml");
+    std::fs::write(
+        &path,
+        br#"schema_version: "1.0"
+CLASSIC_Settings:
+  Update Check: true
+UI:
+  tui:
+    active_tab: 0
+    results_panel_width: 30
+    sort_ascending: false
+    future_layout: compact
+  community_frontend:
+    theme: amber
+"#,
+    )
+    .unwrap();
+    let settings = UserSettings::open(root.path());
+    let UserSettingsUpdatePreview::Accepted(accepted) =
+        settings.preview_update(UserSettingsUpdate::new().with_tui_remembered_state(2, 42, true))
+    else {
+        panic!("valid TUI remembered state should be accepted");
+    };
+
+    let outcome = accepted.commit(root.path()).unwrap();
+
+    assert!(matches!(
+        outcome,
+        UserSettingsCommitOutcome::Committed { .. }
+    ));
+    let actual = parsed_document(&path);
+    assert_eq!(actual["UI"]["tui"]["active_tab"], Yaml::Integer(2));
+    assert_eq!(
+        actual["UI"]["tui"]["results_panel_width"],
+        Yaml::Integer(42)
+    );
+    assert_eq!(actual["UI"]["tui"]["sort_ascending"], Yaml::Boolean(true));
+    assert_eq!(
+        actual["UI"]["tui"]["future_layout"],
+        Yaml::String("compact".to_string())
+    );
+    assert_eq!(
+        actual["UI"]["community_frontend"]["theme"],
+        Yaml::String("amber".to_string())
     );
 }
 

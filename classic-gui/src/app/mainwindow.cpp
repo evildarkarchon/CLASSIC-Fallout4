@@ -76,11 +76,6 @@ QString format_elapsed_seconds(const QElapsedTimer& timer)
     return QString::number(static_cast<double>(elapsedMs) / 1000.0, 'f', 1);
 }
 
-QString settingsFilePath(const QString& dataRoot)
-{
-    return dataRoot + QStringLiteral("/CLASSIC Settings.yaml");
-}
-
 /// Resolve an existing Fallout 4 script-extender log to use as a setup detection hint.
 /// The selected version controls preference, while checking both names keeps auto-detected VR installs working.
 QString resolveExistingXseLogPath(const QString& yamlData, const QString& game, const QString& selectedGameVersion,
@@ -927,8 +922,7 @@ void MainWindow::loadSettings()
         setStatusMessage(QStringLiteral("Settings load failed: unknown error"));
     }
 
-    // Restore per-tab window geometry for the current tab
-    // (has its own YAML load + error handling)
+    // Geometry is restored from the same typed snapshot so startup renders one cohesive revision.
     int initialTab = m_tabWidget ? m_tabWidget->currentIndex() : 0;
     restoreTabGeometry(initialTab);
     m_lastTabIndex = initialTab;
@@ -941,27 +935,30 @@ void MainWindow::loadSettings()
     }
 }
 
-void MainWindow::saveSettings()
+void MainWindow::saveRememberedPath(RememberedPath path)
 {
     if (m_dataRoot.isEmpty()) {
         return;
     }
 
     try {
-        const auto snapshot = classic::gui::GameSetupUserSettings::open(m_dataRoot);
         classic::gui::GameSetupPathChanges changes;
-        changes.modsRoot.selected = true;
-        changes.modsRoot.value = m_editStagingFolder->text().trimmed().isEmpty()
-                                     ? std::nullopt
-                                     : std::optional<QString>{QDir::cleanPath(m_editStagingFolder->text().trimmed())};
-        changes.customScanInput.selected = true;
-        changes.customScanInput.value =
-            m_editCustomFolder->text().trimmed().isEmpty()
-                ? std::nullopt
-                : std::optional<QString>{QDir::cleanPath(m_editCustomFolder->text().trimmed())};
+        if (path == RememberedPath::Staging) {
+            changes.modsRoot.selected = true;
+            changes.modsRoot.value =
+                m_editStagingFolder->text().trimmed().isEmpty()
+                    ? std::nullopt
+                    : std::optional<QString>{QDir::cleanPath(m_editStagingFolder->text().trimmed())};
+        } else {
+            changes.customScanInput.selected = true;
+            changes.customScanInput.value =
+                m_editCustomFolder->text().trimmed().isEmpty()
+                    ? std::nullopt
+                    : std::optional<QString>{QDir::cleanPath(m_editCustomFolder->text().trimmed())};
+        }
 
         const auto result =
-            classic::gui::GameSetupUserSettings::commitSelectedPaths(m_dataRoot, snapshot.revision, changes);
+            classic::gui::GameSetupUserSettings::commitSelectedPaths(m_dataRoot, m_guiSettings.revision, changes);
         if (result.status == QStringLiteral("conflict")) {
             QMessageBox::warning(this, QStringLiteral("User Settings Changed"),
                                  QStringLiteral("User Settings changed before the selected paths could be saved. "
@@ -1125,8 +1122,13 @@ void MainWindow::checkFirstRunPaths()
             hasAcceptedChanges = true;
         }
 
-        if (hasAcceptedChanges && !commitChanges(changes)) {
-            return;
+        if (hasAcceptedChanges) {
+            if (!commitChanges(changes)) {
+                return;
+            }
+            // Accepted startup paths must immediately feed later scan launches and remembered-path
+            // actions from the exact revision Rust published, not the pre-intake startup snapshot.
+            m_guiSettings = classic::gui::GuiUserSettings::open(m_dataRoot);
         }
 
         QString localYamlError;
@@ -1176,34 +1178,30 @@ QString MainWindow::findDataRoot() const
 
 void MainWindow::saveTabGeometry(int tabIndex)
 {
-    if (tabIndex < 0 || tabIndex >= TAB_COUNT || m_dataDir.isEmpty()) {
+    if (tabIndex < 0 || tabIndex >= TAB_COUNT || m_dataRoot.isEmpty()) {
         return;
     }
 
-    const auto setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
-    if (setup.classification != QStringLiteral("current") || setup.commitEligibility != QStringLiteral("eligible")) {
-        // Geometry still uses the legacy writer until issue #105; never let it bypass migration or repair policy.
+    if (m_guiSettings.classification != QStringLiteral("current") ||
+        m_guiSettings.commitEligibility != QStringLiteral("eligible")) {
         return;
     }
 
-    QString settingsPath = settingsFilePath(m_dataRoot);
     try {
-        auto ops = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        const bool maximized = isMaximized();
+        const QSize normalSize = maximized ? normalGeometry().size() : size();
+        const classic::gui::GuiWindowGeometryChange transition{kGuiWindows[tabIndex],
+                                                               {maximized, normalSize.width(), normalSize.height()}};
 
-        auto prefix = std::string("UI.window_geometry.") + kTabNames[tabIndex] + ".";
-
-        bool isMax = isMaximized();
-        classic::settings::yaml_ops_set_bool_setting(*ops, prefix + "maximized", isMax);
-
-        // Save the normal (non-maximized) size
-        QSize sz = isMax ? normalGeometry().size() : size();
-        classic::settings::yaml_ops_set_integer_setting(*ops, prefix + "width", static_cast<int64_t>(sz.width()));
-        classic::settings::yaml_ops_set_integer_setting(*ops, prefix + "height", static_cast<int64_t>(sz.height()));
-
-        classic::settings::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
+        const auto result =
+            classic::gui::GuiUserSettings::commitFrontendTransition(m_dataRoot, m_guiSettings, transition);
+        if (result.status != QStringLiteral("committed")) {
+            setStatusMessage(QStringLiteral("Window geometry was not saved (%1).").arg(result.status));
+        }
+    } catch (const std::exception& error) {
+        setStatusMessage(QStringLiteral("Window geometry save failed: ") + QString::fromUtf8(error.what()));
     } catch (...) {
-        // Non-critical -- geometry will use defaults next time
+        setStatusMessage(QStringLiteral("Window geometry save failed: unknown error"));
     }
 }
 
@@ -1222,31 +1220,10 @@ void MainWindow::restoreTabGeometry(int tabIndex)
         return;
     }
 
-    int savedW = -1, savedH = -1;
-    bool wasMax = false;
-
-    try {
-        const auto frontendState =
-            classic::settings::user_settings_open_frontend_state(std::string(m_dataRoot.toUtf8().constData()));
-        const std::string targetTab = kTabNames[tabIndex];
-        const auto toWidgetDimension = [](std::uint32_t value) {
-            const auto maximum = static_cast<std::uint32_t>(std::numeric_limits<int>::max());
-            return static_cast<int>(qMin(value, maximum));
-        };
-
-        // Rust owns persisted shape/default validation while Qt retains widget constraints.
-        // The raw save path stays available until revision-aware User Settings commits land.
-        for (const auto& geometry : frontendState.window_geometry) {
-            if (std::string(geometry.tab) == targetTab) {
-                savedW = toWidgetDimension(geometry.width);
-                savedH = toWidgetDimension(geometry.height);
-                wasMax = geometry.maximized;
-                break;
-            }
-        }
-    } catch (...) {
-        // Fall through to defaults
-    }
+    const auto geometry = m_guiSettings.frontend.windowGeometry.value(kGuiWindows[tabIndex]);
+    const int savedW = geometry.width;
+    const int savedH = geometry.height;
+    const bool wasMax = geometry.maximized;
 
     int w = (savedW > 0) ? qMax(savedW, minW) : minW;
     int h = (savedH > 0) ? qMax(savedH, minH) : minH;
@@ -1329,7 +1306,7 @@ void MainWindow::onBrowseStaging()
 
     if (!dir.isEmpty()) {
         m_editStagingFolder->setText(dir);
-        saveSettings();
+        saveRememberedPath(RememberedPath::Staging);
     }
 }
 
@@ -1341,7 +1318,7 @@ void MainWindow::onBrowseCustom()
     if (!dir.isEmpty()) {
         if (validateCustomScanFolder(dir)) {
             m_editCustomFolder->setText(dir);
-            saveSettings();
+            saveRememberedPath(RememberedPath::CustomScan);
             initResultsReportDir();
         }
     }
@@ -1403,8 +1380,8 @@ void MainWindow::onCustomFolderEdited()
     QString text = m_editCustomFolder->text().trimmed();
 
     if (text.isEmpty()) {
-        // saveSettings persists the empty text as an explicit canonical clear.
-        saveSettings();
+        // The typed update persists the empty text as an explicit canonical clear.
+        saveRememberedPath(RememberedPath::CustomScan);
         initResultsReportDir();
         return;
     }
@@ -1413,11 +1390,11 @@ void MainWindow::onCustomFolderEdited()
         // Normalize and save
         QString normalized = QDir::cleanPath(text);
         m_editCustomFolder->setText(normalized);
-        saveSettings();
+        saveRememberedPath(RememberedPath::CustomScan);
         initResultsReportDir();
     } else {
         // Validation cleared the text box, so persist the canonical clear.
-        saveSettings();
+        saveRememberedPath(RememberedPath::CustomScan);
         initResultsReportDir();
     }
 }
@@ -1516,6 +1493,8 @@ void MainWindow::onExit()
 {
     if (m_geometryInitialized && m_lastTabIndex >= 0) {
         saveTabGeometry(m_lastTabIndex);
+        // The explicit exit transition already persisted geometry; avoid a duplicate destructor commit.
+        m_geometryInitialized = false;
     }
     QApplication::quit();
 }

@@ -29,6 +29,12 @@ impl App {
                     KeyCode::Enter | KeyCode::Char('y') => self.confirm_results_delete(),
                     _ => {}
                 },
+                Overlay::Settings => match key.code {
+                    KeyCode::Esc => self.close_overlay(),
+                    KeyCode::Char('m') | KeyCode::Char('M') => self.apply_user_settings_migration(),
+                    KeyCode::Char('i') | KeyCode::Char('I') => self.import_legacy_tui_state(),
+                    _ => {}
+                },
                 _ => match key.code {
                     KeyCode::Esc | KeyCode::Enter => self.close_overlay(),
                     _ => {}
@@ -468,7 +474,15 @@ impl App {
     fn activate_focus(&mut self) {
         match self.main_focus {
             MainFocus::StagingInput | MainFocus::CustomInput => {
-                let _ = self.save_paths_from_inputs();
+                match self.save_paths_from_inputs() {
+                    Ok(()) => {
+                        self.scan_status = "User Settings paths saved".to_string();
+                    }
+                    Err(error) => {
+                        self.scan_status = error;
+                    }
+                }
+                self.status_clear_at = None;
             }
             MainFocus::StagingBrowse | MainFocus::CustomBrowse => {
                 self.open_folder_dialog_for_focus()

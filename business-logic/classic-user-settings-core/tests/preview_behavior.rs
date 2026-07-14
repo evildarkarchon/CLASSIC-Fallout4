@@ -2,8 +2,8 @@
 
 use classic_shared_core::GameId;
 use classic_user_settings_core::{
-    GameVersionSelection, UpdateSource, UserSettings, UserSettingsUpdate, UserSettingsUpdateField,
-    UserSettingsUpdatePreview,
+    GameVersionSelection, GuiWindow, UpdateSource, UserSettings, UserSettingsUpdate,
+    UserSettingsUpdateField, UserSettingsUpdatePreview,
 };
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -166,6 +166,80 @@ fn preview_accepts_the_frontend_auto_switch_preference_without_persisting_it() {
         &[UserSettingsUpdateField::AutoSwitchAfterScan(false)]
     );
     assert_eq!(std::fs::read(path).unwrap(), bytes_before);
+}
+
+#[test]
+fn preview_accepts_one_typed_gui_window_geometry_transition_without_persisting_it() {
+    let root = tempfile::tempdir().unwrap();
+    let path = install_fixture(root.path(), "canonical_current_nested.yaml");
+    let bytes_before = std::fs::read(&path).unwrap();
+    let settings = UserSettings::open(root.path());
+
+    let preview = settings.preview_update(UserSettingsUpdate::new().with_window_geometry(
+        GuiWindow::Results,
+        true,
+        1280,
+        720,
+    ));
+
+    let UserSettingsUpdatePreview::Accepted(accepted) = preview else {
+        panic!("a valid typed GUI geometry transition should produce an accepted preview");
+    };
+    assert_eq!(
+        accepted.fields(),
+        &[
+            UserSettingsUpdateField::WindowMaximized(GuiWindow::Results, true),
+            UserSettingsUpdateField::WindowWidth(GuiWindow::Results, 1280),
+            UserSettingsUpdateField::WindowHeight(GuiWindow::Results, 720),
+        ]
+    );
+    assert_eq!(
+        accepted
+            .fields()
+            .iter()
+            .map(UserSettingsUpdateField::canonical_path)
+            .collect::<Vec<_>>(),
+        vec![
+            "/UI/window_geometry/results_tab/maximized",
+            "/UI/window_geometry/results_tab/width",
+            "/UI/window_geometry/results_tab/height",
+        ]
+    );
+    assert_eq!(std::fs::read(path).unwrap(), bytes_before);
+}
+
+#[test]
+fn preview_rejects_non_positive_gui_window_dimensions_as_one_update() {
+    let root = tempfile::tempdir().unwrap();
+    install_fixture(root.path(), "canonical_current_nested.yaml");
+    let settings = UserSettings::open(root.path());
+
+    let preview = settings.preview_update(UserSettingsUpdate::new().with_window_geometry(
+        GuiWindow::Main,
+        false,
+        0,
+        -1,
+    ));
+
+    let UserSettingsUpdatePreview::Rejected(diagnostics) = preview else {
+        panic!("invalid GUI dimensions must reject the complete geometry transition");
+    };
+    assert_eq!(
+        diagnostics
+            .iter()
+            .map(|diagnostic| (diagnostic.field_path(), diagnostic.code()))
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                Some("/UI/window_geometry/main_tab/width"),
+                "invalid_range_gui_geometry_width",
+            ),
+            (
+                Some("/UI/window_geometry/main_tab/height"),
+                "invalid_range_gui_geometry_height",
+            ),
+        ]
+    );
 }
 
 #[test]
@@ -374,4 +448,68 @@ fn preview_carries_every_requested_game_setup_field_as_canonical_paths() {
         accepted.fields()[5],
         UserSettingsUpdateField::IniFolder(None)
     ));
+}
+
+#[test]
+fn preview_carries_one_complete_tui_remembered_state_transition() {
+    let root = tempfile::tempdir().unwrap();
+    install_fixture(root.path(), "canonical_current_nested.yaml");
+    let settings = UserSettings::open(root.path());
+
+    let preview =
+        settings.preview_update(UserSettingsUpdate::new().with_tui_remembered_state(2, 42, true));
+
+    let UserSettingsUpdatePreview::Accepted(accepted) = preview else {
+        panic!("valid TUI remembered state should be accepted");
+    };
+    assert_eq!(
+        accepted
+            .fields()
+            .iter()
+            .map(UserSettingsUpdateField::canonical_path)
+            .collect::<Vec<_>>(),
+        vec![
+            "/UI/tui/active_tab",
+            "/UI/tui/results_panel_width",
+            "/UI/tui/sort_ascending",
+        ]
+    );
+    assert_eq!(
+        accepted.fields(),
+        &[
+            UserSettingsUpdateField::TuiActiveTab(2),
+            UserSettingsUpdateField::TuiResultsPanelWidth(42),
+            UserSettingsUpdateField::TuiSortAscending(true),
+        ]
+    );
+}
+
+#[test]
+fn preview_rejects_the_complete_tui_transition_when_numeric_values_are_invalid() {
+    let root = tempfile::tempdir().unwrap();
+    install_fixture(root.path(), "canonical_current_nested.yaml");
+    let settings = UserSettings::open(root.path());
+
+    let preview = settings.preview_update(UserSettingsUpdate::new().with_tui_remembered_state(
+        4,
+        i64::from(u16::MAX) + 1,
+        true,
+    ));
+
+    let UserSettingsUpdatePreview::Rejected(diagnostics) = preview else {
+        panic!("invalid TUI remembered state must reject the complete update");
+    };
+    assert_eq!(
+        diagnostics
+            .iter()
+            .map(|diagnostic| (diagnostic.field_path(), diagnostic.code()))
+            .collect::<Vec<_>>(),
+        vec![
+            (Some("/UI/tui/active_tab"), "invalid_range_tui_active_tab"),
+            (
+                Some("/UI/tui/results_panel_width"),
+                "invalid_range_tui_results_panel_width"
+            ),
+        ]
+    );
 }

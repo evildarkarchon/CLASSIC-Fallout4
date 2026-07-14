@@ -1,7 +1,10 @@
 //! Conflict-safe publication of accepted User Settings Updates.
 
 use crate::default_settings::published_defaults_document;
-use crate::{AcceptedUserSettingsUpdate, Revision, UserSettings, UserSettingsUpdateField};
+use crate::{
+    AcceptedUserSettingsUpdate, GuiWindow, Revision, UpdateDiagnostic, UserSettings,
+    UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview,
+};
 use classic_settings_core::{Yaml, YamlOperations, parse_yaml_content};
 use sha2::{Digest, Sha256};
 use std::cell::Cell;
@@ -26,6 +29,28 @@ pub enum UserSettingsCommitOutcome {
         /// Revision against which the update was accepted.
         expected_revision: Revision,
         /// Revision found after acquiring cross-process coordination.
+        actual_revision: Revision,
+    },
+}
+
+/// Result of publishing one replay-safe frontend geometry transition.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum UserSettingsFrontendTransitionOutcome {
+    /// The transition was published, possibly after one conflict retry.
+    Committed {
+        /// SHA-256 revision of the newly published document.
+        revision: Revision,
+    },
+    /// The transition was invalid against the snapshot used by the final attempt.
+    Rejected {
+        /// Structured validation diagnostics for the complete transition.
+        diagnostics: Vec<UpdateDiagnostic>,
+    },
+    /// A second concurrent edit won after the one allowed replay attempt.
+    Conflict {
+        /// Revision against which the final retry was accepted.
+        expected_revision: Revision,
+        /// Newer revision found while publishing the retry.
         actual_revision: Revision,
     },
 }
@@ -64,6 +89,78 @@ impl fmt::Display for UserSettingsCommitError {
 }
 
 impl std::error::Error for UserSettingsCommitError {}
+
+impl UserSettings {
+    /// Publishes one accepted GUI geometry transition with at most one conflict replay.
+    ///
+    /// Geometry is replay-safe because it contains only the completed widget transition, not
+    /// other editable form values. The core reopens and revalidates the complete transition for
+    /// each attempt; a second concurrent edit is returned as a conflict without being overwritten.
+    /// Operational reopen, lock, parse, and publication failures return
+    /// [`UserSettingsCommitError`] without partially persisting the transition.
+    pub fn commit_frontend_geometry_transition(
+        classic_root: impl AsRef<Path>,
+        expected_revision: &Revision,
+        window: GuiWindow,
+        maximized: bool,
+        width: i64,
+        height: i64,
+    ) -> Result<UserSettingsFrontendTransitionOutcome, UserSettingsCommitError> {
+        let classic_root = classic_root.as_ref();
+        let update =
+            UserSettingsUpdate::new().with_window_geometry(window, maximized, width, height);
+        let first =
+            commit_frontend_transition_attempt(classic_root, expected_revision, update.clone())?;
+        let UserSettingsFrontendTransitionOutcome::Conflict {
+            actual_revision, ..
+        } = first
+        else {
+            return Ok(first);
+        };
+
+        commit_frontend_transition_attempt(classic_root, &actual_revision, update)
+    }
+}
+
+/// Reopens, validates, and publishes one geometry transition against one expected revision.
+fn commit_frontend_transition_attempt(
+    classic_root: &Path,
+    expected_revision: &Revision,
+    update: UserSettingsUpdate,
+) -> Result<UserSettingsFrontendTransitionOutcome, UserSettingsCommitError> {
+    let settings = UserSettings::open(classic_root);
+    if matches!(settings.revision(), Revision::Unavailable) {
+        return Err(UserSettingsCommitError::new(
+            "commit_source_unavailable",
+            "User Settings could not be reopened before the frontend transition commit",
+        ));
+    }
+    if settings.revision() != expected_revision {
+        return Ok(UserSettingsFrontendTransitionOutcome::Conflict {
+            expected_revision: expected_revision.clone(),
+            actual_revision: settings.revision().clone(),
+        });
+    }
+
+    let accepted = match settings.preview_update(update) {
+        UserSettingsUpdatePreview::Accepted(accepted) => accepted,
+        UserSettingsUpdatePreview::Rejected(diagnostics) => {
+            return Ok(UserSettingsFrontendTransitionOutcome::Rejected { diagnostics });
+        }
+    };
+    match accepted.commit(classic_root)? {
+        UserSettingsCommitOutcome::Committed { revision } => {
+            Ok(UserSettingsFrontendTransitionOutcome::Committed { revision })
+        }
+        UserSettingsCommitOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        } => Ok(UserSettingsFrontendTransitionOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        }),
+    }
+}
 
 impl AcceptedUserSettingsUpdate {
     /// Commits this accepted update against the latest canonical document.
@@ -196,6 +293,8 @@ fn field_yaml_value(field: &UserSettingsUpdateField) -> Yaml {
     match field {
         UserSettingsUpdateField::UpdateCheck(value)
         | UserSettingsUpdateField::AutoSwitchAfterScan(value)
+        | UserSettingsUpdateField::WindowMaximized(_, value)
+        | UserSettingsUpdateField::TuiSortAscending(value)
         | UserSettingsUpdateField::FcxMode(value)
         | UserSettingsUpdateField::SimplifyLogs(value)
         | UserSettingsUpdateField::ShowStatistics(value)
@@ -227,7 +326,11 @@ fn field_yaml_value(field: &UserSettingsUpdateField) -> Yaml {
                 })
                 .collect(),
         ),
-        UserSettingsUpdateField::MaxConcurrentScans(value) => Yaml::Integer(i64::from(*value)),
+        UserSettingsUpdateField::MaxConcurrentScans(value)
+        | UserSettingsUpdateField::WindowWidth(_, value)
+        | UserSettingsUpdateField::WindowHeight(_, value) => Yaml::Integer(i64::from(*value)),
+        UserSettingsUpdateField::TuiActiveTab(value) => Yaml::Integer(i64::from(*value)),
+        UserSettingsUpdateField::TuiResultsPanelWidth(value) => Yaml::Integer(i64::from(*value)),
     }
 }
 

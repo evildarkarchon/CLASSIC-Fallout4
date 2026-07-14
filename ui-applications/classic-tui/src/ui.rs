@@ -172,8 +172,7 @@ impl App {
             ),
             Overlay::Settings => (
                 "Settings",
-                "Settings overlay is planned next.\n\nMain tab paths already persist to YAML.\nPress Esc to close"
-                    .to_string(),
+                self.settings_overlay_text(),
             ),
             Overlay::ConfirmRemoveBackup(backup_type) => {
                 let text = format!(

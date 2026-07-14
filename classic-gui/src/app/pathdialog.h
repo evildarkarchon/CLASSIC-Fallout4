@@ -7,7 +7,7 @@
 ///
 /// Uses classic::scangame::game_setup_needs_path_detection() to determine which
 /// paths are missing, then presents QLineEdit + Browse fields for the
-/// user to fill in. Results are saved to CLASSIC Settings.yaml on OK.
+/// user to fill in. OK returns selected paths to the caller for an explicit typed commit.
 class ManualPathDialog : public QDialog {
     Q_OBJECT
 

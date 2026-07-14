@@ -19,8 +19,8 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_rust_target_crates_count_matches_repo_root_inventory() -> None:
-    assert len(RUST_TARGET_CRATES) == 18, (
-        f"Expected 18 RUST_TARGET_CRATES in the repo-root inventory, "
+    assert len(RUST_TARGET_CRATES) == 19, (
+        f"Expected 19 RUST_TARGET_CRATES in the repo-root inventory, "
         f"got {len(RUST_TARGET_CRATES)}"
     )
 
@@ -97,8 +97,36 @@ def test_pub_crate_modules_do_not_emit_public_symbols(tmp_path: Path) -> None:
     assert "VisibleType" in symbols
 
 
+def test_multiline_public_function_signature_is_discovered(tmp_path: Path) -> None:
+    """Rustfmt-formatted public methods remain visible to parity accounting."""
+    crate_dir = tmp_path / "fixture" / "src"
+    crate_dir.mkdir(parents=True)
+    (crate_dir / "lib.rs").write_text(
+        "pub fn with_window_geometry(\n"
+        "    window: GuiWindow,\n"
+        "    width: i64,\n"
+        ") -> Self { todo!() }\n",
+        encoding="utf-8",
+    )
+
+    original_targets = gb.RUST_TARGET_CRATES
+    original_owners = gb.RUST_OWNER_BY_CRATE
+    try:
+        gb.RUST_TARGET_CRATES = {"fixture-crate": "fixture/src/lib.rs"}
+        gb.RUST_OWNER_BY_CRATE = {"fixture-crate": "aux"}
+        surface = gb.parse_rust_surface(tmp_path, set())
+    finally:
+        gb.RUST_TARGET_CRATES = original_targets
+        gb.RUST_OWNER_BY_CRATE = original_owners
+
+    function = next(
+        entry for entry in surface["symbols"] if entry["symbol"] == "with_window_geometry"
+    )
+    assert function["arity"] == 2
+
+
 def test_python_target_modules_count_matches_repo_root_inventory() -> None:
-    assert len(PYTHON_TARGET_MODULES) == 17
+    assert len(PYTHON_TARGET_MODULES) == 18
 
 
 def test_classic_shared_pyi_path_is_correct() -> None:

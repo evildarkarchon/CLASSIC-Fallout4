@@ -5,6 +5,30 @@ use crate::{CommitEligibility, GameVersionSelection, Revision, UpdateSource, Use
 use classic_shared_core::GameId;
 use std::collections::BTreeMap;
 
+/// Raw geometry retained until preview validates both dimensions together.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct PendingWindowGeometry {
+    maximized: bool,
+    width: i64,
+    height: i64,
+}
+
+/// Raw remembered TUI state retained until preview validates the numeric values together.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct PendingTuiRememberedState {
+    active_tab: i64,
+    results_panel_width: i64,
+    sort_ascending: bool,
+}
+
+/// Canonical metadata for the three fields that make up one remembered window geometry.
+#[derive(Debug, Clone, Copy)]
+struct WindowGeometrySettings {
+    maximized: SettingMetadata,
+    width: SettingMetadata,
+    height: SettingMetadata,
+}
+
 /// A caller-authored, non-persisting request to change one or more User Settings.
 ///
 /// Builder methods retain raw values that require validation so `preview_update` can
@@ -14,6 +38,8 @@ pub struct UserSettingsUpdate {
     update_check: Option<bool>,
     update_source: Option<String>,
     auto_switch_after_scan: Option<bool>,
+    window_geometry: BTreeMap<GuiWindow, PendingWindowGeometry>,
+    tui_remembered_state: Option<PendingTuiRememberedState>,
     managed_game: Option<String>,
     game_version_selection: Option<String>,
     game_root: Option<Option<String>>,
@@ -54,6 +80,46 @@ impl UserSettingsUpdate {
     /// Requests whether the GUI should switch to Results after a completed scan.
     pub fn with_auto_switch_after_scan(mut self, value: bool) -> Self {
         self.auto_switch_after_scan = Some(value);
+        self
+    }
+
+    /// Requests the normal-state dimensions and maximized state remembered for one GUI window.
+    ///
+    /// Signed dimensions are retained until preview so adapters can return structured validation
+    /// diagnostics after checking the complete User Settings Update.
+    pub fn with_window_geometry(
+        mut self,
+        window: GuiWindow,
+        maximized: bool,
+        width: i64,
+        height: i64,
+    ) -> Self {
+        self.window_geometry.insert(
+            window,
+            PendingWindowGeometry {
+                maximized,
+                width,
+                height,
+            },
+        );
+        self
+    }
+
+    /// Requests one complete remembered TUI presentation-state transition.
+    ///
+    /// Signed numeric values are retained until preview so adapters receive structured
+    /// diagnostics for the complete all-or-nothing transition.
+    pub fn with_tui_remembered_state(
+        mut self,
+        active_tab: i64,
+        results_panel_width: i64,
+        sort_ascending: bool,
+    ) -> Self {
+        self.tui_remembered_state = Some(PendingTuiRememberedState {
+            active_tab,
+            results_panel_width,
+            sort_ascending,
+        });
         self
     }
 
@@ -166,6 +232,58 @@ impl UserSettingsUpdate {
     }
 }
 
+/// One maintained GUI window whose remembered geometry belongs to frontend state.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum GuiWindow {
+    /// Main Options tab window.
+    Main,
+    /// File Backup tab window.
+    Backups,
+    /// Articles tab window.
+    Articles,
+    /// Results tab window.
+    Results,
+}
+
+impl GuiWindow {
+    /// Parses the stable snake-case token used by binding adapters.
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "main_tab" => Some(Self::Main),
+            "backups_tab" => Some(Self::Backups),
+            "articles_tab" => Some(Self::Articles),
+            "results_tab" => Some(Self::Results),
+            _ => None,
+        }
+    }
+
+    /// Returns named canonical metadata for this window's three persisted geometry fields.
+    fn settings(self) -> WindowGeometrySettings {
+        match self {
+            Self::Main => WindowGeometrySettings {
+                maximized: MAIN_TAB_MAXIMIZED,
+                width: MAIN_TAB_WIDTH,
+                height: MAIN_TAB_HEIGHT,
+            },
+            Self::Backups => WindowGeometrySettings {
+                maximized: BACKUPS_TAB_MAXIMIZED,
+                width: BACKUPS_TAB_WIDTH,
+                height: BACKUPS_TAB_HEIGHT,
+            },
+            Self::Articles => WindowGeometrySettings {
+                maximized: ARTICLES_TAB_MAXIMIZED,
+                width: ARTICLES_TAB_WIDTH,
+                height: ARTICLES_TAB_HEIGHT,
+            },
+            Self::Results => WindowGeometrySettings {
+                maximized: RESULTS_TAB_MAXIMIZED,
+                width: RESULTS_TAB_WIDTH,
+                height: RESULTS_TAB_HEIGHT,
+            },
+        }
+    }
+}
+
 /// One validated canonical field in an accepted User Settings Update preview.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UserSettingsUpdateField {
@@ -175,6 +293,18 @@ pub enum UserSettingsUpdateField {
     UpdateSource(UpdateSource),
     /// `UI.preferences.auto_switch_after_scan`.
     AutoSwitchAfterScan(bool),
+    /// Maximized state under `UI.window_geometry` for one maintained GUI window.
+    WindowMaximized(GuiWindow, bool),
+    /// Normal-state width under `UI.window_geometry` for one maintained GUI window.
+    WindowWidth(GuiWindow, u32),
+    /// Normal-state height under `UI.window_geometry` for one maintained GUI window.
+    WindowHeight(GuiWindow, u32),
+    /// `UI.tui.active_tab`.
+    TuiActiveTab(u8),
+    /// `UI.tui.results_panel_width`.
+    TuiResultsPanelWidth(u16),
+    /// `UI.tui.sort_ascending`.
+    TuiSortAscending(bool),
     /// `CLASSIC_Settings.Managed Game`.
     ManagedGame(GameId),
     /// `CLASSIC_Settings.Game Version`.
@@ -228,6 +358,12 @@ impl UserSettingsUpdateField {
             Self::UpdateCheck(_) => metadata_paths(UPDATE_CHECK),
             Self::UpdateSource(_) => metadata_paths(UPDATE_SOURCE),
             Self::AutoSwitchAfterScan(_) => metadata_paths(AUTO_SWITCH_AFTER_SCAN),
+            Self::WindowMaximized(window, _) => metadata_paths(window.settings().maximized),
+            Self::WindowWidth(window, _) => metadata_paths(window.settings().width),
+            Self::WindowHeight(window, _) => metadata_paths(window.settings().height),
+            Self::TuiActiveTab(_) => metadata_paths(TUI_ACTIVE_TAB),
+            Self::TuiResultsPanelWidth(_) => metadata_paths(TUI_RESULTS_PANEL_WIDTH),
+            Self::TuiSortAscending(_) => metadata_paths(TUI_SORT_ASCENDING),
             Self::ManagedGame(_) => metadata_paths(MANAGED_GAME),
             Self::GameVersionSelection(_) => metadata_paths(GAME_VERSION),
             Self::GameRoot(_) => metadata_paths(GAME_FOLDER_PATH),
@@ -396,6 +532,62 @@ impl UserSettings {
         if let Some(value) = update.auto_switch_after_scan {
             fields.push(UserSettingsUpdateField::AutoSwitchAfterScan(value));
         }
+        for (window, geometry) in update.window_geometry {
+            let settings = window.settings();
+            let validated_width = validate_window_dimension(
+                geometry.width,
+                settings.width.pointer_path,
+                "invalid_range_gui_geometry_width",
+                "GUI window width must be a positive unsigned 32-bit integer",
+                &mut diagnostics,
+            );
+            let validated_height = validate_window_dimension(
+                geometry.height,
+                settings.height.pointer_path,
+                "invalid_range_gui_geometry_height",
+                "GUI window height must be a positive unsigned 32-bit integer",
+                &mut diagnostics,
+            );
+            if let (Some(width), Some(height)) = (validated_width, validated_height) {
+                fields.extend([
+                    UserSettingsUpdateField::WindowMaximized(window, geometry.maximized),
+                    UserSettingsUpdateField::WindowWidth(window, width),
+                    UserSettingsUpdateField::WindowHeight(window, height),
+                ]);
+            }
+        }
+        if let Some(state) = update.tui_remembered_state {
+            let active_tab = match u8::try_from(state.active_tab) {
+                Ok(value) if value <= 3 => Some(value),
+                _ => {
+                    diagnostics.push(UpdateDiagnostic::for_field(
+                        TUI_ACTIVE_TAB.pointer_path,
+                        "invalid_range_tui_active_tab",
+                        "TUI active tab must be an integer from 0 through 3",
+                    ));
+                    None
+                }
+            };
+            let results_panel_width = match u16::try_from(state.results_panel_width) {
+                Ok(value) => Some(value),
+                Err(_) => {
+                    diagnostics.push(UpdateDiagnostic::for_field(
+                        TUI_RESULTS_PANEL_WIDTH.pointer_path,
+                        "invalid_range_tui_results_panel_width",
+                        "TUI Results panel width must be an unsigned 16-bit integer",
+                    ));
+                    None
+                }
+            };
+            if let (Some(active_tab), Some(results_panel_width)) = (active_tab, results_panel_width)
+            {
+                fields.extend([
+                    UserSettingsUpdateField::TuiActiveTab(active_tab),
+                    UserSettingsUpdateField::TuiResultsPanelWidth(results_panel_width),
+                    UserSettingsUpdateField::TuiSortAscending(state.sort_ascending),
+                ]);
+            }
+        }
         if let Some(value) = update.managed_game {
             match parse_managed_game(&value) {
                 Some(value) => fields.push(UserSettingsUpdateField::ManagedGame(value)),
@@ -546,6 +738,23 @@ impl UserSettings {
     }
 }
 
+/// Validates one persisted GUI dimension without discarding other update diagnostics.
+fn validate_window_dimension(
+    value: i64,
+    field_path: &'static str,
+    code: &'static str,
+    message: &'static str,
+    diagnostics: &mut Vec<UpdateDiagnostic>,
+) -> Option<u32> {
+    match u32::try_from(value) {
+        Ok(value) if value > 0 => Some(value),
+        _ => {
+            diagnostics.push(UpdateDiagnostic::for_field(field_path, code, message));
+            None
+        }
+    }
+}
+
 /// Validates one optional path update and appends either its field or diagnostic.
 fn validate_optional_path_update(
     value: Option<Option<String>>,
@@ -578,9 +787,12 @@ fn valid_optional_absolute_path(path: Option<&str>) -> bool {
     is_absolute_user_path(path)
 }
 use crate::default_settings::{
-    AUTO_SWITCH_AFTER_SCAN, DOCUMENTS_FOLDER_PATH, FCX_MODE, FORMID_DATABASES, GAME_EXE_PATH,
-    GAME_FOLDER_PATH, GAME_VERSION, INI_FOLDER_PATH, MANAGED_GAME, MAX_CONCURRENT_SCANS,
-    MODS_FOLDER_PATH, MOVE_UNSOLVED_LOGS, PAPYRUS_LOG_PATH, SCAN_CUSTOM_PATH, SHOW_FORMID_VALUES,
-    SHOW_STATISTICS, SIMPLIFY_LOGS, SettingMetadata, UNSOLVED_LOGS_DESTINATION, UPDATE_CHECK,
-    UPDATE_SOURCE,
+    ARTICLES_TAB_HEIGHT, ARTICLES_TAB_MAXIMIZED, ARTICLES_TAB_WIDTH, AUTO_SWITCH_AFTER_SCAN,
+    BACKUPS_TAB_HEIGHT, BACKUPS_TAB_MAXIMIZED, BACKUPS_TAB_WIDTH, DOCUMENTS_FOLDER_PATH, FCX_MODE,
+    FORMID_DATABASES, GAME_EXE_PATH, GAME_FOLDER_PATH, GAME_VERSION, INI_FOLDER_PATH,
+    MAIN_TAB_HEIGHT, MAIN_TAB_MAXIMIZED, MAIN_TAB_WIDTH, MANAGED_GAME, MAX_CONCURRENT_SCANS,
+    MODS_FOLDER_PATH, MOVE_UNSOLVED_LOGS, PAPYRUS_LOG_PATH, RESULTS_TAB_HEIGHT,
+    RESULTS_TAB_MAXIMIZED, RESULTS_TAB_WIDTH, SCAN_CUSTOM_PATH, SHOW_FORMID_VALUES,
+    SHOW_STATISTICS, SIMPLIFY_LOGS, SettingMetadata, TUI_ACTIVE_TAB, TUI_RESULTS_PANEL_WIDTH,
+    TUI_SORT_ASCENDING, UNSOLVED_LOGS_DESTINATION, UPDATE_CHECK, UPDATE_SOURCE,
 };

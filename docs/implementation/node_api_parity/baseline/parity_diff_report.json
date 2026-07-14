@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-07-14T12:54:26.245577+00:00",
+  "generated_at_utc": "2026-07-14T23:05:21.985128+00:00",
   "summary": {
-    "tier1_contract_total": 877,
-    "tier1_matched": 877,
+    "tier1_contract_total": 880,
+    "tier1_matched": 880,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -1389,6 +1389,19 @@
       "actual_node_arity": null
     },
     {
+      "id": "user-settings-gui-window-update-type",
+      "tier": "tier1",
+      "owner_module": "user_settings",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "GuiWindow",
+      "node_export": "JsGuiWindow",
+      "status": "matched",
+      "expected_node_kind": "const_enum",
+      "actual_node_kind": "const_enum",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
       "id": "user-settings-window-geometry-type",
       "tier": "tier1",
       "owner_module": "user_settings",
@@ -1790,6 +1803,32 @@
       "actual_node_kind": "function",
       "expected_node_arity": 3,
       "actual_node_arity": 3
+    },
+    {
+      "id": "user-settings-frontend-transition-outcome-type",
+      "tier": "tier1",
+      "owner_module": "user_settings",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "UserSettingsFrontendTransitionOutcome",
+      "node_export": "JsUserSettingsCommitResult",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "user-settings-commit-frontend-geometry-transition",
+      "tier": "tier1",
+      "owner_module": "user_settings",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "commit_frontend_geometry_transition",
+      "node_export": "commitFrontendGeometryTransition",
+      "status": "matched",
+      "expected_node_kind": "function",
+      "actual_node_kind": "function",
+      "expected_node_arity": 4,
+      "actual_node_arity": 4
     },
     {
       "id": "user-settings-accepted-update-commit",

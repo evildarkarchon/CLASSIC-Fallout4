@@ -7,10 +7,7 @@ Crate metadata:
 - Crate: `classic-config-core`
 - Description: `Pure Rust configuration loading business logic for CLASSIC`
 
-This crate is the Rust-side configuration loader for CLASSIC. It does two related jobs:
-
-1. Load the user/runtime settings YAML used by UI surfaces such as the CLI and TUI.
-2. Load the main/game/ignore YAML dataset used by crash-log analysis and related bindings.
+This crate loads curated CLASSIC YAML Data and retains transitional compatibility models. Canonical persisted user choices for every maintained interface are owned by `classic-user-settings-core`; the TUI does not open or save `ClassicConfig`.
 
 Schema reference: [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md).
 
@@ -24,7 +21,6 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 
 Use this crate when you need to:
 
-- read or persist `CLASSIC Settings.yaml`
 - resolve standard CLASSIC YAML file locations
 - load the three-file CLASSIC YAML dataset into a single Rust struct
 - apply version-registry-backed metadata fallbacks while building config data
@@ -45,7 +41,7 @@ Those concerns live in related crates such as [`classic-scanlog-core`](../../bus
 
 ### `config`
 
-Runtime settings API for CLI/TUI-style application configuration.
+Transitional compatibility representation for callers not yet removed by the ADR-0004 cleanup.
 
 - `YamlSource` - enum of standard CLASSIC YAML locations
 - `ClassicConfig` - persisted user/runtime settings

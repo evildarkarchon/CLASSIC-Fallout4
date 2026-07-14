@@ -23,8 +23,6 @@ private slots:
     void mainwindow_does_not_use_deprecated_vr_mode_setting();
     /// Verifies that detected and manual paths reach one final consent-gated commit.
     void mainwindow_defers_setup_commit_until_manual_completion();
-    /// Verifies that legacy geometry persistence cannot bypass User Settings migration policy.
-    void geometry_writer_refuses_non_current_user_settings();
     void mainwindow_preserves_legacy_settings_on_failed_migration();
     void update_worker_declares_not_published_classification();
     void mainwindow_handles_not_published_without_error_dialog();
@@ -324,26 +322,6 @@ void ScanSettingsWiringTests::mainwindow_defers_setup_commit_until_manual_comple
     QVERIFY2(body.contains(QStringLiteral("bootstrapWithSelectedPaths")) &&
                  body.contains(QStringLiteral("commitSelectedPaths")),
              "Missing and existing documents should use distinct explicitly named commit operations");
-}
-
-void ScanSettingsWiringTests::geometry_writer_refuses_non_current_user_settings()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
-    QFile file(sourcePath);
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString source = QString::fromUtf8(file.readAll());
-    const qsizetype start = source.indexOf(QStringLiteral("void MainWindow::saveTabGeometry("));
-    const qsizetype end = source.indexOf(QStringLiteral("\nvoid MainWindow::restoreTabGeometry("), start);
-    QVERIFY2(start >= 0 && end > start, "saveTabGeometry should be readable as one function body");
-    const QString body = source.mid(start, end - start);
-
-    const qsizetype eligibilityGuard = body.indexOf(QStringLiteral("setup.commitEligibility"));
-    const qsizetype rawSave = body.indexOf(QStringLiteral("yaml_ops_save_file"));
-    QVERIFY2(body.contains(QStringLiteral("setup.classification")) && eligibilityGuard >= 0,
-             "Geometry writes must require a trusted current User Settings snapshot");
-    QVERIFY2(rawSave > eligibilityGuard, "Migration eligibility must be checked before the legacy geometry writer");
 }
 
 void ScanSettingsWiringTests::mainwindow_preserves_legacy_settings_on_failed_migration()

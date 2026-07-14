@@ -47,9 +47,25 @@ struct GuiGameSetupSettings {
     std::optional<QString> papyrusLog;
 };
 
+/// Stable identity for one maintained native GUI window.
+enum class GuiWindow {
+    Main,
+    Backups,
+    Articles,
+    Results,
+};
+
+/// Widget-independent normal-state size and maximized state for one GUI window.
+struct GuiWindowGeometry {
+    bool maximized{};
+    int width{};
+    int height{};
+};
+
 /// Typed frontend preferences edited or consumed by the native GUI.
 struct GuiFrontendPreferences {
     bool autoSwitchAfterScan{};
+    QMap<GuiWindow, GuiWindowGeometry> windowGeometry;
 };
 
 /// Revision-approved values passed from the GUI settings snapshot into one Crash Log Scan launch.
@@ -92,11 +108,18 @@ struct SelectedGuiOptionalString {
     std::optional<QString> value;
 };
 
+/// One accepted frontend-state transition for a maintained GUI window.
+struct GuiWindowGeometryChange {
+    GuiWindow window{};
+    GuiWindowGeometry geometry;
+};
+
 /// Caller-authored GUI changes that are previewed and committed as one User Settings Update.
 struct GuiUserSettingsChanges {
     std::optional<bool> updateCheck;
     std::optional<QString> updateSource;
     std::optional<bool> autoSwitchAfterScan;
+    std::optional<GuiWindowGeometryChange> windowGeometry;
     std::optional<QString> gameVersion;
     SelectedGuiOptionalString gameRoot;
     SelectedGuiOptionalString gameExecutable;
@@ -136,6 +159,14 @@ public:
     /// propagate as bridge exceptions and never partially persist selected fields.
     static GuiUserSettingsCommitResult commit(const QString& classicRoot, const QString& expectedRevision,
                                               const GuiUserSettingsChanges& changes);
+
+    /// Commits one accepted geometry transition through the Rust-owned bounded retry operation.
+    ///
+    /// The supplied snapshot is refreshed after success so subsequent GUI actions consume the
+    /// revision published by this transition.
+    static GuiUserSettingsCommitResult commitFrontendTransition(const QString& classicRoot,
+                                                                GuiUserSettingsSnapshot& snapshot,
+                                                                const GuiWindowGeometryChange& transition);
 };
 
 } // namespace classic::gui

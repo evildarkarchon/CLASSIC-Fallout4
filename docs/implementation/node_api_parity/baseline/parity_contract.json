@@ -1105,6 +1105,16 @@
       "nodeKind": "interface"
     },
     {
+      "id": "user-settings-gui-window-update-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "GuiWindow",
+      "rustKind": "enum",
+      "nodeExport": "JsGuiWindow",
+      "nodeKind": "const_enum"
+    },
+    {
       "id": "user-settings-window-geometry-type",
       "tier": "tier1",
       "ownerModule": "user_settings",
@@ -1414,6 +1424,27 @@
       "nodeExport": "commitUserSettingsUpdate",
       "nodeKind": "function",
       "nodeArity": 3
+    },
+    {
+      "id": "user-settings-frontend-transition-outcome-type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsFrontendTransitionOutcome",
+      "rustKind": "enum",
+      "nodeExport": "JsUserSettingsCommitResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "user-settings-commit-frontend-geometry-transition",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "commit_frontend_geometry_transition",
+      "rustKind": "function",
+      "nodeExport": "commitFrontendGeometryTransition",
+      "nodeKind": "function",
+      "nodeArity": 4
     },
     {
       "id": "user-settings-accepted-update-commit",

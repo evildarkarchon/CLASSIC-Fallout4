@@ -966,6 +966,28 @@ export declare class JsIniValidator {
   scanConfigFiles(gameRoot: string): Record<string, string>
 }
 
+/** Opaque native handle to a verified legacy TUI state import receipt. */
+export declare class JsLegacyTuiStateImportReceipt {
+  /** Returns the concrete retired `state.json` path left unchanged by import. */
+  get sourcePath(): string
+  /** Returns the verified content-addressed backup of exact legacy bytes. */
+  get backupPath(): string
+  /** Returns the canonical User Settings path modified by import. */
+  get settingsPath(): string
+  /** Returns the retained pre-import settings backup path when a document existed. */
+  get settingsBackupPath(): string | null
+  /** Returns the revision of the exact parsed legacy bytes. */
+  get sourceRevision(): string
+  /** Returns the independently verified legacy backup revision. */
+  get backupRevision(): string
+  /** Returns the User Settings base revision selected by import. */
+  get baseSettingsRevision(): string
+  /** Returns the User Settings revision published by import. */
+  get publishedSettingsRevision(): string
+  /** Restores the pre-import User Settings state through this verified receipt. */
+  restore(classicRoot: string): JsLegacyTuiStateImportRestoreOutcome
+}
+
 /**
  * Log collector for organizing crash logs from multiple sources.
  *
@@ -1568,6 +1590,17 @@ export declare function clearSettingsCache(): void
  * Useful for testing to ensure clean state between test runs.
  */
 export declare function clearYamlCache(): void
+
+/**
+ * Publishes one GUI geometry transition with at most one Rust-owned conflict replay.
+ *
+ * Validation rejection and a second concurrent edit return structured outcomes. Operational
+ * reopen, lock, parse, and publication failures throw a JavaScript `Error` with the stable core
+ * commit code and never partially persist the transition.
+ *
+ * @throws an `Error` with a stable `commit_*` code when the transition cannot be published.
+ */
+export declare function commitFrontendGeometryTransition(classicRoot: string, expectedRevision: string, window: JsGuiWindow, transition: JsWindowGeometryUpdate): JsUserSettingsCommitResult
 
 /**
  * Commits an explicitly previewed bootstrap against the `missing` revision.
@@ -2298,6 +2331,14 @@ export declare function hashFilesParallel(paths: Array<string>): Record<string, 
  * @throws if either version string is not valid semver.
  */
 export declare function hasUpdate(currentVersion: string, latestVersion: string): boolean
+
+/**
+ * Explicitly imports one retired TUI `state.json` into the canonical User Settings store.
+ *
+ * Expected no-op and conflict cases resolve as tagged data. Operational failures reject with
+ * the stable core code in `error.code` and human-readable context in `error.message`.
+ */
+export declare function importLegacyTuiStateIntoUserSettings(classicRoot: string, legacyStatePath: string): JsLegacyTuiStateImportOutcome
 
 /**
  * Intern a string for memory-efficient deduplication.
@@ -3128,6 +3169,18 @@ export interface JsGpuInfo {
   rival?: string
 }
 
+/** Stable identity for one maintained GUI window. */
+export declare const enum JsGuiWindow {
+  /** Main Options tab window. */
+  Main = 'main_tab',
+  /** File Backup tab window. */
+  Backups = 'backups_tab',
+  /** Articles tab window. */
+  Articles = 'articles_tab',
+  /** Results tab window. */
+  Results = 'results_tab'
+}
+
 /** Remembered geometry for every maintained GUI tab. */
 export interface JsGuiWindowGeometry {
   /** Geometry for the Main Options tab. */
@@ -3138,6 +3191,18 @@ export interface JsGuiWindowGeometry {
   articlesTab: JsWindowGeometry
   /** Geometry for the Results tab. */
   resultsTab: JsWindowGeometry
+}
+
+/** Selected remembered-geometry transitions keyed by maintained GUI window. */
+export interface JsGuiWindowGeometryUpdate {
+  /** Optional transition for the Main Options window. */
+  mainTab?: JsWindowGeometryUpdate
+  /** Optional transition for the File Backup window. */
+  backupsTab?: JsWindowGeometryUpdate
+  /** Optional transition for the Articles window. */
+  articlesTab?: JsWindowGeometryUpdate
+  /** Optional transition for the Results window. */
+  resultsTab?: JsWindowGeometryUpdate
 }
 
 /**
@@ -3195,6 +3260,46 @@ export declare const enum JsIssueSeverity {
   Warning = 'Warning',
   /** Informational issue */
   Info = 'Info'
+}
+
+/** Tagged result of explicitly importing retired TUI state into User Settings. */
+export interface JsLegacyTuiStateImportOutcome {
+  /** Outcome token identifying the no-op, applied, or conflict case. */
+  status: string
+  /** Settings classification for migration or trust-gated outcomes. */
+  classification?: string
+  /** Settings revision for migration or trust-gated outcomes. */
+  revision?: string
+  /** Concrete retired state path, present only when applied. */
+  sourcePath?: string
+  /** Verified retained backup path, present only when applied. */
+  backupPath?: string
+  /** Revision of exact parsed legacy bytes, present only when applied. */
+  sourceRevision?: string
+  /** Independently verified backup revision, present only when applied. */
+  backupRevision?: string
+  /** User Settings base revision selected for an applied import. */
+  baseSettingsRevision?: string
+  /** User Settings revision published by an applied import. */
+  publishedSettingsRevision?: string
+  /** Selected revision for either conflict outcome. */
+  expectedRevision?: string
+  /** Revision found at the conflicting path. */
+  actualRevision?: string
+  /** Opaque verified receipt, present only after an applied import. */
+  receipt?: JsLegacyTuiStateImportReceipt
+}
+
+/** Result of restoring User Settings through an applied legacy import receipt. */
+export interface JsLegacyTuiStateImportRestoreOutcome {
+  /** Outcome token: `restored` or `conflict`. */
+  status: string
+  /** Restored revision, present only when restored. */
+  revision?: string
+  /** Imported revision that had to remain current for restore. */
+  expectedRevision?: string
+  /** Latest User Settings revision, present only when conflicted. */
+  actualRevision?: string
 }
 
 /** Log error entry detected during scanning. */
@@ -3706,6 +3811,16 @@ export interface JsTuiRememberedState {
   sortAscendingOrigin: string
 }
 
+/** One complete TUI remembered-state transition for the canonical `UI.tui` namespace. */
+export interface JsTuiRememberedStateUpdate {
+  /** Requested stable zero-based tab ordinal. */
+  activeTab: number
+  /** Requested Results list-panel width. */
+  resultsPanelWidth: number
+  /** Requested Results sort direction. */
+  sortAscending: boolean
+}
+
 /** Unknown-version handling policy from the version registry. */
 export interface JsUnknownVersionHandling {
   /** Strategy: "nearest_match", "strict", or "default_only" */
@@ -3907,6 +4022,10 @@ export interface JsUserSettingsUpdate {
   updateSource?: string
   /** Requested automatic switch to Results after a completed scan. */
   autoSwitchAfterScan?: boolean
+  /** Selected remembered-geometry transitions for maintained GUI windows. */
+  windowGeometry?: JsGuiWindowGeometryUpdate
+  /** Requested complete TUI remembered-state transition. */
+  tui?: JsTuiRememberedStateUpdate
   /** Requested managed game. */
   managedGame?: JsGameId
   /** Requested canonical game-version selection. */
@@ -4055,6 +4174,16 @@ export interface JsWindowGeometry {
   height: number
   /** Provenance token for the remembered height. */
   heightOrigin: string
+}
+
+/** Caller-authored geometry transition for one maintained GUI window. */
+export interface JsWindowGeometryUpdate {
+  /** Whether the window should be remembered as maximized. */
+  maximized: boolean
+  /** Requested normal-state width in pixels; core preview validates the numeric range. */
+  width: number
+  /** Requested normal-state height in pixels; core preview validates the numeric range. */
+  height: number
 }
 
 /** An issue found in the Wrye Bash plugin checker report. */

@@ -6,7 +6,10 @@
 
 #include <QByteArray>
 
+#include <array>
 #include <cstddef>
+#include <cstdint>
+#include <limits>
 #include <string>
 #include <utility>
 
@@ -78,6 +81,48 @@ void applyFormIdDatabases(const QMap<QString, QStringList>& databases, classic::
     }
 }
 
+struct GuiWindowToken {
+    GuiWindow window;
+    const char* token;
+};
+
+constexpr std::array kGuiWindowTokens{
+    GuiWindowToken{GuiWindow::Main, "main_tab"},
+    GuiWindowToken{GuiWindow::Backups, "backups_tab"},
+    GuiWindowToken{GuiWindow::Articles, "articles_tab"},
+    GuiWindowToken{GuiWindow::Results, "results_tab"},
+};
+
+/// Returns the stable Rust-owned token for one maintained Qt GUI window.
+std::string windowToken(GuiWindow window)
+{
+    for (const auto& mapping : kGuiWindowTokens) {
+        if (mapping.window == window) {
+            return mapping.token;
+        }
+    }
+    return "main_tab";
+}
+
+/// Parses one stable Rust-owned GUI window token without accepting arbitrary namespaces.
+std::optional<GuiWindow> guiWindow(const rust::String& token)
+{
+    const std::string value(token);
+    for (const auto& mapping : kGuiWindowTokens) {
+        if (value == mapping.token) {
+            return mapping.window;
+        }
+    }
+    return std::nullopt;
+}
+
+/// Clamps a persisted unsigned dimension to the range accepted by Qt widgets.
+int widgetDimension(std::uint32_t value)
+{
+    const auto maximum = static_cast<std::uint32_t>(std::numeric_limits<int>::max());
+    return static_cast<int>(qMin(value, maximum));
+}
+
 /// Converts caller-selected GUI values into one all-or-nothing User Settings Update.
 classic::settings::UserSettingsUpdateDto updateFrom(const GuiUserSettingsChanges& changes)
 {
@@ -93,6 +138,15 @@ classic::settings::UserSettingsUpdateDto updateFrom(const GuiUserSettingsChanges
     if (changes.autoSwitchAfterScan.has_value()) {
         update.has_auto_switch_after_scan = true;
         update.auto_switch_after_scan = *changes.autoSwitchAfterScan;
+    }
+    if (changes.windowGeometry.has_value()) {
+        const auto& selected = *changes.windowGeometry;
+        classic::settings::UserSettingsWindowGeometryUpdateDto geometry{};
+        geometry.tab = windowToken(selected.window);
+        geometry.maximized = selected.geometry.maximized;
+        geometry.width = selected.geometry.width;
+        geometry.height = selected.geometry.height;
+        update.window_geometry_updates.push_back(std::move(geometry));
     }
     if (changes.gameVersion.has_value()) {
         update.has_game_version_selection = true;
@@ -166,6 +220,14 @@ GuiUserSettingsSnapshot snapshotFrom(const classic::settings::GuiSettingsSnapsho
         databases[classic::toQString(entry.game)].append(classic::toQString(entry.path));
     }
 
+    QMap<GuiWindow, GuiWindowGeometry> windowGeometry;
+    for (const auto& geometry : settings.frontend_state.window_geometry) {
+        if (const auto window = guiWindow(geometry.tab); window.has_value()) {
+            windowGeometry.insert(
+                *window, {geometry.maximized, widgetDimension(geometry.width), widgetDimension(geometry.height)});
+        }
+    }
+
     return {
         {settings.update_preferences.update_check_enabled,
          classic::toQString(settings.update_preferences.update_source)},
@@ -184,7 +246,7 @@ GuiUserSettingsSnapshot snapshotFrom(const classic::settings::GuiSettingsSnapsho
          optionalString(settings.game_setup.has_ini_folder, settings.game_setup.ini_folder),
          optionalString(settings.game_setup.has_mods_root, settings.game_setup.mods_root),
          optionalString(settings.game_setup.has_papyrus_log, settings.game_setup.papyrus_log)},
-        {settings.frontend_state.auto_switch_after_scan},
+        {settings.frontend_state.auto_switch_after_scan, std::move(windowGeometry)},
         classic::toQString(settings.update_preferences.classification),
         classic::toQString(settings.update_preferences.revision),
         classic::toQString(settings.update_preferences.commit_eligibility),
@@ -252,6 +314,30 @@ GuiUserSettingsCommitResult GuiUserSettings::commit(const QString& classicRoot, 
         classic::toQString(committed.actual_revision),
         diagnosticsFrom(committed.diagnostics),
     };
+}
+
+GuiUserSettingsCommitResult GuiUserSettings::commitFrontendTransition(const QString& classicRoot,
+                                                                      GuiUserSettingsSnapshot& snapshot,
+                                                                      const GuiWindowGeometryChange& transition)
+{
+    classic::settings::UserSettingsWindowGeometryUpdateDto update{};
+    update.tab = windowToken(transition.window);
+    update.maximized = transition.geometry.maximized;
+    update.width = transition.geometry.width;
+    update.height = transition.geometry.height;
+    const auto committed = classic::settings::user_settings_commit_frontend_geometry_transition(
+        toStdString(classicRoot), toStdString(snapshot.revision), update);
+    GuiUserSettingsCommitResult result{
+        classic::toQString(committed.status),
+        classic::toQString(committed.revision),
+        classic::toQString(committed.expected_revision),
+        classic::toQString(committed.actual_revision),
+        diagnosticsFrom(committed.diagnostics),
+    };
+    if (result.status == QStringLiteral("committed")) {
+        snapshot = open(classicRoot);
+    }
+    return result;
 }
 
 } // namespace classic::gui

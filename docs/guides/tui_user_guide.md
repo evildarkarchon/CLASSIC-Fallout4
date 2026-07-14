@@ -298,7 +298,7 @@ Top suspects:
 - Simplify Logs
 - Update Check
 
-**Persistence:** Settings are saved next to the executable as `CLASSIC Settings.yaml`. If the application directory cannot be resolved, CLASSIC falls back to the plain relative filename `CLASSIC Settings.yaml`.
+**Persistence:** The TUI, GUI, CLI, Node, and Python interfaces share the canonical nested `CLASSIC Settings.yaml` store at the CLASSIC root. TUI path and presentation saves are explicit all-or-nothing updates that preserve unknown entries and refuse revision conflicts. `Ctrl+O` presents degraded reads, required migrations, and the explicit verified import for a former TUI `state.json`.
 
 ---
 
@@ -600,12 +600,13 @@ CLASSIC TUI is interactive, but you can script initial setup:
 
 ```bash
 # Configure via YAML before launching TUI.
-# Put the file next to the TUI binary.
-cat > "<tui dir>/CLASSIC Settings.yaml" <<EOF
-fcx_mode: true
-stat_logging: true
-paths:
-  mods_folder: "/path/to/mods"
+# Put the file at the resolved CLASSIC root (the directory containing CLASSIC Data).
+cat > "<CLASSIC root>/CLASSIC Settings.yaml" <<EOF
+schema_version: "1.0"
+CLASSIC_Settings:
+  FCX Mode: true
+  Show Statistics: true
+  MODS Folder Path: "/path/to/mods"
 EOF
 
 ClassicLib-rs/ui-applications/classic-tui

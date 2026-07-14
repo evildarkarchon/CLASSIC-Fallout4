@@ -4,6 +4,14 @@ use classic_scanlog_core::{CrashLogScanRunEvent, CrashLogScanRunEventKind, ScanP
 use std::path::PathBuf;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+/// Opens a filesystem-backed TUI against one canonical User Settings document.
+fn app_with_settings_yaml(yaml: &str) -> (tempfile::TempDir, App) {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(root.path().join("CLASSIC Settings.yaml"), yaml).unwrap();
+    let app = App::new_with_settings_root(root.path(), None);
+    (root, app)
+}
+
 #[test]
 fn custom_validation_marks_crash_logs_path_invalid() {
     let mut app = App::new_for_testing();
@@ -17,13 +25,146 @@ fn custom_validation_marks_crash_logs_path_invalid() {
 }
 
 #[test]
+fn startup_projects_paths_and_presentation_from_one_canonical_snapshot() {
+    let (_root, app) = app_with_settings_yaml(
+        r#"schema_version: "1.0"
+CLASSIC_Settings:
+  MODS Folder Path: 'D:/Mods'
+  SCAN Custom Path: 'D:/Crash Logs'
+UI:
+  tui:
+    active_tab: 2
+    results_panel_width: 42
+    sort_ascending: true
+"#,
+    );
+
+    assert_eq!(app.staging_mods_input.value, "D:/Mods");
+    assert_eq!(app.custom_scan_input.value, "D:/Crash Logs");
+    assert_eq!(app.active_tab, TabIndex::Articles);
+    assert_eq!(app.results.list_panel_width, 42);
+    assert!(app.results.sort_ascending);
+}
+
+#[test]
+fn explicit_path_save_preserves_unknown_settings_entries() {
+    let (root, mut app) = app_with_settings_yaml(
+        r#"schema_version: "1.0"
+CLASSIC_Settings:
+  MODS Folder Path: null
+  SCAN Custom Path: null
+ThirdPartyPlugin:
+  retained: true
+"#,
+    );
+    let mods = root.path().join("mods");
+    std::fs::create_dir_all(&mods).unwrap();
+    app.staging_mods_input
+        .set_value(mods.to_string_lossy().to_string());
+
+    app.save_paths_from_inputs().unwrap();
+
+    let reopened = classic_user_settings_core::UserSettings::open(root.path());
+    assert_eq!(
+        reopened.game_setup_settings().mods_root(),
+        Some(mods.to_string_lossy().as_ref())
+    );
+    let persisted = std::fs::read_to_string(root.path().join("CLASSIC Settings.yaml")).unwrap();
+    assert!(persisted.contains("ThirdPartyPlugin"));
+    assert!(persisted.contains("retained: true"));
+}
+
+#[test]
+fn migration_required_and_invalid_values_use_existing_status_conventions() {
+    let (_flat_root, flat) = app_with_settings_yaml("fcx_mode: true\n");
+    assert!(flat.scan_status.contains("migration required"));
+    assert!(flat.settings_overlay_text().contains("Press M"));
+
+    let (_invalid_root, invalid) = app_with_settings_yaml(
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  Max Concurrent Scans: nope\n",
+    );
+    assert!(
+        invalid
+            .settings
+            .diagnostics()
+            .iter()
+            .any(|diagnostic| { diagnostic.code() == "invalid_type_max_concurrent_scans" })
+    );
+}
+
+#[test]
+fn legacy_state_is_imported_only_by_the_explicit_settings_action() {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(
+        root.path().join("CLASSIC Settings.yaml"),
+        "schema_version: \"1.0\"\nUI:\n  tui:\n    active_tab: 0\n",
+    )
+    .unwrap();
+    let legacy_path = root.path().join("state.json");
+    let legacy_bytes = br#"{"active_tab":3,"results_panel_width":42,"sort_ascending":true}"#;
+    std::fs::write(&legacy_path, legacy_bytes).unwrap();
+    let mut app = App::new_with_settings_root(root.path(), Some(legacy_path.clone()));
+
+    assert_eq!(app.active_tab, TabIndex::MainOptions);
+    assert!(app.scan_status.contains("available"));
+
+    app.import_legacy_tui_state();
+
+    assert_eq!(app.active_tab, TabIndex::Results);
+    assert_eq!(app.results.list_panel_width, 42);
+    assert!(app.results.sort_ascending);
+    assert!(app.scan_status.contains("verified backup retained"));
+    assert_eq!(std::fs::read(&legacy_path).unwrap(), legacy_bytes);
+}
+
+#[test]
 fn crash_logs_nesting_check_handles_forward_slash_absolute_paths() {
-    let app = App::new_for_testing();
-    let current_dir = std::env::current_dir().expect("current directory");
-    let forward_slash_base = current_dir.to_string_lossy().replace('\\', "/");
+    let root = tempfile::tempdir().unwrap();
+    let app = App::new_with_settings_root(root.path(), None);
+    let forward_slash_base = root.path().to_string_lossy().replace('\\', "/");
     let custom_path = PathBuf::from(format!("{forward_slash_base}/Crash Logs/nested"));
 
     assert!(app.is_inside_crash_logs(&custom_path));
+}
+
+#[test]
+fn path_validation_and_result_discovery_use_the_apps_canonical_root() {
+    let root = tempfile::tempdir().unwrap();
+    std::fs::write(
+        root.path().join("CLASSIC Settings.yaml"),
+        "schema_version: \"1.0\"\n",
+    )
+    .unwrap();
+    let nested = root.path().join("Crash Logs").join("nested");
+    std::fs::create_dir_all(&nested).unwrap();
+    std::fs::write(root.path().join("Crash Logs").join("report.md"), "# Report").unwrap();
+    let mut app = App::new_with_settings_root(root.path(), None);
+    app.custom_scan_input
+        .set_value(nested.to_string_lossy().to_string());
+
+    assert_eq!(app.custom_validation_state(), PathValidationState::Invalid);
+    app.refresh_results_reports();
+    assert_eq!(app.results.reports.len(), 1);
+}
+
+#[test]
+fn scan_projection_uses_the_managed_game_and_its_formid_database() {
+    let (_root, app) = app_with_settings_yaml(
+        r#"schema_version: "1.0"
+CLASSIC_Settings:
+  Managed Game: Skyrim SE
+  FormID Databases:
+    Fallout4:
+      - databases/fallout4.db
+    Skyrim:
+      - databases/skyrim.db
+"#,
+    );
+
+    let (game, databases) = app.scan_game_projection();
+
+    assert_eq!(game, "Skyrim");
+    assert_eq!(databases, vec![PathBuf::from("databases/skyrim.db")]);
 }
 
 #[test]
@@ -61,8 +202,9 @@ fn scan_run_progress_formatter_uses_completion_count_and_filename() {
 
 #[test]
 fn scan_complete_switches_to_results_when_enabled() {
-    let mut app = App::new_for_testing();
-    app.config.auto_switch_to_results = true;
+    let (_root, mut app) = app_with_settings_yaml(
+        "schema_version: \"1.0\"\nUI:\n  preferences:\n    auto_switch_after_scan: true\n",
+    );
     app.active_tab = TabIndex::MainOptions;
 
     app.handle_async_message(AsyncMessage::ScanComplete {
@@ -121,9 +263,12 @@ fn results_refresh_preserves_selected_path_when_still_present() {
     std::fs::write(&file_a, "# A").expect("write a");
     std::fs::write(&file_b, "# B").expect("write b");
 
-    let mut app = App::new_for_testing();
+    let canonical_dir = dir.to_string_lossy().replace('\\', "/");
+    let settings = format!(
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  SCAN Custom Path: '{canonical_dir}'\n"
+    );
+    let (_root, mut app) = app_with_settings_yaml(&settings);
     app.active_tab = TabIndex::Results;
-    app.config.paths.scan_custom = Some(dir.clone());
     app.results.search_query = "preserve-".to_string();
     app.refresh_results_reports_with_status(false);
 
@@ -159,9 +304,12 @@ fn poll_results_refreshes_when_snapshot_changes() {
     std::fs::create_dir_all(&dir).expect("create temp dir");
     std::fs::write(dir.join("poll-a.md"), "# A").expect("write a");
 
-    let mut app = App::new_for_testing();
+    let canonical_dir = dir.to_string_lossy().replace('\\', "/");
+    let settings = format!(
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  SCAN Custom Path: '{canonical_dir}'\nUI:\n  preferences:\n    auto_refresh_interval_ms: 1\n"
+    );
+    let (_root, mut app) = app_with_settings_yaml(&settings);
     app.active_tab = TabIndex::Results;
-    app.config.paths.scan_custom = Some(dir.clone());
     app.results.search_query = "poll-".to_string();
     app.refresh_results_reports_with_status(false);
     let before = app.results.filtered_indices.len();

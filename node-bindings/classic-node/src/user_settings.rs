@@ -2,12 +2,14 @@
 
 use crate::shared::{JsGameId, core_to_js_game_id, js_to_core_game_id};
 use classic_user_settings_core::{
-    CommitEligibility, DocumentClassification, MigrationChange, MigrationChangeKind,
-    MigrationEndpoint, MigrationPlanningOutcome, PreferenceOrigin, Revision, SourceLocation,
-    UserSettings, UserSettingsCommitOutcome, UserSettingsMigrationApplyOutcome,
-    UserSettingsMigrationPlan, UserSettingsMigrationReceipt, UserSettingsMigrationRestoreOutcome,
-    UserSettingsSchemaVersion, UserSettingsUpdate, UserSettingsUpdateField,
-    UserSettingsUpdatePreview, WindowGeometry,
+    CommitEligibility, DocumentClassification, GuiWindow, LegacyTuiStateImportOutcome,
+    LegacyTuiStateImportReceipt, LegacyTuiStateImportRestoreOutcome, MigrationChange,
+    MigrationChangeKind, MigrationEndpoint, MigrationPlanningOutcome, PreferenceOrigin, Revision,
+    SourceLocation, UserSettings, UserSettingsCommitOutcome,
+    UserSettingsFrontendTransitionOutcome as CoreUserSettingsFrontendTransitionOutcome,
+    UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan, UserSettingsMigrationReceipt,
+    UserSettingsMigrationRestoreOutcome, UserSettingsSchemaVersion, UserSettingsUpdate,
+    UserSettingsUpdateField, UserSettingsUpdatePreview, WindowGeometry, import_legacy_tui_state,
 };
 use napi::bindgen_prelude::{Buffer, Either, Either5, Null};
 use std::collections::HashMap;
@@ -163,6 +165,47 @@ pub struct JsGuiWindowGeometry {
     pub results_tab: JsWindowGeometry,
 }
 
+/// Caller-authored geometry transition for one maintained GUI window.
+#[napi(object)]
+pub struct JsWindowGeometryUpdate {
+    /// Whether the window should be remembered as maximized.
+    pub maximized: bool,
+    /// Requested normal-state width in pixels; core preview validates the numeric range.
+    pub width: f64,
+    /// Requested normal-state height in pixels; core preview validates the numeric range.
+    pub height: f64,
+}
+
+/// Stable identity for one maintained GUI window.
+#[napi(string_enum)]
+pub enum JsGuiWindow {
+    /// Main Options tab window.
+    #[napi(value = "main_tab")]
+    Main,
+    /// File Backup tab window.
+    #[napi(value = "backups_tab")]
+    Backups,
+    /// Articles tab window.
+    #[napi(value = "articles_tab")]
+    Articles,
+    /// Results tab window.
+    #[napi(value = "results_tab")]
+    Results,
+}
+
+/// Selected remembered-geometry transitions keyed by maintained GUI window.
+#[napi(object)]
+pub struct JsGuiWindowGeometryUpdate {
+    /// Optional transition for the Main Options window.
+    pub main_tab: Option<JsWindowGeometryUpdate>,
+    /// Optional transition for the File Backup window.
+    pub backups_tab: Option<JsWindowGeometryUpdate>,
+    /// Optional transition for the Articles window.
+    pub articles_tab: Option<JsWindowGeometryUpdate>,
+    /// Optional transition for the Results window.
+    pub results_tab: Option<JsWindowGeometryUpdate>,
+}
+
 /// Remembered TUI state from the canonical `UI.tui` namespace.
 #[napi(object)]
 pub struct JsTuiRememberedState {
@@ -178,6 +221,17 @@ pub struct JsTuiRememberedState {
     pub sort_ascending: bool,
     /// Provenance token for the sort direction.
     pub sort_ascending_origin: String,
+}
+
+/// One complete TUI remembered-state transition for the canonical `UI.tui` namespace.
+#[napi(object)]
+pub struct JsTuiRememberedStateUpdate {
+    /// Requested stable zero-based tab ordinal.
+    pub active_tab: f64,
+    /// Requested Results list-panel width.
+    pub results_panel_width: f64,
+    /// Requested Results sort direction.
+    pub sort_ascending: bool,
 }
 
 /// Cohesive, widget-independent state remembered by CLASSIC frontends.
@@ -200,6 +254,10 @@ pub struct JsUserSettingsUpdate {
     pub update_source: Option<String>,
     /// Requested automatic switch to Results after a completed scan.
     pub auto_switch_after_scan: Option<bool>,
+    /// Selected remembered-geometry transitions for maintained GUI windows.
+    pub window_geometry: Option<JsGuiWindowGeometryUpdate>,
+    /// Requested complete TUI remembered-state transition.
+    pub tui: Option<JsTuiRememberedStateUpdate>,
     /// Requested managed game.
     pub managed_game: Option<JsGameId>,
     /// Requested canonical game-version selection.
@@ -282,6 +340,138 @@ pub struct JsUserSettingsCommitResult {
     pub actual_revision: Option<String>,
     /// Validation diagnostics, populated only when the update is rejected.
     pub diagnostics: Vec<JsUserSettingsUpdateDiagnostic>,
+}
+
+/// Tagged result of explicitly importing retired TUI state into User Settings.
+#[napi(object, object_from_js = false)]
+pub struct JsLegacyTuiStateImportOutcome {
+    /// Outcome token identifying the no-op, applied, or conflict case.
+    pub status: String,
+    /// Settings classification for migration or trust-gated outcomes.
+    pub classification: Option<String>,
+    /// Settings revision for migration or trust-gated outcomes.
+    pub revision: Option<String>,
+    /// Concrete retired state path, present only when applied.
+    pub source_path: Option<String>,
+    /// Verified retained backup path, present only when applied.
+    pub backup_path: Option<String>,
+    /// Revision of exact parsed legacy bytes, present only when applied.
+    pub source_revision: Option<String>,
+    /// Independently verified backup revision, present only when applied.
+    pub backup_revision: Option<String>,
+    /// User Settings base revision selected for an applied import.
+    pub base_settings_revision: Option<String>,
+    /// User Settings revision published by an applied import.
+    pub published_settings_revision: Option<String>,
+    /// Selected revision for either conflict outcome.
+    pub expected_revision: Option<String>,
+    /// Revision found at the conflicting path.
+    pub actual_revision: Option<String>,
+    /// Opaque verified receipt, present only after an applied import.
+    pub receipt: Option<JsLegacyTuiStateImportReceipt>,
+}
+
+/// Opaque native handle to a verified legacy TUI state import receipt.
+#[napi]
+pub struct JsLegacyTuiStateImportReceipt {
+    inner: LegacyTuiStateImportReceipt,
+}
+
+#[napi]
+impl JsLegacyTuiStateImportReceipt {
+    /// Returns the concrete retired `state.json` path left unchanged by import.
+    #[napi(getter)]
+    pub fn source_path(&self) -> String {
+        self.inner.source_path().display().to_string()
+    }
+
+    /// Returns the verified content-addressed backup of exact legacy bytes.
+    #[napi(getter)]
+    pub fn backup_path(&self) -> String {
+        self.inner.backup_path().display().to_string()
+    }
+
+    /// Returns the canonical User Settings path modified by import.
+    #[napi(getter)]
+    pub fn settings_path(&self) -> String {
+        self.inner.settings_path().display().to_string()
+    }
+
+    /// Returns the retained pre-import settings backup path when a document existed.
+    #[napi(getter)]
+    pub fn settings_backup_path(&self) -> Option<String> {
+        self.inner
+            .settings_backup_path()
+            .map(|path| path.display().to_string())
+    }
+
+    /// Returns the revision of the exact parsed legacy bytes.
+    #[napi(getter)]
+    pub fn source_revision(&self) -> String {
+        revision_token(self.inner.source_revision())
+    }
+
+    /// Returns the independently verified legacy backup revision.
+    #[napi(getter)]
+    pub fn backup_revision(&self) -> String {
+        revision_token(self.inner.backup_revision())
+    }
+
+    /// Returns the User Settings base revision selected by import.
+    #[napi(getter)]
+    pub fn base_settings_revision(&self) -> String {
+        revision_token(self.inner.base_settings_revision())
+    }
+
+    /// Returns the User Settings revision published by import.
+    #[napi(getter)]
+    pub fn published_settings_revision(&self) -> String {
+        revision_token(self.inner.published_settings_revision())
+    }
+
+    /// Restores the pre-import User Settings state through this verified receipt.
+    #[napi]
+    pub fn restore(
+        &self,
+        classic_root: String,
+    ) -> napi::Result<JsLegacyTuiStateImportRestoreOutcome, String> {
+        match self.inner.restore(classic_root) {
+            Ok(LegacyTuiStateImportRestoreOutcome::Restored { revision }) => {
+                Ok(JsLegacyTuiStateImportRestoreOutcome {
+                    status: "restored".to_string(),
+                    revision: Some(revision_token(&revision)),
+                    expected_revision: None,
+                    actual_revision: None,
+                })
+            }
+            Ok(LegacyTuiStateImportRestoreOutcome::Conflict {
+                expected_revision,
+                actual_revision,
+            }) => Ok(JsLegacyTuiStateImportRestoreOutcome {
+                status: "conflict".to_string(),
+                revision: None,
+                expected_revision: Some(revision_token(&expected_revision)),
+                actual_revision: Some(revision_token(&actual_revision)),
+            }),
+            Err(error) => Err(napi::Error::new(
+                error.code().to_string(),
+                error.message().to_string(),
+            )),
+        }
+    }
+}
+
+/// Result of restoring User Settings through an applied legacy import receipt.
+#[napi(object)]
+pub struct JsLegacyTuiStateImportRestoreOutcome {
+    /// Outcome token: `restored` or `conflict`.
+    pub status: String,
+    /// Restored revision, present only when restored.
+    pub revision: Option<String>,
+    /// Imported revision that had to remain current for restore.
+    pub expected_revision: Option<String>,
+    /// Latest User Settings revision, present only when conflicted.
+    pub actual_revision: Option<String>,
 }
 
 /// Explicit major/minor User Settings schema version.
@@ -505,6 +695,89 @@ pub struct JsUserSettingsSnapshot {
 pub fn open_user_settings(classic_root: String) -> JsUserSettingsSnapshot {
     let settings = UserSettings::open(classic_root);
     user_settings_snapshot_to_js(&settings)
+}
+
+/// Explicitly imports one retired TUI `state.json` into the canonical User Settings store.
+///
+/// Expected no-op and conflict cases resolve as tagged data. Operational failures reject with
+/// the stable core code in `error.code` and human-readable context in `error.message`.
+#[napi]
+pub fn import_legacy_tui_state_into_user_settings(
+    classic_root: String,
+    legacy_state_path: String,
+) -> napi::Result<JsLegacyTuiStateImportOutcome, String> {
+    import_legacy_tui_state(classic_root, legacy_state_path)
+        .map(legacy_tui_state_import_outcome_to_js)
+        .map_err(|error| napi::Error::new(error.code().to_string(), error.message().to_string()))
+}
+
+/// Converts every core import outcome into one stable JavaScript object shape.
+fn legacy_tui_state_import_outcome_to_js(
+    outcome: LegacyTuiStateImportOutcome,
+) -> JsLegacyTuiStateImportOutcome {
+    let mut result = JsLegacyTuiStateImportOutcome {
+        status: String::new(),
+        classification: None,
+        revision: None,
+        source_path: None,
+        backup_path: None,
+        source_revision: None,
+        backup_revision: None,
+        base_settings_revision: None,
+        published_settings_revision: None,
+        expected_revision: None,
+        actual_revision: None,
+        receipt: None,
+    };
+    match outcome {
+        LegacyTuiStateImportOutcome::NoLegacySource => {
+            result.status = "noLegacySource".to_string();
+        }
+        LegacyTuiStateImportOutcome::RequiresSettingsMigration {
+            classification,
+            revision,
+        } => {
+            result.status = "requiresSettingsMigration".to_string();
+            result.classification = Some(classification_token(classification).to_string());
+            result.revision = Some(revision_token(&revision));
+        }
+        LegacyTuiStateImportOutcome::UntrustedSettingsBase {
+            classification,
+            revision,
+        } => {
+            result.status = "untrustedSettingsBase".to_string();
+            result.classification = Some(classification_token(classification).to_string());
+            result.revision = Some(revision_token(&revision));
+        }
+        LegacyTuiStateImportOutcome::Applied(receipt) => {
+            result.status = "applied".to_string();
+            result.source_path = Some(receipt.source_path().display().to_string());
+            result.backup_path = Some(receipt.backup_path().display().to_string());
+            result.source_revision = Some(revision_token(receipt.source_revision()));
+            result.backup_revision = Some(revision_token(receipt.backup_revision()));
+            result.base_settings_revision = Some(revision_token(receipt.base_settings_revision()));
+            result.published_settings_revision =
+                Some(revision_token(receipt.published_settings_revision()));
+            result.receipt = Some(JsLegacyTuiStateImportReceipt { inner: receipt });
+        }
+        LegacyTuiStateImportOutcome::SettingsConflict {
+            expected_revision,
+            actual_revision,
+        } => {
+            result.status = "settingsConflict".to_string();
+            result.expected_revision = Some(revision_token(&expected_revision));
+            result.actual_revision = Some(revision_token(&actual_revision));
+        }
+        LegacyTuiStateImportOutcome::LegacySourceConflict {
+            expected_revision,
+            actual_revision,
+        } => {
+            result.status = "legacySourceConflict".to_string();
+            result.expected_revision = Some(revision_token(&expected_revision));
+            result.actual_revision = Some(revision_token(&actual_revision));
+        }
+    }
+    result
 }
 
 /// Returns the Rust-owned published User Settings defaults without accessing
@@ -971,6 +1244,72 @@ pub fn commit_user_settings_bootstrap(
     )
 }
 
+/// Publishes one GUI geometry transition with at most one Rust-owned conflict replay.
+///
+/// Validation rejection and a second concurrent edit return structured outcomes. Operational
+/// reopen, lock, parse, and publication failures throw a JavaScript `Error` with the stable core
+/// commit code and never partially persist the transition.
+///
+/// @throws an `Error` with a stable `commit_*` code when the transition cannot be published.
+#[napi]
+pub fn commit_frontend_geometry_transition(
+    classic_root: String,
+    expected_revision: String,
+    window: JsGuiWindow,
+    transition: JsWindowGeometryUpdate,
+) -> napi::Result<JsUserSettingsCommitResult, String> {
+    let expected = revision_from_token(&expected_revision).ok_or_else(|| {
+        user_settings_commit_error(
+            "invalid_user_settings_revision",
+            format!("unrecognized revision token {expected_revision:?}"),
+        )
+    })?;
+    let window = match window {
+        JsGuiWindow::Main => GuiWindow::Main,
+        JsGuiWindow::Backups => GuiWindow::Backups,
+        JsGuiWindow::Articles => GuiWindow::Articles,
+        JsGuiWindow::Results => GuiWindow::Results,
+    };
+    match UserSettings::commit_frontend_geometry_transition(
+        &classic_root,
+        &expected,
+        window,
+        transition.maximized,
+        geometry_dimension_to_core(transition.width),
+        geometry_dimension_to_core(transition.height),
+    ) {
+        Ok(CoreUserSettingsFrontendTransitionOutcome::Committed { revision }) => {
+            Ok(JsUserSettingsCommitResult {
+                status: "committed".to_string(),
+                revision: Some(revision_token(&revision)),
+                expected_revision,
+                actual_revision: None,
+                diagnostics: Vec::new(),
+            })
+        }
+        Ok(CoreUserSettingsFrontendTransitionOutcome::Rejected { diagnostics }) => {
+            Ok(JsUserSettingsCommitResult {
+                status: "rejected".to_string(),
+                revision: None,
+                expected_revision,
+                actual_revision: None,
+                diagnostics: diagnostics
+                    .into_iter()
+                    .map(user_settings_update_diagnostic_to_js)
+                    .collect(),
+            })
+        }
+        Ok(CoreUserSettingsFrontendTransitionOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        }) => Ok(user_settings_commit_conflict(
+            revision_token(&expected_revision),
+            revision_token(&actual_revision),
+        )),
+        Err(error) => Err(user_settings_commit_error(error.code(), error.message())),
+    }
+}
+
 /// Selects which core preview contract must be revalidated immediately before commit.
 #[derive(Clone, Copy)]
 enum UserSettingsCommitKind {
@@ -1116,6 +1455,36 @@ fn user_settings_update_to_core(update: JsUserSettingsUpdate) -> UserSettingsUpd
     if let Some(value) = update.auto_switch_after_scan {
         core = core.with_auto_switch_after_scan(value);
     }
+    if let Some(value) = update.window_geometry {
+        let JsGuiWindowGeometryUpdate {
+            main_tab,
+            backups_tab,
+            articles_tab,
+            results_tab,
+        } = value;
+        for (window, geometry) in [
+            (GuiWindow::Main, main_tab),
+            (GuiWindow::Backups, backups_tab),
+            (GuiWindow::Articles, articles_tab),
+            (GuiWindow::Results, results_tab),
+        ] {
+            if let Some(geometry) = geometry {
+                core = core.with_window_geometry(
+                    window,
+                    geometry.maximized,
+                    geometry_dimension_to_core(geometry.width),
+                    geometry_dimension_to_core(geometry.height),
+                );
+            }
+        }
+    }
+    if let Some(value) = update.tui {
+        core = core.with_tui_remembered_state(
+            tui_integer_to_core(value.active_tab),
+            tui_integer_to_core(value.results_panel_width),
+            value.sort_ascending,
+        );
+    }
     if let Some(value) = update.managed_game {
         core = core.with_managed_game(js_to_core_game_id(&value).as_str());
     }
@@ -1182,6 +1551,48 @@ fn scan_concurrency_to_core(value: f64) -> i64 {
     }
 }
 
+/// Preserves one JavaScript geometry dimension until core preview validates its range.
+///
+/// Non-finite and fractional numbers use a guaranteed-invalid sentinel so callers receive
+/// the stable width- or height-specific core diagnostic instead of a conversion failure.
+fn geometry_dimension_to_core(value: f64) -> i64 {
+    if value.is_finite() && value.fract() == 0.0 {
+        value as i64
+    } else {
+        0
+    }
+}
+
+/// Preserves one JavaScript TUI integer until the core validates its field-specific range.
+///
+/// Non-finite and fractional numbers use a guaranteed-invalid sentinel so the complete
+/// transition is rejected with the same stable diagnostics as other out-of-range values.
+fn tui_integer_to_core(value: f64) -> i64 {
+    if value.is_finite() && value.fract() == 0.0 {
+        value as i64
+    } else {
+        -1
+    }
+}
+
+/// Parses the stable revision representation accepted from JavaScript callers.
+fn revision_from_token(token: &str) -> Option<Revision> {
+    match token {
+        "missing" => return Some(Revision::Missing),
+        "unavailable" => return Some(Revision::Unavailable),
+        _ => {}
+    }
+    let encoded = token.strip_prefix("sha256:")?;
+    if encoded.len() != 64 {
+        return None;
+    }
+    let mut digest = [0_u8; 32];
+    for (index, byte) in digest.iter_mut().enumerate() {
+        *byte = u8::from_str_radix(&encoded[index * 2..index * 2 + 2], 16).ok()?;
+    }
+    Some(Revision::ContentSha256(digest))
+}
+
 /// Converts an explicit JavaScript string-or-null input into the core optional value.
 fn nullable_string_to_option(value: Either<String, Null>) -> Option<String> {
     match value {
@@ -1233,6 +1644,8 @@ fn user_settings_update_field_to_js(field: &UserSettingsUpdateField) -> JsUserSe
     let value = match field {
         UserSettingsUpdateField::UpdateCheck(value)
         | UserSettingsUpdateField::AutoSwitchAfterScan(value)
+        | UserSettingsUpdateField::WindowMaximized(_, value)
+        | UserSettingsUpdateField::TuiSortAscending(value)
         | UserSettingsUpdateField::FcxMode(value)
         | UserSettingsUpdateField::SimplifyLogs(value)
         | UserSettingsUpdateField::ShowStatistics(value)
@@ -1260,7 +1673,11 @@ fn user_settings_update_field_to_js(field: &UserSettingsUpdateField) -> JsUserSe
             Some(value) => Either5::B(value.clone()),
             None => Either5::E(Null),
         },
-        UserSettingsUpdateField::MaxConcurrentScans(value) => Either5::D(*value),
+        UserSettingsUpdateField::WindowWidth(_, value)
+        | UserSettingsUpdateField::WindowHeight(_, value)
+        | UserSettingsUpdateField::MaxConcurrentScans(value) => Either5::D(*value),
+        UserSettingsUpdateField::TuiActiveTab(value) => Either5::D(u32::from(*value)),
+        UserSettingsUpdateField::TuiResultsPanelWidth(value) => Either5::D(u32::from(*value)),
     };
 
     JsUserSettingsUpdateField {

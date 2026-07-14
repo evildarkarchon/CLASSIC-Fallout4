@@ -1,8 +1,8 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-07-14T12:58:27.869134+00:00`
-- Tracked surfaces: **1464**
-- Runtime verified: **1464**
+- Generated: `2026-07-14T22:15:49.808343+00:00`
+- Tracked surfaces: **1470**
+- Runtime verified: **1470**
 - Contract mapped only: **0**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
@@ -24,7 +24,7 @@
 | `settings` | 67 | 0 | 0 | 67 |
 | `shared` | 69 | 0 | 0 | 69 |
 | `update` | 10 | 0 | 0 | 10 |
-| `user_settings` | 212 | 0 | 0 | 212 |
+| `user_settings` | 218 | 0 | 0 | 218 |
 | `version` | 15 | 0 | 0 | 15 |
 | `version_registry` | 114 | 0 | 0 | 114 |
 | `web` | 23 | 0 | 0 | 23 |

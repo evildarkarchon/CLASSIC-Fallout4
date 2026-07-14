@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-14T12:58:27.860285+00:00`
-- Tier-1 contract rows: **1244**
-- Tier-1 matched: **1244**
+- Generated: `2026-07-14T22:14:45.479961+00:00`
+- Tier-1 contract rows: **1247**
+- Tier-1 matched: **1247**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -46,6 +46,7 @@
 | `user_settings.accepted_update_type` | `user_settings` | `AcceptedUserSettingsUpdate` | `classic_user_settings.UserSettingsUpdatePreview` | `matched` |
 | `user_settings.commit_outcome_type` | `user_settings` | `UserSettingsCommitOutcome` | `classic_user_settings.UserSettingsCommitOutcome` | `matched` |
 | `user_settings.commit_error_type` | `user_settings` | `UserSettingsCommitError` | `classic_user_settings.UserSettingsCommitError` | `matched` |
+| `user_settings.frontend_transition_outcome_type` | `user_settings` | `UserSettingsFrontendTransitionOutcome` | `classic_user_settings.UserSettingsFrontendTransitionOutcome` | `matched` |
 | `user_settings.update_diagnostic_type` | `user_settings` | `UpdateDiagnostic` | `classic_user_settings.UserSettingsUpdateDiagnostic` | `matched` |
 | `user_settings.update_request_type` | `user_settings` | `UserSettingsUpdate` | `classic_user_settings.UserSettingsUpdate` | `matched` |
 | `user_settings.update_field_type` | `user_settings` | `UserSettingsUpdateField` | `classic_user_settings.UserSettingsUpdateField` | `matched` |
@@ -77,6 +78,8 @@
 | `user_settings.update_with_update_check` | `user_settings` | `with_update_check` | `classic_user_settings.UserSettingsUpdate.set_update_check` | `matched` |
 | `user_settings.update_with_update_source` | `user_settings` | `with_update_source` | `classic_user_settings.UserSettingsUpdate.set_update_source` | `matched` |
 | `user_settings.update_with_auto_switch_after_scan` | `user_settings` | `with_auto_switch_after_scan` | `classic_user_settings.UserSettingsUpdate.set_auto_switch_after_scan` | `matched` |
+| `user_settings.update_with_window_geometry` | `user_settings` | `with_window_geometry` | `classic_user_settings.UserSettingsUpdate.set_window_geometry` | `matched` |
+| `user_settings.commit_frontend_geometry_transition` | `user_settings` | `commit_frontend_geometry_transition` | `classic_user_settings.UserSettingsSnapshot.commit_frontend_geometry_transition` | `matched` |
 | `user_settings.update_with_game_version_selection` | `user_settings` | `with_game_version_selection` | `classic_user_settings.UserSettingsUpdate.set_game_version_selection` | `matched` |
 | `user_settings.update_with_fcx_mode` | `user_settings` | `with_fcx_mode` | `classic_user_settings.UserSettingsUpdate.set_fcx_mode` | `matched` |
 | `user_settings.update_with_simplify_logs` | `user_settings` | `with_simplify_logs` | `classic_user_settings.UserSettingsUpdate.set_simplify_logs` | `matched` |

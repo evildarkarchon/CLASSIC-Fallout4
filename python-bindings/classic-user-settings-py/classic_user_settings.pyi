@@ -254,6 +254,21 @@ class UserSettingsUpdate:
     def set_auto_switch_after_scan(self, value: bool) -> None:
         """Request whether the GUI should switch to Results after a completed scan."""
 
+    def set_window_geometry(
+        self, tab: str, maximized: bool, width: int, height: int
+    ) -> None:
+        """Request remembered geometry for a maintained GUI window.
+
+        ``tab`` must be ``main_tab``, ``backups_tab``, ``articles_tab``, or
+        ``results_tab``; another token raises ``ValueError``. Width and height
+        are preview-validated as positive unsigned 32-bit dimensions.
+        """
+
+    def set_tui_remembered_state(
+        self, active_tab: int, results_panel_width: int, sort_ascending: bool
+    ) -> None:
+        """Request one complete TUI remembered-state transition."""
+
     def set_managed_game(self, value: str) -> None:
         """Request a managed-game identifier for complete preview validation."""
 
@@ -362,6 +377,116 @@ class UserSettingsCommitOutcome:
 
     @property
     def actual_revision(self) -> str | None: ...
+
+
+class UserSettingsFrontendTransitionOutcome:
+    """Structured outcome from a replay-safe frontend geometry transition."""
+
+    @property
+    def status(self) -> str: ...
+
+    @property
+    def revision(self) -> str | None: ...
+
+    @property
+    def expected_revision(self) -> str | None: ...
+
+    @property
+    def actual_revision(self) -> str | None: ...
+
+    @property
+    def diagnostics(self) -> list[UserSettingsUpdateDiagnostic]: ...
+
+
+class LegacyTuiStateImportRestoreOutcome:
+    """Result of restoring User Settings through an applied import receipt."""
+
+    @property
+    def status(self) -> str: ...
+
+    @property
+    def revision(self) -> str | None: ...
+
+    @property
+    def expected_revision(self) -> str | None: ...
+
+    @property
+    def actual_revision(self) -> str | None: ...
+
+
+class LegacyTuiStateImportReceipt:
+    """Opaque verified receipt authorizing restoration of one legacy import."""
+
+    @property
+    def source_path(self) -> str: ...
+
+    @property
+    def backup_path(self) -> str: ...
+
+    @property
+    def settings_path(self) -> str: ...
+
+    @property
+    def settings_backup_path(self) -> str | None: ...
+
+    @property
+    def source_revision(self) -> str: ...
+
+    @property
+    def backup_revision(self) -> str: ...
+
+    @property
+    def base_settings_revision(self) -> str: ...
+
+    @property
+    def published_settings_revision(self) -> str: ...
+
+    def restore(self, classic_root: str) -> LegacyTuiStateImportRestoreOutcome:
+        """Restore the pre-import User Settings state through this receipt."""
+
+
+class LegacyTuiStateImportOutcome:
+    """Tagged result of explicitly importing retired TUI state."""
+
+    @property
+    def status(self) -> str: ...
+
+    @property
+    def classification(self) -> str | None: ...
+
+    @property
+    def revision(self) -> str | None: ...
+
+    @property
+    def source_path(self) -> str | None: ...
+
+    @property
+    def backup_path(self) -> str | None: ...
+
+    @property
+    def source_revision(self) -> str | None: ...
+
+    @property
+    def backup_revision(self) -> str | None: ...
+
+    @property
+    def base_settings_revision(self) -> str | None: ...
+
+    @property
+    def published_settings_revision(self) -> str | None: ...
+
+    @property
+    def expected_revision(self) -> str | None: ...
+
+    @property
+    def actual_revision(self) -> str | None: ...
+
+    @property
+    def receipt(self) -> LegacyTuiStateImportReceipt | None: ...
+
+
+class LegacyTuiStateImportError(RuntimeError):
+    """Operational failure while importing or restoring retired TUI state."""
 
 
 class UserSettingsCommitError(RuntimeError):
@@ -573,12 +698,28 @@ class UserSettingsSnapshot:
     def preview_bootstrap(self, update: UserSettingsUpdate) -> UserSettingsUpdatePreview:
         """Preview explicit creation of a missing document from Rust-owned defaults."""
 
+    def commit_frontend_geometry_transition(
+        self,
+        classic_root: str,
+        tab: str,
+        maximized: bool,
+        width: int,
+        height: int,
+    ) -> UserSettingsFrontendTransitionOutcome:
+        """Commit one geometry transition with at most one Rust-owned conflict replay."""
+
     def plan_migration(self) -> UserSettingsMigrationPlanningOutcome:
         """Produce a deterministic, reversible plan without filesystem access."""
 
 
 def open_user_settings(classic_root: str) -> UserSettingsSnapshot:
     """Open User Settings relative to an explicit CLASSIC root without writing."""
+
+
+def import_legacy_tui_state_into_user_settings(
+    classic_root: str, legacy_state_path: str
+) -> LegacyTuiStateImportOutcome:
+    """Explicitly import retired TUI state into canonical User Settings."""
 
 
 def user_settings_published_defaults() -> UserSettingsSnapshot:

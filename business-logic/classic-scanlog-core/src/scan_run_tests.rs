@@ -171,6 +171,52 @@ fn service_targeted_rejections_are_discovery_data() {
 }
 
 #[test]
+fn service_targeted_run_ignores_relative_unsolved_logs_destination() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let log_path = write_fixture_log(&temp, "crash-targeted-relative-destination.log");
+    let source = CrashLogScanSource::Targeted(TargetedCrashLogScanSource {
+        inputs: vec![log_path],
+    });
+    let mut request = service_request(root, source, CrashLogScanOptions::default());
+    request.move_unsolved_logs = true;
+    request.scan_facts.unsolved_logs_destination = Some("relative-destination".into());
+
+    let result = get_runtime()
+        .block_on(CrashLogScanRunService::execute(request, |_| {}))
+        .expect("targeted runs should ignore Unsolved Logs movement settings");
+
+    assert_eq!(result.status, CrashLogScanRunStatus::Completed);
+    assert_eq!(result.succeeded, 1);
+}
+
+#[test]
+fn service_leave_in_place_ignores_relative_unsolved_logs_destination() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let source_log = root.join("crash-standard-relative-destination.log");
+    std::fs::write(&source_log, FIXTURE_LOG_SMALL).expect("source log should be written");
+    let source = CrashLogScanSource::Standard(StandardCrashLogScanSource {
+        base_directory: root.to_path_buf(),
+        custom_scan_directory: None,
+        configured_documents_root: Some(root.join("Docs")),
+    });
+    let mut request = service_request(root, source, CrashLogScanOptions::default());
+    request.scan_facts.unsolved_logs_destination = Some("relative-destination".into());
+
+    let result = get_runtime()
+        .block_on(CrashLogScanRunService::execute(request, |_| {}))
+        .expect("leave-in-place runs should ignore the configured destination");
+
+    assert_eq!(result.status, CrashLogScanRunStatus::Completed);
+    assert_eq!(result.succeeded, 1);
+}
+
+#[test]
 fn service_fcx_mode_without_setup_context_returns_setup_failed_result() {
     let temp = tempdir().expect("tempdir should succeed");
     let log_path = write_fixture_log(&temp, "manual-selection.txt");

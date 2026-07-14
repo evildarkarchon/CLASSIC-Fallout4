@@ -72,6 +72,14 @@ impl CrashLogScanRunService {
             ));
         }
 
+        let targeted_mode = matches!(&request.source, CrashLogScanSource::Targeted(_));
+        let mut scan_facts = request.scan_facts.clone();
+        if targeted_mode || !request.move_unsolved_logs {
+            // Intake validates configured destinations eagerly, so omit this fact
+            // when the accepted run intent guarantees relocation cannot occur.
+            scan_facts.unsolved_logs_destination = None;
+        }
+
         let ready = CrashLogScanIntake::from_yaml_paths(
             request.yaml_dir_root.clone(),
             request.yaml_dir_data.clone(),
@@ -79,7 +87,7 @@ impl CrashLogScanRunService {
             request.game_version.clone(),
             request.options,
         )
-        .with_scan_facts(request.scan_facts.clone())
+        .with_scan_facts(scan_facts)
         .prepare()
         .await?;
 
@@ -87,7 +95,7 @@ impl CrashLogScanRunService {
             .unsolved_logs_destination()
             .map(std::path::Path::to_path_buf);
         let intent = CrashLogScanRunIntent::from_configured_flags(
-            matches!(request.source, CrashLogScanSource::Targeted(_)),
+            targeted_mode,
             request.move_unsolved_logs,
             configured_unsolved_logs_destination,
         );

@@ -53,8 +53,10 @@ private:
     /// Read-only opens never repair or persist the settings document.
     void loadSettings();
 
-    /// Commits editable staging and custom-scan paths, then refreshes the accepted typed snapshot.
-    void saveSettings();
+    enum class RememberedPath { Staging, CustomScan };
+
+    /// Commits only the path selected by the current user action against the displayed revision.
+    void saveRememberedPath(RememberedPath path);
     void initResultsReportDir();
 
     /// Runs typed Game Setup Intake and commits only paths explicitly accepted by the user.
@@ -62,8 +64,9 @@ private:
     void checkFirstRunPaths();
     QString findDataRoot() const;
 
-    /// Persists legacy geometry only when User Settings is trusted, current, and update-eligible.
+    /// Persists one accepted frontend geometry transition through the revision-aware typed update.
     void saveTabGeometry(int tabIndex);
+    /// Restores one tab's geometry from the cached typed snapshot, falling back to its minimum size.
     void restoreTabGeometry(int tabIndex);
     bool validateCustomScanFolder(const QString& path);
     QString readCrashLogsDir() const;
@@ -180,5 +183,10 @@ private:
         {550, 350}, // Articles
         {750, 450}, // Results
     };
-    static constexpr const char* kTabNames[TAB_COUNT] = {"main_tab", "backups_tab", "articles_tab", "results_tab"};
+    static constexpr classic::gui::GuiWindow kGuiWindows[TAB_COUNT] = {
+        classic::gui::GuiWindow::Main,
+        classic::gui::GuiWindow::Backups,
+        classic::gui::GuiWindow::Articles,
+        classic::gui::GuiWindow::Results,
+    };
 };

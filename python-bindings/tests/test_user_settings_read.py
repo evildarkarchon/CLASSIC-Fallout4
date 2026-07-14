@@ -478,6 +478,150 @@ def test_user_settings_preview_accepts_or_rejects_an_update_without_writing(
     assert settings_path.read_bytes() == source_bytes
 
 
+def test_user_settings_update_round_trips_window_geometry(
+    tmp_path: Path,
+) -> None:
+    """Commit one stable GUI window token and expose each accepted geometry field."""
+    fixture_root = user_settings_fixture_root()
+    settings_path = tmp_path / "CLASSIC Settings.yaml"
+    settings_path.write_bytes((fixture_root / "unknown_entries.yaml").read_bytes())
+    snapshot = classic_user_settings.open_user_settings(str(tmp_path))
+    update = classic_user_settings.UserSettingsUpdate()
+    update.set_window_geometry("results_tab", True, 1024, 768)
+
+    accepted = snapshot.preview_update(update)
+
+    assert accepted.accepted is True
+    assert [field.canonical_path for field in accepted.fields] == [
+        "/UI/window_geometry/results_tab/maximized",
+        "/UI/window_geometry/results_tab/width",
+        "/UI/window_geometry/results_tab/height",
+    ]
+    assert [field.value for field in accepted.fields] == [True, 1024, 768]
+
+    outcome = accepted.commit(str(tmp_path))
+
+    assert outcome.status == "committed"
+    reopened = classic_user_settings.open_user_settings(str(tmp_path))
+    results = reopened.frontend_state.window_geometry.results_tab
+    assert results.maximized is True
+    assert results.width == 1024
+    assert results.height == 768
+    committed_content = settings_path.read_text(encoding="utf-8")
+    assert "future_flag: true" in committed_content
+    assert "community_frontend:\n    theme: amber" in committed_content
+    assert "ThirdPartyPlugin:\n  enabled: true" in committed_content
+
+
+def test_user_settings_update_round_trips_tui_remembered_state(
+    tmp_path: Path,
+) -> None:
+    """Commit one complete TUI transition and expose each accepted field."""
+    fixture_root = user_settings_fixture_root()
+    settings_path = tmp_path / "CLASSIC Settings.yaml"
+    settings_path.write_bytes((fixture_root / "unknown_entries.yaml").read_bytes())
+    snapshot = classic_user_settings.open_user_settings(str(tmp_path))
+    update = classic_user_settings.UserSettingsUpdate()
+    update.set_tui_remembered_state(2, 42, True)
+
+    accepted = snapshot.preview_update(update)
+
+    assert accepted.accepted is True
+    assert [field.canonical_path for field in accepted.fields] == [
+        "/UI/tui/active_tab",
+        "/UI/tui/results_panel_width",
+        "/UI/tui/sort_ascending",
+    ]
+    assert [field.value for field in accepted.fields] == [2, 42, True]
+
+    outcome = accepted.commit(str(tmp_path))
+
+    assert outcome.status == "committed"
+    reopened = classic_user_settings.open_user_settings(str(tmp_path))
+    assert reopened.frontend_state.tui.active_tab == 2
+    assert reopened.frontend_state.tui.results_panel_width == 42
+    assert reopened.frontend_state.tui.sort_ascending is True
+
+
+def test_legacy_tui_state_import_reports_receipt_and_coded_errors(
+    tmp_path: Path,
+) -> None:
+    """Expose verified import evidence and a typed, code-prefixed failure."""
+    fixture_root = user_settings_fixture_root()
+    settings_path = tmp_path / "CLASSIC Settings.yaml"
+    settings_path.write_bytes((fixture_root / "unknown_entries.yaml").read_bytes())
+    legacy_path = tmp_path / "state.json"
+    legacy_path.write_text(
+        '{"active_tab":3,"results_panel_width":48,"sort_ascending":true}',
+        encoding="utf-8",
+    )
+
+    outcome = classic_user_settings.import_legacy_tui_state_into_user_settings(
+        str(tmp_path), str(legacy_path)
+    )
+
+    assert outcome.status == "applied"
+    assert outcome.source_path == str(legacy_path)
+    assert outcome.source_revision == outcome.backup_revision
+    assert outcome.published_settings_revision.startswith("sha256:")
+    assert Path(outcome.backup_path).read_bytes() == legacy_path.read_bytes()
+    assert outcome.receipt.settings_path == str(settings_path)
+
+    restored = outcome.receipt.restore(str(tmp_path))
+    assert restored.status == "restored"
+    assert restored.revision.startswith("sha256:")
+
+    legacy_path.write_text("{", encoding="utf-8")
+    with pytest.raises(
+        classic_user_settings.LegacyTuiStateImportError,
+        match="^legacy_tui_state_parse_failed:",
+    ):
+        classic_user_settings.import_legacy_tui_state_into_user_settings(
+            str(tmp_path), str(legacy_path)
+        )
+
+
+def test_user_settings_update_rejects_unknown_window_geometry_token() -> None:
+    """Reject tokens outside the stable maintained GUI window vocabulary."""
+    update = classic_user_settings.UserSettingsUpdate()
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "unknown GUI window 'sidebar'; expected one of: main_tab, backups_tab, "
+            "articles_tab, results_tab"
+        ),
+    ):
+        update.set_window_geometry("sidebar", False, 640, 480)
+
+
+def test_frontend_geometry_transition_replays_stale_snapshot_once(
+    tmp_path: Path,
+) -> None:
+    """Preserve a newer preference while replaying one accepted geometry transition."""
+    fixture_root = user_settings_fixture_root()
+    settings_path = tmp_path / "CLASSIC Settings.yaml"
+    settings_path.write_bytes((fixture_root / "unknown_entries.yaml").read_bytes())
+    stale = classic_user_settings.open_user_settings(str(tmp_path))
+    concurrent = classic_user_settings.UserSettingsUpdate()
+    concurrent.set_update_check(False)
+    concurrent_outcome = stale.preview_update(concurrent).commit(str(tmp_path))
+    assert concurrent_outcome.status == "committed"
+
+    outcome = stale.commit_frontend_geometry_transition(
+        str(tmp_path), "main_tab", True, 1440, 900
+    )
+
+    assert outcome.status == "committed"
+    assert outcome.revision is not None
+    assert outcome.diagnostics == []
+    current = classic_user_settings.open_user_settings(str(tmp_path))
+    assert current.update_preferences.update_check is False
+    assert current.frontend_state.window_geometry.main_tab.maximized is True
+    assert current.frontend_state.window_geometry.main_tab.width == 1440
+    assert current.frontend_state.window_geometry.main_tab.height == 900
+
+
 def test_accepted_user_settings_update_commit_publishes_preserved_document(
     tmp_path: Path,
 ) -> None:

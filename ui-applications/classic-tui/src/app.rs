@@ -3,7 +3,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
-use classic_config_core::ClassicConfig;
 use classic_file_io_core::BackupType;
 use classic_path_core::validate_custom_scan_path;
 use classic_scanlog_core::{
@@ -13,6 +12,11 @@ use classic_scanlog_core::{
 };
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
+use classic_user_settings_core::{
+    CommitEligibility, LegacyTuiStateImportOutcome, MigrationPlanningOutcome, Revision,
+    UserSettings, UserSettingsCommitOutcome, UserSettingsMigrationApplyOutcome, UserSettingsUpdate,
+    UserSettingsUpdatePreview, import_legacy_tui_state,
+};
 use ratatui::Terminal;
 use ratatui::backend::Backend;
 use ratatui::layout::Rect;
@@ -24,9 +28,7 @@ mod results_workflow;
 mod update_workflow;
 
 use crate::results_markdown::MarkdownLink;
-use crate::state::{
-    WindowState, load_settings, load_window_state, save_settings, save_window_state,
-};
+use crate::state::{classic_root, legacy_tui_state_file_path};
 use crate::tabs::articles_tab::{ARTICLE_LINKS, ArticlesClickAreas};
 use crate::tabs::backup_tab::BackupClickAreas;
 use crate::tabs::main_tab::{MainClickAreas, MainFocus};
@@ -318,8 +320,12 @@ pub struct App {
     pub click_areas: ClickAreas,
     pub tick_count: usize,
 
-    pub config: ClassicConfig,
-    pub window_state: WindowState,
+    /// Revision-cohesive view of the shared canonical User Settings store.
+    pub settings: UserSettings,
+    /// Explicit root against which the canonical store is opened and committed.
+    pub classic_root: PathBuf,
+    legacy_tui_state_path: Option<PathBuf>,
+    settings_persistence_enabled: bool,
 
     pub async_tx: mpsc::UnboundedSender<AsyncMessage>,
     pub async_rx: mpsc::UnboundedReceiver<AsyncMessage>,
@@ -336,23 +342,72 @@ impl Default for App {
 }
 
 impl App {
+    /// Opens the shared canonical User Settings store for the normal TUI process.
     pub fn new() -> Self {
-        let config = load_settings();
-        let window_state = load_window_state();
+        Self::new_with_settings_root(classic_root(), legacy_tui_state_file_path())
+    }
+
+    /// Opens the TUI against an explicit CLASSIC root and optional legacy import source.
+    ///
+    /// This constructor is the filesystem seam used by focused tests and embedders. The legacy
+    /// path is never read automatically; it is retained only for an explicit Settings action.
+    pub fn new_with_settings_root(
+        classic_root: impl Into<PathBuf>,
+        legacy_tui_state_path: Option<PathBuf>,
+    ) -> Self {
+        let classic_root = classic_root.into();
+        let settings = UserSettings::open(&classic_root);
+        Self::from_settings(
+            classic_root,
+            legacy_tui_state_path,
+            settings,
+            true,
+            open_url_default,
+            write_clipboard_default,
+        )
+    }
+
+    /// Builds an isolated default-backed TUI without enabling filesystem persistence.
+    pub fn new_for_testing() -> Self {
+        Self::from_settings(
+            PathBuf::new(),
+            None,
+            UserSettings::published_defaults(),
+            false,
+            open_url_noop,
+            write_clipboard_noop,
+        )
+    }
+
+    /// Projects one cohesive User Settings snapshot into TUI input and presentation state.
+    fn from_settings(
+        classic_root: PathBuf,
+        legacy_tui_state_path: Option<PathBuf>,
+        settings: UserSettings,
+        settings_persistence_enabled: bool,
+        url_opener: UrlOpener,
+        clipboard_writer: ClipboardWriter,
+    ) -> Self {
         let (tx, rx) = mpsc::unbounded_channel();
 
         let mut staging_mods_input = InputState::default();
         let mut custom_scan_input = InputState::default();
 
-        if let Some(path) = config.paths.mods_folder.as_ref() {
-            staging_mods_input.set_value(path.to_string_lossy().to_string());
+        if let Some(path) = settings.game_setup_settings().mods_root() {
+            staging_mods_input.set_value(path.to_string());
         }
-        if let Some(path) = config.paths.scan_custom.as_ref() {
-            custom_scan_input.set_value(path.to_string_lossy().to_string());
+        if let Some(path) = settings.crash_log_scan_settings().custom_scan_input() {
+            custom_scan_input.set_value(path.to_string());
         }
 
+        let remembered = settings.frontend_state().tui();
+        let remembered_active_tab = remembered.active_tab();
+        let remembered_panel_width = remembered.results_panel_width();
+        let remembered_sort_ascending = remembered.sort_ascending();
+        let initial_status = settings_status(&settings, legacy_tui_state_path.as_deref());
+
         let mut app = Self {
-            active_tab: TabIndex::from_index(window_state.active_tab as usize),
+            active_tab: TabIndex::from_index(remembered_active_tab as usize),
             active_overlay: None,
             staging_mods_input,
             custom_scan_input,
@@ -363,7 +418,7 @@ impl App {
             results: ResultsState::default(),
             scan_in_progress: false,
             scan_progress: 0.0,
-            scan_status: "Ready".to_string(),
+            scan_status: initial_status,
             status_clear_at: None,
             update_checking: false,
             last_update_notification: None,
@@ -373,17 +428,19 @@ impl App {
             should_quit: false,
             click_areas: ClickAreas::default(),
             tick_count: 0,
-            config,
-            window_state,
+            settings,
+            classic_root,
+            legacy_tui_state_path,
+            settings_persistence_enabled,
             async_tx: tx,
             async_rx: rx,
             cancel_token: None,
-            url_opener: open_url_default,
-            clipboard_writer: write_clipboard_default,
+            url_opener,
+            clipboard_writer,
         };
 
-        app.results.list_panel_width = app.window_state.results_panel_width;
-        app.results.sort_ascending = app.window_state.sort_ascending;
+        app.results.list_panel_width = remembered_panel_width;
+        app.results.sort_ascending = remembered_sort_ascending;
 
         if matches!(app.active_tab, TabIndex::FileBackup) {
             app.refresh_backup_statuses();
@@ -393,40 +450,6 @@ impl App {
         }
 
         app
-    }
-
-    pub fn new_for_testing() -> Self {
-        let (tx, rx) = mpsc::unbounded_channel();
-        Self {
-            active_tab: TabIndex::MainOptions,
-            active_overlay: None,
-            staging_mods_input: InputState::default(),
-            custom_scan_input: InputState::default(),
-            main_focus: MainFocus::StagingInput,
-            backup_selected_row: 0,
-            backup_exists: [false; 4],
-            articles_selected: 0,
-            results: ResultsState::default(),
-            scan_in_progress: false,
-            scan_progress: 0.0,
-            scan_status: "Ready".to_string(),
-            status_clear_at: None,
-            update_checking: false,
-            last_update_notification: None,
-            papyrus_active: false,
-            pending_backup_remove: None,
-            pending_delete_report: None,
-            should_quit: false,
-            click_areas: ClickAreas::default(),
-            tick_count: 0,
-            config: ClassicConfig::default(),
-            window_state: WindowState::default(),
-            async_tx: tx,
-            async_rx: rx,
-            cancel_token: None,
-            url_opener: open_url_noop,
-            clipboard_writer: write_clipboard_noop,
-        }
     }
 
     pub fn run<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> color_eyre::Result<()>
@@ -493,7 +516,14 @@ impl App {
                 };
                 self.status_clear_at =
                     Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
-                if self.config.auto_switch_to_results && total > 0 && !cancelled {
+                if self
+                    .settings
+                    .frontend_state()
+                    .preferences()
+                    .auto_switch_after_scan()
+                    && total > 0
+                    && !cancelled
+                {
                     self.set_active_tab(TabIndex::Results);
                 }
             }
@@ -544,17 +574,20 @@ impl App {
         }
     }
 
+    /// Validates the editable path fields and commits them as one canonical settings update.
+    ///
+    /// Validation failures leave both the in-memory snapshot and shared settings file unchanged.
     pub fn save_paths_from_inputs(&mut self) -> Result<(), String> {
         let staging = self.staging_mods_input.value.trim();
-        self.config.paths.mods_folder = if staging.is_empty() {
+        let mods_folder = if staging.is_empty() {
             None
         } else {
-            Some(PathBuf::from(staging))
+            Some(staging.to_string())
         };
 
         let custom = self.custom_scan_input.value.trim();
-        if custom.is_empty() {
-            self.config.paths.scan_custom = None;
+        let custom_scan_input = if custom.is_empty() {
+            None
         } else {
             let custom_path = PathBuf::from(custom);
             validate_custom_scan_path(&custom_path).map_err(|err| err.to_string())?;
@@ -562,25 +595,177 @@ impl App {
             if self.is_inside_crash_logs(&custom_path) {
                 return Err("Custom Scan Folder cannot be inside Crash Logs".to_string());
             }
+            Some(custom.to_string())
+        };
 
-            self.config.paths.scan_custom = Some(custom_path);
-        }
-
-        save_settings(&self.config).map_err(|e| format!("Failed to save settings: {e}"))
+        let update = UserSettingsUpdate::new()
+            .with_mods_folder(mods_folder)
+            .with_custom_scan_input(custom_scan_input);
+        self.commit_settings_update(update)
     }
 
+    /// Validates and commits one explicit all-or-nothing update to the shared settings store.
+    ///
+    /// Missing settings are bootstrapped only because the caller invoked a concrete save action;
+    /// migration-required and untrusted snapshots remain read-only until the user resolves them.
+    fn commit_settings_update(&mut self, update: UserSettingsUpdate) -> Result<(), String> {
+        if !self.settings_persistence_enabled {
+            return Ok(());
+        }
+        let preview = if matches!(self.settings.revision(), Revision::Missing) {
+            self.settings.preview_bootstrap(update)
+        } else {
+            self.settings.preview_update(update)
+        };
+        let accepted = match preview {
+            UserSettingsUpdatePreview::Accepted(accepted) => accepted,
+            UserSettingsUpdatePreview::Rejected(diagnostics) => {
+                return Err(format_update_diagnostics(&diagnostics));
+            }
+        };
+        match accepted
+            .commit(&self.classic_root)
+            .map_err(|error| format!("User Settings save failed: {error}"))?
+        {
+            UserSettingsCommitOutcome::Committed { .. } => {
+                self.settings = UserSettings::open(&self.classic_root);
+                Ok(())
+            }
+            UserSettingsCommitOutcome::Conflict { .. } => {
+                self.settings = UserSettings::open(&self.classic_root);
+                Err(
+                    "User Settings changed in another process; review the latest values and retry"
+                        .to_string(),
+                )
+            }
+        }
+    }
+
+    /// Explicitly applies the currently displayed User Settings migration plan.
+    pub fn apply_user_settings_migration(&mut self) {
+        let outcome = match self.settings.plan_migration() {
+            MigrationPlanningOutcome::NotRequired => {
+                self.scan_status = "User Settings do not require migration".to_string();
+                return;
+            }
+            MigrationPlanningOutcome::Unsupported(diagnostics) => {
+                self.scan_status = diagnostics.first().map_or_else(
+                    || "User Settings migration is unavailable".to_string(),
+                    |diagnostic| format!("Migration unavailable: {}", diagnostic.message()),
+                );
+                return;
+            }
+            MigrationPlanningOutcome::Planned(plan) => plan.apply(&self.classic_root),
+        };
+
+        match outcome {
+            Ok(UserSettingsMigrationApplyOutcome::Applied(receipt)) => {
+                self.settings = UserSettings::open(&self.classic_root);
+                self.scan_status = format!(
+                    "User Settings migrated; verified backup retained at {}",
+                    receipt.backup_path().display()
+                );
+            }
+            Ok(UserSettingsMigrationApplyOutcome::Conflict { .. }) => {
+                self.settings = UserSettings::open(&self.classic_root);
+                self.scan_status =
+                    "User Settings changed in another process; migration was not applied"
+                        .to_string();
+            }
+            Err(error) => {
+                self.scan_status = format!("User Settings migration failed: {error}");
+            }
+        }
+        self.status_clear_at = None;
+    }
+
+    /// Explicitly imports the dormant legacy TUI state into the shared canonical store.
+    pub fn import_legacy_tui_state(&mut self) {
+        let Some(legacy_path) = self.legacy_tui_state_path.clone() else {
+            self.scan_status = "No legacy TUI state path is available".to_string();
+            return;
+        };
+        let outcome = import_legacy_tui_state(&self.classic_root, &legacy_path);
+        match outcome {
+            Ok(LegacyTuiStateImportOutcome::Applied(receipt)) => {
+                self.settings = UserSettings::open(&self.classic_root);
+                let remembered = self.settings.frontend_state().tui();
+                self.active_tab = TabIndex::from_index(remembered.active_tab() as usize);
+                self.results.list_panel_width = remembered.results_panel_width();
+                self.results.sort_ascending = remembered.sort_ascending();
+                self.scan_status = format!(
+                    "Legacy TUI state imported; verified backup retained at {}",
+                    receipt.backup_path().display()
+                );
+            }
+            Ok(LegacyTuiStateImportOutcome::NoLegacySource) => {
+                self.scan_status = "No legacy TUI state was found".to_string();
+            }
+            Ok(LegacyTuiStateImportOutcome::RequiresSettingsMigration { .. }) => {
+                self.scan_status =
+                    "Migrate User Settings first, then retry the legacy TUI state import"
+                        .to_string();
+            }
+            Ok(LegacyTuiStateImportOutcome::UntrustedSettingsBase { .. }) => {
+                self.scan_status =
+                    "Legacy TUI state cannot be imported into degraded User Settings".to_string();
+            }
+            Ok(LegacyTuiStateImportOutcome::SettingsConflict { .. }) => {
+                self.settings = UserSettings::open(&self.classic_root);
+                self.scan_status =
+                    "User Settings changed in another process; legacy state was not imported"
+                        .to_string();
+            }
+            Ok(LegacyTuiStateImportOutcome::LegacySourceConflict { .. }) => {
+                self.scan_status =
+                    "Legacy TUI state changed during import; review it and retry".to_string();
+            }
+            Err(error) => {
+                self.scan_status = format!("Legacy TUI state import failed: {error}");
+            }
+        }
+        self.status_clear_at = None;
+    }
+
+    /// Returns migration, degraded-read, and legacy-import guidance for the Settings overlay.
+    pub fn settings_overlay_text(&self) -> String {
+        let mut lines = Vec::new();
+        match self.settings.commit_eligibility() {
+            CommitEligibility::RequiresMigration => lines.push(
+                "Migration required. Press M to review/apply the canonical migration.".to_string(),
+            ),
+            CommitEligibility::BlockedUntrusted => {
+                lines.push("User Settings are degraded and read-only.".to_string())
+            }
+            CommitEligibility::Eligible => {
+                lines.push("Shared canonical User Settings are ready.".to_string())
+            }
+        }
+        if self
+            .legacy_tui_state_path
+            .as_deref()
+            .is_some_and(Path::exists)
+        {
+            lines.push(
+                "Legacy TUI state is available. Press I to import it explicitly.".to_string(),
+            );
+        }
+        for diagnostic in self.settings.diagnostics().iter().take(3) {
+            lines.push(format!("{}: {}", diagnostic.code(), diagnostic.message()));
+        }
+        lines.push("Press Esc to close.".to_string());
+        lines.join("\n\n")
+    }
+
+    /// Starts a crash-log scan from one cohesive User Settings snapshot, or cancels the active scan.
+    ///
+    /// All scan and setup inputs are projected before spawning work so concurrent settings changes
+    /// cannot produce a request assembled from multiple revisions.
     pub fn start_or_cancel_crash_scan(&mut self) {
         if self.scan_in_progress {
             if let Some(token) = &self.cancel_token {
                 token.cancel();
             }
-            return;
-        }
-
-        if let Err(error) = self.save_paths_from_inputs() {
-            self.scan_status = error;
-            self.scan_progress = 0.0;
-            self.status_clear_at = Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
             return;
         }
 
@@ -593,22 +778,23 @@ impl App {
         self.cancel_token = Some(cancel_token.clone());
 
         let tx = self.async_tx.clone();
-        let custom_folder = self.config.paths.scan_custom.clone();
-        let selected_game_version = self.config.game_version.clone();
-        let setup_game_root = self.config.paths.game_root.clone();
-        let configured_docs_root = self.config.paths.docs_root.clone();
-        let show_formid_values = self.config.show_formid_values;
-        let fcx_mode = self.config.fcx_mode;
-        let simplify_logs = self.config.simplify_logs;
-        let move_unsolved_logs = self.config.move_unsolved_logs;
-        let unsolved_logs_destination = self.config.unsolved_logs_destination.clone();
-        let formid_database_paths = self
-            .config
-            .formid_databases
-            .get("Fallout4")
-            .cloned()
-            .unwrap_or_default();
-        let yaml_dir_root = std::env::current_dir().unwrap_or_default();
+        let scan = self.settings.crash_log_scan_settings();
+        let setup = self.settings.game_setup_settings();
+        let (managed_game, formid_database_paths) = self.scan_game_projection();
+        let custom_folder = scan.custom_scan_input().map(PathBuf::from);
+        let selected_game_version = scan.game_version_selection().as_str().to_string();
+        let setup_game_root = setup.game_root().map(PathBuf::from);
+        let configured_docs_root = setup.documents_root().map(PathBuf::from);
+        let game_exe_path = setup.game_executable().map(PathBuf::from);
+        let show_formid_values = scan.formid_value_lookup();
+        let fcx_mode = scan.fcx_mode();
+        let simplify_logs = scan.simplify_logs();
+        let move_unsolved_logs = scan.move_unsolved_logs();
+        let unsolved_logs_destination = scan.unsolved_logs_destination().map(PathBuf::from);
+        let max_concurrent = usize::try_from(scan.max_concurrent_scans())
+            .ok()
+            .filter(|value| *value > 0);
+        let yaml_dir_root = self.classic_root.clone();
         let yaml_dir_data = yaml_dir_root.join("CLASSIC Data");
         let base_folder = yaml_dir_root.clone();
 
@@ -624,15 +810,15 @@ impl App {
             };
 
             let setup_context = fcx_mode.then(|| CrashLogScanSetupContext {
-                game_root: (!setup_game_root.as_os_str().is_empty()).then_some(setup_game_root),
+                game_root: setup_game_root,
                 docs_root: configured_docs_root.clone(),
-                game_exe_path: None,
+                game_exe_path,
                 xse_log_path: None,
             });
             let request = CrashLogScanRunServiceRequest {
                 yaml_dir_root: yaml_dir_root.clone(),
                 yaml_dir_data: yaml_dir_data.clone(),
-                game: "Fallout4".to_string(),
+                game: managed_game,
                 game_version: selected_game_version,
                 options: CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs),
                 source: CrashLogScanSource::Standard(StandardCrashLogScanSource {
@@ -646,7 +832,7 @@ impl App {
                     formid_database_paths,
                     unsolved_logs_destination,
                 },
-                max_concurrent: None,
+                max_concurrent,
                 cancellation: Some(cancellation),
                 preserve_order: false,
             };
@@ -714,9 +900,7 @@ impl App {
     }
 
     pub fn open_crash_logs_folder(&mut self) {
-        let path = std::env::current_dir()
-            .unwrap_or_default()
-            .join("Crash Logs");
+        let path = self.classic_root.join("Crash Logs");
         if let Err(error) = std::fs::create_dir_all(&path) {
             self.scan_status = format!("Failed to prepare Crash Logs folder: {error}");
             return;
@@ -747,6 +931,10 @@ impl App {
         }
         if matches!(tab, TabIndex::Results) {
             self.refresh_results_reports_with_status(false);
+        }
+        if let Err(error) = self.persist_state_update() {
+            self.scan_status = error;
+            self.status_clear_at = None;
         }
     }
 
@@ -821,24 +1009,51 @@ impl App {
         }
     }
 
+    /// Persists remembered presentation state through one canonical explicit update.
     pub fn persist_state(&mut self) {
-        self.window_state.active_tab = self.active_tab as u8;
-        self.window_state.results_panel_width = self.results.list_panel_width;
-        self.window_state.sort_ascending = self.results.sort_ascending;
-        if let Err(error) = save_window_state(&self.window_state) {
-            tracing::warn!("Failed to save window state: {error}");
+        if let Err(error) = self.persist_state_update() {
+            tracing::warn!("Failed to save canonical TUI remembered state: {error}");
         }
     }
 
-    fn is_inside_crash_logs(&self, custom_path: &Path) -> bool {
-        let crash_logs = std::env::current_dir()
-            .unwrap_or_default()
-            .join("Crash Logs");
+    /// Builds the complete TUI remembered-state transition used by event and shutdown saves.
+    fn persist_state_update(&mut self) -> Result<(), String> {
+        let update = UserSettingsUpdate::new().with_tui_remembered_state(
+            self.active_tab as i64,
+            i64::from(self.results.list_panel_width),
+            self.results.sort_ascending,
+        );
+        self.commit_settings_update(update)
+    }
 
-        let custom = normalize_path(custom_path);
-        let crash = normalize_path(&crash_logs);
+    fn is_inside_crash_logs(&self, custom_path: &Path) -> bool {
+        let crash_logs = self.classic_root.join("Crash Logs");
+
+        let custom = normalize_path(&self.classic_root, custom_path);
+        let crash = normalize_path(&self.classic_root, &crash_logs);
 
         custom == crash || custom.starts_with(&crash)
+    }
+
+    /// Projects the canonical managed game and its matching FormID databases from one snapshot.
+    fn scan_game_projection(&self) -> (String, Vec<PathBuf>) {
+        let managed_game = self
+            .settings
+            .game_setup_settings()
+            .managed_game()
+            .as_str()
+            .to_string();
+        let databases = self
+            .settings
+            .crash_log_scan_settings()
+            .formid_databases()
+            .get(&managed_game)
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .map(PathBuf::from)
+            .collect();
+        (managed_game, databases)
     }
 
     fn open_article(&mut self, index: usize) {
@@ -856,11 +1071,39 @@ impl App {
     }
 }
 
-fn normalize_path(path: &Path) -> PathBuf {
+/// Builds the startup status presented through the existing TUI status convention.
+fn settings_status(settings: &UserSettings, legacy_state_path: Option<&Path>) -> String {
+    if settings.commit_eligibility() == CommitEligibility::RequiresMigration {
+        return "User Settings migration required — open Settings with Ctrl+O".to_string();
+    }
+    if settings.commit_eligibility() == CommitEligibility::BlockedUntrusted {
+        return settings.diagnostics().first().map_or_else(
+            || "User Settings are degraded and read-only".to_string(),
+            |diagnostic| format!("User Settings degraded: {}", diagnostic.message()),
+        );
+    }
+    if legacy_state_path.is_some_and(Path::exists) {
+        return "Legacy TUI state is available — open Settings with Ctrl+O to import".to_string();
+    }
+    "Ready".to_string()
+}
+
+/// Formats an all-or-nothing preview rejection for the single-line status convention.
+fn format_update_diagnostics(
+    diagnostics: &[classic_user_settings_core::UpdateDiagnostic],
+) -> String {
+    diagnostics.first().map_or_else(
+        || "User Settings update was rejected".to_string(),
+        |diagnostic| format!("User Settings update rejected: {}", diagnostic.message()),
+    )
+}
+
+/// Resolves a possibly relative path against the App's canonical CLASSIC root.
+fn normalize_path(classic_root: &Path, path: &Path) -> PathBuf {
     let absolute = if path.is_absolute() {
         path.to_path_buf()
     } else {
-        std::env::current_dir().unwrap_or_default().join(path)
+        classic_root.join(path)
     };
 
     absolute.canonicalize().unwrap_or(absolute)

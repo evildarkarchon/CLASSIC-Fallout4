@@ -23,7 +23,7 @@ This page describes behavior visible in active Rust and C++-facing source today.
 
 ## Current Boundary At A Glance
 
-There are three active representations for per-game FormID database paths. Typed User Settings is the canonical persisted choice, and the native CLI and GUI scan adapters project the selected game's entries into explicit scan facts. `ClassicConfig.formid_databases` remains a separate compatibility representation.
+There are three active representations for per-game FormID database paths. Typed User Settings is the canonical persisted choice, and the native CLI, GUI, and TUI scan adapters project the selected game's entries into explicit scan facts. `ClassicConfig.formid_databases` remains a separate compatibility representation.
 
 ## `classic-config-core` representation
 
@@ -170,7 +170,7 @@ These bindings mirror the Rust config model. They do not, in the inspected sourc
 
 ## Surfaces that expose typed User Settings FormID databases
 
-The CXX, Node, and Python User Settings adapters expose `CrashLogScanSettings.formid_databases` from the canonical nested document together with its preference origin. Their update-preview adapters validate requested replacement maps without writing. The native CLI consumes the narrow CXX typed group. The native GUI consumes the aggregate `GuiSettingsSnapshotDto`, whose four settings groups come from one source revision, then projects explicit `CrashLogScanFacts` through its immutable launch object.
+The CXX, Node, and Python User Settings adapters expose `CrashLogScanSettings.formid_databases` from the canonical nested document together with its preference origin. Their update-preview adapters validate requested replacement maps without writing. The native CLI consumes the narrow CXX typed group. The native GUI consumes the aggregate `GuiSettingsSnapshotDto`, whose four settings groups come from one source revision. The Rust TUI opens the same core snapshot directly. Each native frontend selects the active game's paths and projects explicit `CrashLogScanFacts`; scanlog core never opens a settings document.
 
 ## Native GUI typed edit and scan-launch surface
 

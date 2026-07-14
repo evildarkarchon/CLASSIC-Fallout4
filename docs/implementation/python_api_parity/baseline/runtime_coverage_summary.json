@@ -1,16 +1,16 @@
 {
-  "generated_at_utc": "2026-07-14T12:58:27.869134+00:00",
+  "generated_at_utc": "2026-07-14T22:15:49.808343+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1464,
-    "runtime_verified_total": 1464,
+    "tracked_surface_total": 1470,
+    "runtime_verified_total": 1470,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 1244,
+    "tier1_contract_total": 1247,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -69,8 +69,8 @@
       "total": 10
     },
     "user_settings": {
-      "runtime_verified": 212,
-      "total": 212
+      "runtime_verified": 218,
+      "total": 218
     },
     "version": {
       "runtime_verified": 15,
@@ -737,6 +737,25 @@
       "notes": "Direct public-module coverage includes the filesystem-free published-defaults projection; read-only open; typed Crash Log Scan and Game Setup settings; nested frontend state; all-or-nothing update previews and conflict-safe commits; plus python-bindings/tests/test_user_settings_migration_planning.py coverage for deterministic flat and previous-location plans, schema/location/change DTOs, exact in-memory reversal, current no-op outcomes, unsupported version-gap diagnostics, and no-write behavior."
     },
     {
+      "trackedId": "contract:user_settings.frontend_transition_outcome_type",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.frontend_transition_outcome_type",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "UserSettingsFrontendTransitionOutcome",
+      "bindingIdentifier": "classic_user_settings.UserSettingsFrontendTransitionOutcome",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes the filesystem-free published-defaults projection; read-only open; typed Crash Log Scan and Game Setup settings; nested frontend state; all-or-nothing update previews and conflict-safe commits; plus python-bindings/tests/test_user_settings_migration_planning.py coverage for deterministic flat and previous-location plans, schema/location/change DTOs, exact in-memory reversal, current no-op outcomes, unsupported version-gap diagnostics, and no-write behavior."
+    },
+    {
       "trackedId": "contract:user_settings.update_diagnostic_type",
       "trackedType": "contract_row",
       "contractId": "user_settings.update_diagnostic_type",
@@ -1316,6 +1335,44 @@
       "classification": "runtime_verified",
       "rustSymbol": "with_auto_switch_after_scan",
       "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_auto_switch_after_scan",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes the filesystem-free published-defaults projection; read-only open; typed Crash Log Scan and Game Setup settings; nested frontend state; all-or-nothing update previews and conflict-safe commits; plus python-bindings/tests/test_user_settings_migration_planning.py coverage for deterministic flat and previous-location plans, schema/location/change DTOs, exact in-memory reversal, current no-op outcomes, unsupported version-gap diagnostics, and no-write behavior."
+    },
+    {
+      "trackedId": "contract:user_settings.update_with_window_geometry",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.update_with_window_geometry",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "with_window_geometry",
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_window_geometry",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "notes": "Direct public-module coverage includes the filesystem-free published-defaults projection; read-only open; typed Crash Log Scan and Game Setup settings; nested frontend state; all-or-nothing update previews and conflict-safe commits; plus python-bindings/tests/test_user_settings_migration_planning.py coverage for deterministic flat and previous-location plans, schema/location/change DTOs, exact in-memory reversal, current no-op outcomes, unsupported version-gap diagnostics, and no-write behavior."
+    },
+    {
+      "trackedId": "contract:user_settings.commit_frontend_geometry_transition",
+      "trackedType": "contract_row",
+      "contractId": "user_settings.commit_frontend_geometry_transition",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "commit_frontend_geometry_transition",
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot.commit_frontend_geometry_transition",
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",
@@ -22862,6 +22919,48 @@
       "notes": "Direct public-module coverage includes the filesystem-free published-defaults projection; read-only open; typed Crash Log Scan and Game Setup settings; nested frontend state; all-or-nothing update previews and conflict-safe commits; plus python-bindings/tests/test_user_settings_migration_planning.py coverage for deterministic flat and previous-location plans, schema/location/change DTOs, exact in-memory reversal, current no-op outcomes, unsupported version-gap diagnostics, and no-write behavior."
     },
     {
+      "trackedId": "binding:classic_user_settings.UserSettingsFrontendTransitionOutcome",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.UserSettingsFrontendTransitionOutcome",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes the filesystem-free published-defaults projection; read-only open; typed Crash Log Scan and Game Setup settings; nested frontend state; all-or-nothing update previews and conflict-safe commits; plus python-bindings/tests/test_user_settings_migration_planning.py coverage for deterministic flat and previous-location plans, schema/location/change DTOs, exact in-memory reversal, current no-op outcomes, unsupported version-gap diagnostics, and no-write behavior."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.UserSettingsSnapshot.commit_frontend_geometry_transition",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.UserSettingsSnapshot.commit_frontend_geometry_transition",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes the filesystem-free published-defaults projection; read-only open; typed Crash Log Scan and Game Setup settings; nested frontend state; all-or-nothing update previews and conflict-safe commits; plus python-bindings/tests/test_user_settings_migration_planning.py coverage for deterministic flat and previous-location plans, schema/location/change DTOs, exact in-memory reversal, current no-op outcomes, unsupported version-gap diagnostics, and no-write behavior."
+    },
+    {
       "trackedId": "binding:classic_user_settings.UserSettingsUpdatePreview.commit",
       "trackedType": "registry_only",
       "ownerModule": "user_settings",
@@ -22912,6 +23011,27 @@
       "classification": "runtime_verified",
       "rustSymbol": null,
       "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_auto_switch_after_scan",
+      "coverageId": "python-tier1-user-settings",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_user_settings_read.py",
+      "testCaseId": "user-settings-read-scan-preview",
+      "fixtureRefs": [
+        "tests/fixtures/user_settings_compatibility"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Direct public-module coverage includes the filesystem-free published-defaults projection; read-only open; typed Crash Log Scan and Game Setup settings; nested frontend state; all-or-nothing update previews and conflict-safe commits; plus python-bindings/tests/test_user_settings_migration_planning.py coverage for deterministic flat and previous-location plans, schema/location/change DTOs, exact in-memory reversal, current no-op outcomes, unsupported version-gap diagnostics, and no-write behavior."
+    },
+    {
+      "trackedId": "binding:classic_user_settings.UserSettingsUpdate.set_window_geometry",
+      "trackedType": "registry_only",
+      "ownerModule": "user_settings",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_user_settings.UserSettingsUpdate.set_window_geometry",
       "coverageId": "python-tier1-user-settings",
       "verificationMode": "direct_call",
       "testSuite": "python-bindings/tests/test_user_settings_read.py",

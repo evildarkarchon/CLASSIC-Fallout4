@@ -53,7 +53,7 @@
 │  - ClassicLib-rs/business-logic/classic-database-core: FormID lookups            │
 │  - ClassicLib-rs/business-logic/classic-file-io-core: File operations            │
 │  - ClassicLib-rs/business-logic/classic-yaml-core: YAML operations               │
-│  - ClassicLib-rs/business-logic/classic-config-core: Configuration                │
+│  - business-logic/classic-user-settings-core: Shared interface settings           │
 └─────────────────────────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────────────┐
@@ -195,7 +195,7 @@ impl CliConfig {
 ```rust
 pub struct ScanExecutor {
     config: CliConfig,
-    yaml_data: YamlData,  // From ClassicLib-rs/business-logic/classic-config-core
+    yaml_data: YamlData,  // From business-logic/classic-yaml-core
 }
 
 impl ScanExecutor {
@@ -333,8 +333,9 @@ ClassicLib-rs/ui-applications/classic-tui/
 
 ```rust
 pub struct App {
-    // Configuration
-    config: ClassicConfig,
+    // One revision-cohesive view of the shared canonical store
+    settings: UserSettings,
+    classic_root: PathBuf,
 
     // UI State
     ui_state: UiState,
@@ -485,7 +486,7 @@ pub struct ScanHandler {
 }
 
 impl ScanHandler {
-    pub async fn start_crash_scan(&self, config: ClassicConfig) {
+    pub async fn start_crash_scan(&self, settings: UserSettings) {
         let tx = self.tx.clone();
 
         // Spawn scan in background
@@ -493,7 +494,8 @@ impl ScanHandler {
             tx.send(ScanMessage::Started).await.ok();
 
             // Use ClassicLib-rs/business-logic/classic-scanlog-core
-            let executor = ScanExecutor::new(config);
+            let request = project_scan_request(&settings);
+            let executor = ScanExecutor::new(request);
 
             match executor.scan().await {
                 Ok(results) => {
@@ -569,29 +571,22 @@ pub fn main_screen_layout(area: Rect) -> Vec<Rect> {
 
 ## Shared Components
 
-### 1. Configuration Layer
+### 1. User Settings Layer
 
-**Shared between CLI and TUI:**
+**Shared by every maintained interface:**
 
 ```rust
-// ClassicLib-rs/business-logic/classic-config-core/src/lib.rs
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ClassicConfig {
-    pub fcx_mode: bool,
-    pub show_formid_values: bool,
-    pub stat_logging: bool,
-    pub move_unsolved_logs: bool,
-    pub simplify_logs: bool,
-    pub update_check: bool,
-    pub paths: PathConfig,
-}
+let settings = UserSettings::open(classic_root);
+let scan = settings.crash_log_scan_settings();
+let setup = settings.game_setup_settings();
+let frontend = settings.frontend_state();
 ```
 
 **Used by:**
 
-- CLI: Load via `CliConfig::load_from_yaml()`
-- TUI: Load via `App::load_config()`
-- Python: Load via PyO3 bindings (ClassicLib-rs/python-bindings/classic-config-py)
+- CLI and GUI: consume the CXX User Settings bridge
+- TUI: consumes `classic-user-settings-core` directly
+- Node and Python: consume their maintained User Settings bindings
 
 ### 2. Business Logic (-core crates)
 

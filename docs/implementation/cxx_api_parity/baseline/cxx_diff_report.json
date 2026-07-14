@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 402,
-    "current_total": 402,
-    "matched": 402,
+    "contract_total": 410,
+    "current_total": 410,
+    "matched": 410,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2129,6 +2129,14 @@
       "reason": "-"
     },
     {
+      "id": "38462bb98e2fb110",
+      "rustSymbol": "user_settings_commit_frontend_geometry_transition",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "e2ad1a7f27fb5f5a",
       "rustSymbol": "user_settings_commit_update",
       "kind": "function",
@@ -2139,6 +2147,22 @@
     {
       "id": "c420901386dcb35c",
       "rustSymbol": "user_settings_gui_published_defaults",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3ae5a012f30378dd",
+      "rustSymbol": "user_settings_import_legacy_tui_state",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b8852a8a7ccc1741",
+      "rustSymbol": "user_settings_legacy_tui_import_outcome",
       "kind": "function",
       "bridgeModule": "settings",
       "status": "matched",
@@ -2211,6 +2235,14 @@
     {
       "id": "03a8fd971064fde1",
       "rustSymbol": "user_settings_preview_update",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "08917ee3d237e40b",
+      "rustSymbol": "user_settings_restore_legacy_tui_import",
       "kind": "function",
       "bridgeModule": "settings",
       "status": "matched",
@@ -2377,6 +2409,14 @@
       "reason": "-"
     },
     {
+      "id": "7badbce78c203270",
+      "rustSymbol": "LegacyTuiStateImportHandle",
+      "kind": "opaque",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "630aada96fe224e1",
       "rustSymbol": "UserSettingsMigrationApplyHandle",
       "kind": "opaque",
@@ -2427,6 +2467,22 @@
     {
       "id": "6d15af291eab196a",
       "rustSymbol": "GuiSettingsSnapshotDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b91ef2da139516c2",
+      "rustSymbol": "LegacyTuiStateImportOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1b78824669cf8026",
+      "rustSymbol": "LegacyTuiStateImportRestoreOutcomeDto",
       "kind": "struct",
       "bridgeModule": "settings",
       "status": "matched",
@@ -2547,6 +2603,14 @@
     {
       "id": "8e77def1f30afb1a",
       "rustSymbol": "UserSettingsUpdatePreviewDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5893592284b575c4",
+      "rustSymbol": "UserSettingsWindowGeometryUpdateDto",
       "kind": "struct",
       "bridgeModule": "settings",
       "status": "matched",

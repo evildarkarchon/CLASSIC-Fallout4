@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T13:00:07.558369+00:00",
+  "generated_at_utc": "2026-07-14T23:05:32.524700+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -817,6 +817,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "evaluate_rules",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
+      "source_decl": "pub fn evaluate_rules(\n    rules: &CrashgenSettingsRules,\n    context: &EvaluationContext,\n)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "final_settings",
       "kind": "function",
       "arity": 1,
@@ -844,6 +854,16 @@
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::format_registry_game_version",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "from_yaml_content",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/yamldata.rs",
+      "source_decl": "pub fn from_yaml_content(\n        main_content: &str,\n        game_content: &str,\n        ignore_content: &str,\n        game: String,\n        selected_game_version: String,\n    )",
       "tier": "tier1"
     },
     {
@@ -1117,6 +1137,16 @@
     },
     {
       "symbol": "parse_crashgen_expectations",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/crashgen_expectation_parser.rs",
+      "source_decl": "pub fn parse_crashgen_expectations(\n    document: &Value,\n    default_version: Option<u32>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse_crashgen_expectations",
       "kind": "reexport",
       "crate": "classic-config-core",
       "owner_module": "config",
@@ -1143,6 +1173,16 @@
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use game_local::persist_game_local_paths;",
       "source_expr": "game_local::persist_game_local_paths",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_registry_version_info",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/yamldata.rs",
+      "source_decl": "pub fn resolve_registry_version_info(\n    main_root_name: &str,\n    selected_game_version: &str,\n)",
       "tier": "tier1"
     },
     {
@@ -2552,6 +2592,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "hash_files_parallel",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn hash_files_parallel(\n        paths: &[&Path],\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "hash_files_to_map",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/hash.rs",
+      "source_decl": "pub fn hash_files_to_map(\n        paths: &[&Path],\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "ignore_file_path",
       "kind": "function",
       "arity": 1,
@@ -2559,6 +2619,16 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/generation.rs",
       "source_decl": "pub fn ignore_file_path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "install_atomic",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/atomic_install.rs",
+      "source_decl": "pub fn install_atomic(\n    target: &Path,\n    source_tmp: &Path,\n    expected_sha256: &str,\n)",
       "tier": "tier1"
     },
     {
@@ -2721,6 +2791,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
+      "source_decl": "pub fn new(\n        base_folder: PathBuf,\n        xse_folder: Option<PathBuf>,\n        custom_folder: Option<PathBuf>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new_for_scan",
+      "kind": "function",
+      "arity": 6,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/log_collection.rs",
+      "source_decl": "pub fn new_for_scan(\n        base_folder: PathBuf,\n        yaml_dir_data: impl AsRef<Path>,\n        game: &str,\n        selected_game_version: &str,\n        configured_docs_root: Option<&Path>,\n        custom_folder: Option<PathBuf>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "pastebin_dir",
       "kind": "function",
       "arity": 1,
@@ -2830,6 +2920,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "stream_lines_sync",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/core.rs",
+      "source_decl": "pub fn stream_lines_sync(\n        &self,\n        path: &Path,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "validate_batch",
       "kind": "function",
       "arity": 2,
@@ -2867,6 +2967,16 @@
       "owner_module": "file_io",
       "source_file": "business-logic/classic-file-io-core/src/dds.rs",
       "source_decl": "pub fn validate_header(&self, header: &DDSHeader)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "walk_directory",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-file-io-core",
+      "owner_module": "file_io",
+      "source_file": "business-logic/classic-file-io-core/src/core.rs",
+      "source_decl": "pub fn walk_directory(\n        &self,\n        path: &Path,\n        pattern: Option<&str>,\n        max_depth: Option<usize>,\n    )",
       "tier": "tier1"
     },
     {
@@ -3342,6 +3452,36 @@
       "tier": "tier1"
     },
     {
+      "symbol": "log_startup_acceleration_status",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-message-core",
+      "owner_module": "message",
+      "source_file": "business-logic/classic-message-core/src/logging.rs",
+      "source_decl": "pub fn log_startup_acceleration_status(\n        &self,\n        active_components: usize,\n        total_components: usize,\n        acceleration_level: &str,\n        correlation_id: Option<&str>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "log_startup_binding_contract_failed",
+      "kind": "function",
+      "arity": 7,
+      "crate": "classic-message-core",
+      "owner_module": "message",
+      "source_file": "business-logic/classic-message-core/src/logging.rs",
+      "source_decl": "pub fn log_startup_binding_contract_failed(\n        &self,\n        contract: &str,\n        missing_binding: &str,\n        failure_type: &str,\n        failure_hint: &str,\n        error: &str,\n        correlation_id: Option<&str>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "log_startup_binding_contract_validated",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-message-core",
+      "owner_module": "message",
+      "source_file": "business-logic/classic-message-core/src/logging.rs",
+      "source_decl": "pub fn log_startup_binding_contract_validated(\n        &self,\n        contract: &str,\n        checked_bindings: usize,\n        correlation_id: Option<&str>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "logging",
       "kind": "module",
       "crate": "classic-message-core",
@@ -3358,6 +3498,16 @@
       "owner_module": "message",
       "source_file": "business-logic/classic-message-core/src/logging.rs",
       "source_decl": "pub fn name(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-message-core",
+      "owner_module": "message",
+      "source_file": "business-logic/classic-message-core/src/logging.rs",
+      "source_decl": "pub fn new(\n        component: impl Into<String>,\n        event: impl Into<String>,\n        severity: MessageType,\n        outcome: impl Into<String>,\n    )",
       "tier": "tier1"
     },
     {
@@ -3528,6 +3678,16 @@
       "owner_module": "message",
       "source_file": "business-logic/classic-message-core/src/message.rs",
       "source_decl": "pub fn with_details(mut self, details: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_target",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-message-core",
+      "owner_module": "message",
+      "source_file": "business-logic/classic-message-core/src/message.rs",
+      "source_decl": "pub fn with_target(\n        content: impl Into<String>,\n        msg_type: MessageType,\n        target: MessageTarget,\n    )",
       "tier": "tier1"
     },
     {
@@ -4062,6 +4222,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "construct_proton_docs_path",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/platform/linux.rs",
+      "source_decl": "pub fn construct_proton_docs_path(\n    library_path: &Path,\n    game_steam_id: u32,\n    docs_name: &str,\n)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "create_backup",
       "kind": "function",
       "arity": 3,
@@ -4159,6 +4329,26 @@
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/docs_path.rs",
       "source_decl": "pub fn find_docs_path(&self, cached_path: Option<&str>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "find_docs_path_linux_with",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/docs_path.rs",
+      "source_decl": "pub fn find_docs_path_linux_with(\n        &self,\n        home: &Path,\n        steam_library: DocsPathResult<PathBuf>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "find_game_path",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/game_path.rs",
+      "source_decl": "pub fn find_game_path(\n        &self,\n        cached_path: Option<&Path>,\n        xse_log_path: Option<&Path>,\n    )",
       "tier": "tier1"
     },
     {
@@ -4502,6 +4692,16 @@
     {
       "symbol": "new",
       "kind": "function",
+      "arity": 5,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/checker.rs",
+      "source_decl": "pub fn new(\n        ini_name: impl Into<String>,\n        exists: bool,\n        is_valid: bool,\n        message: impl Into<String>,\n        issue: Option<String>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
       "arity": 1,
       "crate": "classic-path-core",
       "owner_module": "path",
@@ -4621,6 +4821,16 @@
     },
     {
       "symbol": "query_game_registry",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/platform/windows.rs",
+      "source_decl": "pub fn query_game_registry(\n    game_name: &str,\n    vr_suffix: &str,\n    try_gog: bool,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "query_game_registry",
       "kind": "reexport",
       "crate": "classic-path-core",
       "owner_module": "path",
@@ -4697,6 +4907,16 @@
       "source_file": "business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::remove_readonly_attribute",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "run_all_check_results",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/checker.rs",
+      "source_decl": "pub fn run_all_check_results(\n        &self,\n        docs_path: &Path,\n    )",
       "tier": "tier1"
     },
     {
@@ -4780,6 +5000,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "validate_ini_file",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/checker.rs",
+      "source_decl": "pub fn validate_ini_file(\n        &self,\n        docs_path: &Path,\n        ini_name: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_ini_files",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/docs_path.rs",
+      "source_decl": "pub fn validate_ini_files(\n        &self,\n        docs_path: &Path,\n        required_inis: &[&str],\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "validate_is_directory",
       "kind": "function",
       "arity": 1,
@@ -4851,12 +5091,32 @@
     },
     {
       "symbol": "validate_path_with_permissions",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/validator.rs",
+      "source_decl": "pub fn validate_path_with_permissions(\n    path: &Path,\n    check_read: bool,\n    check_write: bool,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_path_with_permissions",
       "kind": "reexport",
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::validate_path_with_permissions",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_required_files",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/validator.rs",
+      "source_decl": "pub fn validate_required_files(\n    directory: &Path,\n    required_files: &[String],\n)",
       "tier": "tier1"
     },
     {
@@ -4881,12 +5141,32 @@
     },
     {
       "symbol": "validate_settings_path",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/validator.rs",
+      "source_decl": "pub fn validate_settings_path(\n    path: &Path,\n    setting_name: &str,\n    required_files: Option<&[String]>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_settings_path",
       "kind": "reexport",
       "crate": "classic-path-core",
       "owner_module": "path",
       "source_file": "business-logic/classic-path-core/src/lib.rs",
       "source_decl": "pub use validator::{ check_drive_exists, check_read_permissions, check_write_permissions, // Boolean convenience wrappers drive_exists, has_read_permission, has_write_permission, is_restricted_path, // Permission and accessibility checks is_valid_executable_path, is_valid_path, remove_readonly_attribute, validate_custom_scan_path, validate_is_directory, validate_is_file, validate_path_exists, validate_path_with_permissions, validate_required_files, validate_settings_path, validate_settings_paths, };",
       "source_expr": "validator::validate_settings_path",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_settings_paths",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-path-core",
+      "owner_module": "path",
+      "source_file": "business-logic/classic-path-core/src/validator.rs",
+      "source_decl": "pub fn validate_settings_paths(\n    game_path: &Path,\n    docs_path: &Path,\n    custom_scan_path: Option<&Path>,\n    game_exe: &str,\n)",
       "tier": "tier1"
     },
     {
@@ -5652,6 +5932,16 @@
       "owner_module": "resource",
       "source_file": "business-logic/classic-resource-core/src/lib.rs",
       "source_decl": "pub fn detect_resource_type(path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "enumerate_resources",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-resource-core",
+      "owner_module": "resource",
+      "source_file": "business-logic/classic-resource-core/src/lib.rs",
+      "source_decl": "pub fn enumerate_resources(\n    root: &Path,\n    filter_type: Option<ResourceType>,\n)",
       "tier": "tier1"
     },
     {
@@ -7115,6 +7405,36 @@
       "tier": "tier1"
     },
     {
+      "symbol": "build_archived_report",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_report.rs",
+      "source_decl": "pub fn build_archived_report(\n        &self,\n        issue_lists: &BTreeMap<String, BTreeSet<String>>,\n        xse_acronym: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "build_combined_report",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_report.rs",
+      "source_decl": "pub fn build_combined_report(\n        &self,\n        unpacked_issues: &BTreeMap<String, BTreeSet<String>>,\n        archived_issues: &BTreeMap<String, BTreeSet<String>>,\n        xse_acronym: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "build_unpacked_report",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_report.rs",
+      "source_decl": "pub fn build_unpacked_report(\n        &self,\n        issue_lists: &BTreeMap<String, BTreeSet<String>>,\n        xse_acronym: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "check",
       "kind": "function",
       "arity": 1,
@@ -7182,6 +7502,16 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/integrity.rs",
       "source_decl": "pub fn check_installation_location(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_with_rules",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/crashgen_orchestrator.rs",
+      "source_decl": "pub fn check_with_rules(\n        plugins_path: &Path,\n        crashgen_name: &str,\n        settings_rules: Option<CrashgenSettingsRules>,\n    )",
       "tier": "tier1"
     },
     {
@@ -7455,12 +7785,32 @@
     },
     {
       "symbol": "game_setup_needs_path_detection",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn game_setup_needs_path_detection(\n    game_path: Option<&str>,\n    docs_path: Option<&str>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "game_setup_needs_path_detection",
       "kind": "reexport",
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/lib.rs",
       "source_decl": "pub use game_setup_intake::{ GameSetupCheck, GameSetupCheckKind, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, GameSetupIntakeStatus, GameSetupPathUpdate, GameSetupRequiredAction, GameSetupResolvedPaths, GameSetupVersionFacts, game_setup_needs_path_detection, normalize_game_setup_version_selection, };",
       "source_expr": "game_setup_intake::game_setup_needs_path_detection",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_bool",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/config_cache.rs",
+      "source_decl": "pub fn get_bool(\n        &mut self,\n        file_name_lower: &str,\n        section: &str,\n        setting: &str,\n    )",
       "tier": "tier1"
     },
     {
@@ -7471,6 +7821,16 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/config.rs",
       "source_decl": "pub fn get_duplicates(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_float",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/config_cache.rs",
+      "source_decl": "pub fn get_float(\n        &mut self,\n        file_name_lower: &str,\n        section: &str,\n        setting: &str,\n    )",
       "tier": "tier1"
     },
     {
@@ -7501,6 +7861,16 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/config_cache.rs",
       "source_decl": "pub fn get_path(&self, file_name_lower: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_str",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/config_cache.rs",
+      "source_decl": "pub fn get_str(\n        &mut self,\n        file_name_lower: &str,\n        section: &str,\n        setting: &str,\n    )",
       "tier": "tier1"
     },
     {
@@ -7712,6 +8082,16 @@
     {
       "symbol": "new",
       "kind": "function",
+      "arity": 3,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/logs.rs",
+      "source_decl": "pub fn new(\n        catch_errors: Vec<String>,\n        exclude_files: Vec<String>,\n        exclude_errors: Vec<String>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
       "arity": 2,
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
@@ -7737,6 +8117,16 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/unpacked.rs",
       "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/xse.rs",
+      "source_decl": "pub fn new(\n        plugins_path: impl AsRef<Path>,\n        game_version: GameVersion,\n    )",
       "tier": "tier1"
     },
     {
@@ -7802,6 +8192,16 @@
     {
       "symbol": "new",
       "kind": "function",
+      "arity": 3,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn new(\n        kind: GameSetupCheckKind,\n        state: GameSetupCheckState,\n        message: impl Into<String>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
       "arity": 2,
       "crate": "classic-scangame-core",
       "owner_module": "scangame",
@@ -7827,6 +8227,16 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/wrye.rs",
       "source_decl": "pub fn new(wrye_warnings: HashMap<String, String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new_with_rules",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/toml.rs",
+      "source_decl": "pub fn new_with_rules(\n        plugins_path: &Path,\n        crashgen_name: impl Into<String>,\n        settings_rules: Option<classic_config_core::CrashgenSettingsRules>,\n    )",
       "tier": "tier1"
     },
     {
@@ -7899,6 +8309,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "read_toml_value",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/config_cache.rs",
+      "source_decl": "pub fn read_toml_value(\n    toml_path: &Path,\n    section: &str,\n    key: &str,\n)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "render_report",
       "kind": "function",
       "arity": 1,
@@ -7949,6 +8369,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "scan",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/mod_ini.rs",
+      "source_decl": "pub fn scan(\n        game_root: &Path,\n        game_name: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "scan_archive",
       "kind": "function",
       "arity": 2,
@@ -7996,6 +8426,26 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/config.rs",
       "source_decl": "pub fn scan_directory(&mut self, root_path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "scan_directory",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/unpacked.rs",
+      "source_decl": "pub fn scan_directory(\n        &self,\n        mod_path: &Path,\n        xse_scriptfiles: &[String],\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "scan_with_cache",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/mod_ini.rs",
+      "source_decl": "pub fn scan_with_cache(\n        cache: &mut ConfigFileCache,\n        game_name: &str,\n    )",
       "tier": "tier1"
     },
     {
@@ -8094,6 +8544,16 @@
       "owner_module": "scangame",
       "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
       "source_decl": "pub fn with_custom_scan_input(mut self, path: impl Into<PathBuf>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_details",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scangame-core",
+      "owner_module": "scangame",
+      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
+      "source_decl": "pub fn with_details(\n        kind: GameSetupCheckKind,\n        state: GameSetupCheckState,\n        message: impl Into<String>,\n        details: Vec<String>,\n    )",
       "tier": "tier1"
     },
     {
@@ -9666,6 +10126,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "analyze_batch",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid.rs",
+      "source_decl": "pub fn analyze_batch(\n        &self,\n        formids: Vec<String>,\n        plugins: &HashMap<String, String>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "analyze_batch",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid.rs",
+      "source_decl": "pub fn analyze_batch(\n        &self,\n        formids: Vec<String>,\n        plugins: &HashMap<String, String>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "analyze_full",
       "kind": "function",
       "arity": 1,
@@ -9727,6 +10207,16 @@
     },
     {
       "symbol": "build_analysis_config_from_yaml",
+      "kind": "function",
+      "arity": 7,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/orchestrator.rs",
+      "source_decl": "pub fn build_analysis_config_from_yaml(\n    yaml: &classic_config_core::YamlDataCore,\n    game: &str,\n    selected_game_version: &str,\n    show_formid_values: bool,\n    fcx_mode: bool,\n    simplify_logs: bool,\n    remove_list: Vec<String>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "build_analysis_config_from_yaml",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
@@ -9743,6 +10233,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
       "source_decl": "pub fn build_important_matcher_for_bench(entries: &[CoreModEntry])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "build_important_mod_haystack_for_bench",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
+      "source_decl": "pub fn build_important_mod_haystack_for_bench(\n    crashlog_plugins: &IndexMap<String, String>,\n    xse_modules: &HashSet<String>,\n)",
       "tier": "tier1"
     },
     {
@@ -9776,6 +10276,36 @@
       "tier": "tier1"
     },
     {
+      "symbol": "check_crashgen_version_for_detected_game",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/orchestrator.rs",
+      "source_decl": "pub fn check_crashgen_version_for_detected_game(\n        &self,\n        crashgen_version_str: &str,\n        detected_game_version_str: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_crashgen_version_list",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/orchestrator.rs",
+      "source_decl": "pub fn check_crashgen_version_list(\n        &self,\n        crashgen_version_str: &str,\n        valid_versions: &[&str],\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_crashgen_version_status",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/version.rs",
+      "source_decl": "pub fn check_crashgen_version_status(\n    detected_version: &str,\n    valid_versions: &[&str],\n)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "check_crashgen_version_status",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -9783,6 +10313,16 @@
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use version::{ CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, check_crashgen_version_status_with_exceptions, crashgen_version_gen, };",
       "source_expr": "version::check_crashgen_version_status",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_crashgen_version_status_with_exceptions",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/version.rs",
+      "source_decl": "pub fn check_crashgen_version_status_with_exceptions(\n    detected_version: &str,\n    floor_versions: &[&str],\n    exception_versions: &[&str],\n)",
       "tier": "tier1"
     },
     {
@@ -9796,6 +10336,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "check_disabled_settings",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/settings_validator.rs",
+      "source_decl": "pub fn check_disabled_settings(\n        &self,\n        crashgen: &CrashgenSettingsSnapshot,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "check_dll_crash",
       "kind": "function",
       "arity": 1,
@@ -9806,6 +10356,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "check_for_updates",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/papyrus.rs",
+      "source_decl": "pub fn check_for_updates(\n        &mut self,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "check_loadorder_exists",
       "kind": "function",
       "arity": 1,
@@ -9813,6 +10373,36 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/orchestrator.rs",
       "source_decl": "pub fn check_loadorder_exists(dir_path: &Path)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_plugin_limit",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
+      "source_decl": "pub fn check_plugin_limit(\n        &self,\n        segment_plugins: &[String],\n        game_version: &str,\n        version_current: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_version_status",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/version.rs",
+      "source_decl": "pub fn check_version_status(\n        &self,\n        valid_versions: &[CrashgenVersion],\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "check_version_status_with_exceptions",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/version.rs",
+      "source_decl": "pub fn check_version_status_with_exceptions(\n        &self,\n        floors: &[CrashgenVersion],\n        exceptions: &[CrashgenVersion],\n    )",
       "tier": "tier1"
     },
     {
@@ -10015,6 +10605,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "create_report_generator_with_crashgen_name",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/orchestrator.rs",
+      "source_decl": "pub fn create_report_generator_with_crashgen_name(\n        &self,\n        crashgen_name: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "create_settings_validator",
       "kind": "function",
       "arity": 1,
@@ -10096,12 +10696,42 @@
     },
     {
       "symbol": "detect_mods_batch",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
+      "source_decl": "pub fn detect_mods_batch(\n    yaml_dict: IndexMap<String, String>,\n    crashlog_plugins_list: Vec<IndexMap<String, String>>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "detect_mods_batch",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
       "source_expr": "mod_detector::detect_mods_batch",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "detect_mods_conflicts",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
+      "source_decl": "pub fn detect_mods_conflicts(\n        &self,\n        crashlog_plugins: &IndexMap<String, String>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "detect_mods_double",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
+      "source_decl": "pub fn detect_mods_double(\n    entries: &[ModConflictEntry],\n    crashlog_plugins: IndexMap<String, String>,\n)",
       "tier": "tier1"
     },
     {
@@ -10116,12 +10746,42 @@
     },
     {
       "symbol": "detect_mods_important",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
+      "source_decl": "pub fn detect_mods_important(\n    entries: &[CoreModEntry],\n    crashlog_plugins: &IndexMap<String, String>,\n    user_gpu: Option<&str>,\n    xse_modules: &HashSet<String>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "detect_mods_important",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
       "source_expr": "mod_detector::detect_mods_important",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "detect_mods_important_basic",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
+      "source_decl": "pub fn detect_mods_important_basic(\n        &self,\n        crashlog_plugins: &IndexMap<String, String>,\n        user_gpu: Option<&str>,\n        xse_modules: &HashSet<String>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "detect_mods_single",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
+      "source_decl": "pub fn detect_mods_single(\n    yaml_dict: IndexMap<String, String>,\n    crashlog_plugins: IndexMap<String, String>,\n)",
       "tier": "tier1"
     },
     {
@@ -10132,6 +10792,16 @@
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
       "source_expr": "mod_detector::detect_mods_single",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "detect_mods_single_basic",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
+      "source_decl": "pub fn detect_mods_single_basic(\n        &self,\n        crashlog_plugins: &IndexMap<String, String>,\n    )",
       "tier": "tier1"
     },
     {
@@ -10314,6 +10984,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "extract_section",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
+      "source_decl": "pub fn extract_section(\n        &self,\n        lines: &[String],\n        start_marker: &str,\n        end_marker: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "extract_sections_batch",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
+      "source_decl": "pub fn extract_sections_batch(\n        &self,\n        lines: &[String],\n        markers: &[(String, String)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "failure",
       "kind": "function",
       "arity": 2,
@@ -10330,6 +11020,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod fcx_handler;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "filter_ignored_plugins",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
+      "source_decl": "pub fn filter_ignored_plugins(\n        &self,\n        crashlog_plugins: IndexMap<String, String>,\n    )",
       "tier": "tier1"
     },
     {
@@ -10390,6 +11090,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn find_patterns(&self, lines: &[String])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "find_patterns_chunked",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
+      "source_decl": "pub fn find_patterns_chunked(\n        &self,\n        lines: &[String],\n        chunk_size: Option<usize>,\n    )",
       "tier": "tier1"
     },
     {
@@ -10486,6 +11196,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "from_adapter_flags",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub fn from_adapter_flags(\n        targeted_mode: bool,\n        move_unsolved_logs: bool,\n        unsolved_logs_destination: Option<&str>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "from_configured_flags",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub fn from_configured_flags(\n        targeted_mode: bool,\n        move_unsolved_logs: bool,\n        unsolved_logs_destination: Option<PathBuf>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "from_lines",
       "kind": "function",
       "arity": 1,
@@ -10503,6 +11233,56 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/report.rs",
       "source_decl": "pub fn from_lines_pooled(lines: Vec<String>, pool: &StringPool)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "from_yaml_data",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_intake.rs",
+      "source_decl": "pub fn from_yaml_data(\n        yaml: &'a YamlDataCore,\n        paths: Option<CrashLogScanIntakePaths>,\n        game: impl Into<String>,\n        selected_game_version: impl Into<String>,\n        options: CrashLogScanOptions,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "from_yaml_paths",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_intake.rs",
+      "source_decl": "pub fn from_yaml_paths(\n        yaml_dir_root: impl Into<PathBuf>,\n        yaml_dir_data: impl Into<PathBuf>,\n        game: impl Into<String>,\n        selected_game_version: impl Into<String>,\n        options: CrashLogScanOptions,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "generate_error_section",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
+      "source_decl": "pub fn generate_error_section(\n        &self,\n        main_error: &str,\n        crashgen_version: &str,\n        is_outdated: bool,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "generate_error_section_with_status",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
+      "source_decl": "pub fn generate_error_section_with_status(\n        &self,\n        main_error: &str,\n        crashgen_version: &str,\n        status: Option<CrashgenVersionStatus>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "generate_error_section_with_status_and_fake_mode",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
+      "source_decl": "pub fn generate_error_section_with_status_and_fake_mode(\n        &self,\n        main_error: &str,\n        crashgen_version: &str,\n        status: Option<CrashgenVersionStatus>,\n        fake_bot_compatible_mode: bool,\n    )",
       "tier": "tier1"
     },
     {
@@ -10885,6 +11665,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "loadorder_scan_log",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
+      "source_decl": "pub fn loadorder_scan_log(\n        &self,\n        segment_plugins: &[String],\n        game_version: Option<&str>,\n        version_current: Option<&str>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "log_exists",
       "kind": "function",
       "arity": 1,
@@ -10956,6 +11746,16 @@
     {
       "symbol": "new",
       "kind": "function",
+      "arity": 7,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/fcx_handler.rs",
+      "source_decl": "pub fn new(\n        file_path: String,\n        section: Option<String>,\n        setting: String,\n        current_value: String,\n        recommended_value: String,\n        description: String,\n        severity: String,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
       "arity": 1,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
@@ -10981,6 +11781,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/formid.rs",
       "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 6,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
+      "source_decl": "pub fn new(\n        db_pool: Option<Arc<DatabasePool>>,\n        show_formid_values: bool,\n        crashgen_name: String,\n        important_mods: Vec<CoreModEntry>,\n        mods_single: Vec<ModSolutionEntry>,\n        mods_double: Vec<ModConflictEntry>,\n    )",
       "tier": "tier1"
     },
     {
@@ -11086,11 +11896,21 @@
     {
       "symbol": "new",
       "kind": "function",
-      "arity": 0,
+      "arity": 5,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn new()",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
+      "source_decl": "pub fn new(\n        game_ignore_plugins: Vec<String>,\n        ignore_list: Vec<String>,\n        crashgen_name: String,\n        game_version: String,\n        game_version_vr: String,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
+      "source_decl": "pub fn new(\n        classic_records_list: Vec<String>,\n        game_ignore_records: Vec<String>,\n        crashgen_name: String,\n    )",
       "tier": "tier1"
     },
     {
@@ -11111,6 +11931,26 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/report.rs",
       "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
+      "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_intake.rs",
+      "source_decl": "pub fn new(\n        yaml_dir_root: impl Into<PathBuf>,\n        yaml_dir_data: impl Into<PathBuf>,\n    )",
       "tier": "tier1"
     },
     {
@@ -11131,6 +11971,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/settings_validator.rs",
       "source_decl": "pub fn new(crashgen_name: String, entry: CrashgenEntry)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/suspect_scanner.rs",
+      "source_decl": "pub fn new(\n        suspect_error_rules: Vec<SuspectErrorRule>,\n        suspect_stack_rules: Vec<SuspectStackRule>,\n    )",
       "tier": "tier1"
     },
     {
@@ -11189,6 +12039,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn parse_all_sections_arc(&self, lines: &[Arc<str>])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse_complete",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
+      "source_decl": "pub fn parse_complete(\n        &self,\n        lines: &[String],\n        segment_boundaries: &[(String, String)",
       "tier": "tier1"
     },
     {
@@ -11256,6 +12116,36 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod plugin_analyzer;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "plugin_match",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
+      "source_decl": "pub fn plugin_match(\n        &self,\n        segment_callstack_lower: Vec<String>,\n        crashlog_plugins_lower: HashSet<String>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "plugin_match_with_crashgen_name",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
+      "source_decl": "pub fn plugin_match_with_crashgen_name(\n        &self,\n        segment_callstack_lower: Vec<String>,\n        crashlog_plugins_lower: HashSet<String>,\n        crashgen_name: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "plugin_match_with_crashgen_name_from_lowered",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
+      "source_decl": "pub fn plugin_match_with_crashgen_name_from_lowered(\n        &self,\n        segment_callstack_lower: &[String],\n        crashlog_plugins_lower: &HashSet<String>,\n        crashgen_name: &str,\n    )",
       "tier": "tier1"
     },
     {
@@ -11388,12 +12278,32 @@
     },
     {
       "symbol": "resolve_formid_database_paths",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_intake.rs",
+      "source_decl": "pub fn resolve_formid_database_paths(\n    yaml_dir_data: impl AsRef<Path>,\n    game: &str,\n    configured_paths: &[PathBuf],\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "resolve_formid_database_paths",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use scan_intake::{ CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile, load_simplify_remove_list, resolve_formid_database_paths, };",
       "source_expr": "scan_intake::resolve_formid_database_paths",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "scan_all_settings",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/settings_validator.rs",
+      "source_decl": "pub fn scan_all_settings(\n        &self,\n        crashgen: &CrashgenSettingsSnapshot,\n        xse_modules: &HashSet<String>,\n        crashgen_version: Option<(u32, u32, u32)",
       "tier": "tier1"
     },
     {
@@ -11416,6 +12326,36 @@
       "tier": "tier1"
     },
     {
+      "symbol": "scan_named_records_with_crashgen_name",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
+      "source_decl": "pub fn scan_named_records_with_crashgen_name(\n        &self,\n        segment_callstack: &[String],\n        crashgen_name: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "scan_named_records_with_crashgen_name_and_lowercase",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
+      "source_decl": "pub fn scan_named_records_with_crashgen_name_and_lowercase(\n        &self,\n        segment_callstack: &[String],\n        segment_callstack_lower: &[String],\n        crashgen_name: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "scan_records_batch",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
+      "source_decl": "pub fn scan_records_batch(\n    segments: Vec<Vec<String>>,\n    target_records: Vec<String>,\n    ignore_records: Vec<String>,\n)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "scan_records_batch",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -11432,6 +12372,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod scan_run;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "scan_suspects_batch",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/suspect_scanner.rs",
+      "source_decl": "pub fn scan_suspects_batch(\n        &self,\n        crash_logs: Vec<(String, String)",
       "tier": "tier1"
     },
     {
@@ -11533,6 +12483,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "suspect_scan_mainerror",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/suspect_scanner.rs",
+      "source_decl": "pub fn suspect_scan_mainerror(\n        &self,\n        crashlog_mainerror: &str,\n        max_warn_length: usize,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "suspect_scan_stack",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/suspect_scanner.rs",
+      "source_decl": "pub fn suspect_scan_stack(\n        &self,\n        crashlog_mainerror: &str,\n        segment_callstack_intact: &str,\n        max_warn_length: usize,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "suspect_scanner",
       "kind": "module",
       "crate": "classic-scanlog-core",
@@ -11589,6 +12559,46 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
       "source_decl": "pub fn try_extract_records(&self, segment_callstack: &[String])",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "try_scan_named_records",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
+      "source_decl": "pub fn try_scan_named_records(\n        &self,\n        segment_callstack: &[String],\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "try_scan_named_records_with_crashgen_name",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
+      "source_decl": "pub fn try_scan_named_records_with_crashgen_name(\n        &self,\n        segment_callstack: &[String],\n        crashgen_name: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "try_scan_named_records_with_crashgen_name_and_lowercase",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
+      "source_decl": "pub fn try_scan_named_records_with_crashgen_name_and_lowercase(\n        &self,\n        segment_callstack: &[String],\n        segment_callstack_lower: &[String],\n        crashgen_name: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "try_scan_records_batch",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
+      "source_decl": "pub fn try_scan_records_batch(\n    segments: Vec<Vec<String>>,\n    target_records: Vec<String>,\n    ignore_records: Vec<String>,\n)",
       "tier": "tier1"
     },
     {
@@ -12437,6 +13447,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "get_hashmap_vec_value",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
+      "source_decl": "pub fn get_hashmap_vec_value(\n        &self,\n        data: &Yaml,\n        key_path: &str,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "get_indexmap_value",
       "kind": "function",
       "arity": 3,
@@ -12444,6 +13464,16 @@
       "owner_module": "settings",
       "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
       "source_decl": "pub fn get_indexmap_value(&self, data: &Yaml, key_path: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_indexmap_vec_value",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
+      "source_decl": "pub fn get_indexmap_vec_value(\n        &self,\n        data: &Yaml,\n        key_path: &str,\n    )",
       "tier": "tier1"
     },
     {
@@ -12937,6 +13967,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "set_settings_batch",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-settings-core",
+      "owner_module": "settings",
+      "source_file": "business-logic/classic-settings-core/src/yaml_ops/accessors.rs",
+      "source_decl": "pub fn set_settings_batch(\n        &self,\n        yaml: &Yaml,\n        settings: &[(&str, Yaml)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "validate_setting_value",
       "kind": "function",
       "arity": 2,
@@ -13171,6 +14211,16 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/performance_core.rs",
       "source_decl": "pub struct Timer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "apply_to_builder",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/lib.rs",
+      "source_decl": "pub fn apply_to_builder(\n        &self,\n        mut builder: tokio::runtime::Builder,\n    )",
       "tier": "tier1"
     },
     {
@@ -13546,6 +14596,16 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-core/src/errors.rs",
       "source_decl": "pub fn not_found(resource: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "parse",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-core",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-core/src/errors.rs",
+      "source_decl": "pub fn parse(\n        message: impl Into<String>,\n        position: Option<usize>,\n        context: Option<impl Into<String>>,\n    )",
       "tier": "tier1"
     },
     {
@@ -14055,6 +15115,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "get_operation_stats",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-py",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-py/src/performance_py.rs",
+      "source_decl": "pub fn get_operation_stats(\n        &self,\n        py: Python,\n        operation: String,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "get_parent",
       "kind": "function",
       "arity": 2,
@@ -14231,6 +15301,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "process_batch",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-shared-py",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-py/src/strings_py.rs",
+      "source_decl": "pub fn process_batch(\n        &self,\n        py: Python<'_>,\n        strings: Vec<String>,\n        operation: String,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "pyany_to_indexmap_str",
       "kind": "function",
       "arity": 1,
@@ -14248,6 +15328,16 @@
       "source_file": "foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use indexmap_utils::{ pyany_to_indexmap_str, pyany_to_indexmap_vecstr, pydict_to_indexmap_str, pydict_to_indexmap_str_optional, pydict_to_indexmap_vecstr, };",
       "source_expr": "indexmap_utils::pyany_to_indexmap_str",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "pyany_to_indexmap_vecstr",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-py",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-py/src/indexmap_utils.rs",
+      "source_decl": "pub fn pyany_to_indexmap_vecstr(\n    py_any: &Bound<'_, pyo3::types::PyAny>,\n)",
       "tier": "tier1"
     },
     {
@@ -14282,12 +15372,32 @@
     },
     {
       "symbol": "pydict_to_indexmap_str_optional",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-py",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-py/src/indexmap_utils.rs",
+      "source_decl": "pub fn pydict_to_indexmap_str_optional(\n    dict: Option<&Bound<'_, PyDict>>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "pydict_to_indexmap_str_optional",
       "kind": "reexport",
       "crate": "classic-shared-py",
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub use indexmap_utils::{ pyany_to_indexmap_str, pyany_to_indexmap_vecstr, pydict_to_indexmap_str, pydict_to_indexmap_str_optional, pydict_to_indexmap_vecstr, };",
       "source_expr": "indexmap_utils::pydict_to_indexmap_str_optional",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "pydict_to_indexmap_vecstr",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-shared-py",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-py/src/indexmap_utils.rs",
+      "source_decl": "pub fn pydict_to_indexmap_vecstr(\n    dict: &Bound<'_, PyDict>,\n)",
       "tier": "tier1"
     },
     {
@@ -14361,6 +15471,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "stop_timer",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-py",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-py/src/performance_py.rs",
+      "source_decl": "pub fn stop_timer(\n        &self,\n        timer_info: &Bound<'_, PyDict>,\n        bytes_processed: Option<u64>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "strings_py",
       "kind": "module",
       "crate": "classic-shared-py",
@@ -14387,6 +15507,16 @@
       "owner_module": "shared",
       "source_file": "foundation/classic-shared-py/src/lib.rs",
       "source_decl": "pub fn to_py_err(err: ClassicError)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "validate_paths_batch",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-shared-py",
+      "owner_module": "shared",
+      "source_file": "foundation/classic-shared-py/src/path_py.rs",
+      "source_decl": "pub fn validate_paths_batch(\n        &self,\n        py: Python<'_>,\n        paths: Vec<String>,\n    )",
       "tier": "tier1"
     },
     {
@@ -14958,6 +16088,16 @@
     },
     {
       "symbol": "classify_manifest",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
+      "source_decl": "pub fn classify_manifest(\n    manifest: YamlManifest,\n    current: &ClientSchemaSet,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "classify_manifest",
       "kind": "reexport",
       "crate": "classic-update-core",
       "owner_module": "update",
@@ -15070,6 +16210,26 @@
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/github.rs",
       "source_decl": "pub fn has_update(&self, current_version: &str, latest_version: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "insert",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
+      "source_decl": "pub fn insert(\n        &mut self,\n        name: impl Into<String>,\n        accepted: SchemaCompat,\n        installed: Option<SchemaVersion>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "insert_with_sha256",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
+      "source_decl": "pub fn insert_with_sha256(\n        &mut self,\n        name: impl Into<String>,\n        accepted: SchemaCompat,\n        installed: Option<SchemaVersion>,\n        installed_sha256: Option<String>,\n    )",
       "tier": "tier1"
     },
     {
@@ -15202,6 +16362,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "with_base_url",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/github.rs",
+      "source_decl": "pub fn with_base_url(\n        owner: impl Into<String>,\n        repo: impl Into<String>,\n        base_url: impl Into<String>,\n        token: Option<String>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "with_bundled_yaml_dir",
       "kind": "function",
       "arity": 2,
@@ -15209,6 +16379,16 @@
       "owner_module": "update",
       "source_file": "business-logic/classic-update-core/src/yaml_update.rs",
       "source_decl": "pub fn with_bundled_yaml_dir(mut self, dir: PathBuf)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_token",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-update-core",
+      "owner_module": "update",
+      "source_file": "business-logic/classic-update-core/src/github.rs",
+      "source_decl": "pub fn with_token(\n        owner: impl Into<String>,\n        repo: impl Into<String>,\n        token: Option<String>,\n    )",
       "tier": "tier1"
     },
     {
@@ -15226,7 +16406,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
+      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, GuiWindow, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
       "source_expr": "update::AcceptedUserSettingsUpdate",
       "tier": "tier1"
     },
@@ -15411,6 +16591,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "GuiWindow",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub enum GuiWindow",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GuiWindow",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, GuiWindow, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
+      "source_expr": "update::GuiWindow",
+      "tier": "tier1"
+    },
+    {
       "symbol": "GuiWindowGeometry",
       "kind": "reexport",
       "crate": "classic-user-settings-core",
@@ -15427,6 +16626,82 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
       "source_decl": "pub struct GuiWindowGeometry",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LegacyTuiStateImportError",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use legacy_tui_state_import::{ LegacyTuiStateImportError, LegacyTuiStateImportOutcome, LegacyTuiStateImportReceipt, LegacyTuiStateImportRestoreOutcome, import_legacy_tui_state, };",
+      "source_expr": "legacy_tui_state_import::LegacyTuiStateImportError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LegacyTuiStateImportError",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub struct LegacyTuiStateImportError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LegacyTuiStateImportOutcome",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub enum LegacyTuiStateImportOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LegacyTuiStateImportOutcome",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use legacy_tui_state_import::{ LegacyTuiStateImportError, LegacyTuiStateImportOutcome, LegacyTuiStateImportReceipt, LegacyTuiStateImportRestoreOutcome, import_legacy_tui_state, };",
+      "source_expr": "legacy_tui_state_import::LegacyTuiStateImportOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LegacyTuiStateImportReceipt",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use legacy_tui_state_import::{ LegacyTuiStateImportError, LegacyTuiStateImportOutcome, LegacyTuiStateImportReceipt, LegacyTuiStateImportRestoreOutcome, import_legacy_tui_state, };",
+      "source_expr": "legacy_tui_state_import::LegacyTuiStateImportReceipt",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LegacyTuiStateImportReceipt",
+      "kind": "struct",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub struct LegacyTuiStateImportReceipt",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LegacyTuiStateImportRestoreOutcome",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub enum LegacyTuiStateImportRestoreOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LegacyTuiStateImportRestoreOutcome",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use legacy_tui_state_import::{ LegacyTuiStateImportError, LegacyTuiStateImportOutcome, LegacyTuiStateImportReceipt, LegacyTuiStateImportRestoreOutcome, import_legacy_tui_state, };",
+      "source_expr": "legacy_tui_state_import::LegacyTuiStateImportRestoreOutcome",
       "tier": "tier1"
     },
     {
@@ -15625,7 +16900,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
+      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, GuiWindow, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
       "source_expr": "update::UpdateDiagnostic",
       "tier": "tier1"
     },
@@ -15701,7 +16976,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use commit::{UserSettingsCommitError, UserSettingsCommitOutcome};",
+      "source_decl": "pub use commit::{ UserSettingsCommitError, UserSettingsCommitOutcome, UserSettingsFrontendTransitionOutcome, };",
       "source_expr": "commit::UserSettingsCommitError",
       "tier": "tier1"
     },
@@ -15729,8 +17004,27 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use commit::{UserSettingsCommitError, UserSettingsCommitOutcome};",
+      "source_decl": "pub use commit::{ UserSettingsCommitError, UserSettingsCommitOutcome, UserSettingsFrontendTransitionOutcome, };",
       "source_expr": "commit::UserSettingsCommitOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsFrontendTransitionOutcome",
+      "kind": "enum",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/commit.rs",
+      "source_decl": "pub enum UserSettingsFrontendTransitionOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "UserSettingsFrontendTransitionOutcome",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use commit::{ UserSettingsCommitError, UserSettingsCommitOutcome, UserSettingsFrontendTransitionOutcome, };",
+      "source_expr": "commit::UserSettingsFrontendTransitionOutcome",
       "tier": "tier1"
     },
     {
@@ -15853,7 +17147,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
+      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, GuiWindow, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
       "source_expr": "update::UserSettingsUpdate",
       "tier": "tier1"
     },
@@ -15881,7 +17175,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
+      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, GuiWindow, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
       "source_expr": "update::UserSettingsUpdateField",
       "tier": "tier1"
     },
@@ -15900,7 +17194,7 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
-      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
+      "source_decl": "pub use update::{ AcceptedUserSettingsUpdate, GuiWindow, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, };",
       "source_expr": "update::UserSettingsUpdatePreview",
       "tier": "tier1"
     },
@@ -15951,6 +17245,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/migration.rs",
       "source_decl": "pub fn after(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "apply",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub fn apply(\n        &self,\n        classic_root: impl AsRef<Path>,\n    )",
       "tier": "tier1"
     },
     {
@@ -16011,6 +17315,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/frontend_state.rs",
       "source_decl": "pub fn auto_switch_after_scan_origin(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "backup_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub fn backup_path(&self)",
       "tier": "tier1"
     },
     {
@@ -16124,6 +17438,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "commit",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/commit.rs",
+      "source_decl": "pub fn commit(\n        &self,\n        classic_root: impl AsRef<Path>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "commit_eligibility",
       "kind": "function",
       "arity": 1,
@@ -16131,6 +17455,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn commit_eligibility(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "commit_frontend_geometry_transition",
+      "kind": "function",
+      "arity": 6,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/commit.rs",
+      "source_decl": "pub fn commit_frontend_geometry_transition(\n        classic_root: impl AsRef<Path>,\n        expected_revision: &Revision,\n        window: GuiWindow,\n        maximized: bool,\n        width: i64,\n        height: i64,\n    )",
       "tier": "tier1"
     },
     {
@@ -16269,6 +17603,51 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
       "source_decl": "pub const fn",
       "tier": "tier1"
     },
@@ -16568,6 +17947,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "import_legacy_tui_state",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub fn import_legacy_tui_state(\n    classic_root: impl AsRef<Path>,\n    legacy_state_path: impl AsRef<Path>,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "import_legacy_tui_state",
+      "kind": "reexport",
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/lib.rs",
+      "source_decl": "pub use legacy_tui_state_import::{ LegacyTuiStateImportError, LegacyTuiStateImportOutcome, LegacyTuiStateImportReceipt, LegacyTuiStateImportRestoreOutcome, import_legacy_tui_state, };",
+      "source_expr": "legacy_tui_state_import::import_legacy_tui_state",
+      "tier": "tier1"
+    },
+    {
       "symbol": "ini_folder",
       "kind": "function",
       "arity": 1,
@@ -16684,6 +18083,16 @@
       "crate": "classic-user-settings-core",
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
+      "source_decl": "pub fn message(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
       "source_decl": "pub fn message(&self)",
       "tier": "tier1"
     },
@@ -16828,6 +18237,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "parse",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn parse(value: &str)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "path",
       "kind": "function",
       "arity": 1,
@@ -16898,6 +18317,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "restore",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub fn restore(\n        &self,\n        classic_root: impl AsRef<Path>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "restore",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/migration_persistence.rs",
+      "source_decl": "pub fn restore(\n        &self,\n        classic_root: impl AsRef<Path>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "results_panel_width",
       "kind": "function",
       "arity": 1,
@@ -16955,6 +18394,26 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn schema_version(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "settings_backup_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub fn settings_backup_path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "settings_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub fn settings_path(&self)",
       "tier": "tier1"
     },
     {
@@ -17025,6 +18484,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/document.rs",
       "source_decl": "pub fn source(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "source_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/legacy_tui_state_import.rs",
+      "source_decl": "pub fn source_path(&self)",
       "tier": "tier1"
     },
     {
@@ -17338,6 +18807,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "with_tui_remembered_state",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_tui_remembered_state(\n        mut self,\n        active_tab: i64,\n        results_panel_width: i64,\n        sort_ascending: bool,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "with_unsolved_logs_destination",
       "kind": "function",
       "arity": 2,
@@ -17365,6 +18844,16 @@
       "owner_module": "user_settings",
       "source_file": "business-logic/classic-user-settings-core/src/update.rs",
       "source_decl": "pub fn with_update_source(mut self, value: impl Into<String>)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_window_geometry",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-user-settings-core",
+      "owner_module": "user_settings",
+      "source_file": "business-logic/classic-user-settings-core/src/update.rs",
+      "source_decl": "pub fn with_window_geometry(\n        mut self,\n        window: GuiWindow,\n        maximized: bool,\n        width: i64,\n        height: i64,\n    )",
       "tier": "tier1"
     },
     {
@@ -18149,6 +19638,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "get_address_library_filename",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "business-logic/classic-version-registry-core/src/registry.rs",
+      "source_decl": "pub fn get_address_library_filename(\n        &self,\n        version: &GameVersion,\n        is_vr: bool,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "get_all",
       "kind": "function",
       "arity": 1,
@@ -18199,6 +19698,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "get_compatible_crashgens",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "business-logic/classic-version-registry-core/src/models.rs",
+      "source_decl": "pub fn get_compatible_crashgens(\n        &self,\n        game_version: Option<&GameVersion>,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "get_correct_versions",
       "kind": "function",
       "arity": 2,
@@ -18216,6 +19725,16 @@
       "owner_module": "version_registry",
       "source_file": "business-logic/classic-version-registry-core/src/models.rs",
       "source_decl": "pub fn get_crashgen_for_version(&self, crashgen_version: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "get_crashgen_for_version",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "business-logic/classic-version-registry-core/src/registry.rs",
+      "source_decl": "pub fn get_crashgen_for_version(\n        &self,\n        id: &str,\n        crashgen_version: &str,\n    )",
       "tier": "tier1"
     },
     {
@@ -18379,6 +19898,66 @@
       "tier": "tier1"
     },
     {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "business-logic/classic-version-registry-core/src/matching.rs",
+      "source_decl": "pub fn new(\n        version_info: Option<VersionInfo>,\n        confidence: MatchConfidence,\n        detected: GameVersion,\n        message: impl Into<String>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "business-logic/classic-version-registry-core/src/models.rs",
+      "source_decl": "pub fn new(\n        filename: impl Into<String>,\n        format: AddressLibFormat,\n        nexus_url: impl Into<String>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 5,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "business-logic/classic-version-registry-core/src/models.rs",
+      "source_decl": "pub fn new(\n        acronym: impl Into<String>,\n        full_name: impl Into<String>,\n        compatible_version: impl Into<String>,\n        loader: impl Into<String>,\n        file_count: u32,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 6,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "business-logic/classic-version-registry-core/src/models.rs",
+      "source_decl": "pub fn new(\n        version: impl Into<String>,\n        name: impl Into<String>,\n        acronym: impl Into<String>,\n        dll_file: impl Into<String>,\n        description: impl Into<String>,\n        download_url: impl Into<String>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "business-logic/classic-version-registry-core/src/models.rs",
+      "source_decl": "pub fn new(\n        strategy: UnknownVersionStrategy,\n        defaults: HashMap<String, String>,\n        log_level: LogLevel,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new_for_testing",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "business-logic/classic-version-registry-core/src/registry.rs",
+      "source_decl": "pub fn new_for_testing(\n        versions: HashMap<String, VersionInfo>,\n        by_version: HashMap<String, VersionInfo>,\n        unknown_handling: UnknownVersionHandling,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "parse",
       "kind": "function",
       "arity": 1,
@@ -18446,6 +20025,26 @@
       "owner_module": "version_registry",
       "source_file": "business-logic/classic-version-registry-core/src/models.rs",
       "source_decl": "pub fn version_string(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_range",
+      "kind": "function",
+      "arity": 7,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "business-logic/classic-version-registry-core/src/models.rs",
+      "source_decl": "pub fn with_range(\n        version: impl Into<String>,\n        name: impl Into<String>,\n        acronym: impl Into<String>,\n        dll_file: impl Into<String>,\n        description: impl Into<String>,\n        download_url: impl Into<String>,\n        compatible_range: CompatibleRange,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_script_hashes",
+      "kind": "function",
+      "arity": 6,
+      "crate": "classic-version-registry-core",
+      "owner_module": "version_registry",
+      "source_file": "business-logic/classic-version-registry-core/src/models.rs",
+      "source_decl": "pub fn with_script_hashes(\n        acronym: impl Into<String>,\n        full_name: impl Into<String>,\n        compatible_version: impl Into<String>,\n        loader: impl Into<String>,\n        file_count: u32,\n        script_hashes: Vec<(String, String)",
       "tier": "tier1"
     },
     {
@@ -18780,6 +20379,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "resolve_xse_folder_for_scan",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-xse-core",
+      "owner_module": "xse",
+      "source_file": "business-logic/classic-xse-core/src/lib.rs",
+      "source_decl": "pub fn resolve_xse_folder_for_scan(\n    yaml_dir_data: impl AsRef<Path>,\n    game: &str,\n    selected_game_version: &str,\n    configured_docs_root: Option<&Path>,\n)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "try_parse_version",
       "kind": "reexport",
       "crate": "classic-xse-core",
@@ -18787,6 +20396,16 @@
       "source_file": "business-logic/classic-xse-core/src/lib.rs",
       "source_decl": "pub use classic_version_core::{compare_versions, parse_version, try_parse_version};",
       "source_expr": "classic_version_core::try_parse_version",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "with_version",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-xse-core",
+      "owner_module": "xse",
+      "source_file": "business-logic/classic-xse-core/src/lib.rs",
+      "source_decl": "pub fn with_version(\n        xse_type: XseType,\n        path: PathBuf,\n        version: Option<Version>,\n        installed: bool,\n    )",
       "tier": "tier1"
     }
   ]

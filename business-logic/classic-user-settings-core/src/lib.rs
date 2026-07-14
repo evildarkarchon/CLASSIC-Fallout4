@@ -8,13 +8,16 @@ mod default_settings;
 mod document;
 mod frontend_state;
 mod game_setup_settings;
+mod legacy_tui_state_import;
 mod migration;
 mod migration_persistence;
 mod preference;
 mod scan_settings;
 mod update;
 
-pub use commit::{UserSettingsCommitError, UserSettingsCommitOutcome};
+pub use commit::{
+    UserSettingsCommitError, UserSettingsCommitOutcome, UserSettingsFrontendTransitionOutcome,
+};
 pub use document::{
     CommitEligibility, Diagnostic, DocumentClassification, PreferenceOrigin, Revision,
     SettingsSource, SourceLocation, UpdatePreferences, UpdateSource, UserSettings,
@@ -23,6 +26,10 @@ pub use frontend_state::{
     FrontendPreferences, FrontendState, GuiWindowGeometry, TuiRememberedState, WindowGeometry,
 };
 pub use game_setup_settings::GameSetupSettings;
+pub use legacy_tui_state_import::{
+    LegacyTuiStateImportError, LegacyTuiStateImportOutcome, LegacyTuiStateImportReceipt,
+    LegacyTuiStateImportRestoreOutcome, import_legacy_tui_state,
+};
 pub use migration::{
     CURRENT_USER_SETTINGS_SCHEMA_VERSION, MigrationChange, MigrationChangeKind,
     MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome, UserSettingsMigrationPlan,
@@ -34,6 +41,6 @@ pub use migration_persistence::{
 };
 pub use scan_settings::{CrashLogScanSettings, GameVersionSelection};
 pub use update::{
-    AcceptedUserSettingsUpdate, UpdateDiagnostic, UserSettingsUpdate, UserSettingsUpdateField,
-    UserSettingsUpdatePreview,
+    AcceptedUserSettingsUpdate, GuiWindow, UpdateDiagnostic, UserSettingsUpdate,
+    UserSettingsUpdateField, UserSettingsUpdatePreview,
 };

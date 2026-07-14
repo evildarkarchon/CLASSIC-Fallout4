@@ -1,83 +1,57 @@
-use std::fs;
+//! TUI adapter paths for the shared canonical User Settings store.
+
 use std::path::PathBuf;
 
-use classic_config_core::{ClassicConfig, YamlSource};
-use classic_shared_core::get_runtime;
 use directories::ProjectDirs;
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WindowState {
-    pub active_tab: u8,
-    pub results_panel_width: u16,
-    pub sort_ascending: bool,
-}
+/// Returns the CLASSIC root used by every canonical User Settings operation.
+///
+/// The TUI already resolves YAML Data and Crash Logs relative to its working root, so using the
+/// same explicit root avoids splitting one run across multiple settings locations.
+pub fn classic_root() -> PathBuf {
+    let current_dir = std::env::current_dir().unwrap_or_default();
+    let executable_dir = std::env::current_exe()
+        .ok()
+        .and_then(|path| path.parent().map(PathBuf::from));
 
-impl Default for WindowState {
-    fn default() -> Self {
-        Self {
-            active_tab: 0,
-            results_panel_width: 30,
-            sort_ascending: false,
+    let mut candidates = Vec::new();
+    if let Some(application_dir) = executable_dir.as_ref() {
+        candidates.push(application_dir.clone());
+    }
+    candidates.push(current_dir.clone());
+    if let Some(application_dir) = executable_dir.as_ref() {
+        // Match the native frontends' development/install search so every executable resolves the
+        // same data root even when it is launched from a build output directory.
+        if let Some(parent) = application_dir.parent() {
+            candidates.push(parent.to_path_buf());
+            if let Some(grandparent) = parent.parent() {
+                candidates.push(grandparent.to_path_buf());
+            }
+            candidates.push(parent.join("install"));
         }
     }
+    candidates.push(current_dir.join("install"));
+
+    select_classic_root(candidates, executable_dir.unwrap_or(current_dir))
 }
 
-pub fn state_file_path() -> Option<PathBuf> {
+/// Selects the first native-frontend-compatible root, retaining a stable application fallback.
+fn select_classic_root(candidates: Vec<PathBuf>, fallback: PathBuf) -> PathBuf {
+    candidates
+        .into_iter()
+        .find(|candidate| candidate.join("CLASSIC Data").is_dir())
+        .unwrap_or(fallback)
+}
+
+/// Returns the former TUI-only remembered-state path, when the platform exposes one.
+///
+/// This path is an import source only. Production reads and saves always use the shared
+/// `CLASSIC Settings.yaml` store owned by `classic-user-settings-core`.
+pub fn legacy_tui_state_file_path() -> Option<PathBuf> {
     ProjectDirs::from("com", "classic", "classic-tui")
         .map(|dirs| dirs.config_dir().join("state.json"))
 }
 
-pub fn load_window_state() -> WindowState {
-    let Some(path) = state_file_path() else {
-        return WindowState::default();
-    };
-
-    if !path.exists() {
-        return WindowState::default();
-    }
-
-    fs::read_to_string(path)
-        .ok()
-        .and_then(|content| serde_json::from_str::<WindowState>(&content).ok())
-        .unwrap_or_default()
-}
-
-pub fn save_window_state(state: &WindowState) -> Result<(), Box<dyn std::error::Error>> {
-    let Some(path) = state_file_path() else {
-        return Err("Could not determine config directory".into());
-    };
-
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)?;
-    }
-
-    let json = serde_json::to_string_pretty(state)?;
-    fs::write(path, json)?;
-    Ok(())
-}
-
-pub fn settings_file_path() -> PathBuf {
-    YamlSource::Settings.path("Fallout4")
-}
-
-pub fn load_settings() -> ClassicConfig {
-    let path = settings_file_path();
-    if !path.exists() {
-        return ClassicConfig::default();
-    }
-
-    match get_runtime().block_on(ClassicConfig::load_from_yaml(&path)) {
-        Ok(config) => config,
-        Err(error) => {
-            tracing::warn!("Failed to load settings, using defaults: {error}");
-            ClassicConfig::default()
-        }
-    }
-}
-
-pub fn save_settings(config: &ClassicConfig) -> Result<(), Box<dyn std::error::Error>> {
-    let path = settings_file_path();
-    get_runtime().block_on(config.save_to_yaml(&path))?;
-    Ok(())
-}
+#[cfg(test)]
+#[path = "state_tests.rs"]
+mod tests;

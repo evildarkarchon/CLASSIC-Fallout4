@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-14T12:54:26.245577+00:00`
-- Tier-1 contract rows: **877**
-- Tier-1 matched: **877**
+- Generated: `2026-07-14T23:05:21.985128+00:00`
+- Tier-1 contract rows: **880**
+- Tier-1 matched: **880**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -118,6 +118,7 @@
 | `user-settings-frontend-state-type` | `user_settings` | `FrontendState` | `JsFrontendState` | `matched` |
 | `user-settings-frontend-preferences-type` | `user_settings` | `FrontendPreferences` | `JsFrontendPreferences` | `matched` |
 | `user-settings-gui-window-geometry-type` | `user_settings` | `GuiWindowGeometry` | `JsGuiWindowGeometry` | `matched` |
+| `user-settings-gui-window-update-type` | `user_settings` | `GuiWindow` | `JsGuiWindow` | `matched` |
 | `user-settings-window-geometry-type` | `user_settings` | `WindowGeometry` | `JsWindowGeometry` | `matched` |
 | `user-settings-tui-remembered-state-type` | `user_settings` | `TuiRememberedState` | `JsTuiRememberedState` | `matched` |
 | `user-settings-frontend-state-accessor` | `user_settings` | `frontend_state` | `JsUserSettingsSnapshot` | `matched` |
@@ -149,6 +150,8 @@
 | `user-settings-accepted-update-type` | `user_settings` | `AcceptedUserSettingsUpdate` | `JsUserSettingsUpdatePreview` | `matched` |
 | `user-settings-commit-outcome-type` | `user_settings` | `UserSettingsCommitOutcome` | `JsUserSettingsCommitResult` | `matched` |
 | `user-settings-commit-error-type` | `user_settings` | `UserSettingsCommitError` | `commitUserSettingsUpdate` | `matched` |
+| `user-settings-frontend-transition-outcome-type` | `user_settings` | `UserSettingsFrontendTransitionOutcome` | `JsUserSettingsCommitResult` | `matched` |
+| `user-settings-commit-frontend-geometry-transition` | `user_settings` | `commit_frontend_geometry_transition` | `commitFrontendGeometryTransition` | `matched` |
 | `user-settings-accepted-update-commit` | `user_settings` | `AcceptedUserSettingsUpdate` | `commitUserSettingsUpdate` | `matched` |
 | `user-settings-commit-error-code-accessor` | `user_settings` | `code` | `commitUserSettingsUpdate` | `matched` |
 | `user-settings-commit-error-message-accessor` | `user_settings` | `message` | `commitUserSettingsUpdate` | `matched` |

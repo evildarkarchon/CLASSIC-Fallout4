@@ -123,7 +123,7 @@ ClassicLib-rs/ui-applications/classic-tui/
 │   │   ├── markdown.rs      # Markdown renderer (styled blocks)
 │   │   └── scrollable.rs    # Scrollable text with mouse wheel
 │   │
-│   ├── state.rs             # WindowState, persistence, settings
+│   ├── state.rs             # Shared CLASSIC-root and legacy-import source paths
 │   ├── scan.rs              # Scan orchestration (crash logs + game files)
 │   ├── backup.rs            # Backup operations
 │   ├── papyrus.rs           # Papyrus monitoring task
@@ -169,7 +169,7 @@ crossterm = "0.28"
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 classic-yaml-core = { path = "../../business-logic/classic-yaml-core" }
-classic-config-core = { path = "../../business-logic/classic-config-core" }
+classic-user-settings-core = { path = "../../business-logic/classic-user-settings-core" }
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
 classic-database-core = { path = "../../business-logic/classic-database-core" }
 classic-registry-core = { path = "../../business-logic/classic-registry-core" }
@@ -186,9 +186,6 @@ color-eyre = "0.6"        # Error handling + panic hooks
 tracing = "0.1"           # Logging
 tracing-appender = "0.2"  # File logging
 pulldown-cmark = "0.12"   # Markdown parsing
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"          # Window state persistence
-serde_yaml = "0.9"        # Settings persistence
 directories = "5"         # Platform paths
 open = "5"                # Open URLs/folders in default app
 
@@ -421,9 +418,9 @@ struct App {
     should_quit: bool,
     initialized: bool,
 
-    // Persisted state
-    config: ClassicConfig,
-    window_state: WindowState,
+    // Revision-cohesive view of the shared canonical store
+    settings: UserSettings,
+    classic_root: PathBuf,
 }
 ```
 
@@ -1123,8 +1120,8 @@ FormID Database list:
 - **OK:** Save all settings to YAML, emit settings changed, close overlay
 
 **Settings Persistence:**
-- All settings saved via `classic-config-core`
-- Full config save on OK (matching Slint GUI's save-on-each-change adapted for modal pattern)
+- All settings saved through explicit `classic-user-settings-core` updates
+- Revision-checked field updates on OK preserve unknown settings and commit all-or-nothing
 - Loaded from YAML on app startup
 
 ### 7.4 Papyrus Monitor Overlay
@@ -1426,7 +1423,7 @@ Rendered as inline text with styled checkbox character:
 1. User clicks "SCAN CRASH LOGS" or presses F5
 2. **Pre-scan validation:**
    - Validate CLASSIC Data directory exists
-   - Ensure CLASSIC Settings.yaml exists (create from template if missing)
+   - Open canonical User Settings; missing settings use Rust-owned defaults and are created only by an explicit bootstrap/update action
    - Ensure CLASSIC Ignore.yaml exists (create from template if missing)
 3. **UI state change:**
    - `scan_in_progress = true`
@@ -1532,25 +1529,24 @@ Rendered as inline text with styled checkbox character:
 ### 12.1 Settings File
 
 **Location:** Shared with other CLASSIC UIs
-**Format:** YAML (via `classic-config-core`)
-**File:** `CLASSIC Settings.yaml` in CLASSIC Data directory
+**Format:** canonical nested YAML (via `classic-user-settings-core`)
+**File:** `CLASSIC Settings.yaml` at the explicit CLASSIC root
 
-All settings keys match the Qt GUI and Slint GUI exactly (see §7.3 for mapping table).
+Every maintained interface opens this same store. The TUI consumes typed Update Preferences, Crash Log Scan, Game Setup, and Frontend State groups and saves only through revision-anchored all-or-nothing updates.
 
-### 12.2 TUI-Specific State File
+### 12.2 Remembered TUI State
 
-**Location:** `~/.config/classic-tui/state.json` (via `directories` crate)
-**Format:** JSON
+Remembered presentation lives in the shared YAML store under `UI.tui`:
 
-```json
-{
-    "active_tab": 0,
-    "results_panel_width": 30,
-    "sort_ascending": false
-}
+```yaml
+UI:
+  tui:
+    active_tab: 0
+    results_panel_width: 30
+    sort_ascending: false
 ```
 
-This is minimal — only TUI-specific layout preferences. Application settings are shared via YAML.
+The former platform-config `state.json` is a dormant legacy import source only. The Settings overlay performs the import explicitly, retains a verified byte-exact backup, and commits the three canonical leaves together. Startup never imports or writes the JSON document.
 
 ### 12.3 Logging
 
@@ -1706,7 +1702,6 @@ The TUI should work in:
 | `throbber-widgets-tui` | Animated spinner for indeterminate progress | 0.7 |
 | `tracing` | Structured logging | 0.1 |
 | `tracing-appender` | File-based log output | 0.2 |
-| `serde` / `serde_json` | TUI state persistence | 1.x |
 | `directories` | Platform-appropriate config/data paths | 5.x |
 | `open` | Open URLs and folders in default application | 5.x |
 
@@ -1719,7 +1714,7 @@ All from the existing workspace (no new crates needed):
 | `classic-shared-core` | Tokio runtime, string interning, caching |
 | `classic-scanlog-core` | Crash log parsing and analysis |
 | `classic-yaml-core` | YAML settings loading/caching |
-| `classic-config-core` | Configuration management |
+| `classic-user-settings-core` | Shared typed User Settings ownership and persistence |
 | `classic-file-io-core` | File I/O, encoding detection, backups |
 | `classic-database-core` | FormID database operations |
 | `classic-registry-core` | Game registry, path detection |
@@ -1783,7 +1778,7 @@ All from the existing workspace (no new crates needed):
 - [ ] Number input for Max Concurrent Scans
 - [ ] Reset to Defaults with inline confirmation
 - [ ] OK/Cancel save flow
-- [ ] Settings persistence via classic-config-core
+- [x] Shared canonical settings persistence via classic-user-settings-core
 
 ### Phase 6: Supporting Overlays
 - [ ] About overlay
@@ -1961,8 +1956,8 @@ Async Tasks (Tokio) ──── mpsc::channel ────▶ App::handle_async
 | Resource | Location | Format |
 |----------|----------|--------|
 | Binary | `ClassicLib-rs/target/{debug,release}/classic-tui` | Executable |
-| TUI State | `~/.config/classic-tui/state.json` | JSON |
-| App Settings | `{CLASSIC Data}/CLASSIC Settings.yaml` | YAML (shared) |
+| App and TUI State | `{CLASSIC root}/CLASSIC Settings.yaml` | Canonical YAML (shared) |
+| Legacy TUI State | platform config `state.json` | Dormant JSON import source |
 | Log File | `~/.local/share/classic-tui/classic-tui.log` | Text |
 | Crash Logs | User-configured or `./Crash Logs/` | Directory |
 | Reports | Same as crash logs directory | `*.md` files |

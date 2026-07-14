@@ -11,8 +11,8 @@
         "ownerModule": "user_settings",
         "tier": "tier1"
       },
-      "contractCount": 158,
-      "contractIdsHash": "d0425539e43d2db627227539c9dfc0ac5ed92106b7a872432f5478251b6a820d",
+      "contractCount": 161,
+      "contractIdsHash": "04e6d8e5b902bebe6db8d6a3797ea6e5634166cbb27f0d6e6e1d346ceab0c6da",
       "bindingIdentifiers": [
         "classic_user_settings.user_settings_published_defaults",
         "classic_user_settings.UpdatePreferences.update_source",
@@ -21,9 +21,12 @@
         "classic_user_settings.UserSettingsSnapshot.game_setup_settings",
         "classic_user_settings.UserSettingsCommitError",
         "classic_user_settings.UserSettingsCommitOutcome",
+        "classic_user_settings.UserSettingsFrontendTransitionOutcome",
+        "classic_user_settings.UserSettingsSnapshot.commit_frontend_geometry_transition",
         "classic_user_settings.UserSettingsUpdatePreview.commit",
         "classic_user_settings.UserSettingsUpdate.set_update_source",
         "classic_user_settings.UserSettingsUpdate.set_auto_switch_after_scan",
+        "classic_user_settings.UserSettingsUpdate.set_window_geometry",
         "classic_user_settings.UserSettingsUpdate.set_managed_game",
         "classic_user_settings.UserSettingsUpdate.set_game_root",
         "classic_user_settings.UserSettingsUpdate.set_game_executable",

@@ -198,3 +198,33 @@ def test_pub_crate_modules_do_not_emit_public_symbols(tmp_path: Path) -> None:
     assert "HiddenType" not in symbols
     assert "visible_api" in symbols
     assert "VisibleType" in symbols
+
+
+def test_multiline_public_function_signature_is_discovered(tmp_path: Path) -> None:
+    """Rustfmt-formatted public methods remain visible to parity accounting."""
+    crate_dir = tmp_path / "fixture" / "src"
+    crate_dir.mkdir(parents=True)
+    (crate_dir / "lib.rs").write_text(
+        "pub fn with_window_geometry(\n"
+        "    window: GuiWindow,\n"
+        "    width: i64,\n"
+        ") -> Self { todo!() }\n",
+        encoding="utf-8",
+    )
+
+    original_targets = gb.RUST_TARGET_CRATES
+    original_owners = gb.RUST_OWNER_BY_CRATE
+    try:
+        gb.RUST_TARGET_CRATES = {"fixture-crate": "fixture/src/lib.rs"}
+        gb.RUST_OWNER_BY_CRATE = {"fixture-crate": "aux"}
+        surface = gb.parse_rust_surface(tmp_path, tier1_rust_symbols=set())
+    finally:
+        gb.RUST_TARGET_CRATES = original_targets
+        gb.RUST_OWNER_BY_CRATE = original_owners
+
+    function = next(
+        entry
+        for entry in surface.get("symbols", [])
+        if entry["symbol"] == "with_window_geometry"
+    )
+    assert function["arity"] == 2

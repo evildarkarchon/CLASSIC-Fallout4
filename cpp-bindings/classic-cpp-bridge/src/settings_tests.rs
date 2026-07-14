@@ -838,6 +838,11 @@ fn empty_user_settings_update() -> ffi::UserSettingsUpdateDto {
         update_source: String::new(),
         has_auto_switch_after_scan: false,
         auto_switch_after_scan: false,
+        window_geometry_updates: Vec::new(),
+        has_tui_remembered_state: false,
+        tui_active_tab: 0,
+        tui_results_panel_width: 0,
+        tui_sort_ascending: false,
         has_managed_game: false,
         managed_game: String::new(),
         has_game_version_selection: false,
@@ -1087,6 +1092,294 @@ fn test_user_settings_gui_preferences_round_trip_through_one_typed_update() {
     let reopened = user_settings_open_gui_settings(&root_string);
     assert_eq!(reopened.update_preferences.update_source, "Both");
     assert!(!reopened.frontend_state.auto_switch_after_scan);
+}
+
+#[test]
+fn test_user_settings_tui_remembered_state_round_trips_as_one_transition() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "unknown_entries.yaml");
+    let root_string = root.path().display().to_string();
+    let mut update = empty_user_settings_update();
+    update.has_tui_remembered_state = true;
+    update.tui_active_tab = 2;
+    update.tui_results_panel_width = 42;
+    update.tui_sort_ascending = true;
+
+    let preview = user_settings_preview_update(&root_string, &update);
+
+    assert!(preview.accepted);
+    assert_eq!(
+        preview
+            .accepted_fields
+            .iter()
+            .map(|field| {
+                (
+                    field.field_path.as_str(),
+                    field.value_kind.as_str(),
+                    field.bool_value,
+                    field.u32_value,
+                )
+            })
+            .collect::<Vec<_>>(),
+        vec![
+            ("/UI/tui/active_tab", "u32", false, 2),
+            ("/UI/tui/results_panel_width", "u32", false, 42),
+            ("/UI/tui/sort_ascending", "bool", true, 0),
+        ]
+    );
+
+    let committed =
+        user_settings_commit_update(&root_string, &preview.base_revision, &update).unwrap();
+    assert_eq!(committed.status, "committed");
+
+    let reopened = user_settings_open_frontend_state(&root_string);
+    assert_eq!(reopened.tui_active_tab, 2);
+    assert_eq!(reopened.tui_results_panel_width, 42);
+    assert!(reopened.tui_sort_ascending);
+}
+
+#[test]
+fn test_legacy_tui_state_import_reports_verified_receipt_and_coded_errors() {
+    let root = tempfile::tempdir().unwrap();
+    install_user_settings_fixture(root.path(), "unknown_entries.yaml");
+    let legacy_path = root.path().join("state.json");
+    std::fs::write(
+        &legacy_path,
+        br#"{"active_tab":3,"results_panel_width":48,"sort_ascending":true}"#,
+    )
+    .unwrap();
+
+    let handle = user_settings_import_legacy_tui_state(
+        &root.path().display().to_string(),
+        &legacy_path.display().to_string(),
+    )
+    .unwrap();
+    let outcome = user_settings_legacy_tui_import_outcome(&handle);
+
+    assert_eq!(outcome.status, "applied");
+    assert_eq!(outcome.source_path, legacy_path.display().to_string());
+    assert_eq!(outcome.source_revision, outcome.backup_revision);
+    assert!(outcome.published_settings_revision.starts_with("sha256:"));
+    assert!(std::path::Path::new(&outcome.backup_path).exists());
+
+    let restored =
+        user_settings_restore_legacy_tui_import(&root.path().display().to_string(), &handle)
+            .unwrap();
+    assert_eq!(restored.status, "restored");
+    assert!(restored.revision.starts_with("sha256:"));
+
+    let conflict_handle = user_settings_import_legacy_tui_state(
+        &root.path().display().to_string(),
+        &legacy_path.display().to_string(),
+    )
+    .unwrap();
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let mut newer_content = std::fs::read_to_string(&settings_path).unwrap();
+    newer_content.push_str("\n# concurrent frontend edit\n");
+    std::fs::write(&settings_path, newer_content).unwrap();
+
+    let conflict = user_settings_restore_legacy_tui_import(
+        &root.path().display().to_string(),
+        &conflict_handle,
+    )
+    .unwrap();
+    assert_eq!(conflict.status, "conflict");
+    assert!(conflict.expected_revision.starts_with("sha256:"));
+    assert!(conflict.actual_revision.starts_with("sha256:"));
+
+    std::fs::write(&legacy_path, b"{").unwrap();
+    let error = match user_settings_import_legacy_tui_state(
+        &root.path().display().to_string(),
+        &legacy_path.display().to_string(),
+    ) {
+        Ok(_) => panic!("invalid legacy JSON must fail before returning a receipt handle"),
+        Err(error) => error,
+    };
+    assert!(error.starts_with("legacy_tui_state_parse_failed:"));
+}
+
+#[test]
+fn test_legacy_tui_state_import_maps_every_non_applied_outcome() {
+    let no_source =
+        legacy_tui_state_import_outcome_dto(&CoreLegacyTuiStateImportOutcome::NoLegacySource);
+    assert_eq!(no_source.status, "no_legacy_source");
+
+    let migration = legacy_tui_state_import_outcome_dto(
+        &CoreLegacyTuiStateImportOutcome::RequiresSettingsMigration {
+            classification: DocumentClassification::Unversioned,
+            revision: Revision::Missing,
+        },
+    );
+    assert_eq!(migration.status, "requires_settings_migration");
+    assert_eq!(migration.classification, "unversioned");
+    assert_eq!(migration.revision, "missing");
+
+    let untrusted = legacy_tui_state_import_outcome_dto(
+        &CoreLegacyTuiStateImportOutcome::UntrustedSettingsBase {
+            classification: DocumentClassification::Malformed,
+            revision: Revision::Unavailable,
+        },
+    );
+    assert_eq!(untrusted.status, "untrusted_settings_base");
+    assert_eq!(untrusted.classification, "malformed");
+    assert_eq!(untrusted.revision, "unavailable");
+
+    let settings_conflict =
+        legacy_tui_state_import_outcome_dto(&CoreLegacyTuiStateImportOutcome::SettingsConflict {
+            expected_revision: Revision::Missing,
+            actual_revision: Revision::Unavailable,
+        });
+    assert_eq!(settings_conflict.status, "settings_conflict");
+    assert_eq!(settings_conflict.expected_revision, "missing");
+    assert_eq!(settings_conflict.actual_revision, "unavailable");
+
+    let legacy_conflict = legacy_tui_state_import_outcome_dto(
+        &CoreLegacyTuiStateImportOutcome::LegacySourceConflict {
+            expected_revision: Revision::Unavailable,
+            actual_revision: Revision::Missing,
+        },
+    );
+    assert_eq!(legacy_conflict.status, "legacy_source_conflict");
+    assert_eq!(legacy_conflict.expected_revision, "unavailable");
+    assert_eq!(legacy_conflict.actual_revision, "missing");
+}
+
+#[test]
+fn test_user_settings_window_geometry_update_round_trips_with_canonical_fields() {
+    let root = tempfile::tempdir().unwrap();
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let content = concat!(
+        "schema_version: \"1.0\"\n",
+        "CLASSIC_Settings: {}\n",
+        "UI:\n",
+        "  window_geometry:\n",
+        "    results_tab:\n",
+        "      maximized: false\n",
+        "      width: 750\n",
+        "      height: 450\n",
+        "    future_tab:\n",
+        "      layout: ultrawide\n",
+        "  community_frontend:\n",
+        "    theme: amber\n",
+    );
+    std::fs::write(&settings_path, content).unwrap();
+    let root_string = root.path().display().to_string();
+    let mut update = empty_user_settings_update();
+    update.window_geometry_updates = vec![ffi::UserSettingsWindowGeometryUpdateDto {
+        tab: "results_tab".to_string(),
+        maximized: true,
+        width: 1280,
+        height: 720,
+    }];
+
+    let preview = user_settings_preview_update(&root_string, &update);
+
+    assert!(preview.accepted);
+    assert!(preview.diagnostics.is_empty());
+    assert_eq!(
+        preview
+            .accepted_fields
+            .iter()
+            .map(|field| {
+                (
+                    field.field_path.as_str(),
+                    field.value_kind.as_str(),
+                    field.bool_value,
+                    field.u32_value,
+                )
+            })
+            .collect::<Vec<_>>(),
+        vec![
+            ("/UI/window_geometry/results_tab/maximized", "bool", true, 0,),
+            ("/UI/window_geometry/results_tab/width", "u32", false, 1280,),
+            ("/UI/window_geometry/results_tab/height", "u32", false, 720,),
+        ]
+    );
+
+    let committed =
+        user_settings_commit_update(&root_string, &preview.base_revision, &update).unwrap();
+    assert_eq!(committed.status, "committed");
+
+    let reopened = user_settings_open_frontend_state(&root_string);
+    let results = reopened
+        .window_geometry
+        .iter()
+        .find(|geometry| geometry.tab == "results_tab")
+        .expect("Results geometry should remain in the typed frontend projection");
+    assert!(results.maximized);
+    assert_eq!(results.width, 1280);
+    assert_eq!(results.height, 720);
+
+    let persisted = std::fs::read_to_string(settings_path).unwrap();
+    assert!(persisted.contains("future_tab:"));
+    assert!(persisted.contains("layout: ultrawide"));
+    assert!(persisted.contains("community_frontend:"));
+    assert!(persisted.contains("theme: amber"));
+}
+
+#[test]
+fn test_user_settings_window_geometry_update_rejects_unknown_tab_token() {
+    let root = tempfile::tempdir().unwrap();
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let content = "schema_version: \"1.0\"\nCLASSIC_Settings: {}\n";
+    std::fs::write(&settings_path, content).unwrap();
+    let root_string = root.path().display().to_string();
+    let revision = user_settings_open_frontend_state(&root_string).revision;
+    let mut update = empty_user_settings_update();
+    update.window_geometry_updates = vec![ffi::UserSettingsWindowGeometryUpdateDto {
+        tab: "settings_dialog".to_string(),
+        maximized: false,
+        width: 800,
+        height: 600,
+    }];
+
+    let preview = user_settings_preview_update(&root_string, &update);
+
+    assert!(!preview.accepted);
+    assert_eq!(preview.diagnostics.len(), 1);
+    assert_eq!(preview.diagnostics[0].field_path, "/UI/window_geometry");
+    assert_eq!(preview.diagnostics[0].code, "invalid_enum_gui_window");
+    let committed = user_settings_commit_update(&root_string, &revision, &update).unwrap();
+    assert_eq!(committed.status, "rejected");
+    assert_eq!(committed.diagnostics[0].code, "invalid_enum_gui_window");
+    assert_eq!(std::fs::read(&settings_path).unwrap(), content.as_bytes());
+}
+
+#[test]
+fn test_user_settings_window_geometry_update_preserves_dimension_diagnostics() {
+    let root = tempfile::tempdir().unwrap();
+    let settings_path = root.path().join("CLASSIC Settings.yaml");
+    let content = "schema_version: \"1.0\"\nCLASSIC_Settings: {}\n";
+    std::fs::write(&settings_path, content).unwrap();
+    let mut update = empty_user_settings_update();
+    update.window_geometry_updates = vec![ffi::UserSettingsWindowGeometryUpdateDto {
+        tab: "main_tab".to_string(),
+        maximized: false,
+        width: 0,
+        height: -1,
+    }];
+
+    let preview = user_settings_preview_update(&root.path().display().to_string(), &update);
+
+    assert!(!preview.accepted);
+    assert_eq!(
+        preview
+            .diagnostics
+            .iter()
+            .map(|diagnostic| (diagnostic.field_path.as_str(), diagnostic.code.as_str()))
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                "/UI/window_geometry/main_tab/width",
+                "invalid_range_gui_geometry_width",
+            ),
+            (
+                "/UI/window_geometry/main_tab/height",
+                "invalid_range_gui_geometry_height",
+            ),
+        ]
+    );
+    assert_eq!(std::fs::read(&settings_path).unwrap(), content.as_bytes());
 }
 
 #[test]

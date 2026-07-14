@@ -12,14 +12,17 @@ import { dirname, join } from "node:path";
 
 import {
   applyUserSettingsMigration,
+  commitFrontendGeometryTransition,
   commitUserSettingsBootstrap,
   commitUserSettingsUpdate,
+  importLegacyTuiStateIntoUserSettings,
   openUserSettings,
   planUserSettingsMigration,
   publishedUserSettingsDefaults,
   previewUserSettingsBootstrap,
   previewUserSettingsUpdate,
   reverseUserSettingsMigrationPlan,
+  JsGuiWindow,
 } from "../index.js";
 
 const roots: string[] = [];
@@ -682,6 +685,13 @@ describe("User Settings Update preview", () => {
       updateCheck: false,
       updateSource: "Both",
       autoSwitchAfterScan: true,
+      windowGeometry: {
+        resultsTab: {
+          maximized: true,
+          width: 1280,
+          height: 720,
+        },
+      },
       unsolvedLogsDestination: null,
       customScanInput: null,
       maxConcurrentScans: 4,
@@ -704,6 +714,18 @@ describe("User Settings Update preview", () => {
           value: true,
         },
         {
+          fieldPath: "/UI/window_geometry/results_tab/maximized",
+          value: true,
+        },
+        {
+          fieldPath: "/UI/window_geometry/results_tab/width",
+          value: 1280,
+        },
+        {
+          fieldPath: "/UI/window_geometry/results_tab/height",
+          value: 720,
+        },
+        {
           fieldPath: "/CLASSIC_Settings/Unsolved Logs Destination",
           value: null,
         },
@@ -718,6 +740,35 @@ describe("User Settings Update preview", () => {
       ],
       diagnostics: [],
     });
+    expect(readFileSync(path)).toEqual(content);
+
+    const invalidGeometry = previewUserSettingsUpdate(root, {
+      updateCheck: false,
+      windowGeometry: {
+        mainTab: {
+          maximized: false,
+          width: 0,
+          height: -1,
+        },
+      },
+    });
+    expect(invalidGeometry.accepted).toBe(false);
+    expect(invalidGeometry.fields).toEqual([]);
+    expect(
+      invalidGeometry.diagnostics.map(({ fieldPath, code }) => ({
+        fieldPath,
+        code,
+      })),
+    ).toEqual([
+      {
+        fieldPath: "/UI/window_geometry/main_tab/width",
+        code: "invalid_range_gui_geometry_width",
+      },
+      {
+        fieldPath: "/UI/window_geometry/main_tab/height",
+        code: "invalid_range_gui_geometry_height",
+      },
+    ]);
     expect(readFileSync(path)).toEqual(content);
 
     const gameSetupAccepted = previewUserSettingsUpdate(root, {
@@ -818,6 +869,101 @@ describe("User Settings Update preview", () => {
       readFileSync(join(conflictRoot, "CLASSIC Settings.yaml")),
     ).toEqual(conflictContent);
   });
+
+  test("frontend geometry transition replays one stale snapshot", () => {
+    const root = makeRoot(fixture("unknown_entries.yaml"));
+    const stale = openUserSettings(root);
+    const concurrent = previewUserSettingsUpdate(root, { updateCheck: false });
+    const concurrentOutcome = commitUserSettingsUpdate(
+      root,
+      concurrent.baseRevision!,
+      { updateCheck: false },
+    );
+    expect(concurrentOutcome.status).toBe("committed");
+
+    const outcome = commitFrontendGeometryTransition(
+      root,
+      stale.revision,
+      JsGuiWindow.Main,
+      { maximized: true, width: 1440, height: 900 },
+    );
+
+    expect(outcome.status).toBe("committed");
+    expect(outcome.diagnostics).toEqual([]);
+    const current = openUserSettings(root);
+    expect(current.updatePreferences.updateCheck).toBe(false);
+    expect(current.frontendState.windowGeometry.mainTab).toMatchObject({
+      maximized: true,
+      width: 1440,
+      height: 900,
+    });
+  });
+
+  test("user-settings-tui-state-round-trips-as-one-transition", () => {
+    const root = makeRoot(fixture("unknown_entries.yaml"));
+    const update = {
+      tui: {
+        activeTab: 2,
+        resultsPanelWidth: 42,
+        sortAscending: true,
+      },
+    };
+
+    const preview = previewUserSettingsUpdate(root, update);
+
+    expect(preview.fields).toEqual([
+      { fieldPath: "/UI/tui/active_tab", value: 2 },
+      { fieldPath: "/UI/tui/results_panel_width", value: 42 },
+      { fieldPath: "/UI/tui/sort_ascending", value: true },
+    ]);
+    const outcome = commitUserSettingsUpdate(
+      root,
+      preview.baseRevision!,
+      update,
+    );
+    expect(outcome.status).toBe("committed");
+    expect(openUserSettings(root).frontendState.tui).toMatchObject({
+      activeTab: 2,
+      resultsPanelWidth: 42,
+      sortAscending: true,
+    });
+  });
+
+  test("legacy-tui-state-import-reports-receipt-and-coded-errors", () => {
+    const root = makeRoot(fixture("unknown_entries.yaml"));
+    const legacyPath = join(root, "state.json");
+    writeFileSync(
+      legacyPath,
+      '{"active_tab":3,"results_panel_width":48,"sort_ascending":true}',
+    );
+
+    const outcome = importLegacyTuiStateIntoUserSettings(root, legacyPath);
+
+    expect(outcome.status).toBe("applied");
+    expect(outcome.sourcePath).toBe(legacyPath);
+    expect(outcome.sourceRevision).toBe(outcome.backupRevision);
+    expect(outcome.publishedSettingsRevision?.startsWith("sha256:")).toBe(
+      true,
+    );
+    expect(readFileSync(outcome.backupPath!)).toEqual(readFileSync(legacyPath));
+    expect(outcome.receipt?.settingsPath).toBe(join(root, "CLASSIC Settings.yaml"));
+
+    const restored = outcome.receipt!.restore(root);
+    expect(restored.status).toBe("restored");
+    expect(restored.revision?.startsWith("sha256:")).toBe(true);
+
+    writeFileSync(legacyPath, "{");
+    let caught: unknown;
+    try {
+      importLegacyTuiStateIntoUserSettings(root, legacyPath);
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(Error);
+    const importError = caught as Error & { code?: string };
+    expect(importError.code).toBe("legacy_tui_state_parse_failed");
+    expect(importError.message).toContain("legacy TUI state is not valid JSON");
+  });
 });
 
 describe("User Settings Update commit", () => {
@@ -829,6 +975,13 @@ describe("User Settings Update commit", () => {
       updateCheck: false,
       updateSource: "Both",
       autoSwitchAfterScan: true,
+      windowGeometry: {
+        mainTab: {
+          maximized: true,
+          width: 1024,
+          height: 768,
+        },
+      },
       unsolvedLogsDestination: "D:/CLASSIC/Unsolved",
     };
     const preview = previewUserSettingsUpdate(root, update);
@@ -850,6 +1003,11 @@ describe("User Settings Update commit", () => {
     expect(committed.updatePreferences.updateCheck).toBe(false);
     expect(committed.updatePreferences.updateSource).toBe("Both");
     expect(committed.frontendState.preferences.autoSwitchAfterScan).toBe(true);
+    expect(committed.frontendState.windowGeometry.mainTab).toMatchObject({
+      maximized: true,
+      width: 1024,
+      height: 768,
+    });
     expect(committed.crashLogScanSettings.unsolvedLogsDestination).toBe(
       "D:/CLASSIC/Unsolved",
     );
@@ -858,6 +1016,7 @@ describe("User Settings Update commit", () => {
     // Unknown nodes are not projected by the DTO, so verify their semantic payload survived.
     const published = readFileSync(path, "utf8");
     expect(published).toContain("Future Scan Knob");
+    expect(published).toContain("future_flag: true");
     expect(published).toContain("community_frontend");
     expect(published).toContain("ThirdPartyPlugin");
     expect(published).toContain("threshold: 1.25");

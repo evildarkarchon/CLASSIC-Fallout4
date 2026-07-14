@@ -51,6 +51,8 @@ private slots:
     void accepted_paths_commit_as_one_user_settings_update();
     /// A stale expected revision reports conflict without overwriting a newer commit.
     void stale_revision_reports_conflict_without_overwriting_newer_settings();
+    /// One explicit remembered-path action leaves every unselected path unchanged.
+    void one_remembered_path_action_preserves_the_other_displayed_path();
     /// Rejected path updates retain the canonical field identity for GUI feedback.
     void rejected_path_update_preserves_its_field_diagnostic();
     /// Malformed settings expose degraded state and diagnostics without rewriting bytes.
@@ -238,6 +240,24 @@ void GameSetupUserSettingsTests::stale_revision_reports_conflict_without_overwri
     QVERIFY(current.documentsRoot.has_value());
     QCOMPARE(current.customScanInput.value(), QStringLiteral("E:/Newer Crash Logs"));
     QCOMPARE(current.documentsRoot.value(), QStringLiteral("D:/Documents/My Games/Fallout4"));
+}
+
+void GameSetupUserSettingsTests::one_remembered_path_action_preserves_the_other_displayed_path()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    writeSettings(root.path(), completeSettings());
+    const auto displayed = classic::gui::GameSetupUserSettings::open(root.path());
+
+    classic::gui::GameSetupPathChanges stagingAction;
+    stagingAction.modsRoot = {true, QStringLiteral("E:/Updated Mods")};
+    const auto outcome =
+        classic::gui::GameSetupUserSettings::commitSelectedPaths(root.path(), displayed.revision, stagingAction);
+
+    QCOMPARE(outcome.status, QStringLiteral("committed"));
+    const auto current = classic::gui::GameSetupUserSettings::open(root.path());
+    QCOMPARE(current.modsRoot.value(), QStringLiteral("E:/Updated Mods"));
+    QCOMPARE(current.customScanInput, displayed.customScanInput);
 }
 
 void GameSetupUserSettingsTests::rejected_path_update_preserves_its_field_diagnostic()

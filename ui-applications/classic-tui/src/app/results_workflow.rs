@@ -13,7 +13,13 @@ impl App {
 
     pub(super) fn refresh_results_reports_with_status(&mut self, show_status: bool) {
         let previous_selected_path = self.results.selected_report_path.clone();
-        self.results.reports = discover_result_reports(self.config.paths.scan_custom.clone());
+        self.results.reports = discover_result_reports(
+            &self.classic_root,
+            self.settings
+                .crash_log_scan_settings()
+                .custom_scan_input()
+                .map(PathBuf::from),
+        );
         self.results.last_snapshot_hash = hash_reports_snapshot(&self.results.reports);
         self.results.last_poll_at = Some(Instant::now());
         self.apply_results_filter_sort();
@@ -49,8 +55,14 @@ impl App {
         }
 
         let now = Instant::now();
+        let refresh_interval = Duration::from_millis(
+            self.settings
+                .frontend_state()
+                .preferences()
+                .auto_refresh_interval_ms(),
+        );
         if let Some(last_poll) = self.results.last_poll_at
-            && now.duration_since(last_poll) < Duration::from_secs(2)
+            && now.duration_since(last_poll) < refresh_interval
         {
             return;
         }
@@ -58,7 +70,11 @@ impl App {
         self.results.last_poll_at = Some(now);
 
         let current_snapshot = hash_reports_snapshot(&discover_result_reports(
-            self.config.paths.scan_custom.clone(),
+            &self.classic_root,
+            self.settings
+                .crash_log_scan_settings()
+                .custom_scan_input()
+                .map(PathBuf::from),
         ));
 
         if current_snapshot != self.results.last_snapshot_hash {
@@ -147,6 +163,10 @@ impl App {
     pub fn results_toggle_sort(&mut self) {
         self.results.sort_ascending = !self.results.sort_ascending;
         self.apply_results_filter_sort();
+        if let Err(error) = self.persist_state_update() {
+            self.scan_status = error;
+            self.status_clear_at = None;
+        }
     }
 
     pub fn results_push_search_char(&mut self, ch: char) {
@@ -458,15 +478,11 @@ impl App {
     }
 }
 
-fn discover_result_reports(custom_scan: Option<PathBuf>) -> Vec<ReportEntry> {
+fn discover_result_reports(classic_root: &Path, custom_scan: Option<PathBuf>) -> Vec<ReportEntry> {
     let mut entries = Vec::new();
     let mut seen = HashSet::new();
 
-    let mut directories = vec![
-        std::env::current_dir()
-            .unwrap_or_default()
-            .join("Crash Logs"),
-    ];
+    let mut directories = vec![classic_root.join("Crash Logs")];
     if let Some(custom) = custom_scan {
         directories.push(custom);
     }

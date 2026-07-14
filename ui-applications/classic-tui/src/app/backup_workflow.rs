@@ -98,11 +98,11 @@ impl App {
     }
 
     fn game_root_for_backup(&self) -> PathBuf {
-        if self.config.paths.game_root.as_os_str().is_empty() {
-            std::env::current_dir().unwrap_or_default()
-        } else {
-            self.config.paths.game_root.clone()
-        }
+        self.settings
+            .game_setup_settings()
+            .game_root()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| self.classic_root.clone())
     }
 
     fn run_backup_operation(&mut self, backup_type: BackupType, operation: BackupOperation) {

@@ -42,15 +42,19 @@ use classic_settings_core::{
     YamlOperations, must_not_be_none as core_must_not_be_none, yaml_cache_stats,
 };
 use classic_user_settings_core::{
-    CommitEligibility, DocumentClassification, MigrationChangeKind, MigrationPlanningOutcome,
-    PreferenceOrigin, Revision, SourceLocation, UserSettings,
-    UserSettingsCommitOutcome as CoreUserSettingsCommitOutcome,
+    CommitEligibility, DocumentClassification, GuiWindow,
+    LegacyTuiStateImportOutcome as CoreLegacyTuiStateImportOutcome,
+    LegacyTuiStateImportRestoreOutcome as CoreLegacyTuiStateImportRestoreOutcome,
+    MigrationChangeKind, MigrationPlanningOutcome, PreferenceOrigin, Revision, SourceLocation,
+    UserSettings, UserSettingsCommitOutcome as CoreUserSettingsCommitOutcome,
+    UserSettingsFrontendTransitionOutcome as CoreUserSettingsFrontendTransitionOutcome,
     UserSettingsMigrationApplyOutcome as CoreUserSettingsMigrationApplyOutcome,
     UserSettingsMigrationPlan, UserSettingsMigrationReceipt as CoreUserSettingsMigrationReceipt,
     UserSettingsMigrationRestoreOutcome as CoreUserSettingsMigrationRestoreOutcome,
     UserSettingsSchemaVersion, UserSettingsUpdate as CoreUserSettingsUpdate,
     UserSettingsUpdateField as CoreUserSettingsUpdateField,
     UserSettingsUpdatePreview as CoreUserSettingsUpdatePreview, WindowGeometry,
+    import_legacy_tui_state,
 };
 use std::{collections::BTreeMap, path::Path};
 use yaml_rust2::Yaml;
@@ -67,6 +71,11 @@ pub struct YamlOps {
 /// only the receipt returned by the conflict-safe Rust core can authorize restore.
 pub struct UserSettingsMigrationApplyHandle {
     state: UserSettingsMigrationApplyState,
+}
+
+/// Opaque owner of a legacy TUI import outcome and its unforgeable applied receipt.
+pub struct LegacyTuiStateImportHandle {
+    outcome: CoreLegacyTuiStateImportOutcome,
 }
 
 /// Internal representation of either an applied core receipt or a preflight/core conflict.
@@ -716,7 +725,8 @@ fn user_settings_preview_update(
     update: &ffi::UserSettingsUpdateDto,
 ) -> ffi::UserSettingsUpdatePreviewDto {
     let settings = UserSettings::open(Path::new(classic_root));
-    user_settings_update_preview_dto(settings.preview_update(core_user_settings_update(update)))
+    let (update, bridge_diagnostics) = core_user_settings_update(update);
+    user_settings_update_preview_dto(settings.preview_update(update), bridge_diagnostics)
 }
 
 /// Explicitly previews first-run User Settings creation from Rust-owned published defaults.
@@ -728,14 +738,26 @@ fn user_settings_preview_bootstrap(
     update: &ffi::UserSettingsUpdateDto,
 ) -> ffi::UserSettingsUpdatePreviewDto {
     let settings = UserSettings::open(Path::new(classic_root));
-    user_settings_update_preview_dto(settings.preview_bootstrap(core_user_settings_update(update)))
+    let (update, bridge_diagnostics) = core_user_settings_update(update);
+    user_settings_update_preview_dto(settings.preview_bootstrap(update), bridge_diagnostics)
 }
 
 /// Flattens a core update preview into the shared CXX representation.
 fn user_settings_update_preview_dto(
     preview: CoreUserSettingsUpdatePreview,
+    mut bridge_diagnostics: Vec<ffi::UserSettingsUpdateDiagnosticDto>,
 ) -> ffi::UserSettingsUpdatePreviewDto {
     match preview {
+        CoreUserSettingsUpdatePreview::Accepted(_) if !bridge_diagnostics.is_empty() => {
+            ffi::UserSettingsUpdatePreviewDto {
+                accepted: false,
+                base_revision: String::new(),
+                accepted_fields: Vec::new(),
+                formid_database_games: Vec::new(),
+                formid_database_paths: Vec::new(),
+                diagnostics: bridge_diagnostics,
+            }
+        }
         CoreUserSettingsUpdatePreview::Accepted(accepted) => {
             let databases = accepted.fields().iter().find_map(|field| match field {
                 CoreUserSettingsUpdateField::FormIdDatabases(databases) => Some(databases),
@@ -757,14 +779,17 @@ fn user_settings_update_preview_dto(
                 diagnostics: Vec::new(),
             }
         }
-        CoreUserSettingsUpdatePreview::Rejected(diagnostics) => ffi::UserSettingsUpdatePreviewDto {
-            accepted: false,
-            base_revision: String::new(),
-            accepted_fields: Vec::new(),
-            formid_database_games: Vec::new(),
-            formid_database_paths: Vec::new(),
-            diagnostics: diagnostics.iter().map(update_diagnostic_dto).collect(),
-        },
+        CoreUserSettingsUpdatePreview::Rejected(diagnostics) => {
+            bridge_diagnostics.extend(diagnostics.iter().map(update_diagnostic_dto));
+            ffi::UserSettingsUpdatePreviewDto {
+                accepted: false,
+                base_revision: String::new(),
+                accepted_fields: Vec::new(),
+                formid_database_games: Vec::new(),
+                formid_database_paths: Vec::new(),
+                diagnostics: bridge_diagnostics,
+            }
+        }
     }
 }
 
@@ -778,6 +803,193 @@ fn user_settings_commit_update(
     update: &ffi::UserSettingsUpdateDto,
 ) -> Result<ffi::UserSettingsCommitResultDto, String> {
     commit_user_settings_update(classic_root, base_revision, update, false)
+}
+
+/// Explicitly imports one retired TUI `state.json` into the canonical User Settings store.
+fn user_settings_import_legacy_tui_state(
+    classic_root: &str,
+    legacy_state_path: &str,
+) -> Result<Box<LegacyTuiStateImportHandle>, String> {
+    import_legacy_tui_state(Path::new(classic_root), Path::new(legacy_state_path))
+        .map(|outcome| Box::new(LegacyTuiStateImportHandle { outcome }))
+        .map_err(|error| format!("{}: {}", error.code(), error.message()))
+}
+
+/// Returns the inspectable import outcome while keeping any applied receipt opaque.
+fn user_settings_legacy_tui_import_outcome(
+    handle: &LegacyTuiStateImportHandle,
+) -> ffi::LegacyTuiStateImportOutcomeDto {
+    legacy_tui_state_import_outcome_dto(&handle.outcome)
+}
+
+/// Restores the prior User Settings state through the retained import receipt.
+fn user_settings_restore_legacy_tui_import(
+    classic_root: &str,
+    handle: &LegacyTuiStateImportHandle,
+) -> Result<ffi::LegacyTuiStateImportRestoreOutcomeDto, String> {
+    let CoreLegacyTuiStateImportOutcome::Applied(receipt) = &handle.outcome else {
+        return Err(
+            "legacy_tui_state_restore_receipt_unavailable: only an applied import has a receipt"
+                .to_string(),
+        );
+    };
+    match receipt
+        .restore(Path::new(classic_root))
+        .map_err(|error| format!("{}: {}", error.code(), error.message()))?
+    {
+        CoreLegacyTuiStateImportRestoreOutcome::Restored { revision } => {
+            Ok(ffi::LegacyTuiStateImportRestoreOutcomeDto {
+                status: "restored".to_string(),
+                revision: revision_token(&revision),
+                expected_revision: String::new(),
+                actual_revision: String::new(),
+            })
+        }
+        CoreLegacyTuiStateImportRestoreOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        } => Ok(ffi::LegacyTuiStateImportRestoreOutcomeDto {
+            status: "conflict".to_string(),
+            revision: String::new(),
+            expected_revision: revision_token(&expected_revision),
+            actual_revision: revision_token(&actual_revision),
+        }),
+    }
+}
+
+/// Flattens every import outcome into one CXX-safe tagged DTO.
+fn legacy_tui_state_import_outcome_dto(
+    outcome: &CoreLegacyTuiStateImportOutcome,
+) -> ffi::LegacyTuiStateImportOutcomeDto {
+    let mut dto = ffi::LegacyTuiStateImportOutcomeDto {
+        status: String::new(),
+        classification: String::new(),
+        revision: String::new(),
+        source_path: String::new(),
+        backup_path: String::new(),
+        source_revision: String::new(),
+        backup_revision: String::new(),
+        base_settings_revision: String::new(),
+        published_settings_revision: String::new(),
+        expected_revision: String::new(),
+        actual_revision: String::new(),
+        settings_path: String::new(),
+        has_settings_backup_path: false,
+        settings_backup_path: String::new(),
+    };
+    match outcome {
+        CoreLegacyTuiStateImportOutcome::NoLegacySource => {
+            dto.status = "no_legacy_source".to_string();
+        }
+        CoreLegacyTuiStateImportOutcome::RequiresSettingsMigration {
+            classification,
+            revision,
+        } => {
+            dto.status = "requires_settings_migration".to_string();
+            dto.classification = document_classification_token(*classification).to_string();
+            dto.revision = revision_token(revision);
+        }
+        CoreLegacyTuiStateImportOutcome::UntrustedSettingsBase {
+            classification,
+            revision,
+        } => {
+            dto.status = "untrusted_settings_base".to_string();
+            dto.classification = document_classification_token(*classification).to_string();
+            dto.revision = revision_token(revision);
+        }
+        CoreLegacyTuiStateImportOutcome::Applied(receipt) => {
+            dto.status = "applied".to_string();
+            dto.source_path = receipt.source_path().display().to_string();
+            dto.backup_path = receipt.backup_path().display().to_string();
+            dto.source_revision = revision_token(receipt.source_revision());
+            dto.backup_revision = revision_token(receipt.backup_revision());
+            dto.base_settings_revision = revision_token(receipt.base_settings_revision());
+            dto.published_settings_revision = revision_token(receipt.published_settings_revision());
+            dto.settings_path = receipt.settings_path().display().to_string();
+            dto.has_settings_backup_path = receipt.settings_backup_path().is_some();
+            dto.settings_backup_path = receipt
+                .settings_backup_path()
+                .map_or_else(String::new, |path| path.display().to_string());
+        }
+        CoreLegacyTuiStateImportOutcome::SettingsConflict {
+            expected_revision,
+            actual_revision,
+        } => {
+            dto.status = "settings_conflict".to_string();
+            dto.expected_revision = revision_token(expected_revision);
+            dto.actual_revision = revision_token(actual_revision);
+        }
+        CoreLegacyTuiStateImportOutcome::LegacySourceConflict {
+            expected_revision,
+            actual_revision,
+        } => {
+            dto.status = "legacy_source_conflict".to_string();
+            dto.expected_revision = revision_token(expected_revision);
+            dto.actual_revision = revision_token(actual_revision);
+        }
+    }
+    dto
+}
+
+/// Publishes one replay-safe frontend geometry transition through the Rust-owned retry policy.
+fn user_settings_commit_frontend_geometry_transition(
+    classic_root: &str,
+    base_revision: &str,
+    transition: &ffi::UserSettingsWindowGeometryUpdateDto,
+) -> Result<ffi::UserSettingsCommitResultDto, String> {
+    let Some(expected_revision) = revision_from_token(base_revision) else {
+        return Err(format!(
+            "invalid_user_settings_revision: unrecognized revision token {base_revision:?}"
+        ));
+    };
+    let Some(window) = GuiWindow::parse(&transition.tab) else {
+        return Ok(ffi::UserSettingsCommitResultDto {
+            status: "rejected".to_string(),
+            revision: String::new(),
+            expected_revision: base_revision.to_string(),
+            actual_revision: String::new(),
+            diagnostics: vec![invalid_gui_window_diagnostic(&transition.tab)],
+        });
+    };
+
+    match UserSettings::commit_frontend_geometry_transition(
+        Path::new(classic_root),
+        &expected_revision,
+        window,
+        transition.maximized,
+        transition.width,
+        transition.height,
+    ) {
+        Ok(CoreUserSettingsFrontendTransitionOutcome::Committed { revision }) => {
+            Ok(ffi::UserSettingsCommitResultDto {
+                status: "committed".to_string(),
+                revision: revision_token(&revision),
+                expected_revision: base_revision.to_string(),
+                actual_revision: String::new(),
+                diagnostics: Vec::new(),
+            })
+        }
+        Ok(CoreUserSettingsFrontendTransitionOutcome::Rejected { diagnostics }) => {
+            Ok(ffi::UserSettingsCommitResultDto {
+                status: "rejected".to_string(),
+                revision: String::new(),
+                expected_revision: base_revision.to_string(),
+                actual_revision: String::new(),
+                diagnostics: diagnostics.iter().map(update_diagnostic_dto).collect(),
+            })
+        }
+        Ok(CoreUserSettingsFrontendTransitionOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        }) => Ok(ffi::UserSettingsCommitResultDto {
+            status: "conflict".to_string(),
+            revision: String::new(),
+            expected_revision: revision_token(&expected_revision),
+            actual_revision: revision_token(&actual_revision),
+            diagnostics: Vec::new(),
+        }),
+        Err(error) => Err(error.to_string()),
+    }
 }
 
 /// Commits an explicitly previewed first-run bootstrap against a missing revision.
@@ -817,20 +1029,33 @@ fn commit_user_settings_update(
         });
     }
 
+    let (update, mut bridge_diagnostics) = core_user_settings_update(update);
     let preview = if bootstrap {
-        settings.preview_bootstrap(core_user_settings_update(update))
+        settings.preview_bootstrap(update)
     } else {
-        settings.preview_update(core_user_settings_update(update))
+        settings.preview_update(update)
     };
     let accepted = match preview {
-        CoreUserSettingsUpdatePreview::Accepted(accepted) => accepted,
-        CoreUserSettingsUpdatePreview::Rejected(diagnostics) => {
+        CoreUserSettingsUpdatePreview::Accepted(accepted) if bridge_diagnostics.is_empty() => {
+            accepted
+        }
+        CoreUserSettingsUpdatePreview::Accepted(_) => {
             return Ok(ffi::UserSettingsCommitResultDto {
                 status: "rejected".to_string(),
                 revision: String::new(),
                 expected_revision: base_revision.to_string(),
                 actual_revision: String::new(),
-                diagnostics: diagnostics.iter().map(update_diagnostic_dto).collect(),
+                diagnostics: bridge_diagnostics,
+            });
+        }
+        CoreUserSettingsUpdatePreview::Rejected(diagnostics) => {
+            bridge_diagnostics.extend(diagnostics.iter().map(update_diagnostic_dto));
+            return Ok(ffi::UserSettingsCommitResultDto {
+                status: "rejected".to_string(),
+                revision: String::new(),
+                expected_revision: base_revision.to_string(),
+                actual_revision: String::new(),
+                diagnostics: bridge_diagnostics,
             });
         }
     };
@@ -874,9 +1099,17 @@ fn update_diagnostic_dto(
 /// Converts the CXX request DTO into the Rust-owned update builder without validation.
 ///
 /// Raw domain strings remain unchanged so `UserSettings::preview_update` can validate
-/// every requested field in one pass and return all diagnostics together.
-fn core_user_settings_update(update: &ffi::UserSettingsUpdateDto) -> CoreUserSettingsUpdate {
+/// every requested field in one pass and return all diagnostics together. Geometry tab
+/// tokens are the one adapter-owned enum boundary; unknown tokens are returned alongside
+/// the core request as structured diagnostics so neither preview nor commit can accept them.
+fn core_user_settings_update(
+    update: &ffi::UserSettingsUpdateDto,
+) -> (
+    CoreUserSettingsUpdate,
+    Vec<ffi::UserSettingsUpdateDiagnosticDto>,
+) {
     let mut core = CoreUserSettingsUpdate::new();
+    let mut diagnostics = Vec::new();
     if update.has_update_check {
         core = core.with_update_check(update.update_check);
     }
@@ -885,6 +1118,21 @@ fn core_user_settings_update(update: &ffi::UserSettingsUpdateDto) -> CoreUserSet
     }
     if update.has_auto_switch_after_scan {
         core = core.with_auto_switch_after_scan(update.auto_switch_after_scan);
+    }
+    for geometry in &update.window_geometry_updates {
+        let Some(window) = GuiWindow::parse(&geometry.tab) else {
+            diagnostics.push(invalid_gui_window_diagnostic(&geometry.tab));
+            continue;
+        };
+        core =
+            core.with_window_geometry(window, geometry.maximized, geometry.width, geometry.height);
+    }
+    if update.has_tui_remembered_state {
+        core = core.with_tui_remembered_state(
+            update.tui_active_tab,
+            update.tui_results_panel_width,
+            update.tui_sort_ascending,
+        );
     }
     if update.has_managed_game {
         core = core.with_managed_game(update.managed_game.clone());
@@ -977,7 +1225,19 @@ fn core_user_settings_update(update: &ffi::UserSettingsUpdateDto) -> CoreUserSet
     if update.has_max_concurrent_scans {
         core = core.with_max_concurrent_scans(update.max_concurrent_scans);
     }
-    core
+    (core, diagnostics)
+}
+
+/// Returns a structured bridge-level rejection for a geometry tab token the core cannot name.
+fn invalid_gui_window_diagnostic(tab: &str) -> ffi::UserSettingsUpdateDiagnosticDto {
+    ffi::UserSettingsUpdateDiagnosticDto {
+        has_field_path: true,
+        field_path: "/UI/window_geometry".to_string(),
+        code: "invalid_enum_gui_window".to_string(),
+        message: format!(
+            "GUI window tab must be main_tab, backups_tab, articles_tab, or results_tab; found {tab:?}"
+        ),
+    }
 }
 
 /// Flattens game-keyed FormID paths into CXX-safe rows while retaining games whose
@@ -1005,6 +1265,8 @@ fn user_settings_update_field_dto(
     let (value_kind, bool_value, has_string_value, string_value, u32_value) = match field {
         CoreUserSettingsUpdateField::UpdateCheck(value)
         | CoreUserSettingsUpdateField::AutoSwitchAfterScan(value)
+        | CoreUserSettingsUpdateField::WindowMaximized(_, value)
+        | CoreUserSettingsUpdateField::TuiSortAscending(value)
         | CoreUserSettingsUpdateField::FcxMode(value)
         | CoreUserSettingsUpdateField::SimplifyLogs(value)
         | CoreUserSettingsUpdateField::ShowStatistics(value)
@@ -1038,8 +1300,16 @@ fn user_settings_update_field_dto(
             value.clone().unwrap_or_default(),
             0,
         ),
-        CoreUserSettingsUpdateField::MaxConcurrentScans(value) => {
+        CoreUserSettingsUpdateField::MaxConcurrentScans(value)
+        | CoreUserSettingsUpdateField::WindowWidth(_, value)
+        | CoreUserSettingsUpdateField::WindowHeight(_, value) => {
             ("u32", false, false, String::new(), *value)
+        }
+        CoreUserSettingsUpdateField::TuiActiveTab(value) => {
+            ("u32", false, false, String::new(), u32::from(*value))
+        }
+        CoreUserSettingsUpdateField::TuiResultsPanelWidth(value) => {
+            ("u32", false, false, String::new(), u32::from(*value))
         }
     };
 
@@ -1156,6 +1426,24 @@ fn revision_token(revision: &Revision) -> String {
             token
         }
     }
+}
+
+/// Parses the stable revision representation accepted at the CXX boundary.
+fn revision_from_token(token: &str) -> Option<Revision> {
+    match token {
+        "missing" => return Some(Revision::Missing),
+        "unavailable" => return Some(Revision::Unavailable),
+        _ => {}
+    }
+    let encoded = token.strip_prefix("sha256:")?;
+    if encoded.len() != 64 {
+        return None;
+    }
+    let mut digest = [0_u8; 32];
+    for (index, byte) in digest.iter_mut().enumerate() {
+        *byte = u8::from_str_radix(&encoded[index * 2..index * 2 + 2], 16).ok()?;
+    }
+    Some(Revision::ContentSha256(digest))
 }
 
 // ── Construction ────────────────────────────────────────────────────
@@ -1856,6 +2144,17 @@ mod ffi {
         frontend_state: FrontendStateDto,
     }
 
+    /// Caller-authored geometry transition for one maintained GUI window.
+    ///
+    /// `tab` uses one of the stable `main_tab`, `backups_tab`, `articles_tab`, or
+    /// `results_tab` tokens. Signed dimensions are retained for Rust-owned validation.
+    struct UserSettingsWindowGeometryUpdateDto {
+        tab: String,
+        maximized: bool,
+        width: i64,
+        height: i64,
+    }
+
     /// Caller-authored multi-field User Settings Update request.
     ///
     /// Each `has_*` flag distinguishes an omitted field from a requested false,
@@ -1868,6 +2167,11 @@ mod ffi {
         update_source: String,
         has_auto_switch_after_scan: bool,
         auto_switch_after_scan: bool,
+        window_geometry_updates: Vec<UserSettingsWindowGeometryUpdateDto>,
+        has_tui_remembered_state: bool,
+        tui_active_tab: i64,
+        tui_results_panel_width: i64,
+        tui_sort_ascending: bool,
         has_managed_game: bool,
         managed_game: String,
         has_game_version_selection: bool,
@@ -1960,9 +2264,39 @@ mod ffi {
         diagnostics: Vec<UserSettingsUpdateDiagnosticDto>,
     }
 
+    /// Tagged result of explicitly importing retired TUI state into User Settings.
+    ///
+    /// Only fields associated with `status` are populated. Operational failures
+    /// propagate as `rust::Error` whose message begins with the stable core code.
+    struct LegacyTuiStateImportOutcomeDto {
+        status: String,
+        classification: String,
+        revision: String,
+        source_path: String,
+        backup_path: String,
+        source_revision: String,
+        backup_revision: String,
+        base_settings_revision: String,
+        published_settings_revision: String,
+        expected_revision: String,
+        actual_revision: String,
+        settings_path: String,
+        has_settings_backup_path: bool,
+        settings_backup_path: String,
+    }
+
+    /// Result of restoring User Settings through an applied legacy import receipt.
+    struct LegacyTuiStateImportRestoreOutcomeDto {
+        status: String,
+        revision: String,
+        expected_revision: String,
+        actual_revision: String,
+    }
+
     extern "Rust" {
         type YamlOps;
         type UserSettingsMigrationApplyHandle;
+        type LegacyTuiStateImportHandle;
 
         fn yaml_file_as_str(f: YamlFile) -> String;
         fn yaml_file_description(f: YamlFile) -> String;
@@ -2034,6 +2368,30 @@ mod ffi {
             classic_root: &str,
             base_revision: &str,
             update: &UserSettingsUpdateDto,
+        ) -> Result<UserSettingsCommitResultDto>;
+
+        /// Explicitly import one retired TUI state file into canonical User Settings.
+        fn user_settings_import_legacy_tui_state(
+            classic_root: &str,
+            legacy_state_path: &str,
+        ) -> Result<Box<LegacyTuiStateImportHandle>>;
+
+        /// Inspect an import result without exposing its restoration receipt.
+        fn user_settings_legacy_tui_import_outcome(
+            handle: &LegacyTuiStateImportHandle,
+        ) -> LegacyTuiStateImportOutcomeDto;
+
+        /// Restore through the opaque receipt retained by an applied import.
+        fn user_settings_restore_legacy_tui_import(
+            classic_root: &str,
+            handle: &LegacyTuiStateImportHandle,
+        ) -> Result<LegacyTuiStateImportRestoreOutcomeDto>;
+
+        /// Commit one replay-safe frontend geometry transition with one Rust-owned retry.
+        fn user_settings_commit_frontend_geometry_transition(
+            classic_root: &str,
+            base_revision: &str,
+            transition: &UserSettingsWindowGeometryUpdateDto,
         ) -> Result<UserSettingsCommitResultDto>;
 
         /// Commit an explicitly previewed missing-document bootstrap.

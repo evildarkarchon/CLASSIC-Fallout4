@@ -3,12 +3,15 @@
 use classic_shared::without_gil;
 use classic_user_settings_core::{
     AcceptedUserSettingsUpdate, CommitEligibility, CrashLogScanSettings, DocumentClassification,
-    FrontendPreferences, FrontendState, GameSetupSettings, GuiWindowGeometry, MigrationChange,
-    MigrationChangeKind, MigrationDiagnostic, MigrationEndpoint, MigrationPlanningOutcome,
-    PreferenceOrigin, Revision, SourceLocation, TuiRememberedState, UserSettings,
-    UserSettingsCommitOutcome, UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan,
-    UserSettingsMigrationReceipt, UserSettingsMigrationRestoreOutcome, UserSettingsSchemaVersion,
-    UserSettingsUpdate, UserSettingsUpdateField, UserSettingsUpdatePreview, WindowGeometry,
+    FrontendPreferences, FrontendState, GameSetupSettings, GuiWindow, GuiWindowGeometry,
+    LegacyTuiStateImportOutcome, LegacyTuiStateImportReceipt, LegacyTuiStateImportRestoreOutcome,
+    MigrationChange, MigrationChangeKind, MigrationDiagnostic, MigrationEndpoint,
+    MigrationPlanningOutcome, PreferenceOrigin, Revision, SourceLocation, TuiRememberedState,
+    UserSettings, UserSettingsCommitOutcome,
+    UserSettingsFrontendTransitionOutcome as CoreUserSettingsFrontendTransitionOutcome,
+    UserSettingsMigrationApplyOutcome, UserSettingsMigrationPlan, UserSettingsMigrationReceipt,
+    UserSettingsMigrationRestoreOutcome, UserSettingsSchemaVersion, UserSettingsUpdate,
+    UserSettingsUpdateField, UserSettingsUpdatePreview, WindowGeometry, import_legacy_tui_state,
 };
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
@@ -20,6 +23,13 @@ pyo3::create_exception!(
     UserSettingsCommitError,
     PyRuntimeError,
     "Operational failure while publishing an accepted User Settings Update."
+);
+
+pyo3::create_exception!(
+    classic_user_settings,
+    LegacyTuiStateImportError,
+    PyRuntimeError,
+    "Operational failure while importing retired TUI state into User Settings."
 );
 
 pyo3::create_exception!(
@@ -314,6 +324,44 @@ impl PyUserSettingsUpdate {
         self.inner = std::mem::take(&mut self.inner).with_auto_switch_after_scan(value);
     }
 
+    /// Requests remembered geometry for one maintained GUI window token.
+    ///
+    /// Raises `ValueError` when `tab` is not one of the stable tokens exposed by
+    /// the frontend-state contract; dimensions remain preview-validated with the full update.
+    fn set_window_geometry(
+        &mut self,
+        tab: String,
+        maximized: bool,
+        width: i64,
+        height: i64,
+    ) -> PyResult<()> {
+        let window = GuiWindow::parse(&tab).ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "unknown GUI window '{tab}'; expected one of: main_tab, backups_tab, articles_tab, results_tab"
+            ))
+        })?;
+        self.inner =
+            std::mem::take(&mut self.inner).with_window_geometry(window, maximized, width, height);
+        Ok(())
+    }
+
+    /// Requests one complete TUI remembered-state transition.
+    ///
+    /// The signed integer inputs remain preview-validated with the complete update so callers
+    /// receive the stable field-specific diagnostics for out-of-range values.
+    fn set_tui_remembered_state(
+        &mut self,
+        active_tab: i64,
+        results_panel_width: i64,
+        sort_ascending: bool,
+    ) {
+        self.inner = std::mem::take(&mut self.inner).with_tui_remembered_state(
+            active_tab,
+            results_panel_width,
+            sort_ascending,
+        );
+    }
+
     /// Requests a managed-game identifier for validation with the complete preview.
     fn set_managed_game(&mut self, value: String) {
         self.inner = std::mem::take(&mut self.inner).with_managed_game(value);
@@ -520,6 +568,165 @@ pub struct PyUserSettingsCommitOutcome {
     #[pyo3(get)]
     expected_revision: Option<String>,
     /// Latest on-disk revision, present only for `conflict`.
+    #[pyo3(get)]
+    actual_revision: Option<String>,
+}
+
+/// Structured result of one replay-safe frontend geometry transition.
+#[pyclass(
+    name = "UserSettingsFrontendTransitionOutcome",
+    frozen,
+    skip_from_py_object
+)]
+pub struct PyUserSettingsFrontendTransitionOutcome {
+    /// Result token: `committed`, `conflict`, or `rejected`.
+    #[pyo3(get)]
+    status: String,
+    /// Newly published revision, present only for `committed`.
+    #[pyo3(get)]
+    revision: Option<String>,
+    /// Final retry revision, present only for `conflict`.
+    #[pyo3(get)]
+    expected_revision: Option<String>,
+    /// Latest on-disk revision, present only for `conflict`.
+    #[pyo3(get)]
+    actual_revision: Option<String>,
+    /// Structured validation diagnostics, populated only for `rejected`.
+    #[pyo3(get)]
+    diagnostics: Vec<PyUserSettingsUpdateDiagnostic>,
+}
+
+/// Tagged result of explicitly importing retired TUI state into User Settings.
+#[pyclass(name = "LegacyTuiStateImportOutcome", frozen, skip_from_py_object)]
+pub struct PyLegacyTuiStateImportOutcome {
+    /// Outcome token identifying the no-op, applied, or conflict case.
+    #[pyo3(get)]
+    status: String,
+    /// Settings classification for migration or trust-gated outcomes.
+    #[pyo3(get)]
+    classification: Option<String>,
+    /// Settings revision for migration or trust-gated outcomes.
+    #[pyo3(get)]
+    revision: Option<String>,
+    /// Concrete retired state path, present only when applied.
+    #[pyo3(get)]
+    source_path: Option<String>,
+    /// Verified retained backup path, present only when applied.
+    #[pyo3(get)]
+    backup_path: Option<String>,
+    /// Revision of exact parsed legacy bytes, present only when applied.
+    #[pyo3(get)]
+    source_revision: Option<String>,
+    /// Independently verified backup revision, present only when applied.
+    #[pyo3(get)]
+    backup_revision: Option<String>,
+    /// User Settings base revision selected for an applied import.
+    #[pyo3(get)]
+    base_settings_revision: Option<String>,
+    /// User Settings revision published by an applied import.
+    #[pyo3(get)]
+    published_settings_revision: Option<String>,
+    /// Selected revision for either conflict outcome.
+    #[pyo3(get)]
+    expected_revision: Option<String>,
+    /// Revision found at the conflicting path.
+    #[pyo3(get)]
+    actual_revision: Option<String>,
+    /// Opaque verified receipt, present only after an applied import.
+    #[pyo3(get)]
+    receipt: Option<PyLegacyTuiStateImportReceipt>,
+}
+
+/// Opaque verified receipt authorizing restoration of one legacy TUI state import.
+#[pyclass(name = "LegacyTuiStateImportReceipt", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyLegacyTuiStateImportReceipt {
+    inner: LegacyTuiStateImportReceipt,
+}
+
+#[pymethods]
+impl PyLegacyTuiStateImportReceipt {
+    /// Returns the concrete retired `state.json` path left unchanged by import.
+    #[getter]
+    fn source_path(&self) -> String {
+        self.inner.source_path().display().to_string()
+    }
+
+    /// Returns the verified content-addressed backup of exact legacy bytes.
+    #[getter]
+    fn backup_path(&self) -> String {
+        self.inner.backup_path().display().to_string()
+    }
+
+    /// Returns the canonical User Settings path modified by import.
+    #[getter]
+    fn settings_path(&self) -> String {
+        self.inner.settings_path().display().to_string()
+    }
+
+    /// Returns the retained pre-import settings backup path when a document existed.
+    #[getter]
+    fn settings_backup_path(&self) -> Option<String> {
+        self.inner
+            .settings_backup_path()
+            .map(|path| path.display().to_string())
+    }
+
+    /// Returns the revision of the exact parsed legacy bytes.
+    #[getter]
+    fn source_revision(&self) -> String {
+        revision_token(self.inner.source_revision())
+    }
+
+    /// Returns the independently verified legacy backup revision.
+    #[getter]
+    fn backup_revision(&self) -> String {
+        revision_token(self.inner.backup_revision())
+    }
+
+    /// Returns the User Settings base revision selected by import.
+    #[getter]
+    fn base_settings_revision(&self) -> String {
+        revision_token(self.inner.base_settings_revision())
+    }
+
+    /// Returns the User Settings revision published by import.
+    #[getter]
+    fn published_settings_revision(&self) -> String {
+        revision_token(self.inner.published_settings_revision())
+    }
+
+    /// Restores the pre-import User Settings state through this verified receipt.
+    fn restore(
+        &self,
+        py: Python<'_>,
+        classic_root: String,
+    ) -> PyResult<PyLegacyTuiStateImportRestoreOutcome> {
+        let receipt = self.inner.clone();
+        let outcome = without_gil(py, move || receipt.restore(classic_root)).map_err(|error| {
+            LegacyTuiStateImportError::new_err(format!("{}: {}", error.code(), error.message()))
+        })?;
+        Ok(legacy_tui_state_import_restore_outcome_to_py(outcome))
+    }
+}
+
+/// Result of restoring User Settings through an applied legacy import receipt.
+#[pyclass(
+    name = "LegacyTuiStateImportRestoreOutcome",
+    frozen,
+    skip_from_py_object
+)]
+pub struct PyLegacyTuiStateImportRestoreOutcome {
+    /// Outcome token: `restored` or `conflict`.
+    #[pyo3(get)]
+    status: String,
+    /// Restored revision, present only when restored.
+    #[pyo3(get)]
+    revision: Option<String>,
+    /// Imported revision that had to remain current for restore.
+    #[pyo3(get)]
+    expected_revision: Option<String>,
+    /// Latest User Settings revision, present only when conflicted.
     #[pyo3(get)]
     actual_revision: Option<String>,
 }
@@ -828,6 +1035,42 @@ impl PyUserSettingsSnapshot {
         update_preview_to_py(self.inner.preview_bootstrap(update.inner.clone()))
     }
 
+    /// Publishes one GUI geometry transition with at most one Rust-owned conflict replay.
+    ///
+    /// `tab` must be a stable maintained-window token. Validation rejection and a second
+    /// concurrent edit return structured outcomes; operational persistence failures raise
+    /// `UserSettingsCommitError` without partially writing the transition.
+    fn commit_frontend_geometry_transition(
+        &self,
+        py: Python<'_>,
+        classic_root: String,
+        tab: String,
+        maximized: bool,
+        width: i64,
+        height: i64,
+    ) -> PyResult<PyUserSettingsFrontendTransitionOutcome> {
+        let window = GuiWindow::parse(&tab).ok_or_else(|| {
+            PyValueError::new_err(format!(
+                "unknown GUI window '{tab}'; expected one of: main_tab, backups_tab, articles_tab, results_tab"
+            ))
+        })?;
+        let expected_revision = self.inner.revision().clone();
+        let outcome = without_gil(py, move || {
+            UserSettings::commit_frontend_geometry_transition(
+                classic_root,
+                &expected_revision,
+                window,
+                maximized,
+                width,
+                height,
+            )
+        })
+        .map_err(|error| {
+            UserSettingsCommitError::new_err(format!("{}: {}", error.code(), error.message()))
+        })?;
+        Ok(frontend_transition_outcome_to_py(outcome))
+    }
+
     /// Produces a deterministic, reversible plan without accessing the filesystem.
     fn plan_migration(&self) -> PyUserSettingsMigrationPlanningOutcome {
         migration_planning_outcome_to_py(self.inner.plan_migration())
@@ -839,6 +1082,25 @@ impl PyUserSettingsSnapshot {
 #[pyfunction]
 pub fn open_user_settings(classic_root: String) -> PyUserSettingsSnapshot {
     user_settings_snapshot_to_py(UserSettings::open(classic_root))
+}
+
+/// Explicitly imports one retired TUI `state.json` into the canonical User Settings store.
+///
+/// Expected no-op and conflict cases return tagged data. Operational failures raise
+/// `LegacyTuiStateImportError` with the stable core code prefixed in its message.
+#[pyfunction]
+pub fn import_legacy_tui_state_into_user_settings(
+    py: Python<'_>,
+    classic_root: String,
+    legacy_state_path: String,
+) -> PyResult<PyLegacyTuiStateImportOutcome> {
+    let outcome = without_gil(py, move || {
+        import_legacy_tui_state(classic_root, legacy_state_path)
+    })
+    .map_err(|error| {
+        LegacyTuiStateImportError::new_err(format!("{}: {}", error.code(), error.message()))
+    })?;
+    Ok(legacy_tui_state_import_outcome_to_py(outcome))
 }
 
 /// Returns the Rust-owned published defaults without consulting the filesystem.
@@ -1076,6 +1338,143 @@ fn commit_outcome_to_py(outcome: UserSettingsCommitOutcome) -> PyUserSettingsCom
     }
 }
 
+/// Converts the replay-safe geometry transition outcome without flattening diagnostics.
+fn frontend_transition_outcome_to_py(
+    outcome: CoreUserSettingsFrontendTransitionOutcome,
+) -> PyUserSettingsFrontendTransitionOutcome {
+    match outcome {
+        CoreUserSettingsFrontendTransitionOutcome::Committed { revision } => {
+            PyUserSettingsFrontendTransitionOutcome {
+                status: "committed".to_string(),
+                revision: Some(revision_token(&revision)),
+                expected_revision: None,
+                actual_revision: None,
+                diagnostics: Vec::new(),
+            }
+        }
+        CoreUserSettingsFrontendTransitionOutcome::Rejected { diagnostics } => {
+            PyUserSettingsFrontendTransitionOutcome {
+                status: "rejected".to_string(),
+                revision: None,
+                expected_revision: None,
+                actual_revision: None,
+                diagnostics: diagnostics
+                    .into_iter()
+                    .map(|diagnostic| PyUserSettingsUpdateDiagnostic {
+                        field_path: diagnostic.field_path().map(ToOwned::to_owned),
+                        code: diagnostic.code().to_string(),
+                        message: diagnostic.message().to_string(),
+                    })
+                    .collect(),
+            }
+        }
+        CoreUserSettingsFrontendTransitionOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        } => PyUserSettingsFrontendTransitionOutcome {
+            status: "conflict".to_string(),
+            revision: None,
+            expected_revision: Some(revision_token(&expected_revision)),
+            actual_revision: Some(revision_token(&actual_revision)),
+            diagnostics: Vec::new(),
+        },
+    }
+}
+
+/// Converts every core legacy import outcome into one stable Python object shape.
+fn legacy_tui_state_import_outcome_to_py(
+    outcome: LegacyTuiStateImportOutcome,
+) -> PyLegacyTuiStateImportOutcome {
+    let mut result = PyLegacyTuiStateImportOutcome {
+        status: String::new(),
+        classification: None,
+        revision: None,
+        source_path: None,
+        backup_path: None,
+        source_revision: None,
+        backup_revision: None,
+        base_settings_revision: None,
+        published_settings_revision: None,
+        expected_revision: None,
+        actual_revision: None,
+        receipt: None,
+    };
+    match outcome {
+        LegacyTuiStateImportOutcome::NoLegacySource => {
+            result.status = "no_legacy_source".to_string();
+        }
+        LegacyTuiStateImportOutcome::RequiresSettingsMigration {
+            classification,
+            revision,
+        } => {
+            result.status = "requires_settings_migration".to_string();
+            result.classification = Some(classification_token(classification).to_string());
+            result.revision = Some(revision_token(&revision));
+        }
+        LegacyTuiStateImportOutcome::UntrustedSettingsBase {
+            classification,
+            revision,
+        } => {
+            result.status = "untrusted_settings_base".to_string();
+            result.classification = Some(classification_token(classification).to_string());
+            result.revision = Some(revision_token(&revision));
+        }
+        LegacyTuiStateImportOutcome::Applied(receipt) => {
+            result.status = "applied".to_string();
+            result.source_path = Some(receipt.source_path().display().to_string());
+            result.backup_path = Some(receipt.backup_path().display().to_string());
+            result.source_revision = Some(revision_token(receipt.source_revision()));
+            result.backup_revision = Some(revision_token(receipt.backup_revision()));
+            result.base_settings_revision = Some(revision_token(receipt.base_settings_revision()));
+            result.published_settings_revision =
+                Some(revision_token(receipt.published_settings_revision()));
+            result.receipt = Some(PyLegacyTuiStateImportReceipt { inner: receipt });
+        }
+        LegacyTuiStateImportOutcome::SettingsConflict {
+            expected_revision,
+            actual_revision,
+        } => {
+            result.status = "settings_conflict".to_string();
+            result.expected_revision = Some(revision_token(&expected_revision));
+            result.actual_revision = Some(revision_token(&actual_revision));
+        }
+        LegacyTuiStateImportOutcome::LegacySourceConflict {
+            expected_revision,
+            actual_revision,
+        } => {
+            result.status = "legacy_source_conflict".to_string();
+            result.expected_revision = Some(revision_token(&expected_revision));
+            result.actual_revision = Some(revision_token(&actual_revision));
+        }
+    }
+    result
+}
+
+/// Converts a core restore outcome while retaining conflict revision evidence.
+fn legacy_tui_state_import_restore_outcome_to_py(
+    outcome: LegacyTuiStateImportRestoreOutcome,
+) -> PyLegacyTuiStateImportRestoreOutcome {
+    match outcome {
+        LegacyTuiStateImportRestoreOutcome::Restored { revision } => {
+            PyLegacyTuiStateImportRestoreOutcome {
+                status: "restored".to_string(),
+                revision: Some(revision_token(&revision)),
+                expected_revision: None,
+                actual_revision: None,
+            }
+        }
+        LegacyTuiStateImportRestoreOutcome::Conflict {
+            expected_revision,
+            actual_revision,
+        } => PyLegacyTuiStateImportRestoreOutcome {
+            status: "conflict".to_string(),
+            revision: None,
+            expected_revision: Some(revision_token(&expected_revision)),
+            actual_revision: Some(revision_token(&actual_revision)),
+        },
+    }
+}
+
 /// Converts the core planning result into one stable Python outcome shape.
 fn migration_planning_outcome_to_py(
     outcome: MigrationPlanningOutcome,
@@ -1238,6 +1637,8 @@ fn update_field_to_py(field: &UserSettingsUpdateField) -> PyUserSettingsUpdateFi
     let value = match field {
         UserSettingsUpdateField::UpdateCheck(value)
         | UserSettingsUpdateField::AutoSwitchAfterScan(value)
+        | UserSettingsUpdateField::WindowMaximized(_, value)
+        | UserSettingsUpdateField::TuiSortAscending(value)
         | UserSettingsUpdateField::FcxMode(value)
         | UserSettingsUpdateField::SimplifyLogs(value)
         | UserSettingsUpdateField::ShowStatistics(value)
@@ -1272,6 +1673,16 @@ fn update_field_to_py(field: &UserSettingsUpdateField) -> PyUserSettingsUpdateFi
         }
         UserSettingsUpdateField::MaxConcurrentScans(value) => {
             PyUserSettingsUpdateValue::UnsignedInteger(*value)
+        }
+        UserSettingsUpdateField::WindowWidth(_, value)
+        | UserSettingsUpdateField::WindowHeight(_, value) => {
+            PyUserSettingsUpdateValue::UnsignedInteger(*value)
+        }
+        UserSettingsUpdateField::TuiActiveTab(value) => {
+            PyUserSettingsUpdateValue::UnsignedInteger(u32::from(*value))
+        }
+        UserSettingsUpdateField::TuiResultsPanelWidth(value) => {
+            PyUserSettingsUpdateValue::UnsignedInteger(u32::from(*value))
         }
     };
 
@@ -1358,6 +1769,10 @@ fn classic_user_settings(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyUserSettingsUpdateField>()?;
     module.add_class::<PyUserSettingsUpdatePreview>()?;
     module.add_class::<PyUserSettingsCommitOutcome>()?;
+    module.add_class::<PyUserSettingsFrontendTransitionOutcome>()?;
+    module.add_class::<PyLegacyTuiStateImportOutcome>()?;
+    module.add_class::<PyLegacyTuiStateImportReceipt>()?;
+    module.add_class::<PyLegacyTuiStateImportRestoreOutcome>()?;
     module.add_class::<PyUserSettingsSchemaVersion>()?;
     module.add_class::<PyUserSettingsMigrationEndpoint>()?;
     module.add_class::<PyUserSettingsMigrationChange>()?;
@@ -1376,7 +1791,15 @@ fn classic_user_settings(module: &Bound<'_, PyModule>) -> PyResult<()> {
         "UserSettingsMigrationError",
         module.py().get_type::<UserSettingsMigrationError>(),
     )?;
+    module.add(
+        "LegacyTuiStateImportError",
+        module.py().get_type::<LegacyTuiStateImportError>(),
+    )?;
     module.add_function(wrap_pyfunction!(open_user_settings, module)?)?;
+    module.add_function(wrap_pyfunction!(
+        import_legacy_tui_state_into_user_settings,
+        module
+    )?)?;
     module.add_function(wrap_pyfunction!(user_settings_published_defaults, module)?)?;
     Ok(())
 }

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T12:47:59Z",
+  "generated_at_utc": "2026-07-14T23:06:08Z",
   "entries": [
     {
       "id": "b0d609f9ed78e468",
@@ -5415,6 +5415,31 @@
       }
     },
     {
+      "id": "38462bb98e2fb110",
+      "rustSymbol": "user_settings_commit_frontend_geometry_transition",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          },
+          {
+            "name": "base_revision",
+            "type": "&str"
+          },
+          {
+            "name": "transition",
+            "type": "&UserSettingsWindowGeometryUpdateDto"
+          }
+        ],
+        "returnType": "Result<UserSettingsCommitResultDto>"
+      }
+    },
+    {
       "id": "e2ad1a7f27fb5f5a",
       "rustSymbol": "user_settings_commit_update",
       "kind": "function",
@@ -5449,6 +5474,44 @@
       "signature": {
         "args": [],
         "returnType": "GuiSettingsSnapshotDto"
+      }
+    },
+    {
+      "id": "3ae5a012f30378dd",
+      "rustSymbol": "user_settings_import_legacy_tui_state",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          },
+          {
+            "name": "legacy_state_path",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Result<Box<LegacyTuiStateImportHandle>>"
+      }
+    },
+    {
+      "id": "b8852a8a7ccc1741",
+      "rustSymbol": "user_settings_legacy_tui_import_outcome",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "handle",
+            "type": "&LegacyTuiStateImportHandle"
+          }
+        ],
+        "returnType": "LegacyTuiStateImportOutcomeDto"
       }
     },
     {
@@ -5610,6 +5673,27 @@
           }
         ],
         "returnType": "UserSettingsUpdatePreviewDto"
+      }
+    },
+    {
+      "id": "08917ee3d237e40b",
+      "rustSymbol": "user_settings_restore_legacy_tui_import",
+      "kind": "function",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "classic_root",
+            "type": "&str"
+          },
+          {
+            "name": "handle",
+            "type": "&LegacyTuiStateImportHandle"
+          }
+        ],
+        "returnType": "Result<LegacyTuiStateImportRestoreOutcomeDto>"
       }
     },
     {
@@ -6012,6 +6096,14 @@
       }
     },
     {
+      "id": "7badbce78c203270",
+      "rustSymbol": "LegacyTuiStateImportHandle",
+      "kind": "opaque",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust"
+    },
+    {
       "id": "630aada96fe224e1",
       "rustSymbol": "UserSettingsMigrationApplyHandle",
       "kind": "opaque",
@@ -6382,6 +6474,98 @@
         {
           "name": "frontend_state",
           "type": "FrontendStateDto"
+        }
+      ]
+    },
+    {
+      "id": "b91ef2da139516c2",
+      "rustSymbol": "LegacyTuiStateImportOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "classification",
+          "type": "String"
+        },
+        {
+          "name": "revision",
+          "type": "String"
+        },
+        {
+          "name": "source_path",
+          "type": "String"
+        },
+        {
+          "name": "backup_path",
+          "type": "String"
+        },
+        {
+          "name": "source_revision",
+          "type": "String"
+        },
+        {
+          "name": "backup_revision",
+          "type": "String"
+        },
+        {
+          "name": "base_settings_revision",
+          "type": "String"
+        },
+        {
+          "name": "published_settings_revision",
+          "type": "String"
+        },
+        {
+          "name": "expected_revision",
+          "type": "String"
+        },
+        {
+          "name": "actual_revision",
+          "type": "String"
+        },
+        {
+          "name": "settings_path",
+          "type": "String"
+        },
+        {
+          "name": "has_settings_backup_path",
+          "type": "bool"
+        },
+        {
+          "name": "settings_backup_path",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "1b78824669cf8026",
+      "rustSymbol": "LegacyTuiStateImportRestoreOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "status",
+          "type": "String"
+        },
+        {
+          "name": "revision",
+          "type": "String"
+        },
+        {
+          "name": "expected_revision",
+          "type": "String"
+        },
+        {
+          "name": "actual_revision",
+          "type": "String"
         }
       ]
     },
@@ -6886,6 +7070,26 @@
           "type": "bool"
         },
         {
+          "name": "window_geometry_updates",
+          "type": "Vec<UserSettingsWindowGeometryUpdateDto>"
+        },
+        {
+          "name": "has_tui_remembered_state",
+          "type": "bool"
+        },
+        {
+          "name": "tui_active_tab",
+          "type": "i64"
+        },
+        {
+          "name": "tui_results_panel_width",
+          "type": "i64"
+        },
+        {
+          "name": "tui_sort_ascending",
+          "type": "bool"
+        },
+        {
           "name": "has_managed_game",
           "type": "bool"
         },
@@ -7124,6 +7328,32 @@
         {
           "name": "diagnostics",
           "type": "Vec<UserSettingsUpdateDiagnosticDto>"
+        }
+      ]
+    },
+    {
+      "id": "5893592284b575c4",
+      "rustSymbol": "UserSettingsWindowGeometryUpdateDto",
+      "kind": "struct",
+      "bridgeModule": "settings",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "tab",
+          "type": "String"
+        },
+        {
+          "name": "maximized",
+          "type": "bool"
+        },
+        {
+          "name": "width",
+          "type": "i64"
+        },
+        {
+          "name": "height",
+          "type": "i64"
         }
       ]
     },

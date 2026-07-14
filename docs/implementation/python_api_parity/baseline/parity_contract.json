@@ -408,6 +408,16 @@
       "pythonKind": "class"
     },
     {
+      "id": "user_settings.frontend_transition_outcome_type",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "UserSettingsFrontendTransitionOutcome",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsFrontendTransitionOutcome",
+      "pythonKind": "class"
+    },
+    {
       "id": "user_settings.update_diagnostic_type",
       "tier": "tier1",
       "ownerModule": "user_settings",
@@ -719,6 +729,28 @@
       "pythonExportPath": "UserSettingsUpdate.set_auto_switch_after_scan",
       "pythonKind": "method",
       "pythonArity": 1
+    },
+    {
+      "id": "user_settings.update_with_window_geometry",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "with_window_geometry",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsUpdate.set_window_geometry",
+      "pythonKind": "method",
+      "pythonArity": 4
+    },
+    {
+      "id": "user_settings.commit_frontend_geometry_transition",
+      "tier": "tier1",
+      "ownerModule": "user_settings",
+      "rustCrate": "classic-user-settings-core",
+      "rustSymbol": "commit_frontend_geometry_transition",
+      "pythonModule": "classic_user_settings",
+      "pythonExportPath": "UserSettingsSnapshot.commit_frontend_geometry_transition",
+      "pythonKind": "method",
+      "pythonArity": 5
     },
     {
       "id": "user_settings.update_with_game_version_selection",

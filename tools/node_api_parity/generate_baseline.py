@@ -438,7 +438,9 @@ def _extract_rust_symbols(
         )
 
     for match in re.finditer(
-        r"(?m)^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)", content
+        r"^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)",
+        content,
+        flags=re.MULTILINE | re.DOTALL,
     ):
         symbol = match.group(1)
         arity = count_top_level_params(match.group(2))
