@@ -133,11 +133,11 @@ The execution of a Standard or Targeted Crash Log scan intent. It resolves the C
 _Avoid_: scan transaction, analysis job, scan session
 
 **Crash Log Scan Run Result**:
-The structured outcome of a Crash Log Scan Run, including run status, discovery results, optional setup validation details, and per-log outcomes. It represents expected run-level outcomes such as no Crash Logs found, cancellation before discovery, or setup failure as data rather than exceptions.
+The structured outcome of a Crash Log Scan Run, including run status, discovery results, optional setup validation details, and per-log outcomes in discovery order. It represents expected run-level outcomes such as no Crash Logs found, cancellation before discovery, or setup failure as data rather than exceptions.
 _Avoid_: result list, exception status, scan summary string
 
 **Crash Log Scan Discovery Result**:
-The structured discovery data inside a Crash Log Scan Run Result. It records the scan source, accepted Crash Logs, rejected targeted inputs, and searched locations while preserving the existing Standard and Targeted discovery contracts.
+The structured discovery outcome of a Crash Log Scan Run, available when discovery completes and retained in the terminal Crash Log Scan Run Result. It records the scan source, accepted Crash Logs, rejected targeted inputs, and searched locations while preserving the existing Standard and Targeted discovery contracts.
 _Avoid_: selected paths list, pre-scan event, discovery exception
 
 **Crash Log Scan Run Status**:
