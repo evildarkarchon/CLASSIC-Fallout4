@@ -28,6 +28,7 @@ mod shared;
 mod version;
 
 // Wave 2: Complete Existing Modules
+mod scan_run;
 mod scanlog;
 
 // Wave 3: File I/O & Data

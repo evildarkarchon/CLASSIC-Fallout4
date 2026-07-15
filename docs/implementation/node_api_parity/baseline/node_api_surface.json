@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-15T01:39:57.813594+00:00",
+  "generated_at_utc": "2026-07-15T10:42:25.983928+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -901,6 +901,14 @@
       "signature": "export interface JsRuleTarget {"
     },
     {
+      "export": "JsScanRunConfiguration",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunConfiguration {"
+    },
+    {
       "export": "JsScanRunDiscoveryResult",
       "kind": "interface",
       "owner_module": "aux",
@@ -909,20 +917,52 @@
       "signature": "export interface JsScanRunDiscoveryResult {"
     },
     {
+      "export": "JsScanRunEvent",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunEvent {"
+    },
+    {
+      "export": "JsScanRunFailure",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunFailure {"
+    },
+    {
+      "export": "JsScanRunInfrastructureError",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunInfrastructureError {"
+    },
+    {
+      "export": "JsScanRunLogEvent",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunLogEvent {"
+    },
+    {
+      "export": "JsScanRunLogFailure",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunLogFailure {"
+    },
+    {
       "export": "JsScanRunLogResult",
       "kind": "interface",
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunLogResult {"
-    },
-    {
-      "export": "JsScanRunOptions",
-      "kind": "interface",
-      "owner_module": "aux",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export interface JsScanRunOptions {"
     },
     {
       "export": "JsScanRunRejectedInput",
@@ -971,6 +1011,30 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunSetupResult {"
+    },
+    {
+      "export": "JsScanRunStandardSource",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunStandardSource {"
+    },
+    {
+      "export": "JsScanRunSuccess",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunSuccess {"
+    },
+    {
+      "export": "JsScanRunTargetedSource",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunTargetedSource {"
     },
     {
       "export": "JsSuspectErrorRule",
@@ -1419,6 +1483,30 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface RuntimeInfo {"
+    },
+    {
+      "export": "ScanRunCancellation",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class ScanRunCancellation {"
+    },
+    {
+      "export": "ScanRunRequest",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class ScanRunRequest {"
+    },
+    {
+      "export": "ScanRunUnsolvedLogs",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class ScanRunUnsolvedLogs {"
     },
     {
       "export": "SettingsCacheStats",
@@ -3059,8 +3147,8 @@
       "owner_module": "aux",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function scanRunExecute(logPaths: Array<string>, options: JsScanRunOptions): Promise<JsScanRunResult>",
-      "arity": 2
+      "signature": "export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
+      "arity": 4
     },
     {
       "export": "scanUnpackedFiles",

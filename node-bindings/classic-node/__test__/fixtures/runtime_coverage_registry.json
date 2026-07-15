@@ -234,8 +234,26 @@
       "tier": "tier2",
       "bindingIdentifiers": [
         "JsLogCollector",
+        "JsScanRunConfiguration",
+        "JsScanRunDiscoveryResult",
+        "JsScanRunEvent",
+        "JsScanRunSuccess",
+        "JsScanRunFailure",
+        "JsScanRunInfrastructureError",
+        "JsScanRunLogEvent",
+        "JsScanRunLogFailure",
         "JsScanRunLogResult",
-        "JsScanRunOptions",
+        "JsScanRunRejectedInput",
+        "JsScanRunResult",
+        "JsScanRunSetupCheck",
+        "JsScanRunSetupContext",
+        "JsScanRunSetupPathUpdate",
+        "JsScanRunSetupResult",
+        "JsScanRunStandardSource",
+        "JsScanRunTargetedSource",
+        "ScanRunCancellation",
+        "ScanRunRequest",
+        "ScanRunUnsolvedLogs",
         "scanRunExecute"
       ],
       "verificationMode": "cli_workflow",
@@ -247,7 +265,7 @@
         "GAME_YAML",
         "IGNORE_YAML"
       ],
-      "notes": "Exercises the packaged TypeScript CLI path under Node to keep scan-run execution and Rust-owned Autoscan Report writing in runtime coverage."
+      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
     },
     {
       "coverageId": "node-tier2-scanlog-fcx-runtime",

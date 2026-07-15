@@ -31,6 +31,7 @@
     "shell:vsdev": "pwsh -ExecutionPolicy Bypass -File ../../tools/enter_vs_dev_shell.ps1 -WorkingDirectory . -Interactive",
     "test:bun": "bun run build:cli && bun test",
     "test:node": "bun run build:cli && node --test __test__/runtime.node.test.mjs",
+    "test:types": "bun x tsc -p __test__/scan_run_contract.tsconfig.json",
     "test": "bun run test:bun"
   },
   "devDependencies": {

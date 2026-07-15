@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
-import { availableParallelism } from "node:os";
 import { basename, dirname, join } from "node:path";
+import type { JsScanRunEvent } from "../index.js";
 import type {
 	CliOptions,
 	CliPaths,
@@ -8,76 +8,7 @@ import type {
 	JsonSummary,
 } from "./types";
 
-type BindingVersionInfo = {
-	shortName: string;
-};
-
-type BindingScanResult = {
-  logPath: string;
-  success: boolean;
-  autoscanReportPath?: string;
-  cancelled: boolean;
-  movedToUnsolvedLogs: boolean;
-  reportWriteFailed?: boolean;
-  error?: string;
-};
-
-type BindingScanRunResult = {
-	status: string;
-	message?: string;
-	total: number;
-	succeeded: number;
-	failed: number;
-	cancelled: number;
-	logs: BindingScanResult[];
-};
-
-type BindingUserSettingsSnapshot = {
-  crashLogScanSettings: {
-    fcxMode: boolean;
-    simplifyLogs: boolean;
-    formidValueLookup: boolean;
-    moveUnsolvedLogs: boolean;
-    unsolvedLogsDestination?: string;
-    customScanInput?: string;
-    gameVersionSelection: string;
-    maxConcurrentScans: number;
-  };
-  gameSetupSettings: {
-    documentsRoot?: string;
-  };
-};
-
-type ClassicNodeModule = {
-	getAllVersionsForGame: (
-		game: string,
-		isVr?: boolean | null,
-	) => BindingVersionInfo[];
-	getVersion: () => string;
-	openUserSettings: (classicRoot: string) => BindingUserSettingsSnapshot;
-	scanRunExecute: (
-		logPaths: string[],
-		options: {
-			yamlDirRoot: string;
-			yamlDirData: string;
-			game: string;
-			gameVersion: string;
-			baseDirectory?: string;
-			customScanDirectory?: string;
-			configuredDocumentsRoot?: string;
-			showFormidValues?: boolean;
-			fcxMode?: boolean;
-			simplifyLogs?: boolean;
-			moveUnsolvedLogs?: boolean;
-			unsolvedLogsDestination?: string;
-			targetedMode?: boolean;
-			targetedInputs?: string[];
-			maxConcurrent?: number | null;
-			preserveOrder?: boolean;
-		},
-	) => Promise<BindingScanRunResult>;
-  registrySetGame: (game: string) => void;
-};
+type ClassicNodeModule = typeof import("../index.js");
 
 function loadClassicNode(cliDir: string): ClassicNodeModule {
 	// eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -88,21 +19,6 @@ function loadClassicNode(cliDir: string): ClassicNodeModule {
 
 function normalizeGameVersion(value: string): string {
 	return value === "AE" ? "AnniversaryEdition" : value;
-}
-
-export function autoConcurrencyForCpuCount(cpuCount: number): number {
-	const recommended = Math.max(cpuCount - 2, 2);
-	return Math.min(recommended, 32);
-}
-
-export function effectiveConcurrency(
-	requested: number,
-	cpuCount = availableParallelism(),
-): number {
-	if (requested > 0) {
-		return requested;
-	}
-	return autoConcurrencyForCpuCount(cpuCount);
 }
 
 export function resolvePackageRoot(cliDir: string): string {
@@ -347,35 +263,83 @@ export async function runCli(
 			console.log(`Data dir:  ${paths.data}\n`);
 		}
 
-		const concurrency = effectiveConcurrency(requestedConcurrency);
-    if (!options.json) {
-			console.log(
-				`Scanning with ${concurrency} worker thread${concurrency === 1 ? "" : "s"}\n`,
+		const configuredConcurrency =
+			requestedConcurrency > 0 ? requestedConcurrency : undefined;
+		const configuration = {
+			yamlDirRoot: paths.root,
+			yamlDirData: paths.data,
+			game: options.game,
+			gameVersion: normalizedGameVersion,
+			showFormidValues: showFidValues,
+			simplifyLogs,
+			formidDatabasePaths:
+				scanSettings.formidDatabases[options.game] ?? [],
+			unsolvedLogsDestination: scanSettings.unsolvedLogsDestination,
+			maxConcurrent: configuredConcurrency,
+		};
+		const source = {
+			baseDirectory: process.cwd(),
+			customScanDirectory: scanPath,
+			configuredDocumentsRoot:
+				userSettings.gameSetupSettings.documentsRoot,
+		};
+		const unsolvedLogs = scanSettings.moveUnsolvedLogs
+			? classicNode.ScanRunUnsolvedLogs.moveToConfiguredOrDefault()
+			: classicNode.ScanRunUnsolvedLogs.leaveInPlace();
+		const request = fcxMode
+			? classicNode.ScanRunRequest.standardWithFcx(
+					configuration,
+					source,
+					unsolvedLogs,
+					{
+						gameRoot: userSettings.gameSetupSettings.gameRoot,
+						docsRoot: userSettings.gameSetupSettings.documentsRoot,
+						gameExePath:
+							userSettings.gameSetupSettings.gameExecutable,
+					},
+				)
+			: classicNode.ScanRunRequest.standard(
+					configuration,
+					source,
+					unsolvedLogs,
+				);
+		const cancellation = new classicNode.ScanRunCancellation();
+		const observeScanRun = (event: JsScanRunEvent): void => {
+			if (options.json) {
+				return;
+			}
+			if (event.kind === "discovery_completed" && event.discovery) {
+				console.log(
+					`Found ${formatPluralizedCount(event.discovery.acceptedLogs.length, "crash log")}\n`,
+				);
+			} else if (
+				event.kind === "effective_concurrency_selected" &&
+				event.effectiveConcurrency !== undefined
+			) {
+				const concurrency = event.effectiveConcurrency;
+				console.log(
+					`Scanning with ${concurrency} worker thread${concurrency === 1 ? "" : "s"}\n`,
+				);
+			}
+		};
+		const execution = await classicNode.scanRunExecute(
+			request,
+			cancellation,
+			observeScanRun,
+			false,
+		);
+		if ("error" in execution) {
+			const pathSuffix = execution.error.path
+				? ` (${execution.error.path})`
+				: "";
+			throw new Error(
+				`${execution.error.stage}: ${execution.error.message}${pathSuffix}`,
 			);
 		}
-
-		const scanResult = await classicNode.scanRunExecute(
-      [],
-      {
-        yamlDirRoot: paths.root,
-        yamlDirData: paths.data,
-        game: options.game,
-        gameVersion: normalizedGameVersion,
-				baseDirectory: process.cwd(),
-				customScanDirectory: scanPath,
-				configuredDocumentsRoot:
-					userSettings.gameSetupSettings.documentsRoot,
-				showFormidValues: showFidValues,
-				fcxMode,
-				simplifyLogs,
-				moveUnsolvedLogs: scanSettings.moveUnsolvedLogs,
-				unsolvedLogsDestination:
-					scanSettings.unsolvedLogsDestination,
-        targetedMode: false,
-        maxConcurrent: concurrency,
-        preserveOrder: false,
-      },
-    );
+		if (execution.observerError) {
+			throw new Error(`scan observer: ${execution.observerError}`);
+		}
+		const scanResult = execution.result;
 		const results = scanResult.logs;
 		if (scanResult.status === "setup_failed") {
 			const setupMessage = scanResult.message ?? "Crash Log Scan setup failed";
@@ -430,22 +394,19 @@ export async function runCli(
 			return { exitCode: 0 };
 		}
 
-		if (!options.json) {
-			// Discovery now runs inside the Rust scan service, so its count is available only after the run returns.
-			console.log(
-				`Found ${formatPluralizedCount(scanResult.total, "crash log")}\n`,
-			);
-		}
-
-    const reportsWritten = results.filter(
-      (result) => result.success && result.autoscanReportPath,
-    ).length;
-    const reportFailures = results.filter(
-      (result) => result.reportWriteFailed,
-    ).length;
+		const reportsWritten = results.filter(
+			(result) => result.autoscanReport,
+		).length;
+		const reportFailures = results.filter((result) =>
+			result.failures.some((failure) => failure.stage === "report_write"),
+		).length;
 
 		const scanErrors = results.filter(
-			(result) => !result.success && !result.reportWriteFailed,
+			(result) =>
+				result.disposition === "failed" &&
+				!result.failures.some(
+					(failure) => failure.stage === "report_write",
+				),
 		).length;
 		const durationSeconds = (performance.now() - startedAt) / 1000;
 		const summary: JsonSummary = {

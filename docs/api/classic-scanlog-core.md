@@ -242,7 +242,7 @@ Behavior worth knowing:
 - `process_logs_batch_with_events()` is the richer core batch primitive used by bindings that need stable input indices, optional input-order result restoration, cancellation checks before each log starts, and queued/started/phase/terminal events.
 - `resolve_batch_concurrency()` returns `1` for empty batches, clamps explicit overrides to a minimum of `1`, and otherwise uses the crate's adaptive CPU-aware default.
 - `write_reports_batch()` logs write failures and returns only successfully written paths.
-- New adapter code that needs the full Crash Log Scan Run transaction should prefer `CrashLogScanRun` over manually sequencing `OrchestratorCore`, report writing, and Unsolved Logs movement.
+- New adapter code that needs the full Crash Log Scan Run transaction should use `scan_run::contract` instead of manually sequencing `OrchestratorCore`, report writing, and Unsolved Logs movement.
 - `check_crashgen_version_for_detected_game()` filters registry-backed crashgen floors by the detected or configured crashgen product before comparing versions.
 - `mods_solu` detection is no longer routed through the legacy single-map matcher; it evaluates grouped `any` / `all` criteria, suppresses matches through optional exceptions, and renders report titles/bodies from the structured `name` / `description` fields.
 - `is_feature_complete()` currently means plugin analyzer and suspect scanner are present; a database pool is optional.
@@ -284,11 +284,15 @@ The constructor matrix is exhaustive:
 - `Request::targeted(...)` and `Request::targeted_with_fcx(..., setup_context)` accept a Targeted source and have no Unsolved Logs parameter
 - every FCX constructor requires `CrashLogScanSetupContext`; there is no FCX state that omits it
 
-Stable event variants are `DiscoveryCompleted`, `EffectiveConcurrencySelected`, `LogQueued`, `LogStarted`, `LogPhase`, and `LogFinished`. Log-scoped events carry a discovery index and path. `LogFinished` carries one of the stable dispositions: `Succeeded`, `Failed`, or `CancelledBeforeStart`. `LogResult.failures` independently preserves every applicable structured failure stage (`Analysis`, `ReportWrite`, and `UnsolvedLogsFinalization`) so a finalization failure cannot erase the preceding analysis or report failure.
+Stable event variants are `DiscoveryCompleted`, `EffectiveConcurrencySelected`, `LogQueued`, `LogStarted`, `LogPhase`, and `LogFinished`. Common log-scoped payloads carry `discovery_index`, `crash_log`, `completed`, and `total`; `LogPhase` adds `Setup`, `Parse`, `Analyze`, or `Finalize`, and `LogFinished` adds `Succeeded`, `Failed`, or `CancelledBeforeStart`. The five run statuses are `Completed`, `NoCrashLogsFound`, `SetupFailed`, `CancelledBeforeDiscovery`, and `Cancelled`.
+
+Each discovery-ordered `LogResult` retains its index and Crash Log path, optional Autoscan Report path, disposition, optional message, movement flag, microsecond/millisecond timing, FormID/plugin/suspect counts, and every structured failure. Failure stages are independently preserved as `Analysis`, `ReportWrite`, and `UnsolvedLogsFinalization`, so a finalization failure cannot erase a preceding analysis or report failure.
 
 `contract::RunResult` retains completed discovery, Rust-selected effective concurrency once scheduling is reached, setup data, lifecycle status, aggregate counts, and per-log results in discovery order. When FCX is enabled, setup is evaluated once and held as one immutable run-owned snapshot. The same snapshot supplies every per-log Autoscan Report and is projected into `RunResult.setup`; scan execution never resets, seeds, or reads the legacy process-global FCX handler. Cancellation before or during discovery returns `CancelledBeforeDiscovery` with no discovery result and emits no `DiscoveryCompleted` event. Once discovery commits, the emitted payload and retained result contain the same complete accepted paths, Targeted rejections, source, and searched locations. Cancellation requested by the discovery observer returns `Cancelled`, retains that payload, marks every accepted log `CancelledBeforeStart`, and stops before effective concurrency is selected. An explicit concurrency value of zero is a typed request-validation failure. Adaptive and explicit concurrency are selected once in Rust, capped by the discovered work volume, emitted once, retained unchanged, and passed as the exact admission limit to the scheduler; low-volume runs can therefore select a value below the configured maximum.
 
 Run-wide failures use `contract::InfrastructureError { stage, message, path }`. Stable stages are `RequestValidation`, `Discovery`, `Intake`, `FormIdDatabaseAccess`, `Initialization`, and `InternalInvariant`. The service captures stage and any relevant path at the lifecycle boundary that actually failed instead of inferring them later from a broad error category; the final contract preserves that stage, message, and optional path unchanged. Expected states such as no logs, setup failure, and cancellation remain structured `RunResult` data rather than infrastructure errors. FCX configuration-cache or configuration-scan failures are preserved as typed `Intake` infrastructure errors instead of being collapsed into an empty issue list.
+
+The Node adapter in [`node-bindings/classic-node/src/scan_run.rs`](../../node-bindings/classic-node/src/scan_run.rs) mirrors this seam with opaque `ScanRunRequest`, `ScanRunUnsolvedLogs`, and `ScanRunCancellation` classes. Its four request factories preserve the Standard/Targeted and FCX constructor matrix in generated TypeScript declarations. `scanRunExecute(...)` enters the shared runtime, returns a typed result/error envelope, serializes every event, and keeps observer delivery failures separate from core infrastructure errors.
 
 The expand implementation temporarily delegates discovery and intake preparation through the same transitional lifecycle hook as `CrashLogScanRunService`. Discovery is cooperatively cancellable without exposing partial accumulators: Standard collection checks between completed directory and per-file move/copy operations plus enumeration entries, while Targeted collection checks around metadata operations and recursive directory entries. Completed Standard filesystem mutations are not rolled back when cancellation is observed at the next seam. After discovery commits, the final path uses a scan-run-private scheduler over an internal single-log analysis engine rather than the legacy public batch lifecycle. It emits all queued events serially, checks cancellation immediately before each admission, and never interrupts an admitted log before report persistence and applicable Unsolved Logs finalization resolve. Standard movement attempts both the Crash Log and existing Autoscan Report, preserves whether either artifact moved when the other fails, and atomically claims collision-suffixed destinations so overlapping runs cannot replace one another's artifacts. Targeted requests never resolve a movement destination. Discovery, concurrency, queued, started, phase, and finished callbacks pass through one serial observer pump in execution order, and `LogFinished` is emitted only after report and movement state is final. Attaching no observer, a recording observer, or a slow observer does not alter the selected concurrency or terminal results; only an explicit request through the separate cancellation control can stop later admissions. Per-log results are sorted into discovery order independently of event delivery order. The operation is async and creates no runtime; callers enter it through `classic-shared-core`'s shared Tokio runtime.
 
@@ -296,7 +300,7 @@ The expand implementation temporarily delegates discovery and intake preparation
 
 `CrashLogScanRunService` is the public high-level facade for a full Crash Log Scan Run. It accepts typed Standard or Targeted source facts, optionally validates FCX setup, prepares intake, and executes accepted Crash Logs. `CrashLogScanRun` remains the lower prepared-run module for callers that already have `ScanReadyAnalysis` and an accepted log list.
 
-These interfaces remain temporarily available so existing C++, Node, and Python consumers can migrate through their dedicated cutover tickets. The TUI uses the final `scan_run::contract` interface directly. The provisional interfaces are not alternate constructors or execution paths in the final model and are removed/internalized by the coordinated contract step.
+These interfaces remain temporarily available for legacy lower-level and not-yet-cut-over consumers. The native C++ surfaces, TUI, and Node adapter use the final `scan_run::contract` interface. The provisional interfaces are not alternate constructors or execution paths in the final model and are removed/internalized by the coordinated contraction step.
 
 Important service types:
 
@@ -351,7 +355,7 @@ Behavior worth knowing:
 - Autoscan Report write failure is a per-log failure in `CrashLogScanRunLogOutcome`, not a run-level setup error. These outcomes set `report_write_failed = true` so adapters can separate report failures from analysis failures.
 - `cancellation` is a cooperative shared atomic checked before queued Crash Logs start; binding adapters should pass their frontend cancellation token rather than polling locally only.
 - This provisional prepared-run interface reuses `ScanProgressPhase` and stable input indices; compatibility consumers may use them to correlate completion-order results with their selected Crash Log list. The final `scan_run::contract` instead emits `Event` values keyed by discovery index and retains terminal log results in discovery order.
-- The native CLI and Qt GUI expose the final C++ contract through tagged request constructors plus `classic::scanner::scan_run_contract_execute(request, cancellation, observer)`. Legacy C++ consumers still have `scan_run_execute(...)` during their coordinated migration, while Node exposes `scanRunExecute(...)` and Python exposes `classic_scanlog.scan_run_execute(...)`. Adapter scan flows must not duplicate discovery policy, FCX setup result shaping, Autoscan Report writing, Unsolved Logs movement, or terminal result ordering around those calls.
+- The native CLI and Qt GUI expose the final C++ contract through tagged request constructors plus `classic::scanner::scan_run_contract_execute(request, cancellation, observer)`. Node exposes opaque request/cancellation factories plus `scanRunExecute(request, cancellation, observer?, cancelOnObserverError?)`; Python still exposes `classic_scanlog.scan_run_execute(...)` through its current adapter. Adapter scan flows must not duplicate discovery policy, FCX setup result shaping, Autoscan Report writing, Unsolved Logs movement, adaptive concurrency, or terminal result ordering around those calls.
 
 ## `LogParser`
 
@@ -508,9 +512,9 @@ Complete Crash Log Scan Runs do not use process-global FCX state. The final requ
 
 The main contributor-facing pipeline looks like this:
 
-1. Prepare Crash Log Scan Intake with `CrashLogScanIntake::from_yaml_paths(...)` or `CrashLogScanIntake::from_yaml_data(...)` and attach caller-projected `CrashLogScanFacts` when User Settings affect the run.
-2. Use `prepare().await` to produce `ScanReadyAnalysis`; intake reads YAML Data but does not open or persist User Settings.
-3. For a full Crash Log Scan Run, construct `CrashLogScanRun::new(scan_ready)` and call `run(...)` with selected Crash Logs.
+1. Project one accepted settings/configuration snapshot into `contract::Configuration`, a typed Standard or Targeted source, the Standard-only Unsolved Logs intent, and FCX setup context when enabled.
+2. Construct the tagged request through `Request::standard`, `standard_with_fcx`, `targeted`, or `targeted_with_fcx`; the constructor signature enforces the mode invariants.
+3. Call `contract::execute(request, &cancellation, observer).await`; Rust owns discovery, setup, intake preparation, adaptive concurrency, and serialized lifecycle events.
 4. Inside the module, `OrchestratorCore` reads each file with [`classic-file-io-core`](../../business-logic/classic-file-io-core) and preprocesses lines with `reformat_crash_data_inline()`.
 5. `LogParser::parse_all_sections_arc()` builds named sections.
 6. The orchestrator extracts header metadata, resolves crashgen identity/version status, and builds report helpers.
@@ -523,7 +527,7 @@ The main contributor-facing pipeline looks like this:
    - named-record scanning
    - FCX message inclusion
 8. `ReportComposer` combines fragments and produces `report_lines`.
-9. `CrashLogScanRun` writes Autoscan Reports, accounts per-log outcomes, and applies Standard versus Targeted Unsolved Logs rules.
+9. The final scan-run scheduler writes Autoscan Reports, accounts structured per-log outcomes in discovery order, and applies Standard versus Targeted Unsolved Logs rules.
 
 One subtle integration rule from the source: the effective crashgen name used for settings and report text can switch to `Addictol` when the header or XSE modules indicate it, even if the base `AnalysisConfig` was built for another crashgen.
 
@@ -608,52 +612,41 @@ In practice, `classic-scanlog-core` is the downstream analysis layer that turns 
 
 ## Usage Example
 
-This example follows the intended contributor flow for a full Crash Log Scan Run: prepare scan intake, construct the run module, and execute selected Crash Logs.
+This example follows the final contributor flow for a non-FCX Standard Crash Log Scan Run.
 
 ```rust
-use classic_scanlog_core::{
-    CrashLogScanFacts,
-    CrashLogScanRun,
-    CrashLogScanRunIntent,
-    CrashLogScanRunRequest,
-    CrashLogScanIntake,
-    CrashLogScanOptions,
-    StandardCrashLogScanRunIntent,
-    StandardUnsolvedLogsIntent,
+use classic_scanlog_core::scan_run::contract::{
+    self, Cancellation, Configuration, Options, Request,
 };
+use classic_scanlog_core::{
+    CrashLogScanFacts, StandardCrashLogScanSource, StandardUnsolvedLogsIntent,
+};
+use classic_shared_core::GameId;
 use std::path::PathBuf;
 
 # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-let intake = CrashLogScanIntake::from_yaml_paths(
-    PathBuf::from("C:/CLASSIC"),
-    PathBuf::from("C:/CLASSIC/CLASSIC Data"),
-    "Fallout4",
-    "auto",
-    CrashLogScanOptions::new(
-        false,      // show_formid_values
-        false,      // fcx_mode
-        false,      // simplify_logs
-    ),
-)
-.with_scan_facts(CrashLogScanFacts {
-    formid_database_paths: vec![PathBuf::from("databases/custom.db")],
-    unsolved_logs_destination: Some(PathBuf::from("C:/CLASSIC/Unsolved Logs")),
-});
-
-let scan_ready = intake.prepare().await?;
-let run = CrashLogScanRun::new(scan_ready);
-let result = run.run(
-    CrashLogScanRunRequest {
-        logs: vec![PathBuf::from("C:/CLASSIC/crash-2026-03-09.log")],
-        intent: CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent {
-            unsolved_logs: StandardUnsolvedLogsIntent::LeaveInPlace,
-        }),
+let request = Request::standard(
+    Configuration {
+        yaml_dir_root: PathBuf::from("C:/CLASSIC"),
+        yaml_dir_data: PathBuf::from("C:/CLASSIC/CLASSIC Data"),
+        game: GameId::Fallout4,
+        game_version: "auto".to_string(),
+        options: Options::new(false, false),
+        scan_facts: CrashLogScanFacts {
+            formid_database_paths: vec![PathBuf::from("databases/custom.db")],
+            unsolved_logs_destination: Some(PathBuf::from("C:/CLASSIC/Unsolved Logs")),
+        },
         max_concurrent: None,
-        cancellation: None,
-        preserve_order: true,
     },
-    |_| {},
-).await?;
+    StandardCrashLogScanSource {
+        base_directory: PathBuf::from("C:/CLASSIC"),
+        custom_scan_directory: None,
+        configured_documents_root: None,
+    },
+    StandardUnsolvedLogsIntent::LeaveInPlace,
+);
+let cancellation = Cancellation::new();
+let result = contract::execute(request, &cancellation, None).await?;
 
 if let Some(log) = result.logs.first() {
     println!("Processed {} in {} ms", log.crash_log.display(), log.processing_time_ms);
@@ -662,7 +655,7 @@ if let Some(log) = result.logs.first() {
 # }
 ```
 
-If you need lower-level analysis-only behavior, `OrchestratorCore` remains public. New adapter code that wants Autoscan Report writing and Unsolved Logs behavior should prefer `CrashLogScanRun`.
+If you need lower-level analysis-only behavior, `OrchestratorCore` remains public. New adapter code that wants discovery, setup, Autoscan Report writing, Unsolved Logs behavior, or terminal ordering should use `scan_run::contract`.
 
 ---
 

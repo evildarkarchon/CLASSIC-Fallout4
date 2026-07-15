@@ -113,7 +113,7 @@ Node and Python do not expose a flat settings facade. Their inspection and scan-
 
 ## Surfaces that expose typed User Settings FormID databases
 
-The CXX, Node, and Python User Settings adapters expose `CrashLogScanSettings.formid_databases` from the canonical nested document together with its preference origin. Their update-preview adapters validate requested replacement maps without writing. The native CLI consumes the narrow CXX typed group; the Node CLI and `scanRunExecute` consume the Node typed group. The native GUI consumes the aggregate `GuiSettingsSnapshotDto`, whose four settings groups come from one source revision. The Rust TUI opens the same core snapshot directly. Each maintained frontend selects the active game's paths and projects explicit `CrashLogScanFacts`; scanlog core never opens a settings document.
+The CXX, Node, and Python User Settings adapters expose `CrashLogScanSettings.formid_databases` from the canonical nested document together with its preference origin. Their update-preview adapters validate requested replacement maps without writing. The native CLI consumes the narrow CXX typed group; the Node CLI selects the active game's rows from the Node typed group and supplies them as `JsScanRunConfiguration.formidDatabasePaths`. `scanRunExecute` consumes only that explicit request configuration. The native GUI consumes the aggregate `GuiSettingsSnapshotDto`, whose four settings groups come from one source revision. The Rust TUI opens the same core snapshot directly. Each maintained frontend selects the active game's paths and projects explicit `CrashLogScanFacts`; scanlog core never opens a settings document.
 
 ## Native GUI typed edit and scan-launch surface
 

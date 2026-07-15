@@ -11,10 +11,6 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import {
-	autoConcurrencyForCpuCount,
-	effectiveConcurrency,
-} from "../cli/run-scan";
 import { getVersion } from "../index.js";
 import {
 	CLI_GAME_YAML,
@@ -123,24 +119,6 @@ afterEach(() => {
 			rmSync(dir, { recursive: true, force: true });
 		}
 	}
-});
-
-describe("classic-node CLI concurrency helpers", () => {
-	test("auto concurrency keeps a minimum floor of two workers", () => {
-		expect(autoConcurrencyForCpuCount(1)).toBe(2);
-		expect(autoConcurrencyForCpuCount(2)).toBe(2);
-		expect(autoConcurrencyForCpuCount(3)).toBe(2);
-	});
-
-	test("auto concurrency still reserves two cores when possible and caps at 32", () => {
-		expect(autoConcurrencyForCpuCount(8)).toBe(6);
-		expect(autoConcurrencyForCpuCount(40)).toBe(32);
-	});
-
-	test("effective concurrency preserves explicit overrides", () => {
-		expect(effectiveConcurrency(5, 3)).toBe(5);
-		expect(effectiveConcurrency(0, 3)).toBe(2);
-	});
 });
 
 describe("classic-node CLI", () => {

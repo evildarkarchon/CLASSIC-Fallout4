@@ -1073,6 +1073,38 @@ export declare class JsXseChecker {
   validate(): string
 }
 
+/** Opaque monotonic cancellation control for one scan run. */
+export declare class ScanRunCancellation {
+  /** Creates an uncancelled control. */
+  constructor()
+  /** Requests cancellation at the next Rust-owned safe seam. */
+  cancel(): void
+  /** Returns whether cancellation has been requested. */
+  get isCancelled(): boolean
+}
+
+/** Opaque invariant-preserving request for the final scan-run operation. */
+export declare class ScanRunRequest {
+  /** Constructs a non-FCX Standard request. */
+  static standard(configuration: JsScanRunConfiguration, source: JsScanRunStandardSource, unsolvedLogs: ScanRunUnsolvedLogs): ScanRunRequest
+  /** Constructs an FCX-enabled Standard request with required setup facts. */
+  static standardWithFcx(configuration: JsScanRunConfiguration, source: JsScanRunStandardSource, unsolvedLogs: ScanRunUnsolvedLogs, setupContext: JsScanRunSetupContext): ScanRunRequest
+  /** Constructs a non-FCX Targeted request with no movement capability. */
+  static targeted(configuration: JsScanRunConfiguration, source: JsScanRunTargetedSource): ScanRunRequest
+  /** Constructs an FCX-enabled Targeted request with no movement capability. */
+  static targetedWithFcx(configuration: JsScanRunConfiguration, source: JsScanRunTargetedSource, setupContext: JsScanRunSetupContext): ScanRunRequest
+}
+
+/** Opaque Standard-only Unsolved Logs policy. */
+export declare class ScanRunUnsolvedLogs {
+  /** Creates a policy that leaves failed artifacts in place. */
+  static leaveInPlace(): ScanRunUnsolvedLogs
+  /** Creates a policy that uses the configured or Rust-default destination. */
+  static moveToConfiguredOrDefault(): ScanRunUnsolvedLogs
+  /** Creates a policy that uses one caller-selected destination. */
+  static moveToCustom(destination: string): ScanRunUnsolvedLogs
+}
+
 /**
  * Version information extracted from XSE log files.
  *
@@ -3501,78 +3533,87 @@ export interface JsRuleTarget {
   valueType: string
 }
 
-/** JavaScript-compatible Crash Log Scan Discovery Result. */
+/** JavaScript configuration shared by Standard and Targeted requests. */
+export interface JsScanRunConfiguration {
+  /** Root directory containing settings and the ignore YAML document. */
+  yamlDirRoot: string
+  /** `CLASSIC Data` directory containing shippable YAML databases. */
+  yamlDirData: string
+  /** Supported game identifier. */
+  game: string
+  /** Selected game-version mode. */
+  gameVersion: string
+  /** Whether FormID values should be resolved through configured databases. */
+  showFormidValues: boolean
+  /** Whether simplify-log preprocessing is enabled. */
+  simplifyLogs: boolean
+  /** Explicit FormID database paths projected from User Settings. */
+  formidDatabasePaths: Array<string>
+  /** Configured Standard-run Unsolved Logs destination, when present. */
+  unsolvedLogsDestination?: string
+  /** Explicit concurrency limit. Absence selects adaptively; zero is invalid. */
+  maxConcurrent?: number
+}
+
+/** JavaScript-compatible discovery result. */
 export interface JsScanRunDiscoveryResult {
-  source: string
+  source: 'standard' | 'targeted'
   acceptedLogs: Array<string>
   rejectedInputs: Array<JsScanRunRejectedInput>
   searchedLocations: Array<string>
 }
 
-/** JavaScript-compatible full scan-run per-log result. */
-export interface JsScanRunLogResult {
-  /** Stable index from the input log path list. */
-  inputIndex: number
-  /** Crash Log path selected for this entry. */
-  logPath: string
-  /** Autoscan Report path when one was written successfully. */
-  autoscanReportPath?: string
-  /** Whether analysis and run-owned side effects succeeded. */
-  success: boolean
-  /** Whether analysis succeeded but Autoscan Report writing failed. */
-  reportWriteFailed: boolean
-  /** Whether this entry was cancelled before analysis started. */
-  cancelled: boolean
-  /** Whether the Crash Log or Autoscan Report moved to Unsolved Logs. */
-  movedToUnsolvedLogs: boolean
-  /** Error message for failed or cancelled outcomes. */
-  error?: string
-  /** Processing time in milliseconds. */
-  processingTimeMs: number
-  /** Number of FormIDs found. */
-  formidCount: number
-  /** Number of plugins detected. */
-  pluginCount: number
-  /** Number of suspect patterns matched. */
-  suspectCount: number
+/** One tagged serialized observer event. */
+export interface JsScanRunEvent {
+  kind: 'discovery_completed' | 'effective_concurrency_selected' | 'log_queued' | 'log_started' | 'log_phase' | 'log_finished'
+  discovery?: JsScanRunDiscoveryResult
+  effectiveConcurrency?: number
+  log?: JsScanRunLogEvent
+  phase?: 'setup' | 'parse' | 'analyze' | 'finalize'
+  disposition?: 'succeeded' | 'failed' | 'cancelled_before_start'
 }
 
-/** Options for a full Crash Log Scan Run. */
-export interface JsScanRunOptions {
-  /** Root directory that contains CLASSIC Data and CLASSIC Ignore.yaml. */
-  yamlDirRoot: string
-  /** CLASSIC Data directory. */
-  yamlDirData: string
-  /** Game identifier, e.g. Fallout4. */
-  game: string
-  /** Selected game-version mode. */
-  gameVersion: string
-  /** Standard discovery base directory. */
-  baseDirectory?: string
-  /** Optional custom scan directory for Standard discovery. */
-  customScanDirectory?: string
-  /** Optional configured documents root for Standard discovery. */
-  configuredDocumentsRoot?: string
-  /** Whether to include FormID value lookups in reports. */
-  showFormidValues?: boolean
-  /** Whether FCX mode is enabled. */
-  fcxMode?: boolean
-  /** Whether to simplify logs by removing configured strings. */
-  simplifyLogs?: boolean
-  /** Whether failed Standard runs move logs and reports to Unsolved Logs. */
-  moveUnsolvedLogs?: boolean
-  /** Optional custom destination for moved Unsolved Logs. */
-  unsolvedLogsDestination?: string
-  /** Whether this is a Targeted Crash Log Scan Run. */
-  targetedMode?: boolean
-  /** User-selected Targeted inputs. Falls back to the first positional argument when omitted. */
-  targetedInputs?: Array<string>
-  /** Explicit FCX setup context when FCX Mode is enabled. */
-  setupContext?: JsScanRunSetupContext
-  /** Optional maximum number of concurrent scans. Zero and undefined use core defaults. */
-  maxConcurrent?: number
-  /** Whether results should preserve input order instead of completion order. */
-  preserveOrder?: boolean
+/** Failed final operation envelope with adapter-only observation failure data. */
+export interface JsScanRunFailure {
+  error: JsScanRunInfrastructureError
+  observerError?: string
+}
+
+/** Typed run-wide infrastructure failure. */
+export interface JsScanRunInfrastructureError {
+  stage: 'request_validation' | 'discovery' | 'intake' | 'formid_database_access' | 'initialization' | 'internal_invariant'
+  message: string
+  path?: string
+}
+
+/** Common log-scoped event payload. */
+export interface JsScanRunLogEvent {
+  discoveryIndex: number
+  crashLog: string
+  completed: number
+  total: number
+}
+
+/** One structured per-log processing or finalization failure. */
+export interface JsScanRunLogFailure {
+  stage: 'analysis' | 'report_write' | 'unsolved_logs_finalization'
+  message: string
+}
+
+/** Complete terminal result for one discovered Crash Log. */
+export interface JsScanRunLogResult {
+  discoveryIndex: number
+  crashLog: string
+  autoscanReport?: string
+  disposition: 'succeeded' | 'failed' | 'cancelled_before_start'
+  failures: Array<JsScanRunLogFailure>
+  message?: string
+  movedToUnsolvedLogs: boolean
+  processingTimeUs: number
+  processingTimeMs: number
+  formidCount: number
+  pluginCount: number
+  suspectCount: number
 }
 
 /** JavaScript-compatible Targeted input rejection. */
@@ -3581,16 +3622,17 @@ export interface JsScanRunRejectedInput {
   reason: string
 }
 
-/** JavaScript-compatible top-level Crash Log Scan Run Result. */
+/** Complete terminal Crash Log Scan Run result. */
 export interface JsScanRunResult {
-  status: string
+  status: 'completed' | 'no_crash_logs_found' | 'setup_failed' | 'cancelled_before_discovery' | 'cancelled'
+  discovery?: JsScanRunDiscoveryResult
+  setup?: JsScanRunSetupResult
+  effectiveConcurrency?: number
   message?: string
   total: number
   succeeded: number
   failed: number
   cancelled: number
-  discovery?: JsScanRunDiscoveryResult
-  setup?: JsScanRunSetupResult
   logs: Array<JsScanRunLogResult>
 }
 
@@ -3602,7 +3644,7 @@ export interface JsScanRunSetupCheck {
   details: Array<string>
 }
 
-/** JavaScript-compatible FCX setup context. */
+/** Explicit run-scoped FCX setup facts. */
 export interface JsScanRunSetupContext {
   gameRoot?: string
   docsRoot?: string
@@ -3616,7 +3658,7 @@ export interface JsScanRunSetupPathUpdate {
   path: string
 }
 
-/** JavaScript-compatible Crash Log Scan Setup Result. */
+/** JavaScript-compatible run-scoped setup result. */
 export interface JsScanRunSetupResult {
   status: string
   message?: string
@@ -3626,6 +3668,28 @@ export interface JsScanRunSetupResult {
   configurationIssues: Array<JsFcxConfigIssue>
   actions: Array<string>
   fatalErrors: Array<string>
+}
+
+/** Standard discovery inputs for one request. */
+export interface JsScanRunStandardSource {
+  /** Primary discovery base directory. */
+  baseDirectory: string
+  /** Optional custom scan directory. */
+  customScanDirectory?: string
+  /** Optional configured documents root. */
+  configuredDocumentsRoot?: string
+}
+
+/** Successful final operation envelope with adapter-only observation failure data. */
+export interface JsScanRunSuccess {
+  result: JsScanRunResult
+  observerError?: string
+}
+
+/** Targeted discovery inputs for one request. */
+export interface JsScanRunTargetedSource {
+  /** Explicit user-selected candidate paths in caller order. */
+  inputs: Array<string>
 }
 
 export interface JsSuspectErrorRule {
@@ -4762,14 +4826,14 @@ export declare function scanAllBa2Archives(rootPath: string): Array<JsBa2ScanRes
 export declare function scanModInis(gameRoot: string, gameName: string): JsModIniScanResult
 
 /**
- * Execute a high-level Crash Log Scan Run.
+ * Executes one final-contract request with optional serialized observation.
  *
- * Rust owns discovery, FCX setup validation, Autoscan Report writing, and
- * Standard versus Targeted Unsolved Logs behavior before returning a top-level
- * run result with nested per-log outcomes. Use the lower-level process*
- * functions only when callers explicitly need analysis results with report lines.
+ * The observer is non-controlling. If it throws or cannot be delivered, the
+ * failure is returned only through `observerError`; `cancelOnObserverError`
+ * controls whether that adapter failure also uses the separate cancellation
+ * control to request safe stopping.
  */
-export declare function scanRunExecute(logPaths: Array<string>, options: JsScanRunOptions): Promise<JsScanRunResult>
+export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
 
 /**
  * Convenience function to scan for unpacked files.

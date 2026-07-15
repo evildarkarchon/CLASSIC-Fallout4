@@ -12,6 +12,9 @@ import {
   processLogsBatch,
   processLogWithYamlContent,
   processLogsBatchWithYamlContent,
+  ScanRunCancellation,
+  ScanRunRequest,
+  ScanRunUnsolvedLogs,
   scanRunExecute,
   parseLogSegments,
   extractFormIds,
@@ -28,7 +31,8 @@ import {
   type JsAnalysisBuildOptions,
   type JsAnalysisResult,
   type JsGpuInfo,
-  type JsScanRunOptions,
+  type JsScanRunConfiguration,
+  type JsScanRunEvent,
   type JsLogErrorEntry,
   type JsLogSegments,
   type JsPapyrusStats,
@@ -167,6 +171,24 @@ const writeScanRunDataRoot = (name: string): string => {
   writeFileSync(join(databaseDir, "CLASSIC Fallout4.yaml"), GAME_YAML, "utf8");
   writeFileSync(join(root, "CLASSIC Ignore.yaml"), IGNORE_YAML, "utf8");
   return root;
+};
+
+type ScanRunExecution = Awaited<ReturnType<typeof scanRunExecute>>;
+type ScanRunSuccess = Extract<ScanRunExecution, { result: unknown }>;
+type ScanRunFailure = Extract<ScanRunExecution, { error: unknown }>;
+
+const requireScanRunSuccess = (execution: ScanRunExecution): ScanRunSuccess => {
+  if (!("result" in execution)) {
+    throw new Error(`Expected scan success, received ${execution.error.stage}`);
+  }
+  return execution;
+};
+
+const requireScanRunFailure = (execution: ScanRunExecution): ScanRunFailure => {
+  if (!("error" in execution)) {
+    throw new Error(`Expected scan failure, received ${execution.result.status}`);
+  }
+  return execution;
 };
 
 // ============================================================================
@@ -369,223 +391,277 @@ describe("YAML-backed analysis entry points", () => {
   });
 });
 
-describe("scanRunExecute", () => {
-  const scanRunOptions = (root: string, options: Partial<JsScanRunOptions> = {}): JsScanRunOptions => ({
+describe("final Crash Log Scan Run contract", () => {
+  const scanRunConfiguration = (
+    root: string,
+    options: Partial<JsScanRunConfiguration> = {},
+  ): JsScanRunConfiguration => ({
     yamlDirRoot: root,
     yamlDirData: join(root, "CLASSIC Data"),
     game: "Fallout4",
     gameVersion: "auto",
-    configuredDocumentsRoot: join(root, "Docs"),
+    showFormidValues: false,
+    simplifyLogs: false,
+    formidDatabasePaths: [],
     maxConcurrent: 1,
     ...options,
   });
 
-  test("returns targeted rejections as discovery data", async () => {
+  test("constructors make Targeted movement and FCX without context unrepresentable", () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-request-types");
+    const configuration = scanRunConfiguration(root);
+    const standardSource = {
+      baseDirectory: root,
+      configuredDocumentsRoot: join(root, "Docs"),
+    };
+    const targetedSource = { inputs: [MISSING_LOG_PATH] };
+    const movement = ScanRunUnsolvedLogs.leaveInPlace();
+    const configuredMovement = ScanRunUnsolvedLogs.moveToConfiguredOrDefault();
+    const customMovement = ScanRunUnsolvedLogs.moveToCustom(join(root, "Unsolved Logs"));
+
+    try {
+      expect(ScanRunRequest.standard(configuration, standardSource, movement)).toBeDefined();
+      expect(ScanRunRequest.standard(configuration, standardSource, configuredMovement)).toBeDefined();
+      expect(ScanRunRequest.standard(configuration, standardSource, customMovement)).toBeDefined();
+      expect(ScanRunRequest.targeted(configuration, targetedSource)).toBeDefined();
+
+      if (false) {
+        // @ts-expect-error Targeted requests deliberately accept no movement policy.
+        ScanRunRequest.targeted(configuration, targetedSource, movement);
+        // @ts-expect-error FCX constructors require explicit run-scoped setup facts.
+        ScanRunRequest.standardWithFcx(configuration, standardSource, movement);
+        // @ts-expect-error FCX constructors require explicit run-scoped setup facts.
+        ScanRunRequest.targetedWithFcx(configuration, targetedSource);
+      }
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("returns typed Targeted rejections and request-validation errors", async () => {
     const root = writeScanRunDataRoot("classic-node-scan-run-failure");
 
     try {
-      const scanResult = await scanRunExecute([MISSING_LOG_PATH], {
-        ...scanRunOptions(root, { targetedMode: true }),
-      });
-      const results = scanResult.logs;
+      const request = ScanRunRequest.targeted(
+        scanRunConfiguration(root),
+        { inputs: [MISSING_LOG_PATH] },
+      );
+      const execution = await scanRunExecute(request, new ScanRunCancellation());
 
-      expect(scanResult.status).toBe("no_crash_logs_found");
-      expect(scanResult.discovery).toMatchObject({
+      const success = requireScanRunSuccess(execution);
+      expect(success.result.status).toBe("no_crash_logs_found");
+      expect(success.result.discovery).toMatchObject({
         source: "targeted",
         acceptedLogs: [],
       });
-      expect(scanResult.discovery?.rejectedInputs[0]).toMatchObject({
+      expect(success.result.discovery?.rejectedInputs[0]).toMatchObject({
         path: MISSING_LOG_PATH,
       });
-      expect(results).toHaveLength(0);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
 
-  test("writes Autoscan Reports in Rust for successful scan runs", async () => {
-    const root = writeScanRunDataRoot("classic-node-scan-run-success");
-    const logDir = join(root, "Crash Logs");
-    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
-
-    try {
-      mkdirSync(logDir, { recursive: true });
-      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
-
-      const scanResult = await scanRunExecute([logPath], {
-        ...scanRunOptions(root),
+      const invalidRequest = ScanRunRequest.targeted(
+        scanRunConfiguration(root, { maxConcurrent: 0 }),
+        { inputs: [MISSING_LOG_PATH] },
+      );
+      const invalidExecution = await scanRunExecute(
+        invalidRequest,
+        new ScanRunCancellation(),
+      );
+      const failure = requireScanRunFailure(invalidExecution);
+      expect(failure.error).toEqual({
+        stage: "request_validation",
+        message: expect.stringMatching(/greater than zero/i),
+        path: undefined,
       });
-      const results = scanResult.logs;
-
-      expect(scanResult.total).toBe(1);
-      expect(results).toHaveLength(1);
-      expect(results[0].success).toBe(true);
-      expect(results[0].autoscanReportPath).toContain("-AUTOSCAN.md");
-      expect(existsSync(results[0].autoscanReportPath!)).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
 
-  test("prepares FCX Game Setup from canonical User Settings", async () => {
-    const root = writeScanRunDataRoot("classic-node-scan-run-user-settings-fcx");
-    const logDir = join(root, "Crash Logs");
-    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
+  test("maps FCX setup outcomes through the final Standard contract", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-fcx");
     const gameRoot = join(root, "Fallout4");
-    const gameExecutable = join(gameRoot, "Fallout4.exe");
+    const docsRoot = join(root, "Documents");
+    const gameExePath = join(gameRoot, "Fallout4.exe");
+    const crashLogPath = join(root, "crash-2026-07-15-12-00-00.log");
+    mkdirSync(gameRoot, { recursive: true });
+    mkdirSync(docsRoot, { recursive: true });
+    writeFileSync(gameExePath, "", "utf8");
+    writeFileSync(crashLogPath, SAMPLE_CRASH_LOG, "utf8");
 
     try {
-      mkdirSync(logDir, { recursive: true });
-      mkdirSync(gameRoot, { recursive: true });
-      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
-      writeFileSync(gameExecutable, "", "utf8");
-      writeFileSync(
-        join(root, "CLASSIC Settings.yaml"),
-        `schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  Game Version: Original\n  Game Folder Path: '${normalizeYamlPath(gameRoot)}'\n  Game EXE Path: '${normalizeYamlPath(gameExecutable)}'\n`,
-        "utf8",
+      const request = ScanRunRequest.standardWithFcx(
+        scanRunConfiguration(root),
+        { baseDirectory: root, configuredDocumentsRoot: docsRoot },
+        ScanRunUnsolvedLogs.leaveInPlace(),
+        { gameRoot, docsRoot, gameExePath },
+      );
+      const execution = await scanRunExecute(
+        request,
+        new ScanRunCancellation(),
       );
 
-      const scanResult = await scanRunExecute([logPath], {
-        ...scanRunOptions(root, { fcxMode: true, targetedMode: true }),
+      const success = requireScanRunSuccess(execution);
+      expect(success.result.setup).toMatchObject({
+        status: expect.any(String),
+        renderedReport: expect.any(String),
+        checks: expect.any(Array),
+        pathUpdates: expect.any(Array),
+        configurationIssues: expect.any(Array),
+        actions: expect.any(Array),
+        fatalErrors: expect.any(Array),
       });
 
-      expect(scanResult.setup).toBeDefined();
-      expect(scanResult.setup?.actions).not.toContain("provide_setup_context");
-      expect(scanResult.setup?.checks.length).toBeGreaterThan(0);
+      const discoveredLog = success.result.discovery?.acceptedLogs[0];
+      expect(discoveredLog).toBeDefined();
+      const targetedExecution = await scanRunExecute(
+        ScanRunRequest.targetedWithFcx(
+          scanRunConfiguration(root),
+          { inputs: [discoveredLog!] },
+          { gameRoot, docsRoot, gameExePath },
+        ),
+        new ScanRunCancellation(),
+      );
+      expect(requireScanRunSuccess(targetedExecution).result.setup).toBeDefined();
     } finally {
+      resetFcxGlobalState();
       rmSync(root, { recursive: true, force: true });
     }
   });
 
-  test("marks report write failures separately from analysis failures", async () => {
-    const root = writeScanRunDataRoot("classic-node-scan-run-report-failure");
+  test("Standard execution writes durable reports and exposes every serialized event variant", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-standard");
     const logDir = join(root, "Crash Logs");
     const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
-    const reportPath = join(logDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
+    const events: JsScanRunEvent[] = [];
 
     try {
       mkdirSync(logDir, { recursive: true });
       writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
-      mkdirSync(reportPath);
 
-      const scanResult = await scanRunExecute([logPath], {
-        ...scanRunOptions(root),
-      });
-      const results = scanResult.logs;
+      const request = ScanRunRequest.standard(
+        scanRunConfiguration(root),
+        {
+          baseDirectory: root,
+          configuredDocumentsRoot: join(root, "Docs"),
+        },
+        ScanRunUnsolvedLogs.leaveInPlace(),
+      );
+      const execution = await scanRunExecute(
+        request,
+        new ScanRunCancellation(),
+        (event) => {
+          events.push(event);
+          return false;
+        },
+      );
+      const scanResult = requireScanRunSuccess(execution).result;
+      const result = scanResult.logs[0];
 
       expect(scanResult.total).toBe(1);
-      expect(results).toHaveLength(1);
-      expect(results[0].success).toBe(false);
-      expect(results[0].reportWriteFailed).toBe(true);
-      expect(results[0].autoscanReportPath).toBeUndefined();
-      expect(results[0].error).toBeDefined();
+      expect(scanResult.effectiveConcurrency).toBe(1);
+      expect(result.disposition).toBe("succeeded");
+      expect(result.failures).toEqual([]);
+      expect(result.discoveryIndex).toBe(0);
+      expect(result.autoscanReport).toContain("-AUTOSCAN.md");
+      expect(existsSync(result.autoscanReport!)).toBe(true);
+      expect(events.map((event) => event.kind)).toEqual(
+        expect.arrayContaining([
+          "discovery_completed",
+          "effective_concurrency_selected",
+          "log_queued",
+          "log_started",
+          "log_phase",
+          "log_finished",
+        ]),
+      );
+      expect(events.at(0)?.kind).toBe("discovery_completed");
+      expect(events.at(-1)).toMatchObject({
+        kind: "log_finished",
+        disposition: "succeeded",
+      });
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
 
-  test("targeted mode ignores move and destination options", async () => {
-    const root = writeScanRunDataRoot("classic-node-scan-run-targeted-policy");
+  test("Targeted execution preserves discovery order and durable artifacts", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-targeted");
     const logDir = join(root, "incoming");
-    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
+    const secondPath = join(logDir, "crash-2026-03-06-12-00-02.log");
+    const firstPath = join(logDir, "crash-2026-03-06-12-00-01.log");
 
     try {
       mkdirSync(logDir, { recursive: true });
-      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
+      writeFileSync(firstPath, SAMPLE_CRASH_LOG, "utf8");
+      writeFileSync(secondPath, SAMPLE_CRASH_LOG, "utf8");
 
-      const scanResult = await scanRunExecute(
-        [logPath],
-        scanRunOptions(root, {
-          targetedMode: true,
-          moveUnsolvedLogs: true,
-          unsolvedLogsDestination: "relative-destination",
-        }),
+      const request = ScanRunRequest.targeted(
+        scanRunConfiguration(root, { maxConcurrent: 2 }),
+        { inputs: [secondPath, firstPath] },
       );
-      const results = scanResult.logs;
+      const execution = await scanRunExecute(request, new ScanRunCancellation());
+      const scanResult = requireScanRunSuccess(execution).result;
 
-      expect(scanResult.discovery?.source).toBe("targeted");
-      expect(results).toHaveLength(1);
-      expect(results[0].success).toBe(true);
-      expect(results[0].movedToUnsolvedLogs).toBe(false);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  test("destination is ignored when moveUnsolvedLogs is false", async () => {
-    const root = writeScanRunDataRoot("classic-node-scan-run-ignore-destination");
-    const logDir = join(root, "Crash Logs");
-    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
-
-    try {
-      mkdirSync(logDir, { recursive: true });
-      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
-
-      const scanResult = await scanRunExecute(
-        [],
-        scanRunOptions(root, {
-          moveUnsolvedLogs: false,
-          unsolvedLogsDestination: "relative-destination",
-        }),
-      );
-      const results = scanResult.logs;
-
-      expect(scanResult.status).toBe("completed");
-      expect(results).toHaveLength(1);
-      expect(results[0].success).toBe(true);
-      expect(results[0].movedToUnsolvedLogs).toBe(false);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  test("blank destination uses the default when standard movement is enabled", async () => {
-    const root = writeScanRunDataRoot("classic-node-scan-run-blank-destination");
-    const logDir = join(root, "Crash Logs");
-    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
-
-    try {
-      mkdirSync(logDir, { recursive: true });
-      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
-
-      const scanResult = await scanRunExecute(
-        [],
-        scanRunOptions(root, {
-          moveUnsolvedLogs: true,
-          unsolvedLogsDestination: "  \t  ",
-        }),
-      );
-
-      expect(scanResult.status).toBe("completed");
-      expect(scanResult.logs).toHaveLength(1);
-      expect(scanResult.logs[0].success).toBe(true);
-    } finally {
-      rmSync(root, { recursive: true, force: true });
-    }
-  });
-
-  test("relative destination fails setup when standard movement is enabled", async () => {
-    const root = writeScanRunDataRoot("classic-node-scan-run-relative-destination");
-    const logDir = join(root, "Crash Logs");
-    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
-
-    try {
-      mkdirSync(logDir, { recursive: true });
-      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
-
-      await expect(
-        scanRunExecute(
-          [],
-          scanRunOptions(root, {
-            moveUnsolvedLogs: true,
-            unsolvedLogsDestination: "relative-destination",
-          }),
+      expect(scanResult.discovery?.acceptedLogs).toEqual([secondPath, firstPath]);
+      expect(scanResult.logs.map((result) => result.crashLog)).toEqual([
+        secondPath,
+        firstPath,
+      ]);
+      expect(scanResult.logs.map((result) => result.discoveryIndex)).toEqual([0, 1]);
+      expect(scanResult.logs.every((result) => result.disposition === "succeeded")).toBe(true);
+      expect(
+        scanResult.logs.every(
+          (result) => result.autoscanReport && existsSync(result.autoscanReport),
         ),
-      ).rejects.toThrow(/absolute path/i);
+      ).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test("observer delivery failures stay separate and can request safe cancellation", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-observer-failure");
+    const logPath = join(root, "crash-2026-07-15-12-00-00.log");
+    writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
+
+    try {
+      const requestWithoutCancellation = ScanRunRequest.targeted(
+        scanRunConfiguration(root),
+        { inputs: [logPath] },
+      );
+      const retainedCancellation = new ScanRunCancellation();
+      const completedExecution = await scanRunExecute(
+        requestWithoutCancellation,
+        retainedCancellation,
+        () => {
+          throw new Error("observer transport closed");
+        },
+        false,
+      );
+      const completed = requireScanRunSuccess(completedExecution);
+      expect(completed.result.status).toBe("completed");
+      expect(completed.observerError).toMatch(/observer transport closed/);
+      expect(retainedCancellation.isCancelled).toBe(false);
+
+      const cancellingControl = new ScanRunCancellation();
+      const cancelledExecution = await scanRunExecute(
+        ScanRunRequest.targeted(scanRunConfiguration(root), { inputs: [logPath] }),
+        cancellingControl,
+        () => {
+          throw new Error("observer transport closed");
+        },
+        true,
+      );
+
+      const cancelled = requireScanRunSuccess(cancelledExecution);
+      expect(cancelled.result.status).toBe("cancelled");
+      expect(cancelled.observerError).toMatch(/observer transport closed/);
+      expect(cancellingControl.isCancelled).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
 });
 
 describe("FCX scan state isolation", () => {

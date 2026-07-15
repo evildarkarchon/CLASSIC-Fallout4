@@ -408,6 +408,68 @@ if (activeTier1Owners.has("scanlog")) {
 }
 
 if (activeTier1Owners.has("scanlog")) {
+  test("runs final Standard and Targeted scan contracts in Node runtime", async () => {
+    const { workspace } = createCliWorkspace();
+    const configuration = {
+      yamlDirRoot: workspace,
+      yamlDirData: join(workspace, "CLASSIC Data"),
+      game: "Fallout4",
+      gameVersion: "auto",
+      showFormidValues: false,
+      simplifyLogs: false,
+      formidDatabasePaths: [],
+      maxConcurrent: 1,
+    };
+
+    try {
+      const standardEvents = [];
+      const standardRequest = classic.ScanRunRequest.standard(
+        configuration,
+        { baseDirectory: join(workspace, "incoming") },
+        classic.ScanRunUnsolvedLogs.leaveInPlace(),
+      );
+      const standardExecution = await classic.scanRunExecute(
+        standardRequest,
+        new classic.ScanRunCancellation(),
+        (event) => {
+          standardEvents.push(event.kind);
+        },
+      );
+
+      assert.equal(standardExecution.error, undefined);
+      assert.equal(standardExecution.result.status, "completed");
+      const discoveredLogPath = standardExecution.result.logs[0].crashLog;
+      assert.equal(discoveredLogPath.endsWith("crash-2026-03-06-12-00-00.log"), true);
+      assert.equal(standardEvents.includes("discovery_completed"), true);
+      assert.equal(standardEvents.includes("effective_concurrency_selected"), true);
+
+      const missingPath = join(workspace, "missing-crash.log");
+      const targetedRequest = classic.ScanRunRequest.targeted(
+        configuration,
+        { inputs: [missingPath, discoveredLogPath] },
+      );
+      const targetedExecution = await classic.scanRunExecute(
+        targetedRequest,
+        new classic.ScanRunCancellation(),
+      );
+
+      assert.equal(targetedExecution.error, undefined);
+      assert.deepEqual(
+        targetedExecution.result.discovery.acceptedLogs,
+        [discoveredLogPath],
+      );
+      assert.equal(
+        targetedExecution.result.discovery.rejectedInputs[0].path,
+        missingPath,
+      );
+      assert.equal(targetedExecution.result.logs[0].discoveryIndex, 0);
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+}
+
+if (activeTier1Owners.has("scanlog")) {
   test("runs functional CLI workflow in Node runtime", () => {
     const { cliPath, logPath, workspace } = createCliWorkspace();
 
