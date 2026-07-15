@@ -7,12 +7,21 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tempfile::tempdir;
 
 fn make_ready_analysis() -> ScanReadyAnalysis {
-    make_ready_analysis_with(None, None)
+    make_ready_analysis_with_options(None, None, false)
 }
 
 fn make_ready_analysis_with(
     paths: Option<crate::CrashLogScanIntakePaths>,
     unsolved_logs_destination: Option<std::path::PathBuf>,
+) -> ScanReadyAnalysis {
+    make_ready_analysis_with_options(paths, unsolved_logs_destination, false)
+}
+
+/// Builds prepared intake with explicit FCX state for prepared-run boundary tests.
+fn make_ready_analysis_with_options(
+    paths: Option<crate::CrashLogScanIntakePaths>,
+    unsolved_logs_destination: Option<std::path::PathBuf>,
+    fcx_mode: bool,
 ) -> ScanReadyAnalysis {
     let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     config.crashgen_name = "Buffout 4".to_string();
@@ -20,6 +29,7 @@ fn make_ready_analysis_with(
     config.game_version = "1.10.163".to_string();
     config.game_version_vr = "1.2.72".to_string();
     config.xse_acronym = "F4SE".to_string();
+    config.fcx_mode = fcx_mode;
 
     ScanReadyAnalysis::new(
         config,
@@ -31,6 +41,23 @@ fn make_ready_analysis_with(
         paths,
         unsolved_logs_destination,
     )
+}
+
+#[test]
+fn prepared_run_rejects_fcx_without_run_scoped_setup() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let log_path = write_fixture_log(&temp, "crash-prepared-fcx.log");
+    let run = CrashLogScanRun::new(make_ready_analysis_with_options(None, None, true));
+
+    let result = get_runtime().block_on(run.run(
+        standard_request(log_path, StandardUnsolvedLogsIntent::LeaveInPlace),
+        |_| {},
+    ));
+    let Err(error) = result else {
+        panic!("prepared FCX run without setup should be rejected");
+    };
+
+    assert!(error.to_string().contains("require run-scoped setup facts"));
 }
 
 fn service_request(
@@ -233,7 +260,7 @@ fn fcx_config_checks_use_game_root_resolved_from_configured_executable() {
         xse_log_path: None,
     });
 
-    let (setup, _) = evaluate_setup_for_scan(&request);
+    let (setup, _) = evaluate_setup_for_scan(&request).expect("FCX setup should evaluate");
 
     let setup = setup.expect("FCX setup result should be present");
     assert!(

@@ -11,7 +11,7 @@ fn base_facts() -> AutoscanReportFacts {
         crashgen_version: "Buffout 4 v1.28.6".to_string(),
         crashgen_status: Some(CrashgenVersionStatus::Valid),
         fake_bot_compatible_mode: false,
-        fcx_mode_enabled: false,
+        fcx_setup: None,
     }
 }
 
@@ -229,15 +229,25 @@ fn autoscan_report_assembler_renders_no_suspects_footer_when_no_findings_exist()
 }
 
 #[test]
-fn autoscan_report_assembler_renders_fcx_mode_notice_from_facts() {
+fn autoscan_report_assembler_renders_fcx_content_from_run_setup() {
     let mut facts = base_facts();
-    facts.fcx_mode_enabled = true;
+    facts.fcx_setup = Some(Arc::new(crate::scan_run::CrashLogScanSetupResult {
+        status: "completed".to_string(),
+        checks: Vec::new(),
+        path_updates: Vec::new(),
+        configuration_issues: Vec::new(),
+        actions: Vec::new(),
+        fatal_errors: Vec::new(),
+        message: None,
+        rendered_report: "Run-owned setup facts\n".to_string(),
+    }));
 
     let report_lines = AutoscanReportAssembler::new().assemble(&facts, vec![]);
     let text = report_lines.join("");
 
     assert!(text.contains("FCX LOCAL FILE CHECKS ARE ENABLED"));
     assert!(text.contains("Use FCX only with crash logs from your own installation"));
+    assert!(text.contains("Run-owned setup facts"));
 }
 
 #[test]

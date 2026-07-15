@@ -14,13 +14,14 @@ use parking_lot::Mutex;
 use std::sync::LazyLock;
 use thiserror::Error;
 
-/// Global FCX mode handler for shared state across scan sessions
+/// Legacy process-global FCX handler retained for lower-level compatibility entrypoints.
 ///
-/// This static provides session-wide caching for FCX mode checks, enabling
-/// run-once optimization for batch scanning (10x performance improvement).
+/// Complete Crash Log Scan Runs never reset, seed, or read this handler; they own an
+/// immutable setup snapshot instead. Dedicated adapter migration and contraction tickets
+/// remove the remaining legacy consumers and this compatibility state.
 ///
-/// Call `FcxModeHandler::reset_global_state()` at the start of each scan session
-/// to clear cached results.
+/// Legacy entrypoints that still populate this handler must reset it before starting their
+/// own lower-level scan sequence so cached results are not reused across those calls.
 pub static GLOBAL_FCX_HANDLER: LazyLock<Mutex<FcxModeHandler>> =
     LazyLock::new(|| Mutex::new(FcxModeHandler::new(false)));
 
@@ -37,7 +38,7 @@ pub enum FcxResetError {
 }
 
 /// Configuration issue detected by FCX mode
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ConfigIssue {
     /// Path to the configuration file
     pub file_path: String,

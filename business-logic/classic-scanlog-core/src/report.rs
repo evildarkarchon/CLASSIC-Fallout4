@@ -8,6 +8,7 @@
 
 // Error types not needed in pure Rust - using standard Result
 use crate::error::{Result, ScanLogError};
+use crate::scan_run::CrashLogScanSetupResult;
 use crate::version::CrashgenVersionStatus;
 use classic_config_core::{AutoscanReportPlacement, OutcomeKind, RuleSeverity};
 use classic_file_io_core::FileIOCore;
@@ -58,7 +59,7 @@ pub(crate) struct AutoscanReportFacts {
     pub crashgen_version: String,
     pub crashgen_status: Option<CrashgenVersionStatus>,
     pub fake_bot_compatible_mode: bool,
-    pub fcx_mode_enabled: bool,
+    pub fcx_setup: Option<Arc<CrashLogScanSetupResult>>,
 }
 
 /// Typed contribution from scan-time collectors into Autoscan Report Assembly.
@@ -154,8 +155,8 @@ impl AutoscanReportAssembler {
         composer.add_many(suspect_fragments);
         composer.add(report_gen.generate_suspect_found_footer(found_suspect));
 
-        if facts.fcx_mode_enabled {
-            composer.add(Self::fcx_mode_notice_fragment());
+        if let Some(setup) = facts.fcx_setup.as_deref() {
+            composer.add(Self::fcx_setup_fragment(setup));
         }
 
         let settings_fragments = Self::settings_fragments(&contributions);
@@ -343,11 +344,32 @@ impl AutoscanReportAssembler {
         ReportFragment::from_lines(lines)
     }
 
-    fn fcx_mode_notice_fragment() -> ReportFragment {
-        ReportFragment::from_lines(vec![
+    /// Renders the immutable setup snapshot owned by the current scan run.
+    fn fcx_setup_fragment(setup: &CrashLogScanSetupResult) -> ReportFragment {
+        let mut lines = vec![
             "* NOTICE: FCX LOCAL FILE CHECKS ARE ENABLED FOR THIS SCAN * \n\n".to_string(),
             "[ Use FCX only with crash logs from your own installation. ] \n\n".to_string(),
-        ])
+        ];
+
+        if !setup.rendered_report.trim().is_empty() {
+            lines.push("\n--- FCX SETUP VALIDATION ---\n\n".to_string());
+            lines.push(setup.rendered_report.clone());
+            if !setup.rendered_report.ends_with('\n') {
+                lines.push("\n".to_string());
+            }
+        }
+
+        if !setup.configuration_issues.is_empty() {
+            lines.push("\n--- DETECTED CONFIGURATION ISSUES ---\n\n".to_string());
+            lines.extend(
+                setup
+                    .configuration_issues
+                    .iter()
+                    .map(crate::ConfigIssue::format_report),
+            );
+        }
+
+        ReportFragment::from_lines(lines)
     }
 }
 

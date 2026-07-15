@@ -10,21 +10,25 @@ use crate::error::{Result, ScanLogError};
 use crate::report::autoscan_report_path;
 use crate::{
     AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, ConfigIssue,
-    CrashLogScanFacts, CrashLogScanIntake, CrashLogScanOptions, FcxModeHandler, FcxResetError,
-    GLOBAL_FCX_HANDLER, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase,
-    ScanReadyAnalysis, resolve_batch_concurrency,
+    CrashLogScanFacts, CrashLogScanIntake, CrashLogScanOptions, OrchestratorCore,
+    ScanProgressPhase, ScanReadyAnalysis, resolve_batch_concurrency,
 };
 use classic_database_core::DatabasePool;
 use classic_file_io_core::{LogCollector, RejectedInput, resolve_targeted_inputs};
 use classic_operation_context::scope_cancellation;
 use classic_scangame_core::{
-    GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, detect_config_issues,
+    ConfigFileCache, GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, ModIniScanner,
 };
 use classic_shared_core::GameId;
+use futures::stream::{FuturesUnordered, StreamExt};
+use std::collections::VecDeque;
+use std::future::Future;
 use std::path::{Path, PathBuf};
+use std::pin::Pin;
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
+use tokio::sync::mpsc;
 
 const CANCELLED_BY_USER_MESSAGE: &str = "Cancelled by user";
 
@@ -83,8 +87,6 @@ pub(super) async fn execute_service<F>(
 where
     F: FnMut(CrashLogScanRunServiceEvent),
 {
-    reset_fcx_state()?;
-
     if cancellation_requested(request.cancellation.as_ref()) {
         return Ok(CrashLogScanRunResult::cancelled_before_discovery());
     }
@@ -107,7 +109,7 @@ where
         return Ok(CrashLogScanRunResult::cancelled_after_discovery(discovery));
     }
 
-    let (setup, setup_failed) = evaluate_setup_for_scan(&request);
+    let (setup, setup_failed) = evaluate_setup_for_scan(&request)?;
     if setup_failed {
         let message = setup
             .as_ref()
@@ -154,23 +156,19 @@ where
         request.move_unsolved_logs,
         configured_unsolved_logs_destination,
     );
-    let run_request = CrashLogScanRunRequest {
-        logs: discovery.accepted_logs.clone(),
-        intent,
-        max_concurrent: request.max_concurrent,
-        cancellation: request.cancellation.clone(),
-        preserve_order: request.preserve_order,
-    };
-
-    let mut result = CrashLogScanRun::new(ready)
-        .run_inner(
-            run_request,
+    let setup_snapshot = setup.map(Arc::new);
+    let mut result = CrashLogScanRun::with_setup(ready, setup_snapshot.clone())
+        .run_scheduled(
+            discovery.accepted_logs.clone(),
+            intent,
+            effective_concurrency,
+            request.cancellation.clone(),
+            request.preserve_order,
             |event| on_event(CrashLogScanRunServiceEvent::Log(event)),
-            false,
         )
         .await?;
     result.discovery = Some(discovery);
-    result.setup = setup;
+    result.setup = setup_snapshot.as_deref().cloned();
     Ok(result)
 }
 
@@ -323,7 +321,7 @@ impl From<RejectedInput> for CrashLogScanRejectedInput {
 }
 
 /// Structured setup validation data attached to a Crash Log Scan Run Result.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CrashLogScanSetupResult {
     /// Adapter-facing setup status identifier.
     pub status: String,
@@ -369,13 +367,66 @@ pub struct CrashLogScanSetupPathUpdate {
 #[derive(Clone)]
 pub struct CrashLogScanRun {
     ready: ScanReadyAnalysis,
+    setup: Option<Arc<CrashLogScanSetupResult>>,
+}
+
+/// One phase notification produced by an admitted single-log analysis.
+struct ScheduledLogPhase {
+    input_index: usize,
+    crash_log: PathBuf,
+    phase: ScanProgressPhase,
+}
+
+/// Internal engine for one admitted log's analysis and durable finalization.
+struct SingleLogAnalysisEngine<'a> {
+    orchestrator: &'a OrchestratorCore,
+    unsolved_logs_destination: Option<&'a Path>,
+}
+
+impl SingleLogAnalysisEngine<'_> {
+    /// Analyzes and finalizes one admitted Crash Log without consulting cancellation again.
+    async fn analyze_and_finalize(
+        &self,
+        input_index: usize,
+        crash_log: PathBuf,
+        phase_tx: mpsc::UnboundedSender<ScheduledLogPhase>,
+    ) -> CrashLogScanRunLogOutcome {
+        let log_path = crash_log.to_string_lossy().to_string();
+        let result = match self
+            .orchestrator
+            .process_log_with_progress(log_path.clone(), |phase| {
+                let _ = phase_tx.send(ScheduledLogPhase {
+                    input_index,
+                    crash_log: crash_log.clone(),
+                    phase,
+                });
+            })
+            .await
+        {
+            Ok(result) => result,
+            Err(error) => AnalysisResult::failure(log_path, error.to_string()),
+        };
+
+        finalize_log_outcome(
+            input_index,
+            result,
+            self.unsolved_logs_destination,
+            self.orchestrator,
+        )
+        .await
+    }
 }
 
 impl CrashLogScanRun {
     /// Creates a Crash Log Scan Run module from prepared Crash Log Scan Intake output.
     #[must_use]
     pub fn new(ready: ScanReadyAnalysis) -> Self {
-        Self { ready }
+        Self { ready, setup: None }
+    }
+
+    /// Creates a run whose immutable FCX setup result is shared with every log analysis.
+    fn with_setup(ready: ScanReadyAnalysis, setup: Option<Arc<CrashLogScanSetupResult>>) -> Self {
+        Self { ready, setup }
     }
 
     /// Runs analysis for the selected Crash Logs and owns all run-level side effects.
@@ -383,9 +434,9 @@ impl CrashLogScanRun {
     /// # Errors
     ///
     /// Returns an error for setup failures that prevent the run from starting, such as
-    /// FCX reset failure, orchestrator initialization failure, or FormID database setup
-    /// failure. Per-log analysis, Autoscan Report write, and Unsolved Logs relocation
-    /// failures are returned as log outcomes instead.
+    /// orchestrator initialization or FormID database setup failure. Per-log analysis,
+    /// Autoscan Report write, and Unsolved Logs relocation failures are returned as log
+    /// outcomes instead.
     pub async fn run<F>(
         &self,
         request: CrashLogScanRunRequest,
@@ -394,21 +445,18 @@ impl CrashLogScanRun {
     where
         F: FnMut(CrashLogScanRunEvent),
     {
-        self.run_inner(request, &mut on_event, true).await
+        self.run_inner(request, &mut on_event).await
     }
 
     async fn run_inner<F>(
         &self,
         request: CrashLogScanRunRequest,
         mut on_event: F,
-        reset_state: bool,
     ) -> Result<CrashLogScanRunResult>
     where
         F: FnMut(CrashLogScanRunEvent),
     {
-        if reset_state {
-            reset_fcx_state()?;
-        }
+        self.validate_run_scoped_setup()?;
 
         let total = request.logs.len();
         if total == 0 {
@@ -456,9 +504,13 @@ impl CrashLogScanRun {
         let mut completed = 0usize;
         for indexed in indexed_results {
             completed += 1;
-            let outcome =
-                finalize_log_outcome(indexed, unsolved_logs_destination.as_deref(), &orchestrator)
-                    .await;
+            let outcome = finalize_log_outcome(
+                indexed.input_index,
+                indexed.result,
+                unsolved_logs_destination.as_deref(),
+                &orchestrator,
+            )
+            .await;
             on_event(outcome.terminal_event(completed, total));
             outcomes.push(outcome);
         }
@@ -468,8 +520,63 @@ impl CrashLogScanRun {
         Ok(CrashLogScanRunResult::from_outcomes(outcomes))
     }
 
+    /// Runs the final contract's scan-run-owned scheduler over the single-log engine.
+    ///
+    /// Effective concurrency is selected by the caller exactly once. Cancellation is
+    /// checked only before admission; once `Started` is published, the engine runs
+    /// through report persistence and applicable Unsolved Logs finalization.
+    async fn run_scheduled<F>(
+        &self,
+        logs: Vec<PathBuf>,
+        intent: CrashLogScanRunIntent,
+        effective_concurrency: usize,
+        cancellation: Option<Arc<AtomicBool>>,
+        preserve_order: bool,
+        mut on_event: F,
+    ) -> Result<CrashLogScanRunResult>
+    where
+        F: FnMut(CrashLogScanRunEvent),
+    {
+        self.validate_run_scoped_setup()?;
+
+        let total = logs.len();
+        if total == 0 {
+            return Ok(CrashLogScanRunResult::empty());
+        }
+
+        let unsolved_logs_destination = resolve_unsolved_logs_destination(&self.ready, &intent)?;
+        let mut orchestrator = self.build_orchestrator().await?;
+        let mut outcomes = schedule_logs(
+            &orchestrator,
+            logs,
+            unsolved_logs_destination.as_deref(),
+            effective_concurrency,
+            cancellation.as_ref(),
+            &mut on_event,
+        )
+        .await;
+        orchestrator.async_exit().await?;
+
+        if preserve_order {
+            outcomes.sort_by_key(|outcome| outcome.input_index);
+        }
+        Ok(CrashLogScanRunResult::from_outcomes(outcomes))
+    }
+
+    /// Rejects FCX execution when no immutable run-owned setup snapshot is attached.
+    fn validate_run_scoped_setup(&self) -> Result<()> {
+        if self.ready.analysis_config().fcx_mode && self.setup.is_none() {
+            return Err(ScanLogError::ValidationError(
+                "FCX-enabled Crash Log Scan Runs require run-scoped setup facts; use the final scan_run contract"
+                    .to_string(),
+            ));
+        }
+        Ok(())
+    }
+
     async fn build_orchestrator(&self) -> Result<OrchestratorCore> {
         let mut orchestrator = OrchestratorCore::new(self.ready.analysis_config().clone())?;
+        orchestrator.set_scan_run_setup(self.setup.clone());
 
         if self.ready.should_initialize_formid_database() {
             let cache_profile = self.ready.cache_profile();
@@ -488,6 +595,112 @@ impl CrashLogScanRun {
         orchestrator.async_enter(None).await?;
         Ok(orchestrator)
     }
+}
+
+/// Schedules discovered logs and serializes every observer call from one execution pump.
+async fn schedule_logs<F>(
+    orchestrator: &OrchestratorCore,
+    logs: Vec<PathBuf>,
+    unsolved_logs_destination: Option<&Path>,
+    effective_concurrency: usize,
+    cancellation: Option<&Arc<AtomicBool>>,
+    on_event: &mut F,
+) -> Vec<CrashLogScanRunLogOutcome>
+where
+    F: FnMut(CrashLogScanRunEvent),
+{
+    let total = logs.len();
+    let engine = SingleLogAnalysisEngine {
+        orchestrator,
+        unsolved_logs_destination,
+    };
+
+    for (input_index, crash_log) in logs.iter().enumerate() {
+        on_event(CrashLogScanRunEvent {
+            input_index,
+            crash_log: crash_log.clone(),
+            kind: CrashLogScanRunEventKind::Queued,
+            phase: ScanProgressPhase::Setup,
+            completed: 0,
+            total,
+            success: false,
+            disposition: None,
+        });
+    }
+
+    type AdmittedLogFuture<'a> =
+        Pin<Box<dyn Future<Output = CrashLogScanRunLogOutcome> + Send + 'a>>;
+    let (phase_tx, mut phase_rx) = mpsc::unbounded_channel::<ScheduledLogPhase>();
+    let mut pending = logs.into_iter().enumerate().collect::<VecDeque<_>>();
+    let mut admitted = FuturesUnordered::<AdmittedLogFuture<'_>>::new();
+    let mut outcomes = Vec::with_capacity(total);
+    let mut completed = 0usize;
+
+    loop {
+        while admitted.len() < effective_concurrency {
+            if cancellation_requested(cancellation) {
+                break;
+            }
+            let Some((input_index, crash_log)) = pending.pop_front() else {
+                break;
+            };
+
+            // The successful cancellation check above is the admission boundary.
+            // Started publishes that decision; cancellation requested by this callback
+            // applies to later queued logs, while this log remains admitted.
+            on_event(CrashLogScanRunEvent {
+                input_index,
+                crash_log: crash_log.clone(),
+                kind: CrashLogScanRunEventKind::Started,
+                phase: ScanProgressPhase::Setup,
+                completed,
+                total,
+                success: false,
+                disposition: None,
+            });
+            admitted.push(Box::pin(engine.analyze_and_finalize(
+                input_index,
+                crash_log,
+                phase_tx.clone(),
+            )));
+        }
+
+        if admitted.is_empty() {
+            break;
+        }
+
+        tokio::select! {
+            biased;
+            maybe_phase = phase_rx.recv() => {
+                if let Some(phase) = maybe_phase {
+                    emit_scheduled_phase(on_event, phase, completed, total);
+                }
+            }
+            maybe_outcome = admitted.next() => {
+                let Some(outcome) = maybe_outcome else {
+                    break;
+                };
+                while let Ok(phase) = phase_rx.try_recv() {
+                    emit_scheduled_phase(on_event, phase, completed, total);
+                }
+                completed += 1;
+                on_event(outcome.terminal_event(completed, total));
+                outcomes.push(outcome);
+            }
+        }
+    }
+
+    while let Ok(phase) = phase_rx.try_recv() {
+        emit_scheduled_phase(on_event, phase, completed, total);
+    }
+    for (input_index, crash_log) in pending {
+        let outcome = cancelled_log_outcome(input_index, crash_log);
+        completed += 1;
+        on_event(outcome.terminal_event(completed, total));
+        outcomes.push(outcome);
+    }
+
+    outcomes
 }
 
 /// Request to execute a Crash Log Scan Run for selected Crash Logs.
@@ -876,12 +1089,11 @@ pub enum CrashLogScanRunEventKind {
 }
 
 async fn finalize_log_outcome(
-    indexed: IndexedAnalysisResult,
+    input_index: usize,
+    result: AnalysisResult,
     unsolved_logs_destination: Option<&Path>,
     orchestrator: &OrchestratorCore,
 ) -> CrashLogScanRunLogOutcome {
-    let input_index = indexed.input_index;
-    let result = indexed.result;
     let crash_log = PathBuf::from(result.log_path.clone());
     let mut outcome = outcome_from_analysis(&result);
     let mut error = result.error.clone();
@@ -946,6 +1158,49 @@ async fn finalize_log_outcome(
         formid_count: result.formid_count,
         plugin_count: result.plugin_count,
         suspect_count: result.suspect_count,
+    }
+}
+
+/// Emits one admitted log's phase through the scheduler's single observer pump.
+fn emit_scheduled_phase<F>(
+    on_event: &mut F,
+    phase: ScheduledLogPhase,
+    completed: usize,
+    total: usize,
+) where
+    F: FnMut(CrashLogScanRunEvent),
+{
+    on_event(CrashLogScanRunEvent {
+        input_index: phase.input_index,
+        crash_log: phase.crash_log,
+        kind: CrashLogScanRunEventKind::Phase,
+        phase: phase.phase,
+        completed,
+        total,
+        success: false,
+        disposition: None,
+    });
+}
+
+/// Builds the terminal non-start outcome for a discovered log left in the queue.
+fn cancelled_log_outcome(input_index: usize, crash_log: PathBuf) -> CrashLogScanRunLogOutcome {
+    CrashLogScanRunLogOutcome {
+        input_index,
+        crash_log,
+        autoscan_report: None,
+        outcome: CrashLogScanOutcome::CancelledBeforeStart,
+        report_write_failed: false,
+        moved_to_unsolved_logs: false,
+        unsolved_logs_finalization_failed: false,
+        analysis_error: None,
+        report_write_error: None,
+        unsolved_logs_finalization_error: None,
+        error: Some(CANCELLED_BY_USER_MESSAGE.to_string()),
+        processing_time_us: 0,
+        processing_time_ms: 0,
+        formid_count: 0,
+        plugin_count: 0,
+        suspect_count: 0,
     }
 }
 
@@ -1030,25 +1285,23 @@ async fn discover_scan_source(
 
 fn evaluate_setup_for_scan(
     request: &CrashLogScanRunServiceRequest,
-) -> (Option<CrashLogScanSetupResult>, bool) {
+) -> Result<(Option<CrashLogScanSetupResult>, bool)> {
     if !request.options.fcx_mode {
-        return (None, false);
+        return Ok((None, false));
     }
 
     let Some(context) = request.setup_context.as_ref() else {
         let setup = CrashLogScanSetupResult::missing_context(
             "FCX Mode requires Crash Log Scan Setup Context",
         );
-        seed_global_fcx_state(&setup);
-        return (Some(setup), true);
+        return Ok((Some(setup), true));
     };
 
     let game_id = match request.game.parse::<GameId>() {
         Ok(game_id) => game_id,
         Err(error) => {
             let setup = CrashLogScanSetupResult::fatal(error);
-            seed_global_fcx_state(&setup);
-            return (Some(setup), true);
+            return Ok((Some(setup), true));
         }
     };
 
@@ -1071,12 +1324,8 @@ fn evaluate_setup_for_scan(
         .game_root
         .as_deref()
         .or(game_setup.paths.game_root.as_deref())
-        .map(|game_root| {
-            detect_config_issues(game_root, game_id.as_str())
-                .into_iter()
-                .map(scangame_issue_to_scanlog_issue)
-                .collect()
-        })
+        .map(|game_root| detect_config_issues_for_scan(game_root, game_id.as_str()))
+        .transpose()?
         .unwrap_or_default();
     let setup = CrashLogScanSetupResult::from_game_setup(game_setup, configuration_issues);
     let setup_failed = setup
@@ -1086,8 +1335,28 @@ fn evaluate_setup_for_scan(
         || !setup.actions.is_empty()
         || !setup.fatal_errors.is_empty();
 
-    seed_global_fcx_state(&setup);
-    (Some(setup), setup_failed)
+    Ok((Some(setup), setup_failed))
+}
+
+/// Detects FCX configuration issues without collapsing scanner failures into an empty result.
+fn detect_config_issues_for_scan(game_root: &Path, game_name: &str) -> Result<Vec<ConfigIssue>> {
+    let mut cache = ConfigFileCache::new(game_root, &[]).map_err(|error| {
+        ScanLogError::ConfigError(format!(
+            "Failed to prepare FCX configuration issues scan for {}: {error}",
+            game_root.display()
+        ))
+    })?;
+    let result = ModIniScanner::scan_with_cache(&mut cache, game_name).map_err(|error| {
+        ScanLogError::ConfigError(format!(
+            "Failed to detect FCX configuration issues under {}: {error}",
+            game_root.display()
+        ))
+    })?;
+    Ok(result
+        .issues
+        .into_iter()
+        .map(scangame_issue_to_scanlog_issue)
+        .collect())
 }
 
 impl CrashLogScanSetupResult {
@@ -1181,21 +1450,8 @@ fn scangame_issue_to_scanlog_issue(issue: classic_scangame_core::ConfigIssue) ->
     )
 }
 
-fn seed_global_fcx_state(setup: &CrashLogScanSetupResult) {
-    let mut handler = GLOBAL_FCX_HANDLER.lock();
-    handler.fcx_mode = true;
-    handler.checks_run = true;
-    handler.set_main_files_result(setup.rendered_report.clone());
-    handler.set_game_files_result(format_detected_issues(&setup.configuration_issues));
-    handler.set_detected_issues(setup.configuration_issues.clone());
-}
-
-fn format_detected_issues(issues: &[ConfigIssue]) -> String {
-    issues.iter().map(ConfigIssue::format_report).collect()
-}
-
 fn cancellation_requested(cancellation: Option<&Arc<AtomicBool>>) -> bool {
-    cancellation.is_some_and(|flag| flag.load(std::sync::atomic::Ordering::Relaxed))
+    cancellation.is_some_and(|flag| flag.load(Ordering::Acquire))
 }
 
 fn resolve_unsolved_logs_destination(
@@ -1312,15 +1568,6 @@ async fn path_exists(path: &Path) -> Result<bool> {
         Ok(_) => Ok(true),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
         Err(error) => Err(ScanLogError::IoError(error)),
-    }
-}
-
-fn reset_fcx_state() -> Result<()> {
-    match FcxModeHandler::reset_global_state() {
-        Ok(()) | Err(FcxResetError::Unnecessary) => Ok(()),
-        Err(error) => Err(ScanLogError::Internal(format!(
-            "Failed to reset FCX state before Crash Log Scan Run: {error}"
-        ))),
     }
 }
 

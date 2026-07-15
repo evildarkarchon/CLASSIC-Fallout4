@@ -25,6 +25,7 @@ use crate::report::{
     AutoscanReportAssembler, AutoscanReportContribution, AutoscanReportFacts, ModGuidanceGroup,
     ReportFragment, ReportGenerator, write_autoscan_report,
 };
+use crate::scan_run::CrashLogScanSetupResult;
 use crate::segment_key;
 use crate::settings_validator::SettingsValidator;
 use crate::suspect_scanner::SuspectScanner;
@@ -787,6 +788,8 @@ where
 /// context manager pattern for resource management, and loadorder.txt override support.
 pub struct OrchestratorCore {
     config: AnalysisConfig,
+    /// Immutable setup snapshot owned by the enclosing Crash Log Scan Run.
+    scan_run_setup: Option<Arc<CrashLogScanSetupResult>>,
     file_io: FileIOCore,
     parser: LogParser,
     plugin_analyzer: Option<PluginAnalyzer>,
@@ -1006,6 +1009,7 @@ impl OrchestratorCore {
 
         Ok(Self {
             config,
+            scan_run_setup: None,
             file_io: FileIOCore::new("utf-8", "ignore", 100, 50),
             parser: LogParser::new(None)?,
             plugin_analyzer,
@@ -1023,6 +1027,14 @@ impl OrchestratorCore {
             db_pool: None,
             initialized: false,
         })
+    }
+
+    /// Attaches the immutable setup snapshot evaluated for the enclosing scan run.
+    ///
+    /// Every log analyzed by this orchestrator shares the same snapshot, so report
+    /// assembly cannot observe setup facts from another sequential or overlapping run.
+    pub(crate) fn set_scan_run_setup(&mut self, setup: Option<Arc<CrashLogScanSetupResult>>) {
+        self.scan_run_setup = setup;
     }
 
     /// Builder method to attach a database pool for async FormID lookups.
@@ -1291,7 +1303,7 @@ impl OrchestratorCore {
                 crashgen_version: crashgen.crashgen_version_str.clone(),
                 crashgen_status: crashgen.crashgen_status,
                 fake_bot_compatible_mode: crashgen.fake_bot_compatible_mode,
-                fcx_mode_enabled: self.config.fcx_mode,
+                fcx_setup: self.scan_run_setup.clone(),
             },
             contributions,
         );

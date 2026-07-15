@@ -8,8 +8,10 @@ use crate::scan_run::{
 };
 use classic_shared_core::GameId;
 use classic_shared_core::get_runtime;
-use std::sync::Arc;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Barrier};
+use std::time::Duration;
 use tempfile::tempdir;
 
 fn final_run_configuration() -> contract::Configuration {
@@ -41,6 +43,306 @@ fn final_setup_context() -> CrashLogScanSetupContext {
         game_exe_path: None,
         xse_log_path: None,
     }
+}
+
+/// Builds an executable FCX request whose configuration issue contains a run-unique value.
+fn executable_fcx_request(
+    temp: &tempfile::TempDir,
+    log_name: &str,
+    max_particles: u32,
+) -> (contract::Request, PathBuf) {
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+
+    let game_root = root.join("Fallout4");
+    let docs_root = root.join("Documents");
+    std::fs::create_dir_all(&game_root).expect("game root should be created");
+    std::fs::create_dir_all(&docs_root).expect("documents root should be created");
+    let game_exe_path = game_root.join("Fallout4.exe");
+    std::fs::write(&game_exe_path, b"not a real PE")
+        .expect("game executable fixture should be written");
+    std::fs::write(
+        game_root.join("epo.ini"),
+        format!("[Particles]\niMaxDesired = {max_particles}\n"),
+    )
+    .expect("FCX configuration fixture should be written");
+
+    let log_path = write_fixture_log(temp, log_name);
+    let request = contract::Request::targeted_with_fcx(
+        contract::Configuration {
+            yaml_dir_root: root.to_path_buf(),
+            yaml_dir_data: data,
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path.clone()],
+        },
+        CrashLogScanSetupContext {
+            game_root: Some(game_root),
+            docs_root: Some(docs_root),
+            game_exe_path: Some(game_exe_path),
+            xse_log_path: None,
+        },
+    );
+    (request, log_path)
+}
+
+/// Verifies one run's structured setup and persisted report exclude another run's marker.
+fn assert_isolated_fcx_run(
+    result: &contract::RunResult,
+    log_path: &std::path::Path,
+    expected_marker: &str,
+    foreign_marker: &str,
+) {
+    assert!(
+        result
+            .setup
+            .as_ref()
+            .expect("setup result should be retained")
+            .configuration_issues
+            .iter()
+            .any(|issue| issue.current_value == expected_marker)
+    );
+    let report = std::fs::read_to_string(crate::report::autoscan_report_path(log_path))
+        .expect("Autoscan Report should be readable");
+    assert!(report.contains(expected_marker));
+    assert!(!report.contains(foreign_marker));
+}
+
+/// Stable terminal fields used to compare runs whose temporary paths and timings differ.
+#[derive(Debug, Eq, PartialEq)]
+struct RunSignature {
+    status: contract::RunStatus,
+    effective_concurrency: Option<usize>,
+    succeeded: usize,
+    failed: usize,
+    cancelled: usize,
+    logs: Vec<(usize, String, contract::LogDisposition, Option<String>)>,
+}
+
+/// Normalizes one terminal result to scheduling- and outcome-relevant fields.
+fn run_signature(result: &contract::RunResult) -> RunSignature {
+    RunSignature {
+        status: result.status,
+        effective_concurrency: result.effective_concurrency,
+        succeeded: result.succeeded,
+        failed: result.failed,
+        cancelled: result.cancelled,
+        logs: result
+            .logs
+            .iter()
+            .map(|log| {
+                (
+                    log.discovery_index,
+                    log.crash_log
+                        .file_name()
+                        .expect("fixture log should have a file name")
+                        .to_string_lossy()
+                        .into_owned(),
+                    log.disposition,
+                    log.autoscan_report.as_ref().map(|path| {
+                        path.file_name()
+                            .expect("Autoscan Report should have a file name")
+                            .to_string_lossy()
+                            .into_owned()
+                    }),
+                )
+            })
+            .collect(),
+    }
+}
+
+/// Executes the same two-log request with no, recording, or deliberately slow observation.
+fn observer_scenario(delay: Option<Duration>) -> (contract::RunResult, Vec<contract::Event>) {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let logs = vec![
+        write_fixture_log(&temp, "crash-observer-first.log"),
+        write_fixture_log(&temp, "crash-observer-second.log"),
+    ];
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    configuration.max_concurrent = Some(2);
+    let request =
+        contract::Request::targeted(configuration, TargetedCrashLogScanSource { inputs: logs });
+    let cancellation = contract::Cancellation::new();
+    let mut events = Vec::new();
+    let result = if let Some(delay) = delay {
+        let mut observer = |event| {
+            std::thread::sleep(delay);
+            events.push(event);
+        };
+        get_runtime().block_on(contract::execute(
+            request,
+            &cancellation,
+            Some(&mut observer),
+        ))
+    } else {
+        get_runtime().block_on(contract::execute(request, &cancellation, None))
+    }
+    .expect("observer scenario should complete");
+
+    (result, events)
+}
+
+#[test]
+fn sequential_fcx_runs_return_and_render_only_their_own_setup_facts() {
+    let first_temp = tempdir().expect("first tempdir should succeed");
+    let second_temp = tempdir().expect("second tempdir should succeed");
+    let (first_request, first_log) =
+        executable_fcx_request(&first_temp, "crash-first-fcx.log", 6001);
+    let (second_request, second_log) =
+        executable_fcx_request(&second_temp, "crash-second-fcx.log", 7001);
+
+    let first = get_runtime()
+        .block_on(contract::execute(
+            first_request,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("first FCX run should complete");
+    let second = get_runtime()
+        .block_on(contract::execute(
+            second_request,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("second FCX run should complete");
+
+    assert_isolated_fcx_run(&first, &first_log, "6001", "7001");
+    assert_isolated_fcx_run(&second, &second_log, "7001", "6001");
+}
+
+#[test]
+fn overlapping_fcx_runs_return_and_render_only_their_own_setup_facts() {
+    let first_temp = tempdir().expect("first tempdir should succeed");
+    let second_temp = tempdir().expect("second tempdir should succeed");
+    let (first_request, first_log) =
+        executable_fcx_request(&first_temp, "crash-overlap-first.log", 8001);
+    let (second_request, second_log) =
+        executable_fcx_request(&second_temp, "crash-overlap-second.log", 9001);
+    let admission_barrier = Arc::new(Barrier::new(2));
+    let (first, second) = get_runtime().block_on(async move {
+        let first_barrier = Arc::clone(&admission_barrier);
+        let first_task = tokio::spawn(async move {
+            let cancellation = contract::Cancellation::new();
+            let mut observer = move |event| {
+                if matches!(event, contract::Event::LogStarted(_)) {
+                    first_barrier.wait();
+                }
+            };
+            contract::execute(first_request, &cancellation, Some(&mut observer)).await
+        });
+        let second_barrier = Arc::clone(&admission_barrier);
+        let second_task = tokio::spawn(async move {
+            let cancellation = contract::Cancellation::new();
+            let mut observer = move |event| {
+                if matches!(event, contract::Event::LogStarted(_)) {
+                    second_barrier.wait();
+                }
+            };
+            contract::execute(second_request, &cancellation, Some(&mut observer)).await
+        });
+        tokio::join!(first_task, second_task)
+    });
+    let first = first
+        .expect("first overlapping task should join")
+        .expect("first overlapping FCX run should complete");
+    let second = second
+        .expect("second overlapping task should join")
+        .expect("second overlapping FCX run should complete");
+
+    assert_isolated_fcx_run(&first, &first_log, "8001", "9001");
+    assert_isolated_fcx_run(&second, &second_log, "9001", "8001");
+}
+
+#[test]
+fn fcx_disabled_run_has_no_setup_result_or_fcx_report_content() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let log_path = write_fixture_log(&temp, "crash-fcx-disabled.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            yaml_dir_root: root.to_path_buf(),
+            yaml_dir_data: data,
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path.clone()],
+        },
+    );
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("FCX-disabled run should complete");
+
+    assert!(result.setup.is_none());
+    let report = std::fs::read_to_string(crate::report::autoscan_report_path(&log_path))
+        .expect("FCX-disabled Autoscan Report should be readable");
+    assert!(!report.contains("FCX LOCAL FILE CHECKS"));
+    assert!(!report.contains("FCX SETUP VALIDATION"));
+}
+
+#[test]
+fn fcx_configuration_scan_failure_is_a_typed_intake_error() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let log_path = write_fixture_log(&temp, "crash-fcx-config-failure.log");
+    let docs_root = root.join("Documents");
+    std::fs::create_dir_all(&docs_root).expect("documents root should be created");
+    let missing_game_root = root.join("missing-game-root");
+    let request = contract::Request::targeted_with_fcx(
+        contract::Configuration {
+            yaml_dir_root: root.to_path_buf(),
+            yaml_dir_data: data,
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path],
+        },
+        CrashLogScanSetupContext {
+            game_root: Some(missing_game_root),
+            docs_root: Some(docs_root),
+            game_exe_path: None,
+            xse_log_path: None,
+        },
+    );
+
+    let result = get_runtime().block_on(contract::execute(
+        request,
+        &contract::Cancellation::new(),
+        None,
+    ));
+    let Err(error) = result else {
+        panic!("FCX configuration scan failure should be typed infrastructure data");
+    };
+
+    assert_eq!(error.stage, contract::InfrastructureErrorStage::Intake);
+    assert!(error.message.contains("configuration issues"));
 }
 
 #[test]
@@ -689,6 +991,246 @@ fn final_operation_reports_effective_concurrency_and_stable_log_events() {
             ..
         }
     )));
+}
+
+/// Verifies adaptive selection is published once and retained for low-volume work.
+#[test]
+fn adaptive_low_volume_run_selects_and_retains_one_worker() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let log = write_fixture_log(&temp, "crash-adaptive-low-volume.log");
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    configuration.max_concurrent = None;
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource { inputs: vec![log] },
+    );
+    let mut selected = Vec::new();
+    let mut observer = |event| {
+        if let contract::Event::EffectiveConcurrencySelected {
+            effective_concurrency,
+        } = event
+        {
+            selected.push(effective_concurrency);
+        }
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &contract::Cancellation::new(),
+            Some(&mut observer),
+        ))
+        .expect("adaptive low-volume run should complete");
+
+    assert_eq!(selected, vec![1]);
+    assert_eq!(result.effective_concurrency, Some(1));
+}
+
+/// Verifies observer presence and callback latency do not control scheduling or outcomes.
+#[test]
+fn observer_presence_and_latency_do_not_change_scheduling_or_terminal_results() {
+    let (unobserved, unobserved_events) = observer_scenario(None);
+    let (recorded, recorded_events) = observer_scenario(Some(Duration::ZERO));
+    let (slow, slow_events) = observer_scenario(Some(Duration::from_millis(2)));
+
+    assert!(unobserved_events.is_empty());
+    assert_eq!(run_signature(&unobserved), run_signature(&recorded));
+    assert_eq!(run_signature(&recorded), run_signature(&slow));
+
+    let started_indices = |events: &[contract::Event]| {
+        events
+            .iter()
+            .filter_map(|event| match event {
+                contract::Event::LogStarted(log) => Some(log.discovery_index),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(started_indices(&recorded_events), vec![0, 1]);
+    assert_eq!(started_indices(&slow_events), vec![0, 1]);
+}
+
+/// Verifies serial admission remains occupied until the prior log is durably finished.
+#[test]
+fn serial_scheduler_finishes_one_log_before_starting_the_next() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let first = write_fixture_log(&temp, "crash-serial-first.log");
+    let second = write_fixture_log(&temp, "crash-serial-second.log");
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    configuration.max_concurrent = Some(1);
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: vec![first, second],
+        },
+    );
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &contract::Cancellation::new(),
+            Some(&mut observer),
+        ))
+        .expect("serial final operation should complete");
+
+    assert_eq!(result.effective_concurrency, Some(1));
+    assert_eq!(result.succeeded, 2);
+    let lifecycle = events
+        .iter()
+        .filter_map(|event| match event {
+            contract::Event::LogStarted(log) => Some(("started", log.discovery_index)),
+            contract::Event::LogFinished { log, .. } => Some(("finished", log.discovery_index)),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        lifecycle,
+        vec![
+            ("started", 0),
+            ("finished", 0),
+            ("started", 1),
+            ("finished", 1),
+        ]
+    );
+}
+
+/// Verifies cancellation requested while logs are queued prevents every admission.
+#[test]
+fn cancellation_while_queued_never_emits_started() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let logs = vec![
+        write_fixture_log(&temp, "crash-queued-first.log"),
+        write_fixture_log(&temp, "crash-queued-second.log"),
+    ];
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    configuration.max_concurrent = Some(1);
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: logs.clone(),
+        },
+    );
+    let cancellation = contract::Cancellation::new();
+    let observer_cancellation = cancellation.clone();
+    let mut events = Vec::new();
+    let mut observer = |event| {
+        if matches!(event, contract::Event::LogQueued(_)) {
+            observer_cancellation.cancel();
+        }
+        events.push(event);
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &cancellation,
+            Some(&mut observer),
+        ))
+        .expect("queued cancellation should produce a terminal result");
+
+    assert_eq!(result.status, contract::RunStatus::Cancelled);
+    assert_eq!(result.cancelled, 2);
+    assert!(
+        result
+            .logs
+            .iter()
+            .all(|log| log.disposition == contract::LogDisposition::CancelledBeforeStart)
+    );
+    assert!(
+        events
+            .iter()
+            .all(|event| !matches!(event, contract::Event::LogStarted(_)))
+    );
+    assert!(
+        logs.iter()
+            .all(|log| { !crate::report::autoscan_report_path(log).exists() })
+    );
+}
+
+/// Verifies admitted logs finish durably while later queued logs remain unstarted.
+#[test]
+fn cancellation_with_multiple_admitted_logs_preserves_their_durable_boundary() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let logs = (0..4)
+        .map(|index| write_fixture_log(&temp, &format!("crash-admitted-{index}.log")))
+        .collect::<Vec<_>>();
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    configuration.max_concurrent = Some(2);
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: logs.clone(),
+        },
+    );
+    let cancellation = contract::Cancellation::new();
+    let observer_cancellation = cancellation.clone();
+    let mut started = Vec::new();
+    let mut observer = |event| {
+        if let contract::Event::LogStarted(log) = event {
+            started.push(log.discovery_index);
+            if log.discovery_index == 1 {
+                observer_cancellation.cancel();
+            }
+        }
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &cancellation,
+            Some(&mut observer),
+        ))
+        .expect("admitted cancellation should produce a terminal result");
+
+    assert_eq!(started, vec![0, 1]);
+    assert_eq!(result.status, contract::RunStatus::Cancelled);
+    assert_eq!(result.succeeded, 2);
+    assert_eq!(result.cancelled, 2);
+    assert_eq!(
+        result
+            .logs
+            .iter()
+            .map(|log| log.disposition)
+            .collect::<Vec<_>>(),
+        vec![
+            contract::LogDisposition::Succeeded,
+            contract::LogDisposition::Succeeded,
+            contract::LogDisposition::CancelledBeforeStart,
+            contract::LogDisposition::CancelledBeforeStart,
+        ]
+    );
+    assert!(
+        logs[..2]
+            .iter()
+            .all(|log| crate::report::autoscan_report_path(log).is_file())
+    );
+    assert!(
+        logs[2..]
+            .iter()
+            .all(|log| !crate::report::autoscan_report_path(log).exists())
+    );
 }
 
 #[test]

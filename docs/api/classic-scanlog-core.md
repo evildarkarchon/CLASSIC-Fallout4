@@ -284,11 +284,11 @@ The constructor matrix is exhaustive:
 
 Stable event variants are `DiscoveryCompleted`, `EffectiveConcurrencySelected`, `LogQueued`, `LogStarted`, `LogPhase`, and `LogFinished`. Log-scoped events carry a discovery index and path. `LogFinished` carries one of the stable dispositions: `Succeeded`, `Failed`, or `CancelledBeforeStart`. `LogResult.failures` independently preserves every applicable structured failure stage (`Analysis`, `ReportWrite`, and `UnsolvedLogsFinalization`) so a finalization failure cannot erase the preceding analysis or report failure.
 
-`contract::RunResult` retains completed discovery, Rust-selected effective concurrency once scheduling is reached, setup data, lifecycle status, aggregate counts, and per-log results in discovery order. Cancellation before or during discovery returns `CancelledBeforeDiscovery` with no discovery result and emits no `DiscoveryCompleted` event. Once discovery commits, the emitted payload and retained result contain the same complete accepted paths, Targeted rejections, source, and searched locations. Cancellation requested by the discovery observer returns `Cancelled`, retains that payload, marks every accepted log `CancelledBeforeStart`, and stops before effective concurrency is selected. An explicit concurrency value of zero is a typed request-validation failure; low-volume runs report effective concurrency capped by the discovered work volume.
+`contract::RunResult` retains completed discovery, Rust-selected effective concurrency once scheduling is reached, setup data, lifecycle status, aggregate counts, and per-log results in discovery order. When FCX is enabled, setup is evaluated once and held as one immutable run-owned snapshot. The same snapshot supplies every per-log Autoscan Report and is projected into `RunResult.setup`; scan execution never resets, seeds, or reads the legacy process-global FCX handler. Cancellation before or during discovery returns `CancelledBeforeDiscovery` with no discovery result and emits no `DiscoveryCompleted` event. Once discovery commits, the emitted payload and retained result contain the same complete accepted paths, Targeted rejections, source, and searched locations. Cancellation requested by the discovery observer returns `Cancelled`, retains that payload, marks every accepted log `CancelledBeforeStart`, and stops before effective concurrency is selected. An explicit concurrency value of zero is a typed request-validation failure. Adaptive and explicit concurrency are selected once in Rust, capped by the discovered work volume, emitted once, retained unchanged, and passed as the exact admission limit to the scheduler; low-volume runs can therefore select a value below the configured maximum.
 
-Run-wide failures use `contract::InfrastructureError { stage, message, path }`. Stable stages are `RequestValidation`, `Discovery`, `Intake`, `FormIdDatabaseAccess`, `Initialization`, and `InternalInvariant`. Expected states such as no logs, setup failure, and cancellation remain structured `RunResult` data rather than infrastructure errors.
+Run-wide failures use `contract::InfrastructureError { stage, message, path }`. Stable stages are `RequestValidation`, `Discovery`, `Intake`, `FormIdDatabaseAccess`, `Initialization`, and `InternalInvariant`. Expected states such as no logs, setup failure, and cancellation remain structured `RunResult` data rather than infrastructure errors. FCX configuration-cache or configuration-scan failures are preserved as typed `Intake` infrastructure errors instead of being collapsed into an empty issue list.
 
-The expand implementation temporarily delegates execution to the same internals as `CrashLogScanRunService` through a transitional lifecycle hook. Discovery is cooperatively cancellable without exposing partial accumulators: Standard collection checks between completed directory and per-file move/copy operations plus enumeration entries, while Targeted collection checks around metadata operations and recursive directory entries. Completed Standard filesystem mutations are not rolled back when cancellation is observed at the next seam. After discovery commits, effective concurrency and log events reach the final observer in lifecycle order unless the observer requests cancellation immediately from `DiscoveryCompleted`. The dedicated scheduling/cancellation and finalization tickets replace the remaining compatibility routing. The operation is async and creates no runtime; callers enter it through `classic-shared-core`'s shared Tokio runtime.
+The expand implementation temporarily delegates discovery and intake preparation through the same transitional lifecycle hook as `CrashLogScanRunService`. Discovery is cooperatively cancellable without exposing partial accumulators: Standard collection checks between completed directory and per-file move/copy operations plus enumeration entries, while Targeted collection checks around metadata operations and recursive directory entries. Completed Standard filesystem mutations are not rolled back when cancellation is observed at the next seam. After discovery commits, the final path uses a scan-run-private scheduler over an internal single-log analysis engine rather than the legacy public batch lifecycle. It emits all queued events serially, checks cancellation immediately before each admission, and never interrupts an admitted log before report persistence and applicable Unsolved Logs finalization resolve. Discovery, concurrency, queued, started, phase, and finished callbacks pass through one serial observer pump in execution order. Attaching no observer, a recording observer, or a slow observer does not alter the selected concurrency or terminal results; only an explicit request through the separate cancellation control can stop later admissions. Per-log results are sorted into discovery order independently of event delivery order. The operation is async and creates no runtime; callers enter it through `classic-shared-core`'s shared Tokio runtime.
 
 ### Provisional expand-step interfaces
 
@@ -312,6 +312,7 @@ High-level behavior worth knowing:
 - Cancellation after `DiscoveryCompleted` retains the exact complete discovery payload and returns accepted logs as cancellation-related non-start outcomes without selecting effective concurrency.
 - If discovery accepts no logs, the service returns `status = NoCrashLogsFound` with discovery data and no per-log outcomes. This is result data, not an infrastructure error.
 - If FCX setup is requested but setup facts are missing, action-required, or fatal, the service returns `status = SetupFailed` with `setup` data and no per-log outcomes. Infrastructure failures such as YAML loading or unexpected analysis setup still return `Err`.
+- Successful FCX setup produces one immutable snapshot containing checks, proposed path updates, configuration issues, actions, fatal errors, the adapter message, and rendered setup report. The snapshot is retained for the run, shared read-only with analysis, and projected into the terminal setup result.
 - Progress events begin only after discovery has accepted logs, so progress totals match the accepted scan set.
 
 `CrashLogScanRun` is the prepared-run layer for executing a full Crash Log Scan Run after intake. It accepts a `ScanReadyAnalysis`, selected Crash Logs, a Standard or Targeted intent, optional concurrency and cancellation settings, and a progress callback.
@@ -337,6 +338,7 @@ Behavior worth knowing:
 
 - High-level adapters should prefer `CrashLogScanRunService` so discovery, no-log results, setup results, intake, report writing, and Unsolved Logs policy stay in Rust.
 - Prepared-run callers that already have accepted Crash Logs may still use `CrashLogScanRun`; in that layer callers own selection and `CrashLogScanRun` owns execution after selection.
+- The prepared-run compatibility seam cannot evaluate `CrashLogScanSetupContext`. If its prepared `AnalysisConfig` enables FCX without an attached run-owned setup snapshot, execution returns `ScanLogError::ValidationError` instead of silently omitting setup and FCX report content. FCX callers should use `scan_run::contract::execute`.
 - `CrashLogScanRunRequest.max_concurrent = Some(0)` is treated as the adaptive default at the scan-run seam, identical to `None`. `run` folds `Some(0) -> None` before building batch options; only positive values pin the concurrency. This fold lives at the scan-run seam only and does not change `resolve_batch_concurrency`, which keeps `Some(0) -> 1` (serial) for the analysis-batch callers.
 - `Standard` runs may move failed Crash Logs and sibling Autoscan Reports to Unsolved Logs when their intent requests movement.
 - `Targeted` runs never move Crash Logs or Autoscan Reports to Unsolved Logs.
@@ -420,7 +422,7 @@ Canonical section ownership:
 - header and Error Information
 - Crashgen Expectation outcomes placed in Error Information before that section's separator
 - crash suspect section, always present, including the no-suspects footer
-- FCX Mode notice from per-log facts
+- FCX Mode notice, setup validation report, and detected configuration issues from the immutable setup snapshot owned by the current Crash Log Scan Run
 - settings-related guidance, including settings-placement Crashgen Expectation outcomes and Disabled Setting Notices
 - Mod Guidance groups in fixed order: conflicts, frequent crashes, solutions, important mods
 - Plugin Evidence, FormID Finding, and Named Record Finding sections
@@ -492,20 +494,11 @@ The report module is designed around Python-parity text output, not a stable int
 - `formid`: `RustFormIDAnalyzer`, `FormIDAnalyzer` legacy wrapper
 - `detect_vr_log(content)` - simple Fallout 4 VR log detection helper
 
-### FCX global state reset contract
+### FCX state ownership
 
-`FcxModeHandler::reset_global_state()` is the contributor-facing reset hook for the process-wide FCX singleton.
+Complete Crash Log Scan Runs do not use process-global FCX state. The final request constructors pair FCX enablement with explicit `CrashLogScanSetupContext`; Rust evaluates those facts once, retains the resulting immutable setup snapshot for that run, feeds it into Autoscan Report assembly, and returns its structured projection to adapters. Sequential and overlapping runs therefore cannot reset or inherit one another's setup checks, path proposals, configuration issues, actions, or failures.
 
-- Signature: `Result<(), FcxResetError>`
-- Locking behavior: it uses a blocking mutex lock, so reset requests wait for in-flight FCX work instead of silently skipping under contention
-- Success path: `Ok(())` means stale cached FCX results were cleared for a new scan session
-- No-op path: `Err(FcxResetError::Unnecessary)` means the singleton was already clean; bindings should treat this as benign and continue
-
-Binding expectation:
-
-- binding entrypoints should auto-call the reset hook at scan start so each scan session begins from clean FCX state
-- bindings may expose explicit reset entrypoints for callers that want to clear the singleton between sessions
-- bindings should not treat `Unnecessary` as a scan-start failure
+`FcxModeHandler`, `FcxResetError`, `GLOBAL_FCX_HANDLER`, and their binding entrypoints remain temporarily exported only for legacy lower-level consumers with dedicated migration tickets. They are not part of `scan_run::contract::execute` and must not be called before or after a complete Crash Log Scan Run. The coordinated contraction ticket removes those legacy interfaces after all adapters have migrated.
 
 ---
 
