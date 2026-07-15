@@ -62,6 +62,10 @@ fn resolves_generic_paths() {
         PathBuf::from("CLASSIC Data/databases/CLASSIC Fallout4.yaml")
     );
     assert_eq!(
+        YamlSource::Game.path("Fallout4VR"),
+        PathBuf::from("CLASSIC Data/databases/CLASSIC Fallout4.yaml")
+    );
+    assert_eq!(
         YamlSource::GameLocal.path("Fallout4"),
         PathBuf::from("CLASSIC Data/CLASSIC Fallout4 Local.yaml")
     );

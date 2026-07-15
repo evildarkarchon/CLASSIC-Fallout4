@@ -1,6 +1,9 @@
-use super::{App, AsyncMessage, TabIndex, format_scan_run_progress};
+use super::{App, AsyncMessage, TabIndex};
 use crate::widgets::path_input::PathValidationState;
-use classic_scanlog_core::{CrashLogScanRunEvent, CrashLogScanRunEventKind, ScanProgressPhase};
+use classic_scanlog_core::CrashLogScanRunStatus;
+use classic_scanlog_core::scan_run::contract::{
+    Cancellation, Event as ScanRunEvent, LogDisposition, LogEvent, RunResult,
+};
 use std::path::PathBuf;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
@@ -163,42 +166,65 @@ CLASSIC_Settings:
 
     let (game, databases) = app.scan_game_projection();
 
-    assert_eq!(game, "Skyrim");
+    assert_eq!(game, classic_shared_core::GameId::Skyrim);
     assert_eq!(databases, vec![PathBuf::from("databases/skyrim.db")]);
 }
 
 #[test]
 fn scan_complete_with_errors_updates_status_message() {
     let mut app = App::new_for_testing();
-    app.handle_async_message(AsyncMessage::ScanComplete {
-        processed: 3,
+    app.handle_async_message(AsyncMessage::ScanFinished(Ok(RunResult {
+        status: CrashLogScanRunStatus::Completed,
+        discovery: None,
+        setup: None,
+        effective_concurrency: Some(2),
+        message: None,
         total: 3,
-        errors: 1,
-        cancelled: false,
-    });
+        succeeded: 2,
+        failed: 1,
+        cancelled: 0,
+        logs: Vec::new(),
+    })));
 
-    assert_eq!(app.scan_status, "Scanned 3 logs (1 errors)");
+    assert_eq!(app.scan_status, "Scanned 3 logs (1 errors, 0 cancelled)");
     assert_eq!(app.scan_progress, 100.0);
+    assert!(app.last_scan_run.is_some());
     assert!(app.status_clear_at.is_some());
 }
 
 #[test]
-fn scan_run_progress_formatter_uses_completion_count_and_filename() {
-    let event = CrashLogScanRunEvent {
-        input_index: 1,
-        crash_log: PathBuf::from("Crash Logs/crash-02.log"),
-        kind: CrashLogScanRunEventKind::Completed,
-        phase: ScanProgressPhase::Finalize,
-        completed: 2,
-        total: 4,
-        success: true,
-        disposition: None,
+fn scan_run_event_updates_progress_from_the_final_contract() {
+    let mut app = App::new_for_testing();
+    let event = ScanRunEvent::LogFinished {
+        log: LogEvent {
+            discovery_index: 1,
+            crash_log: PathBuf::from("Crash Logs/crash-02.log"),
+            completed: 2,
+            total: 4,
+        },
+        disposition: LogDisposition::Succeeded,
     };
 
-    let (percent, status) = format_scan_run_progress(&event);
+    app.handle_async_message(AsyncMessage::ScanEvent(event));
 
-    assert_eq!(percent, 50.0);
-    assert_eq!(status, "50% - Scanned crash-02.log");
+    assert_eq!(app.scan_progress, 50.0);
+    assert_eq!(app.scan_status, "50% - Succeeded crash-02.log (2 of 4)");
+}
+
+#[test]
+fn active_scan_cancellation_uses_the_opaque_contract_control() {
+    let mut app = App::new_for_testing();
+    let cancellation = Cancellation::new();
+    app.scan_in_progress = true;
+    app.scan_cancellation = Some(cancellation.clone());
+
+    app.start_or_cancel_crash_scan();
+
+    assert!(cancellation.is_cancelled());
+    assert_eq!(
+        app.scan_status,
+        "Cancellation requested; admitted logs will finish safely..."
+    );
 }
 
 #[test]
@@ -208,12 +234,18 @@ fn scan_complete_switches_to_results_when_enabled() {
     );
     app.active_tab = TabIndex::MainOptions;
 
-    app.handle_async_message(AsyncMessage::ScanComplete {
-        processed: 1,
+    app.handle_async_message(AsyncMessage::ScanFinished(Ok(RunResult {
+        status: CrashLogScanRunStatus::Completed,
+        discovery: None,
+        setup: None,
+        effective_concurrency: Some(1),
+        message: None,
         total: 1,
-        errors: 0,
-        cancelled: false,
-    });
+        succeeded: 1,
+        failed: 0,
+        cancelled: 0,
+        logs: Vec::new(),
+    })));
 
     assert!(matches!(app.active_tab, TabIndex::Results));
 }

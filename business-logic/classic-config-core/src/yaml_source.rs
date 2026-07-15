@@ -5,6 +5,8 @@ use classic_settings_core::load_yaml_merged_async;
 use std::path::{Path, PathBuf};
 use yaml_rust2::Yaml;
 
+use crate::game_data::canonical_game_data_name;
+
 fn resolve_application_dir(current_exe: Option<&Path>) -> Option<PathBuf> {
     current_exe.and_then(|path| path.parent().map(Path::to_path_buf))
 }
@@ -46,6 +48,8 @@ pub enum YamlSource {
     /// Ignore list: `CLASSIC Ignore.yaml`.
     Ignore,
     /// Game database: `CLASSIC Data/databases/CLASSIC {game}.yaml`.
+    ///
+    /// Fallout 4 VR shares `CLASSIC Fallout4.yaml` with Fallout 4.
     Game,
     /// Game-local data: `CLASSIC Data/CLASSIC {game} Local.yaml`.
     GameLocal,
@@ -68,6 +72,7 @@ impl YamlSource {
             Self::Ignore => PathBuf::from("CLASSIC Ignore.yaml"),
             Self::Game => {
                 assert!(!game.is_empty(), "Game name required for YamlSource::Game");
+                let game = canonical_game_data_name(game);
                 PathBuf::from(format!("CLASSIC Data/databases/CLASSIC {game}.yaml"))
             }
             Self::GameLocal => {
@@ -147,7 +152,7 @@ async fn load_via_shippable(source: &YamlSource, game: &str) -> Result<Option<Ya
             &MAIN_YAML,
             "Main Database".to_string(),
         ),
-        YamlSource::Game if game == "Fallout4" => (
+        YamlSource::Game if canonical_game_data_name(game) == "Fallout4" => (
             ShippableFile::game(game),
             &GAME_FALLOUT4_YAML,
             format!("{game} Database"),

@@ -42,6 +42,21 @@ fn enter_activates_focused_help_button() {
 }
 
 #[test]
+fn f8_opens_the_retained_scan_summary_overlay() {
+    let mut app = App::new_for_testing();
+
+    app.handle_event(Event::Key(KeyEvent::new(KeyCode::F(8), KeyModifiers::NONE)));
+
+    assert_eq!(app.active_overlay, Some(Overlay::ScanSummary));
+
+    app.handle_event(Event::Key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE)));
+    app.handle_event(Event::Key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE)));
+    app.handle_event(Event::Key(KeyEvent::new(KeyCode::Up, KeyModifiers::NONE)));
+
+    assert_eq!(app.scan_summary_scroll, 1);
+}
+
+#[test]
 fn mouse_click_hits_help_button() {
     let backend = TestBackend::new(120, 40);
     let mut terminal = Terminal::new(backend).expect("terminal");

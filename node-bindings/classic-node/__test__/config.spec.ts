@@ -656,6 +656,12 @@ describe("YamlSource free functions", () => {
     expect(path).toContain("CLASSIC Fallout4.yaml");
   });
 
+  test("getYamlSourcePath shares the Fallout4 database with Fallout4VR", () => {
+    const path = getYamlSourcePath("Game", "Fallout4VR");
+    expect(path).toContain("CLASSIC Fallout4.yaml");
+    expect(path).not.toContain("CLASSIC Fallout4VR.yaml");
+  });
+
 
   test("getYamlSourcePath returns correct path for Ignore", () => {
     const path = getYamlSourcePath("Ignore", "");

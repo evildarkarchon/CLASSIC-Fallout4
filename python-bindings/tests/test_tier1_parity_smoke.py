@@ -135,6 +135,9 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     assert classic_config.YamlSource.GAME.path("Fallout4").endswith(
         "CLASSIC Fallout4.yaml"
     )
+    assert classic_config.YamlSource.GAME.path("Fallout4VR").endswith(
+        "CLASSIC Fallout4.yaml"
+    )
     cache_path = classic_config.YamlSource.CACHE.path("")
     assert cache_path.endswith("cache.yaml")
     assert "CLASSIC" in cache_path

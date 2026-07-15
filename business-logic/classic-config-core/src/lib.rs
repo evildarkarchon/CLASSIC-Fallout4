@@ -14,6 +14,7 @@ pub mod client_schemas;
 pub mod crashgen_expectation_parser;
 pub(crate) mod crashgen_registry_yaml;
 pub mod crashgen_rules;
+pub(crate) mod game_data;
 pub mod game_local;
 pub mod shippable;
 pub mod yaml_source;

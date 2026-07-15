@@ -107,7 +107,7 @@ The current C++ bridge is what actually assembles DB paths for production scan s
 
 [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) receives the frontend-selected configured entries as explicit request facts and resolves paths in this order:
 
-1. main DB: `CLASSIC Data/databases/{game} FormIDs Main.db`
+1. main DB: `CLASSIC Data/databases/{game-data-identity} FormIDs Main.db` (`Fallout4VR` shares `Fallout4 FormIDs Main.db`)
 2. hardcoded extras from `hardcoded_formid_db_relpaths(game)`
 3. caller-projected configured entries from `CrashLogScanFacts.formid_database_paths`
 4. de-duplicate while preserving first occurrence

@@ -77,6 +77,17 @@ fn windows_env(tmp: &Path) -> Vec<(&'static str, String)> {
     }
 }
 
+#[test]
+fn fallout4_vr_uses_the_shared_fallout4_shippable_file() {
+    let file = ShippableFile::game("Fallout4VR");
+
+    assert_eq!(file.file_name, "CLASSIC Fallout4.yaml");
+    assert_eq!(
+        file.bundled_path,
+        PathBuf::from("CLASSIC Data/databases/CLASSIC Fallout4.yaml")
+    );
+}
+
 #[tokio::test]
 #[serial]
 async fn cache_compatible_wins_over_bundled() {

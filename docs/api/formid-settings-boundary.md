@@ -58,7 +58,7 @@ Native CLI scan startup opens `CrashLogScanSettingsDto`, selects the flattened r
 
 Current path assembly order is:
 
-1. main DB: `<yaml_dir_data>/databases/{game} FormIDs Main.db`
+1. main DB: `<yaml_dir_data>/databases/{game-data-identity} FormIDs Main.db` (`Fallout4VR` shares `Fallout4 FormIDs Main.db`)
 2. hardcoded extras from `hardcoded_formid_db_relpaths(game)`
 3. caller-projected configured paths from `CrashLogScanFacts.formid_database_paths`
 4. de-duplicate normalized paths while preserving first occurrence

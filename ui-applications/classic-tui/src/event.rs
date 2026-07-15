@@ -35,6 +35,23 @@ impl App {
                     KeyCode::Char('i') | KeyCode::Char('I') => self.import_legacy_tui_state(),
                     _ => {}
                 },
+                Overlay::ScanSummary => match key.code {
+                    KeyCode::Esc | KeyCode::Enter => self.close_overlay(),
+                    KeyCode::Up => {
+                        self.scan_summary_scroll = self.scan_summary_scroll.saturating_sub(1);
+                    }
+                    KeyCode::Down => {
+                        self.scan_summary_scroll = self.scan_summary_scroll.saturating_add(1);
+                    }
+                    KeyCode::PageUp => {
+                        self.scan_summary_scroll = self.scan_summary_scroll.saturating_sub(10);
+                    }
+                    KeyCode::PageDown => {
+                        self.scan_summary_scroll = self.scan_summary_scroll.saturating_add(10);
+                    }
+                    KeyCode::Home => self.scan_summary_scroll = 0,
+                    _ => {}
+                },
                 _ => match key.code {
                     KeyCode::Esc | KeyCode::Enter => self.close_overlay(),
                     _ => {}
@@ -67,6 +84,11 @@ impl App {
             }
             KeyCode::F(7) => {
                 self.toggle_papyrus();
+                return;
+            }
+            KeyCode::F(8) => {
+                self.scan_summary_scroll = 0;
+                self.active_overlay = Some(Overlay::ScanSummary);
                 return;
             }
             KeyCode::Char('q') if !key.modifiers.contains(KeyModifiers::CONTROL) => {

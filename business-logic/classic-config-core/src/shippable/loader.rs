@@ -70,6 +70,8 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 use yaml_rust2::Yaml;
 
+use crate::game_data::canonical_game_data_name;
+
 /// Identifies one shippable YAML file by its canonical filename and its
 /// bundled-install path. Factory helpers ([`ShippableFile::main`],
 /// [`ShippableFile::game`]) produce the default instances for the two
@@ -94,7 +96,11 @@ impl ShippableFile {
     }
 
     /// `CLASSIC <Game>.yaml` — per-game crashgen / suspect tables.
+    ///
+    /// `Fallout4VR` resolves to `CLASSIC Fallout4.yaml` because both Fallout 4
+    /// versions share one shippable data set.
     pub fn game(game: &str) -> Self {
+        let game = canonical_game_data_name(game);
         let file_name = format!("CLASSIC {game}.yaml");
         let bundled_path = PathBuf::from(format!("CLASSIC Data/databases/{file_name}"));
         Self {

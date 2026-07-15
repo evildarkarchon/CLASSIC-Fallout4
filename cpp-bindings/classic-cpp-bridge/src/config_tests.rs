@@ -104,6 +104,46 @@ CLASSIC_Ignore_Fallout4: []
 }
 
 #[test]
+fn fallout4_vr_loads_the_shared_fallout4_yaml_through_the_bridge() {
+    let temp = tempdir().expect("failed to create temp dir");
+    let data_dir = temp.path().join("CLASSIC Data");
+    let db_dir = data_dir.join("databases");
+    std::fs::create_dir_all(&db_dir).expect("failed to create db dir");
+
+    std::fs::write(
+        db_dir.join("CLASSIC Main.yaml"),
+        concat!(
+            "CLASSIC_Info:\n",
+            "  version: 7.31.0\n",
+            "CLASSIC_Interface:\n",
+            "  autoscan_text_Fallout4: Autoscan Fallout 4\n",
+        ),
+    )
+    .expect("write main yaml");
+    std::fs::write(
+        db_dir.join("CLASSIC Fallout4.yaml"),
+        "Game_Info:\n  Main_Root_Name: Fallout 4\n",
+    )
+    .expect("write shared Fallout 4 yaml");
+    std::fs::write(
+        temp.path().join("CLASSIC Ignore.yaml"),
+        "CLASSIC_Ignore_Fallout4: []\n",
+    )
+    .expect("write ignore yaml");
+
+    let data = yaml_data_load(
+        &temp.path().to_string_lossy(),
+        &data_dir.to_string_lossy(),
+        "Fallout4VR",
+        "VR",
+    )
+    .expect("Fallout 4 VR should load the shared Fallout 4 YAML");
+
+    assert_eq!(yaml_data_xse_acronym(&data), "F4SEVR");
+    assert_eq!(yaml_data_game_version(&data), "1.2.72");
+}
+
+#[test]
 fn test_save_local_yaml_paths_creates_file() {
     let temp = tempdir().expect("failed to create temp dir");
     let local_yaml_path = temp

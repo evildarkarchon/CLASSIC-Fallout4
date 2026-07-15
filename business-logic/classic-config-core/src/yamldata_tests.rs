@@ -1069,6 +1069,36 @@ async fn test_load_from_yaml_files_with_three_dirs() {
 }
 
 #[tokio::test]
+async fn fallout4_vr_loads_the_shared_fallout4_file_and_keyed_data() {
+    let temp_dir = tempdir().unwrap();
+    let databases_dir = temp_dir.path().join("databases");
+    std::fs::create_dir_all(&databases_dir).unwrap();
+
+    std::fs::write(databases_dir.join("CLASSIC Main.yaml"), minimal_main_yaml()).unwrap();
+    std::fs::write(
+        databases_dir.join("CLASSIC Fallout4.yaml"),
+        minimal_game_yaml_main_root_only(),
+    )
+    .unwrap();
+    std::fs::write(
+        temp_dir.path().join("CLASSIC Ignore.yaml"),
+        minimal_ignore_yaml(),
+    )
+    .unwrap();
+
+    let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
+    let config =
+        YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4VR".to_string(), "VR".to_string())
+            .await
+            .unwrap();
+
+    assert_eq!(config.autoscan_text, "Autoscan Fallout 4");
+    assert_eq!(config.ignore_list, vec!["IgnoreItem1", "IgnoreItem2"]);
+    assert_eq!(config.xse_acronym, "F4SEVR");
+    assert_eq!(config.game_version, "1.2.72");
+}
+
+#[tokio::test]
 async fn test_load_from_yaml_files_invalid_dir_count() {
     // Provide only 1 directory (invalid)
     let yaml_dirs = vec![PathBuf::from("/some/path")];

@@ -1202,7 +1202,6 @@ dependencies = [
  "rfd",
  "tempfile",
  "tokio",
- "tokio-util",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",

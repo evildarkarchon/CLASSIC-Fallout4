@@ -60,6 +60,19 @@ fn load_collects_typed_sidecar_settings() {
 }
 
 #[test]
+fn fallout4_vr_uses_the_shared_fallout4_formid_databases() {
+    let data_dir = PathBuf::from("C:/CLASSIC/CLASSIC Data");
+
+    assert_eq!(
+        resolve_formid_database_paths(&data_dir, "Fallout4VR", &[]),
+        vec![
+            data_dir.join("databases").join("Fallout4 FormIDs Main.db"),
+            data_dir.join("databases").join("FOLON FormIDs.db"),
+        ]
+    );
+}
+
+#[test]
 fn empty_has_no_sidecar_values() {
     assert_eq!(
         ScanSidecarSettings::from_scan_facts(&CrashLogScanFacts::default())

@@ -17,6 +17,8 @@ use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use yaml_rust2::Yaml;
 
+use crate::game_data::canonical_game_data_name;
+
 /// A single mod-conflict pair from the `Mods_CONF` YAML section.
 ///
 /// Each entry describes two mods whose simultaneous presence causes
@@ -1043,6 +1045,7 @@ impl YamlDataCore {
         selected_game_version: &str,
     ) -> Result<Self, ConfigError> {
         let yaml_ops = YamlOperations::new();
+        let data_game = canonical_game_data_name(game);
 
         let crashgen_ignore_is_configured = yaml_ops
             .get_setting(game_data, "Game_Info.CRASHGEN_Ignore")
@@ -1059,7 +1062,7 @@ impl YamlDataCore {
             classic_records_list: yaml_ops.get_vec_value(main_data, "catch_log_records"),
             autoscan_text: yaml_ops.get_string_value(
                 main_data,
-                &format!("CLASSIC_Interface.autoscan_text_{game}"),
+                &format!("CLASSIC_Interface.autoscan_text_{data_game}"),
                 "",
             ),
 
@@ -1098,7 +1101,8 @@ impl YamlDataCore {
             game_version: yaml_ops.get_string_value(game_data, "Game_Info.GameVersion", ""),
 
             // Ignore YAML values
-            ignore_list: yaml_ops.get_vec_value(ignore_data, &format!("CLASSIC_Ignore_{game}")),
+            ignore_list: yaml_ops
+                .get_vec_value(ignore_data, &format!("CLASSIC_Ignore_{data_game}")),
 
             // Per-crashgen registry (game YAML)
             crashgen_registry: parse_crashgen_registry(game_data),
@@ -1184,6 +1188,8 @@ impl YamlDataCore {
         game: String,
         selected_game_version: String,
     ) -> Result<Self, ConfigError> {
+        let data_game = canonical_game_data_name(&game);
+
         // Resolve paths based on input size
         let (main_yaml, game_yaml, ignore_yaml) = if yaml_dirs.len() == 2 {
             // Correct API: [root_dir, data_dir]
@@ -1194,14 +1200,14 @@ impl YamlDataCore {
                 data_dir.join("databases").join("CLASSIC Main.yaml"),
                 data_dir
                     .join("databases")
-                    .join(format!("CLASSIC {}.yaml", game)),
+                    .join(format!("CLASSIC {data_game}.yaml")),
                 root_dir.join("CLASSIC Ignore.yaml"),
             )
         } else if yaml_dirs.len() == 3 {
             // Legacy/Hack API: [main_dir, game_dir, ignore_dir]
             (
                 yaml_dirs[0].join("CLASSIC Main.yaml"),
-                yaml_dirs[1].join(format!("CLASSIC {}.yaml", game)),
+                yaml_dirs[1].join(format!("CLASSIC {data_game}.yaml")),
                 yaml_dirs[2].join("CLASSIC Ignore.yaml"),
             )
         } else {

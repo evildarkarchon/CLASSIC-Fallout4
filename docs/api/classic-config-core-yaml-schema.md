@@ -9,6 +9,7 @@ Reference: [`classic-config-core.md`](classic-config-core.md).
 ## Generic Source And Cache Path Policy
 
 - User Settings discovery and path policy belongs exclusively to [`classic-user-settings-core`](classic-user-settings-core.md).
+- Fallout 4 and Fallout 4 VR share the `Fallout4` YAML data identity. `Fallout4VR` therefore resolves to `CLASSIC Data/databases/CLASSIC Fallout4.yaml` and shared keys such as `CLASSIC_Ignore_Fallout4`; its executable, documents, and version-selection identities remain VR-specific.
 - `YamlSource::Cache` and cache helpers use the `CLASSIC` base directory, not `CLASSIC-Fallout4`:
   - preferred: `dirs::config_dir()/CLASSIC/cache.yaml`
   - compatibility fallback when no user config dir is available: `<application-dir>/CLASSIC/cache.yaml`

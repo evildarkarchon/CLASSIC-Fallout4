@@ -2,7 +2,7 @@ use ratatui::Frame;
 use ratatui::layout::{Alignment, Constraint, Layout, Position, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::Line;
-use ratatui::widgets::{Block, BorderType, Borders, Gauge, Paragraph, Tabs};
+use ratatui::widgets::{Block, BorderType, Borders, Gauge, Paragraph, Tabs, Wrap};
 
 use crate::app::{App, ClickAreas, Overlay, TabIndex};
 use crate::tabs::articles_tab::{ArticlesTabRenderData, render_articles_tab};
@@ -153,8 +153,13 @@ impl App {
             return;
         };
 
-        let width = area.width.min(68);
-        let height = area.height.min(11);
+        let (maximum_width, maximum_height) = if matches!(overlay, Overlay::ScanSummary) {
+            (88, 22)
+        } else {
+            (68, 11)
+        };
+        let width = area.width.min(maximum_width);
+        let height = area.height.min(maximum_height);
         let x = area.x + (area.width.saturating_sub(width)) / 2;
         let y = area.y + (area.height.saturating_sub(height)) / 2;
         let overlay_area = Rect::new(x, y, width, height);
@@ -167,13 +172,14 @@ impl App {
             ),
             Overlay::Help => (
                 "Help",
-                "F5: Crash Scan | F6: Game Scan | F7: Papyrus\nCtrl+O: Settings | 1-4: Switch Tabs | Q: Quit\n\nTab/Shift+Tab: Focus navigation\nPress Esc to close"
+                "F5: Crash Scan | F6: Game Scan | F7: Papyrus | F8: Last Scan\nCtrl+O: Settings | 1-4: Switch Tabs | Q: Quit\n\nTab/Shift+Tab: Focus navigation\nPress Esc to close"
                     .to_string(),
             ),
             Overlay::Settings => (
                 "Settings",
                 self.settings_overlay_text(),
             ),
+            Overlay::ScanSummary => ("Last Crash Log Scan Run", self.scan_run_summary_text()),
             Overlay::ConfirmRemoveBackup(backup_type) => {
                 let text = format!(
                     "Remove {} backup?\n\nThis will delete all backed up files permanently.\n\nPress Enter to confirm, Esc to cancel",
@@ -199,7 +205,13 @@ impl App {
         let paragraph = Paragraph::new(body)
             .style(Style::default().fg(theme::TEXT_PRIMARY))
             .block(block)
-            .alignment(Alignment::Left);
+            .alignment(Alignment::Left)
+            .wrap(Wrap { trim: false });
+        let paragraph = if matches!(overlay, Overlay::ScanSummary) {
+            paragraph.scroll((self.scan_summary_scroll, 0))
+        } else {
+            paragraph
+        };
 
         frame.render_widget(paragraph, overlay_area);
     }

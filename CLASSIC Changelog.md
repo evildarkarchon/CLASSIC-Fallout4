@@ -230,7 +230,7 @@ This is just a reflection of my copy of the code and may or may not make it into
 - Updated *CLASSIC Readme* with explanations for all of the new features.
 - CLASSIC now keeps AUTOSCAN report files in the same folder with their crash logs.
 - Changed the file structure, now all required files are organized inside *CLASSIC Data* folder.
-[Please report if it still fails to generate your Fallout 4 VR file and folder paths in CLASSIC FO4VR.yaml]
+[Please report if it still fails to generate your Fallout 4 VR file and folder paths from the shared CLASSIC Fallout4.yaml data]
 
 ### 7.07 | "Everything Everywhere All At Once" Update
 #### NEW FEATURES

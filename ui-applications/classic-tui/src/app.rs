@@ -1,14 +1,15 @@
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use classic_file_io_core::BackupType;
 use classic_path_core::validate_custom_scan_path;
+use classic_scanlog_core::scan_run::contract::{
+    self as scan_run_contract, Cancellation, Configuration, Event as ScanRunEvent,
+    InfrastructureError, Options, RunResult,
+};
 use classic_scanlog_core::{
-    CrashLogScanFacts, CrashLogScanOptions, CrashLogScanRunEvent, CrashLogScanRunEventKind,
-    CrashLogScanRunService, CrashLogScanRunServiceRequest, CrashLogScanRunStatus,
-    CrashLogScanSetupContext, CrashLogScanSource, StandardCrashLogScanSource,
+    CrashLogScanFacts, CrashLogScanSetupContext, StandardCrashLogScanSource,
+    StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
 use classic_shared_core::get_runtime;
 use classic_update_core::NotificationStatus;
@@ -21,13 +22,13 @@ use ratatui::Terminal;
 use ratatui::backend::Backend;
 use ratatui::layout::Rect;
 use tokio::sync::mpsc;
-use tokio_util::sync::CancellationToken;
 
 mod backup_workflow;
 mod results_workflow;
 mod update_workflow;
 
 use crate::results_markdown::MarkdownLink;
+use crate::scan_run::{ScanRunIntent, build_request, format_error, format_event, format_result};
 use crate::state::{classic_root, legacy_tui_state_file_path};
 use crate::tabs::articles_tab::{ARTICLE_LINKS, ArticlesClickAreas};
 use crate::tabs::backup_tab::BackupClickAreas;
@@ -62,27 +63,6 @@ fn write_clipboard_noop(_text: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn format_scan_run_progress(event: &CrashLogScanRunEvent) -> (f64, String) {
-    let percent = if event.total == 0 {
-        0.0
-    } else {
-        (event.completed as f64 / event.total as f64) * 100.0
-    };
-    let filename = event
-        .crash_log
-        .file_name()
-        .map(|name| name.to_string_lossy().to_string())
-        .unwrap_or_else(|| "unknown".to_string());
-    let action = match event.kind {
-        CrashLogScanRunEventKind::Queued => "Queued",
-        CrashLogScanRunEventKind::Started | CrashLogScanRunEventKind::Phase => "Scanning",
-        CrashLogScanRunEventKind::Completed => "Scanned",
-        CrashLogScanRunEventKind::Failed => "Failed",
-    };
-
-    (percent, format!("{percent:.0}% - {action} {filename}"))
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TabIndex {
     MainOptions = 0,
@@ -109,6 +89,7 @@ pub enum Overlay {
     About,
     Help,
     Settings,
+    ScanSummary,
     ConfirmRemoveBackup(BackupType),
     ConfirmDeleteReport(String),
 }
@@ -268,17 +249,8 @@ impl InputState {
 }
 
 pub enum AsyncMessage {
-    ScanProgress {
-        percent: f64,
-        status: String,
-    },
-    ScanComplete {
-        processed: usize,
-        total: usize,
-        errors: usize,
-        cancelled: bool,
-    },
-    ScanError(String),
+    ScanEvent(ScanRunEvent),
+    ScanFinished(Result<RunResult, InfrastructureError>),
     UpdateResult(Result<NotificationStatus, String>),
     BackupStatuses([bool; 4]),
     BackupComplete(String),
@@ -309,6 +281,7 @@ pub struct App {
     pub scan_in_progress: bool,
     pub scan_progress: f64,
     pub scan_status: String,
+    pub scan_summary_scroll: u16,
     pub status_clear_at: Option<Instant>,
     pub update_checking: bool,
     pub last_update_notification: Option<NotificationStatus>,
@@ -329,7 +302,8 @@ pub struct App {
 
     pub async_tx: mpsc::UnboundedSender<AsyncMessage>,
     pub async_rx: mpsc::UnboundedReceiver<AsyncMessage>,
-    pub cancel_token: Option<CancellationToken>,
+    pub scan_cancellation: Option<Cancellation>,
+    pub last_scan_run: Option<Result<RunResult, InfrastructureError>>,
 
     pub url_opener: UrlOpener,
     pub clipboard_writer: ClipboardWriter,
@@ -419,6 +393,7 @@ impl App {
             scan_in_progress: false,
             scan_progress: 0.0,
             scan_status: initial_status,
+            scan_summary_scroll: 0,
             status_clear_at: None,
             update_checking: false,
             last_update_notification: None,
@@ -434,7 +409,8 @@ impl App {
             settings_persistence_enabled,
             async_tx: tx,
             async_rx: rx,
-            cancel_token: None,
+            scan_cancellation: None,
+            last_scan_run: None,
             url_opener,
             clipboard_writer,
         };
@@ -490,29 +466,34 @@ impl App {
         }
     }
 
+    /// Applies one background workflow message to the TUI's retained presentation state.
+    ///
+    /// Crash Log Scan Run events update live progress, while terminal results and typed
+    /// infrastructure errors remain available through the Last Scan overlay.
     pub fn handle_async_message(&mut self, message: AsyncMessage) {
         match message {
-            AsyncMessage::ScanProgress { percent, status } => {
-                self.scan_progress = percent;
-                self.scan_status = status;
+            AsyncMessage::ScanEvent(event) => {
+                let presentation = format_event(&event);
+                self.scan_progress = self.scan_progress.max(presentation.percent);
+                self.scan_status = presentation.status;
             }
-            AsyncMessage::ScanComplete {
-                processed,
-                total,
-                errors,
-                cancelled,
-            } => {
+            AsyncMessage::ScanFinished(outcome) => {
                 self.scan_in_progress = false;
-                self.cancel_token = None;
-                self.scan_progress = if cancelled || total == 0 { 0.0 } else { 100.0 };
-                self.scan_status = if total == 0 {
-                    "No crash logs found".to_string()
-                } else if cancelled {
-                    format!("Cancelled ({processed} of {total} logs)")
-                } else if errors > 0 {
-                    format!("Scanned {total} logs ({errors} errors)")
-                } else {
-                    format!("Scanned {total} logs")
+                self.scan_cancellation = None;
+                let should_switch_to_results = match &outcome {
+                    Ok(result) => {
+                        let presentation = format_result(result);
+                        self.scan_progress = presentation.percent;
+                        self.scan_status = presentation.status;
+                        result.status == classic_scanlog_core::CrashLogScanRunStatus::Completed
+                            && result.total > 0
+                    }
+                    Err(error) => {
+                        let presentation = format_error(error);
+                        self.scan_progress = presentation.percent;
+                        self.scan_status = presentation.status;
+                        false
+                    }
                 };
                 self.status_clear_at =
                     Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
@@ -521,19 +502,11 @@ impl App {
                     .frontend_state()
                     .preferences()
                     .auto_switch_after_scan()
-                    && total > 0
-                    && !cancelled
+                    && should_switch_to_results
                 {
                     self.set_active_tab(TabIndex::Results);
                 }
-            }
-            AsyncMessage::ScanError(message) => {
-                self.scan_in_progress = false;
-                self.cancel_token = None;
-                self.scan_progress = 0.0;
-                self.scan_status = message;
-                self.status_clear_at =
-                    Some(Instant::now() + Duration::from_secs(STATUS_CLEAR_SECONDS));
+                self.last_scan_run = Some(outcome);
             }
             AsyncMessage::UpdateResult(result) => {
                 self.update_checking = false;
@@ -763,19 +736,35 @@ impl App {
     /// cannot produce a request assembled from multiple revisions.
     pub fn start_or_cancel_crash_scan(&mut self) {
         if self.scan_in_progress {
-            if let Some(token) = &self.cancel_token {
-                token.cancel();
+            if let Some(cancellation) = &self.scan_cancellation {
+                cancellation.cancel();
+                self.scan_status =
+                    "Cancellation requested; admitted logs will finish safely...".to_string();
             }
             return;
         }
 
+        self.start_crash_scan(None);
+    }
+
+    /// Starts a Targeted Crash Log Scan Run for explicit user-selected paths.
+    ///
+    /// This preserves the final contract's Targeted tag and cannot express Unsolved Logs movement.
+    pub fn start_targeted_crash_scan(&mut self, inputs: Vec<PathBuf>) {
+        if self.scan_in_progress {
+            self.scan_status = "A scan is already in progress".to_string();
+            return;
+        }
+
+        self.start_crash_scan(Some(inputs));
+    }
+
+    /// Projects one settings revision and launches it through the shared Rust runtime.
+    fn start_crash_scan(&mut self, targeted_inputs: Option<Vec<PathBuf>>) {
         self.scan_in_progress = true;
         self.scan_progress = -1.0;
         self.scan_status = "Discovering crash logs...".to_string();
         self.status_clear_at = None;
-
-        let cancel_token = CancellationToken::new();
-        self.cancel_token = Some(cancel_token.clone());
 
         let tx = self.async_tx.clone();
         let scan = self.settings.crash_log_scan_settings();
@@ -789,7 +778,6 @@ impl App {
         let show_formid_values = scan.formid_value_lookup();
         let fcx_mode = scan.fcx_mode();
         let simplify_logs = scan.simplify_logs();
-        let move_unsolved_logs = scan.move_unsolved_logs();
         let unsolved_logs_destination = scan.unsolved_logs_destination().map(PathBuf::from);
         let max_concurrent = usize::try_from(scan.max_concurrent_scans())
             .ok()
@@ -797,85 +785,56 @@ impl App {
         let yaml_dir_root = self.classic_root.clone();
         let yaml_dir_data = yaml_dir_root.join("CLASSIC Data");
         let base_folder = yaml_dir_root.clone();
-
-        get_runtime().spawn(async move {
-            let cancellation = Arc::new(AtomicBool::new(cancel_token.is_cancelled()));
-            let cancellation_watcher = {
-                let cancellation = Arc::clone(&cancellation);
-                let cancel_token = cancel_token.clone();
-                tokio::spawn(async move {
-                    cancel_token.cancelled().await;
-                    cancellation.store(true, Ordering::Relaxed);
-                })
-            };
-
-            let setup_context = fcx_mode.then(|| CrashLogScanSetupContext {
-                game_root: setup_game_root,
-                docs_root: configured_docs_root.clone(),
-                game_exe_path,
-                xse_log_path: None,
-            });
-            let request = CrashLogScanRunServiceRequest {
-                yaml_dir_root: yaml_dir_root.clone(),
-                yaml_dir_data: yaml_dir_data.clone(),
-                game: managed_game,
-                game_version: selected_game_version,
-                options: CrashLogScanOptions::new(show_formid_values, fcx_mode, simplify_logs),
-                source: CrashLogScanSource::Standard(StandardCrashLogScanSource {
+        let configuration = Configuration {
+            yaml_dir_root,
+            yaml_dir_data,
+            game: managed_game,
+            game_version: selected_game_version,
+            options: Options::new(show_formid_values, simplify_logs),
+            scan_facts: CrashLogScanFacts {
+                formid_database_paths,
+                unsolved_logs_destination,
+            },
+            max_concurrent,
+        };
+        let intent = match targeted_inputs {
+            Some(inputs) => ScanRunIntent::Targeted(TargetedCrashLogScanSource { inputs }),
+            None => ScanRunIntent::Standard {
+                source: StandardCrashLogScanSource {
                     base_directory: base_folder,
                     custom_scan_directory: custom_folder,
-                    configured_documents_root: configured_docs_root,
-                }),
-                setup_context,
-                move_unsolved_logs,
-                scan_facts: CrashLogScanFacts {
-                    formid_database_paths,
-                    unsolved_logs_destination,
+                    configured_documents_root: configured_docs_root.clone(),
                 },
-                max_concurrent,
-                cancellation: Some(cancellation),
-                preserve_order: false,
-            };
+                unsolved_logs: if scan.move_unsolved_logs() {
+                    StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault
+                } else {
+                    StandardUnsolvedLogsIntent::LeaveInPlace
+                },
+            },
+        };
+        let setup_context = fcx_mode.then_some(CrashLogScanSetupContext {
+            game_root: setup_game_root,
+            docs_root: configured_docs_root,
+            game_exe_path,
+            xse_log_path: None,
+        });
+        let request = build_request(configuration, intent, setup_context);
+        let cancellation = Cancellation::new();
+        self.scan_cancellation = Some(cancellation.clone());
 
-            let result = CrashLogScanRunService::execute(request, |event| {
-                let (percent, status) = format_scan_run_progress(&event);
-                let _ = tx.send(AsyncMessage::ScanProgress { percent, status });
-            })
-            .await;
-
-            cancellation_watcher.abort();
-
-            let result = match result {
-                Ok(result) => result,
-                Err(error) => {
-                    let _ = tx.send(AsyncMessage::ScanError(format!(
-                        "Failed to scan logs: {error}"
-                    )));
-                    return;
+        get_runtime().spawn(async move {
+            let delivery_cancellation = cancellation.clone();
+            let event_tx = tx.clone();
+            let mut observer = move |event| {
+                // Losing the UI delivery channel explicitly requests safe cancellation so queued
+                // work does not continue without a usable presentation consumer.
+                if event_tx.send(AsyncMessage::ScanEvent(event)).is_err() {
+                    delivery_cancellation.cancel();
                 }
             };
-
-            if result.status == CrashLogScanRunStatus::SetupFailed {
-                let message = result
-                    .message
-                    .unwrap_or_else(|| "Crash Log Scan setup failed".to_string());
-                let _ = tx.send(AsyncMessage::ScanError(message));
-                return;
-            }
-
-            let processed = result.succeeded + result.failed;
-            let errors = result.failed;
-            let cancelled = matches!(
-                result.status,
-                CrashLogScanRunStatus::Cancelled | CrashLogScanRunStatus::CancelledBeforeDiscovery
-            );
-
-            let _ = tx.send(AsyncMessage::ScanComplete {
-                processed,
-                total: result.total,
-                errors,
-                cancelled,
-            });
+            let result =
+                scan_run_contract::execute(request, &cancellation, Some(&mut observer)).await;
+            let _ = tx.send(AsyncMessage::ScanFinished(result));
         });
     }
 
@@ -1036,24 +995,29 @@ impl App {
     }
 
     /// Projects the canonical managed game and its matching FormID databases from one snapshot.
-    fn scan_game_projection(&self) -> (String, Vec<PathBuf>) {
-        let managed_game = self
-            .settings
-            .game_setup_settings()
-            .managed_game()
-            .as_str()
-            .to_string();
+    fn scan_game_projection(&self) -> (classic_shared_core::GameId, Vec<PathBuf>) {
+        let managed_game = self.settings.game_setup_settings().managed_game();
+        let managed_game_key = managed_game.as_str().to_string();
         let databases = self
             .settings
             .crash_log_scan_settings()
             .formid_databases()
-            .get(&managed_game)
+            .get(&managed_game_key)
             .cloned()
             .unwrap_or_default()
             .into_iter()
             .map(PathBuf::from)
             .collect();
         (managed_game, databases)
+    }
+
+    /// Returns the retained terminal scan presentation shown by the Last Scan overlay.
+    pub fn scan_run_summary_text(&self) -> String {
+        match self.last_scan_run.as_ref() {
+            Some(Ok(result)) => format_result(result).details,
+            Some(Err(error)) => format_error(error).details,
+            None => "No Crash Log Scan Run has completed yet.".to_string(),
+        }
     }
 
     fn open_article(&mut self, index: usize) {

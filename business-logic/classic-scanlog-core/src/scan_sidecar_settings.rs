@@ -112,9 +112,10 @@ pub(crate) fn resolve_formid_database_paths(
     configured_paths: &[PathBuf],
 ) -> Vec<PathBuf> {
     let data_dir = yaml_dir_data.as_ref();
+    let main_database_game = main_formid_database_game(game);
     let main_db = data_dir
         .join("databases")
-        .join(format!("{game} FormIDs Main.db"));
+        .join(format!("{main_database_game} FormIDs Main.db"));
 
     let hardcoded = hardcoded_formid_database_relpaths(game)
         .iter()
@@ -134,6 +135,17 @@ pub(crate) fn resolve_formid_database_paths(
     all_paths.extend(hardcoded);
     all_paths.extend(configured_paths);
     dedupe_paths(all_paths)
+}
+
+/// Returns the shared game identity used by the built-in main FormID database.
+///
+/// Fallout 4 VR retains its own runtime identity but reads Fallout 4's shared
+/// analysis data, matching the `CLASSIC Fallout4.yaml` ownership contract.
+fn main_formid_database_game(game: &str) -> &str {
+    match game {
+        "Fallout4VR" => "Fallout4",
+        _ => game,
+    }
 }
 
 /// Load simplify-log removal rules from `CLASSIC Main.yaml`.

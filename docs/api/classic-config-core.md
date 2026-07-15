@@ -83,7 +83,7 @@ Variants:
 
 - `Main` -> `CLASSIC Data/databases/CLASSIC Main.yaml`
 - `Ignore` -> `CLASSIC Ignore.yaml`
-- `Game` -> `CLASSIC Data/databases/CLASSIC {game}.yaml`
+- `Game` -> `CLASSIC Data/databases/CLASSIC {game}.yaml`; `Fallout4VR` resolves to the shared `CLASSIC Fallout4.yaml`
 - `GameLocal` -> `CLASSIC Data/CLASSIC {game} Local.yaml`
 - `Test` -> `tests/test_settings.yaml`
 - `Cache` -> `User config dir/CLASSIC/cache.yaml` with application-relative compatibility fallback
@@ -116,7 +116,7 @@ Binding adapters expose the same operation as CXX `save_local_yaml_paths(...)`, 
 It combines values from:
 
 - `CLASSIC Main.yaml`
-- `CLASSIC {game}.yaml`
+- `CLASSIC {game}.yaml` (`Fallout4VR` uses `CLASSIC Fallout4.yaml`)
 - `CLASSIC Ignore.yaml`
 
 Representative field groups:
@@ -140,7 +140,7 @@ Two accepted directory layouts for `load_from_yaml_files()`:
 
 - preferred 2-dir API: `[root_dir, data_dir]`
   - expects `CLASSIC Ignore.yaml` under `root_dir`
-  - expects `databases/CLASSIC Main.yaml` and `databases/CLASSIC {game}.yaml` under `data_dir`
+  - expects `databases/CLASSIC Main.yaml` and `databases/CLASSIC {game}.yaml` under `data_dir`; Fallout 4 VR uses the Fallout 4 filename and keyed data identity
 - legacy 3-dir API: `[main_dir, game_dir, ignore_dir]`
 
 If `yaml_dirs` has any other length, the function returns `ConfigError::InvalidInput`.

@@ -165,6 +165,8 @@ Important constructors/helpers:
 
 Behavior worth knowing:
 
+- Fallout 4 VR retains the `Fallout4VR` runtime identity while resolving the built-in main FormID database through the shared `Fallout4 FormIDs Main.db` data identity.
+
 - Path-backed intake loads YAML Data through `classic-config-core::YamlDataCore::load_from_yaml_files()`.
 - In-memory intake accepts an already-loaded `YamlDataCore` so tests and later adapters can use the same readiness seam without unnecessary file setup.
 - `CrashLogScanFacts` carries caller-projected configured FormID database paths and the optional Unsolved Logs Destination. Intake never discovers, opens, previews, or persists User Settings.
@@ -294,7 +296,7 @@ The expand implementation temporarily delegates discovery and intake preparation
 
 `CrashLogScanRunService` is the public high-level facade for a full Crash Log Scan Run. It accepts typed Standard or Targeted source facts, optionally validates FCX setup, prepares intake, and executes accepted Crash Logs. `CrashLogScanRun` remains the lower prepared-run module for callers that already have `ScanReadyAnalysis` and an accepted log list.
 
-These interfaces remain temporarily available so existing C++, Node, Python, and TUI consumers can migrate through their dedicated cutover tickets. They are not alternate constructors or execution paths in the final `scan_run::contract` model and are removed/internalized by the coordinated contract step.
+These interfaces remain temporarily available so existing C++, Node, and Python consumers can migrate through their dedicated cutover tickets. The TUI uses the final `scan_run::contract` interface directly. The provisional interfaces are not alternate constructors or execution paths in the final model and are removed/internalized by the coordinated contract step.
 
 Important service types:
 
