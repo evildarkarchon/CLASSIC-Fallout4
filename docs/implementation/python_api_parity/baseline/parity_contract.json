@@ -1,5 +1,5 @@
 {
-  "contractVersion": "1.1.0",
+  "contractVersion": "1.2.0",
   "phase": "phase1",
   "description": "Tiered Python bindings parity contract for Rust core APIs, including callable member export paths.",
   "tierDefinitions": {
@@ -65,6 +65,336 @@
     }
   },
   "tier1Mappings": [
+    {
+      "id": "scanlog.scan_run.ScanRunConfiguration",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "Configuration",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunConfiguration",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunConfiguration.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "Configuration",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunConfiguration.__init__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunStandardSource",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "StandardCrashLogScanSource",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunStandardSource",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunStandardSource.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "StandardCrashLogScanSource",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunStandardSource.__init__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunTargetedSource",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "TargetedCrashLogScanSource",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunTargetedSource",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunTargetedSource.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "TargetedCrashLogScanSource",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunTargetedSource.__init__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunSetupContext",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashLogScanSetupContext",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunSetupContext",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunSetupContext.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashLogScanSetupContext",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunSetupContext.__init__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunUnsolvedLogs",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "StandardUnsolvedLogsIntent",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunUnsolvedLogs",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunUnsolvedLogs.leave_in_place",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "StandardUnsolvedLogsIntent",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunUnsolvedLogs.leave_in_place",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunUnsolvedLogs.move_to_configured_or_default",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "StandardUnsolvedLogsIntent",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunUnsolvedLogs.move_to_configured_or_default",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunUnsolvedLogs.move_to_custom",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "StandardUnsolvedLogsIntent",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunUnsolvedLogs.move_to_custom",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunRequest",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "Request",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunRequest",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunRequest.standard",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "standard",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunRequest.standard",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunRequest.standard_with_fcx",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "standard_with_fcx",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunRequest.standard_with_fcx",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunRequest.targeted",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "targeted",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunRequest.targeted",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunRequest.targeted_with_fcx",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "targeted_with_fcx",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunRequest.targeted_with_fcx",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunCancellation",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "Cancellation",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunCancellation",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunCancellation.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "new",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunCancellation.__init__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunCancellation.cancel",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "cancel",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunCancellation.cancel",
+      "pythonKind": "method"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunRejectedInput",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashLogScanRejectedInput",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunRejectedInput",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunDiscoveryResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashLogScanDiscoveryResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunDiscoveryResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunSetupCheck",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashLogScanSetupCheck",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunSetupCheck",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunSetupPathUpdate",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashLogScanSetupPathUpdate",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunSetupPathUpdate",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunSetupResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashLogScanSetupResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunSetupResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunLogFailure",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogFailure",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLogFailure",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunLogResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLogResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "RunResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunInfrastructureError",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "InfrastructureError",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunInfrastructureError",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunLogEvent",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "LogEvent",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunLogEvent",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunEvent",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "Event",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunEvent",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.ScanRunExecution",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "RunResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ScanRunExecution",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.scan_run.scan_run_execute",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "Request",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "scan_run_execute",
+      "pythonKind": "function"
+    },
     {
       "id": "user_settings.commit_eligibility",
       "tier": "tier1",

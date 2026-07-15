@@ -130,8 +130,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 246,
-      "contractIdsHash": "0c0bef57b092541c968409b8b28668f65fe968bf0b62b9637dca9221f8fd7396",
+      "contractCount": 279,
+      "contractIdsHash": "bda328b0f180e0ae1e358b2db665506074eccec33d6cc766474a66326495332f",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
@@ -140,7 +140,7 @@
         "PARITY_GAME_YAML",
         "PARITY_IGNORE_YAML"
       ],
-      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns); Plan 03 added 57 Wave 2 rows (mod_detector/suspect_scanner/settings_validator/fcx_handler/gpu_detector) per R9 with GLOBAL_FCX_HANDLER excluded; Plan 04 added 50 Wave 3a rows (orchestrator/papyrus/version/crashgen_registry/segment_key/error); Plan 05 added 46 Wave 3b report rows (StringPool/ReportFragment/ReportComposer/ReportGenerator/ParallelReportProcessor + report module marker). Supplementary smoke tests live in test_promoted_scanlog_wave1_smoke.py, test_promoted_scanlog_wave2_smoke.py, test_promoted_scanlog_wave3a_smoke.py, and test_promoted_scanlog_report_smoke.py."
+      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns); Plan 03 added 57 Wave 2 rows (mod_detector/suspect_scanner/settings_validator/fcx_handler/gpu_detector) per R9 with GLOBAL_FCX_HANDLER excluded; Plan 04 added 50 Wave 3a rows (orchestrator/papyrus/version/crashgen_registry/segment_key/error); Plan 05 added 46 Wave 3b report rows (StringPool/ReportFragment/ReportComposer/ReportGenerator/ParallelReportProcessor + report module marker). Issue #123 adds 33 final Crash Log Scan Run contract rows with dedicated public-seam tests. Supplementary smoke tests live in test_promoted_scanlog_wave1_smoke.py, test_promoted_scanlog_wave2_smoke.py, test_promoted_scanlog_wave3a_smoke.py, test_promoted_scanlog_report_smoke.py, and test_scan_run_contract.py."
     },
     {
       "coverageId": "python-tier1-scanlog-wave1-promoted",
@@ -230,8 +230,6 @@
         "classic_scanlog.CancellationToken.cancel",
         "classic_scanlog.CancellationToken.is_cancelled",
         "classic_scanlog.CancellationToken.reset",
-        "classic_scanlog.ScanRunLogResult",
-        "classic_scanlog.scan_run_execute",
         "classic_scanlog.Orchestrator",
         "classic_scanlog.Orchestrator.__init__",
         "classic_scanlog.Orchestrator.check_loadorder_exists",
@@ -259,7 +257,53 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_promoted_scanlog_wave3a_smoke.py",
       "testCaseId": "scanlog-wave3a-promoted-smoke",
-      "notes": "Per-class smoke tests for Wave 3a orchestration core added in Phase 3 Plan 04, plus the full Crash Log Scan Run binding seam. Covers orchestrator/papyrus/version sub-modules (the only sub-modules with PyO3 wrappers); crashgen_registry/segment_key/error are pure Rust and tracked as @rust proxy contract rows that resolve against the classic-scanlog-core surface. Constructor signatures from 03-04-CONSTRUCTOR-INVENTORY.md. Rust-only symbol guard via test_rust_only_symbols_in_core_surface. Report sub-module is deferred to Plan 05."
+      "notes": "Per-class smoke tests for Wave 3a orchestration core added in Phase 3 Plan 04. Covers the retained legacy orchestrator plus papyrus/version sub-modules; crashgen_registry/segment_key/error are pure Rust and tracked as @rust proxy contract rows that resolve against the classic-scanlog-core surface. Constructor signatures from 03-04-CONSTRUCTOR-INVENTORY.md. Rust-only symbol guard via test_rust_only_symbols_in_core_surface. The final Crash Log Scan Run contract has a dedicated public-seam runtime entry."
+    },
+    {
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_scanlog.ScanRunConfiguration",
+        "classic_scanlog.ScanRunConfiguration.__init__",
+        "classic_scanlog.ScanRunStandardSource",
+        "classic_scanlog.ScanRunStandardSource.__init__",
+        "classic_scanlog.ScanRunTargetedSource",
+        "classic_scanlog.ScanRunTargetedSource.__init__",
+        "classic_scanlog.ScanRunSetupContext",
+        "classic_scanlog.ScanRunSetupContext.__init__",
+        "classic_scanlog.ScanRunUnsolvedLogs",
+        "classic_scanlog.ScanRunUnsolvedLogs.leave_in_place",
+        "classic_scanlog.ScanRunUnsolvedLogs.move_to_configured_or_default",
+        "classic_scanlog.ScanRunUnsolvedLogs.move_to_custom",
+        "classic_scanlog.ScanRunRequest",
+        "classic_scanlog.ScanRunRequest.standard",
+        "classic_scanlog.ScanRunRequest.standard_with_fcx",
+        "classic_scanlog.ScanRunRequest.targeted",
+        "classic_scanlog.ScanRunRequest.targeted_with_fcx",
+        "classic_scanlog.ScanRunCancellation",
+        "classic_scanlog.ScanRunCancellation.__init__",
+        "classic_scanlog.ScanRunCancellation.cancel",
+        "classic_scanlog.ScanRunCancellation.is_cancelled",
+        "classic_scanlog.ScanRunRejectedInput",
+        "classic_scanlog.ScanRunDiscoveryResult",
+        "classic_scanlog.ScanRunSetupCheck",
+        "classic_scanlog.ScanRunSetupPathUpdate",
+        "classic_scanlog.ScanRunSetupResult",
+        "classic_scanlog.ScanRunLogFailure",
+        "classic_scanlog.ScanRunLogResult",
+        "classic_scanlog.ScanRunResult",
+        "classic_scanlog.ScanRunInfrastructureError",
+        "classic_scanlog.ScanRunLogEvent",
+        "classic_scanlog.ScanRunEvent",
+        "classic_scanlog.ScanRunExecution",
+        "classic_scanlog.scan_run_execute"
+      ],
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "coverageId": "python-tier1-scanlog-wave3b-promoted",

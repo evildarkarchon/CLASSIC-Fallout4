@@ -91,15 +91,14 @@ Current shape notes:
 - `classic_scangame.run_game_setup_intake_from_user_settings(...)` opens the cohesive typed group at an explicit root; the explicit-facts `GameSetupIntake` path remains available, and both return resolved `game_root`, `game_executable`, and `docs_root` facts plus proposals controlled by the caller
 - Python does not export `classic_config.ClassicConfig` or `PathConfig`; those flat models are removed from the Rust/CXX ownership surface as well
 - some Python modules are support-oriented rather than one-to-one mirrors of a single business-logic crate, so check the binding crate before assuming ownership
-- full Crash Log Scan Run adapter work should use `classic_scanlog.scan_run_execute(...) -> ScanRunResult`; lower-level `Orchestrator` methods remain analysis/report-line entry points for callers that explicitly need that shape
-- `scan_run_execute` returns a top-level result with `status`, `message`, aggregate counts, optional `discovery`, optional `setup`, and nested `logs`
-- Standard discovery is selected with `targeted_mode=False` and uses `base_directory`, `custom_scan_directory`, and `configured_documents_root`; Targeted discovery is selected with `targeted_mode=True` and uses `targeted_inputs` when present, otherwise the positional `log_paths` argument
-- `status == "no_crash_logs_found"` is a normal result when discovery accepts no logs. Targeted inputs rejected during discovery appear under `discovery.rejected_inputs`, not as per-log failures
-- `classic_scanlog.scan_run_execute(...)` accepts optional `unsolved_logs_destination: str | None = None`; Targeted runs and Standard runs with `move_unsolved_logs=False` ignore it, while Standard movement uses it as a custom destination when non-empty
-- omitted `scan_run_execute` scan flags, custom input, concurrency, Unsolved Logs policy, and FCX setup facts come from typed User Settings under `yaml_dir_root`; explicit arguments override the saved values
-- Standard/Targeted discovery, FCX setup result shaping, and Unsolved Logs Destination normalization are core-owned
-- `max_concurrent=0` still means the adaptive default in the provisional Python compatibility adapter. The final Node and C++ contracts instead preserve zero for centralized typed request validation; callers select adaptively by omitting the value
-- nested per-log results include `report_write_failed` so report-write failures stay distinct from scan analysis failures
+- full Crash Log Scan Run adapter work uses `ScanRunRequest` factories plus `scan_run_execute(request, cancellation, observer=None, cancel_on_observer_error=False) -> ScanRunExecution`; retained lower-level `Orchestrator` methods remain analysis/report-line entry points until the coordinated contraction ticket removes them
+- `ScanRunConfiguration` contains explicit YAML roots, game/version, analysis options, FormID database paths, optional configured Unsolved Logs destination, and optional positive concurrency. The adapter never opens User Settings; callers project one accepted settings snapshot into these facts
+- `ScanRunRequest.standard(...)`, `standard_with_fcx(...)`, `targeted(...)`, and `targeted_with_fcx(...)` are opaque invariant-preserving factories. Targeted factories accept no movement policy, and both FCX factories require `ScanRunSetupContext`
+- `ScanRunUnsolvedLogs` exposes Standard-only leave-in-place, configured/default movement, and custom-destination movement policies. `ScanRunCancellation` is a separate opaque monotonic control with no reset operation
+- `ScanRunExecution` contains exactly one of a complete `result` or typed run-wide `error`, plus independent optional `observer_error` data. The result retains all lifecycle states, discovery/setup optionals, Rust-selected effective concurrency, aggregate counts, and discovery-ordered per-log outcomes
+- per-log results preserve the durable disposition, every structured analysis/report/Unsolved-Logs failure stage, optional Autoscan Report and message, both timing units, movement state, and analysis counts
+- observers receive all serialized discovery, concurrency, queued, started, phase, and finished variants. Callback exceptions remain adapter concerns; `cancel_on_observer_error=True` requests stopping only through the separate safe cancellation control
+- omitted concurrency selects adaptively; an explicit zero reaches centralized request validation and returns a typed `request_validation` infrastructure error
 
 ---
 

@@ -121,6 +121,7 @@ pub mod plugin_analyzer;
 mod py_adapters;
 pub mod record_scanner;
 pub mod report;
+pub mod scan_run;
 pub mod settings_validator;
 pub mod suspect_scanner;
 pub mod version;
@@ -137,9 +138,6 @@ pub use mod_detector::{
 };
 pub use orchestrator::{
     PyAnalysisConfig, PyAnalysisResult, PyCancellationToken, PyRustOrchestrator,
-    PyScanRunDiscoveryResult, PyScanRunLogResult, PyScanRunRejectedInput, PyScanRunResult,
-    PyScanRunSetupCheck, PyScanRunSetupContext, PyScanRunSetupPathUpdate, PyScanRunSetupResult,
-    scan_run_execute,
 };
 pub use papyrus::{PyPapyrusAnalyzer, PyPapyrusStats, papyrus_logging};
 pub use parser::PyLogParser;
@@ -148,6 +146,13 @@ pub use plugin_analyzer::{PyPluginAnalyzer, contains_plugin, detect_plugins_batc
 pub use record_scanner::{PyRecordScanner, contains_record, scan_records_batch};
 pub use report::{
     PyParallelReportProcessor, PyReportComposer, PyReportFragment, PyReportGenerator, PyStringPool,
+};
+pub use scan_run::{
+    PyScanRunCancellation, PyScanRunConfiguration, PyScanRunDiscoveryResult, PyScanRunEvent,
+    PyScanRunExecution, PyScanRunInfrastructureError, PyScanRunLogEvent, PyScanRunLogFailure,
+    PyScanRunLogResult, PyScanRunRejectedInput, PyScanRunRequest, PyScanRunResult,
+    PyScanRunSetupCheck, PyScanRunSetupContext, PyScanRunSetupPathUpdate, PyScanRunSetupResult,
+    PyScanRunStandardSource, PyScanRunTargetedSource, PyScanRunUnsolvedLogs, scan_run_execute,
 };
 pub use settings_validator::PySettingsValidator;
 pub use suspect_scanner::PySuspectScanner;
@@ -185,6 +190,31 @@ fn auto_init_application_dir(py: Python<'_>) {
     {
         classic_registry_core::set_application_dir(app_dir);
     }
+}
+
+/// Register the final Crash Log Scan Run adapter types and execution function.
+fn register_scan_run_exports(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<PyScanRunConfiguration>()?;
+    m.add_class::<PyScanRunCancellation>()?;
+    m.add_class::<PyScanRunStandardSource>()?;
+    m.add_class::<PyScanRunTargetedSource>()?;
+    m.add_class::<PyScanRunUnsolvedLogs>()?;
+    m.add_class::<PyScanRunRequest>()?;
+    m.add_class::<PyScanRunRejectedInput>()?;
+    m.add_class::<PyScanRunDiscoveryResult>()?;
+    m.add_class::<PyScanRunSetupContext>()?;
+    m.add_class::<PyScanRunSetupCheck>()?;
+    m.add_class::<PyScanRunSetupPathUpdate>()?;
+    m.add_class::<PyScanRunSetupResult>()?;
+    m.add_class::<PyScanRunLogFailure>()?;
+    m.add_class::<PyScanRunLogResult>()?;
+    m.add_class::<PyScanRunResult>()?;
+    m.add_class::<PyScanRunInfrastructureError>()?;
+    m.add_class::<PyScanRunLogEvent>()?;
+    m.add_class::<PyScanRunEvent>()?;
+    m.add_class::<PyScanRunExecution>()?;
+    m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;
+    Ok(())
 }
 
 /// Python module initialization
@@ -238,15 +268,7 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyAnalysisConfig>()?;
     m.add_class::<PyAnalysisResult>()?;
     m.add_class::<PyCancellationToken>()?;
-    m.add_class::<PyScanRunRejectedInput>()?;
-    m.add_class::<PyScanRunDiscoveryResult>()?;
-    m.add_class::<PyScanRunSetupContext>()?;
-    m.add_class::<PyScanRunSetupCheck>()?;
-    m.add_class::<PyScanRunSetupPathUpdate>()?;
-    m.add_class::<PyScanRunSetupResult>()?;
-    m.add_class::<PyScanRunLogResult>()?;
-    m.add_class::<PyScanRunResult>()?;
-    m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;
+    register_scan_run_exports(m)?;
 
     // Report generation
     m.add_class::<PyStringPool>()?;
@@ -321,15 +343,7 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyAnalysisConfig>()?;
     m.add_class::<PyAnalysisResult>()?;
     m.add_class::<PyCancellationToken>()?;
-    m.add_class::<PyScanRunRejectedInput>()?;
-    m.add_class::<PyScanRunDiscoveryResult>()?;
-    m.add_class::<PyScanRunSetupContext>()?;
-    m.add_class::<PyScanRunSetupCheck>()?;
-    m.add_class::<PyScanRunSetupPathUpdate>()?;
-    m.add_class::<PyScanRunSetupResult>()?;
-    m.add_class::<PyScanRunLogResult>()?;
-    m.add_class::<PyScanRunResult>()?;
-    m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;
+    register_scan_run_exports(m)?;
 
     // Report generation
     m.add_class::<PyStringPool>()?;

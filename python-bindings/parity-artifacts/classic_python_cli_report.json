@@ -2,16 +2,43 @@
   "coveredExports": [
     "FileHasher.hash_file",
     "PathValidator.is_valid_path",
-    "ScanRunLogResult.autoscan_report_path",
+    "ScanRunCancellation",
+    "ScanRunLogResult.autoscan_report",
+    "ScanRunRequest.targeted",
     "bindings.list",
     "format_version",
     "load_main_yaml_version",
     "parse_version",
     "scan_run_execute"
   ],
-  "delegatedGates": [],
+  "delegatedGates": [
+    {
+      "commandLine": [
+        "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\.venv\\Scripts\\python.exe",
+        "tools/python_api_parity/check_parity_gate.py",
+        "--repo-root",
+        "."
+      ],
+      "exitCode": 0,
+      "stderr": "",
+      "stdout": "Python parity gate artifacts generated:\n- D:\\repos\\CLASSIC-Fallout4\\python-bindings\\parity-artifacts\\rust_api_surface.json\n- D:\\repos\\CLASSIC-Fallout4\\python-bindings\\parity-artifacts\\python_api_surface.json\n- D:\\repos\\CLASSIC-Fallout4\\python-bindings\\parity-artifacts\\parity_diff_report.json\n- D:\\repos\\CLASSIC-Fallout4\\python-bindings\\parity-artifacts\\parity_diff_report.md\n- D:\\repos\\CLASSIC-Fallout4\\python-bindings\\parity-artifacts\\runtime_coverage_summary.json\n- D:\\repos\\CLASSIC-Fallout4\\python-bindings\\parity-artifacts\\runtime_coverage_summary.md\n- D:\\repos\\CLASSIC-Fallout4\\python-bindings\\parity-artifacts\\tier1_gate_report.md\nTier-1 parity gate passed.\n"
+    },
+    {
+      "commandLine": [
+        "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\.venv\\Scripts\\python.exe",
+        "tools/binding_compliance/check_compliance.py",
+        "--repo-root",
+        ".",
+        "--profile",
+        "python-ci"
+      ],
+      "exitCode": 0,
+      "stderr": "",
+      "stdout": "Binding compliance profile: python-ci\nResult: PASS\n- JSON report: D:\\repos\\CLASSIC-Fallout4\\tools\\binding_compliance\\artifacts\\binding_compliance_report.json\n- Markdown report: D:\\repos\\CLASSIC-Fallout4\\tools\\binding_compliance\\artifacts\\binding_compliance_report.md\nSummary: passed=12, failed=0, gaps=1, skipped=0\n"
+    }
+  ],
   "environment": {
-    "fixtureRoot": "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\tests\\fixtures",
+    "fixtureRoot": "D:\\repos\\CLASSIC-Fallout4\\sample_logs\\FO4",
     "python": "D:\\repos\\CLASSIC-Fallout4\\python-bindings\\.venv\\Scripts\\python.exe",
     "repoRoot": "D:\\repos\\CLASSIC-Fallout4"
   },
@@ -22,7 +49,7 @@
     "stale-generated-artifact",
     "true-binding-compliance-gap"
   ],
-  "profile": "smoke",
+  "profile": "python-ci",
   "scenarioResults": [
     {
       "commandLine": [
@@ -112,7 +139,7 @@
       "id": "file-hash",
       "owner": "classic_file_io",
       "status": "passed",
-      "summary": "Cargo.toml d9d8b188944e4ec2167b1baec27e28cce1a57b23bbed883c8369ce6d74f9e5fd"
+      "summary": "Cargo.toml 9b1c3c3eebad280ece432e35b6a85ac78d721282b9b6175fa9f89180176bd606"
     },
     {
       "commandLine": [
@@ -123,8 +150,10 @@
         "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"
       ],
       "coveredExports": [
+        "ScanRunRequest.targeted",
+        "ScanRunCancellation",
         "scan_run_execute",
-        "ScanRunLogResult.autoscan_report_path"
+        "ScanRunLogResult.autoscan_report"
       ],
       "data": {
         "failedLogs": 0,

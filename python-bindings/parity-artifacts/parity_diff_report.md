@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-15T01:39:57.862361+00:00`
-- Tier-1 contract rows: **1232**
-- Tier-1 matched: **1232**
+- Generated: `2026-07-15T11:51:27.707977+00:00`
+- Tier-1 contract rows: **1265**
+- Tier-1 matched: **1265**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -12,6 +12,39 @@
 
 | ID | Owner Module | Rust Symbol | Python Export | Status |
 |---|---|---|---|---|
+| `scanlog.scan_run.ScanRunConfiguration` | `scanlog` | `Configuration` | `classic_scanlog.ScanRunConfiguration` | `matched` |
+| `scanlog.scan_run.ScanRunConfiguration.__init__` | `scanlog` | `Configuration` | `classic_scanlog.ScanRunConfiguration.__init__` | `matched` |
+| `scanlog.scan_run.ScanRunStandardSource` | `scanlog` | `StandardCrashLogScanSource` | `classic_scanlog.ScanRunStandardSource` | `matched` |
+| `scanlog.scan_run.ScanRunStandardSource.__init__` | `scanlog` | `StandardCrashLogScanSource` | `classic_scanlog.ScanRunStandardSource.__init__` | `matched` |
+| `scanlog.scan_run.ScanRunTargetedSource` | `scanlog` | `TargetedCrashLogScanSource` | `classic_scanlog.ScanRunTargetedSource` | `matched` |
+| `scanlog.scan_run.ScanRunTargetedSource.__init__` | `scanlog` | `TargetedCrashLogScanSource` | `classic_scanlog.ScanRunTargetedSource.__init__` | `matched` |
+| `scanlog.scan_run.ScanRunSetupContext` | `scanlog` | `CrashLogScanSetupContext` | `classic_scanlog.ScanRunSetupContext` | `matched` |
+| `scanlog.scan_run.ScanRunSetupContext.__init__` | `scanlog` | `CrashLogScanSetupContext` | `classic_scanlog.ScanRunSetupContext.__init__` | `matched` |
+| `scanlog.scan_run.ScanRunUnsolvedLogs` | `scanlog` | `StandardUnsolvedLogsIntent` | `classic_scanlog.ScanRunUnsolvedLogs` | `matched` |
+| `scanlog.scan_run.ScanRunUnsolvedLogs.leave_in_place` | `scanlog` | `StandardUnsolvedLogsIntent` | `classic_scanlog.ScanRunUnsolvedLogs.leave_in_place` | `matched` |
+| `scanlog.scan_run.ScanRunUnsolvedLogs.move_to_configured_or_default` | `scanlog` | `StandardUnsolvedLogsIntent` | `classic_scanlog.ScanRunUnsolvedLogs.move_to_configured_or_default` | `matched` |
+| `scanlog.scan_run.ScanRunUnsolvedLogs.move_to_custom` | `scanlog` | `StandardUnsolvedLogsIntent` | `classic_scanlog.ScanRunUnsolvedLogs.move_to_custom` | `matched` |
+| `scanlog.scan_run.ScanRunRequest` | `scanlog` | `Request` | `classic_scanlog.ScanRunRequest` | `matched` |
+| `scanlog.scan_run.ScanRunRequest.standard` | `scanlog` | `standard` | `classic_scanlog.ScanRunRequest.standard` | `matched` |
+| `scanlog.scan_run.ScanRunRequest.standard_with_fcx` | `scanlog` | `standard_with_fcx` | `classic_scanlog.ScanRunRequest.standard_with_fcx` | `matched` |
+| `scanlog.scan_run.ScanRunRequest.targeted` | `scanlog` | `targeted` | `classic_scanlog.ScanRunRequest.targeted` | `matched` |
+| `scanlog.scan_run.ScanRunRequest.targeted_with_fcx` | `scanlog` | `targeted_with_fcx` | `classic_scanlog.ScanRunRequest.targeted_with_fcx` | `matched` |
+| `scanlog.scan_run.ScanRunCancellation` | `scanlog` | `Cancellation` | `classic_scanlog.ScanRunCancellation` | `matched` |
+| `scanlog.scan_run.ScanRunCancellation.__init__` | `scanlog` | `new` | `classic_scanlog.ScanRunCancellation.__init__` | `matched` |
+| `scanlog.scan_run.ScanRunCancellation.cancel` | `scanlog` | `cancel` | `classic_scanlog.ScanRunCancellation.cancel` | `matched` |
+| `scanlog.scan_run.ScanRunRejectedInput` | `scanlog` | `CrashLogScanRejectedInput` | `classic_scanlog.ScanRunRejectedInput` | `matched` |
+| `scanlog.scan_run.ScanRunDiscoveryResult` | `scanlog` | `CrashLogScanDiscoveryResult` | `classic_scanlog.ScanRunDiscoveryResult` | `matched` |
+| `scanlog.scan_run.ScanRunSetupCheck` | `scanlog` | `CrashLogScanSetupCheck` | `classic_scanlog.ScanRunSetupCheck` | `matched` |
+| `scanlog.scan_run.ScanRunSetupPathUpdate` | `scanlog` | `CrashLogScanSetupPathUpdate` | `classic_scanlog.ScanRunSetupPathUpdate` | `matched` |
+| `scanlog.scan_run.ScanRunSetupResult` | `scanlog` | `CrashLogScanSetupResult` | `classic_scanlog.ScanRunSetupResult` | `matched` |
+| `scanlog.scan_run.ScanRunLogFailure` | `scanlog` | `LogFailure` | `classic_scanlog.ScanRunLogFailure` | `matched` |
+| `scanlog.scan_run.ScanRunLogResult` | `scanlog` | `LogResult` | `classic_scanlog.ScanRunLogResult` | `matched` |
+| `scanlog.scan_run.ScanRunResult` | `scanlog` | `RunResult` | `classic_scanlog.ScanRunResult` | `matched` |
+| `scanlog.scan_run.ScanRunInfrastructureError` | `scanlog` | `InfrastructureError` | `classic_scanlog.ScanRunInfrastructureError` | `matched` |
+| `scanlog.scan_run.ScanRunLogEvent` | `scanlog` | `LogEvent` | `classic_scanlog.ScanRunLogEvent` | `matched` |
+| `scanlog.scan_run.ScanRunEvent` | `scanlog` | `Event` | `classic_scanlog.ScanRunEvent` | `matched` |
+| `scanlog.scan_run.ScanRunExecution` | `scanlog` | `RunResult` | `classic_scanlog.ScanRunExecution` | `matched` |
+| `scanlog.scan_run.scan_run_execute` | `scanlog` | `Request` | `classic_scanlog.scan_run_execute` | `matched` |
 | `user_settings.commit_eligibility` | `user_settings` | `CommitEligibility` | `classic_user_settings.UserSettingsSnapshot` | `matched` |
 | `user_settings.diagnostic` | `user_settings` | `Diagnostic` | `classic_user_settings.UserSettingsDiagnostic` | `matched` |
 | `user_settings.document_classification` | `user_settings` | `DocumentClassification` | `classic_user_settings.UserSettingsSnapshot` | `matched` |

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-15T01:39:57.860227+00:00",
+  "generated_at_utc": "2026-07-15T11:57:09.823327+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -6481,6 +6481,62 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "ScanRunCancellation",
+      "export_path": "ScanRunCancellation",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunCancellation:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "ScanRunCancellation.__init__",
+      "parent_class": "ScanRunCancellation",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__(self) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "cancel",
+      "export_path": "ScanRunCancellation.cancel",
+      "parent_class": "ScanRunCancellation",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def cancel(self) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunConfiguration",
+      "export_path": "ScanRunConfiguration",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunConfiguration:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "ScanRunConfiguration.__init__",
+      "parent_class": "ScanRunConfiguration",
+      "kind": "method",
+      "arity": 9,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__( self, yaml_dir_root: str, yaml_dir_data: str, game: str, game_version: str, show_formid_values: bool, simplify_logs: bool, formid_database_paths: list[str], unsolved_logs_destination: str | None = None, max_concurrent: int | None = None, ) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
       "export": "ScanRunDiscoveryResult",
       "export_path": "ScanRunDiscoveryResult",
       "kind": "class",
@@ -6491,15 +6547,53 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "to_dict",
-      "export_path": "ScanRunDiscoveryResult.to_dict",
-      "parent_class": "ScanRunDiscoveryResult",
-      "kind": "method",
-      "arity": 0,
+      "export": "ScanRunEvent",
+      "export_path": "ScanRunEvent",
+      "kind": "class",
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def to_dict(self) -> dict[str, Any]:"
+      "signature": "class ScanRunEvent:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunExecution",
+      "export_path": "ScanRunExecution",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunExecution:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunInfrastructureError",
+      "export_path": "ScanRunInfrastructureError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunInfrastructureError:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLogEvent",
+      "export_path": "ScanRunLogEvent",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunLogEvent:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLogFailure",
+      "export_path": "ScanRunLogFailure",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunLogFailure:"
     },
     {
       "module": "classic_scanlog",
@@ -6513,18 +6607,6 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "to_dict",
-      "export_path": "ScanRunLogResult.to_dict",
-      "parent_class": "ScanRunLogResult",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def to_dict(self) -> dict[str, Any]:"
-    },
-    {
-      "module": "classic_scanlog",
       "export": "ScanRunRejectedInput",
       "export_path": "ScanRunRejectedInput",
       "kind": "class",
@@ -6535,15 +6617,61 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "to_dict",
-      "export_path": "ScanRunRejectedInput.to_dict",
-      "parent_class": "ScanRunRejectedInput",
-      "kind": "method",
-      "arity": 0,
+      "export": "ScanRunRequest",
+      "export_path": "ScanRunRequest",
+      "kind": "class",
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def to_dict(self) -> dict[str, Any]:"
+      "signature": "class ScanRunRequest:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "standard",
+      "export_path": "ScanRunRequest.standard",
+      "parent_class": "ScanRunRequest",
+      "kind": "method",
+      "arity": 3,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def standard( configuration: ScanRunConfiguration, source: ScanRunStandardSource, unsolved_logs: ScanRunUnsolvedLogs, ) -> ScanRunRequest: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "standard_with_fcx",
+      "export_path": "ScanRunRequest.standard_with_fcx",
+      "parent_class": "ScanRunRequest",
+      "kind": "method",
+      "arity": 4,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def standard_with_fcx( configuration: ScanRunConfiguration, source: ScanRunStandardSource, unsolved_logs: ScanRunUnsolvedLogs, setup_context: ScanRunSetupContext, ) -> ScanRunRequest: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "targeted",
+      "export_path": "ScanRunRequest.targeted",
+      "parent_class": "ScanRunRequest",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def targeted( configuration: ScanRunConfiguration, source: ScanRunTargetedSource, ) -> ScanRunRequest: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "targeted_with_fcx",
+      "export_path": "ScanRunRequest.targeted_with_fcx",
+      "parent_class": "ScanRunRequest",
+      "kind": "method",
+      "arity": 3,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def targeted_with_fcx( configuration: ScanRunConfiguration, source: ScanRunTargetedSource, setup_context: ScanRunSetupContext, ) -> ScanRunRequest: ..."
     },
     {
       "module": "classic_scanlog",
@@ -6557,18 +6685,6 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "to_dict",
-      "export_path": "ScanRunResult.to_dict",
-      "parent_class": "ScanRunResult",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def to_dict(self) -> dict[str, Any]:"
-    },
-    {
-      "module": "classic_scanlog",
       "export": "ScanRunSetupCheck",
       "export_path": "ScanRunSetupCheck",
       "kind": "class",
@@ -6576,18 +6692,6 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class ScanRunSetupCheck:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "to_dict",
-      "export_path": "ScanRunSetupCheck.to_dict",
-      "parent_class": "ScanRunSetupCheck",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def to_dict(self) -> dict[str, Any]:"
     },
     {
       "module": "classic_scanlog",
@@ -6609,19 +6713,7 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def __init__( self, game_root: str | None = None, docs_root: str | None = None, game_exe_path: str | None = None, xse_log_path: str | None = None, ) -> None:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "to_dict",
-      "export_path": "ScanRunSetupContext.to_dict",
-      "parent_class": "ScanRunSetupContext",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def to_dict(self) -> dict[str, Any]:"
+      "signature": "def __init__( self, game_root: str | None = None, docs_root: str | None = None, game_exe_path: str | None = None, xse_log_path: str | None = None, ) -> None: ..."
     },
     {
       "module": "classic_scanlog",
@@ -6635,18 +6727,6 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "to_dict",
-      "export_path": "ScanRunSetupPathUpdate.to_dict",
-      "parent_class": "ScanRunSetupPathUpdate",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def to_dict(self) -> dict[str, Any]:"
-    },
-    {
-      "module": "classic_scanlog",
       "export": "ScanRunSetupResult",
       "export_path": "ScanRunSetupResult",
       "kind": "class",
@@ -6657,15 +6737,93 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "to_dict",
-      "export_path": "ScanRunSetupResult.to_dict",
-      "parent_class": "ScanRunSetupResult",
+      "export": "ScanRunStandardSource",
+      "export_path": "ScanRunStandardSource",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunStandardSource:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "ScanRunStandardSource.__init__",
+      "parent_class": "ScanRunStandardSource",
+      "kind": "method",
+      "arity": 3,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__( self, base_directory: str, custom_scan_directory: str | None = None, configured_documents_root: str | None = None, ) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunTargetedSource",
+      "export_path": "ScanRunTargetedSource",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunTargetedSource:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "ScanRunTargetedSource.__init__",
+      "parent_class": "ScanRunTargetedSource",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__(self, inputs: list[str]) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunUnsolvedLogs",
+      "export_path": "ScanRunUnsolvedLogs",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunUnsolvedLogs:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "leave_in_place",
+      "export_path": "ScanRunUnsolvedLogs.leave_in_place",
+      "parent_class": "ScanRunUnsolvedLogs",
       "kind": "method",
       "arity": 0,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def to_dict(self) -> dict[str, Any]:"
+      "signature": "def leave_in_place() -> ScanRunUnsolvedLogs: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "move_to_configured_or_default",
+      "export_path": "ScanRunUnsolvedLogs.move_to_configured_or_default",
+      "parent_class": "ScanRunUnsolvedLogs",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def move_to_configured_or_default() -> ScanRunUnsolvedLogs: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "move_to_custom",
+      "export_path": "ScanRunUnsolvedLogs.move_to_custom",
+      "parent_class": "ScanRunUnsolvedLogs",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def move_to_custom(destination: str) -> ScanRunUnsolvedLogs: ..."
     },
     {
       "module": "classic_scanlog",
@@ -7001,11 +7159,11 @@
       "export": "scan_run_execute",
       "export_path": "scan_run_execute",
       "kind": "function",
-      "arity": 19,
+      "arity": 4,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def scan_run_execute( yaml_dir_root: str, yaml_dir_data: str, game: str, game_version: str, log_paths: list[str], show_formid_values: bool | None = None, fcx_mode: bool | None = None, simplify_logs: bool | None = None, move_unsolved_logs: bool | None = None, targeted_mode: bool = False, max_concurrent: int | None = None, preserve_order: bool = False, cancellation_token: CancellationToken | None = None, unsolved_logs_destination: str | None = None, base_directory: str | None = None, custom_scan_directory: str | None = None, configured_documents_root: str | None = None, targeted_inputs: list[str] | None = None, setup_context: ScanRunSetupContext | None = None, ) -> ScanRunResult:"
+      "signature": "def scan_run_execute( request: ScanRunRequest, cancellation: ScanRunCancellation, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunExecution:"
     },
     {
       "module": "classic_scanlog",

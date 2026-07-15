@@ -77,7 +77,7 @@ See: [`node-python-contract-map.md`](node-python-contract-map.md).
 
 ### Python (PyO3)
 
-The Python surface is a set of per-crate PyO3 modules under [`python-bindings/`](../../python-bindings/). Each module uses `#[pyclass]` wrappers with `#[getter]` properties and `#[pyo3(name="...")]` for Python-convention naming. The intentional breaking User Settings cutover removed `ClassicConfig` and `PathConfig`; scan, FCX, Game Setup, inspection, updates, conflicts, and migrations use the explicit-root `classic_user_settings` contract.
+The Python surface is a set of per-crate PyO3 modules under [`python-bindings/`](../../python-bindings/). Each module uses `#[pyclass]` wrappers with `#[getter]` properties and `#[pyo3(name="...")]` for Python-convention naming. The intentional breaking User Settings cutover removed `ClassicConfig` and `PathConfig`; inspection, updates, conflicts, and migrations use the explicit-root `classic_user_settings` contract. Crash Log Scan Runs now use the same final Rust-owned contract as C++ and Node through invariant-preserving `ScanRunRequest` factories, separate opaque cancellation, complete serialized events, typed result/error mapping, and adapter-only observer failure data.
 
 See: [`node-python-contract-map.md`](node-python-contract-map.md).
 

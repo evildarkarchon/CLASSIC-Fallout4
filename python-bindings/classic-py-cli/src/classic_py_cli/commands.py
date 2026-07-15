@@ -461,19 +461,19 @@ def resource_detect(args: _PathArg, context: CommandContext) -> CommandResult:
 
 
 def _scan_result_success(result: object) -> bool:
-    """Return the per-log success flag from a scanlog result-like object."""
+    """Return whether one final per-log disposition succeeded."""
 
-    value = getattr(result, "success", False)
-    if callable(value):
-        value = value()
-    return bool(value)
+    return str(result.disposition) == "succeeded"
 
 
 def _scan_failure_summary(result: object) -> dict[str, str]:
     """Return a JSON-safe summary for a failed per-log scan result."""
 
-    log_path = getattr(result, "log_path", getattr(result, "logPath", ""))
-    error = getattr(result, "error", None)
+    log_path = result.crash_log
+    error = result.message
+    failures = list(result.failures)
+    if error is None and failures:
+        error = "; ".join(str(getattr(item, "message", item)) for item in failures)
     summary = {"logPath": str(log_path)}
     if error is not None:
         summary["error"] = str(error)
@@ -483,17 +483,12 @@ def _scan_failure_summary(result: object) -> dict[str, str]:
 def _scan_report_text(result: object) -> str:
     """Return report text from a scanlog result-like object."""
 
-    autoscan_report_path = getattr(result, "autoscan_report_path", None)
+    autoscan_report_path = result.autoscan_report
     if autoscan_report_path:
         report_path = Path(str(autoscan_report_path))
         if report_path.is_file():
             return report_path.read_text(encoding="utf-8")
-
-    get_report_text = getattr(result, "get_report_text", None)
-    if callable(get_report_text):
-        return str(get_report_text())
-    report_lines = getattr(result, "report_lines", [])
-    return "".join(str(line) for line in report_lines)
+    return ""
 
 
 def _scan_report_evidence(result: object) -> dict[str, Any]:
@@ -501,7 +496,7 @@ def _scan_report_evidence(result: object) -> dict[str, Any]:
 
     report_text = _scan_report_text(result)
     evidence: dict[str, Any] = {
-        "logPath": str(getattr(result, "log_path", getattr(result, "logPath", ""))),
+        "logPath": str(result.crash_log),
         "outdatedWarningPresent": "OUTDATED" in report_text.upper(),
     }
     for line in report_text.splitlines():
@@ -510,6 +505,44 @@ def _scan_report_evidence(result: object) -> dict[str, Any]:
             evidence["validVersionLine"] = stripped
             break
     return evidence
+
+
+def _scan_event_summary(event: object) -> dict[str, Any]:
+    """Project one final-contract observer event into stable CLI JSON."""
+
+    kind = str(getattr(event, "kind"))
+    summary: dict[str, Any] = {"kind": kind}
+    effective_concurrency = getattr(event, "effective_concurrency", None)
+    if effective_concurrency is not None:
+        summary["effectiveConcurrency"] = int(effective_concurrency)
+    discovery = getattr(event, "discovery", None)
+    if discovery is not None:
+        summary["discovery"] = {
+            "source": str(discovery.source),
+            "acceptedLogs": [str(path) for path in discovery.accepted_logs],
+            "rejectedInputs": [
+                {"path": str(item.path), "reason": str(item.reason)}
+                for item in discovery.rejected_inputs
+            ],
+            "searchedLocations": [
+                str(path) for path in discovery.searched_locations
+            ],
+        }
+    log = getattr(event, "log", None)
+    if log is not None:
+        summary["log"] = {
+            "discoveryIndex": int(getattr(log, "discovery_index")),
+            "crashLog": str(getattr(log, "crash_log")),
+            "completed": int(getattr(log, "completed")),
+            "total": int(getattr(log, "total")),
+        }
+    phase = getattr(event, "phase", None)
+    if phase is not None:
+        summary["phase"] = str(phase)
+    disposition = getattr(event, "disposition", None)
+    if disposition is not None:
+        summary["disposition"] = str(disposition)
+    return summary
 
 
 def _path_is_relative_to(path: Path, root: Path) -> bool:
@@ -553,24 +586,79 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     yaml_dir_data = yaml_dir_root / "CLASSIC Data"
     try:
         module = require_binding("classic_scanlog")
-        paths = [str(path) for path in scan_path.glob("*.log")] if scan_path.is_dir() else [str(scan_path)]
+        settings_module = require_binding("classic_user_settings")
+        snapshot = settings_module.open_user_settings(str(yaml_dir_root))
+        scan_settings = snapshot.crash_log_scan_settings
+        setup_settings = snapshot.game_setup_settings
+        game = str(setup_settings.managed_game)
+        formid_databases = scan_settings.formid_databases
+        max_concurrent = int(scan_settings.max_concurrent_scans)
+        events: list[dict[str, Any]] = []
         with _working_directory(yaml_dir_root):
-            # Explicit CLI paths must select Targeted mode so Rust does not replace them with Standard discovery.
-            result = module.scan_run_execute(
-                str(yaml_dir_root),
-                str(yaml_dir_data),
-                "Fallout4",
-                "auto",
-                paths,
-                targeted_mode=True,
+            configuration = module.ScanRunConfiguration(
+                yaml_dir_root=str(yaml_dir_root),
+                yaml_dir_data=str(yaml_dir_data),
+                game=game,
+                game_version=str(scan_settings.game_version_selection),
+                show_formid_values=bool(scan_settings.formid_value_lookup),
+                simplify_logs=bool(scan_settings.simplify_logs),
+                formid_database_paths=[
+                    str(path) for path in formid_databases.get(game, [])
+                ],
+                unsolved_logs_destination=scan_settings.unsolved_logs_destination,
+                max_concurrent=max_concurrent or None,
+            )
+            source = module.ScanRunTargetedSource(inputs=[str(scan_path)])
+            if scan_settings.fcx_mode:
+                request = module.ScanRunRequest.targeted_with_fcx(
+                    configuration,
+                    source,
+                    module.ScanRunSetupContext(
+                        game_root=setup_settings.game_root,
+                        docs_root=setup_settings.documents_root,
+                        game_exe_path=setup_settings.game_executable,
+                    ),
+                )
+            else:
+                request = module.ScanRunRequest.targeted(configuration, source)
+            execution = module.scan_run_execute(
+                request,
+                module.ScanRunCancellation(),
+                lambda event: events.append(_scan_event_summary(event)),
+                cancel_on_observer_error=True,
             )
     except ImportError as exc:
         return failure("scan logs", str(exc), int(ExitCode.BINDING_IMPORT))
     except AttributeError:
-        return failure("scan logs", "classic_scanlog does not expose scan_run_execute", int(ExitCode.BINDING_IMPORT))
+        return failure(
+            "scan logs",
+            "scanlog or User Settings binding does not expose the final scan-run contract",
+            int(ExitCode.BINDING_IMPORT),
+        )
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
         return binding_exception("scan logs", "classic_scanlog", exc)
-    results = list(getattr(result, "logs", result))
+    infrastructure_error = getattr(execution, "error", None)
+    observer_error = getattr(execution, "observer_error", None)
+    if infrastructure_error is not None:
+        stage = str(getattr(infrastructure_error, "stage", "internal_invariant"))
+        message = str(getattr(infrastructure_error, "message", infrastructure_error))
+        path = getattr(infrastructure_error, "path", None)
+        return failure(
+            "scan logs",
+            f"Crash Log Scan Run failed during {stage}: {message}",
+            int(ExitCode.PRODUCT_FAILURE),
+            error={"classification": "scan-run-infrastructure", "stage": stage, "message": message, "path": path},
+            data={"events": events, "observerError": observer_error},
+        )
+    result = getattr(execution, "result", None)
+    if result is None:
+        return failure(
+            "scan logs",
+            "classic_scanlog returned neither a result nor an infrastructure error",
+            int(ExitCode.PRODUCT_FAILURE),
+            data={"events": events, "observerError": observer_error},
+        )
+    results = list(result.logs)
     failures = [_scan_failure_summary(item) for item in results if not _scan_result_success(item)]
     report_evidence = [_scan_report_evidence(item) for item in results if _scan_result_success(item)]
     successful_logs = len(results) - len(failures)
@@ -584,8 +672,13 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             "processedLogs": len(results),
             "successfulLogs": successful_logs,
             "failedLogs": len(failures),
+            "status": str(result.status),
+            "effectiveConcurrency": result.effective_concurrency,
+            "cancelledLogs": int(result.cancelled),
             "failures": failures,
             "reportEvidence": report_evidence,
+            "events": events,
+            "observerError": observer_error,
             "result": str(result),
         },
     )

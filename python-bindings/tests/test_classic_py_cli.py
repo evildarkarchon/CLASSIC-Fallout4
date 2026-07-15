@@ -17,6 +17,89 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CLI_SRC = REPO_ROOT / "python-bindings" / "classic-py-cli" / "src"
 
 
+def _install_user_settings_fake(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    fcx_mode: bool = False,
+) -> None:
+    """Install a typed User Settings projection for scan CLI tests."""
+
+    scan = types.SimpleNamespace(
+        fcx_mode=fcx_mode,
+        simplify_logs=True,
+        formid_value_lookup=True,
+        formid_databases={"Fallout4": ["formids.db"]},
+        unsolved_logs_destination="Unsolved Logs",
+        game_version_selection="1.10.984",
+        max_concurrent_scans=3,
+    )
+    setup = types.SimpleNamespace(
+        managed_game="Fallout4",
+        game_root="game-root",
+        documents_root="documents-root",
+        game_executable="Fallout4.exe",
+    )
+    module = types.ModuleType("classic_user_settings")
+    module.open_user_settings = lambda _root: types.SimpleNamespace(
+        crash_log_scan_settings=scan,
+        game_setup_settings=setup,
+    )
+    monkeypatch.setitem(sys.modules, "classic_user_settings", module)
+
+
+def _install_final_scan_run_fake(fake: types.ModuleType, make_logs: object) -> None:
+    """Attach the final request/execution contract to a fake scanlog module."""
+
+    class ScanRunConfiguration:
+        def __init__(self, **values: object) -> None:
+            self.values = values
+
+    class ScanRunTargetedSource:
+        def __init__(self, *, inputs: list[str]) -> None:
+            self.inputs = inputs
+
+    class ScanRunRequest:
+        @staticmethod
+        def targeted(configuration: object, source: object) -> object:
+            return types.SimpleNamespace(
+                intent="targeted",
+                configuration=configuration,
+                source=source,
+            )
+
+    class ScanRunCancellation:
+        pass
+
+    def scan_run_execute(
+        request: object,
+        cancellation: object,
+        observer: object | None = None,
+        cancel_on_observer_error: bool = False,
+    ) -> object:
+        assert getattr(request, "intent") == "targeted"
+        assert isinstance(cancellation, ScanRunCancellation)
+        assert callable(make_logs)
+        logs = make_logs(request.configuration.values, request.source.inputs)
+        succeeded = sum(item.disposition == "succeeded" for item in logs)
+        cancelled = sum(item.disposition == "cancelled_before_start" for item in logs)
+        result = types.SimpleNamespace(
+            status="completed",
+            effective_concurrency=1,
+            total=len(logs),
+            succeeded=succeeded,
+            failed=len(logs) - succeeded - cancelled,
+            cancelled=cancelled,
+            logs=logs,
+        )
+        return types.SimpleNamespace(result=result, error=None, observer_error=None)
+
+    fake.ScanRunConfiguration = ScanRunConfiguration
+    fake.ScanRunTargetedSource = ScanRunTargetedSource
+    fake.ScanRunRequest = ScanRunRequest
+    fake.ScanRunCancellation = ScanRunCancellation
+    fake.scan_run_execute = scan_run_execute
+
+
 def _env() -> dict[str, str]:
     """Return an environment that can import the local CLI package."""
 
@@ -178,30 +261,29 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
     fake = types.ModuleType("classic_scanlog")
     fake.__version__ = "test"
 
-    def fake_scan_run_execute(
-        yaml_dir_root: str,
-        yaml_dir_data: str,
-        game: str,
-        game_version: str,
+    def make_logs(
+        configuration: dict[str, object],
         paths: list[str],
-        *,
-        targeted_mode: bool,
     ) -> list[types.SimpleNamespace]:
-        assert targeted_mode is True
-        assert yaml_dir_root == str(REPO_ROOT)
-        assert yaml_dir_data == str(REPO_ROOT / "CLASSIC Data")
+        assert configuration["yaml_dir_root"] == str(REPO_ROOT)
+        assert configuration["yaml_dir_data"] == str(REPO_ROOT / "CLASSIC Data")
+        assert paths == [str(scan_dir)]
         return [
             types.SimpleNamespace(
-                log_path=path,
-                success=Path(path).name != "bad.log",
-                error="malformed log" if Path(path).name == "bad.log" else None,
-                autoscan_report_path=None,
+                crash_log=path,
+                disposition=(
+                    "failed" if Path(path).name == "bad.log" else "succeeded"
+                ),
+                message="malformed log" if Path(path).name == "bad.log" else None,
+                failures=[],
+                autoscan_report=None,
             )
-            for path in paths
+            for path in (str(scan_dir / "good.log"), str(scan_dir / "bad.log"))
         ]
 
-    fake.scan_run_execute = fake_scan_run_execute
+    _install_final_scan_run_fake(fake, make_logs)
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+    _install_user_settings_fake(monkeypatch)
 
     code = main(["--json", "scan", "logs", "--path", str(scan_dir)])
     payload = json.loads(capsys.readouterr().out)
@@ -212,6 +294,163 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
     assert payload["data"]["successfulLogs"] == 1
     assert payload["data"]["failedLogs"] == 1
     assert payload["data"]["failures"] == [{"logPath": str(scan_dir / "bad.log"), "error": "malformed log"}]
+
+
+def test_scan_logs_consumes_final_result_and_event_contract(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The binding-local CLI constructs a Targeted request and reads final events/results."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    crash_log = tmp_path / "crash-final.log"
+    crash_log.write_text("crash log\n", encoding="utf-8")
+    observed: dict[str, object] = {}
+    fake = types.ModuleType("classic_scanlog")
+    fake.__version__ = "test"
+
+    class ScanRunConfiguration:
+        def __init__(self, **values: object) -> None:
+            observed["configuration"] = values
+
+    class ScanRunTargetedSource:
+        def __init__(self, *, inputs: list[str]) -> None:
+            self.inputs = inputs
+
+    class ScanRunRequest:
+        @staticmethod
+        def targeted(
+            configuration: ScanRunConfiguration,
+            source: ScanRunTargetedSource,
+        ) -> object:
+            observed["targetedInputs"] = source.inputs
+            return types.SimpleNamespace(intent="targeted")
+
+        @staticmethod
+        def targeted_with_fcx(
+            configuration: ScanRunConfiguration,
+            source: ScanRunTargetedSource,
+            setup_context: object,
+        ) -> object:
+            observed["targetedInputs"] = source.inputs
+            observed["setupContext"] = setup_context
+            return types.SimpleNamespace(intent="targeted")
+
+    class ScanRunSetupContext:
+        def __init__(self, **values: object) -> None:
+            self.values = values
+
+    class ScanRunCancellation:
+        pass
+
+    def scan_run_execute(
+        request: object,
+        cancellation: ScanRunCancellation,
+        observer: object | None = None,
+        cancel_on_observer_error: bool = False,
+    ) -> object:
+        assert getattr(request, "intent") == "targeted"
+        assert isinstance(cancellation, ScanRunCancellation)
+        assert cancel_on_observer_error is True
+        assert callable(observer)
+        observer(
+            types.SimpleNamespace(
+                kind="discovery_completed",
+                discovery=types.SimpleNamespace(
+                    source="targeted",
+                    accepted_logs=[str(crash_log)],
+                    rejected_inputs=[
+                        types.SimpleNamespace(
+                            path="ignored.txt",
+                            reason="not a Crash Log",
+                        )
+                    ],
+                    searched_locations=[str(tmp_path)],
+                ),
+            )
+        )
+        observer(
+            types.SimpleNamespace(
+                kind="effective_concurrency_selected",
+                effective_concurrency=1,
+            )
+        )
+        result = types.SimpleNamespace(
+            status="completed",
+            effective_concurrency=1,
+            total=1,
+            succeeded=1,
+            failed=0,
+            cancelled=0,
+            logs=[
+                types.SimpleNamespace(
+                    discovery_index=0,
+                    crash_log=str(crash_log),
+                    autoscan_report=None,
+                    disposition="succeeded",
+                    failures=[],
+                    message=None,
+                )
+            ],
+        )
+        return types.SimpleNamespace(
+            result=result,
+            error=None,
+            observer_error=None,
+        )
+
+    fake.ScanRunConfiguration = ScanRunConfiguration
+    fake.ScanRunTargetedSource = ScanRunTargetedSource
+    fake.ScanRunRequest = ScanRunRequest
+    fake.ScanRunSetupContext = ScanRunSetupContext
+    fake.ScanRunCancellation = ScanRunCancellation
+    fake.scan_run_execute = scan_run_execute
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+    _install_user_settings_fake(monkeypatch, fcx_mode=True)
+
+    code = main(["--json", "scan", "logs", "--path", str(crash_log)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == 0
+    assert observed["targetedInputs"] == [str(crash_log)]
+    assert observed["configuration"] == {
+        "yaml_dir_root": str(REPO_ROOT),
+        "yaml_dir_data": str(REPO_ROOT / "CLASSIC Data"),
+        "game": "Fallout4",
+        "game_version": "1.10.984",
+        "show_formid_values": True,
+        "simplify_logs": True,
+        "formid_database_paths": ["formids.db"],
+        "unsolved_logs_destination": "Unsolved Logs",
+        "max_concurrent": 3,
+    }
+    assert observed["setupContext"].values == {
+        "game_root": "game-root",
+        "docs_root": "documents-root",
+        "game_exe_path": "Fallout4.exe",
+    }
+    assert payload["data"]["status"] == "completed"
+    assert payload["data"]["effectiveConcurrency"] == 1
+    assert payload["data"]["events"] == [
+        {
+            "kind": "discovery_completed",
+            "discovery": {
+                "source": "targeted",
+                "acceptedLogs": [str(crash_log)],
+                "rejectedInputs": [
+                    {"path": "ignored.txt", "reason": "not a Crash Log"}
+                ],
+                "searchedLocations": [str(tmp_path)],
+            },
+        },
+        {
+            "kind": "effective_concurrency_selected",
+            "effectiveConcurrency": 1,
+        }
+    ]
 
 
 def test_catalog_validation() -> None:
@@ -249,32 +488,27 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
     fake_scanlog.__version__ = "test"
     fixture_root = REPO_ROOT / "python-bindings" / "tests" / "fixtures"
 
-    def fake_scan_run_execute(
-        yaml_dir_root: str,
-        yaml_dir_data: str,
-        game: str,
-        game_version: str,
+    def make_logs(
+        configuration: dict[str, object],
         paths: list[str],
-        *,
-        targeted_mode: bool,
     ) -> list[types.SimpleNamespace]:
-        assert targeted_mode is True
-        assert yaml_dir_root == str(fixture_root)
-        assert yaml_dir_data == str(fixture_root / "CLASSIC Data")
+        assert configuration["yaml_dir_root"] == str(fixture_root)
+        assert configuration["yaml_dir_data"] == str(fixture_root / "CLASSIC Data")
         assert paths == [str(scan_fixture)]
         assert "Addictol v1.3.1" in scan_fixture.read_text(encoding="utf-8")
         report_path = tmp_path / "addictol-AUTOSCAN.md"
         report_path.write_text("*You have a valid version of Addictol!*\n", encoding="utf-8")
         return [
             types.SimpleNamespace(
-                log_path=str(scan_fixture),
-                success=True,
-                error=None,
-                autoscan_report_path=str(report_path),
+                crash_log=str(scan_fixture),
+                disposition="succeeded",
+                message=None,
+                failures=[],
+                autoscan_report=str(report_path),
             )
         ]
 
-    fake_scanlog.scan_run_execute = fake_scan_run_execute
+    _install_final_scan_run_fake(fake_scanlog, make_logs)
     for name, module in {
         "classic_version": fake_version,
         "classic_config": fake_config,
@@ -322,32 +556,32 @@ def test_smoke_scanlog_contract_rejects_outdated_warning(monkeypatch: pytest.Mon
     report_path.write_text("*** WARNING: YOUR Addictol IS OUTDATED! PLEASE UPDATE TO A VALID VERSION!***\n", encoding="utf-8")
     fake_scanlog = types.ModuleType("classic_scanlog")
 
-    def fake_scan_run_execute(
-        yaml_dir_root: str,
-        yaml_dir_data: str,
-        game: str,
-        game_version: str,
+    def make_logs(
+        configuration: dict[str, object],
         paths: list[str],
-        *,
-        targeted_mode: bool,
     ) -> list[types.SimpleNamespace]:
-        assert targeted_mode is True
         return [
             types.SimpleNamespace(
-                log_path=str(scan_fixture),
-                success=True,
-                error=None,
-                autoscan_report_path=str(report_path),
+                crash_log=str(scan_fixture),
+                disposition="succeeded",
+                message=None,
+                failures=[],
+                autoscan_report=str(report_path),
             )
         ]
 
-    fake_scanlog.scan_run_execute = fake_scan_run_execute
+    _install_final_scan_run_fake(fake_scanlog, make_logs)
     monkeypatch.setitem(sys.modules, "classic_scanlog", fake_scanlog)
     scenario = Scenario(
         "scanlog-addictol-newer-than-floor",
         "Scan an Addictol crash log newer than the configured floor and prove it remains valid.",
         "classic_scanlog",
-        ["scan_run_execute", "ScanRunLogResult.autoscan_report_path"],
+            [
+                "ScanRunRequest.targeted",
+                "ScanRunCancellation",
+                "scan_run_execute",
+                "ScanRunLogResult.autoscan_report",
+            ],
         ["scan", "logs", "--path", "python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
         ["python-bindings/tests/fixtures/scanlogs/addictol-newer-than-floor.log"],
         0,

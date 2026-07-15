@@ -300,7 +300,7 @@ The expand implementation temporarily delegates discovery and intake preparation
 
 `CrashLogScanRunService` is the public high-level facade for a full Crash Log Scan Run. It accepts typed Standard or Targeted source facts, optionally validates FCX setup, prepares intake, and executes accepted Crash Logs. `CrashLogScanRun` remains the lower prepared-run module for callers that already have `ScanReadyAnalysis` and an accepted log list.
 
-These interfaces remain temporarily available for legacy lower-level and not-yet-cut-over consumers. The native C++ surfaces, TUI, and Node adapter use the final `scan_run::contract` interface. The provisional interfaces are not alternate constructors or execution paths in the final model and are removed/internalized by the coordinated contraction step.
+These interfaces remain temporarily available for legacy lower-level and not-yet-cut-over consumers. The native C++ surfaces, TUI, Node adapter, and Python adapter use the final `scan_run::contract` interface. The provisional interfaces are not alternate constructors or execution paths in the final model and are removed/internalized by the coordinated contraction step.
 
 Important service types:
 
@@ -337,7 +337,7 @@ Request normalization seam:
 
 - `from_adapter_flags` and `from_configured_flags` are the infallible request-normalization constructors adapters build against. Callers pass user intent facts — Targeted mode, whether to move Unsolved Logs, and an optional destination — and the core derives the Standard/Targeted intent so every binding shares one rule set instead of re-deriving it.
 - Derivation rules: Targeted mode always wins over movement; `move_unsolved_logs == false` maps to `LeaveInPlace` and ignores the destination; move with a destination maps to `MoveToCustom`; move without a destination maps to `MoveToConfiguredOrDefault`.
-- `from_adapter_flags` takes the raw string destination used by the CXX, Node, and Python surfaces and owns the sentinel convention: it trims the destination and treats an empty or whitespace-only result as absent. `from_configured_flags` takes an already-parsed `Option<PathBuf>` (used by the TUI) so callers that already hold a path avoid a lossy path -> string -> path round trip. `from_adapter_flags` delegates to `from_configured_flags` after trimming.
+- `from_adapter_flags` takes the raw string destination used by the CXX and Node surfaces and owns the sentinel convention: it trims the destination and treats an empty or whitespace-only result as absent. The Python surface exposes typed policy factories instead. `from_configured_flags` takes an already-parsed `Option<PathBuf>` (used by the TUI) so callers that already hold a path avoid a lossy path -> string -> path round trip. `from_adapter_flags` delegates to `from_configured_flags` after trimming.
 - Absolute-path validation of a custom destination stays in `run` (see below); the constructors themselves are infallible.
 
 Behavior worth knowing:
@@ -355,7 +355,7 @@ Behavior worth knowing:
 - Autoscan Report write failure is a per-log failure in `CrashLogScanRunLogOutcome`, not a run-level setup error. These outcomes set `report_write_failed = true` so adapters can separate report failures from analysis failures.
 - `cancellation` is a cooperative shared atomic checked before queued Crash Logs start; binding adapters should pass their frontend cancellation token rather than polling locally only.
 - This provisional prepared-run interface reuses `ScanProgressPhase` and stable input indices; compatibility consumers may use them to correlate completion-order results with their selected Crash Log list. The final `scan_run::contract` instead emits `Event` values keyed by discovery index and retains terminal log results in discovery order.
-- The native CLI and Qt GUI expose the final C++ contract through tagged request constructors plus `classic::scanner::scan_run_contract_execute(request, cancellation, observer)`. Node exposes opaque request/cancellation factories plus `scanRunExecute(request, cancellation, observer?, cancelOnObserverError?)`; Python still exposes `classic_scanlog.scan_run_execute(...)` through its current adapter. Adapter scan flows must not duplicate discovery policy, FCX setup result shaping, Autoscan Report writing, Unsolved Logs movement, adaptive concurrency, or terminal result ordering around those calls.
+- The native CLI and Qt GUI expose the final C++ contract through tagged request constructors plus `classic::scanner::scan_run_contract_execute(request, cancellation, observer)`. Node exposes opaque request/cancellation factories plus `scanRunExecute(request, cancellation, observer?, cancelOnObserverError?)`. Python exposes matching `ScanRunRequest` factories, monotonic `ScanRunCancellation`, serialized `ScanRunEvent` observation, and `scan_run_execute(request, cancellation, observer=None, cancel_on_observer_error=False) -> ScanRunExecution`. Adapter scan flows must not duplicate discovery policy, FCX setup result shaping, Autoscan Report writing, Unsolved Logs movement, adaptive concurrency, or terminal result ordering around those calls.
 
 ## `LogParser`
 

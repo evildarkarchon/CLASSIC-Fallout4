@@ -10,7 +10,7 @@ This standalone module provides high-performance crash log analysis with:
 """
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Literal
 
 __version__: str
 
@@ -976,51 +976,39 @@ class AnalysisResult:
 
         """
 
-class ScanRunLogResult:
-    """Per-log result from a full Crash Log Scan Run.
+class ScanRunConfiguration:
+    """Explicit facts shared by Standard and Targeted scan requests."""
 
-    Rust writes Autoscan Reports and owns Standard versus Targeted Unsolved Logs
-    behavior before returning this outcome.
-    """
+    def __init__(
+        self,
+        yaml_dir_root: str,
+        yaml_dir_data: str,
+        game: str,
+        game_version: str,
+        show_formid_values: bool,
+        simplify_logs: bool,
+        formid_database_paths: list[str],
+        unsolved_logs_destination: str | None = None,
+        max_concurrent: int | None = None,
+    ) -> None: ...
 
-    input_index: int
-    log_path: str
-    autoscan_report_path: str | None
-    success: bool
-    report_write_failed: bool
-    cancelled: bool
-    moved_to_unsolved_logs: bool
-    error: str | None
-    processing_time_ms: int
-    formid_count: int
-    plugin_count: int
-    suspect_count: int
+class ScanRunStandardSource:
+    """Explicit Standard discovery inputs."""
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to a dictionary."""
+    def __init__(
+        self,
+        base_directory: str,
+        custom_scan_directory: str | None = None,
+        configured_documents_root: str | None = None,
+    ) -> None: ...
 
-class ScanRunRejectedInput:
-    """Targeted input rejected during Crash Log discovery."""
+class ScanRunTargetedSource:
+    """Explicit Targeted candidates in caller order."""
 
-    path: str
-    reason: str
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to a dictionary."""
-
-class ScanRunDiscoveryResult:
-    """High-level Crash Log discovery data."""
-
-    source: str
-    accepted_logs: list[str]
-    rejected_inputs: list[ScanRunRejectedInput]
-    searched_locations: list[str]
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to a dictionary."""
+    def __init__(self, inputs: list[str]) -> None: ...
 
 class ScanRunSetupContext:
-    """FCX setup facts supplied to high-level scan-run execution."""
+    """Explicit run-scoped FCX setup facts."""
 
     game_root: str | None
     docs_root: str | None
@@ -1033,34 +1021,86 @@ class ScanRunSetupContext:
         docs_root: str | None = None,
         game_exe_path: str | None = None,
         xse_log_path: str | None = None,
-    ) -> None:
-        """Create setup context for high-level scan-run FCX validation."""
+    ) -> None: ...
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to a dictionary."""
+class ScanRunUnsolvedLogs:
+    """Opaque Standard-only Unsolved Logs policy."""
+
+    @staticmethod
+    def leave_in_place() -> ScanRunUnsolvedLogs: ...
+    @staticmethod
+    def move_to_configured_or_default() -> ScanRunUnsolvedLogs: ...
+    @staticmethod
+    def move_to_custom(destination: str) -> ScanRunUnsolvedLogs: ...
+
+class ScanRunRequest:
+    """Opaque invariant-preserving Standard or Targeted request."""
+
+    intent: Literal["standard", "targeted"]
+
+    @staticmethod
+    def standard(
+        configuration: ScanRunConfiguration,
+        source: ScanRunStandardSource,
+        unsolved_logs: ScanRunUnsolvedLogs,
+    ) -> ScanRunRequest: ...
+    @staticmethod
+    def standard_with_fcx(
+        configuration: ScanRunConfiguration,
+        source: ScanRunStandardSource,
+        unsolved_logs: ScanRunUnsolvedLogs,
+        setup_context: ScanRunSetupContext,
+    ) -> ScanRunRequest: ...
+    @staticmethod
+    def targeted(
+        configuration: ScanRunConfiguration,
+        source: ScanRunTargetedSource,
+    ) -> ScanRunRequest: ...
+    @staticmethod
+    def targeted_with_fcx(
+        configuration: ScanRunConfiguration,
+        source: ScanRunTargetedSource,
+        setup_context: ScanRunSetupContext,
+    ) -> ScanRunRequest: ...
+
+class ScanRunCancellation:
+    """Opaque monotonic cancellation control for one scan run."""
+
+    is_cancelled: bool
+
+    def __init__(self) -> None: ...
+    def cancel(self) -> None: ...
+
+class ScanRunRejectedInput:
+    """One Targeted candidate rejected during discovery."""
+
+    path: str
+    reason: str
+
+class ScanRunDiscoveryResult:
+    """Complete retained discovery data."""
+
+    source: Literal["standard", "targeted"]
+    accepted_logs: list[str]
+    rejected_inputs: list[ScanRunRejectedInput]
+    searched_locations: list[str]
 
 class ScanRunSetupCheck:
-    """Typed FCX setup validation check."""
+    """One typed FCX setup check."""
 
     kind: str
     state: str
     message: str
     details: list[str]
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to a dictionary."""
-
 class ScanRunSetupPathUpdate:
-    """Proposed setup path update."""
+    """One proposed setup path update."""
 
     kind: str
     path: str
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to a dictionary."""
-
 class ScanRunSetupResult:
-    """High-level FCX setup validation data."""
+    """Run-scoped FCX setup result."""
 
     status: str
     message: str | None
@@ -1071,51 +1111,102 @@ class ScanRunSetupResult:
     actions: list[str]
     fatal_errors: list[str]
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to a dictionary."""
+class ScanRunLogFailure:
+    """One structured processing or finalization failure."""
+
+    stage: Literal["analysis", "report_write", "unsolved_logs_finalization"]
+    message: str
+
+class ScanRunLogResult:
+    """Complete durable terminal result for one discovered Crash Log."""
+
+    discovery_index: int
+    crash_log: str
+    autoscan_report: str | None
+    disposition: Literal["succeeded", "failed", "cancelled_before_start"]
+    failures: list[ScanRunLogFailure]
+    message: str | None
+    moved_to_unsolved_logs: bool
+    processing_time_us: int
+    processing_time_ms: int
+    formid_count: int
+    plugin_count: int
+    suspect_count: int
 
 class ScanRunResult:
-    """Top-level result from a high-level Crash Log Scan Run."""
+    """Complete terminal Crash Log Scan Run result."""
 
-    status: str
+    status: Literal[
+        "completed",
+        "no_crash_logs_found",
+        "setup_failed",
+        "cancelled_before_discovery",
+        "cancelled",
+    ]
+    discovery: ScanRunDiscoveryResult | None
+    setup: ScanRunSetupResult | None
+    effective_concurrency: int | None
     message: str | None
     total: int
     succeeded: int
     failed: int
     cancelled: int
-    discovery: ScanRunDiscoveryResult | None
-    setup: ScanRunSetupResult | None
     logs: list[ScanRunLogResult]
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to a dictionary."""
+class ScanRunInfrastructureError:
+    """Typed run-wide failure that prevents a meaningful result."""
+
+    stage: Literal[
+        "request_validation",
+        "discovery",
+        "intake",
+        "formid_database_access",
+        "initialization",
+        "internal_invariant",
+    ]
+    message: str
+    path: str | None
+
+class ScanRunLogEvent:
+    """Common facts for one log-scoped observer event."""
+
+    discovery_index: int
+    crash_log: str
+    completed: int
+    total: int
+
+class ScanRunEvent:
+    """One tagged serialized observer event."""
+
+    kind: Literal[
+        "discovery_completed",
+        "effective_concurrency_selected",
+        "log_queued",
+        "log_started",
+        "log_phase",
+        "log_finished",
+    ]
+    discovery: ScanRunDiscoveryResult | None
+    effective_concurrency: int | None
+    log: ScanRunLogEvent | None
+    phase: Literal["setup", "parse", "analyze", "finalize"] | None
+    disposition: Literal["succeeded", "failed", "cancelled_before_start"] | None
+
+class ScanRunExecution:
+    """Final operation envelope with adapter-only observer failure data."""
+
+    result: ScanRunResult | None
+    error: ScanRunInfrastructureError | None
+    observer_error: str | None
 
 def scan_run_execute(
-    yaml_dir_root: str,
-    yaml_dir_data: str,
-    game: str,
-    game_version: str,
-    log_paths: list[str],
-    show_formid_values: bool | None = None,
-    fcx_mode: bool | None = None,
-    simplify_logs: bool | None = None,
-    move_unsolved_logs: bool | None = None,
-    targeted_mode: bool = False,
-    max_concurrent: int | None = None,
-    preserve_order: bool = False,
-    cancellation_token: CancellationToken | None = None,
-    unsolved_logs_destination: str | None = None,
-    base_directory: str | None = None,
-    custom_scan_directory: str | None = None,
-    configured_documents_root: str | None = None,
-    targeted_inputs: list[str] | None = None,
-    setup_context: ScanRunSetupContext | None = None,
-) -> ScanRunResult:
-    """Execute a high-level Crash Log Scan Run.
+    request: ScanRunRequest,
+    cancellation: ScanRunCancellation,
+    observer: Callable[[ScanRunEvent], None] | None = None,
+    cancel_on_observer_error: bool = False,
+) -> ScanRunExecution:
+    """Execute one final-contract Crash Log Scan Run."""
 
-    Rust owns discovery, FCX setup validation, Autoscan Report writing, and
-    Standard versus Targeted Unsolved Logs behavior.
-    """
 
 # =============================================================================
 # Report Generation

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-15T01:39:57.848643+00:00",
+  "generated_at_utc": "2026-07-15T11:57:09.811258+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -8719,6 +8719,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "Cancellation",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct Cancellation",
+      "tier": "tier1"
+    },
+    {
       "symbol": "ConfigIssue",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -8735,6 +8744,15 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/fcx_handler.rs",
       "source_decl": "pub struct ConfigIssue",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Configuration",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct Configuration",
       "tier": "tier1"
     },
     {
@@ -9251,6 +9269,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "Event",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum Event",
+      "tier": "tier1"
+    },
+    {
       "symbol": "FcxModeHandler",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -9441,6 +9468,60 @@
       "tier": "tier1"
     },
     {
+      "symbol": "InfrastructureError",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct InfrastructureError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InfrastructureErrorStage",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum InfrastructureErrorStage",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LogDisposition",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum LogDisposition",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LogEvent",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct LogEvent",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LogFailure",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct LogFailure",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LogFailureStage",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum LogFailureStage",
+      "tier": "tier1"
+    },
+    {
       "symbol": "LogParser",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -9460,12 +9541,39 @@
       "tier": "tier1"
     },
     {
+      "symbol": "LogResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct LogResult",
+      "tier": "tier1"
+    },
+    {
       "symbol": "MODULES",
       "kind": "const",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/segment_key.rs",
       "source_decl": "pub const MODULES",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Observer",
+      "kind": "trait",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub trait Observer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "Options",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct Options",
       "tier": "tier1"
     },
     {
@@ -9677,12 +9785,40 @@
       "tier": "tier1"
     },
     {
+      "symbol": "Request",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum Request",
+      "tier": "tier1"
+    },
+    {
       "symbol": "Result",
       "kind": "type",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/error.rs",
       "source_decl": "pub type Result",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RunResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct RunResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "RunStatus",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub use super::CrashLogScanRunStatus as RunStatus;",
+      "source_expr": "super::CrashLogScanRunStatus",
       "tier": "tier1"
     },
     {
@@ -9884,6 +10020,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "StandardRequest",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct StandardRequest",
+      "tier": "tier1"
+    },
+    {
       "symbol": "StandardUnsolvedLogsIntent",
       "kind": "enum",
       "crate": "classic-scanlog-core",
@@ -9995,6 +10140,15 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
       "source_decl": "pub struct TargetedCrashLogScanSource",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "TargetedRequest",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct TargetedRequest",
       "tier": "tier1"
     },
     {
@@ -10204,6 +10358,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/formid.rs",
       "source_decl": "pub fn cache_stats(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "cancel",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub fn cancel(&self)",
       "tier": "tier1"
     },
     {
@@ -10474,6 +10638,15 @@
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use record_scanner::{ RecordScanner, contains_record, scan_records_batch, try_scan_records_batch, };",
       "source_expr": "record_scanner::contains_record",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "contract",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub mod contract;",
       "tier": "tier1"
     },
     {
@@ -11079,6 +11252,132 @@
       "tier": "tier1"
     },
     {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
       "symbol": "format_report",
       "kind": "function",
       "arity": 1,
@@ -11506,6 +11805,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "is_cancelled",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub fn is_cancelled(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "is_empty",
       "kind": "function",
       "arity": 1,
@@ -11892,6 +12201,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
       "source_decl": "pub fn new(ready: ScanReadyAnalysis)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 0,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub fn new()",
       "tier": "tier1"
     },
     {
@@ -12384,6 +12703,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "standard",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub fn standard(\n        configuration: Configuration,\n        source: StandardCrashLogScanSource,\n        unsolved_logs: StandardUnsolvedLogsIntent,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "standard_with_fcx",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub fn standard_with_fcx(\n        configuration: Configuration,\n        source: StandardCrashLogScanSource,\n        unsolved_logs: StandardUnsolvedLogsIntent,\n        setup_context: CrashLogScanSetupContext,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "start_monitoring",
       "kind": "function",
       "arity": 1,
@@ -12440,6 +12779,26 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod suspect_scanner;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "targeted",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub fn targeted(configuration: Configuration, source: TargetedCrashLogScanSource)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "targeted_with_fcx",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub fn targeted_with_fcx(\n        configuration: Configuration,\n        source: TargetedCrashLogScanSource,\n        setup_context: CrashLogScanSetupContext,\n    )",
       "tier": "tier1"
     },
     {
