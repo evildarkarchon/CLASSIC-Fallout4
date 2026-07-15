@@ -204,6 +204,12 @@ add_classic_gui_qt_test(classic-gui-test-scan-progress-model
 )
 link_classic_gui_rust_bridge(classic-gui-test-scan-progress-model)
 
+add_classic_gui_qt_test(classic-gui-test-scan-run-presentation
+    test_scanrunpresentation.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-scan-run-presentation)
+
 add_classic_gui_qt_test(classic-gui-test-scan-request-builder
     test_scanrequestbuilder.cpp
     ${CMAKE_SOURCE_DIR}/src/core/guiusersettings.cpp
@@ -216,6 +222,7 @@ add_classic_gui_qt_test(classic-gui-test-scanworker-cancellation
     ${CMAKE_SOURCE_DIR}/src/workers/scanworker.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanrequestbuilder.cpp
     ${CMAKE_SOURCE_DIR}/src/workers/scanprogressmodel.cpp
+    ${CMAKE_SOURCE_DIR}/src/workers/scanrunpresentation.cpp
 )
 link_classic_gui_rust_bridge(classic-gui-test-scanworker-cancellation)
 

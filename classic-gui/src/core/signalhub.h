@@ -13,6 +13,8 @@ signals:
     void scanStarted();
     void scanProgress(float percent, const QString& status);
     void scanCompleted();
+    void scanNoLogsFound(const QString& message);
+    void scanCancelled(const QString& message);
     void scanError(const QString& message);
     void settingsChanged();
     void gameChanged(const QString& game);

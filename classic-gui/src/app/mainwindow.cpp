@@ -782,6 +782,8 @@ void MainWindow::connectSignals()
     connect(m_scanController, &ScanController::scanDiscovered, this, &MainWindow::onCrashScanDiscovered);
     connect(m_scanController, &ScanController::scanLogScanned, this, &MainWindow::onCrashLogScanned);
     connect(m_scanController, &ScanController::scanFinished, this, &MainWindow::onScanCompleted);
+    connect(m_scanController, &ScanController::scanNoLogsFound, this, &MainWindow::onScanNoLogsFound);
+    connect(m_scanController, &ScanController::scanCancelled, this, &MainWindow::onScanCancelled);
     connect(m_scanController, &ScanController::scanError, this, &MainWindow::onScanError);
     connect(m_scanController, &ScanController::scanWarning, this, &MainWindow::onScanWarning);
     connect(m_scanController, &ScanController::scanReportDirectoriesResolved, this,
@@ -1586,6 +1588,28 @@ void MainWindow::onScanCompleted(int total, int success, int errors)
                          .arg(errors));
 
     // Auto-switch to Results tab is handled by ResultsController::onScanCompleted()
+}
+
+void MainWindow::onScanCancelled(const QString& message)
+{
+    m_btnScanCrashLogs->setEnabled(true);
+    m_btnScanCrashLogs->setText(QStringLiteral("SCAN CRASH LOGS"));
+    m_progressBar->setRange(0, 100);
+    m_progressBar->setValue(0);
+    m_crashScanInProgress = false;
+    initResultsReportDir();
+    setStatusMessage(QStringLiteral("%1 (%2s)").arg(message).arg(format_elapsed_seconds(m_crashScanTimer)));
+}
+
+void MainWindow::onScanNoLogsFound(const QString& message)
+{
+    m_btnScanCrashLogs->setEnabled(true);
+    m_btnScanCrashLogs->setText(QStringLiteral("SCAN CRASH LOGS"));
+    m_progressBar->setRange(0, 100);
+    m_progressBar->setValue(0);
+    m_crashScanInProgress = false;
+    initResultsReportDir();
+    setStatusMessage(message);
 }
 
 void MainWindow::onScanError(const QString& message)

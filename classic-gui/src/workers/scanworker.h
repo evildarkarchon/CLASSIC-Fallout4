@@ -8,21 +8,19 @@
 #include "core/guiusersettings.h"
 #include "rust/cxx.h"
 
-#include <atomic>
-
 class ScanWorker : public QObject {
     Q_OBJECT
 
 public:
     explicit ScanWorker(QObject* parent = nullptr);
 
-    /// Executes one Crash Log Scan from an immutable, revision-approved typed settings value object.
+    /// Executes one Rust-owned Crash Log Scan Run from immutable, revision-approved GUI settings.
     ///
-    /// This method runs synchronously on the worker thread, consumes runtime paths separately from
-    /// User Settings, and reports completion or failure through Qt signals without reopening settings.
-    void doScan(const QStringList& logPaths, const QString& yamlRoot, const QString& yamlData,
+    /// Discovery, scheduling, durable finalization, and terminal ordering remain inside Rust. This
+    /// synchronous worker-thread call only projects the tagged request and presents events/results.
+    void doScan(const QString& yamlRoot, const QString& yamlData,
                 const classic::gui::CrashLogScanLaunchSettings& settings, const QString& baseDirectory,
-                const QString& setupXseLogPath, bool targetedMode, const QStringList& targetedInputs);
+                const QString& setupXseLogPath, const QStringList& targetedInputs);
 
 public slots:
     void requestCancel();
@@ -30,11 +28,15 @@ public slots:
 signals:
     void progress(float percent, const QString& status);
     void progressDetailed(float percent, const QString& status, int completed, int total);
+    void discoveryCompleted(int totalLogs, const QString& rejectionWarning, const QStringList& reportDirectories);
+    void effectiveConcurrencySelected(int concurrency);
+    void reportDirectoriesResolved(const QStringList& reportDirectories);
     void logScanned(int index, bool success, const QString& logPath);
     void finished(int totalLogs, int successCount, int errorCount);
+    void noLogsFound(const QString& message);
+    void cancelled(const QString& message);
     void error(const QString& message);
 
 private:
-    std::atomic<bool> m_cancelled{false};
-    rust::Box<classic::scanner::ScanCancellationToken> m_cancellationToken;
+    rust::Box<classic::scanner::ScanRunCancellation> m_cancellation;
 };

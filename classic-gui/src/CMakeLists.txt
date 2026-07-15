@@ -46,6 +46,8 @@ qt_add_executable(ClassicGui WIN32
     workers/scanworker.cpp
     workers/scanrequestbuilder.h
     workers/scanrequestbuilder.cpp
+    workers/scanrunpresentation.h
+    workers/scanrunpresentation.cpp
     workers/gamefilesworker.h
     workers/gamefilesworker.cpp
     workers/papyrusworker.h

@@ -100,7 +100,7 @@ delivery is non-controlling. Implementations must handle delivery failures
 internally and may explicitly request safe cancellation through the same
 `ScanRunCancellation`; exceptions must not cross the `noexcept` callback.
 
-The native CLI is an active final-observer consumer: `classic-cli/src/scanner.cpp` lazily creates its progress display from `DiscoveryCompleted`, reports the Rust-selected value from `EffectiveConcurrencySelected`, correlates log events by `discovery_index`, and requests safe cancellation if presentation fails. [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp) forwards its callback updates into Qt signals and uses [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp) to keep visible progress monotonic. That GUI consumer path is documented in [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md).
+The native CLI and Qt GUI are active final-observer consumers. `classic-cli/src/scanner.cpp` lazily creates its progress display from `DiscoveryCompleted`, reports the Rust-selected value from `EffectiveConcurrencySelected`, correlates log events by `discovery_index`, and requests safe cancellation if presentation fails. [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp) likewise implements `ScanRunObserver`, initializes Qt state from discovery and concurrency events, forwards serialized log events through Qt signals, and uses [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp) to keep visible progress monotonic. Neither active native frontend uses `BatchProgressEvent` or completion-order `ScanRunLogResult` correlation. The GUI consumer path is documented in [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md).
 
 ---
 
@@ -258,15 +258,16 @@ Frontend contributors should therefore avoid assuming more than serialized deliv
 
 ## Mapping events back to logs
 
-Use `input_index` first, not callback arrival order.
+Use the correlation key belonging to the selected contract, never callback arrival order.
 
-- callback order can interleave across logs
-- `BatchScanResult` return order is completion order too
-- the GUI scan worker already uses `input_index` to map results back to the original `QStringList` in [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp)
+- legacy `BatchProgressEvent` / `BatchScanResult` consumers use `input_index`; callback and return order can differ from input order
+- the final `ScanRunContractEvent` uses `discovery_index`, which identifies the committed `DiscoveryCompleted.accepted_logs` sequence
+- the final terminal result stores logs in discovery order, so final-contract consumers do not rebuild input order from event or completion order
+- the active GUI follows the final rule and carries `discovery_index` through its progress model and terminal presentation
 
 ## Treat progress as monotonic, not exact phase accounting
 
-The active GUI progress model in [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp) uses the same lifecycle ranking as the Rust bridge and ignores late lower-rank regressions.
+The active GUI progress model in [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp) ranks final `ScanRunContractEvent` tags (`LogQueued`, `LogStarted`, `LogPhase`, and `LogFinished`) and ignores late lower-rank regressions.
 
 That matches the source-backed contract better than assuming:
 
@@ -302,7 +303,7 @@ This is the main source-backed debugging aid for callback sequencing issues.
 - `Queued` is a bridge-only event kind; lower layers expose phase progress, not queued-batch bookkeeping.
 - The bridge currently sets `success = false` on `Queued`, `Started`, and `Phase` events and sets the actual result on terminal events only.
 - `orchestrator_process_logs_batch_with_progress(...)` computes adaptive concurrency locally when `max_concurrent == 0`; `scan_run_execute(...)` delegates that default to `classic-scanlog-core` through `CrashLogScanRun`.
-- `BatchScanResult`, `ScanRunLogResult`, and callback events use completion order at the batch level; callers must use `input_index` when stable original ordering matters.
+- Legacy `BatchScanResult`, legacy `ScanRunLogResult`, and their callback events use completion order at the batch level; those callers must use `input_index` when stable original ordering matters. The final contract instead returns discovery-ordered log results and uses `discovery_index` on observer events.
 - The bridge uses an unbounded progress channel, so the current contract does not expose backpressure semantics to C++ callers.
 - The ready-event drain is bounded to two empty yields; it improves same-log ordering but is not a proof of globally strict ordering under every scheduler timing.
 - The source comments explicitly allow leftover non-terminal events to be emitted in abnormal shutdown paths after the main loop.

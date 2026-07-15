@@ -18,13 +18,22 @@ BatchProgressModel::BatchProgressModel(int totalLogs)
 {
 }
 
-float BatchProgressModel::update(const classic::scanner::BatchProgressEvent& event)
+float BatchProgressModel::update(const classic::scanner::ScanRunContractEvent& event)
 {
+    using EventKind = classic::scanner::ScanRunContractEventKind;
+    if (event.kind == EventKind::DiscoveryCompleted) {
+        m_totalLogs = static_cast<int>(event.discovery.accepted_logs.size());
+        return m_percent;
+    }
+    if (event.kind == EventKind::EffectiveConcurrencySelected) {
+        m_effectiveConcurrency = static_cast<int>(event.effective_concurrency);
+        return m_percent;
+    }
     if (m_totalLogs <= 0) {
-        m_totalLogs = static_cast<int>(std::max(event.total, 1U));
+        return m_percent;
     }
 
-    LogProgressState& state = m_logStates[event.input_index];
+    LogProgressState& state = m_logStates[static_cast<quint64>(event.discovery_index)];
     const int nextRank = rankFor(event);
     if (nextRank == kUnknownRank) {
         return m_percent;
@@ -50,14 +59,25 @@ float BatchProgressModel::percent() const
     return m_percent;
 }
 
-int BatchProgressModel::rankFor(const classic::scanner::BatchProgressEvent& event)
+int BatchProgressModel::totalLogs() const
 {
-    switch (event.event_kind) {
-    case classic::scanner::BatchProgressEventKind::Queued:
+    return m_totalLogs;
+}
+
+int BatchProgressModel::effectiveConcurrency() const
+{
+    return m_effectiveConcurrency;
+}
+
+int BatchProgressModel::rankFor(const classic::scanner::ScanRunContractEvent& event)
+{
+    using EventKind = classic::scanner::ScanRunContractEventKind;
+    switch (event.kind) {
+    case EventKind::LogQueued:
         return 0;
-    case classic::scanner::BatchProgressEventKind::Started:
+    case EventKind::LogStarted:
         return 1;
-    case classic::scanner::BatchProgressEventKind::Phase:
+    case EventKind::LogPhase:
         switch (event.phase) {
         case classic::scanner::BatchProgressPhase::Setup:
             return 2;
@@ -69,22 +89,25 @@ int BatchProgressModel::rankFor(const classic::scanner::BatchProgressEvent& even
             return 5;
         }
         break;
-    case classic::scanner::BatchProgressEventKind::Completed:
-    case classic::scanner::BatchProgressEventKind::Failed:
+    case EventKind::LogFinished:
         return 6;
+    case EventKind::DiscoveryCompleted:
+    case EventKind::EffectiveConcurrencySelected:
+        return kUnknownRank;
     }
 
     return kUnknownRank;
 }
 
-float BatchProgressModel::contributionFor(const classic::scanner::BatchProgressEvent& event)
+float BatchProgressModel::contributionFor(const classic::scanner::ScanRunContractEvent& event)
 {
-    switch (event.event_kind) {
-    case classic::scanner::BatchProgressEventKind::Queued:
+    using EventKind = classic::scanner::ScanRunContractEventKind;
+    switch (event.kind) {
+    case EventKind::LogQueued:
         return kQueuedContribution;
-    case classic::scanner::BatchProgressEventKind::Started:
+    case EventKind::LogStarted:
         return kStartedContribution;
-    case classic::scanner::BatchProgressEventKind::Phase:
+    case EventKind::LogPhase:
         switch (event.phase) {
         case classic::scanner::BatchProgressPhase::Setup:
             return kSetupContribution;
@@ -96,9 +119,11 @@ float BatchProgressModel::contributionFor(const classic::scanner::BatchProgressE
             return kFinalizeContribution;
         }
         break;
-    case classic::scanner::BatchProgressEventKind::Completed:
-    case classic::scanner::BatchProgressEventKind::Failed:
+    case EventKind::LogFinished:
         return kTerminalContribution;
+    case EventKind::DiscoveryCompleted:
+    case EventKind::EffectiveConcurrencySelected:
+        return kQueuedContribution;
     }
 
     return kQueuedContribution;

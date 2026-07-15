@@ -1,143 +1,222 @@
 #include "scanworker.h"
+
 #include "core/rust_qt_bridge.h"
 #include "scanprogressmodel.h"
 #include "scanrequestbuilder.h"
+#include "scanrunpresentation.h"
+
+#include "classic_cxx_bridge/scanner.h"
 
 #include <QDebug>
+#include <QDir>
+#include <QFileInfo>
+#include <QSet>
 
-#include "classic_cxx_bridge/config.h"
-#include "classic_cxx_bridge/scanner.h"
-#include "rust/cxx.h"
-
-#include <cstdint>
-#include <string>
-#include <utility>
+#include <exception>
 
 namespace {
-std::string resolve_log_path(const rust::String& result_log_path_rust, const QString& fallback)
+
+namespace scanner = classic::scanner;
+
+QString eventStatus(const scanner::ScanRunContractEvent& event)
 {
-    const std::string result_log_path(result_log_path_rust.data(), result_log_path_rust.size());
-    if (!result_log_path.empty()) {
-        return result_log_path;
+    using EventKind = scanner::ScanRunContractEventKind;
+    const QString path = classic::toQString(event.crash_log);
+    switch (event.kind) {
+    case EventKind::DiscoveryCompleted:
+        return QStringLiteral("Found %1 crash log%2")
+            .arg(event.discovery.accepted_logs.size())
+            .arg(event.discovery.accepted_logs.size() == 1 ? "" : "s");
+    case EventKind::EffectiveConcurrencySelected:
+        return QStringLiteral("Scanning with %1 concurrent scan%2")
+            .arg(event.effective_concurrency)
+            .arg(event.effective_concurrency == 1 ? "" : "s");
+    case EventKind::LogQueued:
+        return QStringLiteral("Queued: %1").arg(path);
+    case EventKind::LogStarted:
+        return QStringLiteral("Scanning: %1").arg(path);
+    case EventKind::LogPhase: {
+        QString phase;
+        switch (event.phase) {
+        case scanner::BatchProgressPhase::Setup:
+            phase = QStringLiteral("setup");
+            break;
+        case scanner::BatchProgressPhase::Parse:
+            phase = QStringLiteral("parse");
+            break;
+        case scanner::BatchProgressPhase::Analyze:
+            phase = QStringLiteral("analysis");
+            break;
+        case scanner::BatchProgressPhase::Finalize:
+            phase = QStringLiteral("finalization");
+            break;
+        }
+        return QStringLiteral("%1: %2").arg(phase, path);
     }
-    return std::string(fallback.toUtf8().constData());
+    case EventKind::LogFinished:
+        return QStringLiteral("Finished: %1").arg(path);
+    }
+    return path;
 }
 
-class BatchProgressCallback final : public classic::scanner::ScanBatchProgressCallback {
+QStringList terminalReportDirectories(const classic::gui::ScanRunTerminalPresentation& terminal)
+{
+    QStringList directories;
+    QSet<QString> seen;
+    for (const auto& log : terminal.logs) {
+        if (log.autoscanReport.isEmpty()) {
+            continue;
+        }
+        const QString directory = QDir::cleanPath(QFileInfo(log.autoscanReport).absolutePath());
+        const QString key = directory.toLower();
+        if (!directory.isEmpty() && !seen.contains(key)) {
+            seen.insert(key);
+            directories.append(directory);
+        }
+    }
+    return directories;
+}
+
+/// Serially projects Rust lifecycle events to the worker's Qt signals.
+class GuiScanRunObserver final : public scanner::ScanRunObserver {
 public:
-    BatchProgressCallback(ScanWorker& worker, int total_logs)
+    /// Borrows the worker and cancellation control for the synchronous execution lifetime.
+    GuiScanRunObserver(ScanWorker& worker, const scanner::ScanRunCancellation& cancellation) noexcept
         : m_worker(worker)
-        , m_progressModel(total_logs)
+        , m_cancellation(cancellation)
     {
     }
 
-    void on_batch_progress(const classic::scanner::BatchProgressEvent& event) const override
+    /// Presents one serialized event without allowing adapter failures to cross the CXX boundary.
+    void on_scan_run_event(const scanner::ScanRunContractEvent& event) const noexcept override
     {
-        const float percent = m_progressModel.update(event);
-        const QString status = QString::fromUtf8(event.log_path.data(), static_cast<int>(event.log_path.size()));
-        const int completed = static_cast<int>(event.completed);
-        const int total = static_cast<int>(event.total);
-        Q_EMIT m_worker.progress(percent, status);
-        Q_EMIT m_worker.progressDetailed(percent, status, completed, total);
+        try {
+            const float percent = m_progress.update(event);
+            using EventKind = scanner::ScanRunContractEventKind;
+            switch (event.kind) {
+            case EventKind::DiscoveryCompleted: {
+                const int total = m_progress.totalLogs();
+                Q_EMIT m_worker.discoveryCompleted(total, classic::gui::formatScanRunRejections(event.discovery),
+                                                   classic::gui::scanRunReportDirectories(event.discovery));
+                Q_EMIT m_worker.progress(0.0F, eventStatus(event));
+                Q_EMIT m_worker.progressDetailed(0.0F, eventStatus(event), 0, total);
+                break;
+            }
+            case EventKind::EffectiveConcurrencySelected:
+                Q_EMIT m_worker.effectiveConcurrencySelected(m_progress.effectiveConcurrency());
+                Q_EMIT m_worker.progress(percent, eventStatus(event));
+                Q_EMIT m_worker.progressDetailed(percent, eventStatus(event), static_cast<int>(event.completed),
+                                                 static_cast<int>(event.total));
+                break;
+            case EventKind::LogQueued:
+            case EventKind::LogStarted:
+            case EventKind::LogPhase:
+            case EventKind::LogFinished:
+                Q_EMIT m_worker.progress(percent, eventStatus(event));
+                Q_EMIT m_worker.progressDetailed(percent, eventStatus(event), static_cast<int>(event.completed),
+                                                 static_cast<int>(event.total));
+                break;
+            }
+        } catch (...) {
+            // Qt presentation failure is adapter-local; stop future admissions at Rust's next safe seam.
+            m_deliveryFailed = true;
+            scanner::scan_run_cancellation_cancel(m_cancellation);
+        }
     }
+
+    /// Returns whether Qt event presentation failed during observer delivery.
+    [[nodiscard]] bool deliveryFailed() const noexcept { return m_deliveryFailed; }
 
 private:
     ScanWorker& m_worker;
-    mutable BatchProgressModel m_progressModel;
+    const scanner::ScanRunCancellation& m_cancellation;
+    mutable BatchProgressModel m_progress;
+    mutable bool m_deliveryFailed = false;
 };
+
 } // namespace
 
 ScanWorker::ScanWorker(QObject* parent)
     : QObject(parent)
-    , m_cancellationToken(classic::scanner::scan_cancellation_token_new())
+    , m_cancellation(scanner::scan_run_cancellation_new())
 {
 }
 
 void ScanWorker::requestCancel()
 {
     qDebug() << "ScanWorker: cancellation requested";
-    m_cancelled.store(true);
-    classic::scanner::scan_cancellation_token_cancel(*m_cancellationToken);
+    scanner::scan_run_cancellation_cancel(*m_cancellation);
 }
 
-void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, const QString& yamlData,
+void ScanWorker::doScan(const QString& yamlRoot, const QString& yamlData,
                         const classic::gui::CrashLogScanLaunchSettings& settings, const QString& baseDirectory,
-                        const QString& setupXseLogPath, bool targetedMode, const QStringList& targetedInputs)
+                        const QString& setupXseLogPath, const QStringList& targetedInputs)
 {
-    m_cancelled.store(false);
-    classic::scanner::scan_cancellation_token_reset(*m_cancellationToken);
-
-    int total = logPaths.size();
-    qDebug() << "ScanWorker: starting scan," << total << "logs," << (targetedMode ? "targeted" : "standard") << "mode";
-    int successCount = 0;
-    int errorCount = 0;
+    qDebug() << "ScanWorker: starting" << (targetedInputs.isEmpty() ? "standard" : "targeted") << "scan run";
 
     try {
-        if (m_cancelled.load()) {
-            emit error(QStringLiteral("Scan cancelled by user"));
+        auto request = classic::gui::buildScanRunRequest(yamlRoot, yamlData, baseDirectory, settings, setupXseLogPath,
+                                                         targetedInputs);
+        GuiScanRunObserver observer(*this, *m_cancellation);
+        const auto execution = scanner::scan_run_contract_execute(*request, *m_cancellation, &observer);
+        if (observer.deliveryFailed()) {
+            emit error(QStringLiteral("Crash Log Scan progress delivery failed; the run was cancelled safely."));
             return;
         }
 
-        emit progress(0.0f, QStringLiteral("Scanning logs..."));
-        emit progressDetailed(0.0f, QStringLiteral("Scanning logs..."), 0, total);
-
-        BatchProgressCallback progress_callback(*this, total);
-        auto request = classic::gui::buildScanRunRequest(logPaths, yamlRoot, yamlData, baseDirectory, settings,
-                                                         setupXseLogPath, targetedMode, targetedInputs);
-        auto scanResult = classic::scanner::scan_run_execute(request, progress_callback, *m_cancellationToken);
-        const auto& results = scanResult.logs;
-
-        const QString runStatus =
-            QString::fromUtf8(scanResult.status.data(), static_cast<int>(scanResult.status.size()));
-        if (runStatus == QStringLiteral("setup_failed")) {
-            const QString message =
-                scanResult.message.empty()
-                    ? QStringLiteral("Crash Log Scan setup failed")
-                    : QString::fromUtf8(scanResult.message.data(), static_cast<int>(scanResult.message.size()));
-            emit error(message);
-            return;
+        const auto terminal = classic::gui::presentScanRunExecution(execution);
+        if (!terminal.setupDetails.isEmpty()) {
+            qInfo().noquote() << terminal.setupDetails;
         }
-        if (runStatus == QStringLiteral("no_crash_logs_found")) {
-            emit error(QStringLiteral("No crash logs found"));
-            return;
-        }
-        if (runStatus == QStringLiteral("cancelled_before_discovery") ||
-            runStatus == QStringLiteral("cancelled")) {
-            const QString message =
-                scanResult.message.empty()
-                    ? QStringLiteral("Scan cancelled by user")
-                    : QString::fromUtf8(scanResult.message.data(), static_cast<int>(scanResult.message.size()));
-            // Cancellation is a run-level terminal state; never report it through the completed-scan path.
-            emit error(message);
-            return;
+        const QStringList reportDirectories = terminalReportDirectories(terminal);
+        if (!reportDirectories.isEmpty()) {
+            emit reportDirectoriesResolved(reportDirectories);
         }
 
-        total = static_cast<int>(scanResult.total);
-
-        for (const auto& result : results) {
-            const bool hasFallbackPath = result.input_index < static_cast<uint32_t>(logPaths.size());
-            const int resultIndex = static_cast<int>(result.input_index);
-            const QString fallbackPath = hasFallbackPath ? logPaths[resultIndex] : QString{};
-            const std::string reportLogPath = resolve_log_path(result.log_path, fallbackPath);
-            const QString resolvedPath = QString::fromStdString(reportLogPath);
-
-            if (result.success) {
-                ++successCount;
-            } else {
-                ++errorCount;
+        // The contract supplies terminal outcomes in discovery order even when execution events interleave.
+        for (const auto& log : terminal.logs) {
+            if (log.cancelledBeforeStart) {
+                continue;
             }
-
-            emit logScanned(resultIndex, result.success, resolvedPath);
+            if (!log.failures.isEmpty()) {
+                qWarning().noquote() << QStringLiteral("Crash Log Scan failed for %1: %2")
+                                            .arg(log.crashLog, log.failures.join(QStringLiteral("; ")));
+            } else if (log.failed && !log.message.isEmpty()) {
+                qWarning().noquote()
+                    << QStringLiteral("Crash Log Scan failed for %1: %2").arg(log.crashLog, log.message);
+            }
+            if (log.movedToUnsolvedLogs) {
+                qInfo().noquote()
+                    << QStringLiteral("Moved failed Crash Log artifacts to Unsolved Logs: %1").arg(log.crashLog);
+            }
+            emit logScanned(log.discoveryIndex, log.succeeded, log.crashLog);
         }
 
-        qDebug() << "ScanWorker: scan complete -" << successCount << "success," << errorCount << "errors of" << total;
-        emit progress(100.0f, QStringLiteral("Complete"));
-        emit progressDetailed(100.0f, QStringLiteral("Complete"), total, total);
-        emit finished(total, successCount, errorCount);
-
-    } catch (const rust::Error& e) {
-        emit error(QString::fromUtf8(e.what()));
-    } catch (const std::exception& e) {
-        emit error(QString::fromUtf8(e.what()));
+        using TerminalKind = classic::gui::ScanRunTerminalKind;
+        switch (terminal.kind) {
+        case TerminalKind::Completed:
+            emit progress(100.0F, QStringLiteral("Complete"));
+            emit progressDetailed(100.0F, QStringLiteral("Complete"), terminal.succeeded + terminal.failed,
+                                  terminal.total);
+            emit finished(terminal.total, terminal.succeeded, terminal.failed);
+            break;
+        case TerminalKind::CancelledBeforeDiscovery:
+        case TerminalKind::Cancelled:
+            emit cancelled(terminal.message);
+            break;
+        case TerminalKind::NoCrashLogsFound:
+            emit noLogsFound(terminal.message);
+            break;
+        case TerminalKind::SetupFailed:
+        case TerminalKind::InfrastructureError:
+            emit error(terminal.message);
+            break;
+        }
+    } catch (const rust::Error& error) {
+        emit this->error(QString::fromUtf8(error.what()));
+    } catch (const std::exception& error) {
+        emit this->error(QString::fromUtf8(error.what()));
+    } catch (...) {
+        emit error(QStringLiteral("Crash Log Scan Run failed with an unknown adapter error."));
     }
 }

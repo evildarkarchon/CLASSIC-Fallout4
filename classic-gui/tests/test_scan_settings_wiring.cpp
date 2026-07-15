@@ -8,17 +8,12 @@ class ScanSettingsWiringTests : public QObject {
 private slots:
     void mainwindow_sources_initial_policy_from_rust_defaults();
     void typed_scan_settings_reach_controller();
-    void typed_scan_settings_reach_worker();
-    void typed_scan_settings_reach_request_builder();
     void scan_pipeline_forwards_existing_xse_log_hint();
     void mainwindow_forwards_game_version_to_game_files_controller();
     void game_files_controller_forwards_game_version_to_worker();
     void game_files_worker_forwards_game_version_to_setup_intake();
     void game_files_worker_marks_required_actions_as_attention();
     void game_files_worker_catches_non_standard_exceptions();
-    void scan_worker_uses_progress_enabled_batch_api();
-    void scan_worker_forwards_batch_counts_in_progress_updates();
-    void scan_worker_defaults_to_batch_for_multi_log_scans();
     void mainwindow_wires_live_crash_scan_progress_updates();
     void mainwindow_does_not_use_deprecated_vr_mode_setting();
     /// Verifies that detected and manual paths reach one final consent-gated commit.
@@ -33,7 +28,6 @@ private slots:
     void mainwindow_uses_exe_relative_crash_logs_dir();
     void mainwindow_resets_stale_game_exe_path_outside_selected_root();
     void controllers_emit_global_scan_started_signal_on_scan_start();
-    void scan_controller_uses_exe_dir_and_xse_resolver_for_log_collection();
     void scan_controller_delegates_xse_folder_resolution_to_core();
     void mainwindow_enables_drag_and_drop();
     void mainwindow_forwards_drops_through_targeted_child_event_filter();
@@ -41,21 +35,13 @@ private slots:
     void mainwindow_acknowledges_duplicate_non_local_and_unsupported_drops();
     void mainwindow_reports_wrong_tab_drops();
     void mainwindow_passes_targeted_inputs_to_scan_controller();
-    void scan_controller_routes_targeted_inputs_through_bridge_resolver();
-    void scan_controller_appends_targeted_resolved_logs_without_filename_filter();
     void mainwindow_has_clear_targeted_inputs_slot();
     void mainwindow_sizes_clear_targeted_button_to_fit_text();
     void mainwindow_refreshes_layout_when_targeted_list_visibility_changes();
-    void scan_controller_surfaces_targeted_rejections_to_gui();
-    void scan_controller_logs_targeted_rejections_with_reason_fallback();
     void mainwindow_wires_scan_warnings_to_user_feedback();
-    void scan_controller_emits_targeted_report_directories();
     void mainwindow_includes_last_scan_report_dirs_in_results_setup();
     void mainwindow_seeds_targeted_report_dirs_before_scan_finishes();
     void mainwindow_deduplicates_report_dirs_before_results_setup();
-    void scan_controller_disables_unsolved_relocation_for_targeted_runs();
-    void scan_worker_routes_cancelled_statuses_away_from_completion();
-    void scan_worker_counts_per_log_failures_without_scan_level_error();
 };
 
 void ScanSettingsWiringTests::mainwindow_sources_initial_policy_from_rust_defaults()
@@ -84,39 +70,6 @@ void ScanSettingsWiringTests::typed_scan_settings_reach_controller()
         R"(m_scanController->startScan\(m_dataRoot,\s*m_dataDir,\s*launchSettings,\s*setupXseLogPath,\s*m_targetedInputPaths\))"));
     QVERIFY2(callRegex.match(sourceText).hasMatch(),
              "MainWindow should pass the accepted typed scan settings to ScanController");
-}
-
-void ScanSettingsWiringTests::typed_scan_settings_reach_worker()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
-    QFile file(sourcePath);
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(file.readAll());
-    const QRegularExpression captureRegex(QStringLiteral(
-        R"(\[worker,\s*logPathsList,\s*yamlRoot,\s*yamlData,\s*settings,\s*baseDir,\s*targetedMode,\s*setupXseLogPath,\s*targetedInputs\])"));
-    QVERIFY2(captureRegex.match(sourceText).hasMatch(),
-             "ScanController should copy the typed scan settings into the worker-thread callback");
-
-    const QRegularExpression callRegex(QStringLiteral(
-        R"(worker->doScan\(logPathsList,\s*yamlRoot,\s*yamlData,\s*settings,\s*baseDir,\s*setupXseLogPath,\s*targetedMode,\s*targetedInputs\))"));
-    QVERIFY2(callRegex.match(sourceText).hasMatch(),
-             "ScanController should pass the captured typed scan settings to ScanWorker");
-}
-
-void ScanSettingsWiringTests::typed_scan_settings_reach_request_builder()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
-    QFile file(sourcePath);
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(file.readAll());
-    const QRegularExpression callRegex(QStringLiteral(
-        R"(buildScanRunRequest\(logPaths,\s*yamlRoot,\s*yamlData,\s*baseDirectory,\s*settings,\s*setupXseLogPath,\s*targetedMode,\s*targetedInputs\))"));
-    QVERIFY2(callRegex.match(sourceText).hasMatch(),
-             "ScanWorker should pass the typed scan settings to the behavior-tested request builder");
 }
 
 void ScanSettingsWiringTests::scan_pipeline_forwards_existing_xse_log_hint()
@@ -223,53 +176,6 @@ void ScanSettingsWiringTests::game_files_worker_catches_non_standard_exceptions(
              "GameFilesWorker should surface non-standard worker exceptions");
     QVERIFY2(sourceText.contains(QStringLiteral("emit error(QStringLiteral(\"unknown error\"))")),
              "GameFilesWorker should report a stable fallback error message");
-}
-
-void ScanSettingsWiringTests::scan_worker_uses_progress_enabled_batch_api()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
-    QFile file(sourcePath);
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("BatchProgressCallback")),
-             "ScanWorker should define a CXX batch progress callback adapter");
-    QVERIFY2(sourceText.contains(QStringLiteral("BatchProgressEvent")),
-             "ScanWorker should consume the richer batch progress event payload");
-    QVERIFY2(sourceText.contains(QStringLiteral("scan_run_execute")),
-             "ScanWorker should use the CXX Crash Log Scan Run API that reports progress");
-}
-
-void ScanSettingsWiringTests::scan_worker_forwards_batch_counts_in_progress_updates()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
-    QFile file(sourcePath);
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("event.completed")),
-             "ScanWorker should forward completed-count progress from BatchProgressEvent");
-    QVERIFY2(sourceText.contains(QStringLiteral("event.total")),
-             "ScanWorker should forward total-count progress from BatchProgressEvent");
-    QVERIFY2(sourceText.contains(QStringLiteral("progressDetailed(percent, status, completed, total)")),
-             "ScanWorker should emit batch progress updates with structured completed and total counts");
-}
-
-void ScanSettingsWiringTests::scan_worker_defaults_to_batch_for_multi_log_scans()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
-    QFile file(sourcePath);
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("scan_run_execute")),
-             "ScanWorker should delegate both single-log and multi-log runs to Rust");
-    const QRegularExpression batchGateRegex(QStringLiteral(R"(if\s*\(\s*total\s*>\s*1\s*\))"));
-    QVERIFY2(!batchGateRegex.match(sourceText).hasMatch(),
-             "ScanWorker should not preserve a separate C++ batch-mode branch");
 }
 
 void ScanSettingsWiringTests::mainwindow_wires_live_crash_scan_progress_updates()
@@ -570,26 +476,6 @@ void ScanSettingsWiringTests::controllers_emit_global_scan_started_signal_on_sca
              "GameFilesController should emit SignalHub::scanStarted() when a game-files scan begins");
 }
 
-void ScanSettingsWiringTests::scan_controller_uses_exe_dir_and_xse_resolver_for_log_collection()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
-    QFile file(sourcePath);
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("classic::files::log_collector_new_for_scan")),
-             "ScanController should delegate scan-time XSE Folder resolution to Rust file-IO core");
-    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(settings.gameVersion)")),
-             "ScanController should forward gameVersion to XSE Folder resolution");
-    QVERIFY2(sourceText.contains(QStringLiteral("QCoreApplication::applicationDirPath()")),
-             "ScanController should collect crash logs relative to the GUI executable directory");
-    QVERIFY2(!sourceText.contains(QStringLiteral("QDir::currentPath()")),
-             "ScanController should not use the current working directory for crash-log collection");
-    QVERIFY2(sourceText.contains(QStringLiteral("classic::toRustString(settings.customScanDirectory)")),
-             "ScanController should continue forwarding the custom scan folder separately");
-}
-
 void ScanSettingsWiringTests::scan_controller_delegates_xse_folder_resolution_to_core()
 {
     const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
@@ -726,45 +612,6 @@ void ScanSettingsWiringTests::mainwindow_passes_targeted_inputs_to_scan_controll
              "MainWindow should pass m_targetedInputPaths to ScanController");
 }
 
-void ScanSettingsWiringTests::scan_controller_routes_targeted_inputs_through_bridge_resolver()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
-    QFile file(sourcePath);
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(file.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("resolve_targeted_inputs")),
-             "ScanController should call resolve_targeted_inputs for targeted mode");
-    QVERIFY2(sourceText.contains(QStringLiteral("targetedInputs")),
-             "ScanController::startScan should accept targetedInputs parameter");
-    QVERIFY2(sourceText.contains(QStringLiteral("log_collector_collect_all")),
-             "ScanController should still use log_collector_collect_all for default discovery");
-}
-
-void ScanSettingsWiringTests::scan_controller_appends_targeted_resolved_logs_without_filename_filter()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
-    QFile file(sourcePath);
-    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(file.readAll());
-    const qsizetype targetedStart = sourceText.indexOf(QStringLiteral("if (targetedMode)"));
-    QVERIFY2(targetedStart >= 0, "ScanController should have a targeted-mode branch");
-
-    const qsizetype defaultStart = sourceText.indexOf(QStringLiteral("} else {"), targetedStart);
-    QVERIFY2(defaultStart > targetedStart, "ScanController should separate targeted mode from default discovery");
-
-    const QString targetedBranch = sourceText.mid(targetedStart, defaultStart - targetedStart);
-    QVERIFY2(targetedBranch.contains(QStringLiteral("resolve_targeted_inputs")),
-             "Targeted mode should use the Rust resolver before appending logs");
-    QVERIFY2(targetedBranch.contains(QStringLiteral("logPathsList.append(qpath);")),
-             "Targeted mode should append every path returned by the Rust resolver");
-    QVERIFY2(!targetedBranch.contains(QStringLiteral("isCrashLogPath")),
-             "Targeted mode should not reapply the GUI crash-*.log filename filter");
-}
-
 void ScanSettingsWiringTests::mainwindow_has_clear_targeted_inputs_slot()
 {
     const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
@@ -819,41 +666,6 @@ void ScanSettingsWiringTests::mainwindow_refreshes_layout_when_targeted_list_vis
              "updateTargetedInputUi should resize the window upward when visible targeted inputs need more room");
 }
 
-void ScanSettingsWiringTests::scan_controller_surfaces_targeted_rejections_to_gui()
-{
-    const QString headerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.h");
-    QFile headerFile(headerPath);
-    QVERIFY2(headerFile.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(headerPath)));
-
-    const QString headerText = QString::fromUtf8(headerFile.readAll());
-    QVERIFY2(headerText.contains(QStringLiteral("void scanWarning(const QString& message);")),
-             "ScanController should expose a non-fatal scanWarning signal for targeted-input rejections");
-
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
-    QFile sourceFile(sourcePath);
-    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("emit scanWarning(")),
-             "ScanController should emit scanWarning when targeted inputs are rejected");
-}
-
-void ScanSettingsWiringTests::scan_controller_logs_targeted_rejections_with_reason_fallback()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
-    QFile sourceFile(sourcePath);
-    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
-    const QRegularExpression warningLoopRegex(QString::fromLatin1(
-        R"REGEX(for\s*\(size_t i = 0; i < resolution\.rejected_paths\.size\(\); \+\+i\)\s*\{(?:.|\n)*?const QString reason = i < resolution\.rejected_reasons\.size\(\)\s*\?\s*classic::toQString\(resolution\.rejected_reasons\[i\]\)\s*:\s*QStringLiteral\("unknown reason"\);(?:.|\n)*?qWarning\("Targeted input rejected: %s \(%s\)",(?:.|\n)*?qPrintable\(reason\)\);(?:.|\n)*?\})REGEX"));
-    QVERIFY2(warningLoopRegex.match(sourceText).hasMatch(),
-             "ScanController should guard targeted rejection logging against missing rejection reasons");
-}
-
 void ScanSettingsWiringTests::mainwindow_wires_scan_warnings_to_user_feedback()
 {
     const QString headerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.h");
@@ -875,27 +687,6 @@ void ScanSettingsWiringTests::mainwindow_wires_scan_warnings_to_user_feedback()
              "MainWindow should connect ScanController::scanWarning to user-visible feedback");
     QVERIFY2(sourceText.contains(QStringLiteral("QMessageBox::warning(this, QStringLiteral(\"Scan Warning\")")),
              "MainWindow should surface scan warnings through a warning dialog");
-}
-
-void ScanSettingsWiringTests::scan_controller_emits_targeted_report_directories()
-{
-    const QString headerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.h");
-    QFile headerFile(headerPath);
-    QVERIFY2(headerFile.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(headerPath)));
-
-    const QString headerText = QString::fromUtf8(headerFile.readAll());
-    QVERIFY2(headerText.contains(QStringLiteral("void scanReportDirectoriesResolved(const QStringList& reportDirs);")),
-             "ScanController should expose resolved report directories for the current scan");
-
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
-    QFile sourceFile(sourcePath);
-    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("emit scanReportDirectoriesResolved(")),
-             "ScanController should emit resolved report directories for targeted scans");
 }
 
 void ScanSettingsWiringTests::mainwindow_includes_last_scan_report_dirs_in_results_setup()
@@ -956,75 +747,6 @@ void ScanSettingsWiringTests::mainwindow_deduplicates_report_dirs_before_results
              "MainWindow should deduplicate report directories before updating ResultsController");
     QVERIFY2(sourceText.contains(QStringLiteral("seenReportDirs.insert(key);")),
              "MainWindow should track report directories case-insensitively before appending them");
-}
-
-void ScanSettingsWiringTests::scan_controller_disables_unsolved_relocation_for_targeted_runs()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
-    QFile sourceFile(sourcePath);
-    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
-    QVERIFY2(sourceText.contains(QStringLiteral("const bool targetedMode = !targetedInputs.isEmpty();")),
-             "ScanController should detect targeted mode before dispatching work to ScanWorker");
-
-    const qsizetype callStart = sourceText.indexOf(QStringLiteral("worker->doScan("));
-    QVERIFY2(callStart >= 0, "ScanController should call ScanWorker::doScan()");
-    const qsizetype callEnd = sourceText.indexOf(QStringLiteral(");"), callStart);
-    QVERIFY2(callEnd > callStart, "ScanController should have a complete ScanWorker::doScan() call");
-    const QString call = sourceText.mid(callStart, callEnd - callStart);
-    QVERIFY2(call.contains(QStringLiteral("targetedMode")),
-             "ScanController should pass targetedMode to ScanWorker::doScan()");
-    QVERIFY2(call.contains(QStringLiteral("targetedInputs")),
-             "ScanController should pass targeted inputs to ScanWorker::doScan()");
-}
-
-void ScanSettingsWiringTests::scan_worker_counts_per_log_failures_without_scan_level_error()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
-    QFile sourceFile(sourcePath);
-    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
-    const QRegularExpression resultLoopRegex(QStringLiteral(
-        R"(for\s*\(\s*const\s+auto&\s+result\s*:\s*results\s*\)(?:.|\n)*?if\s*\(\s*result\.success\s*\)(?:.|\n)*?\+\+successCount;(?:.|\n)*?else(?:.|\n)*?\+\+errorCount;(?:.|\n)*?emit\s+logScanned\(resultIndex,\s*result\.success)"));
-    QVERIFY2(resultLoopRegex.match(sourceText).hasMatch(),
-             "ScanWorker should treat Rust scan_run per-log outcomes as per-log success/failure signals");
-
-    const qsizetype outerCatchStart = sourceText.indexOf(QStringLiteral("} catch (const rust::Error& e) {"));
-    QVERIFY2(outerCatchStart > 0, "ScanWorker should have an outer rust::Error handler for setup failures");
-    const qsizetype outerCatchEnd =
-        sourceText.indexOf(QStringLiteral("} catch (const std::exception& e)"), outerCatchStart);
-    const QString outerCatchBlock = sourceText.mid(outerCatchStart, outerCatchEnd - outerCatchStart);
-    QVERIFY2(outerCatchBlock.contains(QStringLiteral("emit error(")),
-             "ScanWorker should reserve scan-level error emission for setup failures outside per-log work");
-    QVERIFY2(!outerCatchBlock.contains(QStringLiteral("logScanned")),
-             "ScanWorker outer error handler should not masquerade as a completed per-log result");
-    QVERIFY2(sourceText.contains(QStringLiteral("emit finished(total, successCount, errorCount);")),
-             "ScanWorker should finish targeted scans with failed counts instead of aborting the whole scan");
-}
-
-void ScanSettingsWiringTests::scan_worker_routes_cancelled_statuses_away_from_completion()
-{
-    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
-    QFile sourceFile(sourcePath);
-    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
-             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
-
-    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
-    const qsizetype cancellationStart = sourceText.indexOf(QStringLiteral("cancelled_before_discovery"));
-    const qsizetype cancelledRun = sourceText.indexOf(QStringLiteral("cancelled"), cancellationStart + 1);
-    const qsizetype cancellationError = sourceText.indexOf(QStringLiteral("emit error(message);"), cancellationStart);
-    const qsizetype cancellationReturn = sourceText.indexOf(QStringLiteral("return;"), cancellationError);
-    const qsizetype completedRun = sourceText.indexOf(QStringLiteral("emit finished(total, successCount, errorCount);"));
-
-    QVERIFY2(cancellationStart >= 0, "ScanWorker should handle cancellation before discovery");
-    QVERIFY2(cancelledRun > cancellationStart, "ScanWorker should handle cancellation after discovery");
-    QVERIFY2(cancellationError > cancelledRun, "ScanWorker should emit a cancellation signal for both statuses");
-    QVERIFY2(cancellationReturn > cancellationError, "ScanWorker should return after emitting cancellation");
-    QVERIFY2(completedRun > cancellationReturn, "ScanWorker should return from cancellation before the completed-scan path");
 }
 
 QTEST_MAIN(ScanSettingsWiringTests)

@@ -1,16 +1,15 @@
-# `classic-gui` Scan Result Ordering And `input_index` Correlation
+# `classic-gui` Discovery-Ordered Scan Results
 
-Contributor-facing documentation for how the active Qt frontend handles batch scan result ordering through:
+Contributor-facing documentation for how the active Qt frontend consumes final Crash Log Scan Run ordering through:
 
 - [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp)
-- [`classic-gui/src/workers/scanworker.h`](../../classic-gui/src/workers/scanworker.h)
+- [`classic-gui/src/workers/scanrunpresentation.cpp`](../../classic-gui/src/workers/scanrunpresentation.cpp)
 - [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp)
 - [`classic-gui/src/controllers/scancontroller.cpp`](../../classic-gui/src/controllers/scancontroller.cpp)
 - [`classic-gui/src/controllers/resultscontroller.cpp`](../../classic-gui/src/controllers/resultscontroller.cpp)
 - [`classic-gui/src/app/mainwindow.cpp`](../../classic-gui/src/app/mainwindow.cpp)
-- [`classic-gui/src/core/signalhub.h`](../../classic-gui/src/core/signalhub.h)
 
-This page documents the current GUI behavior visible in source today for the active Rust/C++/Qt path. It does not invent a stronger future ordering contract, and it does not claim that the Qt layer receives input-ordered batch results from the bridge.
+The active GUI does not consume legacy completion-order `ScanRunLogResult` values or correlate them back to a GUI-owned input list with `input_index`. It consumes final-contract terminal outcomes that Rust has already sorted into discovery order.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
@@ -18,277 +17,199 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 
 ## Purpose And Scope
 
-Use this page when you need to understand:
+Use this page to understand:
 
-- where completion-order batch results enter the Qt scan flow
-- how `result.input_index` maps returned batch results back to the original `QStringList`
-- how progress events and returned results serve different purposes in the GUI
-- what `ResultsController` assumes about reports and what it does not assume about scan result order
-- which current tests cover this area and which gaps still exist
+- the difference between serialized event order and terminal result order
+- what `discovery_index` identifies after Standard or Targeted discovery
+- how `ScanWorker` emits per-log terminal notifications
+- why Results-tab ordering remains independent from scan-result ordering
+- what the current tests guarantee
 
-For the bridge-side batch callback contract, see [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md). For the broader Qt progress-consumer flow, see [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md).
-
----
-
-## Current Ordering Boundary
-
-The active ordering boundary for Qt contributors is the Rust-owned Crash Log Scan Run bridge call.
-
-`ScanWorker::doScan(...)` calls `classic::scanner::scan_run_execute(...)` for the selected Crash Logs in [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp).
-
-That matters because the documented bridge behavior today is:
-
-- callback events can interleave across logs
-- returned `ScanRunLogResult` items are in completion order, not original input order
-- `input_index` is the stable correlation key back to the original request list
-
-Qt does not re-sort the returned batch vector into input order before processing it. Instead, it consumes the completion-order vector and uses `result.input_index` whenever it needs to recover the original log row.
+For live progress consumption, see [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md). For the CXX final observer and retained terminal contract, see [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md).
 
 ---
 
-## Where Completion-Order Results Enter The GUI Path
+## The Two Ordering Domains
 
-Completion-order results enter the active GUI path here in [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp):
+The final Crash Log Scan Run exposes two intentionally different orders.
+
+### Serialized execution-event order
+
+`ScanRunObserver` receives `DiscoveryCompleted`, `EffectiveConcurrencySelected`, and per-log events from one serial observer pump. Events from concurrently admitted logs may interleave. This order answers "what is happening now?"
+
+Every log-scoped event carries `discovery_index` and `crash_log`, so `BatchProgressModel` can maintain independent state for each discovered log without assuming that events arrive grouped by log.
+
+### Discovery-ordered terminal results
+
+`ScanRunContractExecutionResult.result.logs` is sorted by discovery index before crossing CXX. This order answers "what was the final outcome for each accepted log?"
+
+The Rust contract preserves terminal results in discovery order independently of event delivery or work completion order. Qt does not sort, clamp, or remap the returned vector. `presentScanRunExecution(...)` iterates it as received and retains each `log.discovery_index` in `ScanRunLogPresentation`.
+
+---
+
+## What `discovery_index` Means
+
+`discovery_index` is the zero-based position in Rust's accepted discovery sequence.
+
+- Standard runs use the accepted order produced by Rust-owned `LogCollector` discovery.
+- Targeted runs canonicalize, expand directories, de-duplicate accepted logs, and retain rejected `{path, reason}` entries in discovery data.
+- Rejected Targeted inputs do not receive per-log outcomes.
+
+Consequently, `discovery_index` is not a promise about the user's original Targeted list position. It identifies `discovery.accepted_logs`, which is the same committed discovery payload delivered by `DiscoveryCompleted` and retained on the terminal result.
+
+This replaces the legacy rule where `input_index` correlated completion-order results with a caller-supplied `log_paths` array.
+
+---
+
+## Where Terminal Results Enter Qt
+
+`ScanWorker::doScan(...)` receives one `ScanRunContractExecutionResult` from:
 
 ```cpp
-classic::scanner::ScanRunRequestDto request{};
-request.targeted_mode = targetedMode;
-request.log_paths = std::move(rustPaths);
-auto results = classic::scanner::scan_run_execute(request, progress_callback,
-                                                  *m_cancellationToken);
+scan_run_contract_execute(*request, *m_cancellation, &observer)
+```
 
-for (const auto& result : results) {
-    const int index = static_cast<int>(qMin(result.input_index, static_cast<uint32_t>(total - 1)));
-    const QString fallbackPath = logPaths[index];
-    ...
-    emit logScanned(index, result.success, resolvedPath);
+`presentScanRunExecution(...)` first preserves the result-level counts and run status, then projects logs in their existing order:
+
+```cpp
+for (const auto& log : result.logs) {
+    presentation.logs.append(presentLog(log));
 }
 ```
 
-Current source-backed behavior:
+The projection retains:
 
-- the loop runs in returned vector order, which is completion order
-- Autoscan Report writing and optional Unsolved Logs movement have already happened in Rust before each returned result
-- `logScanned(index, success, path)` is emitted in completion order too
-- the emitted `index` is derived from `result.input_index`, not from the loop position
+- `discoveryIndex`
+- `Succeeded`, `Failed`, or `CancelledBeforeStart` disposition
+- Crash Log and optional Autoscan Report paths
+- every structured analysis, report-write, and Unsolved Logs finalization failure
+- optional message and movement state
 
-So the GUI preserves original-row identity per result, but it does not preserve original-row notification order for batch completion.
-
----
-
-## How `result.input_index` Maps Back To The Original `QStringList`
-
-The original request order for the batch is the `QStringList logPaths` passed into `ScanWorker::doScan(...)`.
-
-When batch results come back, `ScanWorker` uses `result.input_index` to recover that original list position:
-
-1. clamp `result.input_index` with `qMin(..., total - 1)`
-2. use the resulting `index` to read `logPaths[index]`
-3. treat that original `QStringList` entry as the fallback path when `result.log_path` is empty
-4. emit `logScanned(index, scanSuccess, resolvedPath)` with that recovered original index
-
-Practical effect in current code:
-
-- batch result arrival order may differ from input order
-- per-result row identity still points back to the original `QStringList`
-- later UI consumers that care about row identity should use the emitted `index`, not assume the next completion belongs to the next input row
-
-Current boundary worth keeping clear:
-
-- this is correlation, not reordering
-- the worker does not rebuild an input-ordered `QVector` or `QStringList` of results before emitting notifications
+No `QStringList` lookup, fallback-path recovery, `qMin` clamp, or completion-order correlation remains in the active worker.
 
 ---
 
-## Progress Events Versus Result Notifications
+## Per-Log Qt Notifications
 
-The active GUI has two different ordering-sensitive streams.
+After terminal projection, `ScanWorker` iterates `terminal.logs` in discovery order.
 
-## Progress events
+- `CancelledBeforeStart` entries are skipped because they represent accepted work that Rust never admitted.
+- failures are logged with all projected structured failure messages
+- admitted succeeded or failed entries emit `logScanned(discoveryIndex, succeeded, crashLog)`
 
-Bridge progress enters Qt through the local `BatchProgressCallback` adapter in [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp).
+Therefore `ScanController::scanLogScanned(...)` notifications are discovery ordered for admitted outcomes, not completion ordered. There can be gaps in emitted indices when cancellation leaves accepted logs unstarted.
 
-Current responsibilities:
+`MainWindow::onCrashLogScanned(...)` currently ignores index, success, and path and uses each notification only to advance its completed display count. It does not update a row by index today. The signal still carries discovery identity for consumers that need it.
 
-- consume each `BatchProgressEvent` as it arrives
-- pass `event.input_index` into `BatchProgressModel::update(...)`
-- emit live `progress(...)` and `progressDetailed(...)` updates
+The terminal aggregate counts remain authoritative:
 
-Current ordering behavior:
+- `total` counts all accepted logs
+- `succeeded` and `failed` count admitted terminal work
+- `cancelled` counts accepted logs not started
 
-- event arrival order follows callback delivery, not original input order
-- `BatchProgressModel` uses `event.input_index` only as a per-log key for monotonic aggregate progress
-- live status text uses `event.log_path`, so the visible status line follows callback arrival order too
+On a completed run, the worker emits `finished(total, succeeded, failed)`. On cancellation, it emits the typed cancellation presentation instead of a completion summary.
 
-## Result notifications
-
-Returned scan-run results are handled later, after the bridge call returns its full `Vec<ScanRunLogResult>`.
-
-Current responsibilities:
-
-- update success and error counters
-- emit `logScanned(...)`
-- emit final `finished(...)` and explicit `100%` progress updates
-
-Current ordering behavior:
-
-- this path uses batch result completion order
-- original-row identity is recovered with `result.input_index`
-- `MainWindow::onCrashLogScanned(...)` therefore observes completion-order notifications tagged with original indices
-
-Short version:
-
-- progress events answer "what is happening right now?"
-- returned results answer "what finished, and which original input row did it belong to?"
+`NoCrashLogsFound` is also a typed expected terminal with discovery data and no per-log outcomes. The worker emits `noLogsFound(...)`, and the controller/MainWindow restore idle state through the dedicated no-logs route rather than treating the empty result as an infrastructure error.
 
 ---
 
-## What `ResultsController` Does And Does Not Assume
+## Progress Order Is Still Independent
 
-`ResultsController` is not part of the per-result correlation path.
+Live event order is not changed to match terminal order.
 
-Current behavior in [`classic-gui/src/controllers/resultscontroller.cpp`](../../classic-gui/src/controllers/resultscontroller.cpp):
+- the visible status line follows serialized observer delivery and may move between logs
+- `BatchProgressModel` keys state by `event.discovery_index`
+- `event.completed`/`event.total` are Rust-owned snapshots from execution order
+- the terminal `logScanned(...)` loop happens only after the final contract returns
 
-- it listens only to `SignalHub::scanStarted` and `SignalHub::scanCompleted`
-- it pauses directory watching during scans and refreshes the report list after completion
-- it discovers `*-AUTOSCAN.md` files from configured report directories
-- it globally sorts discovered report paths newest first by file modification time
+Do not infer terminal vector order from the last progress event, and do not delay or reorder observer events to mimic the discovery-ordered result vector.
 
-What it does not assume:
+---
 
-- it does not consume `input_index`
-- it does not consume `ScanWorker::logScanned(...)`
-- it does not assume reports arrive in original log input order
-- it does not assume reports arrive in bridge completion order either
+## Report-Directory Ordering Boundary
 
-Its ordering responsibility is narrower:
+Qt learns report directories at two points:
 
-- per-directory report discovery comes from `classic::files::discover_report_files(...)`
-- the controller then applies its own global newest-first sort across directories
+1. `DiscoveryCompleted` derives unique directories from Rust-accepted Crash Logs and publishes them through a blocking controller handoff before scan output is written.
+2. Terminal presentation derives unique directories from actual Autoscan Report paths and publishes them when non-empty.
 
-So `ResultsController` is a report-list refresh layer, not a scan-result ordering layer.
+Both helpers preserve first-seen order and de-duplicate paths case-insensitively. These lists configure where the Results controller watches; they are not the visible report sort order.
+
+`ResultsController` remains outside per-log result correlation. It:
+
+- listens to coarse `SignalHub` start/completion/no-logs/cancellation/error lifecycle
+- pauses watching while a scan runs and resumes afterward
+- discovers `*-AUTOSCAN.md` files from configured directories
+- globally sorts report paths newest-first by filesystem modification time
+
+The Results tab therefore represents report recency, not discovery order, event order, or execution completion order.
 
 ---
 
 ## Session-Scoped NEW Badge
 
-The Results list marks reports with a visible **NEW** indicator when their `*-AUTOSCAN.md` path was not present in the session baseline for its report directory.
+The report list's **NEW** marker also depends on directory baselines, not scan-result order.
 
-Current behavior in [`classic-gui/src/controllers/resultscontroller.cpp`](../../classic-gui/src/controllers/resultscontroller.cpp) and [`classic-gui/src/widgets/reportlistwidget.cpp`](../../classic-gui/src/widgets/reportlistwidget.cpp):
+- when a report directory is first configured, `ResultsController` seeds an in-memory baseline from paths already present
+- the blocking `DiscoveryCompleted` handoff lets newly discovered Targeted directories be configured and baselined before Rust writes reports
+- later refreshes compute new paths as current paths minus that directory's baseline using case-insensitive absolute-path comparison
+- an existing report overwritten by a scan is not NEW; a previously absent path remains NEW for the rest of the session
+- the baseline is session-only and resets on application restart
 
-- before computing NEW paths, the controller seeds an in-memory baseline set (`m_baselineReports`) for each configured report directory that has not been baselined yet
-- when a report directory is added later in the session, any reports already present in that directory are seeded before `newPaths` is computed
-- targeted scans publish their resolved report directories before the worker starts, allowing the Results controller to seed those directories before scan output is written
-- on every later refresh, `newPaths = current paths − baseline` (case-insensitive absolute-path comparison)
-- `ReportListWidget::setReports(paths, newPaths)` renders matching rows in bold with accent foreground, appends a ✨ marker to the label, and adds `(new this session)` to the tooltip
-- the badge is session-scoped only; it resets when the app restarts and is not cleared when a report is selected or viewed
-
-Why a snapshot instead of file modification time:
-
-- scan report generation overwrites existing `{stem}-AUTOSCAN.md` files via `fs::write`, so mtime cannot distinguish a genuinely new report from a re-generated one
-- a path present when its report directory baseline is seeded stays non-NEW even if overwritten during the session; a path absent from that directory baseline and created by a scan is NEW for the rest of the session
-
-Tests:
-
-- [`classic-gui/tests/test_resultscontroller.cpp`](../../classic-gui/tests/test_resultscontroller.cpp) — baseline, post-baseline, overwrite, and later-directory seeding cases
-- [`classic-gui/tests/test_reportlistwidget.cpp`](../../classic-gui/tests/test_reportlistwidget.cpp) — badge rendering and the existing no-coloring path when no new-set is supplied
+On completion, `SignalHub::scanCompleted` resumes watching and refreshes the report list. No-logs, cancellation, and error terminals also resume watching and refresh through the cleanup path, but they do not pretend the run completed successfully.
 
 ---
 
-## Current End-To-End Qt Behavior
+## Current End-To-End Behavior
 
-For multi-log crash scans today:
+For either Standard or Targeted GUI scans:
 
-1. `ScanController` gathers a `QStringList` of crash-log paths and starts `ScanWorker`
-2. `ScanWorker` submits that list to `scan_run_execute(...)`
-3. live progress events reach Qt in callback arrival order and are aggregated by `BatchProgressModel` using `event.input_index`
-4. returned scan-run results come back in completion order after Rust-owned Autoscan Report writing and Unsolved Logs decisions
-5. `ScanWorker` uses `result.input_index` to recover the original `QStringList` row for each completed result
-6. `MainWindow` receives live progress counts from `progressDetailed(...)` and later completion notifications from `logScanned(...)`
-7. `ResultsController` refreshes reports only after the scan-completed signal, then sorts report files by modification time
+1. `ScanController` forwards request facts without discovering logs.
+2. Rust performs discovery and commits an accepted sequence.
+3. `DiscoveryCompleted` initializes Qt totals, warnings, and report directories from that committed sequence.
+4. Per-log observer events arrive serially in execution order and correlate by `discovery_index`.
+5. Rust completes admitted report persistence and applicable movement before `LogFinished`.
+6. Rust sorts terminal per-log outcomes into discovery order.
+7. `presentScanRunExecution(...)` preserves that order and typed data.
+8. `ScanWorker` emits admitted `logScanned(...)` notifications in discovery order and skips `CancelledBeforeStart` outcomes.
+9. `ResultsController` later refreshes filesystem reports and applies its own newest-first order.
 
-Nothing in the active Qt path turns the batch result vector into an input-ordered sequence before side effects or signals occur.
+Qt owns none of the discovery, completion-order reconciliation, durable finalization, or terminal sorting in this sequence.
 
 ---
 
 ## What Current Tests Lock In
 
-## Direct coverage
+[`test_scanrunpresentation.cpp`](../../classic-gui/tests/test_scanrunpresentation.cpp) directly verifies that:
 
-[`classic-gui/tests/test_scan_progress_model.cpp`](../../classic-gui/tests/test_scan_progress_model.cpp) locks in the Qt-side use of `input_index` for progress aggregation indirectly through `BatchProgressModel` state updates.
+- terminal logs retain discovery order and discovery indices
+- succeeded, failed, and cancelled-before-start dispositions remain distinct
+- analysis, report-write, and Unsolved Logs finalization failures all survive presentation
+- aggregate counts, report paths, messages, and movement state are preserved
+- Targeted rejection paths stay paired with their Rust-provided reasons
 
-It currently verifies that:
+[`test_scan_progress_model.cpp`](../../classic-gui/tests/test_scan_progress_model.cpp) verifies the separate event-order domain: state is keyed by discovery index, interleaved logs advance independently, and late lower-rank events cannot regress visible progress.
 
-- visible progress stays monotonic across a single-log lifecycle
-- in-flight phase events raise aggregate progress before terminal completion
-- later phases contribute more than earlier phases
-- late lower-rank events are ignored after a terminal state
+[`test_scanrequestbuilder.cpp`](../../classic-gui/tests/test_scanrequestbuilder.cpp) verifies that Standard and Targeted discovery begin through distinct tagged requests and that Targeted rejection remains structured discovery data.
 
-[`classic-gui/tests/test_scan_settings_wiring.cpp`](../../classic-gui/tests/test_scan_settings_wiring.cpp) locks in the source-level wiring around the batch progress path.
-
-It currently verifies that:
-
-- `ScanWorker` uses `BatchProgressCallback`
-- `ScanWorker` consumes `BatchProgressEvent`
-- `ScanWorker` calls `scan_run_execute(...)`
-- `ScanWorker` forwards `event.completed` and `event.total` through `progressDetailed(...)`
-- single-log and multi-log scans both cross the same Rust Crash Log Scan Run seam
-
-[`classic-gui/tests/test_mainwindow_geometry.cpp`](../../classic-gui/tests/test_mainwindow_geometry.cpp) locks in the status-bar side of the live progress contract.
-
-It currently verifies that:
-
-- `MainWindow` stores separate crash-scan total and completed counters
-- `onCrashScanProgress(...)` updates those counters from structured `completed` and `total` arguments
-- status text reads tracked scan counts instead of inferring them from percent alone
-
-## Related but different coverage
-
-[`classic-gui/tests/test_resultscontroller.cpp`](../../classic-gui/tests/test_resultscontroller.cpp) covers report discovery, watcher refresh, auto-switching, and open-folder behavior.
-
-It does not lock in any batch-scan `input_index` correlation rule.
-
----
-
-## Where There Are No Dedicated Tests Yet
-
-There is currently no dedicated Qt test that proves all of these together at runtime:
-
-- returned batch results arrive in completion order and are processed in that order by `ScanWorker`
-- `result.input_index` is used to map each completion back to the original `QStringList`
-- `logScanned(index, ...)` preserves original-row identity even when completions are out of order
-- report file side effects occur in completion order while the Results tab later shows newest-first filesystem order
-  - report file side effects are now Rust-owned before results return; the Qt ordering concern is notification order, not file-write order
-
-There is also no dedicated `ResultsController` test asserting report-list ordering as a contributor-facing scan-order contract. The controller sorts by file modification time, but the existing tests focus on discovery and refresh behavior rather than a stable semantic ordering promise.
-
-So today the strongest source-backed statement is:
-
-- the code uses `input_index` for correlation
-- the tests cover progress-model monotonicity and wiring
-- there is not yet a focused integration test for out-of-order batch completion correlation in the Qt layer
+[`test_resultscontroller.cpp`](../../classic-gui/tests/test_resultscontroller.cpp) and [`test_reportlistwidget.cpp`](../../classic-gui/tests/test_reportlistwidget.cpp) cover directory baselines, NEW-path behavior, refresh, and badge rendering. Those tests do not redefine terminal scan-result order.
 
 ---
 
 ## Source-Backed Limits And Caveats
 
-- The bridge callback and returned result vector come from `scan_run_execute(...)` for both single-log and multi-log scans.
-- `ScanWorker` clamps `result.input_index` with `qMin(result.input_index, total - 1)` before indexing `logPaths`; this is a defensive bound, not a statement that out-of-range indices are expected.
-- `ScanWorker` uses `result.log_path` when present and falls back to the original `QStringList` entry when it is empty.
-- `ScanWorker` does not write Autoscan Reports or move Unsolved Logs; it observes the `ScanRunLogResult` produced after Rust-owned side effects.
-- `BatchProgressModel` uses `event.input_index` only to track per-log progress state; it does not expose or preserve a user-visible input order.
-- `MainWindow` progress text reflects callback arrival order for status messages and structured completed counts for scan totals; those are separate concepts.
-- `MainWindow::onCrashLogScanned(...)` increments the completed counter again as per-result notifications arrive, so contributors should not treat that counter as a one-source-of-truth mirror of bridge terminal events.
-- `ResultsController` refreshes reports only after `SignalHub::scanCompleted()` and then sorts by file modification time, so the Results tab does not represent original input order or bridge completion order as a documented contract.
-- `SignalHub` carries only coarse scan lifecycle signals for this flow: start, progress text, completion, and error. It does not carry `input_index` or per-result ordering metadata.
-
-These are current behavior notes, not a future ordering design.
+- Discovery order is a Rust contract for accepted logs, not necessarily filesystem lexical order or original Targeted-input order.
+- Event delivery may interleave even though terminal results are discovery ordered.
+- `logScanned(...)` excludes `CancelledBeforeStart`, so emitted notification indices need not be contiguous after cancellation.
+- The worker derives terminal report directories only from non-empty Autoscan Report paths; a failed log without a report contributes no directory at that stage.
+- Results-tab newest-first sorting depends on filesystem modification times and is intentionally separate from scan ordering.
+- `SignalHub` carries no discovery index or per-result DTO. Detailed identity stays on `ScanController::scanLogScanned(...)`.
 
 ---
 
 ## Contributor Rule Of Thumb
 
-- If you are debugging wrong-row updates in batch crash scans, start in [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp) and verify `result.input_index` handling first.
-- If you are debugging percent regressions or odd live progress, check [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp), not `ResultsController`.
-- If you are debugging why the Results tab order differs from scan completion order, check [`classic-gui/src/controllers/resultscontroller.cpp`](../../classic-gui/src/controllers/resultscontroller.cpp) and remember it sorts report files by modified time.
-- If you need a stronger Qt-side ordering guarantee, make it real in `ScanWorker` and tests first, then document it.
+- Use `discovery_index` to correlate final-contract events and accepted discovery data.
+- Trust the terminal `logs` vector's discovery order; do not add GUI sorting or original-input fallback logic.
+- Treat event order, terminal order, and Results-tab order as three separate contracts.
+- Do not reintroduce legacy `input_index` or completion-order result handling into the Qt worker.

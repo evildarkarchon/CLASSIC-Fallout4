@@ -35,3 +35,22 @@ set(CMAKE_LINKER "${CLASSIC_VCPKG_LLD_LINK}" CACHE FILEPATH "")
 set(CMAKE_RC_COMPILER "${CLASSIC_VCPKG_RC}" CACHE FILEPATH "")
 
 include("${_classic_vcpkg_root}/scripts/toolchains/windows.cmake")
+
+# CMake's RC dependency scanner preprocesses resources with clang-cl and forwards
+# vcpkg's rc.exe-only /c65001 switch as a compiler input path. Vcpkg also isolates
+# package environments, so spell out the SDK includes that rc.exe would normally
+# inherit through INCLUDE while avoiding that clang-cl 22 incompatibility.
+set(_classic_rc_flags "/DWIN32")
+if(DEFINED ENV{WindowsSdkDir} AND DEFINED ENV{WindowsSDKVersion})
+    cmake_path(CONVERT "$ENV{WindowsSdkDir}" TO_CMAKE_PATH_LIST _classic_windows_sdk NORMALIZE)
+    string(REGEX REPLACE "[/\\\\]+$" "" _classic_windows_sdk_version "$ENV{WindowsSDKVersion}")
+    foreach(_classic_sdk_include IN ITEMS um shared ucrt)
+        string(APPEND _classic_rc_flags
+            " /I\"${_classic_windows_sdk}/Include/${_classic_windows_sdk_version}/${_classic_sdk_include}\"")
+    endforeach()
+endif()
+if(DEFINED ENV{VCToolsInstallDir})
+    cmake_path(CONVERT "$ENV{VCToolsInstallDir}" TO_CMAKE_PATH_LIST _classic_vc_tools NORMALIZE)
+    string(APPEND _classic_rc_flags " /I\"${_classic_vc_tools}/include\"")
+endif()
+set(CMAKE_RC_FLAGS "${_classic_rc_flags}" CACHE STRING "" FORCE)

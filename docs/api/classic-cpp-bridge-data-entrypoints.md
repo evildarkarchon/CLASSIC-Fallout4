@@ -183,7 +183,7 @@ The native CLI scan adapter opens the Crash Log Scan and Game Setup DTOs once, r
 
 The native CLI YAML Data check/apply commands and `--check-app-update` both consume `UpdatePreferencesDto` rather than a raw key path. Disabled or degraded policy short-circuits before network work with the command's established exit behavior, while migration and validation diagnostics remain visible. The typed frontend DTO separately drives GUI geometry restoration.
 
-The native GUI's `GuiUserSettings` Qt adapter consumes `GuiSettingsSnapshotDto`. The Settings dialog submits every selected visible change through one preview and one revision-anchored commit; cancel performs no update, rejection writes nothing, and a concurrent edit returns an actionable conflict without overwriting the newer document. Unknown keys and unrelated invalid settings survive because Rust patches only accepted canonical fields. The accepted snapshot also produces an immutable `CrashLogScanLaunchSettings` value object. `MainWindow`, `ScanController`, and `ScanWorker` forward that value through `buildScanRunRequest(...)`, including the selected game's FormID database paths, without rereading User Settings or interpreting raw YAML during scan launch.
+The native GUI's `GuiUserSettings` Qt adapter consumes `GuiSettingsSnapshotDto`. The Settings dialog submits every selected visible change through one preview and one revision-anchored commit; cancel performs no update, rejection writes nothing, and a concurrent edit returns an actionable conflict without overwriting the newer document. Unknown keys and unrelated invalid settings survive because Rust patches only accepted canonical fields. The accepted snapshot also produces an immutable `CrashLogScanLaunchSettings` value object. `MainWindow`, `ScanController`, and `ScanWorker` forward that value through `buildScanRunRequest(...)`, including the selected game's FormID database paths, without rereading User Settings or interpreting raw YAML during scan launch. The builder returns one opaque tagged Standard or Targeted `ScanRunRequest`; Targeted constructors cannot express Standard Unsolved Logs movement, and FCX constructors require setup context. The GUI calls `scan_run_contract_execute(...)` once and consumes Rust-owned discovery, effective concurrency, serialized lifecycle events, cancellation, typed terminal states, and discovery-ordered per-log outcomes through the final observer/result contract.
 
 ### YAML file-cache helpers
 
@@ -630,9 +630,10 @@ FCX reset failure mapping:
 ### `scan_run_contract_execute(request, cancellation, observer) -> ScanRunContractExecutionResult`
 
 This is the final C++ projection of
-`classic_scanlog_core::scan_run::contract::execute(...)`. The native CLI uses
-this operation exclusively; the older `scan_run_execute(...)` surface below
-remains only for native consumers not yet migrated by their coordinated tickets.
+`classic_scanlog_core::scan_run::contract::execute(...)`. The native CLI and Qt
+GUI use this operation exclusively; the older `scan_run_execute(...)` surface
+below remains only for native consumers not yet migrated by their coordinated
+tickets.
 
 Requests are opaque Rust-owned `ScanRunRequest` values. C++ constructs them
 through exactly the same valid matrix as the core contract:

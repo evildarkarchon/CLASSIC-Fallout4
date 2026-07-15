@@ -35,9 +35,9 @@ Use this directory in this order:
 22. [`classic-scangame-core.md`](classic-scangame-core.md) - game-installation, archive, loose-file, and setup validation workflows
 23. [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md) - active C++ bridge entry points for path, game, and scangame workflows
 24. [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md) - active C++ bridge entry points for config, file I/O, database, and scanlog workflows
-25. [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md) - batch callback and final Crash Log Scan Run observer contracts for `classic::scanner`
-26. [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md) - how `classic-gui` consumes bridge scan progress through `ScanWorker`, `BatchProgressModel`, `ScanController`, and `MainWindow`
-27. [`classic-gui-scan-result-ordering.md`](classic-gui-scan-result-ordering.md) - current Qt-side behavior for completion-order batch results, `input_index` correlation, and Results-tab ordering boundaries
+25. [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md) - legacy batch callback and final Crash Log Scan Run observer contracts for `classic::scanner`
+26. [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md) - how `classic-gui` consumes final `ScanRunObserver` events through `ScanWorker`, `BatchProgressModel`, `ScanController`, and `MainWindow`
+27. [`classic-gui-scan-result-ordering.md`](classic-gui-scan-result-ordering.md) - current Qt-side behavior for discovery-ordered terminal outcomes, `discovery_index` event correlation, and Results-tab ordering boundaries
 28. [`binding-parity-overview.md`](binding-parity-overview.md) - complete C++ bridge, Node, and Python binding surface reference for all shared Rust crates
 29. [`cxx-parity-gate.md`](cxx-parity-gate.md) - contributor guide for the CXX parity gate that enumerates the bridge surface from `build.rs` and detects drift against a committed baseline
 30. [`node-python-contract-map.md`](node-python-contract-map.md) - where the active Node and Python public contracts, wrapper files, and parity artifacts live
@@ -79,9 +79,9 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `classic-scangame-core` handles game setup validation, archive/loose-file checks, and related install-scanning workflows
 - `classic-cpp-bridge-game-entrypoints.md` documents how the active C++ bridge narrows and forwards path/game/scangame Rust APIs
 - `classic-cpp-bridge-data-entrypoints.md` documents how the active C++ bridge narrows and forwards config/file/database/scanner Rust APIs plus bridge-local helper behavior
-- `classic-cpp-bridge-scan-progress-callback.md` documents the current `classic::scanner` batch progress callback contract, event ordering expectations, and bridge-local drain behavior
-- `classic-gui-scan-progress-consumer.md` documents how the active Qt frontend consumes that batch callback contract and turns it into visible progress and status-bar state
-- `classic-gui-scan-result-ordering.md` documents how the active Qt frontend handles completion-order batch results, uses `input_index` to recover original row identity, and keeps Results-tab ordering separate from scan ordering
+- `classic-cpp-bridge-scan-progress-callback.md` distinguishes the temporary legacy batch callback contract from the final serialized `ScanRunObserver` contract
+- `classic-gui-scan-progress-consumer.md` documents how the active Qt frontend consumes final discovery, concurrency, and per-log observer events and turns them into visible progress and status-bar state
+- `classic-gui-scan-result-ordering.md` documents how the active Qt frontend preserves discovery-ordered terminal outcomes, correlates events by `discovery_index`, and keeps Results-tab ordering separate from scan ordering
 - `binding-parity-overview.md` provides the complete per-crate binding surface reference for all shared Rust crates across C++, Node, and Python
 - `node-python-contract-map.md` points contributors to the active Node and Python contract files, wrapper modules, and parity-report entry points
 - `binding-contract-refresh-note.md` explains the current maintainer expectation for refreshing C++ baseline, Node `index.d.ts`, and Python `.pyi` contract artifacts separately or in the same change

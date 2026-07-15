@@ -54,6 +54,8 @@ ResultsController::ResultsController(SignalHub* signalHub, QTabWidget* tabWidget
     if (m_signalHub) {
         connect(m_signalHub, &SignalHub::scanStarted, this, &ResultsController::onScanStarted);
         connect(m_signalHub, &SignalHub::scanCompleted, this, &ResultsController::onScanCompleted);
+        connect(m_signalHub, &SignalHub::scanNoLogsFound, this, &ResultsController::onScanError);
+        connect(m_signalHub, &SignalHub::scanCancelled, this, &ResultsController::onScanError);
         connect(m_signalHub, &SignalHub::scanError, this, &ResultsController::onScanError);
     }
 

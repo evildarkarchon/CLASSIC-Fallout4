@@ -122,6 +122,16 @@ function ConvertTo-TestNameList {
 function Get-WindowsResourceCompiler {
     param([string]$ClangClPath)
 
+    # VS Dev Shell can publish the SDK root/version without adding its x64 bin directory to PATH.
+    # Prefer that exact SDK rc.exe so resource compilation uses the validated SDK toolchain.
+    if (Test-WindowsSdkEnvironment) {
+        $sdkVersion = $env:WindowsSDKVersion.TrimEnd("\\")
+        $sdkRcPath = Join-Path $env:WindowsSdkDir "bin\$sdkVersion\x64\rc.exe"
+        if (Test-Path $sdkRcPath) {
+            return Get-Command $sdkRcPath -ErrorAction SilentlyContinue
+        }
+    }
+
     $rcCommands = @(Get-Command rc.exe -All -ErrorAction SilentlyContinue | Where-Object { $_.Source })
     $windowsSdkRc = $rcCommands |
         Where-Object { $_.Source -match '\\Windows Kits\\10\\bin\\[^\\]+\\x64\\rc\.exe$' } |

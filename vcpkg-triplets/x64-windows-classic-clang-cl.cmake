@@ -6,8 +6,8 @@ set(VCPKG_LIBRARY_LINKAGE dynamic)
 # tool paths instead of the whole PATH to avoid picking up unrelated tools.
 # The Windows SDK version changes SDK-provided import-library packages such as
 # opengl, so keep it in the ABI while leaving the installation root untracked.
-set(VCPKG_ENV_PASSTHROUGH CLASSIC_CLANG_CL CLASSIC_LLD_LINK CLASSIC_RC WindowsSDKVersion)
-set(VCPKG_ENV_PASSTHROUGH_UNTRACKED CLASSIC_DUMPBIN WindowsSdkDir)
+set(VCPKG_ENV_PASSTHROUGH CLASSIC_CLANG_CL CLASSIC_LLD_LINK CLASSIC_RC VCToolsVersion WindowsSDKVersion)
+set(VCPKG_ENV_PASSTHROUGH_UNTRACKED CLASSIC_DUMPBIN VCToolsInstallDir WindowsSdkDir)
 # vcpkg_copy_pdbs invokes dumpbin by name after the portfile runs; expose only
 # the validated Visual Studio tool directory instead of passing the full PATH.
 if(DEFINED ENV{CLASSIC_DUMPBIN} AND NOT "$ENV{CLASSIC_DUMPBIN}" STREQUAL "")

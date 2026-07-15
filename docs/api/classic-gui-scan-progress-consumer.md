@@ -1,18 +1,15 @@
-# `classic-gui` Scan Progress Consumer Flow
+# `classic-gui` Final Scan Run Progress Consumer
 
-Contributor-facing documentation for how the active Qt frontend consumes the Rust/C++ batch scan progress callback contract through:
+Contributor-facing documentation for how the active Qt frontend consumes the final Rust-owned Crash Log Scan Run contract through:
 
-- [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp)
-- [`classic-gui/src/workers/scanworker.h`](../../classic-gui/src/workers/scanworker.h)
 - [`classic-gui/src/workers/scanrequestbuilder.cpp`](../../classic-gui/src/workers/scanrequestbuilder.cpp)
-- [`classic-gui/src/workers/scanrequestbuilder.h`](../../classic-gui/src/workers/scanrequestbuilder.h)
+- [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp)
 - [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp)
-- [`classic-gui/src/workers/scanprogressmodel.h`](../../classic-gui/src/workers/scanprogressmodel.h)
+- [`classic-gui/src/workers/scanrunpresentation.cpp`](../../classic-gui/src/workers/scanrunpresentation.cpp)
 - [`classic-gui/src/controllers/scancontroller.cpp`](../../classic-gui/src/controllers/scancontroller.cpp)
-- [`classic-gui/src/controllers/scancontroller.h`](../../classic-gui/src/controllers/scancontroller.h)
 - [`classic-gui/src/app/mainwindow.cpp`](../../classic-gui/src/app/mainwindow.cpp)
 
-This page documents the current GUI consumer behavior visible in source today for the active Rust/C++/Qt path. It does not describe deprecated `classic-pybridge` behavior and it does not invent a future UI contract.
+This page documents the active `ScanRunObserver` path. The GUI no longer consumes the legacy `ScanRunRequestDto`, `ScanBatchProgressCallback`, `BatchProgressEvent`, or completion-order `ScanRunLogResult` contract.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
@@ -20,245 +17,197 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 
 ## Purpose And Scope
 
-Use this page when you need to understand:
+Use this page to understand:
 
-- where `BatchProgressEvent` enters `classic-gui`
-- how `BatchProgressCallback`, `BatchProgressModel`, `ScanController`, and `MainWindow` divide responsibility
-- which callback fields the GUI uses directly and which ones it only uses indirectly
-- how visible percent progress stays monotonic even when callback ordering interleaves across logs
-- what the current Qt-side tests actually lock in
+- how Qt constructs only valid tagged Standard or Targeted requests
+- where Rust-owned discovery, concurrency, and lifecycle events enter Qt
+- how `BatchProgressModel` projects serialized final-contract events into visible progress
+- how cancellation and terminal statuses become Qt signals
+- which policies remain in Rust and which transformations are presentation-only
 
-For the bridge-side contract itself, see [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md). For the wider C++ scan entry points, see [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md). For the Qt-side result-ordering and `input_index` correlation rules that happen after progress delivery, see [`classic-gui-scan-result-ordering.md`](classic-gui-scan-result-ordering.md).
+For the CXX observer contract, see [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md). For discovery-ordered terminal results, see [`classic-gui-scan-result-ordering.md`](classic-gui-scan-result-ordering.md).
 
 ---
 
-## Where The Callback Enters Qt
+## Request Construction Boundary
 
-The callback enters the GUI in the local adapter class `BatchProgressCallback` inside [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp).
+`ScanController::startScan(...)` does not collect Crash Logs. It captures the immutable, revision-approved `CrashLogScanLaunchSettings`, the runtime FCX XSE-log hint, and the optional Targeted input list, then invokes `ScanWorker::doScan(...)` on a worker thread.
 
-`ScanWorker::doScan(...)` accepts one immutable `CrashLogScanLaunchSettings` value derived from the revision-cohesive GUI User Settings snapshot. It uses `buildScanRunRequest(...)` to combine those accepted settings with runtime-only inputs, then calls the callback-enabled `classic::scanner::scan_run_execute(...)` bridge entry point for both single-log and multi-log Crash Log Scan Runs. Neither the worker nor the request builder rereads User Settings or interprets raw YAML.
+`buildScanRunRequest(...)` projects those values into one opaque Rust-owned `ScanRunRequest`:
 
-The callback adapter is intentionally small:
+- no Targeted inputs constructs Standard intent with a `ScanRunStandardSourceDto`
+- one or more Targeted inputs constructs Targeted intent with a `ScanRunTargetedSourceDto`
+- Standard requests receive either `LeaveInPlace` or `MoveToConfiguredOrDefault` Unsolved Logs intent
+- Targeted constructors have no Unsolved Logs parameter, so persisted Standard movement settings cannot leak into a Targeted run
+- FCX requests use the corresponding `_with_fcx` constructor and must carry `ScanRunSetupContextDto`
+- a positive configured concurrency becomes an explicit value; a non-positive GUI setting omits it and selects Rust's adaptive policy
 
-- it owns a mutable `BatchProgressModel`
-- it passes each `BatchProgressEvent` into `BatchProgressModel::update(...)`
-- it converts `event.log_path` into a `QString` status string
-- it forwards the returned visible percent plus `event.completed` and `event.total` through `ScanWorker` signals
-
-Current signal fan-out from the callback adapter:
+The worker then calls exactly one operation:
 
 ```cpp
-Q_EMIT m_worker.progress(percent, status);
-Q_EMIT m_worker.progressDetailed(percent, status, completed, total);
+scan_run_contract_execute(*request, *m_cancellation, &observer)
 ```
 
----
-
-## Current End-To-End Flow
-
-## 1. `ScanWorker` owns Rust orchestration and callback adaptation
-
-[`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp) is the only active Qt file that implements `classic::scanner::ScanBatchProgressCallback`.
-
-Current worker responsibilities:
-
-- pass selected Crash Logs and the immutable typed scan-launch settings to `buildScanRunRequest(...)`
-- pass the complete `ScanRunRequestDto` to `scan_run_execute(...)`; configured FormID paths, Unsolved behavior, concurrency, game/version, and setup facts come from the accepted launch object
-- adapt bridge callback events into Qt signals
-- reset and pass the Rust-owned scan cancellation token, then cancel that token from `requestCancel()`
-- map completion-order `ScanRunLogResult` values back to original log rows with `result.input_index`
-- emit Qt signals from Rust-owned Crash Log Scan Run outcomes
-
-Important boundary:
-
-- callback events drive live progress updates
-- `logScanned(...)` and `finished(...)` happen later, while iterating returned scan-run results; Autoscan Report writing and Unsolved Logs movement have already happened in Rust
-
-## 2. `BatchProgressModel` turns event stream state into visible percent
-
-[`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp) does not expose raw bridge events to the UI. It keeps per-log state in a `QHash<quint32, LogProgressState>` keyed by `event.input_index` and returns one aggregate percentage for the whole batch.
-
-Current rank ladder:
-
-- `Queued` -> rank `0`
-- `Started` -> rank `1`
-- `Phase + Setup` -> rank `2`
-- `Phase + Parse` -> rank `3`
-- `Phase + Analyze` -> rank `4`
-- `Phase + Finalize` -> rank `5`
-- `Completed` or `Failed` -> rank `6`
-
-Current per-log contribution weights:
-
-- `Queued` -> `0.00`
-- `Started` -> `0.08`
-- `Setup` -> `0.15`
-- `Parse` -> `0.40`
-- `Analyze` -> `0.82`
-- `Finalize` -> `0.95`
-- terminal `Completed` or `Failed` -> `1.00`
-
-The model sums the latest accepted contribution for each known log, divides by `m_totalLogs`, converts to `0..100`, and then clamps the visible percent with `std::max(m_percent, computedPercent)`.
-
-## 3. `ScanController` relays worker signals, not raw callback events
-
-[`classic-gui/src/controllers/scancontroller.cpp`](../../classic-gui/src/controllers/scancontroller.cpp) never sees `BatchProgressEvent` directly.
-
-Current controller responsibilities in this flow:
-
-- collect candidate crash logs before creating the worker thread
-- retain and forward the `CrashLogScanLaunchSettings` value supplied by `MainWindow` without reopening User Settings
-- emit `scanStarted()` and `scanDiscovered(int)`
-- connect `ScanWorker::progressDetailed` to `ScanController::scanProgress`
-- connect `ScanWorker::logScanned` to `ScanController::scanLogScanned`
-- connect `ScanWorker::finished` and `ScanWorker::error` to controller completion/error handling
-
-`ScanController::scanProgress` therefore carries the already-transformed Qt payload:
-
-- `float percent`
-- `QString status`
-- `int completed`
-- `int total`
-
-## 4. `MainWindow` turns structured progress into status-bar UI state
-
-[`classic-gui/src/app/mainwindow.cpp`](../../classic-gui/src/app/mainwindow.cpp) connects `ScanController::scanProgress` to `MainWindow::onCrashScanProgress(...)`.
-
-Current main-window responsibilities:
-
-- start crash-scan UI state in `onScanCrashLogs()`
-- derive one `CrashLogScanLaunchSettings` value from the cached cohesive GUI settings snapshot and pass it to `ScanController`
-- keep `m_crashScanTimer`, `m_crashScanTotalLogs`, and `m_crashScanLogsCompleted`
-- update those counters from structured progress in `onCrashScanProgress(...)`
-- render percent, scanned-log counts, elapsed time, and status text in `onScanProgress(...)`
-- update completion counters again from `scanDiscovered`, `scanLogScanned`, and `scanFinished`
-- reset button/progress-bar state on completion or error
-
-The visible status bar is therefore driven by two streams:
-
-- live callback-derived `scanProgress(percent, status, completed, total)` updates
-- later per-result `scanLogScanned(...)` notifications as the worker iterates returned batch results
+Rust owns discovery, Targeted rejection policy, effective-concurrency selection, scheduling, FCX setup evaluation, Autoscan Report persistence, Unsolved Logs finalization, cancellation admission seams, aggregate counts, and terminal ordering. Qt supplies facts and presents the resulting contract; it does not repeat those decisions.
 
 ---
 
-## What The GUI Propagates And Transforms
+## Where Events Enter Qt
 
-## Fields used directly from `BatchProgressEvent`
+The local `GuiScanRunObserver` in [`scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp) implements `classic::scanner::ScanRunObserver`.
 
-The callback adapter currently uses these bridge fields directly:
+The observer:
 
-- `event.input_index` - used only inside `BatchProgressModel` as the stable per-log key
-- `event.log_path` - converted to `QString` and shown as the status text
-- `event.completed` - forwarded as the structured completed-log count
-- `event.total` - forwarded as the structured total-log count
-- `event.event_kind` - ranked by `BatchProgressModel`
-- `event.phase` - ranked and weighted by `BatchProgressModel`
+- receives `ScanRunContractEvent` values serially in execution order
+- owns a mutable `BatchProgressModel`
+- emits worker Qt signals from the synchronous worker-thread call
+- is `noexcept`, catches every Qt-side presentation exception, records delivery failure, and explicitly requests safe cancellation
 
-## Fields not surfaced as first-class UI state
+Observer delivery is non-controlling. A presentation failure does not become a Rust scan failure and no exception crosses CXX. After execution returns, `ScanWorker` checks `deliveryFailed()` and emits an adapter-local error instead of presenting a possibly incomplete event stream as a successful run.
 
-The adapter does not currently expose these as distinct UI concepts:
-
-- `event.success` - ignored for live progress; success and failure only affect terminal result handling later
-- raw `event_kind` names - the UI does not display `Queued`, `Started`, `Phase`, `Completed`, or `Failed` directly
-- raw phase names - the UI does not display `Setup`, `Parse`, `Analyze`, or `Finalize` directly
-
-## Transformations applied on the Qt side
-
-Current transformations from bridge event to UI state:
-
-1. `event.log_path` becomes a `QString status`
-2. `event` becomes a monotonic aggregate `float percent` through `BatchProgressModel::update(...)`
-3. `event.completed` and `event.total` become `int completed` and `int total` in `progressDetailed(...)`
-4. `MainWindow::onCrashScanProgress(...)` clamps `completed` to `total` when `total > 0`
-5. `MainWindow::onScanProgress(...)` formats status text such as `Scanning: 42% | 1/3 logs scanned | elapsed 2.4s | ...`
+The worker owns one monotonic `ScanRunCancellation`. `requestCancel()` calls `scan_run_cancellation_cancel(...)`; the GUI does not poll or decide which queued work may still start.
 
 ---
 
-## How Monotonic Visible Progress Is Enforced
+## Event-To-Signal Mapping
 
-The GUI enforces monotonic visible progress in `BatchProgressModel`, not in `MainWindow`.
+### `DiscoveryCompleted`
 
-There are two layers to that enforcement:
+`BatchProgressModel` sets its total from `event.discovery.accepted_logs.size()`. The worker then emits:
 
-- per log, a new event is accepted only when its rank is greater than or equal to the stored rank for that `input_index`
-- across the whole batch, `m_percent` is updated with `std::max(m_percent, computedPercent)` so the returned percent never decreases even if later events would recompute to a lower value
+- `discoveryCompleted(total, rejectionWarning, reportDirectories)`
+- `progress(0, "Found ...")`
+- `progressDetailed(0, "Found ...", 0, total)`
 
-Practical consequences of the current model:
+`formatScanRunRejections(...)` preserves every Rust-provided Targeted `{path, reason}` pair. It formats a warning but does not reapply rejection policy. `scanRunReportDirectories(...)` derives case-insensitively de-duplicated directories from the Rust-accepted logs.
 
-- late regressions such as `Phase + Parse` after `Completed` are ignored for that log
-- interleaved updates from different logs can still raise the aggregate percent smoothly
-- the visible percent is an intentionally weighted approximation of batch progress, not an exact projection of bridge `completed`
-- `Completed` and `Failed` both contribute `1.00`, so visible percent reaches full contribution for either terminal outcome
+`ScanController` receives discovery through a `Qt::BlockingQueuedConnection`, then emits `scanDiscovered`, optional `scanWarning`, and `scanReportDirectoriesResolved`. This lets the UI install report-directory watching and session baselines before the worker continues into report-producing scan work.
 
-This matches the bridge contract better than assuming callback order alone is safe to show directly.
+### `EffectiveConcurrencySelected`
+
+The model stores `event.effective_concurrency`. The worker emits:
+
+- `effectiveConcurrencySelected(...)`
+- `progress(...)`
+- `progressDetailed(...)`
+
+The value is informational: Qt reports the exact Rust-selected admission limit and does not select or adjust concurrency itself.
+
+### Per-log events
+
+`LogQueued`, `LogStarted`, `LogPhase`, and `LogFinished` update the progress model and emit both progress signals. Status presentation is event-aware:
+
+- `LogQueued` -> `Queued: <path>`
+- `LogStarted` -> `Scanning: <path>`
+- `LogPhase` -> `setup`, `parse`, `analysis`, or `finalization` plus the path
+- `LogFinished` -> `Finished: <path>`
+
+The final-contract correlation key is `event.discovery_index`, not the legacy `input_index`. `event.completed` and `event.total` remain Rust-owned lifecycle snapshots forwarded through `progressDetailed(...)`.
+
+The observer does not turn `LogFinished.disposition` into success/error UI state. Structured disposition and failure-stage presentation happens from the terminal execution result after the call returns.
 
 ---
 
-## What The Current Tests Assert
+## Visible Progress Model
 
-## `test_scan_progress_model.cpp`
+`BatchProgressModel` is initialized by `DiscoveryCompleted`, not by a GUI-collected input count. It stores per-log state in a `QHash<quint64, LogProgressState>` keyed by `discovery_index`.
 
-[`classic-gui/tests/test_scan_progress_model.cpp`](../../classic-gui/tests/test_scan_progress_model.cpp) is the direct behavioral test for `BatchProgressModel`.
+Current rank and contribution ladder:
 
-It currently asserts that:
+| Event | Rank | Contribution |
+|---|---:|---:|
+| `LogQueued` | 0 | 0.00 |
+| `LogStarted` | 1 | 0.08 |
+| `LogPhase(Setup)` | 2 | 0.15 |
+| `LogPhase(Parse)` | 3 | 0.40 |
+| `LogPhase(Analyze)` | 4 | 0.82 |
+| `LogPhase(Finalize)` | 5 | 0.95 |
+| `LogFinished` | 6 | 1.00 |
 
-- a single log lifecycle from `Queued` through `Completed` never decreases visible percent
-- in-flight `Phase` updates advance visible batch progress before terminal completion
-- later phases contribute more than earlier phases for a log in progress
-- a late lower-rank phase after terminal completion is ignored
-- a one-log terminal completion produces `100.0f`
+`DiscoveryCompleted` and `EffectiveConcurrencySelected` initialize run state without adding per-log contribution.
 
-## `test_scan_settings_wiring.cpp`
+For each log, only an event at the same or a later rank may replace stored state. The model sums contributions, divides by the discovered total, and applies `std::max(m_percent, computedPercent)`. Therefore:
 
-[`classic-gui/tests/test_scan_settings_wiring.cpp`](../../classic-gui/tests/test_scan_settings_wiring.cpp) keeps source-text checks for the remaining callback and signal wiring. Typed settings propagation is covered by behavior tests instead of source-string guards.
+- interleaved serialized events can advance different logs independently
+- a late lower-rank event cannot regress a finished log
+- failed and successful `LogFinished` events both represent completed work and contribute `1.00`
+- visible percent is a weighted presentation estimate, while completed/total are separate Rust lifecycle counts
 
-It currently asserts that:
+---
 
-- `ScanWorker` defines `BatchProgressCallback` and consumes `BatchProgressEvent`
-- `ScanWorker` calls `scan_run_execute(...)`
-- `ScanWorker` forwards `event.completed` and `event.total` into `progressDetailed(percent, status, completed, total)`
-- `ScanWorker` delegates both single-log and multi-log runs to Rust
-- `MainWindow` connects `ScanController::scanProgress` to `MainWindow::onCrashScanProgress(...)`
-- `MainWindow::onCrashScanProgress(...)` receives structured `completed` and `total` counts
+## Controller And Main-Window Flow
 
-## Typed scan-launch behavior tests
+`ScanController` never receives a raw bridge event. It relays presentation-ready worker signals:
 
-[`classic-gui/tests/test_guiusersettings.cpp`](../../classic-gui/tests/test_guiusersettings.cpp) verifies that all GUI-consumed settings groups come from one revision and that the selected game's FormID paths enter an immutable `CrashLogScanLaunchSettings` value. [`classic-gui/tests/test_scanrequestbuilder.cpp`](../../classic-gui/tests/test_scanrequestbuilder.cpp) then verifies the complete request mapping for game/version, FCX, simplification, FormID Value Lookup and database paths, custom input, Unsolved behavior, concurrency, setup paths, targeted inputs, and runtime log paths. Until a fully injectable MainWindow-to-worker behavior seam exists, narrow source guards remain for the three production handoffs: MainWindow to controller, controller callback to worker, and worker to the behavior-tested request builder.
+- `scanDiscovered(total)`
+- `scanConcurrencySelected(concurrency)`
+- `scanProgress(percent, status, completed, total)`
+- `scanLogScanned(discoveryIndex, success, path)`
+- `scanFinished(...)`, `scanNoLogsFound(...)`, `scanCancelled(...)`, or `scanError(...)`
+- `scanWarning(...)` and `scanReportDirectoriesResolved(...)`
 
-## `test_mainwindow_geometry.cpp`
+`MainWindow::onCrashScanProgress(...)` updates its displayed count monotonically from structured completed/total values, then formats percent, elapsed time, counts, and event status. `onCrashScanDiscovered(...)` initializes the accepted-log total. The main window does not infer a log count from percentage and does not see raw observer tags.
 
-[`classic-gui/tests/test_mainwindow_geometry.cpp`](../../classic-gui/tests/test_mainwindow_geometry.cpp) includes one progress-related UI contract check.
+`SignalHub` receives only coarse lifecycle presentation: start, two-field progress, completion, no-logs, cancellation, and error. Final-contract discovery indices and typed terminal data stay on the worker/controller path.
 
-It currently asserts that:
+---
 
-- `MainWindow` stores crash-scan timer and count fields in `mainwindow.h`
-- `onCrashScanProgress(...)` updates `m_crashScanLogsCompleted` from the structured `completed` and `total` arguments
-- `onScanProgress(...)` formats status text using tracked scanned-log counts and elapsed time
-- crash-scan progress handling does not infer completed-log counts from percent alone
+## Terminal Presentation And Cancellation
+
+After `scan_run_contract_execute(...)` returns, `presentScanRunExecution(...)` maps the typed execution envelope into `ScanRunTerminalPresentation` without flattening distinct lifecycle states.
+
+Terminal mapping:
+
+- `Completed` emits an explicit `100% / Complete` progress update and `finished(total, succeeded, failed)`
+- `CancelledBeforeDiscovery` emits `cancelled(...)` and has no discovery payload
+- `Cancelled` emits `cancelled(...)` with completed and not-started counts
+- `NoCrashLogsFound` emits the dedicated `noLogsFound(...)` signal with searched locations when available; the controller relays `scanNoLogsFound(...)`, and MainWindow restores idle state without presenting an error dialog
+- `SetupFailed` emits `error(...)` with structured setup details
+- a typed infrastructure error emits `error(...)` with its stage, message, and optional path
+
+Cancellation after discovery does not interrupt admitted work. Rust finishes durable report/movement handling for admitted logs, prevents later admissions at safe seams, and returns non-started accepted logs as `CancelledBeforeStart`. The worker skips those entries when emitting `logScanned(...)`.
+
+The presentation layer projects:
+
+- the run-scoped FCX setup status, message, rendered report, checks, proposed path updates, complete configuration-issue severity/file/section/setting/current/recommended/description data, actions, and fatal errors
+- per-log `Succeeded`, `Failed`, and `CancelledBeforeStart` dispositions
+- all applicable `Analysis`, `ReportWrite`, and `UnsolvedLogsFinalization` failures
+- Autoscan Report paths and movement state
+- discovery-ordered terminal logs and Rust-owned aggregate counts
+
+For completed or cancelled work, report directories are also derived from terminal Autoscan Report paths and emitted through `reportDirectoriesResolved(...)` when non-empty.
+
+---
+
+## What Current Tests Assert
+
+[`test_scanrequestbuilder.cpp`](../../classic-gui/tests/test_scanrequestbuilder.cpp) behavior-tests the tagged constructor boundary: empty Targeted input creates Standard discovery, while Targeted input creates Targeted discovery with structured rejections and cannot express Standard movement.
+
+[`test_scan_progress_model.cpp`](../../classic-gui/tests/test_scan_progress_model.cpp) uses `ScanRunContractEvent` directly. It verifies discovery/concurrency initialization, monotonic serialized lifecycle progress, interleaved per-log advancement, late-phase suppression, and full work contribution for a failed `LogFinished` event.
+
+[`test_scanrunpresentation.cpp`](../../classic-gui/tests/test_scanrunpresentation.cpp) verifies paired Targeted rejections, report-directory de-duplication, discovery-ordered typed dispositions and failure stages, every expected lifecycle status, complete FCX setup presentation including configuration-issue current/recommended values, infrastructure-stage/path preservation, and invalid-envelope handling.
+
+[`test_scanworker_cancellation.cpp`](../../classic-gui/tests/test_scanworker_cancellation.cpp) verifies monotonic/idempotent cancellation and that cancellation requested before execution reaches Rust's `CancelledBeforeDiscovery` lifecycle rather than a generic error.
+
+Narrow source-wiring checks remain for MainWindow/controller presentation handoffs, but legacy worker lifecycle assertions have been replaced by the behavior tests above.
 
 ---
 
 ## Source-Backed Limits And Caveats
 
-- The bridge callback path is used for both single-log and multi-log scans in `ScanWorker` through `scan_run_execute(...)`.
-- `ScanController` and `MainWindow` do not consume raw `BatchProgressEvent`; they only see Qt signals emitted by `ScanWorker`.
-- `MainWindow`, `ScanController`, and `ScanWorker` share one accepted `CrashLogScanLaunchSettings` value for a run; scan launch does not reopen User Settings or rebuild preferences from raw YAML.
-- The GUI uses `event.log_path` as the live status string, so visible status order follows callback arrival order rather than original input order.
-- The GUI uses `event.input_index` only inside `BatchProgressModel` and later for `BatchScanResult` correlation; `MainWindow` never sees that key directly.
-- Visible percent and visible completed-log counts come from different sources: percent is the weighted aggregate from `BatchProgressModel`, while completed counts come from bridge `event.completed` and later `logScanned(...)`/`finished(...)` signals.
-- `MainWindow::onCrashLogScanned(...)` increments the completed counter again as batch results are processed. That is harmless because `onCrashScanProgress(...)` and `onScanCompleted(...)` clamp or overwrite the value, but contributors should not treat those counters as a one-source-of-truth mirror of bridge state.
-- The Qt side does not currently expose `event.success`, raw phase names, or raw event-kind names to the user interface.
-- `BatchProgressModel` treats `Completed` and `Failed` identically for percentage contribution, so percent tracks work completion, not success rate.
-- `ScanWorker` emits an explicit final `100%` / `Complete` update after iterating all batch results, even though the callback path may already have reached `100%`.
-- `ScanWorker` no longer writes Autoscan Reports or moves Unsolved Logs; those side effects are owned by Rust `CrashLogScanRun` before each `ScanRunLogResult` reaches Qt.
-
-These are current consumer behavior notes, not a future UI design.
+- Observer delivery is serialized but occurs during the synchronous worker-thread call; it is not a UI-thread callback guarantee.
+- Status text follows serialized execution-event order, which may interleave across discovered logs.
+- `discovery_index` identifies Rust's accepted discovery sequence. It is not necessarily an index into the user's original Targeted input list because inputs may expand, de-duplicate, or be rejected during discovery.
+- `LogFinished` reaches the observer only after per-log report writing and applicable movement are final, but Qt waits for the terminal result to present success/failure details.
+- `MainWindow::onCrashLogScanned(...)` currently uses notifications as a count increment and ignores their index, success, and path arguments.
+- The worker emits an explicit final `100%` update only for `Completed`; cancellation and error terminals restore UI state through their distinct signals.
+- No GUI layer resets the final-contract cancellation object or the legacy process-global FCX handler.
 
 ---
 
 ## Contributor Rule Of Thumb
 
-- If callback sequencing changes in Rust, check whether `BatchProgressModel` ranking and weighting still make sense for the GUI.
-- If you change `BatchProgressEvent` fields or semantics, update both [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md) and this page in the same change.
-- If the status bar counts look wrong, inspect both `progressDetailed(...)` emission in [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp) and counter handling in [`classic-gui/src/app/mainwindow.cpp`](../../classic-gui/src/app/mainwindow.cpp).
-- If you need stronger frontend guarantees than weighted monotonic progress, make them real in code and tests first, then document them.
+- Change request policy in Rust and its tagged constructors, not by adding GUI flag combinations.
+- When final observer tags or fields change, update the bridge observer documentation, `BatchProgressModel`, presentation tests, and this page together.
+- Debug totals and accepted paths from `DiscoveryCompleted`; debug concurrency from `EffectiveConcurrencySelected`; debug success/failure details from the terminal execution result.
+- Do not reintroduce `BatchProgressEvent`, `input_index`, completion-order result correlation, GUI discovery, or GUI-owned durable finalization into this flow.

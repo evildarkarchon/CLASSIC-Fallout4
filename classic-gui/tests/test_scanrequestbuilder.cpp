@@ -1,36 +1,75 @@
 #include "core/guiusersettings.h"
 #include "workers/scanrequestbuilder.h"
 
-#include <QFile>
 #include <QTemporaryDir>
 #include <QtTest>
 
+#include "classic_cxx_bridge/scanner.h"
+
+#include <cstddef>
+#include <string>
+
 namespace {
 
-/// Writes one persisted typed settings fixture for the adapter-to-request behavior test.
-void writeSettings(const QString& root)
+/// Creates representative accepted GUI settings for tagged request behavior tests.
+classic::gui::CrashLogScanLaunchSettings makeSettings()
 {
-    QFile file(root + QStringLiteral("/CLASSIC Settings.yaml"));
-    QVERIFY(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
-    const QByteArray content = QByteArrayLiteral("schema_version: \"1.0\"\n"
-                                                 "CLASSIC_Settings:\n"
-                                                 "  Managed Game: Fallout4\n"
-                                                 "  Game Version: VR\n"
-                                                 "  Game Folder Path: C:/Games/Fallout4VR\n"
-                                                 "  Game EXE Path: C:/Games/Fallout4VR/Fallout4VR.exe\n"
-                                                 "  Documents Folder Path: C:/Documents/Fallout4VR\n"
-                                                 "  FCX Mode: true\n"
-                                                 "  Simplify Logs: true\n"
-                                                 "  Show FormID Values: true\n"
-                                                 "  Move Unsolved Logs: false\n"
-                                                 "  Unsolved Logs Destination: E:/Unsolved\n"
-                                                 "  SCAN Custom Path: D:/Crash Logs\n"
-                                                 "  Max Concurrent Scans: 7\n"
-                                                 "  FormID Databases:\n"
-                                                 "    Fallout4:\n"
-                                                 "      - databases/official.db\n"
-                                                 "      - E:/Databases/community.db\n");
-    QCOMPARE(file.write(content), content.size());
+    classic::gui::CrashLogScanLaunchSettings settings;
+    settings.game = QStringLiteral("Fallout4");
+    settings.gameVersion = QStringLiteral("NextGen");
+    settings.formIdValueLookup = true;
+    settings.simplifyLogs = true;
+    settings.moveUnsolvedLogs = true;
+    settings.unsolvedLogsDestination = QStringLiteral("E:/Unsolved");
+    settings.maxConcurrentScans = 8;
+    settings.customScanDirectory = {};
+    settings.formIdDatabasePaths = {QStringLiteral("databases/official.db")};
+    return settings;
+}
+
+/// Records the tagged source published by Rust discovery and stops before any discovered work is admitted.
+class DiscoveryCancellingObserver final : public classic::scanner::ScanRunObserver {
+public:
+    /// Borrows the run's separate monotonic cancellation control for the execution lifetime.
+    explicit DiscoveryCancellingObserver(const classic::scanner::ScanRunCancellation& cancellation) noexcept
+        : m_cancellation(cancellation)
+    {
+    }
+
+    /// Retains the discovery tag and requests cancellation without throwing across CXX.
+    void on_scan_run_event(const classic::scanner::ScanRunContractEvent& event) const noexcept override
+    {
+        if (event.kind != classic::scanner::ScanRunContractEventKind::DiscoveryCompleted) {
+            return;
+        }
+        m_sawDiscovery = true;
+        m_source = event.discovery.source;
+        classic::scanner::scan_run_cancellation_cancel(m_cancellation);
+    }
+
+    /// Returns whether the Rust-owned discovery lifecycle event was observed.
+    [[nodiscard]] bool sawDiscovery() const noexcept { return m_sawDiscovery; }
+
+    /// Returns the source tag carried by the completed discovery result.
+    [[nodiscard]] classic::scanner::ScanRunContractDiscoverySource source() const noexcept { return m_source; }
+
+private:
+    const classic::scanner::ScanRunCancellation& m_cancellation;
+    mutable bool m_sawDiscovery = false;
+    mutable classic::scanner::ScanRunContractDiscoverySource m_source =
+        classic::scanner::ScanRunContractDiscoverySource::Standard;
+};
+
+/// Builds and executes one request without an observer so terminal discovery data can be asserted.
+classic::scanner::ScanRunContractExecutionResult execute(const QString& yamlRoot, const QString& yamlData,
+                                                         const QString& baseDirectory,
+                                                         const classic::gui::CrashLogScanLaunchSettings& settings,
+                                                         const QStringList& targetedInputs)
+{
+    const auto request =
+        classic::gui::buildScanRunRequest(yamlRoot, yamlData, baseDirectory, settings, {}, targetedInputs);
+    const auto cancellation = classic::scanner::scan_run_cancellation_new();
+    return classic::scanner::scan_run_contract_execute(*request, *cancellation, nullptr);
 }
 
 } // namespace
@@ -39,87 +78,55 @@ class ScanRequestBuilderTests : public QObject {
     Q_OBJECT
 
 private slots:
-    void accepted_typed_values_populate_the_complete_rust_request();
-    void persisted_snapshot_values_reach_the_rust_request_without_rereading_yaml();
+    void no_targeted_inputs_constructs_a_tagged_standard_request();
+    void targeted_inputs_construct_a_tagged_targeted_request_with_structured_rejections();
 };
 
-void ScanRequestBuilderTests::accepted_typed_values_populate_the_complete_rust_request()
-{
-    classic::gui::CrashLogScanLaunchSettings settings;
-    settings.game = QStringLiteral("Fallout4");
-    settings.gameVersion = QStringLiteral("NextGen");
-    settings.formIdValueLookup = true;
-    settings.fcxMode = true;
-    settings.simplifyLogs = true;
-    settings.moveUnsolvedLogs = false;
-    settings.unsolvedLogsDestination = QStringLiteral("E:/Unsolved");
-    settings.maxConcurrentScans = 8;
-    settings.customScanDirectory = QStringLiteral("D:/Crash Logs");
-    settings.formIdDatabasePaths = {QStringLiteral("databases/official.db"),
-                                    QStringLiteral("E:/Databases/community.db")};
-    settings.setupGameRoot = QStringLiteral("C:/Games/Fallout4");
-    settings.setupDocumentsRoot = QStringLiteral("C:/Documents/Fallout4");
-    settings.setupGameExecutable = QStringLiteral("C:/Games/Fallout4/Fallout4.exe");
-
-    const auto request = classic::gui::buildScanRunRequest(
-        {QStringLiteral("D:/Crash Logs/crash-1.log")}, QStringLiteral("C:/CLASSIC"),
-        QStringLiteral("C:/CLASSIC/CLASSIC Data"), QStringLiteral("C:/Portable CLASSIC"), settings,
-        QStringLiteral("C:/Documents/Fallout4/F4SE/f4se.log"), true, {QStringLiteral("D:/Crash Logs/crash-1.log")});
-
-    QCOMPARE(QString::fromStdString(std::string(request.game)), QStringLiteral("Fallout4"));
-    QCOMPARE(QString::fromStdString(std::string(request.game_version)), QStringLiteral("NextGen"));
-    QVERIFY(request.show_formid_values);
-    QVERIFY(request.fcx_mode);
-    QVERIFY(request.simplify_logs);
-    QVERIFY(!request.move_unsolved_logs);
-    QCOMPARE(QString::fromStdString(std::string(request.unsolved_logs_destination)), QStringLiteral("E:/Unsolved"));
-    QCOMPARE(request.max_concurrent, std::uint32_t{8});
-    QCOMPARE(QString::fromStdString(std::string(request.custom_scan_directory)), QStringLiteral("D:/Crash Logs"));
-    QCOMPARE(request.formid_database_paths.size(), std::size_t{2});
-    QCOMPARE(QString::fromStdString(std::string(request.formid_database_paths[1])),
-             QStringLiteral("E:/Databases/community.db"));
-    QCOMPARE(QString::fromStdString(std::string(request.configured_documents_root)),
-             QStringLiteral("C:/Documents/Fallout4"));
-    QCOMPARE(QString::fromStdString(std::string(request.setup_game_root)), QStringLiteral("C:/Games/Fallout4"));
-    QCOMPARE(QString::fromStdString(std::string(request.setup_game_exe_path)),
-             QStringLiteral("C:/Games/Fallout4/Fallout4.exe"));
-    QCOMPARE(QString::fromStdString(std::string(request.setup_xse_log_path)),
-             QStringLiteral("C:/Documents/Fallout4/F4SE/f4se.log"));
-    QVERIFY(request.targeted_mode);
-    QCOMPARE(request.targeted_inputs.size(), std::size_t{1});
-    QCOMPARE(request.log_paths.size(), std::size_t{1});
-}
-
-void ScanRequestBuilderTests::persisted_snapshot_values_reach_the_rust_request_without_rereading_yaml()
+void ScanRequestBuilderTests::no_targeted_inputs_constructs_a_tagged_standard_request()
 {
     QTemporaryDir root;
     QVERIFY(root.isValid());
-    writeSettings(root.path());
-    const auto snapshot = classic::gui::GuiUserSettings::open(root.path());
-    const auto launch = snapshot.scanLaunchSettings(snapshot.gameSetup.managedGame);
 
-    const auto request = classic::gui::buildScanRunRequest(
-        {QStringLiteral("D:/Crash Logs/crash-1.log")}, root.path(), root.filePath(QStringLiteral("CLASSIC Data")),
-        QStringLiteral("C:/Portable CLASSIC"), launch, QStringLiteral("C:/Documents/Fallout4VR/F4SE/f4sevr.log"), false,
-        {});
+    const auto request = classic::gui::buildScanRunRequest(root.path(), root.filePath(QStringLiteral("CLASSIC Data")),
+                                                           root.path(), makeSettings(), {}, {});
+    const auto cancellation = classic::scanner::scan_run_cancellation_new();
+    const DiscoveryCancellingObserver observer(*cancellation);
+    const auto execution = classic::scanner::scan_run_contract_execute(*request, *cancellation, &observer);
 
-    QCOMPARE(QString::fromStdString(std::string(request.game)), QStringLiteral("Fallout4"));
-    QCOMPARE(QString::fromStdString(std::string(request.game_version)), QStringLiteral("VR"));
-    QVERIFY(request.show_formid_values);
-    QVERIFY(request.fcx_mode);
-    QVERIFY(request.simplify_logs);
-    QVERIFY(!request.move_unsolved_logs);
-    QCOMPARE(QString::fromStdString(std::string(request.unsolved_logs_destination)), QStringLiteral("E:/Unsolved"));
-    QCOMPARE(request.max_concurrent, std::uint32_t{7});
-    QCOMPARE(QString::fromStdString(std::string(request.custom_scan_directory)), QStringLiteral("D:/Crash Logs"));
-    QCOMPARE(request.formid_database_paths.size(), std::size_t{2});
-    QCOMPARE(QString::fromStdString(std::string(request.formid_database_paths[0])),
-             QStringLiteral("databases/official.db"));
-    QCOMPARE(QString::fromStdString(std::string(request.configured_documents_root)),
-             QStringLiteral("C:/Documents/Fallout4VR"));
-    QCOMPARE(QString::fromStdString(std::string(request.setup_game_root)), QStringLiteral("C:/Games/Fallout4VR"));
-    QCOMPARE(QString::fromStdString(std::string(request.setup_game_exe_path)),
-             QStringLiteral("C:/Games/Fallout4VR/Fallout4VR.exe"));
+    QVERIFY2(execution.has_result, "Standard discovery should produce an expected lifecycle result");
+    QVERIFY(!execution.has_error);
+    QVERIFY(observer.sawDiscovery());
+    QCOMPARE(observer.source(), classic::scanner::ScanRunContractDiscoverySource::Standard);
+    QVERIFY(execution.result.has_discovery);
+    QCOMPARE(execution.result.discovery.source, classic::scanner::ScanRunContractDiscoverySource::Standard);
+    QVERIFY(execution.result.status == classic::scanner::ScanRunContractStatus::NoCrashLogsFound ||
+            execution.result.status == classic::scanner::ScanRunContractStatus::Cancelled);
+}
+
+void ScanRequestBuilderTests::targeted_inputs_construct_a_tagged_targeted_request_with_structured_rejections()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    const QString missingInput = root.filePath(QStringLiteral("missing-crash.log"));
+
+    auto settings = makeSettings();
+    // This persisted Standard-run choice must not make movement representable on the Targeted request constructor.
+    settings.moveUnsolvedLogs = true;
+    settings.unsolvedLogsDestination = root.filePath(QStringLiteral("Unsolved Logs"));
+
+    const auto execution =
+        execute(root.path(), root.filePath(QStringLiteral("CLASSIC Data")), root.path(), settings, {missingInput});
+
+    QVERIFY2(execution.has_result, "Rejected Targeted inputs are discovery data, not a run-wide failure");
+    QVERIFY(!execution.has_error);
+    QCOMPARE(execution.result.status, classic::scanner::ScanRunContractStatus::NoCrashLogsFound);
+    QVERIFY(execution.result.has_discovery);
+    QCOMPARE(execution.result.discovery.source, classic::scanner::ScanRunContractDiscoverySource::Targeted);
+    QCOMPARE(execution.result.discovery.accepted_logs.size(), std::size_t{0});
+    QCOMPARE(execution.result.discovery.rejected_inputs.size(), std::size_t{1});
+    QCOMPARE(QString::fromStdString(std::string(execution.result.discovery.rejected_inputs[0].path)), missingInput);
+    QVERIFY2(!execution.result.discovery.rejected_inputs[0].reason.empty(),
+             "Rust discovery must retain the reason for every rejected Targeted input");
 }
 
 QTEST_MAIN(ScanRequestBuilderTests)

@@ -9,14 +9,15 @@
 
 namespace classic::gui {
 
-/// Builds the complete Rust scan-run request from one accepted typed GUI settings value object.
+/// Builds one invariant-preserving tagged Crash Log Scan Run request from accepted GUI settings.
 ///
-/// Runtime-only inputs such as discovered Crash Logs, the portable base directory, the XSE log
-/// hint, and targeted input intent are supplied separately and never persisted as User Settings.
-classic::scanner::ScanRunRequestDto buildScanRunRequest(const QStringList& logPaths, const QString& yamlRoot,
-                                                        const QString& yamlData, const QString& baseDirectory,
-                                                        const CrashLogScanLaunchSettings& settings,
-                                                        const QString& setupXseLogPath, bool targetedMode,
-                                                        const QStringList& targetedInputs);
+/// An empty Targeted input list constructs Standard intent with Rust-owned discovery and Unsolved
+/// Logs policy. A non-empty list constructs Targeted intent, whose CXX constructor cannot express
+/// Unsolved Logs movement. FCX selection always uses a constructor that requires setup context.
+rust::Box<classic::scanner::ScanRunRequest> buildScanRunRequest(const QString& yamlRoot, const QString& yamlData,
+                                                                const QString& baseDirectory,
+                                                                const CrashLogScanLaunchSettings& settings,
+                                                                const QString& setupXseLogPath,
+                                                                const QStringList& targetedInputs);
 
 } // namespace classic::gui
