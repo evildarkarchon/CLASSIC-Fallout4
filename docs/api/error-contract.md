@@ -20,6 +20,17 @@ Each binding surface adapts Rust `Result<T, E>` errors into the idiom expected b
 
 ## C++ (CXX Bridge)
 
+The final Crash Log Scan Run entry point is intentionally more strongly typed
+than the older general bridge convention. `scan_run_contract_execute(...)`
+returns `ScanRunContractExecutionResult`, where exactly one of `has_result` and
+`has_error` is true. Its `ScanRunContractInfrastructureError` preserves the
+stable stage (`RequestValidation`, `Discovery`, `Intake`,
+`FormIdDatabaseAccess`, `Initialization`, or `InternalInvariant`), message, and
+optional relevant path. Expected lifecycle states and per-log failures stay in
+the terminal result and do not throw. This envelope is required because a CXX
+`Result<T>` would flatten the typed core infrastructure error into
+`rust::Error` text and discard stage/path data.
+
 **Pattern:** `rust::Error` exceptions for hard failures, empty-string sentinels for fail-soft returns.
 
 **Example 1 -- empty-string sentinel:** `db_pool_get_entry()` in [`cpp-bindings/classic-cpp-bridge/src/database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs) returns `""` on lookup failure because Qt callers check `.isEmpty()` rather than catching exceptions.

@@ -49,7 +49,9 @@ The header forward-declares `BatchProgressEvent`; the concrete shared DTO and en
 
 The bridge-local batch callback contract is defined inside the `#[cxx::bridge(namespace = "classic::scanner")]` module in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs).
 
-The main consumers are `orchestrator_process_logs_batch_with_progress(...)` and `scan_run_execute(...)`.
+The legacy consumers are `orchestrator_process_logs_batch_with_progress(...)`
+and `scan_run_execute(...)`. The final Crash Log Scan Run contract uses the
+separate optional `ScanRunObserver` described below.
 
 `orchestrator_process_logs_batch_with_progress(...)`:
 
@@ -66,6 +68,37 @@ The main consumers are `orchestrator_process_logs_batch_with_progress(...)` and 
 - emits terminal `Completed` or `Failed` events after Rust has finalized per-log Crash Log Scan Run work such as Autoscan Report writing and Unsolved Logs movement
 - returns `Vec<ScanRunLogResult>` in completion order after callback emission finishes
 - observes the caller-provided `ScanCancellationToken` so C++ frontends can cancel queued logs without owning scan-run internals
+
+## Final Crash Log Scan Run observer
+
+[`cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_run_observer.h`](../../cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_run_observer.h)
+declares the optional final-contract callback:
+
+```cpp
+class ScanRunObserver {
+public:
+    virtual ~ScanRunObserver() = default;
+    virtual void on_scan_run_event(const ScanRunContractEvent& event) const noexcept = 0;
+};
+```
+
+`scan_run_contract_execute(request, cancellation, observer)` forwards directly
+to `classic_scanlog_core::scan_run::contract::execute(...)`. A null observer
+means no observation. A non-null observer receives serialized events in
+execution order:
+
+- `DiscoveryCompleted`, containing complete retained discovery data
+- `EffectiveConcurrencySelected`, containing the exact Rust-selected admission limit
+- `LogQueued`
+- `LogStarted`
+- `LogPhase`, with `Setup`, `Parse`, `Analyze`, or `Finalize`
+- `LogFinished`, with `Succeeded`, `Failed`, or `CancelledBeforeStart`
+
+Log event payloads use `discovery_index`, and the terminal result always stores
+logs in discovery order even when event/completion order differs. Observer
+delivery is non-controlling. Implementations must handle delivery failures
+internally and may explicitly request safe cancellation through the same
+`ScanRunCancellation`; exceptions must not cross the `noexcept` callback.
 
 One active frontend consumer is [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp), which forwards callback updates into Qt signals and uses [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp) to keep visible progress monotonic. That consumer path is documented in [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md).
 

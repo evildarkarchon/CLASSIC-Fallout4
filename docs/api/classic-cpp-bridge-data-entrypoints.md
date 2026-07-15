@@ -627,7 +627,72 @@ FCX reset failure mapping:
 - `FcxResetError::Unnecessary` remains non-fatal
 - a real reset failure aborts the scan session before callback activity begins and returns a single failed `BatchScanResult` with the reset error text
 
-### `scan_run_execute(request, callback, cancellation_token) -> Result<ScanRunResult>`
+### `scan_run_contract_execute(request, cancellation, observer) -> ScanRunContractExecutionResult`
+
+This is the final C++ projection of
+`classic_scanlog_core::scan_run::contract::execute(...)`. It is additive during
+the coordinated expand-contract migration; the older `scan_run_execute(...)`
+surface below remains available until the native-consumer contraction ticket.
+
+Requests are opaque Rust-owned `ScanRunRequest` values. C++ constructs them
+through exactly the same valid matrix as the core contract:
+
+- `scan_run_request_standard(configuration, source, unsolved_logs)`
+- `scan_run_request_standard_with_fcx(configuration, source, unsolved_logs, setup_context)`
+- `scan_run_request_targeted(configuration, source)`
+- `scan_run_request_targeted_with_fcx(configuration, source, setup_context)`
+
+`ScanRunConfigurationDto` contains YAML roots, typed game text, selected game
+version, non-FCX analysis options, configured FormID database paths, an optional
+configured Unsolved Logs destination, and optional explicit concurrency.
+Optional inputs use `has_*` plus the corresponding value: `has_max_concurrent =
+false` selects Rust's adaptive value, while a present zero reaches the final
+operation as a typed `RequestValidation` infrastructure error. Optional request paths use the same presence convention;
+their value strings are ignored when the presence flag is false.
+
+Standard callers select one opaque `ScanRunUnsolvedLogs` value with
+`scan_run_unsolved_logs_leave_in_place()`,
+`scan_run_unsolved_logs_move_to_configured_or_default()`, or
+`scan_run_unsolved_logs_move_to_custom(path)`. Targeted constructors accept no
+movement value. FCX constructors require `ScanRunSetupContextDto`; an explicitly
+supplied context whose four optional path fields are absent still means FCX is
+enabled and is not collapsed into the non-FCX variant.
+
+`ScanRunCancellation` is an opaque monotonic control with `new`, `cancel`, and
+`is_cancelled` operations. It deliberately has no reset operation. Pass
+`nullptr` for `observer` to disable observation, or pass a live
+`ScanRunObserver` declared in
+`include/classic_cxx_bridge/scan_run_observer.h`. Observer calls are serialized
+and cover `DiscoveryCompleted`, `EffectiveConcurrencySelected`, `LogQueued`,
+`LogStarted`, `LogPhase`, and `LogFinished`. A `LogFinished` event carries the
+typed `Succeeded`, `Failed`, or `CancelledBeforeStart` disposition. Fields not
+applicable to an event's tag contain defaults and must be ignored.
+
+The callback is `noexcept`: delivery or presentation failures remain adapter
+concerns. An adapter may record the failure and call
+`scan_run_cancellation_cancel(...)` to stop future admission at safe seams; it
+must not throw through the callback or turn delivery failure into a core scan
+failure.
+
+`ScanRunContractExecutionResult` is a typed result/error envelope. Exactly one
+of `has_result` and `has_error` is true:
+
+- `result` retains the typed five-way run status, optional discovery, optional
+  FCX setup, optional effective concurrency, optional message, aggregate counts,
+  and per-log results in discovery order
+- each discovery rejection is one `{path, reason}` object rather than parallel
+  arrays
+- each log retains its typed disposition, every structured failure
+  (`Analysis`, `ReportWrite`, `UnsolvedLogsFinalization`), optional report path,
+  optional message, movement flag, microsecond and millisecond timing, and counts
+- `error` retains all six infrastructure stages, its message, and an optional
+  relevant path
+
+Every optional output uses an explicit `has_*` flag, so an absent value is not
+conflated with an empty string or zero. Bridge paths use the repository's
+existing lossy UTF-8 CXX string conversion policy.
+
+### Legacy expand-contract surface: `scan_run_execute(request, callback, cancellation_token) -> Result<ScanRunResult>`
 
 Forwards to the Rust `classic_scanlog_core::CrashLogScanRunService` facade. Rust owns Standard/Targeted discovery, optional FCX setup result shaping, Crash Log Scan Intake preparation, Autoscan Report writing, and Unsolved Logs policy.
 
@@ -698,7 +763,10 @@ Bridge DTO shape for `ScanRunLogResult`:
 
 Contributor note:
 
-- this is the preferred C++ CLI/GUI seam for a full Crash Log Scan Run; the older `orchestrator_*` functions remain lower-level analysis bridge entry points.
+- new C++ consumers should use `scan_run_contract_execute(...)`; this legacy
+  flag-based DTO, resettable token, mandatory batch callback, and the older
+  `orchestrator_*` functions remain only as temporary native-consumer migration
+  aids
 
 ## Small scan utilities
 

@@ -201,12 +201,13 @@ if(Catch2_FOUND)
     include(Catch)
     catch_discover_tests(classic-cli-tests)
 
-    # Bridge-linked tests: one entry per FFI surface that warrants a C++
-    # round-trip check. Added for the yaml-update-delivery change so C++
-    # consumers prove the discriminated DTO shape at compile AND run time.
+    # Bridge-linked tests: one entry per FFI surface that warrants a native
+    # round-trip check, proving generated declarations and DTO behavior at
+    # both compile time and runtime.
     add_executable(classic-cli-bridge-tests
         tests/test_yaml_update.cpp
         tests/test_app_update.cpp
+        tests/test_scan_run_contract.cpp
         tests/test_user_settings_action.cpp
         src/yaml_update.cpp
         src/app_update.cpp
