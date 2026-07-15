@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from "fs";
+import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import {
@@ -21,6 +21,7 @@ import {
   checkCrashgenFull,
   scanModInis,
   runGameSetupIntake,
+  runGameSetupIntakeFromUserSettings,
   normalizeGameSetupVersionSelection,
   gameSetupNeedsPathDetection,
   getAddressLibInfo,
@@ -857,6 +858,25 @@ describe("scanModInis", () => {
 // ============================================================================
 
 describe("runGameSetupIntake", () => {
+  test("opens typed User Settings without rewriting the source", () => {
+    const gameRoot = join(tempDir, "Fallout4");
+    const gameExecutable = join(gameRoot, "Fallout4.exe");
+    const settingsPath = join(tempDir, "CLASSIC Settings.yaml");
+    mkdirSync(gameRoot, { recursive: true });
+    writeFileSync(gameExecutable, "not a real executable");
+    const settings = `schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  Game Version: Original\n  Game EXE Path: '${gameExecutable.replace(/\\/g, "/")}'\n  Unknown Future Setting: retained\n`;
+    writeFileSync(settingsPath, settings, "utf8");
+
+    const result = runGameSetupIntakeFromUserSettings(tempDir);
+
+    const gameRootUpdate = result.pathUpdates.find(
+      ({ kind }) => kind === "game_root",
+    );
+    expect(gameRootUpdate).toBeDefined();
+    expect(gameRootUpdate?.path.replace(/\//g, "\\")).toBe(gameRoot);
+    expect(readFileSync(settingsPath, "utf8")).toBe(settings);
+  });
+
   test("returns exact proposed path updates without persisting them", () => {
     const gameRoot = join(tempDir, "Fallout4");
     const docsRoot = join(tempDir, "Documents");

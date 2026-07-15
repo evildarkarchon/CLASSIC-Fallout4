@@ -193,6 +193,29 @@ describe("classic-node CLI", () => {
 		expect(readFileSync(reportPath, "utf8")).toContain("AUTOSCAN REPORT");
 	});
 
+	test("uses canonical User Settings when scan flags are omitted", () => {
+		const workspace = rememberTempDir("classic-node-cli-user-settings-");
+		const scanDir = join(workspace, "incoming");
+		const logPath = join(scanDir, "crash-2026-03-06-12-00-00.log");
+
+		writeWorkspaceDataRoot(workspace);
+		mkdirSync(scanDir, { recursive: true });
+		writeFileSync(logPath, CLI_SAMPLE_LOG, "utf8");
+		writeFileSync(
+			join(workspace, "CLASSIC Settings.yaml"),
+			`schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  Game Version: Original\n  SCAN Custom Path: '${scanDir.replace(/\\/g, "/")}'\n  Max Concurrent Scans: 1\n`,
+			"utf8",
+		);
+
+		const result = runCli([], workspace);
+		const reportPath = join(scanDir, "crash-2026-03-06-12-00-00-AUTOSCAN.md");
+
+		expect(result.exitCode).toBe(0);
+		expect(result.output).toContain("Fallout4 Original");
+		expect(result.output).toContain("Scanning with 1 worker thread");
+		expect(existsSync(reportPath)).toBe(true);
+	});
+
 	test("emits structured report failure counts when AUTOSCAN writing fails", () => {
 		const workspace = rememberTempDir("classic-node-cli-report-failure-json-");
 		const scanDir = join(workspace, "incoming");

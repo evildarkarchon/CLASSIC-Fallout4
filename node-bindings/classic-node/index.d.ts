@@ -52,107 +52,6 @@ export declare class BackupManager {
 }
 
 /**
- * Runtime configuration for CLASSIC (settings, feature flags, paths).
- *
- * Construct with `new ClassicConfig()` for defaults, or use
- * `ClassicConfig.loadFromYaml(path)` to load from a YAML file.
- */
-export declare class ClassicConfigJs {
-  /** Create a new ClassicConfig with default values. */
-  constructor()
-  /**
-   * Load configuration from a YAML file.
-   *
-   * @param path - Path to the YAML configuration file.
-   * @throws on I/O or parse errors.
-   */
-  static loadFromYaml(path: string): ClassicConfigJs
-  /** Load configuration from default location, or return defaults if no file exists. */
-  static loadOrDefault(): ClassicConfigJs
-  /**
-   * Save configuration to a YAML file.
-   *
-   * Creates parent directories if they do not exist.
-   *
-   * @param path - Path to save the YAML configuration file.
-   * @throws on I/O or serialization errors.
-   */
-  saveToYaml(path: string): void
-  /** Get the default config file path. */
-  getConfigPath(): string
-  /**
-   * Validate that configured paths exist.
-   *
-   * @throws if any configured path does not exist.
-   */
-  validatePaths(): void
-  /**
-   * Load paths from the game's Local.yaml file.
-   *
-   * Updates game_root and docs_root in place. If the Local.yaml file does not
-   * exist, this is not an error -- the config retains its current paths.
-   *
-   * @param game - Game name (e.g., "Fallout4", "Skyrim").
-   */
-  loadLocalYamlPaths(game: string): void
-  /** Whether FCX mode (enhanced FormID analysis) is enabled. */
-  get fcxMode(): boolean
-  /** Set FCX mode. */
-  set fcxMode(value: boolean)
-  /** Whether FormID values are shown in output. */
-  get showFormidValues(): boolean
-  /** Set show FormID values. */
-  set showFormidValues(value: boolean)
-  /** Whether statistical logging is enabled. */
-  get statLogging(): boolean
-  /** Set statistical logging. */
-  set statLogging(value: boolean)
-  /** Whether unsolved logs are moved to a subfolder. */
-  get moveUnsolvedLogs(): boolean
-  /** Set move unsolved logs. */
-  set moveUnsolvedLogs(value: boolean)
-  /** Whether logs are simplified (may remove important info). */
-  get simplifyLogs(): boolean
-  /** Set simplify logs. */
-  set simplifyLogs(value: boolean)
-  /** Whether update checks at startup are enabled. */
-  get updateCheck(): boolean
-  /** Set update check. */
-  set updateCheck(value: boolean)
-  /**
-   * Game version selection:
-   * "auto", "Original", "NextGen", "AnniversaryEdition"/"AE", or "VR".
-   */
-  get gameVersion(): string
-  /** Set game version. */
-  set gameVersion(value: string)
-  /** Update source: "github" or "both". */
-  get updateSource(): string
-  /** Set update source. */
-  set updateSource(value: string)
-  /** Whether to auto-switch to Results tab after scan completion. */
-  get autoSwitchToResults(): boolean
-  /** Set auto-switch to results. */
-  set autoSwitchToResults(value: boolean)
-  /** Auto-refresh interval for file watcher in milliseconds. */
-  get autoRefreshIntervalMs(): number
-  /** Set auto-refresh interval in milliseconds. */
-  set autoRefreshIntervalMs(value: number)
-  /** Get the path configuration as a JavaScript object. */
-  get paths(): JsPathConfig
-  /** Set the path configuration from a JavaScript object. */
-  set paths(value: JsPathConfig)
-  /**
-   * User-configured FormID databases per game.
-   *
-   * Returns a `Record<string, string[]>` mapping game names to lists of database paths.
-   */
-  get formidDatabases(): Record<string, Array<string>>
-  /** Set FormID databases. */
-  set formidDatabases(value: Record<string, Array<string>>)
-}
-
-/**
  * Multi-strategy documents path finder.
  *
  * Locates the game's documents folder (containing INI files, saves, and logs)
@@ -1664,13 +1563,6 @@ export declare function createAnalysisConfig(game: string, gameVersion: string):
 export declare function createAnalysisConfigFromYamlContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): JsAnalysisConfig
 
 /**
- * Create a new ClassicConfig with default values (convenience free function).
- *
- * Equivalent to `new ClassicConfig()`.
- */
-export declare function createDefaultConfig(): ClassicConfigJs
-
-/**
  * Create a new logger instance.
  *
  * @param name - A name for this logger (used for identification).
@@ -2502,6 +2394,8 @@ export interface JsAnalysisBuildOptions {
   simplifyLogs?: boolean
   /** Strings to remove when simplify logs is enabled. */
   removeList?: Array<string>
+  /** Explicit CLASSIC root used to open typed User Settings for FCX preparation. */
+  classicRoot?: string
 }
 
 /**
@@ -2528,6 +2422,8 @@ export interface JsAnalysisConfig {
   fcxMode: boolean
   /** Whether to simplify logs */
   simplifyLogs: boolean
+  /** Explicit CLASSIC root used to open typed User Settings for FCX preparation. */
+  classicRoot?: string
   /** Per-crashgen registry entries with optional settings rules. */
   crashgenRegistry?: Record<string, JsCrashgenRegistryEntry>
 }
@@ -3509,20 +3405,6 @@ export interface JsPapyrusStats {
   errors: number
   /** Total lines processed from the log file */
   linesProcessed: number
-}
-
-/** Path configuration for game directories. */
-export interface JsPathConfig {
-  /** Path to INI folder (game documents folder), or undefined if not set. */
-  iniFolder?: string
-  /** Path to custom scan folder, or undefined if not set. */
-  scanCustom?: string
-  /** Path to mods folder, or undefined if not set. */
-  modsFolder?: string
-  /** Path to game root directory. */
-  gameRoot: string
-  /** Path to game documents root directory, or undefined if not set. */
-  docsRoot?: string
 }
 
 /** Result of checking if paths need Game Setup Intake detection. */
@@ -4617,7 +4499,7 @@ export declare function parseXseType(typeName: string): JsXseType
  * Persist optional runtime paths to an explicit Game Local YAML document.
  *
  * Omitted path updates leave their existing keys unchanged. The operation is
- * independent from `ClassicConfig` and never reads or writes User Settings.
+ * independent from User Settings and never reads or writes that document.
  *
  * @param localYamlPath - Explicit Game Local YAML document path.
  * @param gameRoot - Optional game-root update.
@@ -4840,6 +4722,14 @@ export declare function runGameChecks(config: JsGameScanConfig): Promise<JsGameS
 export declare function runGameSetupIntake(options: JsGameSetupIntakeOptions): JsGameSetupIntakeResult
 
 /**
+ * Opens typed User Settings from an explicit CLASSIC root and runs Game Setup Intake.
+ *
+ * The operation is read-only. Any discovered paths are returned as proposals and are
+ * never committed to User Settings without a separate caller-approved update.
+ */
+export declare function runGameSetupIntakeFromUserSettings(classicRoot: string, xseLogPath?: string | undefined | null): JsGameSetupIntakeResult
+
+/**
  * Run mod file scans (unpacked + archived) concurrently.
  *
  * Scans both loose/unpacked mod files and BA2 archives for issues.
@@ -4893,10 +4783,9 @@ export declare function scanRunExecute(logPaths: Array<string>, options: JsScanR
 export declare function scanUnpackedFiles(rootPath: string, xseScriptfiles: Array<string>): JsUnpackedIssues
 
 /**
- * Override the directory used to resolve `CLASSIC Settings.yaml` and other
- * application-local files.  Call before `ClassicConfig.loadOrDefault()` or
- * `getConfigPath()` if you need a directory other than `process.cwd()`
- * captured at first use.
+ * Override the directory used by independent application-local YAML helpers.
+ * Call before those helpers if you need a directory other than `process.cwd()`
+ * captured at first use. User Settings APIs always take an explicit CLASSIC root.
  *
  * @param path - Absolute path to the desired application directory.
  */

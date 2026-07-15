@@ -45,11 +45,6 @@ function requireValue(flag: string, value: string | undefined): string {
 function parseArgs(argv: string[]): CliOptions {
   const options: CliOptions = {
     game: "Fallout4",
-    gameVersion: "auto",
-    fcxMode: false,
-    showFidValues: false,
-    simplifyLogs: false,
-    maxConcurrent: 0,
     version: false,
     json: false,
   };

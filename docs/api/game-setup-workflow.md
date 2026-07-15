@@ -212,7 +212,7 @@ saved settings / frontend inputs
 Current binding surfaces should stay thin:
 
 - C++ bridge: `classic::scangame::run_game_setup_intake_from_user_settings(classic_root, xse_log_path)` is the cohesive GUI path; the positional `run_game_setup_intake(...)`, `game_setup_intake_checks(...)`, and `game_setup_needs_path_detection(...)` remain compatibility entry points.
-- Node binding: `runGameSetupIntake(...)`, `normalizeGameSetupVersionSelection(...)`, and `gameSetupNeedsPathDetection(...)`; `runGameSetupIntake` accepts `gameExePath`, `modsRoot`, `customScanInput`, and `papyrusLogPath` so saved typed setup facts cross the binding without raw settings-key interpretation.
+- Node binding: `runGameSetupIntakeFromUserSettings(classicRoot, xseLogPath?)` is the cohesive read-only path and delegates `GameSetupIntake::from_user_settings`; `runGameSetupIntake(...)` remains the explicit-facts entry point, while `normalizeGameSetupVersionSelection(...)` and `gameSetupNeedsPathDetection(...)` remain narrow helpers. Both intake paths return proposals without persisting them.
 - Python binding: `GameSetupIntake`, `run_game_setup_intake(...)`, `normalize_game_setup_version_selection(...)`, and `game_setup_needs_path_detection(...)`; `GameSetupIntake` accepts `game_exe_path`, `mods_root`, `custom_scan_input`, and `papyrus_log_path` so the saved typed setup facts cross the binding without raw settings-key interpretation.
 
 Adapters should not rebuild executable-hash, XSE, Address Library, or documents logic locally. If a setup diagnostic needs to change, change `classic-scangame-core::game_setup_intake`.

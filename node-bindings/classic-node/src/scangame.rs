@@ -22,6 +22,7 @@ use classic_scangame_core::{
     GameSetupIntakeResult, IniValidator, LogProcessor, UnpackedScanner,
 };
 use classic_shared_core::GameId;
+use classic_user_settings_core::UserSettings;
 use napi::bindgen_prelude::*;
 
 use crate::crashgen_rules::{JsCrashgenSettingsRules, js_rules_to_core};
@@ -1730,6 +1731,23 @@ fn game_setup_result_to_js(result: GameSetupIntakeResult) -> JsGameSetupIntakeRe
 #[napi]
 pub fn run_game_setup_intake(options: JsGameSetupIntakeOptions) -> Result<JsGameSetupIntakeResult> {
     build_game_setup_intake(options).map(|intake| game_setup_result_to_js(intake.run()))
+}
+
+/// Opens typed User Settings from an explicit CLASSIC root and runs Game Setup Intake.
+///
+/// The operation is read-only. Any discovered paths are returned as proposals and are
+/// never committed to User Settings without a separate caller-approved update.
+#[napi]
+pub fn run_game_setup_intake_from_user_settings(
+    classic_root: String,
+    xse_log_path: Option<String>,
+) -> JsGameSetupIntakeResult {
+    let user_settings = UserSettings::open(classic_root);
+    let mut intake = GameSetupIntake::from_user_settings(user_settings.game_setup_settings());
+    if let Some(xse_log_path) = optional_path(xse_log_path) {
+        intake = intake.with_xse_log_path(xse_log_path);
+    }
+    game_setup_result_to_js(intake.run())
 }
 
 /// Normalize a raw Game Setup Intake version selection.

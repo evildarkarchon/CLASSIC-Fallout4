@@ -4,12 +4,12 @@ export type SupportedGame = (typeof SUPPORTED_GAMES)[number];
 
 export type CliOptions = {
   game: SupportedGame;
-  gameVersion: string;
+  gameVersion?: string;
   scanPath?: string;
-  fcxMode: boolean;
-  showFidValues: boolean;
-  simplifyLogs: boolean;
-  maxConcurrent: number;
+  fcxMode?: boolean;
+  showFidValues?: boolean;
+  simplifyLogs?: boolean;
+  maxConcurrent?: number;
   version: boolean;
   json: boolean;
 };

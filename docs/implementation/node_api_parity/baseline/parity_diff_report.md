@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-14T23:05:21.985128+00:00`
-- Tier-1 contract rows: **880**
-- Tier-1 matched: **880**
+- Generated: `2026-07-14T23:59:19.419582+00:00`
+- Tier-1 contract rows: **879**
+- Tier-1 matched: **879**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -203,8 +203,7 @@
 | `scanlog-crashgen-version-status-enum` | `scanlog` | `CrashgenVersionStatus` | `JsCrashgenVersionStatus` | `matched` |
 | `config-yamldata-class` | `config` | `YamlDataCore` | `YamlData` | `matched` |
 | `config-create-yamldata-content` | `config` | `YamlDataCore` | `createYamlDataFromContent` | `matched` |
-| `config-classic-config-class` | `config` | `ClassicConfig` | `ClassicConfigJs` | `matched` |
-| `config-create-default-config` | `config` | `ClassicConfig` | `createDefaultConfig` | `matched` |
+| `config.ClassicConfig@rust` | `config` | `ClassicConfig@rust` | `None` | `matched` |
 | `config-clear-yaml-cache` | `config` | `clear_global_yaml_cache` | `clearYamlCache` | `matched` |
 | `config.game_local.persistGameLocalPaths` | `config` | `persist_game_local_paths` | `persistGameLocalPaths` | `matched` |
 | `config-yaml-source-enum` | `config` | `YamlSource` | `JsYamlSource` | `matched` |
@@ -212,7 +211,6 @@
 | `config-yaml-source-display-name` | `config` | `YamlSource` | `getYamlSourceDisplayName` | `matched` |
 | `config-yaml-source-display-name-with-game` | `config` | `YamlSource` | `getYamlSourceDisplayNameWithGame` | `matched` |
 | `config-fileio-config-interface` | `config` | `config` | `FileIoConfig` | `matched` |
-| `config-path-config-interface` | `config` | `PathConfig` | `JsPathConfig` | `matched` |
 | `config-yaml-file-enum` | `config` | `YamlSource` | `JsYamlFile` | `matched` |
 | `config-get-all-yaml-files` | `config` | `YamlSource` | `getAllYamlFiles` | `matched` |
 | `config-get-yaml-file-description` | `config` | `YamlSource` | `getYamlFileDescription` | `matched` |
@@ -886,6 +884,7 @@
 | `scangame.gameSetupNeedsPathDetection` | `scangame` | `game_setup_needs_path_detection` | `gameSetupNeedsPathDetection` | `matched` |
 | `scangame.normalizeGameSetupVersionSelection` | `scangame` | `normalize_game_setup_version_selection` | `normalizeGameSetupVersionSelection` | `matched` |
 | `scangame.runGameSetupIntake` | `scangame` | `GameSetupIntake` | `runGameSetupIntake` | `matched` |
+| `scangame.runGameSetupIntakeFromUserSettings` | `scangame` | `from_user_settings` | `runGameSetupIntakeFromUserSettings` | `matched` |
 | `scangame.GameSetupIntake@rust` | `scangame` | `GameSetupIntake@rust` | `None` | `matched` |
 | `scangame.GameSetupIntakeResult@rust` | `scangame` | `GameSetupIntakeResult@rust` | `None` | `matched` |
 | `scangame.GameSetupCheck@rust` | `scangame` | `GameSetupCheck@rust` | `None` | `matched` |

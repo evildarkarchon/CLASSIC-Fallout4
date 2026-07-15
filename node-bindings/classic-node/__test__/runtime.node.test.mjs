@@ -142,6 +142,32 @@ test("loads native binding in Node runtime", () => {
   assert.equal(typeof classic.getVersionById, "function");
 });
 
+test("exposes only the User Settings replacement contract in Node", () => {
+  const root = mkdtempSync(join(tmpdir(), "classic-node-runtime-user-settings-"));
+
+  try {
+    assert.equal(classic.ClassicConfigJs, undefined);
+    assert.equal(classic.createDefaultConfig, undefined);
+    assert.equal(typeof classic.openUserSettings, "function");
+    assert.equal(typeof classic.previewUserSettingsUpdate, "function");
+    assert.equal(typeof classic.commitUserSettingsUpdate, "function");
+    assert.equal(typeof classic.planUserSettingsMigration, "function");
+    assert.equal(typeof classic.applyUserSettingsMigration, "function");
+
+    const snapshot = classic.openUserSettings(root);
+    assert.equal(snapshot.classification, "missing");
+    assert.equal(snapshot.crashLogScanSettings.gameVersionSelection, "auto");
+
+    const preview = classic.previewUserSettingsBootstrap(root, {
+      simplifyLogs: true,
+    });
+    assert.equal(preview.accepted, true);
+    assert.equal(preview.baseRevision, "missing");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 if (activeTier1Owners.has("scanlog")) {
   test("runs Tier-1 sync APIs in Node runtime", () => {
     const config = classic.createAnalysisConfig("Fallout4", "auto");

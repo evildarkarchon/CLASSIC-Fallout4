@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-10T01:31:14.904328+00:00",
+  "generated_at_utc": "2026-07-14T23:59:19.417917+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -35,14 +35,6 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export const CRASH_LOG_PATTERN: string"
-    },
-    {
-      "export": "ClassicConfigJs",
-      "kind": "class",
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare class ClassicConfigJs {"
     },
     {
       "export": "DEFAULT_CACHE_CLEANUP_INTERVAL",
@@ -485,6 +477,22 @@
       "signature": "export interface JsFileOperationResult {"
     },
     {
+      "export": "JsFrontendPreferences",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFrontendPreferences {"
+    },
+    {
+      "export": "JsFrontendState",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFrontendState {"
+    },
+    {
       "export": "JsGameFilesManager",
       "kind": "class",
       "owner_module": "aux",
@@ -597,6 +605,30 @@
       "signature": "export interface JsGpuInfo {"
     },
     {
+      "export": "JsGuiWindow",
+      "kind": "const_enum",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsGuiWindow {"
+    },
+    {
+      "export": "JsGuiWindowGeometry",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsGuiWindowGeometry {"
+    },
+    {
+      "export": "JsGuiWindowGeometryUpdate",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsGuiWindowGeometryUpdate {"
+    },
+    {
       "export": "JsIniCheckResult",
       "kind": "interface",
       "owner_module": "aux",
@@ -635,6 +667,30 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsIssueSeverity {"
+    },
+    {
+      "export": "JsLegacyTuiStateImportOutcome",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsLegacyTuiStateImportOutcome {"
+    },
+    {
+      "export": "JsLegacyTuiStateImportReceipt",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsLegacyTuiStateImportReceipt {"
+    },
+    {
+      "export": "JsLegacyTuiStateImportRestoreOutcome",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsLegacyTuiStateImportRestoreOutcome {"
     },
     {
       "export": "JsLogCollector",
@@ -787,14 +843,6 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsPapyrusStats {"
-    },
-    {
-      "export": "JsPathConfig",
-      "kind": "interface",
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export interface JsPathConfig {"
     },
     {
       "export": "JsPathDetectionResult",
@@ -965,6 +1013,22 @@
       "signature": "export declare const enum JsTomlIssueSeverity {"
     },
     {
+      "export": "JsTuiRememberedState",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsTuiRememberedState {"
+    },
+    {
+      "export": "JsTuiRememberedStateUpdate",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsTuiRememberedStateUpdate {"
+    },
+    {
       "export": "JsUnknownVersionHandling",
       "kind": "interface",
       "owner_module": "version_registry",
@@ -1005,12 +1069,92 @@
       "signature": "export interface JsUpdatePreferences {"
     },
     {
+      "export": "JsUserSettingsCommitResult",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsCommitResult {"
+    },
+    {
       "export": "JsUserSettingsDiagnostic",
       "kind": "interface",
       "owner_module": "user_settings",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsUserSettingsDiagnostic {"
+    },
+    {
+      "export": "JsUserSettingsMigrationApplyResult",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsMigrationApplyResult {"
+    },
+    {
+      "export": "JsUserSettingsMigrationChange",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsMigrationChange {"
+    },
+    {
+      "export": "JsUserSettingsMigrationDiagnostic",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsMigrationDiagnostic {"
+    },
+    {
+      "export": "JsUserSettingsMigrationEndpoint",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsMigrationEndpoint {"
+    },
+    {
+      "export": "JsUserSettingsMigrationPlan",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsMigrationPlan {"
+    },
+    {
+      "export": "JsUserSettingsMigrationPlanningResult",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsMigrationPlanningResult {"
+    },
+    {
+      "export": "JsUserSettingsMigrationReceipt",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsUserSettingsMigrationReceipt {"
+    },
+    {
+      "export": "JsUserSettingsMigrationRestoreResult",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsMigrationRestoreResult {"
+    },
+    {
+      "export": "JsUserSettingsSchemaVersion",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsUserSettingsSchemaVersion {"
     },
     {
       "export": "JsUserSettingsSnapshot",
@@ -1083,6 +1227,22 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsVsyncEntry {"
+    },
+    {
+      "export": "JsWindowGeometry",
+      "kind": "interface",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsWindowGeometry {"
+    },
+    {
+      "export": "JsWindowGeometryUpdate",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsWindowGeometryUpdate {"
     },
     {
       "export": "JsWryeBashParser",
@@ -1310,6 +1470,15 @@
       "arity": 1
     },
     {
+      "export": "applyUserSettingsMigration",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function applyUserSettingsMigration(classicRoot: string, approvedBaseRevision: string, approvedProposedContent: Buffer): JsUserSettingsMigrationApplyResult",
+      "arity": 3
+    },
+    {
       "export": "applyYamlUpdate",
       "kind": "function",
       "owner_module": "config",
@@ -1499,6 +1668,33 @@
       "arity": 0
     },
     {
+      "export": "commitFrontendGeometryTransition",
+      "kind": "function",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function commitFrontendGeometryTransition(classicRoot: string, expectedRevision: string, window: JsGuiWindow, transition: JsWindowGeometryUpdate): JsUserSettingsCommitResult",
+      "arity": 4
+    },
+    {
+      "export": "commitUserSettingsBootstrap",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function commitUserSettingsBootstrap(classicRoot: string, baseRevision: string, update: JsUserSettingsUpdate): JsUserSettingsCommitResult",
+      "arity": 3
+    },
+    {
+      "export": "commitUserSettingsUpdate",
+      "kind": "function",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function commitUserSettingsUpdate(classicRoot: string, baseRevision: string, update: JsUserSettingsUpdate): JsUserSettingsCommitResult",
+      "arity": 3
+    },
+    {
       "export": "compareVersions",
       "kind": "function",
       "owner_module": "version_registry",
@@ -1533,15 +1729,6 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function createAnalysisConfigFromYamlContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): JsAnalysisConfig",
       "arity": 6
-    },
-    {
-      "export": "createDefaultConfig",
-      "kind": "function",
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function createDefaultConfig(): ClassicConfigJs",
-      "arity": 0
     },
     {
       "export": "createLogger",
@@ -2273,6 +2460,15 @@
       "arity": 1
     },
     {
+      "export": "importLegacyTuiStateIntoUserSettings",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function importLegacyTuiStateIntoUserSettings(classicRoot: string, legacyStatePath: string): JsLegacyTuiStateImportOutcome",
+      "arity": 2
+    },
+    {
       "export": "internString",
       "kind": "function",
       "owner_module": "aux",
@@ -2579,6 +2775,24 @@
       "arity": 3
     },
     {
+      "export": "planUserSettingsMigration",
+      "kind": "function",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function planUserSettingsMigration(classicRoot: string): JsUserSettingsMigrationPlanningResult",
+      "arity": 1
+    },
+    {
+      "export": "previewUserSettingsBootstrap",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function previewUserSettingsBootstrap(classicRoot: string, update: JsUserSettingsUpdate): JsUserSettingsUpdatePreview",
+      "arity": 2
+    },
+    {
       "export": "previewUserSettingsUpdate",
       "kind": "function",
       "owner_module": "user_settings",
@@ -2640,6 +2854,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function processStringBatch(values: Array<string>): Array<string>",
       "arity": 1
+    },
+    {
+      "export": "publishedUserSettingsDefaults",
+      "kind": "function",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function publishedUserSettingsDefaults(): JsUserSettingsSnapshot",
+      "arity": 0
     },
     {
       "export": "queryGameRegistry",
@@ -2759,6 +2982,15 @@
       "arity": 0
     },
     {
+      "export": "reverseUserSettingsMigrationPlan",
+      "kind": "function",
+      "owner_module": "user_settings",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function reverseUserSettingsMigrationPlan(plan: JsUserSettingsMigrationPlan): JsUserSettingsMigrationPlan",
+      "arity": 1
+    },
+    {
       "export": "rollbackYamlUpdate",
       "kind": "function",
       "owner_module": "config",
@@ -2784,6 +3016,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function runGameSetupIntake(options: JsGameSetupIntakeOptions): JsGameSetupIntakeResult",
       "arity": 1
+    },
+    {
+      "export": "runGameSetupIntakeFromUserSettings",
+      "kind": "function",
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function runGameSetupIntakeFromUserSettings(classicRoot: string, xseLogPath?: string | undefined | null): JsGameSetupIntakeResult",
+      "arity": 2
     },
     {
       "export": "runModScans",

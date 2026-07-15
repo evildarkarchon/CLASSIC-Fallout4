@@ -1941,21 +1941,12 @@
       "nodeArity": 5
     },
     {
-      "id": "config-classic-config-class",
+      "id": "config.ClassicConfig@rust",
       "tier": "tier1",
       "ownerModule": "config",
-      "rustSymbol": "ClassicConfig",
-      "nodeExport": "ClassicConfigJs",
-      "nodeKind": "class"
-    },
-    {
-      "id": "config-create-default-config",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustSymbol": "ClassicConfig",
-      "nodeExport": "createDefaultConfig",
-      "nodeKind": "function",
-      "nodeArity": 0
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ClassicConfig@rust",
+      "rustKind": "class"
     },
     {
       "id": "config-clear-yaml-cache",
@@ -2018,14 +2009,6 @@
       "ownerModule": "config",
       "rustSymbol": "config",
       "nodeExport": "FileIoConfig",
-      "nodeKind": "interface"
-    },
-    {
-      "id": "config-path-config-interface",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustSymbol": "PathConfig",
-      "nodeExport": "JsPathConfig",
       "nodeKind": "interface"
     },
     {
@@ -7586,6 +7569,16 @@
       "rustSymbol": "GameSetupIntake",
       "nodeExport": "runGameSetupIntake",
       "nodeKind": "function"
+    },
+    {
+      "id": "scangame.runGameSetupIntakeFromUserSettings",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "from_user_settings",
+      "nodeExport": "runGameSetupIntakeFromUserSettings",
+      "nodeKind": "function",
+      "nodeArity": 2
     },
     {
       "id": "scangame.GameSetupIntake@rust",

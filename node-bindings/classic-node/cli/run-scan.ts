@@ -32,12 +32,29 @@ type BindingScanRunResult = {
 	logs: BindingScanResult[];
 };
 
+type BindingUserSettingsSnapshot = {
+  crashLogScanSettings: {
+    fcxMode: boolean;
+    simplifyLogs: boolean;
+    formidValueLookup: boolean;
+    moveUnsolvedLogs: boolean;
+    unsolvedLogsDestination?: string;
+    customScanInput?: string;
+    gameVersionSelection: string;
+    maxConcurrentScans: number;
+  };
+  gameSetupSettings: {
+    documentsRoot?: string;
+  };
+};
+
 type ClassicNodeModule = {
 	getAllVersionsForGame: (
 		game: string,
 		isVr?: boolean | null,
 	) => BindingVersionInfo[];
 	getVersion: () => string;
+	openUserSettings: (classicRoot: string) => BindingUserSettingsSnapshot;
 	scanRunExecute: (
 		logPaths: string[],
 		options: {
@@ -52,6 +69,7 @@ type ClassicNodeModule = {
 			fcxMode?: boolean;
 			simplifyLogs?: boolean;
 			moveUnsolvedLogs?: boolean;
+			unsolvedLogsDestination?: string;
 			targetedMode?: boolean;
 			targetedInputs?: string[];
 			maxConcurrent?: number | null;
@@ -260,6 +278,12 @@ function emitJson(summary: JsonSummary): void {
 	console.log(JSON.stringify(summary, null, 2));
 }
 
+/**
+ * Runs the CLI command using explicit flags as overrides over canonical User Settings.
+ *
+ * Scan settings are opened read-only from the discovered CLASSIC root. The native scan service
+ * owns analysis and report writes; this function reports a stable process exit result.
+ */
 export async function runCli(
 	options: CliOptions,
 	cliDir: string,
@@ -286,13 +310,22 @@ export async function runCli(
 			return { exitCode: 0 };
 		}
 
-		const normalizedGameVersion = normalizeSupportedGameVersion(
-			options.game,
-			options.gameVersion,
-			cliDir,
-		);
 		const paths = findDataRoot(process.cwd(), cliDir);
 		validateScanData(paths, options);
+		const userSettings = classicNode.openUserSettings(paths.root);
+		const scanSettings = userSettings.crashLogScanSettings;
+		const normalizedGameVersion = normalizeSupportedGameVersion(
+			options.game,
+			options.gameVersion ?? scanSettings.gameVersionSelection,
+			cliDir,
+		);
+		const fcxMode = options.fcxMode ?? scanSettings.fcxMode;
+		const showFidValues =
+			options.showFidValues ?? scanSettings.formidValueLookup;
+		const simplifyLogs = options.simplifyLogs ?? scanSettings.simplifyLogs;
+		const scanPath = options.scanPath ?? scanSettings.customScanInput;
+		const requestedConcurrency =
+			options.maxConcurrent ?? scanSettings.maxConcurrentScans;
 
 		classicNode.registrySetGame(options.game);
 
@@ -303,7 +336,7 @@ export async function runCli(
 			} else if (normalizedGameVersion !== "auto") {
 				modeSuffix += ` ${normalizedGameVersion}`;
 			}
-			if (options.fcxMode) {
+			if (fcxMode) {
 				modeSuffix += " [FCX]";
 			}
 
@@ -314,7 +347,7 @@ export async function runCli(
 			console.log(`Data dir:  ${paths.data}\n`);
 		}
 
-		const concurrency = effectiveConcurrency(options.maxConcurrent);
+		const concurrency = effectiveConcurrency(requestedConcurrency);
     if (!options.json) {
 			console.log(
 				`Scanning with ${concurrency} worker thread${concurrency === 1 ? "" : "s"}\n`,
@@ -329,11 +362,15 @@ export async function runCli(
         game: options.game,
         gameVersion: normalizedGameVersion,
 				baseDirectory: process.cwd(),
-				customScanDirectory: options.scanPath,
-        showFormidValues: options.showFidValues,
-        fcxMode: options.fcxMode,
-        simplifyLogs: options.simplifyLogs,
-        moveUnsolvedLogs: false,
+				customScanDirectory: scanPath,
+				configuredDocumentsRoot:
+					userSettings.gameSetupSettings.documentsRoot,
+				showFormidValues: showFidValues,
+				fcxMode,
+				simplifyLogs,
+				moveUnsolvedLogs: scanSettings.moveUnsolvedLogs,
+				unsolvedLogsDestination:
+					scanSettings.unsolvedLogsDestination,
         targetedMode: false,
         maxConcurrent: concurrency,
         preserveOrder: false,
@@ -367,8 +404,8 @@ export async function runCli(
 
 		if (scanResult.status === "no_crash_logs_found") {
 			const noLogsMessage = scanResult.message ??
-				(options.scanPath
-					? `No crash logs found in: ${process.cwd()} or ${options.scanPath}`
+				(scanPath
+					? `No crash logs found in: ${process.cwd()} or ${scanPath}`
 					: `No crash logs found in: ${process.cwd()}`);
 			const summary: JsonSummary = {
 				mode: "scan",
@@ -438,7 +475,7 @@ export async function runCli(
 			mode: "fatal",
 			exitCode: 2,
 			game: options.game,
-			gameVersion: normalizeGameVersion(options.gameVersion),
+			gameVersion: normalizeGameVersion(options.gameVersion ?? "auto"),
 			message,
 		};
 

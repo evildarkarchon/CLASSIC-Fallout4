@@ -71,7 +71,7 @@ See: [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoi
 
 ### Node (NAPI-RS)
 
-The Node surface in [`classic-node`](../../node-bindings/classic-node/src/lib.rs) uses `#[napi(object)]` structs for DTOs, `JsXxx` wrapper types with `inner:` fields holding core Rust types, and async Rust functions that map naturally to JavaScript promises. NAPI-RS auto-converts `snake_case` Rust identifiers to `camelCase` at the JS boundary. User Settings exposes separate ordinary-update and explicit-bootstrap preview/commit pairs, and Game Setup Intake accepts the complete typed setup path context. The committed [`index.d.ts`](../../node-bindings/classic-node/index.d.ts) is the tracked generated contract artifact.
+The Node surface in [`classic-node`](../../node-bindings/classic-node/src/lib.rs) uses `#[napi(object)]` structs for DTOs, `JsXxx` wrapper types with `inner:` fields holding core Rust types, and async Rust functions that map naturally to JavaScript promises. NAPI-RS auto-converts `snake_case` Rust identifiers to `camelCase` at the JS boundary. User Settings exposes separate ordinary-update and explicit-bootstrap preview/commit pairs, scan preparation projects omitted settings from the typed snapshot, and Game Setup has both explicit-facts and explicit-root typed entry points. The intentional breaking Node cutover removed the flat `ClassicConfigJs`/`JsPathConfig`/`createDefaultConfig` surface while Rust retains temporary compatibility ownership until its later contraction. The committed [`index.d.ts`](../../node-bindings/classic-node/index.d.ts) is the tracked generated contract artifact.
 
 See: [`node-python-contract-map.md`](node-python-contract-map.md).
 

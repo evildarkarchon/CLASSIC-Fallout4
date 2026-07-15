@@ -10,6 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
+import * as classicNode from "../index.js";
 import {
   applyUserSettingsMigration,
   commitFrontendGeometryTransition,
@@ -63,6 +64,11 @@ afterEach(() => {
 });
 
 describe("read-only User Settings", () => {
+  test("does not expose the retired flat ClassicConfig facade", () => {
+    expect(classicNode).not.toHaveProperty("ClassicConfigJs");
+    expect(classicNode).not.toHaveProperty("createDefaultConfig");
+  });
+
   test("user-settings-published-defaults", () => {
     const snapshot = publishedUserSettingsDefaults();
 

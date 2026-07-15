@@ -13,7 +13,6 @@ import {
   processLogWithYamlContent,
   processLogsBatchWithYamlContent,
   scanRunExecute,
-  setApplicationDir,
   parseLogSegments,
   extractFormIds,
   extractPluginList,
@@ -152,7 +151,7 @@ const writeFcxAppFixture = (name: string, withIssue: boolean): string => {
 
   writeFileSync(
     join(appDir, "CLASSIC Settings.yaml"),
-    `paths:\n  game_root: ${normalizeYamlPath(gameRoot)}\n`,
+    `schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  Game Version: Original\n  Game Folder Path: '${normalizeYamlPath(gameRoot)}'\n`,
     "utf8",
   );
 
@@ -428,6 +427,36 @@ describe("scanRunExecute", () => {
     }
   });
 
+  test("prepares FCX Game Setup from canonical User Settings", async () => {
+    const root = writeScanRunDataRoot("classic-node-scan-run-user-settings-fcx");
+    const logDir = join(root, "Crash Logs");
+    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
+    const gameRoot = join(root, "Fallout4");
+    const gameExecutable = join(gameRoot, "Fallout4.exe");
+
+    try {
+      mkdirSync(logDir, { recursive: true });
+      mkdirSync(gameRoot, { recursive: true });
+      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
+      writeFileSync(gameExecutable, "", "utf8");
+      writeFileSync(
+        join(root, "CLASSIC Settings.yaml"),
+        `schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  Game Version: Original\n  Game Folder Path: '${normalizeYamlPath(gameRoot)}'\n  Game EXE Path: '${normalizeYamlPath(gameExecutable)}'\n`,
+        "utf8",
+      );
+
+      const scanResult = await scanRunExecute([logPath], {
+        ...scanRunOptions(root, { fcxMode: true, targetedMode: true }),
+      });
+
+      expect(scanResult.setup).toBeDefined();
+      expect(scanResult.setup?.actions).not.toContain("provide_setup_context");
+      expect(scanResult.setup?.checks.length).toBeGreaterThan(0);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("marks report write failures separately from analysis failures", async () => {
     const root = writeScanRunDataRoot("classic-node-scan-run-report-failure");
     const logDir = join(root, "Crash Logs");
@@ -560,11 +589,53 @@ describe("scanRunExecute", () => {
 });
 
 describe("FCX scan state isolation", () => {
-  const fcxOptions = { fcxMode: true };
+  const fcxOptions = (classicRoot: string) => ({
+    fcxMode: true,
+    classicRoot,
+  });
+
+  test("prepares lower-level FCX analysis from an explicit User Settings root", async () => {
+    const root = writeFcxAppFixture("classic-node-fcx-user-settings", true);
+    const gameRoot = join(root, "Fallout4");
+
+    try {
+      writeFileSync(
+        join(root, "CLASSIC Settings.yaml"),
+        `schema_version: "1.0"\nCLASSIC_Settings:\n  Managed Game: Fallout 4\n  Game Version: Original\n  Game Folder Path: '${normalizeYamlPath(gameRoot)}'\n`,
+        "utf8",
+      );
+
+      try {
+        await processLogWithYamlContent(
+          MISSING_LOG_PATH,
+          MAIN_YAML,
+          GAME_YAML,
+          IGNORE_YAML,
+          "Fallout4",
+          "auto",
+          { fcxMode: true, classicRoot: root },
+        );
+      } catch {
+        // FCX state is prepared before file I/O; a missing log still exercises setup.
+      }
+
+      expect(getFcxConfigIssues()).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            filePath: expect.stringContaining("epo.ini"),
+          }),
+        ]),
+      );
+    } finally {
+      resetFcxGlobalState();
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   const scanVariants = [
     {
       name: "processLog",
-      run: async () => {
+      run: async (classicRoot: string) => {
         const config = createAnalysisConfigFromYamlContent(
           MAIN_YAML,
           GAME_YAML,
@@ -573,6 +644,7 @@ describe("FCX scan state isolation", () => {
           "auto",
         );
         config.fcxMode = true;
+        config.classicRoot = classicRoot;
 
         try {
           await processLog(MISSING_LOG_PATH, config);
@@ -583,7 +655,7 @@ describe("FCX scan state isolation", () => {
     },
     {
       name: "processLogsBatch",
-      run: async () => {
+      run: async (classicRoot: string) => {
         const config = createAnalysisConfigFromYamlContent(
           MAIN_YAML,
           GAME_YAML,
@@ -592,13 +664,14 @@ describe("FCX scan state isolation", () => {
           "auto",
         );
         config.fcxMode = true;
+        config.classicRoot = classicRoot;
 
         await processLogsBatch([MISSING_LOG_PATH], config, 1);
       },
     },
     {
       name: "processLogWithYamlContent",
-      run: async () => {
+      run: async (classicRoot: string) => {
         try {
           await processLogWithYamlContent(
             MISSING_LOG_PATH,
@@ -607,7 +680,7 @@ describe("FCX scan state isolation", () => {
             IGNORE_YAML,
             "Fallout4",
             "auto",
-            fcxOptions,
+            fcxOptions(classicRoot),
           );
         } catch {
           // FCX state is prepared before file I/O; a missing log still exercises scan-start reset.
@@ -616,7 +689,7 @@ describe("FCX scan state isolation", () => {
     },
     {
       name: "processLogsBatchWithYamlContent",
-      run: async () => {
+      run: async (classicRoot: string) => {
         await processLogsBatchWithYamlContent(
           [MISSING_LOG_PATH],
           MAIN_YAML,
@@ -624,7 +697,7 @@ describe("FCX scan state isolation", () => {
           IGNORE_YAML,
           "Fallout4",
           "auto",
-          fcxOptions,
+          fcxOptions(classicRoot),
           1,
         );
       },
@@ -641,8 +714,7 @@ describe("FCX scan state isolation", () => {
       const cleanAppDir = writeFcxAppFixture("classic-node-fcx-clean", false);
 
       try {
-        setApplicationDir(issueAppDir);
-        await run();
+        await run(issueAppDir);
 
         expect(getFcxConfigIssues()).toEqual(
           expect.arrayContaining([
@@ -654,8 +726,7 @@ describe("FCX scan state isolation", () => {
           ]),
         );
 
-        setApplicationDir(cleanAppDir);
-        await run();
+        await run(cleanAppDir);
 
         expect(getFcxConfigIssues()).toEqual([]);
       } finally {
@@ -669,8 +740,6 @@ describe("FCX scan state isolation", () => {
     const issueAppDir = writeFcxAppFixture("classic-node-fcx-reset", true);
 
     try {
-      setApplicationDir(issueAppDir);
-
       try {
         await processLogWithYamlContent(
           MISSING_LOG_PATH,
@@ -679,7 +748,7 @@ describe("FCX scan state isolation", () => {
           IGNORE_YAML,
           "Fallout4",
           "auto",
-          fcxOptions,
+          fcxOptions(issueAppDir),
         );
       } catch {
         // FCX state is prepared before file I/O; a missing log still exercises scan-start reset.

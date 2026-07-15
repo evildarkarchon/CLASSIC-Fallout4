@@ -11,7 +11,7 @@
 //! Parsing utilities (`parseLogSegments`, `extractFormIds`, `extractPluginList`,
 //! `detectCrashPattern`) are synchronous and operate on string content directly.
 
-use classic_config_core::{ClassicConfig, YamlDataCore};
+use classic_config_core::YamlDataCore;
 use classic_scangame_core::{GameSetupIntake, detect_config_issues};
 use classic_scanlog_core::crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 use classic_scanlog_core::orchestrator;
@@ -24,7 +24,6 @@ use classic_scanlog_core::{
     CrashLogScanRunServiceRequest, CrashLogScanSetupContext, CrashLogScanSetupResult,
     CrashLogScanSource, OrchestratorCore, StandardCrashLogScanSource, TargetedCrashLogScanSource,
 };
-use classic_shared_core::GameId;
 use classic_user_settings_core::UserSettings;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -41,37 +40,6 @@ fn normalize_max_concurrent(max_concurrent: Option<u32>) -> Option<usize> {
         Some(0) | None => None,
         Some(value) => Some(value as usize),
     }
-}
-
-async fn load_classic_config() -> napi::Result<ClassicConfig> {
-    ClassicConfig::load_or_default()
-        .await
-        .map_err(|error| to_napi_err(format!("failed to load CLASSIC config: {error}")))
-}
-
-fn infer_game_id(config: &ClassicConfig) -> Option<GameId> {
-    let game_root = &config.paths.game_root;
-    if !game_root.as_os_str().is_empty() {
-        if let Some(game_id) = GameId::all()
-            .into_iter()
-            .find(|game_id| game_root.join(game_id.exe_name()).exists())
-        {
-            return Some(game_id);
-        }
-
-        if let Some(name) = game_root.file_name().and_then(|name| name.to_str())
-            && let Ok(game_id) = name.parse::<GameId>()
-        {
-            return Some(game_id);
-        }
-    }
-
-    None
-}
-
-/// Build a read-only Game Setup Intake from saved CLASSIC configuration.
-fn build_game_setup_intake(config: &ClassicConfig, game_id: GameId) -> Option<GameSetupIntake> {
-    GameSetupIntake::from_config(config, game_id)
 }
 
 fn to_scanlog_issue(issue: classic_scangame_core::ConfigIssue) -> ConfigIssue {
@@ -95,24 +63,27 @@ fn format_detected_issues(issues: &[ConfigIssue]) -> String {
     issues.iter().map(ConfigIssue::format_report).collect()
 }
 
-async fn run_fcx_scan_state_checks() -> napi::Result<()> {
-    let config = load_classic_config().await?;
-    let game_id = infer_game_id(&config).ok_or_else(|| {
-        to_napi_err("failed to infer game id from configured game root; run path detection first")
-    })?;
-
-    let main_result = build_game_setup_intake(&config, game_id)
-        .map(|intake| intake.run().rendered_report)
+/// Populate the process-wide FCX diagnostics from typed User Settings at an explicit root.
+///
+/// This read-only check replaces the previous implicit `ClassicConfig` lookup, but it still
+/// mutates `GLOBAL_FCX_HANDLER` so all maintained scan entry points expose the same results.
+fn run_fcx_scan_state_checks(classic_root: &str) {
+    let user_settings = UserSettings::open(classic_root);
+    let intake = GameSetupIntake::from_user_settings(user_settings.game_setup_settings());
+    let game_id = intake.game_id;
+    let setup = intake.run();
+    let main_result = setup.rendered_report;
+    let rust_issues: Vec<ConfigIssue> = setup
+        .paths
+        .game_root
+        .as_deref()
+        .map(|game_root| {
+            detect_config_issues(game_root, game_id.as_str())
+                .into_iter()
+                .map(to_scanlog_issue)
+                .collect()
+        })
         .unwrap_or_default();
-
-    let rust_issues: Vec<ConfigIssue> = if config.paths.game_root.as_os_str().is_empty() {
-        Vec::new()
-    } else {
-        detect_config_issues(&config.paths.game_root, game_id.as_str())
-            .into_iter()
-            .map(to_scanlog_issue)
-            .collect()
-    };
     let game_result = format_detected_issues(&rust_issues);
 
     let mut global_handler = GLOBAL_FCX_HANDLER.lock();
@@ -121,11 +92,15 @@ async fn run_fcx_scan_state_checks() -> napi::Result<()> {
     global_handler.set_main_files_result(main_result);
     global_handler.set_game_files_result(game_result);
     global_handler.set_detected_issues(rust_issues);
-
-    Ok(())
 }
 
-async fn prepare_fcx_state_for_scan(fcx_mode: bool) -> napi::Result<()> {
+/// Reset FCX state for a new scan and, when enabled, repopulate it from User Settings.
+///
+/// FCX callers must provide `classic_root`; disabled scans only clear stale process-wide state.
+async fn prepare_fcx_state_for_scan(
+    fcx_mode: bool,
+    classic_root: Option<&str>,
+) -> napi::Result<()> {
     match FcxModeHandler::reset_global_state() {
         Ok(()) | Err(FcxResetError::Unnecessary) => {}
         Err(error) => {
@@ -136,7 +111,13 @@ async fn prepare_fcx_state_for_scan(fcx_mode: bool) -> napi::Result<()> {
     }
 
     if fcx_mode {
-        run_fcx_scan_state_checks().await?;
+        let classic_root = classic_root.ok_or_else(|| {
+            napi::Error::new(
+                napi::Status::InvalidArg,
+                "FCX analysis requires an explicit classicRoot User Settings root",
+            )
+        })?;
+        run_fcx_scan_state_checks(classic_root);
     }
 
     Ok(())
@@ -173,6 +154,8 @@ pub struct JsAnalysisConfig {
     pub fcx_mode: bool,
     /// Whether to simplify logs
     pub simplify_logs: bool,
+    /// Explicit CLASSIC root used to open typed User Settings for FCX preparation.
+    pub classic_root: Option<String>,
     /// Per-crashgen registry entries with optional settings rules.
     pub crashgen_registry: Option<HashMap<String, JsCrashgenRegistryEntry>>,
 }
@@ -189,6 +172,8 @@ pub struct JsAnalysisBuildOptions {
     pub simplify_logs: Option<bool>,
     /// Strings to remove when simplify logs is enabled.
     pub remove_list: Option<Vec<String>>,
+    /// Explicit CLASSIC root used to open typed User Settings for FCX preparation.
+    pub classic_root: Option<String>,
 }
 
 /// JavaScript-compatible analysis result.
@@ -408,6 +393,7 @@ pub fn create_analysis_config(game: String, game_version: String) -> JsAnalysisC
         classic_version: "CLASSIC".to_string(),
         fcx_mode: false,
         simplify_logs: false,
+        classic_root: None,
         crashgen_registry: Some(HashMap::new()),
     }
 }
@@ -434,9 +420,9 @@ pub fn get_fcx_config_issues() -> Vec<JsFcxConfigIssue> {
 
 fn resolve_build_options(
     options: Option<JsAnalysisBuildOptions>,
-) -> (bool, bool, bool, Vec<String>) {
+) -> (bool, bool, bool, Vec<String>, Option<String>) {
     let Some(options) = options else {
-        return (false, false, false, Vec::new());
+        return (false, false, false, Vec::new(), None);
     };
 
     (
@@ -444,6 +430,7 @@ fn resolve_build_options(
         options.fcx_mode.unwrap_or(false),
         options.simplify_logs.unwrap_or(false),
         options.remove_list.unwrap_or_default(),
+        options.classic_root,
     )
 }
 
@@ -455,7 +442,8 @@ fn build_core_config_from_yaml_content(
     selected_game_version: String,
     options: Option<JsAnalysisBuildOptions>,
 ) -> napi::Result<(orchestrator::AnalysisConfig, YamlDataCore)> {
-    let (show_formid_values, fcx_mode, simplify_logs, remove_list) = resolve_build_options(options);
+    let (show_formid_values, fcx_mode, simplify_logs, remove_list, _) =
+        resolve_build_options(options);
     let yaml = YamlDataCore::from_yaml_content(
         &main_content,
         &game_content,
@@ -488,6 +476,9 @@ pub fn create_analysis_config_from_yaml_content(
     game_version: String,
     options: Option<JsAnalysisBuildOptions>,
 ) -> napi::Result<JsAnalysisConfig> {
+    let classic_root = options
+        .as_ref()
+        .and_then(|options| options.classic_root.clone());
     let (core_config, yaml) = build_core_config_from_yaml_content(
         main_content,
         game_content,
@@ -505,6 +496,7 @@ pub fn create_analysis_config_from_yaml_content(
         classic_version: core_config.classic_version,
         fcx_mode: core_config.fcx_mode,
         simplify_logs: core_config.simplify_logs,
+        classic_root,
         crashgen_registry: Some(
             yaml.crashgen_registry
                 .iter()
@@ -536,8 +528,8 @@ pub async fn process_log_with_yaml_content(
     game_version: String,
     options: Option<JsAnalysisBuildOptions>,
 ) -> napi::Result<JsAnalysisResult> {
-    let (_, fcx_mode, _, _) = resolve_build_options(options.clone());
-    prepare_fcx_state_for_scan(fcx_mode).await?;
+    let (_, fcx_mode, _, _, classic_root) = resolve_build_options(options.clone());
+    prepare_fcx_state_for_scan(fcx_mode, classic_root.as_deref()).await?;
     let (core_config, _) = build_core_config_from_yaml_content(
         main_content,
         game_content,
@@ -577,8 +569,8 @@ pub async fn process_logs_batch_with_yaml_content(
     options: Option<JsAnalysisBuildOptions>,
     max_concurrent: Option<u32>,
 ) -> napi::Result<Vec<JsAnalysisResult>> {
-    let (_, fcx_mode, _, _) = resolve_build_options(options.clone());
-    prepare_fcx_state_for_scan(fcx_mode).await?;
+    let (_, fcx_mode, _, _, classic_root) = resolve_build_options(options.clone());
+    prepare_fcx_state_for_scan(fcx_mode, classic_root.as_deref()).await?;
     let (core_config, _) = build_core_config_from_yaml_content(
         main_content,
         game_content,
@@ -619,13 +611,26 @@ pub async fn scan_run_execute(
     options: JsScanRunOptions,
 ) -> napi::Result<JsScanRunResult> {
     let handle = classic_shared_core::get_runtime().handle().clone();
-    // Core folds the `Some(0)` sentinel to the adaptive default at the service boundary.
-    let max_concurrent = options.max_concurrent.map(|value| value as usize);
-    let show_formid_values = options.show_formid_values.unwrap_or(false);
-    let fcx_mode = options.fcx_mode.unwrap_or(false);
-    let simplify_logs = options.simplify_logs.unwrap_or(false);
+    let yaml_dir_root = PathBuf::from(&options.yaml_dir_root);
+    let yaml_dir_data = PathBuf::from(&options.yaml_dir_data);
+    let user_settings = UserSettings::open(&yaml_dir_root);
+    let scan_settings = user_settings.crash_log_scan_settings();
+    let max_concurrent = normalize_max_concurrent(
+        options
+            .max_concurrent
+            .or_else(|| Some(scan_settings.max_concurrent_scans())),
+    );
+    let show_formid_values = options
+        .show_formid_values
+        .unwrap_or_else(|| scan_settings.formid_value_lookup());
+    let fcx_mode = options.fcx_mode.unwrap_or_else(|| scan_settings.fcx_mode());
+    let simplify_logs = options
+        .simplify_logs
+        .unwrap_or_else(|| scan_settings.simplify_logs());
     let targeted_mode = options.targeted_mode.unwrap_or(false);
-    let move_unsolved_logs = options.move_unsolved_logs.unwrap_or(false);
+    let move_unsolved_logs = options
+        .move_unsolved_logs
+        .unwrap_or_else(|| scan_settings.move_unsolved_logs());
     // JavaScript forms use blank strings as an absent optional path; normalize that
     // sentinel before core validates custom destinations as absolute paths.
     let requested_unsolved_logs_destination = options
@@ -635,10 +640,32 @@ pub async fn scan_run_execute(
         .filter(|destination| !destination.is_empty())
         .map(PathBuf::from);
     let preserve_order = options.preserve_order.unwrap_or(false);
-    let yaml_dir_root = PathBuf::from(&options.yaml_dir_root);
-    let yaml_dir_data = PathBuf::from(&options.yaml_dir_data);
-    let user_settings = UserSettings::open(&yaml_dir_root);
-    let scan_settings = user_settings.crash_log_scan_settings();
+    let custom_scan_directory = options
+        .custom_scan_directory
+        .as_deref()
+        .or_else(|| scan_settings.custom_scan_input())
+        .map(PathBuf::from);
+    let configured_documents_root = options
+        .configured_documents_root
+        .as_deref()
+        .or_else(|| user_settings.game_setup_settings().documents_root())
+        .map(PathBuf::from);
+    let setup_context = options
+        .setup_context
+        .map(js_setup_context_to_core)
+        .or_else(|| {
+            // FCX callers may override live facts, but the maintained default path must
+            // come from the typed User Settings group rather than legacy ClassicConfig.
+            fcx_mode.then(|| {
+                let settings = user_settings.game_setup_settings();
+                CrashLogScanSetupContext {
+                    game_root: settings.game_root().map(PathBuf::from),
+                    docs_root: settings.documents_root().map(PathBuf::from),
+                    game_exe_path: settings.game_executable().map(PathBuf::from),
+                    xse_log_path: None,
+                }
+            })
+        });
     let formid_database_paths = scan_settings
         .formid_databases()
         .get(&options.game)
@@ -662,11 +689,10 @@ pub async fn scan_run_execute(
                         .base_directory
                         .map(PathBuf::from)
                         .unwrap_or_else(|| yaml_dir_root.clone()),
-                    custom_scan_directory: options.custom_scan_directory.map(PathBuf::from),
-                    configured_documents_root: options.configured_documents_root.map(PathBuf::from),
+                    custom_scan_directory,
+                    configured_documents_root,
                 })
             };
-            let setup_context = options.setup_context.map(js_setup_context_to_core);
             let request = CrashLogScanRunServiceRequest {
                 yaml_dir_root,
                 yaml_dir_data,
@@ -711,7 +737,7 @@ pub async fn process_log(
     log_path: String,
     config: JsAnalysisConfig,
 ) -> napi::Result<JsAnalysisResult> {
-    prepare_fcx_state_for_scan(config.fcx_mode).await?;
+    prepare_fcx_state_for_scan(config.fcx_mode, config.classic_root.as_deref()).await?;
     let core_config = _js_config_to_core(&config);
     let handle = classic_shared_core::get_runtime().handle().clone();
 
@@ -744,7 +770,7 @@ pub async fn process_logs_batch(
     config: JsAnalysisConfig,
     max_concurrent: Option<u32>,
 ) -> napi::Result<Vec<JsAnalysisResult>> {
-    prepare_fcx_state_for_scan(config.fcx_mode).await?;
+    prepare_fcx_state_for_scan(config.fcx_mode, config.classic_root.as_deref()).await?;
     let core_config = _js_config_to_core(&config);
     let handle = classic_shared_core::get_runtime().handle().clone();
     let max_concurrent = normalize_max_concurrent(max_concurrent);

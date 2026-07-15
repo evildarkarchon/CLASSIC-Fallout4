@@ -153,24 +153,22 @@ Intake and bridge adapter tests cover contributor-relevant cases:
 
 The active repo surfaces are split across this same boundary.
 
-## Surfaces that expose `ClassicConfig.formid_databases`
+## Remaining binding surface that exposes `ClassicConfig.formid_databases`
 
-These wrappers expose the Rust `ClassicConfig` field directly:
+The Python compatibility wrapper still exposes the Rust `ClassicConfig` field directly:
 
-- [`node-bindings/classic-node/src/config.rs`](../../node-bindings/classic-node/src/config.rs)
 - [`python-bindings/classic-config-py/src/lib.rs`](../../python-bindings/classic-config-py/src/lib.rs)
 
 Current binding behavior:
 
 - getters return `HashMap<String, Vec<String>>`
 - setters write back into `ClassicConfig.formid_databases`
-- the Node test suite covers round-trip behavior for `Fallout4` and `Skyrim`
 
-These bindings mirror the Rust config model. They do not, in the inspected source, redirect scan startup to the canonical nested User Settings key.
+This wrapper mirrors the Rust config model. The Node binding intentionally removed its `ClassicConfigJs` and `JsPathConfig` facade; its inspection and scan-start paths now use the canonical typed User Settings group.
 
 ## Surfaces that expose typed User Settings FormID databases
 
-The CXX, Node, and Python User Settings adapters expose `CrashLogScanSettings.formid_databases` from the canonical nested document together with its preference origin. Their update-preview adapters validate requested replacement maps without writing. The native CLI consumes the narrow CXX typed group. The native GUI consumes the aggregate `GuiSettingsSnapshotDto`, whose four settings groups come from one source revision. The Rust TUI opens the same core snapshot directly. Each native frontend selects the active game's paths and projects explicit `CrashLogScanFacts`; scanlog core never opens a settings document.
+The CXX, Node, and Python User Settings adapters expose `CrashLogScanSettings.formid_databases` from the canonical nested document together with its preference origin. Their update-preview adapters validate requested replacement maps without writing. The native CLI consumes the narrow CXX typed group; the Node CLI and `scanRunExecute` consume the Node typed group. The native GUI consumes the aggregate `GuiSettingsSnapshotDto`, whose four settings groups come from one source revision. The Rust TUI opens the same core snapshot directly. Each maintained frontend selects the active game's paths and projects explicit `CrashLogScanFacts`; scanlog core never opens a settings document.
 
 ## Native GUI typed edit and scan-launch surface
 

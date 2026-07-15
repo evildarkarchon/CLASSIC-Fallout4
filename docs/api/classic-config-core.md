@@ -106,6 +106,8 @@ Contributor notes:
 
 `ClassicConfig` is the transitional legacy flat-schema settings struct. New User Settings ownership lives in [`classic-user-settings-core`](classic-user-settings-core.md); maintained consumers migrate there through the staged ADR-0004 tickets before `ClassicConfig` is removed in the intentional breaking cutovers.
 
+The Node binding has completed that intentional breaking cutover. It no longer exports `ClassicConfigJs`, `JsPathConfig`, or `createDefaultConfig`; Node callers use the explicit-root User Settings API instead. Rust and the not-yet-contracted bindings retain this section only until the final ADR-0004 contraction.
+
 Key fields include:
 
 - feature flags such as `fcx_mode`, `show_formid_values`, `stat_logging`, `simplify_logs`
