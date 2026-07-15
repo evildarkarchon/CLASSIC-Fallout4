@@ -9,8 +9,8 @@
 
 /// ANSI-based progress display for concurrent crash log scanning.
 ///
-/// Thread-safe: workers or scan-run callbacks call report_started/report_finished/report_error,
-/// while a renderer polls render() every 100ms.
+/// Thread-safe: workers or scan-run callbacks call report_started/report_finished/report_error.
+/// A frontend may render synchronously after events or poll render() from a dedicated renderer.
 class ProgressDisplay {
 public:
     ProgressDisplay(uint32_t total, const std::string& game);
@@ -36,7 +36,7 @@ public:
     /// Render the progress bar + in-flight list to stdout (main thread).
     void render();
 
-    /// Clear all rendered lines and print final summary.
+    /// Clears the current dynamic progress frame; callers own durable messages and summaries.
     void finish();
 
     uint32_t completed() const { return completed_.load(std::memory_order_relaxed); }

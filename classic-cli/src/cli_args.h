@@ -15,7 +15,7 @@ struct CliArgs {
     bool simplify_logs = false;
     std::string scan_path;                 // Empty = auto-detect
     std::string unsolved_logs_destination; // Empty = use configured/canonical destination
-    uint32_t max_concurrent = 0;           // 0 = auto (cpu_count - 2, min 2, max 32)
+    uint32_t max_concurrent = 0;           // 0 = Rust-selected adaptive concurrency
     bool max_concurrent_was_explicit = false;
     bool version_flag = false;
     bool reset_unsolved_logs_destination = false;
@@ -33,9 +33,6 @@ struct CliArgs {
     // pipeline like the yaml-update flags.
     bool check_app_update = false;
 };
-
-uint32_t auto_concurrency_for_cpu_count(uint32_t cpu_count);
-uint32_t effective_concurrency(uint32_t requested, uint32_t cpu_count);
 
 /// Parse command-line arguments using CLI11.
 /// Exits the process on --help or parse error.

@@ -31,7 +31,7 @@ Before scanning, `user_settings_action.cpp` opens typed projections through:
 
 Only explicitly supplied CLI options override typed saved values. Persistence is an explicit User Settings preview/commit action; ordinary scan preparation is read-only. The CLI never interprets raw `CLASSIC_Settings` paths and never bootstraps from `CLASSIC_Info.default_settings`.
 
-The scanner then passes explicit facts to Rust-backed scan entry points. Report creation, FormID analysis, database access, and YAML Data interpretation remain in their owning Rust core crates.
+The scanner projects those explicit facts into the tagged Standard or Targeted CXX request constructors and calls `scan_run_contract_execute(...)` once. Rust owns Crash Log discovery, effective-concurrency selection, run-scoped FCX setup, analysis, Autoscan Report persistence, Unsolved Logs finalization, and discovery-order terminal results. The CLI owns only event/result presentation and a scoped Ctrl+C monitor that requests cooperative cancellation through the opaque run control.
 
 ## Rust TUI flow
 

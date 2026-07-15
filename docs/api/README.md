@@ -35,7 +35,7 @@ Use this directory in this order:
 22. [`classic-scangame-core.md`](classic-scangame-core.md) - game-installation, archive, loose-file, and setup validation workflows
 23. [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md) - active C++ bridge entry points for path, game, and scangame workflows
 24. [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md) - active C++ bridge entry points for config, file I/O, database, and scanlog workflows
-25. [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md) - current batch scan progress callback contract for `classic::scanner`
+25. [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md) - batch callback and final Crash Log Scan Run observer contracts for `classic::scanner`
 26. [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md) - how `classic-gui` consumes bridge scan progress through `ScanWorker`, `BatchProgressModel`, `ScanController`, and `MainWindow`
 27. [`classic-gui-scan-result-ordering.md`](classic-gui-scan-result-ordering.md) - current Qt-side behavior for completion-order batch results, `input_index` correlation, and Results-tab ordering boundaries
 28. [`binding-parity-overview.md`](binding-parity-overview.md) - complete C++ bridge, Node, and Python binding surface reference for all shared Rust crates

@@ -1,23 +1,9 @@
 #include "cli_args.h"
-#include <algorithm>
 #include <CLI/CLI.hpp>
 #include <filesystem>
 #include <fmt/core.h>
-#include <thread>
 
 namespace fs = std::filesystem;
-
-uint32_t auto_concurrency_for_cpu_count(uint32_t cpu_count) {
-    auto recommended = std::max(cpu_count, 4u) - 2u;
-    return std::min(recommended, 32u);
-}
-
-uint32_t effective_concurrency(uint32_t requested, uint32_t cpu_count) {
-    if (requested > 0) {
-        return requested;
-    }
-    return auto_concurrency_for_cpu_count(cpu_count);
-}
 
 CliArgs parse_args(int argc, char* argv[]) {
     CliArgs args;
@@ -25,14 +11,14 @@ CliArgs parse_args(int argc, char* argv[]) {
     CLI::App app{"CLASSIC - Crash Log Auto Scanner & Setup Integrity Checker"};
 
     auto* game_option = app.add_option("--game", args.game, "Game to scan (Fallout4, Skyrim)")
-        ->default_val("Fallout4")
-        ->check(CLI::IsMember({"Fallout4", "Skyrim"}));
+                            ->default_val("Fallout4")
+                            ->check(CLI::IsMember({"Fallout4", "Skyrim"}));
 
-    auto* game_version_option = app.add_option(
-        "--game-version", args.game_version,
-        "Game version mode (auto, Original, NextGen, AnniversaryEdition/AE, VR)")
-        ->default_val("auto")
-        ->check(CLI::IsMember({"auto", "Original", "NextGen", "AnniversaryEdition", "AE", "VR"}));
+    auto* game_version_option =
+        app.add_option("--game-version", args.game_version,
+                       "Game version mode (auto, Original, NextGen, AnniversaryEdition/AE, VR)")
+            ->default_val("auto")
+            ->check(CLI::IsMember({"auto", "Original", "NextGen", "AnniversaryEdition", "AE", "VR"}));
     app.add_flag("--fcx-mode", args.fcx_mode, "Enable FCX local file checks and enhanced analysis");
     app.add_flag("--show-fid-values", args.show_fid_values, "Show FormID database values");
     app.add_flag("--simplify-logs", args.simplify_logs, "Remove specified strings from logs");
@@ -43,14 +29,11 @@ CliArgs parse_args(int argc, char* argv[]) {
     app.add_flag("--reset-unsolved-logs-destination", args.reset_unsolved_logs_destination,
                  "Reset Unsolved Logs relocation to the canonical CLASSIC backup folder");
 
-    auto cpu_count = std::thread::hardware_concurrency();
-    auto recommended = auto_concurrency_for_cpu_count(cpu_count);
-    auto* max_concurrent_option = app.add_option(
-        "--max-concurrent", args.max_concurrent,
-        "Max parallel scans (0=auto, recommended: " + std::to_string(recommended) + " for " +
-            std::to_string(cpu_count) + " cores)")
-        ->default_val(0)
-        ->check(CLI::Range(0u, 32u));
+    auto* max_concurrent_option =
+        app.add_option("--max-concurrent", args.max_concurrent,
+                       "Max parallel scans (0=auto; Rust selects the effective concurrency for discovered work)")
+            ->default_val(0)
+            ->check(CLI::Range(0u, 32u));
 
     app.add_flag("--version", args.version_flag, "Print version and exit");
 

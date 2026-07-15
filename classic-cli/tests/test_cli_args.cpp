@@ -45,19 +45,6 @@ TEST_CASE("CliArgs defaults", "[cli_args]") {
     REQUIRE(args.rollback_yaml_updates == false);
 }
 
-TEST_CASE("Auto concurrency helper preserves floor and cap", "[cli_args]") {
-    REQUIRE(auto_concurrency_for_cpu_count(1) == 2);
-    REQUIRE(auto_concurrency_for_cpu_count(2) == 2);
-    REQUIRE(auto_concurrency_for_cpu_count(3) == 2);
-    REQUIRE(auto_concurrency_for_cpu_count(8) == 6);
-    REQUIRE(auto_concurrency_for_cpu_count(40) == 32);
-}
-
-TEST_CASE("Effective concurrency helper preserves explicit overrides", "[cli_args]") {
-    REQUIRE(effective_concurrency(5, 3) == 5);
-    REQUIRE(effective_concurrency(0, 3) == 2);
-}
-
 TEST_CASE("CliArgs game selection", "[cli_args]") {
     SECTION("Fallout4 (explicit)") {
         ArgvBuilder ab({"classic-cli", "--game", "Fallout4"});

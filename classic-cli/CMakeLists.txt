@@ -72,6 +72,7 @@ add_executable(classic-cli
     src/main.cpp
     src/cli_args.cpp
     src/scanner.cpp
+    src/scan_run_cli.cpp
     src/progress.cpp
     src/yaml_update.cpp
     src/app_update.cpp
@@ -208,9 +209,12 @@ if(Catch2_FOUND)
         tests/test_yaml_update.cpp
         tests/test_app_update.cpp
         tests/test_scan_run_contract.cpp
+        tests/test_scanner.cpp
         tests/test_user_settings_action.cpp
         src/yaml_update.cpp
         src/app_update.cpp
+        src/progress.cpp
+        src/scan_run_cli.cpp
         src/user_settings_action.cpp
     )
 

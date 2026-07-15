@@ -47,14 +47,14 @@ The typed read path retains relative strings exactly; Crash Log Scan preparation
 Important contributor takeaway:
 
 - the typed map is the only persisted representation
-- `classic-user-settings-core` owns the typed canonical projection; the native CLI and GUI select the effective game and copy only that game's rows into `ScanRunRequestDto.formid_database_paths`
+- `classic-user-settings-core` owns the typed canonical projection; the native CLI copies only the effective game's rows into `ScanRunConfigurationDto.formid_database_paths`, while the GUI currently projects its selected rows through its native launch request
 - `classic-cpp-bridge` converts the request vector into `CrashLogScanFacts`; scanlog-core owns path resolution, built-in ordering, and de-duplication
 
 ---
 
 ## What Crash Log Scan Intake Reads At Scan Startup Today
 
-Native CLI scan startup opens `CrashLogScanSettingsDto`, selects the flattened rows for the effective game, and sends them through `ScanRunRequestDto.formid_database_paths`. Native GUI settings load opens one `GuiSettingsSnapshotDto`; at scan startup its Qt adapter creates an immutable `CrashLogScanLaunchSettings` from that accepted revision, selecting the effective game's FormID rows. `buildScanRunRequest(...)` copies those rows into the same request field. The C++ bridge creates `CrashLogScanFacts`, then `CrashLogScanRunService` attaches those facts to `CrashLogScanIntake::from_yaml_paths(...).prepare()`.
+Native CLI scan startup opens `CrashLogScanSettingsDto`, selects the flattened rows for the effective game, and sends them through `ScanRunConfigurationDto.formid_database_paths` into a tagged final-contract request. Native GUI settings load opens one `GuiSettingsSnapshotDto`; at scan startup its Qt adapter creates an immutable `CrashLogScanLaunchSettings` from that accepted revision, selecting the effective game's FormID rows. The C++ bridge creates `CrashLogScanFacts`, and the Rust-owned Crash Log Scan Run attaches those facts to `CrashLogScanIntake::from_yaml_paths(...).prepare()`.
 
 Current path assembly order is:
 

@@ -135,7 +135,7 @@ It owns:
 - YAML-backed scan config construction
 - explicit FCX singleton reset through `classic::scanner::fcx_reset_global_state()`
 - `OrchestratorCore` creation and single and batch scan entry points
-- full Crash Log Scan Run execution through `scan_run_execute(...)`
+- final tagged Crash Log Scan Run execution through `scan_run_contract_execute(...)`, plus the temporary legacy `scan_run_execute(...)` adapter
 - delegation to `classic-scanlog-core` Crash Log Scan Intake for remove-list loading, FormID DB path selection, and short-scan cache profile choice
 - progress callback DTOs for batch scanning
 - small scan utilities such as `detect_vr_log` and `detect_crash_pattern`
@@ -179,7 +179,7 @@ This is currently where `classic-config-core`, `classic-database-core`, `classic
 
 `user_settings_commit_update(classic_root, base_revision, update) -> Result<UserSettingsCommitResultDto>` requires the revision returned by the accepted preview, reopens and compares it before revalidating the request, then delegates publication to the Rust core's locked atomic commit. `status` is `committed`, `conflict`, or `rejected`; the DTO carries the new revision, expected/actual conflict revisions, or rejection diagnostics as appropriate. Operational failures propagate as `rust::Error` with the stable core code prefixed in the message. C++ never reconstructs or trusts an `AcceptedUserSettingsUpdate` from the flattened preview fields.
 
-The native CLI scan adapter opens the Crash Log Scan and Game Setup DTOs once, reports their structured diagnostics and migration/blocked-commit state, then builds explicit scan facts. Saved values supply game/version, FCX Mode, Simplify Logs, FormID Value Lookup and configured databases, custom scan input, concurrency, setup paths, and Unsolved Logs policy; explicitly present CLI options override the corresponding saved value. `--unsolved-logs-destination` and `--reset-unsolved-logs-destination` preview and commit through the typed revision-aware CXX seam before the scan snapshot is reopened.
+The native CLI scan adapter opens the Crash Log Scan and Game Setup DTOs once, reports their structured diagnostics and migration/blocked-commit state, then projects explicit facts through the tagged `scan_run_request_standard[_with_fcx](...)` or `scan_run_request_targeted[_with_fcx](...)` constructors. Saved values supply game/version, FCX Mode, Simplify Logs, FormID Value Lookup and configured databases, Standard discovery sources, concurrency intent, setup paths, and Unsolved Logs policy; explicitly present CLI options override the corresponding saved value. The CLI calls `scan_run_contract_execute(...)` once, observes Rust-owned discovery and effective concurrency, and presents typed setup, cancellation, infrastructure, and discovery-order per-log results. Its Ctrl+C path requests cooperative cancellation through `ScanRunCancellation`, and FCX diagnostics come from the run-scoped terminal setup result rather than the legacy global handler. `--unsolved-logs-destination` and `--reset-unsolved-logs-destination` preview and commit through the typed revision-aware CXX seam before the scan snapshot is reopened.
 
 The native CLI YAML Data check/apply commands and `--check-app-update` both consume `UpdatePreferencesDto` rather than a raw key path. Disabled or degraded policy short-circuits before network work with the command's established exit behavior, while migration and validation diagnostics remain visible. The typed frontend DTO separately drives GUI geometry restoration.
 
@@ -523,7 +523,7 @@ Current bridge behavior that matters:
 
 Important boundary:
 
-- the public CXX call shape is preserved for lower-level callers, but it does not open User Settings. Native full scans should use `scan_run_execute(...)` and provide configured paths through its typed request.
+- the public CXX call shape is preserved for lower-level callers, but it does not open User Settings. New native full scans use the final tagged request constructors and `scan_run_contract_execute(...)`; the CLI provides configured paths through `ScanRunConfigurationDto`.
 
 ### `orchestrator_new(config) -> Result<Box<Orchestrator>>`
 
@@ -630,9 +630,9 @@ FCX reset failure mapping:
 ### `scan_run_contract_execute(request, cancellation, observer) -> ScanRunContractExecutionResult`
 
 This is the final C++ projection of
-`classic_scanlog_core::scan_run::contract::execute(...)`. It is additive during
-the coordinated expand-contract migration; the older `scan_run_execute(...)`
-surface below remains available until the native-consumer contraction ticket.
+`classic_scanlog_core::scan_run::contract::execute(...)`. The native CLI uses
+this operation exclusively; the older `scan_run_execute(...)` surface below
+remains only for native consumers not yet migrated by their coordinated tickets.
 
 Requests are opaque Rust-owned `ScanRunRequest` values. C++ constructs them
 through exactly the same valid matrix as the core contract:
@@ -931,7 +931,7 @@ When FormID lookup looks empty:
 
 When the C++ scan path diverges from the crate docs:
 
-1. check whether the frontend used `scan_run_execute(...)`, `orchestrator_new()`, or `orchestrator_new_minimal()`
+1. check whether the frontend used final `scan_run_contract_execute(...)`, legacy `scan_run_execute(...)`, `orchestrator_new()`, or `orchestrator_new_minimal()`
 2. if FormID values are missing, verify `show_formid_values` was true when the full config was built
 3. remember that scanlog-core intake resolves FormID DB paths for the bridge, including a hardcoded FOLON DB path for Fallout 4 modes
 4. if a scan aborts before work starts, check whether `fcx_reset_global_state()` failed and left an FCX reset error string in the bridge result path
@@ -963,7 +963,7 @@ When Papyrus monitoring looks stale:
 - scanlog-core intake hardcodes `databases/FOLON FormIDs.db` for `Fallout4` and `Fallout4VR`
 - `src/scanner.rs` exposes only FCX reset control in C++; FCX issue inspection remains out of scope for this phase
 - `src/scanner.rs::orchestrator_process_logs_batch_with_progress()` is bridge-local coordination on top of per-log crate calls, not a direct wrapper over one lower-level batch API
-- `src/scanner.rs::scan_run_execute()` is the full Crash Log Scan Run seam; callers should not duplicate Autoscan Report writing or Unsolved Logs movement around it
+- `src/scanner.rs::scan_run_contract_execute()` is the final tagged Crash Log Scan Run seam used by the native CLI; legacy `scan_run_execute()` callers must still avoid duplicating Autoscan Report writing or Unsolved Logs movement while they await migration
 - `src/scanner.rs::detect_vr_log()` is a simple substring heuristic, not a full parser
 - `src/scanner.rs::papyrus_check_updates()` intentionally hides update errors from C++ callers
 

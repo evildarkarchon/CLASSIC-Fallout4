@@ -349,7 +349,7 @@ Behavior worth knowing:
 - Autoscan Report write failure is a per-log failure in `CrashLogScanRunLogOutcome`, not a run-level setup error. These outcomes set `report_write_failed = true` so adapters can separate report failures from analysis failures.
 - `cancellation` is a cooperative shared atomic checked before queued Crash Logs start; binding adapters should pass their frontend cancellation token rather than polling locally only.
 - Progress events reuse `ScanProgressPhase` and carry stable input indices so adapters can correlate completion-order results to their selected Crash Log list.
-- Binding adapters expose the high-level service as `classic::scanner::scan_run_execute(request, callback, cancellation_token)` for C++, `scanRunExecute(...)` for Node, and `classic_scanlog.scan_run_execute(...)` for Python. Adapter scan flows should not duplicate discovery policy, FCX setup result shaping, Autoscan Report writing, or Unsolved Logs movement around those calls.
+- The native CLI exposes the final C++ contract through tagged request constructors plus `classic::scanner::scan_run_contract_execute(request, cancellation, observer)`. Legacy C++ consumers still have `scan_run_execute(...)` during their coordinated migration, while Node exposes `scanRunExecute(...)` and Python exposes `classic_scanlog.scan_run_execute(...)`. Adapter scan flows must not duplicate discovery policy, FCX setup result shaping, Autoscan Report writing, or Unsolved Logs movement around those calls.
 
 ## `LogParser`
 

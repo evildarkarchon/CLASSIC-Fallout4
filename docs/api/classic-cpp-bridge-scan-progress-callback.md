@@ -100,7 +100,7 @@ delivery is non-controlling. Implementations must handle delivery failures
 internally and may explicitly request safe cancellation through the same
 `ScanRunCancellation`; exceptions must not cross the `noexcept` callback.
 
-One active frontend consumer is [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp), which forwards callback updates into Qt signals and uses [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp) to keep visible progress monotonic. That consumer path is documented in [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md).
+The native CLI is an active final-observer consumer: `classic-cli/src/scanner.cpp` lazily creates its progress display from `DiscoveryCompleted`, reports the Rust-selected value from `EffectiveConcurrencySelected`, correlates log events by `discovery_index`, and requests safe cancellation if presentation fails. [`classic-gui/src/workers/scanworker.cpp`](../../classic-gui/src/workers/scanworker.cpp) forwards its callback updates into Qt signals and uses [`classic-gui/src/workers/scanprogressmodel.cpp`](../../classic-gui/src/workers/scanprogressmodel.cpp) to keep visible progress monotonic. That GUI consumer path is documented in [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md).
 
 ---
 
