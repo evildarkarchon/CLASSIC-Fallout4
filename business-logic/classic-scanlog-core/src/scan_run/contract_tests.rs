@@ -115,6 +115,370 @@ fn cancellation_control_is_opaque_cloneable_and_separate_from_the_request() {
 }
 
 #[test]
+fn targeted_cancellation_before_discovery_has_no_discovery_result() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = temp.path().to_path_buf();
+    configuration.yaml_dir_data = temp.path().join("CLASSIC Data");
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: vec![temp.path().join("unobserved-target.log")],
+        },
+    );
+    let cancellation = contract::Cancellation::new();
+    cancellation.cancel();
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &cancellation,
+            Some(&mut observer),
+        ))
+        .expect("pre-discovery cancellation should be an expected terminal result");
+
+    assert_eq!(result.status, contract::RunStatus::CancelledBeforeDiscovery);
+    assert!(result.discovery.is_none());
+    assert!(events.is_empty());
+}
+
+#[test]
+fn standard_cancellation_before_discovery_has_no_discovery_result_or_side_effects() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = temp.path().to_path_buf();
+    configuration.yaml_dir_data = temp.path().join("CLASSIC Data");
+    let request = contract::Request::standard(
+        configuration,
+        StandardCrashLogScanSource {
+            base_directory: temp.path().to_path_buf(),
+            custom_scan_directory: None,
+            configured_documents_root: None,
+        },
+        StandardUnsolvedLogsIntent::LeaveInPlace,
+    );
+    let cancellation = contract::Cancellation::new();
+    cancellation.cancel();
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &cancellation,
+            Some(&mut observer),
+        ))
+        .expect("pre-discovery cancellation should be an expected terminal result");
+
+    assert_eq!(result.status, contract::RunStatus::CancelledBeforeDiscovery);
+    assert!(result.discovery.is_none());
+    assert!(events.is_empty());
+    assert!(!temp.path().join("Crash Logs").exists());
+}
+
+#[test]
+fn targeted_cancellation_during_discovery_discards_partial_results() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let directory = root.join("targeted-cancellation-tree");
+    std::fs::create_dir_all(&directory).expect("targeted cancellation directory should be created");
+    for index in 0..2_000 {
+        std::fs::write(
+            directory.join(format!("crash-targeted-discovery-cancel-{index:04}.log")),
+            b"targeted discovery cancellation fixture",
+        )
+        .expect("targeted discovery fixture should be written");
+    }
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: vec![directory],
+        },
+    );
+    let cancellation = contract::Cancellation::new();
+    let cancellation_request = cancellation.clone();
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let result = get_runtime()
+        .block_on(async {
+            let canceller = tokio::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+                cancellation_request.cancel();
+            });
+            let result = contract::execute(request, &cancellation, Some(&mut observer)).await;
+            canceller.await.expect("cancellation task should complete");
+            result
+        })
+        .expect("discovery cancellation should be an expected terminal result");
+
+    assert_eq!(result.status, contract::RunStatus::CancelledBeforeDiscovery);
+    assert!(result.discovery.is_none());
+    assert!(events.is_empty());
+}
+
+#[test]
+fn standard_cancellation_during_discovery_discards_partial_results() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    for index in 0..256 {
+        std::fs::write(
+            root.join(format!("crash-standard-discovery-cancel-{index:04}.log")),
+            b"discovery cancellation fixture",
+        )
+        .expect("standard discovery fixture should be written");
+    }
+    let first_moved_log = root
+        .join("Crash Logs")
+        .join("crash-standard-discovery-cancel-0000.log");
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    let request = contract::Request::standard(
+        configuration,
+        StandardCrashLogScanSource {
+            base_directory: root.to_path_buf(),
+            custom_scan_directory: None,
+            configured_documents_root: None,
+        },
+        StandardUnsolvedLogsIntent::LeaveInPlace,
+    );
+    let cancellation = contract::Cancellation::new();
+    let cancellation_request = cancellation.clone();
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let result = get_runtime()
+        .block_on(async {
+            let canceller = tokio::spawn(async move {
+                tokio::time::timeout(std::time::Duration::from_secs(5), async {
+                    while !first_moved_log.exists() {
+                        tokio::task::yield_now().await;
+                    }
+                })
+                .await
+                .expect("standard discovery should move the first fixture");
+                cancellation_request.cancel();
+            });
+            let result = contract::execute(request, &cancellation, Some(&mut observer)).await;
+            canceller.await.expect("cancellation task should complete");
+            result
+        })
+        .expect("discovery cancellation should be an expected terminal result");
+
+    assert_eq!(result.status, contract::RunStatus::CancelledBeforeDiscovery);
+    assert!(result.discovery.is_none());
+    assert!(events.is_empty());
+    let unmoved_logs = std::fs::read_dir(root)
+        .expect("standard fixture root should remain readable")
+        .filter_map(std::result::Result::ok)
+        .filter(|entry| {
+            entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with("crash-standard-discovery-cancel-")
+        })
+        .count();
+    assert!(
+        unmoved_logs > 0,
+        "cancellation should stop within the Standard move phase"
+    );
+}
+
+#[test]
+fn targeted_cancellation_immediately_after_discovery_retains_the_complete_result() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let explicit = root.join("selected-input.txt");
+    std::fs::write(&explicit, b"explicit targeted input")
+        .expect("explicit targeted fixture should be written");
+    let directory = root.join("selected-directory");
+    let nested_directory = directory.join("nested");
+    std::fs::create_dir_all(&nested_directory)
+        .expect("nested targeted fixture directory should be created");
+    let nested = nested_directory.join("crash-nested-target.log");
+    std::fs::write(&nested, b"nested targeted input")
+        .expect("nested targeted fixture should be written");
+    let missing = root.join("missing-target.log");
+    let inputs = vec![
+        explicit.clone(),
+        directory.clone(),
+        nested.clone(),
+        missing.clone(),
+    ];
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: inputs.clone(),
+        },
+    );
+    let cancellation = contract::Cancellation::new();
+    let observer_cancellation = cancellation.clone();
+    let mut observed_discovery = None;
+    let mut later_event_observed = false;
+    let result = {
+        let mut observer = |event| match event {
+            contract::Event::DiscoveryCompleted(discovery) => {
+                observed_discovery = Some(discovery);
+                observer_cancellation.cancel();
+            }
+            _ => later_event_observed = true,
+        };
+
+        get_runtime()
+            .block_on(contract::execute(
+                request,
+                &cancellation,
+                Some(&mut observer),
+            ))
+            .expect("post-discovery cancellation should be an expected terminal result")
+    };
+
+    assert_eq!(result.status, contract::RunStatus::Cancelled);
+    assert!(result.effective_concurrency.is_none());
+    assert!(!later_event_observed);
+    let retained = result
+        .discovery
+        .as_ref()
+        .expect("completed discovery must be retained");
+    let observed = observed_discovery
+        .as_ref()
+        .expect("completed discovery must be observable");
+    assert_eq!(retained.source, CrashLogScanDiscoverySource::Targeted);
+    assert_eq!(retained.accepted_logs, vec![explicit, nested]);
+    assert_eq!(retained.searched_locations, inputs);
+    assert_eq!(retained.rejected_inputs.len(), 1);
+    assert_eq!(retained.rejected_inputs[0].path, missing);
+    assert_eq!(observed.source, retained.source);
+    assert_eq!(observed.accepted_logs, retained.accepted_logs);
+    assert_eq!(observed.searched_locations, retained.searched_locations);
+    assert_eq!(
+        observed
+            .rejected_inputs
+            .iter()
+            .map(|rejection| (&rejection.path, &rejection.reason))
+            .collect::<Vec<_>>(),
+        retained
+            .rejected_inputs
+            .iter()
+            .map(|rejection| (&rejection.path, &rejection.reason))
+            .collect::<Vec<_>>()
+    );
+    assert_eq!(result.total, 2);
+    assert_eq!(result.cancelled, 2);
+    assert!(
+        result
+            .logs
+            .iter()
+            .all(|log| { log.disposition == contract::LogDisposition::CancelledBeforeStart })
+    );
+}
+
+#[test]
+fn standard_cancellation_immediately_after_discovery_retains_configured_sources() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let base_log = root.join("crash-standard-base.log");
+    std::fs::write(&base_log, b"standard base input")
+        .expect("standard base fixture should be written");
+    let custom = root.join("Custom Logs");
+    std::fs::create_dir_all(custom.join("nested"))
+        .expect("custom fixture directories should be created");
+    let custom_log = custom.join("crash-standard-custom.log");
+    std::fs::write(&custom_log, b"standard custom input")
+        .expect("standard custom fixture should be written");
+    std::fs::write(
+        custom.join("nested").join("crash-standard-nested.log"),
+        b"nested custom input",
+    )
+    .expect("nested custom fixture should be written");
+    let documents = root.join("Configured Documents");
+    std::fs::create_dir_all(&documents).expect("configured documents fixture should be created");
+    let moved_base_log = root.join("Crash Logs").join("crash-standard-base.log");
+    let searched_locations = vec![
+        root.to_path_buf(),
+        root.join("Crash Logs"),
+        custom.clone(),
+        documents.clone(),
+    ];
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    let request = contract::Request::standard(
+        configuration,
+        StandardCrashLogScanSource {
+            base_directory: root.to_path_buf(),
+            custom_scan_directory: Some(custom),
+            configured_documents_root: Some(documents),
+        },
+        StandardUnsolvedLogsIntent::LeaveInPlace,
+    );
+    let cancellation = contract::Cancellation::new();
+    let observer_cancellation = cancellation.clone();
+    let mut observed_discovery = None;
+    let mut later_event_observed = false;
+    let result = {
+        let mut observer = |event| match event {
+            contract::Event::DiscoveryCompleted(discovery) => {
+                observed_discovery = Some(discovery);
+                observer_cancellation.cancel();
+            }
+            _ => later_event_observed = true,
+        };
+
+        get_runtime()
+            .block_on(contract::execute(
+                request,
+                &cancellation,
+                Some(&mut observer),
+            ))
+            .expect("post-discovery cancellation should be an expected terminal result")
+    };
+
+    assert_eq!(result.status, contract::RunStatus::Cancelled);
+    assert!(result.effective_concurrency.is_none());
+    assert!(!later_event_observed);
+    let retained = result
+        .discovery
+        .as_ref()
+        .expect("completed discovery must be retained");
+    let observed = observed_discovery
+        .as_ref()
+        .expect("completed discovery must be observable");
+    assert_eq!(retained.source, CrashLogScanDiscoverySource::Standard);
+    assert_eq!(retained.accepted_logs, vec![moved_base_log, custom_log]);
+    assert!(retained.rejected_inputs.is_empty());
+    assert_eq!(retained.searched_locations, searched_locations);
+    assert_eq!(observed.source, retained.source);
+    assert_eq!(observed.accepted_logs, retained.accepted_logs);
+    assert_eq!(observed.searched_locations, retained.searched_locations);
+    assert_eq!(result.total, 2);
+    assert_eq!(result.cancelled, 2);
+    assert!(
+        result
+            .logs
+            .iter()
+            .all(|log| { log.disposition == contract::LogDisposition::CancelledBeforeStart })
+    );
+}
+
+#[test]
 fn final_contract_exposes_all_stable_variant_identifiers() {
     assert_eq!(
         contract::InfrastructureErrorStage::RequestValidation.as_str(),

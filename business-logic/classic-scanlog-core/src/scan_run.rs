@@ -16,6 +16,7 @@ use crate::{
 };
 use classic_database_core::DatabasePool;
 use classic_file_io_core::{LogCollector, RejectedInput, resolve_targeted_inputs};
+use classic_operation_context::scope_cancellation;
 use classic_scangame_core::{
     GameSetupCheckState, GameSetupIntake, GameSetupIntakeResult, detect_config_issues,
 };
@@ -88,12 +89,22 @@ where
         return Ok(CrashLogScanRunResult::cancelled_before_discovery());
     }
 
-    let discovery = discover_scan_source(&request).await?;
+    // File-I/O owns the discovery loops, while the unpublished task context
+    // carries this run's control across that crate boundary without creating a
+    // new binding-facing API or process-global cancellation state.
+    let Some(discovery) =
+        scope_cancellation(request.cancellation.clone(), discover_scan_source(&request)).await?
+    else {
+        return Ok(CrashLogScanRunResult::cancelled_before_discovery());
+    };
     on_event(CrashLogScanRunServiceEvent::DiscoveryCompleted(
         discovery.clone(),
     ));
     if discovery.accepted_logs.is_empty() {
         return Ok(CrashLogScanRunResult::no_logs_found(discovery));
+    }
+    if cancellation_requested(request.cancellation.as_ref()) {
+        return Ok(CrashLogScanRunResult::cancelled_after_discovery(discovery));
     }
 
     let (setup, setup_failed) = evaluate_setup_for_scan(&request);
@@ -660,6 +671,47 @@ impl CrashLogScanRunResult {
         }
     }
 
+    /// Builds a terminal cancellation result after discovery committed but
+    /// before any accepted Crash Log entered execution.
+    fn cancelled_after_discovery(discovery: CrashLogScanDiscoveryResult) -> Self {
+        let logs = discovery
+            .accepted_logs
+            .iter()
+            .enumerate()
+            .map(|(input_index, crash_log)| CrashLogScanRunLogOutcome {
+                input_index,
+                crash_log: crash_log.clone(),
+                autoscan_report: None,
+                outcome: CrashLogScanOutcome::CancelledBeforeStart,
+                report_write_failed: false,
+                moved_to_unsolved_logs: false,
+                unsolved_logs_finalization_failed: false,
+                analysis_error: None,
+                report_write_error: None,
+                unsolved_logs_finalization_error: None,
+                error: Some(CANCELLED_BY_USER_MESSAGE.to_string()),
+                processing_time_us: 0,
+                processing_time_ms: 0,
+                formid_count: 0,
+                plugin_count: 0,
+                suspect_count: 0,
+            })
+            .collect::<Vec<_>>();
+        let total = logs.len();
+
+        Self {
+            status: CrashLogScanRunStatus::Cancelled,
+            discovery: Some(discovery),
+            setup: None,
+            message: Some("Cancelled after crash log discovery".to_string()),
+            total,
+            succeeded: 0,
+            failed: 0,
+            cancelled: total,
+            logs,
+        }
+    }
+
     fn no_logs_found(discovery: CrashLogScanDiscoveryResult) -> Self {
         Self {
             status: CrashLogScanRunStatus::NoCrashLogsFound,
@@ -913,9 +965,16 @@ fn outcome_from_analysis(result: &AnalysisResult) -> CrashLogScanOutcome {
     }
 }
 
+/// Discovers the complete accepted Crash Log set, returning `None` when
+/// cancellation wins before the discovery result is committed.
+///
+/// # Errors
+///
+/// Returns an error when Standard directory setup, file organization, or
+/// enumeration fails. Targeted path rejections remain structured result data.
 async fn discover_scan_source(
     request: &CrashLogScanRunServiceRequest,
-) -> Result<CrashLogScanDiscoveryResult> {
+) -> Result<Option<CrashLogScanDiscoveryResult>> {
     match &request.source {
         CrashLogScanSource::Standard(source) => {
             let collector = LogCollector::new_for_scan(
@@ -927,6 +986,10 @@ async fn discover_scan_source(
                 source.custom_scan_directory.clone(),
             );
             let logs = collector.collect_all().await?;
+            if cancellation_requested(request.cancellation.as_ref()) {
+                return Ok(None);
+            }
+
             let mut searched_locations = vec![
                 source.base_directory.clone(),
                 source.base_directory.join("Crash Logs"),
@@ -938,16 +1001,20 @@ async fn discover_scan_source(
                 searched_locations.push(docs.clone());
             }
 
-            Ok(CrashLogScanDiscoveryResult {
+            Ok(Some(CrashLogScanDiscoveryResult {
                 source: CrashLogScanDiscoverySource::Standard,
                 accepted_logs: logs,
                 rejected_inputs: Vec::new(),
                 searched_locations,
-            })
+            }))
         }
         CrashLogScanSource::Targeted(source) => {
             let resolution = resolve_targeted_inputs(source.inputs.clone()).await;
-            Ok(CrashLogScanDiscoveryResult {
+            if cancellation_requested(request.cancellation.as_ref()) {
+                return Ok(None);
+            }
+
+            Ok(Some(CrashLogScanDiscoveryResult {
                 source: CrashLogScanDiscoverySource::Targeted,
                 accepted_logs: resolution.logs,
                 rejected_inputs: resolution
@@ -956,7 +1023,7 @@ async fn discover_scan_source(
                     .map(CrashLogScanRejectedInput::from)
                     .collect(),
                 searched_locations: source.inputs.clone(),
-            })
+            }))
         }
     }
 }

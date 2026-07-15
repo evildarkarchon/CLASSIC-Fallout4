@@ -294,6 +294,8 @@ Workflow methods:
 Behavior worth knowing:
 
 - `collect_all()` creates `Crash Logs/` and `Crash Logs/Pastebin/`, then moves base-folder crash logs and autoscan reports, then copies crash logs from the optional XSE folder, then enumerates `crash-*.log` paths.
+- when a caller runs these methods inside the unpublished `classic-operation-context` cancellation scope, collection checks only at safe boundaries between completed directory/file operations and enumeration entries; cancellation discards the accumulator and the public method returns its zero/empty sentinel, which the scope-owning scan service must distinguish by reading the same monotonic control
+- already-completed moves and copies are not rolled back when scoped cancellation is observed at the next safe boundary
 - base-folder files are moved only when the destination path does not already exist.
 - XSE-folder files are copied only when the destination path does not already exist.
 - `collect_crash_logs()` searches `Crash Logs` recursively, but the optional custom folder only with a non-recursive `crash-*.log` glob.
@@ -322,6 +324,7 @@ Behavior worth knowing:
 - paths are canonicalized for deduplication while preserving first-seen order
 - non-existent paths, non-file/non-directory paths, unreadable paths, and empty directories are rejected with specific reasons
 - no directories are created and no files are moved or copied
+- inside the unpublished `classic-operation-context` cancellation scope, resolution yields between recursive entries, discards partial accepted/rejected accumulators on cancellation, and returns an empty resolution for the scope-owning scan service to discard
 
 ## Backup and game-file management APIs
 
@@ -494,7 +497,7 @@ This crate exposes async APIs but does not create its own runtime.
 
 - async entry points include most of `FileIOCore`, all of `LogCollector`, all of `BackupManager`, all of `GameFilesManager`, and all generation helpers
 - synchronous helpers still exist where they fit better, including `walk_directory()`, `stream_lines_sync()`, `FileHasher`, DDS validation helpers, and similarity helpers
-- the crate depends on Tokio, but source in this crate does not visibly construct or export a runtime
+- the crate depends on Tokio but does not construct or export a runtime; scoped discovery cancellation is supplied by [`classic-operation-context`](../../foundation/classic-operation-context) through Tokio task-local state
 - that matches the repo rule that runtime ownership stays outside low-level crates and should remain compatible with the shared CLASSIC runtime model
 
 Concurrency and caching patterns visible in source:
@@ -515,6 +518,7 @@ Contributor rule: keep runtime ownership outside this crate. If you add new asyn
 
 Important direct dependencies:
 
+- [`classic-operation-context`](../../foundation/classic-operation-context) - unpublished task-local cancellation scope used by crash-log discovery loops
 - `tokio` and `futures` - async file operations and bounded batch concurrency
 - `memmap2` - large-file memory-mapped reads
 - `quick_cache`, `dashmap`, `parking_lot`, and `lru` - caching and shared-state primitives
@@ -532,9 +536,10 @@ Related CLASSIC crates:
 - [`classic-xse-core`](../../business-logic/classic-xse-core) - XSE Folder resolution used by `LogCollector::new_for_scan(...)`
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) and [`classic-node`](../../node-bindings/classic-node) - binding layers that depend on stable higher-level behavior built on top of these helpers
 
-Source-observed note:
+Source-observed notes:
 
 - `Cargo.toml` declares a dependency on [`classic-shared-core`](../../foundation/classic-shared-core), but the current `src/` files do not visibly expose or call shared-runtime APIs directly.
+- `classic-operation-context` supplies control state only; runtime ownership remains with the caller and the single shared Tokio runtime.
 
 ---
 

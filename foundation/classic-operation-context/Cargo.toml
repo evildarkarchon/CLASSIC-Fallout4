@@ -1,0 +1,19 @@
+[package]
+name = "classic-operation-context"
+version = "9.1.0"
+edition = "2024"
+rust-version = "1.96.0"
+publish = false
+authors = ["CLASSIC Development Team"]
+description = "Workspace-internal async operation context for CLASSIC"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[dependencies]
+tokio = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

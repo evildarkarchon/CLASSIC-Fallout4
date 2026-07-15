@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use tokio::fs;
 use tracing::debug;
 
+use classic_operation_context::cancellation_requested;
 use classic_xse_core::resolve_xse_folder_for_scan;
 
 use crate::error::{FileIOError, Result};
@@ -120,7 +121,17 @@ impl LogCollector {
     /// Creates:
     /// - {base_folder}/Crash Logs
     /// - {base_folder}/Crash Logs/Pastebin
-    async fn ensure_directories(&self) -> Result<()> {
+    ///
+    /// Cancellation is checked only between completed directory operations.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FileIOError`] when either directory cannot be created.
+    async fn ensure_directories(&self) -> Result<bool> {
+        if cancellation_requested() {
+            return Ok(false);
+        }
+
         fs::create_dir_all(&self.crash_logs_dir)
             .await
             .map_err(|e| {
@@ -130,6 +141,9 @@ impl LogCollector {
                     e
                 ))
             })?;
+        if cancellation_requested() {
+            return Ok(false);
+        }
 
         fs::create_dir_all(&self.pastebin_dir).await.map_err(|e| {
             FileIOError::Io(format!(
@@ -138,9 +152,12 @@ impl LogCollector {
                 e
             ))
         })?;
+        if cancellation_requested() {
+            return Ok(false);
+        }
 
         debug!("Ensured directory structure exists");
-        Ok(())
+        Ok(true)
     }
 
     /// Move files matching a pattern from source to target directory
@@ -156,17 +173,26 @@ impl LogCollector {
     ///
     /// # Returns
     ///
-    /// Number of files successfully moved
+    /// `Some` contains the number of files successfully moved. `None` means
+    /// cancellation was observed after the current atomic rename completed.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FileIOError`] for invalid glob patterns, unreadable glob
+    /// entries, or failed file renames.
     async fn move_files(
         &self,
         source_dir: &Path,
         target_dir: &Path,
         pattern: &str,
-    ) -> Result<usize> {
+    ) -> Result<Option<usize>> {
         let mut moved_count = 0;
 
+        if cancellation_requested() {
+            return Ok(None);
+        }
         if !source_dir.exists() {
-            return Ok(0);
+            return Ok(Some(0));
         }
 
         // Use glob pattern matching
@@ -176,6 +202,12 @@ impl LogCollector {
         for entry in glob::glob(&pattern_str)
             .map_err(|e| FileIOError::Io(format!("Invalid glob pattern '{}': {}", pattern, e)))?
         {
+            // Yield only between glob entries so cancellation never interrupts
+            // an in-flight filesystem mutation.
+            tokio::task::yield_now().await;
+            if cancellation_requested() {
+                return Ok(None);
+            }
             let source_path =
                 entry.map_err(|e| FileIOError::Io(format!("Failed to read glob entry: {}", e)))?;
 
@@ -198,11 +230,18 @@ impl LogCollector {
                         source_path.display(),
                         target_path.display()
                     );
+                    if cancellation_requested() {
+                        return Ok(None);
+                    }
                 }
             }
         }
 
-        Ok(moved_count)
+        if cancellation_requested() {
+            Ok(None)
+        } else {
+            Ok(Some(moved_count))
+        }
     }
 
     /// Copy files matching a pattern from source to target directory
@@ -218,18 +257,27 @@ impl LogCollector {
     ///
     /// # Returns
     ///
-    /// Number of files successfully copied
+    /// `Some` contains the number of files successfully copied. `None` means
+    /// cancellation was observed after the current file copy completed.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FileIOError`] for invalid glob patterns, unreadable glob
+    /// entries, or failed file copies.
     async fn copy_files(
         &self,
         source_dir: Option<&Path>,
         target_dir: &Path,
         pattern: &str,
-    ) -> Result<usize> {
+    ) -> Result<Option<usize>> {
         let mut copied_count = 0;
 
+        if cancellation_requested() {
+            return Ok(None);
+        }
         let source_dir = match source_dir {
             Some(dir) if dir.exists() && dir.is_dir() => dir,
-            _ => return Ok(0),
+            _ => return Ok(Some(0)),
         };
 
         // Use glob pattern matching
@@ -239,6 +287,12 @@ impl LogCollector {
         for entry in glob::glob(&pattern_str)
             .map_err(|e| FileIOError::Io(format!("Invalid glob pattern '{}': {}", pattern, e)))?
         {
+            // Yield only between glob entries so cancellation never interrupts
+            // an in-flight filesystem mutation.
+            tokio::task::yield_now().await;
+            if cancellation_requested() {
+                return Ok(None);
+            }
             let source_path =
                 entry.map_err(|e| FileIOError::Io(format!("Failed to read glob entry: {}", e)))?;
 
@@ -261,11 +315,18 @@ impl LogCollector {
                         source_path.display(),
                         target_path.display()
                     );
+                    if cancellation_requested() {
+                        return Ok(None);
+                    }
                 }
             }
         }
 
-        Ok(copied_count)
+        if cancellation_requested() {
+            Ok(None)
+        } else {
+            Ok(Some(copied_count))
+        }
     }
 
     /// Move crash logs and AUTOSCAN reports from base folder to Crash Logs directory
@@ -274,11 +335,36 @@ impl LogCollector {
     ///
     /// # Returns
     ///
-    /// Total number of files moved
+    /// Total number of files moved. Within a
+    /// `classic-operation-context` cancellation scope, returns zero when
+    /// cancellation is observed; the scope owner distinguishes that sentinel
+    /// from an ordinary zero result by reading the same monotonic control.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FileIOError`] when a glob cannot be traversed or a matching
+    /// base-folder file cannot be renamed.
     pub async fn move_from_base_folder(&self) -> Result<usize> {
+        Ok(self
+            .move_from_base_folder_until_cancelled()
+            .await?
+            .unwrap_or_default())
+    }
+
+    /// Moves base-folder artifacts while observing cancellation between
+    /// completed file renames.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FileIOError`] when a glob entry cannot be read or a matching
+    /// file cannot be moved.
+    async fn move_from_base_folder_until_cancelled(&self) -> Result<Option<usize>> {
         let logs_moved = self
             .move_files(&self.base_folder, &self.crash_logs_dir, CRASH_LOG_PATTERN)
             .await?;
+        let Some(logs_moved) = logs_moved else {
+            return Ok(None);
+        };
 
         let reports_moved = self
             .move_files(
@@ -287,13 +373,16 @@ impl LogCollector {
                 CRASH_AUTOSCAN_PATTERN,
             )
             .await?;
+        let Some(reports_moved) = reports_moved else {
+            return Ok(None);
+        };
 
         let total = logs_moved + reports_moved;
         if total > 0 {
             debug!("Moved {} files from base folder to Crash Logs", total);
         }
 
-        Ok(total)
+        Ok(Some(total))
     }
 
     /// Copy crash logs from game's XSE folder (My Games directory) to Crash Logs
@@ -303,8 +392,30 @@ impl LogCollector {
     ///
     /// # Returns
     ///
-    /// Number of files copied
+    /// Number of files copied. Within a `classic-operation-context`
+    /// cancellation scope, returns zero when cancellation is observed; the
+    /// scope owner distinguishes that sentinel from an ordinary zero result by
+    /// reading the same monotonic control.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FileIOError`] when a glob cannot be traversed or a matching
+    /// XSE file cannot be copied.
     pub async fn copy_from_xse_folder(&self) -> Result<usize> {
+        Ok(self
+            .copy_from_xse_folder_until_cancelled()
+            .await?
+            .unwrap_or_default())
+    }
+
+    /// Copies XSE Crash Logs while observing cancellation between completed
+    /// file copies.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FileIOError`] when a glob entry cannot be read or a matching
+    /// file cannot be copied.
+    async fn copy_from_xse_folder_until_cancelled(&self) -> Result<Option<usize>> {
         let copied = self
             .copy_files(
                 self.xse_folder.as_deref(),
@@ -312,12 +423,15 @@ impl LogCollector {
                 CRASH_LOG_PATTERN,
             )
             .await?;
+        let Some(copied) = copied else {
+            return Ok(None);
+        };
 
         if copied > 0 {
             debug!("Copied {} crash logs from XSE folder", copied);
         }
 
-        Ok(copied)
+        Ok(Some(copied))
     }
 
     /// Collect all crash log file paths for processing
@@ -328,9 +442,34 @@ impl LogCollector {
     ///
     /// # Returns
     ///
-    /// Vector of paths to all crash log files found
+    /// Vector of paths to all crash log files found. Within a
+    /// `classic-operation-context` cancellation scope, returns an empty vector
+    /// when cancellation is observed; the scope owner discards that sentinel.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FileIOError`] when a recursive glob cannot be created or one
+    /// of its entries cannot be read.
     pub async fn collect_crash_logs(&self) -> Result<Vec<PathBuf>> {
+        Ok(self
+            .collect_crash_logs_until_cancelled()
+            .await?
+            .unwrap_or_default())
+    }
+
+    /// Enumerates accepted Crash Logs and discards the accumulator when
+    /// cancellation is observed between directory entries.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FileIOError`] when a recursive glob cannot be created or one
+    /// of its directory entries cannot be read.
+    async fn collect_crash_logs_until_cancelled(&self) -> Result<Option<Vec<PathBuf>>> {
         let mut crash_files = Vec::new();
+
+        if cancellation_requested() {
+            return Ok(None);
+        }
 
         // Collect from Crash Logs directory (recursively)
         if self.crash_logs_dir.exists() {
@@ -340,6 +479,10 @@ impl LogCollector {
             for entry in glob::glob(&pattern_str)
                 .map_err(|e| FileIOError::Io(format!("Invalid glob pattern: {}", e)))?
             {
+                tokio::task::yield_now().await;
+                if cancellation_requested() {
+                    return Ok(None);
+                }
                 let path = entry
                     .map_err(|e| FileIOError::Io(format!("Failed to read glob entry: {}", e)))?;
                 crash_files.push(path);
@@ -357,6 +500,10 @@ impl LogCollector {
             for entry in glob::glob(&pattern_str)
                 .map_err(|e| FileIOError::Io(format!("Invalid glob pattern: {}", e)))?
             {
+                tokio::task::yield_now().await;
+                if cancellation_requested() {
+                    return Ok(None);
+                }
                 let path = entry
                     .map_err(|e| FileIOError::Io(format!("Failed to read glob entry: {}", e)))?;
                 crash_files.push(path);
@@ -364,7 +511,11 @@ impl LogCollector {
         }
 
         debug!("Collected {} crash log files", crash_files.len());
-        Ok(crash_files)
+        if cancellation_requested() {
+            Ok(None)
+        } else {
+            Ok(Some(crash_files))
+        }
     }
 
     /// Execute full log collection workflow
@@ -377,7 +528,14 @@ impl LogCollector {
     ///
     /// # Returns
     ///
-    /// Vector of paths to all crash log files ready for processing
+    /// Vector of paths to all crash log files ready for processing. Within a
+    /// `classic-operation-context` cancellation scope, returns an empty vector
+    /// when cancellation is observed; the scope owner discards that sentinel.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FileIOError`] when directory creation, glob traversal, a
+    /// matching rename, or a matching copy fails.
     ///
     /// # Example
     ///
@@ -398,32 +556,59 @@ impl LogCollector {
     /// # }
     /// ```
     pub async fn collect_all(&self) -> Result<Vec<PathBuf>> {
+        Ok(self
+            .collect_all_until_cancelled()
+            .await?
+            .unwrap_or_default())
+    }
+
+    /// Executes the complete Standard collection workflow while cooperatively
+    /// checking cancellation between completed filesystem operations and
+    /// directory entries.
+    ///
+    /// This workspace-internal seam returns `None` instead of a partial path
+    /// list when cancellation is observed. Completed moves or copies remain on
+    /// disk so a later discovery run can observe their consistent end state.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FileIOError`] when directory creation, glob traversal, a move,
+    /// or a copy fails before cancellation is observed.
+    async fn collect_all_until_cancelled(&self) -> Result<Option<Vec<PathBuf>>> {
         debug!("Starting log collection workflow");
 
         // Step 1: Ensure directories exist
-        self.ensure_directories().await?;
+        if !self.ensure_directories().await? {
+            return Ok(None);
+        }
 
         // Step 2: Move logs from base folder
-        let moved = self.move_from_base_folder().await?;
+        let Some(moved) = self.move_from_base_folder_until_cancelled().await? else {
+            return Ok(None);
+        };
         if moved > 0 {
             debug!("Organized {} files into Crash Logs directory", moved);
         }
 
         // Step 3: Copy logs from XSE folder
-        let copied = self.copy_from_xse_folder().await?;
+        let Some(copied) = self.copy_from_xse_folder_until_cancelled().await? else {
+            return Ok(None);
+        };
         if copied > 0 {
             debug!("Retrieved {} crash logs from game directory", copied);
         }
 
         // Step 4: Collect all crash log paths
-        let crash_files = self.collect_crash_logs().await?;
+        let Some(crash_files) = self.collect_crash_logs_until_cancelled().await? else {
+            return Ok(None);
+        };
 
         debug!(
             "Log collection complete: {} crash logs ready for processing",
             crash_files.len()
         );
 
-        Ok(crash_files)
+        Ok(Some(crash_files))
     }
 
     /// Get the path to the Crash Logs directory
@@ -475,17 +660,46 @@ fn matches_crash_log_pattern(path: &Path) -> bool {
 /// - **Other**: reject with a human-readable reason.
 ///
 /// Paths are canonicalized and deduplicated while preserving first-seen order.
+/// Within a `classic-operation-context` cancellation scope, cancellation
+/// returns an empty resolution whose scope owner must discard after observing
+/// the same monotonic control.
 pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution {
+    resolve_targeted_inputs_until_cancelled(inputs)
+        .await
+        .unwrap_or_else(|| TargetedResolution {
+            logs: Vec::new(),
+            rejected: Vec::new(),
+        })
+}
+
+/// Resolves Targeted inputs while cooperatively checking cancellation between
+/// metadata operations and recursive directory entries.
+///
+/// This workspace-internal seam returns `None` instead of a partial resolution
+/// when cancellation is observed. It performs no filesystem mutations.
+async fn resolve_targeted_inputs_until_cancelled(
+    inputs: Vec<PathBuf>,
+) -> Option<TargetedResolution> {
     let mut logs = Vec::new();
     let mut rejected = Vec::new();
     let mut seen: HashSet<PathBuf> = HashSet::new();
 
+    if cancellation_requested() {
+        return None;
+    }
+
     for input in inputs {
+        if cancellation_requested() {
+            return None;
+        }
         if !input.exists() {
             rejected.push(RejectedInput {
                 reason: "path does not exist".to_string(),
                 path: input,
             });
+            if cancellation_requested() {
+                return None;
+            }
             continue;
         }
 
@@ -496,14 +710,23 @@ pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution
                     reason: format!("cannot read path: {e}"),
                     path: input,
                 });
+                if cancellation_requested() {
+                    return None;
+                }
                 continue;
             }
         };
+        if cancellation_requested() {
+            return None;
+        }
 
         if metadata.is_file() {
             let canonical = input.canonicalize().unwrap_or_else(|_| input.clone());
             if seen.insert(canonical) {
                 logs.push(input);
+            }
+            if cancellation_requested() {
+                return None;
             }
         } else if metadata.is_dir() {
             let escaped_input = glob::Pattern::escape(input.to_string_lossy().as_ref());
@@ -524,11 +747,20 @@ pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution
 
             let mut found_any = false;
             for entry in entries {
+                // Recursive glob iteration is synchronous, so yield at the
+                // entry boundary to let same-executor callers request cancel.
+                tokio::task::yield_now().await;
+                if cancellation_requested() {
+                    return None;
+                }
                 let Ok(path) = entry else { continue };
                 let canonical = path.canonicalize().unwrap_or_else(|_| path.clone());
                 found_any = true;
                 if seen.insert(canonical) {
                     logs.push(path);
+                }
+                if cancellation_requested() {
+                    return None;
                 }
             }
 
@@ -544,6 +776,9 @@ pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution
                 path: input,
             });
         }
+        if cancellation_requested() {
+            return None;
+        }
     }
 
     debug!(
@@ -552,7 +787,11 @@ pub async fn resolve_targeted_inputs(inputs: Vec<PathBuf>) -> TargetedResolution
         rejected.len()
     );
 
-    TargetedResolution { logs, rejected }
+    if cancellation_requested() {
+        None
+    } else {
+        Some(TargetedResolution { logs, rejected })
+    }
 }
 
 #[cfg(test)]

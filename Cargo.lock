@@ -790,6 +790,7 @@ version = "9.1.0"
 dependencies = [
  "anyhow",
  "chrono",
+ "classic-operation-context",
  "classic-shared-core",
  "classic-xse-core",
  "criterion 0.6.0",
@@ -885,6 +886,13 @@ dependencies = [
  "tokio",
  "walkdir",
  "yaml-rust2",
+]
+
+[[package]]
+name = "classic-operation-context"
+version = "9.1.0"
+dependencies = [
+ "tokio",
 ]
 
 [[package]]
@@ -1046,6 +1054,7 @@ dependencies = [
  "classic-config-core",
  "classic-database-core",
  "classic-file-io-core",
+ "classic-operation-context",
  "classic-scangame-core",
  "classic-settings-core",
  "classic-shared-core",

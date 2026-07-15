@@ -1,4 +1,7 @@
 use super::*;
+use classic_operation_context::scope_cancellation;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tempfile::TempDir;
 
 #[tokio::test]
@@ -6,7 +9,7 @@ async fn test_ensure_directories() {
     let temp = TempDir::new().unwrap();
     let collector = LogCollector::new(temp.path().to_path_buf(), None, None);
 
-    collector.ensure_directories().await.unwrap();
+    assert!(collector.ensure_directories().await.unwrap());
 
     assert!(collector.crash_logs_dir().exists());
     assert!(collector.pastebin_dir().exists());
@@ -312,4 +315,83 @@ async fn test_collect_all_unchanged_regression() {
             .join("crash-2024-06-01-10-00-00.log")
             .exists()
     );
+}
+
+#[tokio::test]
+async fn cancellable_standard_collection_stops_between_file_moves() {
+    let temp = TempDir::new().unwrap();
+    let base = temp.path();
+    for index in 0..256 {
+        tokio::fs::write(
+            base.join(format!("crash-cancellable-standard-{index}.log")),
+            b"cancellable standard fixture",
+        )
+        .await
+        .unwrap();
+    }
+    let collector = LogCollector::new(base.to_path_buf(), None, None);
+    let cancellation = Arc::new(AtomicBool::new(false));
+    let watcher_cancellation = Arc::clone(&cancellation);
+    let crash_logs_dir = collector.crash_logs_dir().to_path_buf();
+    let watcher = tokio::spawn(async move {
+        loop {
+            if crash_logs_dir
+                .read_dir()
+                .is_ok_and(|mut entries| entries.next().is_some())
+            {
+                watcher_cancellation.store(true, Ordering::Release);
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+    });
+
+    let result = scope_cancellation(Some(cancellation), collector.collect_all())
+        .await
+        .unwrap();
+    watcher.await.unwrap();
+
+    assert!(result.is_empty());
+    let remaining = glob::glob(
+        base.join("crash-*.log")
+            .to_str()
+            .expect("temporary path should be UTF-8"),
+    )
+    .unwrap()
+    .count();
+    assert!(
+        remaining > 0,
+        "cancellation should stop the move phase early"
+    );
+}
+
+#[tokio::test]
+async fn cancellable_targeted_resolution_stops_inside_one_recursive_directory() {
+    let temp = TempDir::new().unwrap();
+    let nested = temp.path().join("nested");
+    tokio::fs::create_dir_all(&nested).await.unwrap();
+    for index in 0..2_000 {
+        tokio::fs::write(
+            nested.join(format!("crash-cancellable-targeted-{index}.log")),
+            b"cancellable targeted fixture",
+        )
+        .await
+        .unwrap();
+    }
+    let cancellation = Arc::new(AtomicBool::new(false));
+    let watcher_cancellation = Arc::clone(&cancellation);
+    let watcher = tokio::spawn(async move {
+        tokio::task::yield_now().await;
+        watcher_cancellation.store(true, Ordering::Release);
+    });
+
+    let result = scope_cancellation(
+        Some(cancellation),
+        resolve_targeted_inputs(vec![temp.path().to_path_buf()]),
+    )
+    .await;
+    watcher.await.unwrap();
+
+    assert!(result.logs.is_empty());
+    assert!(result.rejected.is_empty());
 }

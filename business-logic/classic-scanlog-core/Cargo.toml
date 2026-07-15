@@ -21,6 +21,7 @@ mimalloc = ["dep:mimalloc"]
 mimalloc = { workspace = true, optional = true }
 # CLASSIC core dependencies (pure Rust - NO PyO3!)
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
+classic-operation-context = { path = "../../foundation/classic-operation-context" }
 classic-config-core = { path = "../classic-config-core" }
 classic-file-io-core = { path = "../classic-file-io-core" }
 classic-scangame-core = { path = "../classic-scangame-core" }
