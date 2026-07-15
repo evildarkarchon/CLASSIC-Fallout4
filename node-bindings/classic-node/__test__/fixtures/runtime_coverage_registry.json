@@ -93,8 +93,8 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 104,
-      "contractIdsHash": "2acfc24f3fbf38e766d157974832abaf1225f0fd0c4e4bae13b346f915ac5d79",
+      "contractCount": 101,
+      "contractIdsHash": "8385d32a9c5999ccaa484931dfd230bb7adaa67fcdb3a0bdb47b0fd6f0574a7e",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "config-tier1-parity",
@@ -321,8 +321,8 @@
         "ownerModule": "path",
         "tier": "tier1"
       },
-      "contractCount": 25,
-      "contractIdsHash": "c8c45e573e877499c1a7e520cf4a7a3cc2b20184fc65332e01f0b2ef467f3a38",
+      "contractCount": 27,
+      "contractIdsHash": "279ddc4698e5154c73f0c3336e175fd76ce7f8245b01dfe197f25819c740db78",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "path-tier1-parity",
@@ -385,8 +385,8 @@
         "ownerModule": "settings",
         "tier": "tier1"
       },
-      "contractCount": 47,
-      "contractIdsHash": "2eb14033161d5a5fcc9422e4819f243e806ca890283e9a1f75e6c20edbadbf53",
+      "contractCount": 45,
+      "contractIdsHash": "f5e1e4a5fd95b79f24f5f69c994f3bcb177e9c0f1530e178ccbaae096aa750e0",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "settings-tier1-parity",

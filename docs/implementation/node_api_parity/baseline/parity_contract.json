@@ -1941,14 +1941,6 @@
       "nodeArity": 5
     },
     {
-      "id": "config.ClassicConfig@rust",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "ClassicConfig@rust",
-      "rustKind": "class"
-    },
-    {
       "id": "config-clear-yaml-cache",
       "tier": "tier1",
       "ownerModule": "config",
@@ -2182,16 +2174,18 @@
     {
       "id": "config-validate-settings-path",
       "tier": "tier1",
-      "ownerModule": "config",
-      "rustSymbol": "PathConfig",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "rustSymbol": "validate_settings_path",
       "nodeExport": "validateSettingsPath",
       "nodeKind": "function"
     },
     {
       "id": "config-validate-settings-paths",
       "tier": "tier1",
-      "ownerModule": "config",
-      "rustSymbol": "PathConfig",
+      "ownerModule": "path",
+      "rustCrate": "classic-path-core",
+      "rustSymbol": "validate_settings_paths",
       "nodeExport": "validateSettingsPaths",
       "nodeKind": "function"
     },
@@ -4885,14 +4879,6 @@
       "rustKind": "reexport"
     },
     {
-      "id": "settings.SETTINGS_IGNORE_NONE@rust",
-      "tier": "tier1",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
-      "rustSymbol": "SETTINGS_IGNORE_NONE@rust",
-      "rustKind": "const"
-    },
-    {
       "id": "settings.YamlFile@rust",
       "tier": "tier1",
       "ownerModule": "settings",
@@ -5050,14 +5036,6 @@
       "ownerModule": "version_registry",
       "rustCrate": "classic-version-registry-core",
       "rustSymbol": "get_version_info@rust",
-      "rustKind": "function"
-    },
-    {
-      "id": "settings.must_not_be_none@rust",
-      "tier": "tier1",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
-      "rustSymbol": "must_not_be_none@rust",
       "rustKind": "function"
     },
     {

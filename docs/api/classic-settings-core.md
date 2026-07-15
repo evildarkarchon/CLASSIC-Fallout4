@@ -13,9 +13,9 @@ This crate is a small YAML settings utility layer with two distinct responsibili
 2. Parse and merge YAML streams for higher-level callers that want one mapping result.
 3. Cache loaded YAML documents behind caller-chosen string keys for later reuse.
 
-It also exposes a public `validators` module for lightweight settings-shape checks and string-to-type coercion.
+It also exposes a public `validators` module for generic string-to-type validation and coercion.
 
-This is not the main CLASSIC config-modeling crate. It works at the level of raw `yaml_rust2::Yaml` documents and simple validation helpers rather than typed application settings structs.
+This crate does not interpret raw User Settings key paths or own the `CLASSIC Settings.yaml` schema. That contract belongs exclusively to [`classic-user-settings-core`](classic-user-settings-core.md).
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
@@ -30,11 +30,12 @@ Use this crate when you need to:
 - cache parsed YAML documents under a logical string key
 - expose the same YAML-loading behavior through sync and async Rust APIs
 - inspect or clear cache state from tests, bindings, or startup code
-- run lightweight validation or coercion for settings-like scalar values
+- run lightweight validation or coercion for generic scalar values
 
 Do not use this crate for:
 
-- typed CLASSIC config modeling such as `ClassicConfig` or `YamlDataCore`
+- typed CLASSIC data modeling such as `YamlDataCore`
+- User Settings source discovery, defaults, schema validation, serialization, or persistence
 - automatic file freshness checks or mtime-based cache invalidation
 - owning a Tokio runtime
 - deep schema validation or business-rule enforcement for scan/config workflows
@@ -53,8 +54,6 @@ This crate exposes most of its API from the crate root and one public module.
 - `SettingsSource` - distinguishes path-backed and label-backed parse sources
 - `Yaml` - re-export of `yaml_rust2::Yaml`
 - `YamlFile` - type-safe identifiers for CLASSIC YAML/config files
-- `SETTINGS_IGNORE_NONE` - settings keys that must not be stored as `None`
-- `must_not_be_none()` - convenience membership check over `SETTINGS_IGNORE_NONE`
 - loader functions:
   - `parse_yaml_content(source, content)`
   - `merge_yaml_documents(source, docs)`
@@ -85,9 +84,6 @@ This crate exposes most of its API from the crate root and one public module.
 
 - `SettingType` - expected scalar type for validation/coercion
 - `CoercedValue` - typed coercion result
-- `ValidationIssue` - structure-validation finding
-- `IssueSeverity` - `Warning` or `Error`
-- `validate_settings_structure(yaml)` - top-level settings-document checks
 - `validate_setting_value(value, expected_type)` - fast string validation
 - `coerce_setting_value(value, target_type)` - string-to-typed-value coercion
 
@@ -118,7 +114,6 @@ Helpers and conversions:
 Variants:
 
 - `Main`
-- `Settings`
 - `Ignore`
 - `Game`
 - `GameLocal`
@@ -129,31 +124,13 @@ Important methods and traits:
 
 - `as_str() -> &'static str`
 - `description() -> &'static str`
-- `all() -> [YamlFile; 7]`
+- `all() -> [YamlFile; 6]`
 - `Display`, `Serialize`, `Deserialize`, `Clone`, `Copy`, `Hash`
 
 Contributor note:
 
 - this enum labels file roles only; it does not build real paths
 - it moved here from the retired constants crate because the enum is part of the settings domain rather than the version domain
-
-## `SETTINGS_IGNORE_NONE` and `must_not_be_none()`
-
-`SETTINGS_IGNORE_NONE` is the shared slice of settings keys that must not be persisted as `None`.
-
-Current keys:
-
-- `SCAN Custom Path`
-- `MODS Folder Path`
-- `INI Folder Path`
-- `Root_Folder_Game`
-- `Root_Folder_Docs`
-
-`must_not_be_none(key) -> bool` performs a simple membership check against that slice.
-
-Contributor note:
-
-- the helper is intentionally lightweight; higher-level validation and persistence rules still live in callers such as [`classic-config-core`](classic-config-core.md)
 
 ## `SettingsError`
 
@@ -358,22 +335,6 @@ Accessor helpers:
 - `as_f64()`
 - `as_str()` for `String` and `Path`
 
-## `validate_settings_structure(yaml)`
-
-This performs lightweight top-level checks intended for settings-style YAML documents.
-
-Rules visible in the source:
-
-- a root `Yaml::Hash` is considered the expected shape
-- an empty mapping produces a `Warning`
-- a mapping without the `CLASSIC_Settings` root key produces a `Warning`
-- `Yaml::Null` and `Yaml::BadValue` produce an `Error`
-- any non-mapping root value produces an `Error`
-
-Contributor note:
-
-- missing `CLASSIC_Settings` is not fatal in current source; it is a warning, not an error
-
 ## `validate_setting_value(value, expected_type)`
 
 - `Int` uses `parse::<i64>()`
@@ -459,8 +420,9 @@ Important direct dependencies visible in current behavior:
 Related CLASSIC crates and consumers:
 
 - [`classic-node`](../../node-bindings/classic-node/src/settings.rs) - exposes the cache, loaders, and stats to JavaScript/TypeScript
-- [`classic-settings-py`](../../python-bindings/classic-settings-py/src/lib.rs) - exposes the same surface plus validator helpers to Python
-- [`classic-config-core`](../../docs/api/classic-config-core.md) - higher-level typed config loader; use it when raw `Yaml` documents are not enough
+- [`classic-settings-py`](../../python-bindings/classic-settings-py/src/lib.rs) - exposes the generic YAML and scalar-validator surface to Python
+- [`classic-config-core`](../../docs/api/classic-config-core.md) - higher-level CLASSIC YAML Data loader; use it when raw `Yaml` documents are not enough
+- [`classic-user-settings-core`](../../docs/api/classic-user-settings-core.md) - exclusive owner of typed User Settings
 - [`classic-shared-core`](../../docs/api/classic-shared-core.md) - repo-wide shared Tokio runtime policy this crate is expected to follow
 
 Source-observed limitation:
@@ -471,29 +433,18 @@ Source-observed limitation:
 
 ## Usage Example
 
-This example stays within the real public API and shows the common contributor pattern: load settings into the cache, inspect structure, then reuse the cached documents.
+This example stays within the real public API and shows the generic cache pattern. Use a non-User-Settings document; first-party production code must use `classic-user-settings-core` for `CLASSIC Settings.yaml`.
 
 ```rust
 use classic_settings_core::{get_cached, load_settings_sync};
-use classic_settings_core::validators::{IssueSeverity, validate_settings_structure};
 use std::path::Path;
 
 let docs = load_settings_sync(
-    "settings",
-    Path::new("CLASSIC Settings.yaml"),
+    "ignore",
+    Path::new("CLASSIC Ignore.yaml"),
 )?;
 
-if let Some(first_doc) = docs.first() {
-    let issues = validate_settings_structure(first_doc);
-
-    for issue in &issues {
-        if issue.severity == IssueSeverity::Error {
-            eprintln!("settings structure error: {}", issue.message);
-        }
-    }
-}
-
-let cached = get_cached("settings").expect("settings should be cached after load");
+let cached = get_cached("ignore").expect("document should be cached after load");
 assert!(std::sync::Arc::ptr_eq(&docs, &cached));
 
 # Ok::<(), classic_settings_core::SettingsError>(())
@@ -519,7 +470,7 @@ If you extend this crate, update this document when you change:
 - cache key rules or invalidation behavior
 - sync vs async loading semantics
 - `SettingsError` variant usage
-- validator rules for accepted settings structure or scalar coercion
+- scalar validation or coercion rules
 
 ---
 
@@ -695,8 +646,8 @@ The C++ bridge module `classic::settings` (formerly `classic::yaml`; renamed dur
 - `yaml_ops_*` — path-backed YAML cache operations (parse, load, save, get_setting, cache_stats)
 - `settings_load_sync`, `settings_load_async_blocking`, `settings_load_batch_sync`, `settings_load_batch_async_blocking` — cache-populating loaders that return document counts (the full `Arc<Vec<Yaml>>` does not cross the CXX boundary)
 - `settings_cache_stats`, `settings_cache_size`, `settings_cache_keys`, `settings_is_cached`, `settings_invalidate`, `settings_clear_cache`, `settings_reset_cache_stats` — key-based settings cache observability
-- `settings_validate_structure`, `settings_validate_value`, `settings_coerce_value` — validator helpers mirroring the Python surface
-- Shared structs: `SettingsCacheStats`, `SettingsValidationIssue`, `SettingsCoercedValue`, `YamlCacheStatsDto`
+- `settings_validate_value`, `settings_coerce_value` — generic scalar validator helpers mirroring the Python surface
+- Shared structs: `SettingsCacheStats`, `SettingsCoercedValue`, `YamlCacheStatsDto`
 
 Two type-system exceptions apply at the CXX boundary (bridge-internal design notes):
 

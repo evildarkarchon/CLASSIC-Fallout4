@@ -902,6 +902,7 @@ describe("runGameSetupIntake", () => {
       { kind: "game_root", path: gameRoot },
     ]);
     expect(result.pathUpdateCount).toBe(result.pathUpdates.length);
+    expect(result.gameExecutable).toBe(gameExecutable);
   });
 });
 

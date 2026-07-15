@@ -5,8 +5,6 @@ use serde::{Deserialize, Serialize};
 pub enum YamlFile {
     /// The main database-backed configuration file.
     Main,
-    /// The user-editable settings file.
-    Settings,
     /// The ignore-list configuration file.
     Ignore,
     /// The game-specific database file.
@@ -25,7 +23,6 @@ impl YamlFile {
     pub const fn as_str(&self) -> &'static str {
         match self {
             Self::Main => "Main",
-            Self::Settings => "Settings",
             Self::Ignore => "Ignore",
             Self::Game => "Game",
             Self::GameLocal => "GameLocal",
@@ -39,7 +36,6 @@ impl YamlFile {
     pub const fn description(&self) -> &'static str {
         match self {
             Self::Main => "CLASSIC Data/databases/CLASSIC Main.yaml",
-            Self::Settings => "CLASSIC Settings.yaml",
             Self::Ignore => "CLASSIC Ignore.yaml",
             Self::Game => "CLASSIC Data/databases/CLASSIC {Game}.yaml",
             Self::GameLocal => "CLASSIC Data/CLASSIC {Game} Local.yaml",
@@ -50,10 +46,9 @@ impl YamlFile {
 
     /// Return all supported YAML file kinds in a stable order.
     #[must_use]
-    pub const fn all() -> [Self; 7] {
+    pub const fn all() -> [Self; 6] {
         [
             Self::Main,
-            Self::Settings,
             Self::Ignore,
             Self::Game,
             Self::GameLocal,
@@ -67,21 +62,6 @@ impl std::fmt::Display for YamlFile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_str())
     }
-}
-
-/// Settings keys that should not have `None` values.
-pub const SETTINGS_IGNORE_NONE: &[&str] = &[
-    "SCAN Custom Path",
-    "MODS Folder Path",
-    "INI Folder Path",
-    "Root_Folder_Game",
-    "Root_Folder_Docs",
-];
-
-/// Check if a settings key should not allow `None` values.
-#[must_use]
-pub fn must_not_be_none(key: &str) -> bool {
-    SETTINGS_IGNORE_NONE.contains(&key)
 }
 
 #[cfg(test)]

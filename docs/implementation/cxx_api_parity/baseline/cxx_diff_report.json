@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 410,
-    "current_total": 410,
-    "matched": 410,
+    "contract_total": 401,
+    "current_total": 401,
+    "matched": 401,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -1497,22 +1497,6 @@
       "reason": "-"
     },
     {
-      "id": "88af8b8a16131319",
-      "rustSymbol": "game_setup_intake_checks",
-      "kind": "function",
-      "bridgeModule": "scangame",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "b0197da00d8a6307",
-      "rustSymbol": "game_setup_needs_path_detection",
-      "kind": "function",
-      "bridgeModule": "scangame",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "67d52d0e3e5715b7",
       "rustSymbol": "ini_validator_detect_all_issues_for_root",
       "kind": "function",
@@ -1531,14 +1515,6 @@
     {
       "id": "164f9907a9bad5e6",
       "rustSymbol": "integrity_run_all_checks",
-      "kind": "function",
-      "bridgeModule": "scangame",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "c2c792f2bb44f4c3",
-      "rustSymbol": "run_game_setup_intake",
       "kind": "function",
       "bridgeModule": "scangame",
       "status": "matched",
@@ -1593,24 +1569,8 @@
       "reason": "-"
     },
     {
-      "id": "4fc6518f8ff3ec2f",
-      "rustSymbol": "GameSetupCheckDto",
-      "kind": "struct",
-      "bridgeModule": "scangame",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "17ae6c60e6c3bbd6",
       "rustSymbol": "GameSetupIntakeDto",
-      "kind": "struct",
-      "bridgeModule": "scangame",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "1b386a35f09c91ff",
-      "rustSymbol": "GameSetupPathDetectionNeeds",
       "kind": "struct",
       "bridgeModule": "scangame",
       "status": "matched",
@@ -1985,14 +1945,6 @@
       "reason": "-"
     },
     {
-      "id": "471dfac358240ff7",
-      "rustSymbol": "must_not_be_none_key",
-      "kind": "function",
-      "bridgeModule": "settings",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "0b5a4ad5368e8a02",
       "rustSymbol": "settings_cache_keys",
       "kind": "function",
@@ -2027,14 +1979,6 @@
     {
       "id": "e31a74d851e93942",
       "rustSymbol": "settings_coerce_value",
-      "kind": "function",
-      "bridgeModule": "settings",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "b303f68008e43f3e",
-      "rustSymbol": "settings_ignore_none_contains",
       "kind": "function",
       "bridgeModule": "settings",
       "status": "matched",
@@ -2091,14 +2035,6 @@
     {
       "id": "914acb0d0c76351f",
       "rustSymbol": "settings_reset_cache_stats",
-      "kind": "function",
-      "bridgeModule": "settings",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "5907231f4215f1a4",
-      "rustSymbol": "settings_validate_structure",
       "kind": "function",
       "bridgeModule": "settings",
       "status": "matched",
@@ -2499,14 +2435,6 @@
     {
       "id": "f78d79a6ed011c75",
       "rustSymbol": "SettingsCoercedValue",
-      "kind": "struct",
-      "bridgeModule": "settings",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "17a8395468c3cef5",
-      "rustSymbol": "SettingsValidationIssue",
       "kind": "struct",
       "bridgeModule": "settings",
       "status": "matched",

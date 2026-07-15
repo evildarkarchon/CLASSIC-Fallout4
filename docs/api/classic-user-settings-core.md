@@ -9,7 +9,7 @@ Contributor-facing documentation for [`business-logic/classic-user-settings-core
 This crate is distinct from:
 
 - `classic-settings-core`, which supplies generic YAML parsing/cache utilities
-- `classic-config-core::ClassicConfig`, which remains a transitional legacy flat-schema adapter until the later breaking cutovers
+- `classic-config-core`, which supplies generic non-User-Settings YAML Data loading and does not locate or serialize User Settings
 - YAML Data, which is curated application data rather than persisted user choices
 
 ## Published-default registry and compatibility mirror
@@ -119,7 +119,7 @@ The published `SCAN Custom Path` label is canonical. The GUI-era `Custom Scan Fo
 
 `GameSetupSettings` projects the saved facts needed to prepare Game Setup Intake without making intake load or persist User Settings. It contains the managed `GameId`, the shared `GameVersionSelection`, and the following optional path strings:
 
-| User Settings label | Typed getter | Flat `ClassicConfig` source |
+| User Settings label | Typed getter | Legacy flat migration source |
 | --- | --- | --- |
 | `Game Folder Path` | `game_root()` | `paths.game_root` |
 | `Game EXE Path` | `game_executable()` | none |
@@ -273,7 +273,7 @@ Stable diagnostic codes currently include:
 
 - CXX: `classic::settings::user_settings_open_update_preferences(classic_root)` retains the narrow update-policy DTO; `user_settings_open_crash_log_scan_settings(classic_root)`, `user_settings_open_game_setup_settings(classic_root)`, and `user_settings_open_frontend_state(classic_root)` expose cohesive consumer groups. `UserSettingsUpdateDto` carries complete GUI geometry and TUI remembered-state transitions. `user_settings_preview_update(...)` / `user_settings_commit_update(...)` and their bootstrap variants own ordinary persistence. `user_settings_import_legacy_tui_state(...)` returns an opaque handle whose outcome reports verified backup/revision evidence, and `user_settings_restore_legacy_tui_import(...)` explicitly restores its receipt. Versioned YAML migration continues through the separate migration handle/apply/restore surface.
 - Node: `openUserSettings(classicRoot)` returns `JsUserSettingsSnapshot` with all four typed groups and exact source bytes. `JsUserSettingsUpdate` accepts optional typed `windowGeometry` and `tui` transitions; preview/commit and bootstrap calls remain read-only then explicit. `importLegacyTuiStateIntoUserSettings(classicRoot, legacyStatePath)` returns structured status, conflict, revision, backup, and opaque receipt data; `receipt.restore(classicRoot)` performs conflict-safe restoration. `scanRunExecute(...)` projects omitted scan and FCX setup facts from the same snapshot, `runGameSetupIntakeFromUserSettings(classicRoot, xseLogPath?)` is the cohesive read-only Game Setup path, and lower-level FCX analysis accepts `classicRoot` explicitly. The intentional breaking cutover removed `ClassicConfigJs`, `JsPathConfig`, and `createDefaultConfig`. Operational failures retain stable core error codes on the thrown Node error.
-- Python: `classic_user_settings.open_user_settings(classic_root)` returns `UserSettingsSnapshot` with all four typed groups and exact source bytes. `UserSettingsUpdate.set_window_geometry(...)` and `set_tui_remembered_state(...)` request cohesive frontend transitions before snapshot preview/commit or bootstrap. `import_legacy_tui_state_into_user_settings(classic_root, legacy_state_path)` returns typed outcome/receipt objects, and `receipt.restore(classic_root)` performs explicit restoration; import failures raise `LegacyTuiStateImportError` with the stable core code.
+- Python: `classic_user_settings.open_user_settings(classic_root)` returns `UserSettingsSnapshot` with all four typed groups and exact source bytes. Preview, explicit commit, conflict, migration apply, and receipt restore remain typed Python objects. `classic_scangame.run_game_setup_intake_from_user_settings(...)`, `classic_scanlog.scan_run_execute(...)`, and explicit-root FCX preparation consume the typed groups without interpreting flat keys. The intentional breaking cutover removed Python `ClassicConfig` and `PathConfig` exports.
 
 All maintained bindings expose the pure migration planner: CXX uses `user_settings_plan_migration(classic_root)`, Node uses `planUserSettingsMigration(classicRoot)`, and Python uses `UserSettingsSnapshot.plan_migration()`. Their result DTOs carry status, requiredness, version/location endpoints, ordered changes, exact original/proposed content, and structured diagnostics. CXX `user_settings_reverse_migration_plan(...)`, Node `reverseUserSettingsMigrationPlan(...)`, and Python `UserSettingsMigrationPlan.reverse_in_memory()` expose the same pure inverse review operation. Each binding also exposes explicit apply and opaque-receipt restore adapters; CXX and Node reopen and compare the caller-approved base revision plus exact proposed content before they invoke the core plan, while Python retains the immutable core plan directly.
 
@@ -292,10 +292,10 @@ $env:PYO3_PYTHON = "$PWD\python-bindings\.venv\Scripts\python.exe"
 cargo test -p classic-user-settings-core
 cargo test -p classic-user-settings-core --test migration_planning_behavior
 cargo test -p classic-user-settings-core --test migration_persistence_behavior
-cargo test -p classic-config-core --test user_settings_compatibility_tests
+cargo test -p classic-user-settings-core --test compatibility_contract
 cargo test -p classic-cpp-bridge test_user_settings_frontend_state_bridge
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test -CTestName "App update honors disabled typed User Settings before checking the network,App update fails closed for malformed User Settings"
 pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test -CTestName classic-gui-test-mainwindow-geometry
 ```
 
-The compatibility source of truth remains [`tests/fixtures/user_settings_compatibility/expectations.json`](../../tests/fixtures/user_settings_compatibility/expectations.json), with its prefactoring guard in `classic-config-core` and public-interface behavioral coverage in this crate. The checked-in fixtures cover canonical, alias-only, conflicting-alias, invalid-known-value, and unknown-entry documents.
+The compatibility source of truth remains [`tests/fixtures/user_settings_compatibility/expectations.json`](../../tests/fixtures/user_settings_compatibility/expectations.json), with its contract guard and public-interface behavioral coverage owned by this crate. The checked-in fixtures cover canonical, alias-only, conflicting-alias, invalid-known-value, and unknown-entry documents.

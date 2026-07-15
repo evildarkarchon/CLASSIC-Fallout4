@@ -55,46 +55,6 @@ fn docs_relative_path_uses_proton_safe_separator() {
 }
 
 #[test]
-fn from_config_requires_saved_game_root() {
-    let config = classic_config_core::ClassicConfig::default();
-
-    assert!(GameSetupIntake::from_config(&config, GameId::Fallout4).is_none());
-}
-
-#[test]
-fn from_config_prefers_docs_root_over_ini_folder() {
-    let (_temp, game_root, docs_root) = setup_roots();
-    let ini_folder = docs_root.with_file_name("IniFallback");
-    let mut config = classic_config_core::ClassicConfig {
-        game_version: "NextGen".to_string(),
-        ..classic_config_core::ClassicConfig::default()
-    };
-    config.paths.game_root = game_root.clone();
-    config.paths.docs_root = Some(docs_root.clone());
-    config.paths.ini_folder = Some(ini_folder);
-
-    let intake = GameSetupIntake::from_config(&config, GameId::Fallout4)
-        .expect("saved game root should build intake");
-
-    assert_eq!(intake.selected_game_version, "NextGen");
-    assert_eq!(intake.game_root.as_deref(), Some(game_root.as_path()));
-    assert_eq!(intake.docs_root.as_deref(), Some(docs_root.as_path()));
-}
-
-#[test]
-fn from_config_uses_ini_folder_as_legacy_docs_fallback() {
-    let (_temp, game_root, docs_root) = setup_roots();
-    let mut config = classic_config_core::ClassicConfig::default();
-    config.paths.game_root = game_root;
-    config.paths.ini_folder = Some(docs_root.clone());
-
-    let intake = GameSetupIntake::from_config(&config, GameId::Fallout4)
-        .expect("saved game root should build intake");
-
-    assert_eq!(intake.docs_root.as_deref(), Some(docs_root.as_path()));
-}
-
-#[test]
 fn optional_setup_fact_builders_preserve_paths_and_ignore_empty_values() {
     let intake = GameSetupIntake::new(GameId::Fallout4, "auto")
         .with_mods_root("D:/Mods")

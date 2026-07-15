@@ -2936,6 +2936,8 @@ export interface JsGameSetupIntakeResult {
   pathUpdates: Array<JsGameSetupPathUpdate>
   /** Resolved game root, when known. */
   gameRoot?: string
+  /** Resolved game executable, when known. */
+  gameExecutable?: string
   /** Resolved documents root, when known. */
   docsRoot?: string
   /** Typed check results for structured consumers. */
@@ -4176,8 +4178,6 @@ export interface JsYamlClientSchemaEntry {
 export declare const enum JsYamlFile {
   /** CLASSIC Data/databases/CLASSIC Main.yaml */
   Main = 'Main',
-  /** CLASSIC Settings.yaml */
-  Settings = 'Settings',
   /** CLASSIC Ignore.yaml */
   Ignore = 'Ignore',
   /** CLASSIC Data/databases/CLASSIC {Game}.yaml */
@@ -4221,8 +4221,6 @@ export interface JsYamlRollbackOutcome {
 export declare const enum JsYamlSource {
   /** Main database: CLASSIC Data/databases/CLASSIC Main.yaml */
   Main = 'Main',
-  /** User settings: CLASSIC Settings.yaml */
-  Settings = 'Settings',
   /** Ignore list: CLASSIC Ignore.yaml */
   Ignore = 'Ignore',
   /** Game database: CLASSIC Data/databases/CLASSIC {game}.yaml */

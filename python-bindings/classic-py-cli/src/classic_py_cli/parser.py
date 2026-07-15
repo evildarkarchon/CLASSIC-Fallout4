@@ -51,8 +51,8 @@ def build_parser() -> argparse.ArgumentParser:
     config_sub = config.add_subparsers(dest="config_command", required=True)
     config_main = config_sub.add_parser("main-version", help="read bundled main YAML version")
     config_main.set_defaults(handler=commands.config_main_version)
-    config_inspect = config_sub.add_parser("inspect", help="inspect a CLASSIC config YAML file")
-    config_inspect.add_argument("path")
+    config_inspect = config_sub.add_parser("inspect", help="inspect typed User Settings at a CLASSIC root")
+    config_inspect.add_argument("path", help="explicit CLASSIC root containing CLASSIC Settings.yaml")
     config_inspect.set_defaults(handler=commands.config_inspect)
 
     path = subcommands.add_parser("path", help="path validation utilities")

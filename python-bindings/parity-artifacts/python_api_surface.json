@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T23:05:32.536146+00:00",
+  "generated_at_utc": "2026-07-15T02:25:38.164466+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -43,112 +43,6 @@
     ]
   },
   "exports": [
-    {
-      "module": "classic_config",
-      "export": "ClassicConfig",
-      "export_path": "ClassicConfig",
-      "kind": "class",
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "class ClassicConfig:"
-    },
-    {
-      "module": "classic_config",
-      "export": "__init__",
-      "export_path": "ClassicConfig.__init__",
-      "parent_class": "ClassicConfig",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def __init__(self) -> None:"
-    },
-    {
-      "module": "classic_config",
-      "export": "__repr__",
-      "export_path": "ClassicConfig.__repr__",
-      "parent_class": "ClassicConfig",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def __repr__(self) -> str: ..."
-    },
-    {
-      "module": "classic_config",
-      "export": "get_config_path",
-      "export_path": "ClassicConfig.get_config_path",
-      "parent_class": "ClassicConfig",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def get_config_path(self) -> str:"
-    },
-    {
-      "module": "classic_config",
-      "export": "load_from_yaml",
-      "export_path": "ClassicConfig.load_from_yaml",
-      "parent_class": "ClassicConfig",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def load_from_yaml(path: str | Path) -> ClassicConfig:"
-    },
-    {
-      "module": "classic_config",
-      "export": "load_local_yaml_paths",
-      "export_path": "ClassicConfig.load_local_yaml_paths",
-      "parent_class": "ClassicConfig",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def load_local_yaml_paths(self, game: str) -> None:"
-    },
-    {
-      "module": "classic_config",
-      "export": "load_or_default",
-      "export_path": "ClassicConfig.load_or_default",
-      "parent_class": "ClassicConfig",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def load_or_default() -> ClassicConfig:"
-    },
-    {
-      "module": "classic_config",
-      "export": "save_to_yaml",
-      "export_path": "ClassicConfig.save_to_yaml",
-      "parent_class": "ClassicConfig",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def save_to_yaml(self, path: str | Path) -> None:"
-    },
-    {
-      "module": "classic_config",
-      "export": "validate_paths",
-      "export_path": "ClassicConfig.validate_paths",
-      "parent_class": "ClassicConfig",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def validate_paths(self) -> None:"
-    },
     {
       "module": "classic_config",
       "export": "ClassicMainYamlVersionEmptyError",
@@ -208,40 +102,6 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "class ClassicMainYamlVersionNotStringError(ClassicMainYamlVersionError):"
-    },
-    {
-      "module": "classic_config",
-      "export": "PathConfig",
-      "export_path": "PathConfig",
-      "kind": "class",
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "class PathConfig:"
-    },
-    {
-      "module": "classic_config",
-      "export": "__init__",
-      "export_path": "PathConfig.__init__",
-      "parent_class": "PathConfig",
-      "kind": "method",
-      "arity": 5,
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def __init__( self, ini_folder: str | None = None, scan_custom: str | None = None, mods_folder: str | None = None, game_root: str = \"\", docs_root: str | None = None, ) -> None:"
-    },
-    {
-      "module": "classic_config",
-      "export": "__repr__",
-      "export_path": "PathConfig.__repr__",
-      "parent_class": "PathConfig",
-      "kind": "method",
-      "arity": 0,
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def __repr__(self) -> str: ..."
     },
     {
       "module": "classic_config",
@@ -4673,6 +4533,17 @@
     },
     {
       "module": "classic_scangame",
+      "export": "run_game_setup_intake_from_user_settings",
+      "export_path": "run_game_setup_intake_from_user_settings",
+      "kind": "function",
+      "arity": 2,
+      "owner_module": "scangame",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scangame-py/classic_scangame.pyi",
+      "signature": "def run_game_setup_intake_from_user_settings( classic_root: str, xse_log_path: str | None = ... ) -> GameSetupIntakeResult:"
+    },
+    {
+      "module": "classic_scangame",
       "export": "scan_all_ba2_archives",
       "export_path": "scan_all_ba2_archives",
       "kind": "function",
@@ -4984,11 +4855,11 @@
       "export_path": "FcxModeHandler.check_fcx_mode",
       "parent_class": "FcxModeHandler",
       "kind": "method",
-      "arity": 0,
+      "arity": 1,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def check_fcx_mode(self) -> None:"
+      "signature": "def check_fcx_mode(self, classic_root: str) -> None:"
     },
     {
       "module": "classic_scanlog",
@@ -7134,7 +7005,7 @@
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def scan_run_execute( yaml_dir_root: str, yaml_dir_data: str, game: str, game_version: str, log_paths: list[str], show_formid_values: bool = False, fcx_mode: bool = False, simplify_logs: bool = False, move_unsolved_logs: bool = False, targeted_mode: bool = False, max_concurrent: int | None = None, preserve_order: bool = False, cancellation_token: CancellationToken | None = None, unsolved_logs_destination: str | None = None, base_directory: str | None = None, custom_scan_directory: str | None = None, configured_documents_root: str | None = None, targeted_inputs: list[str] | None = None, setup_context: ScanRunSetupContext | None = None, ) -> ScanRunResult:"
+      "signature": "def scan_run_execute( yaml_dir_root: str, yaml_dir_data: str, game: str, game_version: str, log_paths: list[str], show_formid_values: bool | None = None, fcx_mode: bool | None = None, simplify_logs: bool | None = None, move_unsolved_logs: bool | None = None, targeted_mode: bool = False, max_concurrent: int | None = None, preserve_order: bool = False, cancellation_token: CancellationToken | None = None, unsolved_logs_destination: str | None = None, base_directory: str | None = None, custom_scan_directory: str | None = None, configured_documents_root: str | None = None, targeted_inputs: list[str] | None = None, setup_context: ScanRunSetupContext | None = None, ) -> ScanRunResult:"
     },
     {
       "module": "classic_scanlog",
@@ -7589,17 +7460,6 @@
     },
     {
       "module": "classic_settings",
-      "export": "must_not_be_none",
-      "export_path": "must_not_be_none",
-      "kind": "function",
-      "arity": 1,
-      "owner_module": "settings",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-settings-py/classic_settings.pyi",
-      "signature": "def must_not_be_none(key: str) -> bool: ..."
-    },
-    {
-      "module": "classic_settings",
       "export": "reset_cache_stats",
       "export_path": "reset_cache_stats",
       "kind": "function",
@@ -7630,17 +7490,6 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-settings-py/classic_settings.pyi",
       "signature": "def validate_setting_value(value: str, expected_type: str) -> bool:"
-    },
-    {
-      "module": "classic_settings",
-      "export": "validate_settings_structure",
-      "export_path": "validate_settings_structure",
-      "kind": "function",
-      "arity": 1,
-      "owner_module": "settings",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-settings-py/classic_settings.pyi",
-      "signature": "def validate_settings_structure(yaml_content: str) -> list[dict[str, Any]]:"
     },
     {
       "module": "classic_settings",

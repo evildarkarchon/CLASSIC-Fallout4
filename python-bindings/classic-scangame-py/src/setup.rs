@@ -10,6 +10,7 @@ use classic_scangame_core::{
 };
 use classic_shared::without_gil;
 use classic_shared_core::GameId;
+use classic_user_settings_core::UserSettings;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use std::path::PathBuf;
@@ -245,6 +246,9 @@ pub struct PyGameSetupIntakeResult {
     /// Resolved game root, when known.
     #[pyo3(get)]
     pub game_root: Option<String>,
+    /// Resolved game executable, when known.
+    #[pyo3(get)]
+    pub game_executable: Option<String>,
     /// Resolved documents root, when known.
     #[pyo3(get)]
     pub docs_root: Option<String>,
@@ -310,6 +314,10 @@ fn convert_result(result: GameSetupIntakeResult) -> PyGameSetupIntakeResult {
             .paths
             .game_root
             .map(|path| path.to_string_lossy().into_owned()),
+        game_executable: result
+            .paths
+            .game_exe_path
+            .map(|path| path.to_string_lossy().into_owned()),
         docs_root: result
             .paths
             .docs_root
@@ -325,6 +333,26 @@ fn convert_result(result: GameSetupIntakeResult) -> PyGameSetupIntakeResult {
 fn run_game_setup_intake(py: Python<'_>, intake: &PyGameSetupIntake) -> PyGameSetupIntakeResult {
     let core_intake = intake.inner.clone();
     let result = without_gil(py, || core_intake.run());
+    convert_result(result)
+}
+
+/// Open typed User Settings at an explicit CLASSIC root and run Game Setup Intake.
+///
+/// The operation is read-only. Discovered paths remain proposals in the returned
+/// result and are never committed without a separate caller-approved update.
+#[pyfunction]
+#[pyo3(signature = (classic_root, xse_log_path=None))]
+fn run_game_setup_intake_from_user_settings(
+    py: Python<'_>,
+    classic_root: PathBuf,
+    xse_log_path: Option<PathBuf>,
+) -> PyGameSetupIntakeResult {
+    let user_settings = UserSettings::open(classic_root);
+    let mut intake = GameSetupIntake::from_user_settings(user_settings.game_setup_settings());
+    if let Some(xse_log_path) = xse_log_path {
+        intake = intake.with_xse_log_path(xse_log_path);
+    }
+    let result = without_gil(py, || intake.run());
     convert_result(result)
 }
 
@@ -354,6 +382,10 @@ pub fn register_setup(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyGameSetupPathUpdate>()?;
     m.add_class::<PyGameSetupIntakeResult>()?;
     m.add_function(wrap_pyfunction!(run_game_setup_intake, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        run_game_setup_intake_from_user_settings,
+        m
+    )?)?;
     m.add_function(wrap_pyfunction!(
         normalize_game_setup_version_selection_py,
         m

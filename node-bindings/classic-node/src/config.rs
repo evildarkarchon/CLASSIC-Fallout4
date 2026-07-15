@@ -24,8 +24,8 @@ use std::sync::Once;
 
 static INIT_APP_DIR: Once = Once::new();
 
-/// Ensure APP_DIR is registered so settings resolve relative to the process
-/// working directory rather than the interpreter install path (node/bun).
+/// Ensure APP_DIR is registered so independent YAML/cache paths resolve relative
+/// to the process working directory rather than the Node/Bun install path.
 fn ensure_app_dir_initialized() {
     INIT_APP_DIR.call_once(|| {
         if classic_registry_core::get_application_dir().is_none()
@@ -609,8 +609,6 @@ impl YamlData {
 pub enum JsYamlSource {
     /// Main database: CLASSIC Data/databases/CLASSIC Main.yaml
     Main,
-    /// User settings: CLASSIC Settings.yaml
-    Settings,
     /// Ignore list: CLASSIC Ignore.yaml
     Ignore,
     /// Game database: CLASSIC Data/databases/CLASSIC {game}.yaml
@@ -627,7 +625,6 @@ impl From<JsYamlSource> for CoreYamlSource {
     fn from(js: JsYamlSource) -> Self {
         match js {
             JsYamlSource::Main => CoreYamlSource::Main,
-            JsYamlSource::Settings => CoreYamlSource::Settings,
             JsYamlSource::Ignore => CoreYamlSource::Ignore,
             JsYamlSource::Game => CoreYamlSource::Game,
             JsYamlSource::GameLocal => CoreYamlSource::GameLocal,

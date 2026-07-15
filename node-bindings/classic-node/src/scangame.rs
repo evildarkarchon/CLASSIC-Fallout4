@@ -1615,6 +1615,8 @@ pub struct JsGameSetupIntakeResult {
     pub path_updates: Vec<JsGameSetupPathUpdate>,
     /// Resolved game root, when known.
     pub game_root: Option<String>,
+    /// Resolved game executable, when known.
+    pub game_executable: Option<String>,
     /// Resolved documents root, when known.
     pub docs_root: Option<String>,
     /// Typed check results for structured consumers.
@@ -1714,6 +1716,10 @@ fn game_setup_result_to_js(result: GameSetupIntakeResult) -> JsGameSetupIntakeRe
         game_root: result
             .paths
             .game_root
+            .map(|path| path.to_string_lossy().into_owned()),
+        game_executable: result
+            .paths
+            .game_exe_path
             .map(|path| path.to_string_lossy().into_owned()),
         docs_root: result
             .paths

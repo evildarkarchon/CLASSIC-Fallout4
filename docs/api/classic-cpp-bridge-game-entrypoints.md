@@ -65,10 +65,7 @@ This is currently the main bridge file where multiple crates meet.
 
 This file exposes Game Setup Intake plus the broader scanner/checker bridge functions in this namespace.
 
-- `run_game_setup_intake(...) -> GameSetupIntakeDto`
 - `run_game_setup_intake_from_user_settings(classic_root, xse_log_path) -> GameSetupIntakeDto`
-- `game_setup_intake_checks(...) -> Result<Vec<GameSetupCheckDto>>`
-- `game_setup_needs_path_detection(game_path, docs_path) -> GameSetupPathDetectionNeeds`
 
 Game Setup Intake is setup-only. ENB, crashgen, BA2, Wrye, INI, and mod-file checks remain separate bridge entry points.
 
@@ -342,70 +339,9 @@ Important boundary:
 
 ## `classic::scangame` entry points
 
-### `run_game_setup_intake(game_id, game_version, game_root, docs_path, xse_log_path, game_exe_path) -> GameSetupIntakeDto`
-
-Forwards to:
-
-- `classic_scangame_core::GameSetupIntake::new(...)`
-- `GameSetupIntake::with_game_root(...)`
-- `GameSetupIntake::with_game_exe_path(...)`
-- `GameSetupIntake::with_docs_root(...)`
-- `GameSetupIntake::with_xse_log_path(...)`
-- `GameSetupIntake::run()`
-
-Bridge DTO shape:
-
-- `rendered_report`
-- `status`
-- `has_errors`
-- `total_checks`
-- `failed_checks`
-- `action_count`
-- `path_update_count`
-- `path_updates: Vec<GameSetupPathUpdateDto>` with ordered `kind` and `path` proposals; UTF-8-representable paths are exact, while other native paths follow the CXX bridge's established lossy string conversion
-- `game_root`
-- `game_executable`
-- `docs_root`
-
-Current bridge behavior that matters:
-
-- `game_id` must parse as a `classic_shared_core::GameId`
-- empty path strings are treated as absent optional paths
-- non-empty `game_exe_path` is forwarded to intake for root fallback, auto-version detection, executable checks, and install-location checks
-- invalid `game_id` returns a fatal DTO rather than throwing across CXX
-- setup diagnostics come from Rust core and include registry-backed executable, documents, and XSE checks where metadata exists
-
 ### `run_game_setup_intake_from_user_settings(classic_root, xse_log_path) -> GameSetupIntakeDto`
 
-This is the cohesive GUI adapter. Rust opens `UserSettings` read-only, builds `GameSetupIntake` with `from_user_settings(...)`, optionally adds the XSE-log detection hint, and returns the same DTO shape as the positional compatibility entry point. Opening and running intake never creates, migrates, or updates User Settings; returned path proposals still require caller consent and one later explicit update commit.
-
-### `game_setup_intake_checks(game_id, game_version, game_root, docs_path, xse_log_path, game_exe_path) -> Result<Vec<GameSetupCheckDto>>`
-
-Returns the typed check list from the same intake run. Invalid intake inputs, such as an unknown `game_id`, are returned as CXX `Result` errors rather than being collapsed to an empty check list.
-
-Bridge DTO shape:
-
-- `kind`
-- `state`
-- `message`
-- `details`
-
-Use this when a C++ caller needs structured UI/status handling instead of only `rendered_report`.
-
-### `game_setup_needs_path_detection(game_path, docs_path) -> GameSetupPathDetectionNeeds`
-
-Forwards to `classic_scangame_core::game_setup_needs_path_detection()`.
-
-Bridge DTO shape:
-
-- `needs_game_path`
-- `needs_docs_path`
-
-Current behavior:
-
-- empty strings are treated as missing paths
-- non-empty strings are treated as present without validation
-- this helper answers only whether detection work is needed, not whether the provided paths are valid
+This is the sole CXX Game Setup Intake adapter. Rust opens `UserSettings` read-only, builds `GameSetupIntake` with `from_user_settings(...)`, optionally adds the XSE-log detection hint, and returns rendered report text, summary counts, resolved paths, and ordered typed path proposals. Opening and running intake never creates, migrates, or updates User Settings; returned path proposals still require caller consent and one later explicit update commit.
 
 ---
 
@@ -434,9 +370,7 @@ Those DTOs still flatten the underlying Rust models heavily.
 
 ## 3. Rendered text plus typed setup DTOs
 
-`classic::scangame::run_game_setup_intake()` and `run_game_setup_intake_from_user_settings()` return Rust-rendered report text, summary counts, the resolved executable, and ordered typed path proposals for caller review. UTF-8-representable paths cross exactly; other native paths use the CXX bridge's established lossy string transport. Returning a proposal does not preview or persist User Settings.
-
-`classic::scangame::game_setup_intake_checks()` exposes typed check records for callers that need structured state and propagates intake setup errors.
+`classic::scangame::run_game_setup_intake_from_user_settings()` returns Rust-rendered report text, summary counts, the resolved executable, and ordered typed path proposals for caller review. UTF-8-representable paths cross exactly; other native paths use the CXX bridge's established lossy string transport. Returning a proposal does not preview or persist User Settings.
 
 ---
 
@@ -499,13 +433,12 @@ When XSE output looks inconsistent:
 
 ## Game Setup Intake flow
 
-When `run_game_setup_intake()` output looks wrong:
+When `run_game_setup_intake_from_user_settings()` output looks wrong:
 
-1. check the `status`, `action_count`, and typed checks before reading the rendered report text
-2. confirm the frontend passed the expected `GameId` string and selected version
-3. confirm empty strings were intended to mean missing optional paths
-4. inspect whether the relevant typed check is `Failed`, `ActionRequired`, `Skipped`, or `Unsupported`
-5. debug `classic-scangame-core::game_setup_intake` before adding bridge-side setup logic
+1. check the `status`, `has_errors`, check counts, action count, and proposed path updates before reading the rendered report text
+2. inspect the typed User Settings Game Setup group and its origins
+3. confirm the supplied CLASSIC root selects the intended document
+4. debug `classic-scangame-core::game_setup_intake` before adding bridge-side setup logic; individual typed checks are intentionally not exported through CXX
 
 ---
 
@@ -519,8 +452,6 @@ When `run_game_setup_intake()` output looks wrong:
 - `src/game.rs::detect_xse_version_string()` expects a loader path even though the parameter name is `exe_path`
 - `src/game.rs` stringifies many failures as `""`; C++ callers cannot recover typed causes without adding new bridge surface
 - `src/game.rs::version_registry_get_xse_config()` drops `script_hashes`, so callers cannot build script-hash validation from this DTO alone
-- `src/scangame.rs::run_game_setup_intake()` collapses invalid `game_id` into a fatal DTO instead of exposing a typed Rust parse error
-- `src/scangame.rs::game_setup_intake_checks()` recomputes intake separately from `run_game_setup_intake()` and returns a CXX `Result` on setup errors; keep callers aware if they call both
 - Game Setup Intake is setup-only; ENB, crashgen, Wrye, BA2, loose-file, and mod INI checks remain separate bridge calls
 
 These are current behavior notes, not recommendations for future design.
@@ -531,5 +462,5 @@ These are current behavior notes, not recommendations for future design.
 
 - If you need Fallout 4-only auto-detection convenience, start in `src/path.rs`.
 - If you need registry metadata, generic path lookup, PE version reads, or XSE loader/version probing, start in `src/game.rs`.
-- If you need setup-time intake diagnostics or a cheap missing-path gate, start in `src/scangame.rs`.
+- If you need setup-time intake diagnostics from typed User Settings, start with `run_game_setup_intake_from_user_settings()` in `src/scangame.rs`.
 - If you need richer Rust behavior than the bridge exposes, change the bridge intentionally and document the new boundary in this file and the crate-level docs in the same change.

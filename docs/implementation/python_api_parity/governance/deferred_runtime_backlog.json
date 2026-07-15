@@ -978,58 +978,6 @@
       ]
     },
     {
-      "coverageId": "python-deferred-config-076",
-      "classification": "deferred",
-      "ownerModule": "config",
-      "tier": "tier2",
-      "wave": "wave2",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_config.ClassicConfig.__init__"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-config-077",
-      "classification": "deferred",
-      "ownerModule": "config",
-      "tier": "tier2",
-      "wave": "wave2",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_config.ClassicConfig.__repr__"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-config-078",
-      "classification": "deferred",
-      "ownerModule": "config",
-      "tier": "tier2",
-      "wave": "wave2",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_config.PathConfig.__init__"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-config-079",
-      "classification": "deferred",
-      "ownerModule": "config",
-      "tier": "tier2",
-      "wave": "wave2",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_config.PathConfig.__repr__"
-      ],
-      "rustSymbols": []
-    },
-    {
       "coverageId": "python-deferred-config-080",
       "classification": "deferred",
       "ownerModule": "config",

@@ -1,44 +1,22 @@
 //! Python bindings for FcxModeHandler - Thin wrapper over classic-scanlog-core
 
 use crate::FcxResetError as PyFcxResetError;
-use classic_config_core::ClassicConfig;
 use classic_scangame_core::{GameSetupIntake, detect_config_issues};
 use classic_scanlog_core::{ConfigIssue, FcxModeHandler, FcxResetError};
-use classic_shared_core::{GameId, get_runtime};
-use pyo3::exceptions::PyRuntimeError;
+use classic_user_settings_core::UserSettings;
+use parking_lot::Mutex;
 use pyo3::prelude::*;
 use pyo3::types::PyType;
+use std::path::PathBuf;
+use std::sync::LazyLock;
 
-fn load_classic_config() -> PyResult<ClassicConfig> {
-    get_runtime()
-        .block_on(ClassicConfig::load_or_default())
-        .map_err(|error| PyRuntimeError::new_err(format!("failed to load CLASSIC config: {error}")))
-}
-
-fn infer_game_id(config: &ClassicConfig) -> Option<GameId> {
-    let game_root = &config.paths.game_root;
-    if !game_root.as_os_str().is_empty() {
-        if let Some(game_id) = GameId::all()
-            .into_iter()
-            .find(|game_id| game_root.join(game_id.exe_name()).exists())
-        {
-            return Some(game_id);
-        }
-
-        if let Some(name) = game_root.file_name().and_then(|name| name.to_str())
-            && let Ok(game_id) = name.parse::<GameId>()
-        {
-            return Some(game_id);
-        }
-    }
-
-    None
-}
-
-/// Build a read-only Game Setup Intake from saved CLASSIC configuration.
-fn build_game_setup_intake(config: &ClassicConfig, game_id: GameId) -> Option<GameSetupIntake> {
-    GameSetupIntake::from_config(config, game_id)
-}
+/// Binding-owned FCX result cache keyed by the explicit CLASSIC root.
+///
+/// The core global handler can also be updated by non-Python scan-run paths, so
+/// keeping the root and handler together prevents unrelated core state from being
+/// mistaken for this binding's root-scoped cache entry.
+static FCX_CACHE: LazyLock<Mutex<Option<(PathBuf, FcxModeHandler)>>> =
+    LazyLock::new(|| Mutex::new(None));
 
 fn to_scanlog_issue(issue: classic_scangame_core::ConfigIssue) -> ConfigIssue {
     ConfigIssue::new(
@@ -180,24 +158,26 @@ impl PyFcxModeHandler {
 
     /// Check and update FCX mode state using Rust core checks.
     ///
-    /// Uses run-once caching via global singleton for batch scanning performance.
-    /// When checks have already been run in this session, cached results are reused
-    /// instead of re-running expensive operations (10x speedup for batch scans).
+    /// Uses a binding-owned, root-and-mode-keyed cache for batch scanning performance.
+    /// Matching checks reuse the retained handler instead of re-running expensive
+    /// operations such as INI parsing and path inspection.
     ///
-    /// IMPORTANT: This method assumes game paths have already been generated
-    /// via game_generate_paths() before being called. This should be done
-    /// in the scan executor or orchestrator initialization.
-    pub fn check_fcx_mode(&mut self, _py: Python<'_>) -> PyResult<()> {
-        // Use global handler for session-wide caching
-        use classic_scanlog_core::GLOBAL_FCX_HANDLER;
-        let mut global_handler = GLOBAL_FCX_HANDLER.lock();
-
-        // If checks already run in this session, use cached results
-        if global_handler.checks_run {
-            // Copy cached results to this instance
-            self.inner = global_handler.clone();
+    /// `classic_root` is explicit so FCX preparation never consults an implicit
+    /// application directory or interprets the retired flat configuration schema.
+    pub fn check_fcx_mode(&mut self, _py: Python<'_>, classic_root: String) -> PyResult<()> {
+        let classic_root = PathBuf::from(classic_root);
+        let mut cache = FCX_CACHE.lock();
+        if let Some((cache_root, cached_handler)) = cache.as_ref()
+            && cache_root == &classic_root
+            && cached_handler.fcx_mode == self.inner.fcx_mode
+        {
+            self.inner = cached_handler.clone();
             return Ok(());
         }
+
+        // Keep the core singleton synchronized for non-Python FCX consumers.
+        use classic_scanlog_core::GLOBAL_FCX_HANDLER;
+        let mut global_handler = GLOBAL_FCX_HANDLER.lock();
 
         if !self.inner.fcx_mode {
             // FCX mode is off; leave report output empty but mark the session checked.
@@ -209,36 +189,34 @@ impl PyFcxModeHandler {
             global_handler.fcx_mode = false;
             global_handler.set_main_files_result(String::new());
             global_handler.set_game_files_result(String::new());
+            *cache = Some((classic_root, self.inner.clone()));
 
             return Ok(());
         }
 
-        let config = load_classic_config()?;
-        let game_id = infer_game_id(&config).ok_or_else(|| {
-            PyRuntimeError::new_err(
-                "failed to infer game id from configured game root; run path detection first",
-            )
-        })?;
-
-        let main_result = build_game_setup_intake(&config, game_id)
-            .map(|intake| intake.run().rendered_report)
-            .unwrap_or_default();
+        let user_settings = UserSettings::open(&classic_root);
+        let intake = GameSetupIntake::from_user_settings(user_settings.game_setup_settings());
+        let game_id = intake.game_id;
+        let setup = intake.run();
+        let game_root = setup.paths.game_root.clone();
+        let main_result = setup.rendered_report;
         self.inner.set_main_files_result(main_result);
 
-        let rust_issues: Vec<ConfigIssue> = if config.paths.game_root.as_os_str().is_empty() {
-            Vec::new()
-        } else {
-            detect_config_issues(&config.paths.game_root, game_id.as_str())
-                .into_iter()
-                .map(to_scanlog_issue)
-                .collect()
-        };
+        let rust_issues: Vec<ConfigIssue> = game_root
+            .as_deref()
+            .map(|game_root| {
+                detect_config_issues(game_root, game_id.as_str())
+                    .into_iter()
+                    .map(to_scanlog_issue)
+                    .collect()
+            })
+            .unwrap_or_default();
         let game_result = format_detected_issues(&rust_issues);
 
         self.inner.set_game_files_result(game_result);
         self.inner.set_detected_issues(rust_issues.clone());
 
-        // Cache results in global handler for subsequent calls
+        // Publish the completed result to the core singleton for other consumers.
         global_handler.checks_run = true;
         global_handler.fcx_mode = self.inner.fcx_mode;
         global_handler
@@ -246,6 +224,7 @@ impl PyFcxModeHandler {
         global_handler
             .set_game_files_result(self.inner.game_files_check.clone().unwrap_or_default());
         global_handler.set_detected_issues(rust_issues);
+        *cache = Some((classic_root, self.inner.clone()));
 
         Ok(())
     }
@@ -331,7 +310,10 @@ impl PyFcxModeHandler {
     #[classmethod]
     fn reset_fcx_checks(_cls: &Bound<'_, PyType>) -> PyResult<()> {
         match FcxModeHandler::reset_global_state() {
-            Ok(()) | Err(FcxResetError::Unnecessary) => Ok(()),
+            Ok(()) | Err(FcxResetError::Unnecessary) => {
+                *FCX_CACHE.lock() = None;
+                Ok(())
+            }
             Err(error) => Err(PyFcxResetError::new_err(format!(
                 "failed to reset FCX global state: {error}"
             ))),

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T23:06:08Z",
+  "generated_at_utc": "2026-07-15T01:21:49Z",
   "schema_version": 1,
   "entries": [
     {
@@ -3519,64 +3519,6 @@
       }
     },
     {
-      "id": "88af8b8a16131319",
-      "rustSymbol": "game_setup_intake_checks",
-      "kind": "function",
-      "bridgeModule": "scangame",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "game_id",
-            "type": "&str"
-          },
-          {
-            "name": "game_version",
-            "type": "&str"
-          },
-          {
-            "name": "game_root",
-            "type": "&str"
-          },
-          {
-            "name": "docs_path",
-            "type": "&str"
-          },
-          {
-            "name": "xse_log_path",
-            "type": "&str"
-          },
-          {
-            "name": "game_exe_path",
-            "type": "&str"
-          }
-        ],
-        "returnType": "Result<Vec<GameSetupCheckDto>>"
-      }
-    },
-    {
-      "id": "b0197da00d8a6307",
-      "rustSymbol": "game_setup_needs_path_detection",
-      "kind": "function",
-      "bridgeModule": "scangame",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "game_path",
-            "type": "&str"
-          },
-          {
-            "name": "docs_path",
-            "type": "&str"
-          }
-        ],
-        "returnType": "GameSetupPathDetectionNeeds"
-      }
-    },
-    {
       "id": "67d52d0e3e5715b7",
       "rustSymbol": "ini_validator_detect_all_issues_for_root",
       "kind": "function",
@@ -3641,43 +3583,6 @@
           }
         ],
         "returnType": "Vec<IntegrityCheckResultDto>"
-      }
-    },
-    {
-      "id": "c2c792f2bb44f4c3",
-      "rustSymbol": "run_game_setup_intake",
-      "kind": "function",
-      "bridgeModule": "scangame",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "game_id",
-            "type": "&str"
-          },
-          {
-            "name": "game_version",
-            "type": "&str"
-          },
-          {
-            "name": "game_root",
-            "type": "&str"
-          },
-          {
-            "name": "docs_path",
-            "type": "&str"
-          },
-          {
-            "name": "xse_log_path",
-            "type": "&str"
-          },
-          {
-            "name": "game_exe_path",
-            "type": "&str"
-          }
-        ],
-        "returnType": "GameSetupIntakeDto"
       }
     },
     {
@@ -3831,32 +3736,6 @@
       ]
     },
     {
-      "id": "4fc6518f8ff3ec2f",
-      "rustSymbol": "GameSetupCheckDto",
-      "kind": "struct",
-      "bridgeModule": "scangame",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "kind",
-          "type": "String"
-        },
-        {
-          "name": "state",
-          "type": "String"
-        },
-        {
-          "name": "message",
-          "type": "String"
-        },
-        {
-          "name": "details",
-          "type": "String"
-        }
-      ]
-    },
-    {
       "id": "17ae6c60e6c3bbd6",
       "rustSymbol": "GameSetupIntakeDto",
       "kind": "struct",
@@ -3907,24 +3786,6 @@
         {
           "name": "game_executable",
           "type": "String"
-        }
-      ]
-    },
-    {
-      "id": "1b386a35f09c91ff",
-      "rustSymbol": "GameSetupPathDetectionNeeds",
-      "kind": "struct",
-      "bridgeModule": "scangame",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scangame.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "needs_game_path",
-          "type": "bool"
-        },
-        {
-          "name": "needs_docs_path",
-          "type": "bool"
         }
       ]
     },
@@ -5098,30 +4959,12 @@
       "blockOrigin": "Rust",
       "variants": [
         "Main",
-        "Settings",
         "Ignore",
         "Game",
         "GameLocal",
         "Test",
         "Cache"
       ]
-    },
-    {
-      "id": "471dfac358240ff7",
-      "rustSymbol": "must_not_be_none_key",
-      "kind": "function",
-      "bridgeModule": "settings",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "key",
-            "type": "&str"
-          }
-        ],
-        "returnType": "bool"
-      }
     },
     {
       "id": "0b5a4ad5368e8a02",
@@ -5190,23 +5033,6 @@
           }
         ],
         "returnType": "Result<SettingsCoercedValue>"
-      }
-    },
-    {
-      "id": "b303f68008e43f3e",
-      "rustSymbol": "settings_ignore_none_contains",
-      "kind": "function",
-      "bridgeModule": "settings",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "key",
-            "type": "&str"
-          }
-        ],
-        "returnType": "bool"
       }
     },
     {
@@ -5329,23 +5155,6 @@
       "signature": {
         "args": [],
         "returnType": null
-      }
-    },
-    {
-      "id": "5907231f4215f1a4",
-      "rustSymbol": "settings_validate_structure",
-      "kind": "function",
-      "bridgeModule": "settings",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "yaml_content",
-            "type": "&str"
-          }
-        ],
-        "returnType": "Result<Vec<SettingsValidationIssue>>"
       }
     },
     {
@@ -6627,24 +6436,6 @@
         {
           "name": "bool_val",
           "type": "bool"
-        }
-      ]
-    },
-    {
-      "id": "17a8395468c3cef5",
-      "rustSymbol": "SettingsValidationIssue",
-      "kind": "struct",
-      "bridgeModule": "settings",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/settings.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "severity",
-          "type": "String"
-        },
-        {
-          "name": "message",
-          "type": "String"
         }
       ]
     },

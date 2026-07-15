@@ -1704,82 +1704,6 @@
       "pythonKind": "class"
     },
     {
-      "id": "config-classic-config-class",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "ClassicConfig",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "ClassicConfig",
-      "pythonKind": "class"
-    },
-    {
-      "id": "config-classic-config-get-config-path",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "ClassicConfig",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "ClassicConfig.get_config_path",
-      "pythonKind": "method",
-      "pythonArity": 0
-    },
-    {
-      "id": "config-classic-config-load-from-yaml",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "ClassicConfig",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "ClassicConfig.load_from_yaml",
-      "pythonKind": "method",
-      "pythonArity": 1
-    },
-    {
-      "id": "config-classic-config-load-local-yaml-paths",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "ClassicConfig",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "ClassicConfig.load_local_yaml_paths",
-      "pythonKind": "method",
-      "pythonArity": 1
-    },
-    {
-      "id": "config-classic-config-load-or-default",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "ClassicConfig",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "ClassicConfig.load_or_default",
-      "pythonKind": "method",
-      "pythonArity": 0
-    },
-    {
-      "id": "config-classic-config-save-to-yaml",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "ClassicConfig",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "ClassicConfig.save_to_yaml",
-      "pythonKind": "method",
-      "pythonArity": 1
-    },
-    {
-      "id": "config-classic-config-validate-paths",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "ClassicConfig",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "ClassicConfig.validate_paths",
-      "pythonKind": "method",
-      "pythonArity": 0
-    },
-    {
       "id": "config-clear-yaml-cache",
       "tier": "tier1",
       "ownerModule": "config",
@@ -1789,16 +1713,6 @@
       "pythonExportPath": "clear_yaml_cache",
       "pythonKind": "function",
       "pythonArity": 0
-    },
-    {
-      "id": "config-path-config-class",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "PathConfig",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "PathConfig",
-      "pythonKind": "class"
     },
     {
       "id": "config-yaml-source-class",
@@ -1865,50 +1779,6 @@
       "pythonArity": 5
     },
     {
-      "id": "config.config.ClassicConfig.__init__",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "ClassicConfig",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "ClassicConfig.__init__",
-      "pythonKind": "method",
-      "pythonArity": 0
-    },
-    {
-      "id": "config.config.ClassicConfig.__repr__",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "ClassicConfig",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "ClassicConfig.__repr__",
-      "pythonKind": "method",
-      "pythonArity": 0
-    },
-    {
-      "id": "config.config.PathConfig.__init__",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "PathConfig",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "PathConfig.__init__",
-      "pythonKind": "method",
-      "pythonArity": 5
-    },
-    {
-      "id": "config.config.PathConfig.__repr__",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "PathConfig",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "PathConfig.__repr__",
-      "pythonKind": "method",
-      "pythonArity": 0
-    },
-    {
       "id": "config.config.YamlSource.__eq__",
       "tier": "tier1",
       "ownerModule": "config",
@@ -1951,16 +1821,6 @@
       "pythonExportPath": "YamlSource.__str__",
       "pythonKind": "method",
       "pythonArity": 0
-    },
-    {
-      "id": "config.config.config@rust",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "config",
-      "pythonModule": "classic_config",
-      "pythonExportPath": "ClassicConfig",
-      "pythonKind": "class"
     },
     {
       "id": "config.shared.get_application_dir",
@@ -2442,16 +2302,6 @@
       "pythonKind": "class"
     },
     {
-      "id": "version_registry.lib.SETTINGS_IGNORE_NONE@rust",
-      "tier": "tier1",
-      "ownerModule": "version_registry",
-      "rustCrate": "classic-version-registry-core",
-      "rustSymbol": "SETTINGS_IGNORE_NONE",
-      "pythonModule": "classic_version_registry",
-      "pythonExportPath": "Fallout4Version",
-      "pythonKind": "class"
-    },
-    {
       "id": "settings.lib.YamlFile",
       "tier": "tier1",
       "ownerModule": "settings",
@@ -2570,16 +2420,6 @@
       "pythonModule": "classic_version_registry",
       "pythonExportPath": "Fallout4Version",
       "pythonKind": "class"
-    },
-    {
-      "id": "settings.lib.must_not_be_none",
-      "tier": "tier1",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
-      "rustSymbol": "must_not_be_none",
-      "pythonModule": "classic_settings",
-      "pythonExportPath": "must_not_be_none",
-      "pythonKind": "function"
     },
     {
       "id": "version_registry.lib.short_name@rust",
@@ -7815,7 +7655,7 @@
       "pythonModule": "classic_scanlog",
       "pythonExportPath": "FcxModeHandler.check_fcx_mode",
       "pythonKind": "method",
-      "pythonArity": 0
+      "pythonArity": 1
     },
     {
       "id": "scanlog.fcx_handler.FcxModeHandler.get_detected_issues",
@@ -10373,16 +10213,6 @@
       "pythonKind": "function"
     },
     {
-      "id": "settings.lib.validate_settings_structure",
-      "tier": "tier1",
-      "ownerModule": "settings",
-      "rustCrate": "classic-settings-core",
-      "rustSymbol": "validators",
-      "pythonModule": "classic_settings",
-      "pythonExportPath": "validate_settings_structure",
-      "pythonKind": "function"
-    },
-    {
       "id": "shared.path.PathHandler",
       "tier": "tier1",
       "ownerModule": "shared",
@@ -12878,6 +12708,17 @@
       "pythonModule": "classic_scangame",
       "pythonExportPath": "run_game_setup_intake",
       "pythonKind": "function"
+    },
+    {
+      "id": "scangame.setup.run_game_setup_intake_from_user_settings",
+      "tier": "tier1",
+      "ownerModule": "scangame",
+      "rustCrate": "classic-scangame-core",
+      "rustSymbol": "from_user_settings",
+      "pythonModule": "classic_scangame",
+      "pythonExportPath": "run_game_setup_intake_from_user_settings",
+      "pythonKind": "function",
+      "pythonArity": 2
     },
     {
       "id": "scangame.setup.game_setup_needs_path_detection",

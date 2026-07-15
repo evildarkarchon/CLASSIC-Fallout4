@@ -89,8 +89,8 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 44,
-      "contractIdsHash": "978eee3903dde8a3df6768c161077b627c4cdf2f622dca739daac1717039d484",
+      "contractCount": 31,
+      "contractIdsHash": "2287270ce405ae4e280cb5dad6102b95672c37deb114012d872145f1622a9037",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "config-tier1-smoke",
@@ -106,10 +106,6 @@
       "ownerModule": "config",
       "tier": "tier1",
       "bindingIdentifiers": [
-        "classic_config.ClassicConfig.__init__",
-        "classic_config.ClassicConfig.__repr__",
-        "classic_config.PathConfig.__init__",
-        "classic_config.PathConfig.__repr__",
         "classic_config.YamlData.__init__",
         "classic_config.YamlData.__repr__",
         "classic_config.YamlSource.__eq__",
@@ -327,8 +323,8 @@
         "ownerModule": "version_registry",
         "tier": "tier1"
       },
-      "contractCount": 89,
-      "contractIdsHash": "0a61b1aa58ac08acb5197ddad31e4159f4d4d0dae2709d616a8c14479bd5b208",
+        "contractCount": 88,
+        "contractIdsHash": "dc1837a236e03a1db4a8fa610f3c91cf527f037f8b2f9e6ae162a93f49d69e51",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "version-registry-tier1-smoke",
@@ -426,11 +422,12 @@
         "ownerModule": "scangame",
         "tier": "tier1"
       },
-      "contractCount": 165,
-      "contractIdsHash": "61de07b7ff9e1050458d10e06ce109da2edb0669eae0f45ba953cade9b88ef40",
+      "contractCount": 166,
+      "contractIdsHash": "03e0cac1b5a5aa6dcdf4ae1bac67a981547ada4ece14e19d7c013582db4de768",
       "bindingIdentifiers": [
         "classic_scangame.GameSetupPathUpdate",
-        "classic_scangame.GameSetupIntakeResult.path_updates"
+        "classic_scangame.GameSetupIntakeResult.path_updates",
+        "classic_scangame.run_game_setup_intake_from_user_settings"
       ],
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "scangame-residuals-smoke",
@@ -521,8 +518,8 @@
         "ownerModule": "settings",
         "tier": "tier1"
       },
-      "contractCount": 67,
-      "contractIdsHash": "b684d577b3c108223c0c9a6c2e32da27f216bce6ff3ac7e0631e45ff486baada",
+        "contractCount": 65,
+        "contractIdsHash": "b5a94140f0b729cfc4dae8a8f353d31ec453f112952b85e200707e1f40e327bc",
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "settings-residuals-smoke"
     },

@@ -4,14 +4,10 @@
 //! and the BA2 / INI / ENB / TOML / Wrye / Integrity / Setup / Crashgen sub-domain checkers.
 
 use classic_scangame_core::integrity::IntegrityConfig;
-use classic_scangame_core::{
-    GameSetupCheck, GameSetupIntake, GameSetupIntakeResult,
-    game_setup_needs_path_detection as core_game_setup_needs_path_detection,
-};
+use classic_scangame_core::{GameSetupIntake, GameSetupIntakeResult};
 use classic_user_settings_core::UserSettings;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 
 use classic_scangame_core::crashgen_orchestrator::{
     CrashgenCheckOrchestrator, CrashgenReport as CoreCrashgenReport,
@@ -33,44 +29,10 @@ use classic_scangame_core::{
     BA2Scanner, EnbChecker, EnbConfigResult as CoreEnbConfigResult, EnbResult as CoreEnbResult,
     IniValidator, IssueSeverity as CoreIniIssueSeverity,
 };
-use classic_shared_core::GameId;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Game Setup Intake entry points
 // ─────────────────────────────────────────────────────────────────────────────
-
-fn run_game_setup_intake(
-    game_id: &str,
-    game_version: &str,
-    game_root: &str,
-    docs_path: &str,
-    xse_log_path: &str,
-    game_exe_path: &str,
-) -> ffi::GameSetupIntakeDto {
-    match execute_game_setup_intake(
-        game_id,
-        game_version,
-        game_root,
-        docs_path,
-        xse_log_path,
-        game_exe_path,
-    ) {
-        Ok(result) => game_setup_result_to_dto(result),
-        Err(message) => ffi::GameSetupIntakeDto {
-            rendered_report: format!("Game Setup Intake failed: {message}\n"),
-            status: "fatal_error".to_string(),
-            has_errors: true,
-            total_checks: 0,
-            failed_checks: 0,
-            action_count: 0,
-            path_update_count: 0,
-            path_updates: Vec::new(),
-            game_root: String::new(),
-            docs_root: String::new(),
-            game_executable: String::new(),
-        },
-    }
-}
 
 /// Opens typed User Settings and runs Game Setup Intake without mutating the snapshot or disk.
 ///
@@ -86,77 +48,6 @@ fn run_game_setup_intake_from_user_settings(
         intake = intake.with_xse_log_path(PathBuf::from(xse_log_path));
     }
     game_setup_result_to_dto(intake.run())
-}
-
-fn game_setup_intake_checks(
-    game_id: &str,
-    game_version: &str,
-    game_root: &str,
-    docs_path: &str,
-    xse_log_path: &str,
-    game_exe_path: &str,
-) -> Result<Vec<ffi::GameSetupCheckDto>, String> {
-    execute_game_setup_intake(
-        game_id,
-        game_version,
-        game_root,
-        docs_path,
-        xse_log_path,
-        game_exe_path,
-    )
-    .map(|result| {
-        result
-            .checks
-            .into_iter()
-            .map(game_setup_check_to_dto)
-            .collect()
-    })
-}
-
-fn game_setup_needs_path_detection(
-    game_path: &str,
-    docs_path: &str,
-) -> ffi::GameSetupPathDetectionNeeds {
-    let gp = if game_path.is_empty() {
-        None
-    } else {
-        Some(game_path)
-    };
-    let dp = if docs_path.is_empty() {
-        None
-    } else {
-        Some(docs_path)
-    };
-    let (need_game, need_docs) = core_game_setup_needs_path_detection(gp, dp);
-    ffi::GameSetupPathDetectionNeeds {
-        needs_game_path: need_game,
-        needs_docs_path: need_docs,
-    }
-}
-
-fn execute_game_setup_intake(
-    game_id: &str,
-    game_version: &str,
-    game_root: &str,
-    docs_path: &str,
-    xse_log_path: &str,
-    game_exe_path: &str,
-) -> Result<GameSetupIntakeResult, String> {
-    let game_id = GameId::from_str(game_id).map_err(|error| error.to_string())?;
-    let mut intake = GameSetupIntake::new(game_id, game_version);
-    if !game_root.trim().is_empty() {
-        intake = intake.with_game_root(PathBuf::from(game_root));
-    }
-    if !game_exe_path.trim().is_empty() {
-        intake = intake.with_game_exe_path(PathBuf::from(game_exe_path));
-    }
-    if !docs_path.trim().is_empty() {
-        intake = intake.with_docs_root(PathBuf::from(docs_path));
-    }
-    if !xse_log_path.trim().is_empty() {
-        intake = intake.with_xse_log_path(PathBuf::from(xse_log_path));
-    }
-    Ok(intake.run())
 }
 
 /// Converts a core intake result into the CXX DTO without changing proposal order.
@@ -199,15 +90,6 @@ fn game_setup_result_to_dto(result: GameSetupIntakeResult) -> ffi::GameSetupInta
             .game_exe_path
             .map(|path| path.to_string_lossy().into_owned())
             .unwrap_or_default(),
-    }
-}
-
-fn game_setup_check_to_dto(check: GameSetupCheck) -> ffi::GameSetupCheckDto {
-    ffi::GameSetupCheckDto {
-        kind: check.kind.as_str().to_string(),
-        state: check.state.as_str().to_string(),
-        message: check.message,
-        details: check.details.join("\n"),
     }
 }
 
@@ -678,18 +560,6 @@ mod ffi {
         game_executable: String,
     }
 
-    struct GameSetupCheckDto {
-        kind: String,
-        state: String,
-        message: String,
-        details: String,
-    }
-
-    struct GameSetupPathDetectionNeeds {
-        needs_game_path: bool,
-        needs_docs_path: bool,
-    }
-
     // ── New shared enums (D-04/D-07 — repr(u8), REAL variants) ─────────────
 
     /// INI configuration issue severity (mirrors classic_scangame_core::ini::IssueSeverity).
@@ -833,34 +703,11 @@ mod ffi {
 
     extern "Rust" {
         // ── Game Setup Intake ───────────────────────────────────────────────
-        fn run_game_setup_intake(
-            game_id: &str,
-            game_version: &str,
-            game_root: &str,
-            docs_path: &str,
-            xse_log_path: &str,
-            game_exe_path: &str,
-        ) -> GameSetupIntakeDto;
-
         /// Open typed User Settings and run setup intake without writing any settings.
         fn run_game_setup_intake_from_user_settings(
             classic_root: &str,
             xse_log_path: &str,
         ) -> GameSetupIntakeDto;
-
-        fn game_setup_intake_checks(
-            game_id: &str,
-            game_version: &str,
-            game_root: &str,
-            docs_path: &str,
-            xse_log_path: &str,
-            game_exe_path: &str,
-        ) -> Result<Vec<GameSetupCheckDto>>;
-
-        fn game_setup_needs_path_detection(
-            game_path: &str,
-            docs_path: &str,
-        ) -> GameSetupPathDetectionNeeds;
 
         // ── BA2 sub-domain (REAL BA2Scanner behind the scenes) ───────────────
         fn ba2_scan_archive_summary(archive_path: &str) -> Ba2IssuesSummaryDto;

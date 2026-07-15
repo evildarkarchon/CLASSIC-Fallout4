@@ -36,10 +36,10 @@
 //!
 //! Everything else on the `cache` and `validators` modules IS exposed.
 
-use classic_settings_core::validators::{self, CoercedValue, IssueSeverity, SettingType};
+use classic_settings_core::validators::{self, CoercedValue, SettingType};
 use classic_settings_core::{
-    self as settings_core, SETTINGS_IGNORE_NONE, YamlCacheStats, YamlFile as CoreYamlFile,
-    YamlOperations, must_not_be_none as core_must_not_be_none, yaml_cache_stats,
+    self as settings_core, YamlCacheStats, YamlFile as CoreYamlFile, YamlOperations,
+    yaml_cache_stats,
 };
 use classic_user_settings_core::{
     CommitEligibility, DocumentClassification, GuiWindow,
@@ -1706,13 +1706,12 @@ fn settings_invalidate(key: &str) -> bool {
 fn from_bridge_yaml_file(f: ffi::YamlFile) -> CoreYamlFile {
     match f {
         ffi::YamlFile::Main => CoreYamlFile::Main,
-        ffi::YamlFile::Settings => CoreYamlFile::Settings,
         ffi::YamlFile::Ignore => CoreYamlFile::Ignore,
         ffi::YamlFile::Game => CoreYamlFile::Game,
         ffi::YamlFile::GameLocal => CoreYamlFile::GameLocal,
         ffi::YamlFile::Test => CoreYamlFile::Test,
         ffi::YamlFile::Cache => CoreYamlFile::Cache,
-        _ => CoreYamlFile::Settings,
+        _ => CoreYamlFile::Main,
     }
 }
 
@@ -1722,14 +1721,6 @@ fn yaml_file_as_str(f: ffi::YamlFile) -> String {
 
 fn yaml_file_description(f: ffi::YamlFile) -> String {
     from_bridge_yaml_file(f).description().to_string()
-}
-
-fn must_not_be_none_key(key: &str) -> bool {
-    core_must_not_be_none(key)
-}
-
-fn settings_ignore_none_contains(key: &str) -> bool {
-    SETTINGS_IGNORE_NONE.contains(&key)
 }
 
 // ── Validators (D-09 — mirrors Python classic_settings surface) ────
@@ -1748,31 +1739,6 @@ fn parse_setting_type_token(type_name: &str) -> Result<SettingType, String> {
         "string" | "str" => Ok(SettingType::String),
         _ => Err(format!("unknown setting type: {type_name}")),
     }
-}
-
-fn severity_token(sev: IssueSeverity) -> &'static str {
-    match sev {
-        IssueSeverity::Warning => "warning",
-        IssueSeverity::Error => "error",
-    }
-}
-
-fn settings_validate_structure(
-    yaml_content: &str,
-) -> Result<Vec<ffi::SettingsValidationIssue>, String> {
-    let docs = yaml_rust2::YamlLoader::load_from_str(yaml_content).map_err(|e| e.to_string())?;
-    let issues = if docs.is_empty() {
-        validators::validate_settings_structure(&Yaml::Null)
-    } else {
-        validators::validate_settings_structure(&docs[0])
-    };
-    Ok(issues
-        .into_iter()
-        .map(|issue| ffi::SettingsValidationIssue {
-            severity: severity_token(issue.severity).to_string(),
-            message: issue.message,
-        })
-        .collect())
 }
 
 fn settings_validate_value(value: &str, expected_type: &str) -> Result<bool, String> {
@@ -1830,7 +1796,6 @@ mod ffi {
     #[repr(u8)]
     enum YamlFile {
         Main = 0,
-        Settings = 1,
         Ignore = 2,
         Game = 3,
         GameLocal = 4,
@@ -1862,16 +1827,6 @@ mod ffi {
         hit_rate: f64,
         size: u64,
         capacity: u64,
-    }
-
-    /// One issue from settings structure validation.
-    ///
-    /// Mirrors `classic_settings_core::validators::ValidationIssue` 1:1.
-    /// `severity` is exactly one of "warning" or "error" — there is no "info"
-    /// variant in the underlying enum.
-    struct SettingsValidationIssue {
-        severity: String,
-        message: String,
     }
 
     /// Tagged coerced-value DTO for `settings_coerce_value`.
@@ -2300,8 +2255,6 @@ mod ffi {
 
         fn yaml_file_as_str(f: YamlFile) -> String;
         fn yaml_file_description(f: YamlFile) -> String;
-        fn must_not_be_none_key(key: &str) -> bool;
-        fn settings_ignore_none_contains(key: &str) -> bool;
 
         /// Open User Settings from an explicit CLASSIC root and return the
         /// typed Update Preferences view used by native update-check policy.
@@ -2453,7 +2406,6 @@ mod ffi {
         fn settings_invalidate(key: &str) -> bool;
 
         // Validators (D-09 — mirrors Python surface)
-        fn settings_validate_structure(yaml_content: &str) -> Result<Vec<SettingsValidationIssue>>;
         fn settings_validate_value(value: &str, expected_type: &str) -> Result<bool>;
         fn settings_coerce_value(value: &str, target_type: &str) -> Result<SettingsCoercedValue>;
     }

@@ -1096,10 +1096,10 @@ def scan_run_execute(
     game: str,
     game_version: str,
     log_paths: list[str],
-    show_formid_values: bool = False,
-    fcx_mode: bool = False,
-    simplify_logs: bool = False,
-    move_unsolved_logs: bool = False,
+    show_formid_values: bool | None = None,
+    fcx_mode: bool | None = None,
+    simplify_logs: bool | None = None,
+    move_unsolved_logs: bool | None = None,
     targeted_mode: bool = False,
     max_concurrent: int | None = None,
     preserve_order: bool = False,
@@ -1929,16 +1929,8 @@ class FcxModeHandler:
 
         """
 
-    def check_fcx_mode(self) -> None:
-        """Check and update FCX mode state with Rust core checks.
-
-        This method loads the current CLASSIC configuration, runs the
-        corresponding Rust setup/config checks, and stores the results
-        in the handler.
-
-        IMPORTANT: This method assumes game paths have already been generated
-        via game_generate_paths() before being called.
-        """
+    def check_fcx_mode(self, classic_root: str) -> None:
+        """Prepare FCX diagnostics from typed User Settings at an explicit CLASSIC root."""
 
     def set_main_files_result(self, result: str) -> None:
         """Set main files check result."""

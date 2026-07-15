@@ -46,6 +46,32 @@ STATIC_PROFILES = ("static", "ci", "full", "cxx-ci", "node-ci", "python-ci")
 
 REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
     ComplianceRequirement(
+        id="user-settings-exclusive-ownership",
+        title="User Settings has one deep Rust owner",
+        surface="policy",
+        classification="new_check",
+        profiles=STATIC_PROFILES,
+        blocking=True,
+        summary=(
+            "Rejects legacy settings models, raw first-party key interpretation, "
+            "and runtime compatibility-mirror reads outside classic-user-settings-core."
+        ),
+        command=CommandSpec(
+            argv=(
+                "python",
+                "tools/user_settings_ownership/check.py",
+                "--repo-root",
+                ".",
+            )
+        ),
+        paths=("tools/user_settings_ownership/check.py",),
+        proves=(
+            "ClassicConfig and PathConfig cannot return to maintained production code.",
+            "Only classic-user-settings-core interprets first-party User Settings keys.",
+            "Maintained runtimes do not bootstrap from CLASSIC_Info.default_settings.",
+        ),
+    ),
+    ComplianceRequirement(
         id="policy-one-tier-contract",
         title="One-tier parity policy is documented",
         surface="policy",

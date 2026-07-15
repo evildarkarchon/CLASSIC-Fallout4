@@ -395,6 +395,8 @@ def main() -> int:
     coverage_totals = coverage_summary["summary"]
 
     tracked_artifact_names = (
+        "rust_api_surface.json",
+        "node_api_surface.json",
         "parity_diff_report.json",
         "parity_diff_report.md",
         "runtime_coverage_summary.json",

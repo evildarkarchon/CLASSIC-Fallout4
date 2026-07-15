@@ -36,7 +36,6 @@ from pathlib import Path
 from typing import Any, TypedDict
 
 __version__: str
-SETTINGS_IGNORE_NONE: list[str]
 
 # ----------------------------------------------------------------------------
 # YAML exception hierarchy (folded in from classic-yaml-py per plan 01-02 D-06)
@@ -89,7 +88,6 @@ class YamlFile:
     def __str__(self) -> str: ...
     def __repr__(self) -> str: ...
 
-def must_not_be_none(key: str) -> bool: ...
 def load_settings_sync(key: str, path: str) -> list[dict[str, Any]]:
     """Load YAML settings synchronously.
 
@@ -307,35 +305,6 @@ def reset_cache_stats() -> None:
     Example:
         >>> reset_cache_stats()
         >>> cache_stats()["hits"]
-        0
-
-    """
-
-def validate_settings_structure(yaml_content: str) -> list[dict[str, Any]]:
-    """Validate the structural shape of a serialized CLASSIC settings YAML document.
-
-    Parses the YAML string, walks the top-level ``CLASSIC_Settings`` mapping, and
-    returns a list of structured issue dictionaries (each containing at minimum
-    ``severity``, ``path``, and ``message`` keys).  An empty list means the
-    structure is valid.
-
-    Args:
-        yaml_content: Raw YAML text.  May be an empty string, in which case the
-            function reports a single "missing document" issue.
-
-    Returns:
-        A list of issue dictionaries.  The caller is responsible for rendering
-        these into user-facing errors.
-
-    Raises:
-        ValueError: If the YAML text cannot be parsed at all.
-
-    Example:
-        >>> import classic_settings
-        >>> issues = classic_settings.validate_settings_structure(
-        ...     "CLASSIC_Settings:\\n  key: value"
-        ... )
-        >>> len(issues)
         0
 
     """

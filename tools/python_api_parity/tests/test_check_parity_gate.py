@@ -70,6 +70,8 @@ def test_python_gate_defaults_use_repo_root_paths() -> None:
         in source
     )
     assert "ClassicLib-rs/python-bindings" not in source
+    assert '"rust_api_surface.json",' in source
+    assert '"python_api_surface.json",' in source
 
 
 def test_validate_stubs_rejects_legacy_workspace_path() -> None:

@@ -335,17 +335,43 @@ def config_main_version(args: object, context: CommandContext) -> CommandResult:
 
 
 def config_inspect(args: _PathArg, context: CommandContext) -> CommandResult:
-    """Inspect a CLASSIC config file through classic_config."""
+    """Inspect typed User Settings from an explicit CLASSIC root."""
 
     try:
-        module = require_binding("classic_config")
-        config = module.ClassicConfig.load_from_yaml(args.path)
-        data = {"game": getattr(config, "game", None), "gameVersion": getattr(config, "game_version", None), "path": args.path}
+        module = require_binding("classic_user_settings")
+        snapshot = module.open_user_settings(args.path)
+        setup = snapshot.game_setup_settings
+        scan = snapshot.crash_log_scan_settings
+        data = {
+            "classicRoot": args.path,
+            "sourceLocation": snapshot.source_location,
+            "sourcePath": snapshot.source_path,
+            "classification": snapshot.classification,
+            "schemaVersion": [snapshot.schema_major, snapshot.schema_minor],
+            "revision": snapshot.revision,
+            "commitEligibility": snapshot.commit_eligibility,
+            "diagnostics": [
+                {"code": item.code, "message": item.message}
+                for item in snapshot.diagnostics
+            ],
+            "gameSetup": {
+                "managedGame": setup.managed_game,
+                "gameVersion": setup.game_version_selection,
+                "gameRoot": setup.game_root,
+                "documentsRoot": setup.documents_root,
+            },
+            "crashLogScan": {
+                "fcxMode": scan.fcx_mode,
+                "simplifyLogs": scan.simplify_logs,
+                "formidValueLookup": scan.formid_value_lookup,
+                "moveUnsolvedLogs": scan.move_unsolved_logs,
+            },
+        }
     except ImportError as exc:
         return failure("config inspect", str(exc), int(ExitCode.BINDING_IMPORT))
     except Exception as exc:  # noqa: BLE001 - preserve public binding exception detail.
-        return binding_exception("config inspect", "classic_config", exc)
-    return success("config inspect", f"Loaded config {args.path}", data)
+        return binding_exception("config inspect", "classic_user_settings", exc)
+    return success("config inspect", f"Opened User Settings at {args.path}", data)
 
 
 def path_validate(args: _PathArg, context: CommandContext) -> CommandResult:

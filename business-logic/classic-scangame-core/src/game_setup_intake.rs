@@ -7,7 +7,6 @@
 
 use std::path::{Path, PathBuf};
 
-use classic_config_core::ClassicConfig;
 use classic_file_io_core::FileHasher;
 use classic_path_core::{DocsPathFinder, GamePathFinder};
 use classic_shared_core::GameId;
@@ -281,34 +280,6 @@ impl GameSetupIntake {
             papyrus_log_path: None,
             xse_log_path: None,
         }
-    }
-
-    /// Build a Game Setup Intake request from saved CLASSIC configuration.
-    ///
-    /// This remains a transitional expand-phase adapter while maintained callers move to
-    /// [`Self::from_user_settings`]. New callers should prefer the typed User Settings group.
-    ///
-    /// Returns `None` when the saved config has no game root, because setup
-    /// intake cannot infer the game identity-specific root from config alone.
-    /// When both `docs_root` and legacy `ini_folder` are present, `docs_root`
-    /// wins and `ini_folder` remains a compatibility fallback.
-    #[must_use]
-    pub fn from_config(config: &ClassicConfig, game_id: GameId) -> Option<Self> {
-        if config.paths.game_root.as_os_str().is_empty() {
-            return None;
-        }
-
-        let mut intake =
-            Self::new(game_id, &config.game_version).with_game_root(config.paths.game_root.clone());
-        if let Some(docs_root) = config
-            .paths
-            .docs_root
-            .as_ref()
-            .or(config.paths.ini_folder.as_ref())
-        {
-            intake = intake.with_docs_root(docs_root.clone());
-        }
-        Some(intake)
     }
 
     /// Prepares Game Setup Intake from an already-opened typed User Settings group.

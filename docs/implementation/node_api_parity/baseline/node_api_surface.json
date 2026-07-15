@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T23:59:19.417917+00:00",
+  "generated_at_utc": "2026-07-15T01:39:57.813594+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -3155,7 +3155,7 @@
     {
       "export": "validateSettingsPath",
       "kind": "function",
-      "owner_module": "config",
+      "owner_module": "path",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function validateSettingsPath(path: string, settingName: string, requiredFiles?: Array<string> | undefined | null): void",
@@ -3164,7 +3164,7 @@
     {
       "export": "validateSettingsPaths",
       "kind": "function",
-      "owner_module": "config",
+      "owner_module": "path",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function validateSettingsPaths(gamePath: string, docsPath: string, customScanPath: string | undefined | null, gameExe: string): void",

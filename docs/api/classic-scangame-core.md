@@ -243,7 +243,6 @@ Important items:
 
 - `GameSetupIntake::new(game_id, selected_game_version)`
 - `GameSetupIntake::from_user_settings(game_setup_settings)`
-- `GameSetupIntake::from_config(config, game_id)`
 - `GameSetupIntake::with_game_root(path)`
 - `GameSetupIntake::with_game_exe_path(path)`
 - `GameSetupIntake::with_docs_root(path)`
@@ -271,7 +270,6 @@ Behavior worth knowing:
 - `from_user_settings(game_setup_settings)` copies every typed Game Setup fact from an already-opened snapshot—including mods/staging, custom-scan, and Papyrus paths—performs no settings I/O, and consumes the effective documents root after User Settings has applied canonical-before-INI alias precedence.
 - `auto` mode reads executable PE version metadata and attempts a Version Registry match.
 - a caller-provided executable path is used for root fallback, auto-version detection, executable version checks, hash checks, and installation-location checks.
-- `from_config(config, game_id)` returns `None` when no saved game root exists and uses `docs_root` before falling back to legacy `ini_folder`.
 - failed setup diagnostics are typed checks; the top-level status is `ActionRequired` only when user input is missing.
 - documents-folder state is mapped from `classic-path-core`'s structured `DocumentsCheckState`, not rendered message text.
 - the module covers setup-only diagnostics, not ENB, crashgen TOML, Wrye, BA2, loose-file, or mod INI scans.
@@ -486,7 +484,7 @@ Crashgen TOML flow in more detail:
 
 Game Setup Intake flow:
 
-1. Build `GameSetupIntake` with a `GameId`, selected version, and any saved paths; use `GameSetupIntake::from_user_settings(group)` for typed User Settings, or retain `from_config(config, game_id)` only as the transitional ClassicConfig adapter.
+1. Build `GameSetupIntake` from explicit facts or use `GameSetupIntake::from_user_settings(group)` after one typed User Settings open.
 2. Call `run()`.
 3. The crate resolves paths, registry metadata, executable facts, documents diagnostics, and XSE setup diagnostics.
 4. Callers use `rendered_report` for text display and `checks` for structured UI/status handling.

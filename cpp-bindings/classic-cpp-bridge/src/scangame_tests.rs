@@ -12,83 +12,6 @@ fn write_valid_fallout4_docs_inis(docs_root: &Path) {
 }
 
 #[test]
-fn test_run_game_setup_intake_invalid_game_returns_fatal_dto() {
-    let result = run_game_setup_intake("UnknownGame", "auto", "", "", "", "");
-    assert_eq!(result.status, "fatal_error");
-    assert!(result.has_errors);
-    assert!(result.rendered_report.contains("Game Setup Intake failed"));
-}
-
-#[test]
-fn test_run_game_setup_intake_empty_paths_requests_action() {
-    let result = run_game_setup_intake("Fallout4", "auto", "", "", "", "");
-    assert!(!result.status.is_empty());
-    assert!(!result.rendered_report.is_empty());
-    assert!(result.action_count > 0 || result.total_checks > 0);
-}
-
-#[test]
-fn test_run_game_setup_intake_uses_configured_executable_path() {
-    let temp = TempDir::new().expect("temp dir");
-    let game_root = temp.path().join("Fallout4");
-    let docs_root = temp.path().join("Docs");
-    fs::create_dir_all(&game_root).expect("game root");
-    fs::create_dir_all(&docs_root).expect("docs root");
-    write_valid_fallout4_docs_inis(&docs_root);
-    let configured_exe = game_root.join("Fallout4Custom.exe");
-    fs::write(&configured_exe, b"not a real pe").expect("configured exe");
-    fs::write(game_root.join("f4se_loader.exe"), b"loader").expect("loader");
-
-    let result = run_game_setup_intake(
-        "Fallout4",
-        "auto",
-        &game_root.to_string_lossy(),
-        &docs_root.to_string_lossy(),
-        "",
-        &configured_exe.to_string_lossy(),
-    );
-
-    assert_eq!(result.status, "action_required");
-    assert!(!result.has_errors);
-    assert_eq!(result.action_count, 1);
-    assert!(
-        result
-            .rendered_report
-            .contains("Resolved game root from configured executable")
-    );
-}
-
-#[test]
-fn test_run_game_setup_intake_returns_exact_proposed_path_updates() {
-    let temp = TempDir::new().expect("temp dir");
-    let game_root = temp.path().join("Fallout4");
-    let docs_root = temp.path().join("Docs");
-    fs::create_dir_all(&game_root).expect("game root");
-    fs::create_dir_all(&docs_root).expect("docs root");
-    write_valid_fallout4_docs_inis(&docs_root);
-    let configured_exe = game_root.join("Fallout4.exe");
-    fs::write(&configured_exe, b"not a real pe").expect("configured exe");
-
-    let result = run_game_setup_intake(
-        "Fallout4",
-        "auto",
-        "",
-        &docs_root.to_string_lossy(),
-        "",
-        &configured_exe.to_string_lossy(),
-    );
-
-    assert_eq!(result.path_update_count, 1);
-    assert_eq!(result.path_updates.len(), 1);
-    assert_eq!(result.path_updates[0].kind, "game_root");
-    assert_eq!(
-        result.path_updates[0].path,
-        game_root.to_string_lossy().into_owned()
-    );
-    assert_eq!(result.game_root, game_root.to_string_lossy());
-}
-
-#[test]
 fn test_run_game_setup_intake_from_user_settings_uses_typed_paths_without_writing() {
     let root = TempDir::new().expect("temp dir");
     let game_root = root.path().join("Fallout4");
@@ -151,20 +74,6 @@ fn test_run_game_setup_intake_from_user_settings_uses_typed_paths_without_writin
         settings.as_bytes(),
         "root-based typed intake must remain read-only"
     );
-}
-
-#[test]
-fn test_game_setup_needs_path_detection_empty() {
-    let result = game_setup_needs_path_detection("", "");
-    assert!(result.needs_game_path);
-    assert!(result.needs_docs_path);
-}
-
-#[test]
-fn test_game_setup_needs_path_detection_with_paths() {
-    let result = game_setup_needs_path_detection("C:\\Games\\Fallout4", "C:\\Users\\Docs");
-    assert!(!result.needs_game_path);
-    assert!(!result.needs_docs_path);
 }
 
 // ── BA2 sub-domain tests ──────────────────────────────────────────────────
@@ -370,25 +279,6 @@ fn test_integrity_run_all_checks_no_is_valid_field_is_bool() {
 fn test_integrity_run_all_checks_empty_path_returns_empty() {
     let r = integrity_run_all_checks("", &[], "Fallout4");
     assert!(r.is_empty());
-}
-
-// ── Game Setup Intake structured check DTO tests ──────────────────────────
-
-#[test]
-fn test_game_setup_intake_checks_empty_paths_returns_diagnostics() {
-    let checks = game_setup_intake_checks("Fallout4", "auto", "", "", "", "")
-        .expect("valid game id should return setup diagnostics");
-    assert!(!checks.is_empty());
-    assert!(checks.iter().any(|check| !check.kind.is_empty()));
-    assert!(checks.iter().any(|check| !check.state.is_empty()));
-}
-
-#[test]
-fn test_game_setup_intake_checks_invalid_game_id_returns_error() {
-    match game_setup_intake_checks("NotAGame", "auto", "", "", "", "") {
-        Ok(_) => panic!("invalid game id should be visible to C++ callers"),
-        Err(error) => assert!(error.contains("Unknown game identifier")),
-    }
 }
 
 // ── CrashgenOrchestrator tests ────────────────────────────────────────────

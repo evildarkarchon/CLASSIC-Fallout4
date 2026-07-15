@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-14T22:14:45.479961+00:00`
-- Tier-1 contract rows: **1247**
-- Tier-1 matched: **1247**
+- Generated: `2026-07-15T01:39:57.862361+00:00`
+- Tier-1 contract rows: **1232**
+- Tier-1 matched: **1232**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -173,30 +173,17 @@
 | `user_settings.migration_change_before` | `user_settings` | `before` | `classic_user_settings.UserSettingsMigrationChange` | `matched` |
 | `user_settings.migration_change_after` | `user_settings` | `after` | `classic_user_settings.UserSettingsMigrationChange` | `matched` |
 | `user_settings.migration_diagnostic_message` | `user_settings` | `message` | `classic_user_settings.UserSettingsMigrationDiagnostic` | `matched` |
-| `config-classic-config-class` | `config` | `ClassicConfig` | `classic_config.ClassicConfig` | `matched` |
-| `config-classic-config-get-config-path` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.get_config_path` | `matched` |
-| `config-classic-config-load-from-yaml` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.load_from_yaml` | `matched` |
-| `config-classic-config-load-local-yaml-paths` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.load_local_yaml_paths` | `matched` |
-| `config-classic-config-load-or-default` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.load_or_default` | `matched` |
-| `config-classic-config-save-to-yaml` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.save_to_yaml` | `matched` |
-| `config-classic-config-validate-paths` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.validate_paths` | `matched` |
 | `config-clear-yaml-cache` | `config` | `clear_global_yaml_cache` | `classic_config.clear_yaml_cache` | `matched` |
-| `config-path-config-class` | `config` | `PathConfig` | `classic_config.PathConfig` | `matched` |
 | `config-yaml-source-class` | `config` | `YamlSource` | `classic_config.YamlSource` | `matched` |
 | `config-yaml-source-display-name` | `config` | `YamlSource` | `classic_config.YamlSource.display_name` | `matched` |
 | `config-yaml-source-display-name-with-game` | `config` | `YamlSource` | `classic_config.YamlSource.display_name_with_game` | `matched` |
 | `config-yaml-source-path` | `config` | `YamlSource` | `classic_config.YamlSource.path` | `matched` |
 | `config-yamldata-class` | `config` | `YamlDataCore` | `classic_config.YamlData` | `matched` |
 | `config-yamldata-from-content` | `config` | `YamlDataCore` | `classic_config.YamlData.from_yaml_content` | `matched` |
-| `config.config.ClassicConfig.__init__` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.__init__` | `matched` |
-| `config.config.ClassicConfig.__repr__` | `config` | `ClassicConfig` | `classic_config.ClassicConfig.__repr__` | `matched` |
-| `config.config.PathConfig.__init__` | `config` | `PathConfig` | `classic_config.PathConfig.__init__` | `matched` |
-| `config.config.PathConfig.__repr__` | `config` | `PathConfig` | `classic_config.PathConfig.__repr__` | `matched` |
 | `config.config.YamlSource.__eq__` | `config` | `YamlSource` | `classic_config.YamlSource.__eq__` | `matched` |
 | `config.config.YamlSource.__hash__` | `config` | `YamlSource` | `classic_config.YamlSource.__hash__` | `matched` |
 | `config.config.YamlSource.__repr__` | `config` | `YamlSource` | `classic_config.YamlSource.__repr__` | `matched` |
 | `config.config.YamlSource.__str__` | `config` | `YamlSource` | `classic_config.YamlSource.__str__` | `matched` |
-| `config.config.config@rust` | `config` | `config` | `classic_config.ClassicConfig` | `matched` |
 | `config.shared.get_application_dir` | `config` | `get_application_dir` | `classic_config.get_application_dir` | `matched` |
 | `config.shared.get_runtime@rust` | `config` | `get_runtime` | `classic_config.clear_yaml_cache` | `matched` |
 | `config.shared.set_application_dir` | `config` | `set_application_dir` | `classic_config.set_application_dir` | `matched` |
@@ -244,7 +231,6 @@
 | `shared.lib.GameId.exe_name` | `shared` | `GameId` | `classic_shared.GameId.exe_name` | `matched` |
 | `shared.lib.GameId.is_vr` | `shared` | `GameId` | `classic_shared.GameId.is_vr` | `matched` |
 | `version_registry.lib.NULL_VERSION@rust` | `version_registry` | `NULL_VERSION` | `classic_version_registry.Fallout4Version` | `matched` |
-| `version_registry.lib.SETTINGS_IGNORE_NONE@rust` | `version_registry` | `SETTINGS_IGNORE_NONE` | `classic_version_registry.Fallout4Version` | `matched` |
 | `settings.lib.YamlFile` | `settings` | `YamlFile` | `classic_settings.YamlFile` | `matched` |
 | `settings.lib.YamlFile.__eq__` | `settings` | `YamlFile` | `classic_settings.YamlFile.__eq__` | `matched` |
 | `settings.lib.YamlFile.__hash__` | `settings` | `YamlFile` | `classic_settings.YamlFile.__hash__` | `matched` |
@@ -257,7 +243,6 @@
 | `version_registry.lib.fn@rust` | `version_registry` | `fn` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.game_version@rust` | `version_registry` | `game_version` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.get_version_info@rust` | `version_registry` | `get_version_info` | `classic_version_registry.Fallout4Version` | `matched` |
-| `settings.lib.must_not_be_none` | `settings` | `must_not_be_none` | `classic_settings.must_not_be_none` | `matched` |
 | `version_registry.lib.short_name@rust` | `version_registry` | `short_name` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.version_semver@rust` | `version_registry` | `version_semver` | `classic_version_registry.Fallout4Version` | `matched` |
 | `version_registry.lib.xse_acronym@rust` | `version_registry` | `xse_acronym` | `classic_version_registry.Fallout4Version` | `matched` |
@@ -1014,7 +999,6 @@
 | `settings.lib.parse_yaml_content@rust` | `settings` | `parse_yaml_content` | `classic_settings.SettingsCacheStats` | `matched` |
 | `settings.lib.reset_cache_stats` | `settings` | `reset_cache_stats` | `classic_settings.reset_cache_stats` | `matched` |
 | `settings.lib.validate_setting_value` | `settings` | `validators` | `classic_settings.validate_setting_value` | `matched` |
-| `settings.lib.validate_settings_structure` | `settings` | `validators` | `classic_settings.validate_settings_structure` | `matched` |
 | `shared.path.PathHandler` | `shared` | `PyPathHandler` | `classic_shared.PathHandler` | `matched` |
 | `shared.path.PathHandler.__init__` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.__init__` | `matched` |
 | `shared.path.PathHandler.cache_metrics` | `shared` | `PyPathHandler` | `classic_shared.PathHandler.cache_metrics` | `matched` |
@@ -1257,6 +1241,7 @@
 | `scangame.setup.GameSetupIntakeResult` | `scangame` | `GameSetupIntakeResult` | `classic_scangame.GameSetupIntakeResult` | `matched` |
 | `scangame.setup.GameSetupIntakeResult.combined` | `scangame` | `GameSetupIntakeResult` | `classic_scangame.GameSetupIntakeResult.combined` | `matched` |
 | `scangame.setup.run_game_setup_intake` | `scangame` | `GameSetupIntake` | `classic_scangame.run_game_setup_intake` | `matched` |
+| `scangame.setup.run_game_setup_intake_from_user_settings` | `scangame` | `from_user_settings` | `classic_scangame.run_game_setup_intake_from_user_settings` | `matched` |
 | `scangame.setup.game_setup_needs_path_detection` | `scangame` | `game_setup_needs_path_detection` | `classic_scangame.game_setup_needs_path_detection` | `matched` |
 | `scangame.setup.normalize_game_setup_version_selection` | `scangame` | `normalize_game_setup_version_selection` | `classic_scangame.normalize_game_setup_version_selection` | `matched` |
 

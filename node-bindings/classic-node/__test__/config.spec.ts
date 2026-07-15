@@ -656,10 +656,6 @@ describe("YamlSource free functions", () => {
     expect(path).toContain("CLASSIC Fallout4.yaml");
   });
 
-  test("getYamlSourcePath returns correct path for Settings", () => {
-    const path = getYamlSourcePath("Settings", "");
-    expect(path).toContain("CLASSIC Settings.yaml");
-  });
 
   test("getYamlSourcePath returns correct path for Ignore", () => {
     const path = getYamlSourcePath("Ignore", "");
@@ -683,10 +679,6 @@ describe("YamlSource free functions", () => {
     expect(name).toBe("Main Database");
   });
 
-  test("getYamlSourceDisplayName returns correct name for Settings", () => {
-    const name = getYamlSourceDisplayName("Settings");
-    expect(name).toBe("Settings");
-  });
 
   test("getYamlSourceDisplayNameWithGame returns game-specific name", () => {
     const name = getYamlSourceDisplayNameWithGame("Game", "Fallout4");

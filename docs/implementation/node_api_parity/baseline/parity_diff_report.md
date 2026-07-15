@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-14T23:59:19.419582+00:00`
-- Tier-1 contract rows: **879**
-- Tier-1 matched: **879**
+- Generated: `2026-07-15T01:39:57.814925+00:00`
+- Tier-1 contract rows: **876**
+- Tier-1 matched: **876**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -203,7 +203,6 @@
 | `scanlog-crashgen-version-status-enum` | `scanlog` | `CrashgenVersionStatus` | `JsCrashgenVersionStatus` | `matched` |
 | `config-yamldata-class` | `config` | `YamlDataCore` | `YamlData` | `matched` |
 | `config-create-yamldata-content` | `config` | `YamlDataCore` | `createYamlDataFromContent` | `matched` |
-| `config.ClassicConfig@rust` | `config` | `ClassicConfig@rust` | `None` | `matched` |
 | `config-clear-yaml-cache` | `config` | `clear_global_yaml_cache` | `clearYamlCache` | `matched` |
 | `config.game_local.persistGameLocalPaths` | `config` | `persist_game_local_paths` | `persistGameLocalPaths` | `matched` |
 | `config-yaml-source-enum` | `config` | `YamlSource` | `JsYamlSource` | `matched` |
@@ -232,8 +231,8 @@
 | `config-settings-cache-keys` | `config` | `config` | `settingsCacheKeys` | `matched` |
 | `config-get-settings-cache-stats` | `config` | `config` | `getSettingsCacheStats` | `matched` |
 | `config-reset-settings-cache-stats` | `config` | `config` | `resetSettingsCacheStats` | `matched` |
-| `config-validate-settings-path` | `config` | `PathConfig` | `validateSettingsPath` | `matched` |
-| `config-validate-settings-paths` | `config` | `PathConfig` | `validateSettingsPaths` | `matched` |
+| `config-validate-settings-path` | `path` | `validate_settings_path` | `validateSettingsPath` | `matched` |
+| `config-validate-settings-paths` | `path` | `validate_settings_paths` | `validateSettingsPaths` | `matched` |
 | `config-yaml-document-class` | `config` | `yamldata` | `YamlDocument` | `matched` |
 | `config-yaml-parse` | `config` | `yamldata` | `yamlParse` | `matched` |
 | `config-yaml-stringify` | `config` | `yamldata` | `yamlStringify` | `matched` |
@@ -552,7 +551,6 @@
 | `version_registry.Fallout4Version@rust` | `version_registry` | `Fallout4Version@rust` | `None` | `matched` |
 | `shared.GameId@rust` | `shared` | `GameId@rust` | `None` | `matched` |
 | `version_registry.NULL_VERSION@rust` | `version_registry` | `NULL_VERSION@rust` | `None` | `matched` |
-| `settings.SETTINGS_IGNORE_NONE@rust` | `settings` | `SETTINGS_IGNORE_NONE@rust` | `None` | `matched` |
 | `settings.YamlFile@rust` | `settings` | `YamlFile@rust` | `None` | `matched` |
 | `version_registry.display_name@rust` | `version_registry` | `display_name@rust` | `None` | `matched` |
 | `version_registry.display_name_string@rust` | `version_registry` | `display_name_string@rust` | `None` | `matched` |
@@ -573,7 +571,6 @@
 | `version_registry.fn@rust` | `version_registry` | `fn@rust` | `None` | `matched` |
 | `version_registry.game_version@rust` | `version_registry` | `game_version@rust` | `None` | `matched` |
 | `version_registry.get_version_info@rust` | `version_registry` | `get_version_info@rust` | `None` | `matched` |
-| `settings.must_not_be_none@rust` | `settings` | `must_not_be_none@rust` | `None` | `matched` |
 | `version_registry.short_name@rust` | `version_registry` | `short_name@rust` | `None` | `matched` |
 | `version_registry.version_semver@rust` | `version_registry` | `version_semver@rust` | `None` | `matched` |
 | `version_registry.xse_acronym@rust` | `version_registry` | `xse_acronym@rust` | `None` | `matched` |

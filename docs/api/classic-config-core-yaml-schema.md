@@ -1,21 +1,14 @@
 # `classic-config-core` YAML Schema Contract
 
-Runtime-facing schema reference for [`classic-config-core`](../../business-logic/classic-config-core). This page is the source of truth for the YAML shapes that `ClassicConfig` and `YamlDataCore` consume after the shared loader refactor.
+Runtime-facing schema reference for [`classic-config-core`](../../business-logic/classic-config-core). This page is the source of truth for the non-User-Settings YAML shapes consumed by `YamlDataCore` and Game Local persistence.
 
 Reference: [`classic-config-core.md`](classic-config-core.md).
 
 ---
 
-## Settings Discovery And Path Policy
+## Generic Source And Cache Path Policy
 
-- `ClassicConfig::load_or_default()` reads settings in this order:
-  1. application directory: `CLASSIC Settings.yaml`
-- If none of those files exist, the crate returns `ClassicConfig::default()`.
-- `ClassicConfig::get_config_path()` is best-effort and non-fallible:
-  - it first tries to update an existing writable `CLASSIC Settings.yaml` in the application directory
-  - if that file does not exist, it tries to create `CLASSIC Settings.yaml` in the application directory
-  - if those writability checks fail but the application directory can still be resolved, it returns that preferred `CLASSIC Settings.yaml` target anyway
-  - it falls back to the plain relative filename `CLASSIC Settings.yaml` only when the application directory cannot be resolved
+- User Settings discovery and path policy belongs exclusively to [`classic-user-settings-core`](classic-user-settings-core.md).
 - `YamlSource::Cache` and cache helpers use the `CLASSIC` base directory, not `CLASSIC-Fallout4`:
   - preferred: `dirs::config_dir()/CLASSIC/cache.yaml`
   - compatibility fallback when no user config dir is available: `<application-dir>/CLASSIC/cache.yaml`
@@ -23,7 +16,7 @@ Reference: [`classic-config-core.md`](classic-config-core.md).
 
 ## Multi-Document Merge Semantics
 
-- `ClassicConfig`, `YamlDataCore`, and `GameLocal` loading all parse the full YAML stream first, then merge it into one document.
+- `YamlDataCore` and Game Local loading parse the full YAML stream first, then merge it into one document.
 - Every document in the stream must be a mapping. Any sequence, scalar, or null document is rejected.
 - Nested mappings merge recursively.
 - Sequences are replaced wholesale by the later document.
@@ -60,52 +53,16 @@ items:
 
 ---
 
-## `ClassicConfig` Persisted Fields
-
-All keys are read from the merged root mapping. Missing or malformed values usually fall back to defaults instead of failing the load.
-
-| Key | Type / shape | Required | Default / behavior |
-|---|---|---|---|
-| `fcx_mode` | boolean | no | defaults to `false` |
-| `show_formid_values` | boolean | no | defaults to `false` |
-| `stat_logging` | boolean | no | defaults to `false` |
-| `move_unsolved_logs` | boolean | no | defaults to `false` |
-| `unsolved_logs_destination` | string path | no | omitted or empty means no flat custom destination; TUI maps non-empty values to the Rust scan-run custom destination intent |
-| `simplify_logs` | boolean | no | defaults to `false` |
-| `update_check` | boolean | no | defaults to `true` |
-| `game_version` | string | no | defaults to `"auto"`; callers interpret values such as `auto`, `Original`, `NextGen`, `AnniversaryEdition`/`AE`, and `VR` |
-| `update_source` | string | no | defaults to `"github"` |
-| `auto_switch_to_results` | boolean | no | defaults to `true` |
-| `auto_refresh_interval_ms` | integer | no | defaults to `5000`; loaded through `as_i64()` then cast to `u64` |
-| `paths` | mapping | no | omitted or partial mappings fall back field-by-field |
-| `paths.ini_folder` | string path | no | omitted when `None`; usually points at the game documents / INI folder |
-| `paths.scan_custom` | string path | no | omitted when `None`; custom crash-log scan folder |
-| `paths.mods_folder` | string path | no | omitted when `None`; typically MO2 staging mods folder |
-| `paths.game_root` | string path | effectively yes for usable installs | defaults to empty `PathBuf`; `validate_paths()` fails if the resolved path does not exist |
-| `paths.docs_root` | string path | no | omitted when `None`; may be backfilled later from `CLASSIC Data/CLASSIC {game} Local.yaml` |
-| `formid_databases` | mapping of game name -> sequence of string paths | no | defaults to empty map; non-string game keys or non-string items are skipped |
-
-Persistence notes:
-
-- `save_to_yaml()` always writes all scalar booleans/strings/integers.
-- `save_to_yaml()` always writes `paths.game_root`, even when empty.
-- Optional path fields are omitted when `None`; they are not written as explicit YAML nulls.
-- `unsolved_logs_destination` is omitted when `None`; the nested GUI/intake setting remains `CLASSIC_Settings.Unsolved Logs Destination` and is parsed during Crash Log Scan Intake.
-- `formid_databases` is omitted entirely when empty.
-- Relative `formid_databases.<game>[]` entries are preserved as strings and resolved by higher layers at runtime.
-
 ## `GameLocal` Runtime Path Data
 
-`ClassicConfig::load_local_yaml_paths(game)` loads merged YAML from `CLASSIC Data/CLASSIC {game} Local.yaml` and reads only:
+Game Local readers and `persist_game_local_paths` use only these keys in `CLASSIC Data/CLASSIC {game} Local.yaml`:
 
 | Key | Type / shape | Required | Behavior |
 |---|---|---|---|
-| `Game_Info.Root_Folder_Game` | string path | no | when present, replaces `paths.game_root` |
-| `Game_Info.Root_Folder_Docs` | string path | no | when present, sets `paths.docs_root` |
+| `Game_Info.Root_Folder_Game` | string path | no | persisted runtime-discovered game root |
+| `Game_Info.Root_Folder_Docs` | string path | no | persisted runtime-discovered documents root |
 
-If the local YAML file does not exist, the method returns `Ok(())` and leaves the existing config unchanged.
-
-`classic_config_core::persist_game_local_paths(path, game_root, docs_root)` persists only those same keys independently of `ClassicConfig`. It creates the local YAML file when needed, preserves unrelated existing YAML keys, leaves a key unchanged when its update is `None`, and skips file creation entirely when both updates are `None`. The operation does not read or write `CLASSIC Settings.yaml`.
+`classic_config_core::persist_game_local_paths(path, game_root, docs_root)` creates the local YAML file when needed, preserves unrelated existing YAML keys, leaves a key unchanged when its update is `None`, and skips file creation entirely when both updates are `None`. The operation does not read or write `CLASSIC Settings.yaml`.
 
 ---
 
@@ -122,9 +79,9 @@ If the local YAML file does not exist, the method returns `Ok(())` and leaves th
 | `catch_log_records` | sequence of strings | populates `classic_records_list` |
 | `CLASSIC_Interface.autoscan_text_<Game>` | string | populates `autoscan_text` using the caller-provided game name |
 
-`CLASSIC Main.yaml` `schema_version: "2.1"` added optional `CLASSIC_Settings.Unsolved Logs Destination` to the shipped `CLASSIC_Info.default_settings` template. Crash Log Scan Intake reads that nested setting when resolving the Rust-owned Unsolved Logs destination; the flat `ClassicConfig.unsolved_logs_destination` field is only the TUI-local persisted equivalent.
+`CLASSIC Main.yaml` `schema_version: "2.1"` added optional `CLASSIC_Settings.Unsolved Logs Destination` to the shipped `CLASSIC_Info.default_settings` template. The template is a generated compatibility artifact, not a runtime bootstrap or a second source of User Settings defaults.
 
-`schema_version: "2.2"` makes that template a deterministic compatibility mirror of the Rust-owned User Settings registry. It additively includes all canonical Crash Log Scan, Game Setup, and frontend defaults while retaining the compatibility-only fields required by older clients. `classic-config-core` may expose or copy the scalar for legacy consumers, but it does not own its labels, defaults, schema, or guidance; regenerate and check the artifact through the `classic-user-settings-core` generator documented in [`classic-user-settings-core.md`](classic-user-settings-core.md#published-default-registry-and-compatibility-mirror).
+`schema_version: "2.2"` makes that template a deterministic compatibility mirror of the Rust-owned User Settings registry. It additively includes all canonical Crash Log Scan, Game Setup, and frontend defaults while retaining compatibility-only fields required by older clients. No production path may read it as User Settings defaults; regenerate and check the artifact through the `classic-user-settings-core` generator documented in [`classic-user-settings-core.md`](classic-user-settings-core.md#published-default-registry-and-compatibility-mirror).
 
 #### `CLASSIC_Info.version` bare-SemVer contract
 
@@ -325,5 +282,5 @@ Deduplication: at parse time each pair is canonicalized to `(min(mod_a, mod_b), 
 
 ## Contributor Notes
 
-- If you add or remove consumed keys in `ClassicConfig` or `YamlDataCore`, update this page in the same change.
+- If you add or remove consumed keys in `YamlDataCore` or Game Local persistence, update this page in the same change.
 - If a binding or frontend depends on a new default, note that here even if the Rust API itself does not change.

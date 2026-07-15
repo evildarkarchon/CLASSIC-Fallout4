@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-07-14T23:59:19.419582+00:00",
+  "generated_at_utc": "2026-07-15T01:39:57.814925+00:00",
   "summary": {
-    "tier1_contract_total": 879,
-    "tier1_matched": 879,
+    "tier1_contract_total": 876,
+    "tier1_matched": 876,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -2494,19 +2494,6 @@
       "actual_node_arity": 5
     },
     {
-      "id": "config.ClassicConfig@rust",
-      "tier": "tier1",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "ClassicConfig@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
       "id": "config-clear-yaml-cache",
       "tier": "tier1",
       "owner_module": "config",
@@ -2873,9 +2860,9 @@
     {
       "id": "config-validate-settings-path",
       "tier": "tier1",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "PathConfig",
+      "owner_module": "path",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "validate_settings_path",
       "node_export": "validateSettingsPath",
       "status": "matched",
       "expected_node_kind": "function",
@@ -2886,9 +2873,9 @@
     {
       "id": "config-validate-settings-paths",
       "tier": "tier1",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "PathConfig",
+      "owner_module": "path",
+      "squad": "Squad B (version-registry/aux)",
+      "rust_symbol": "validate_settings_paths",
       "node_export": "validateSettingsPaths",
       "status": "matched",
       "expected_node_kind": "function",
@@ -7031,19 +7018,6 @@
       "actual_node_arity": null
     },
     {
-      "id": "settings.SETTINGS_IGNORE_NONE@rust",
-      "tier": "tier1",
-      "owner_module": "settings",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "SETTINGS_IGNORE_NONE@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
       "id": "settings.YamlFile@rust",
       "tier": "tier1",
       "owner_module": "settings",
@@ -7296,19 +7270,6 @@
       "owner_module": "version_registry",
       "squad": "Squad B (version-registry/aux)",
       "rust_symbol": "get_version_info@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "settings.must_not_be_none@rust",
-      "tier": "tier1",
-      "owner_module": "settings",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "must_not_be_none@rust",
       "node_export": null,
       "status": "matched",
       "expected_node_kind": null,

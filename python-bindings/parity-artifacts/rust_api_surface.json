@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T23:05:32.524700+00:00",
+  "generated_at_utc": "2026-07-15T02:25:38.152398+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -100,25 +100,6 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
       "source_decl": "pub struct CheckRule",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ClassicConfig",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use config::{ClassicConfig, PathConfig, YamlSource};",
-      "source_expr": "config::ClassicConfig",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ClassicConfig",
-      "kind": "struct",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/config.rs",
-      "source_decl": "pub struct ClassicConfig",
       "tier": "tier1"
     },
     {
@@ -479,25 +460,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "PathConfig",
-      "kind": "reexport",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use config::{ClassicConfig, PathConfig, YamlSource};",
-      "source_expr": "config::PathConfig",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "PathConfig",
-      "kind": "struct",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/config.rs",
-      "source_decl": "pub struct PathConfig",
-      "tier": "tier1"
-    },
-    {
       "symbol": "Predicate",
       "kind": "enum",
       "crate": "classic-config-core",
@@ -726,7 +688,7 @@
       "kind": "enum",
       "crate": "classic-config-core",
       "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/config.rs",
+      "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
       "source_decl": "pub enum YamlSource",
       "tier": "tier1"
     },
@@ -736,8 +698,8 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use config::{ClassicConfig, PathConfig, YamlSource};",
-      "source_expr": "config::YamlSource",
+      "source_decl": "pub use yaml_source::YamlSource;",
+      "source_expr": "yaml_source::YamlSource",
       "tier": "tier1"
     },
     {
@@ -770,15 +732,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "config",
-      "kind": "module",
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub mod config;",
-      "tier": "tier1"
-    },
-    {
       "symbol": "crashgen_expectation_parser",
       "kind": "module",
       "crate": "classic-config-core",
@@ -797,22 +750,12 @@
       "tier": "tier1"
     },
     {
-      "symbol": "display_name",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/config.rs",
-      "source_decl": "pub fn display_name(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "display_name_with_game",
       "kind": "function",
       "arity": 2,
       "crate": "classic-config-core",
       "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/config.rs",
+      "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
       "source_decl": "pub fn display_name_with_game(&self, game: &str)",
       "tier": "tier1"
     },
@@ -834,6 +777,15 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
       "source_decl": "pub fn final_settings(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
+      "source_decl": "pub const fn",
       "tier": "tier1"
     },
     {
@@ -883,16 +835,6 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub mod game_local;",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_config_path",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/config.rs",
-      "source_decl": "pub fn get_config_path(&self)",
       "tier": "tier1"
     },
     {
@@ -1161,7 +1103,7 @@
       "arity": 2,
       "crate": "classic-config-core",
       "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/config.rs",
+      "source_file": "business-logic/classic-config-core/src/yaml_source.rs",
       "source_decl": "pub fn path(&self, game: &str)",
       "tier": "tier1"
     },
@@ -1215,16 +1157,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "validate_paths",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-config-core",
-      "owner_module": "config",
-      "source_file": "business-logic/classic-config-core/src/config.rs",
-      "source_decl": "pub fn validate_paths(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "value_for",
       "kind": "function",
       "arity": 3,
@@ -1242,6 +1174,15 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/yamldata.rs",
       "source_decl": "pub fn values(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "yaml_source",
+      "kind": "module",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub mod yaml_source;",
       "tier": "tier1"
     },
     {
@@ -7746,16 +7687,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "from_config",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scangame-core",
-      "owner_module": "scangame",
-      "source_file": "business-logic/classic-scangame-core/src/game_setup_intake.rs",
-      "source_decl": "pub fn from_config(config: &ClassicConfig, game_id: GameId)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "from_user_settings",
       "kind": "function",
       "arity": 1,
@@ -12768,25 +12699,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "IssueSeverity",
-      "kind": "enum",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators/structure.rs",
-      "source_decl": "pub enum IssueSeverity",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "IssueSeverity",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
-      "source_decl": "pub use structure::{IssueSeverity, ValidationIssue, validate_settings_structure};",
-      "source_expr": "structure::IssueSeverity",
-      "tier": "tier1"
-    },
-    {
       "symbol": "Result",
       "kind": "reexport",
       "crate": "classic-settings-core",
@@ -12832,15 +12744,6 @@
       "source_file": "business-logic/classic-settings-core/src/schema_version.rs",
       "source_decl": "pub use extract::{SCHEMA_VERSION_KEY, YamlSchemaError, extract_schema_version};",
       "source_expr": "extract::SCHEMA_VERSION_KEY",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SETTINGS_IGNORE_NONE",
-      "kind": "const",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_file.rs",
-      "source_decl": "pub const SETTINGS_IGNORE_NONE",
       "tier": "tier1"
     },
     {
@@ -12985,25 +12888,6 @@
       "source_file": "business-logic/classic-settings-core/src/lib.rs",
       "source_decl": "pub use error::{Result, SettingsError, SettingsSource};",
       "source_expr": "error::SettingsSource",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ValidationIssue",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
-      "source_decl": "pub use structure::{IssueSeverity, ValidationIssue, validate_settings_structure};",
-      "source_expr": "structure::ValidationIssue",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ValidationIssue",
-      "kind": "struct",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators/structure.rs",
-      "source_decl": "pub struct ValidationIssue",
       "tier": "tier1"
     },
     {
@@ -13797,16 +13681,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "must_not_be_none",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/yaml_file.rs",
-      "source_decl": "pub fn must_not_be_none(key: &str)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "new",
       "kind": "function",
       "arity": 0,
@@ -13994,26 +13868,6 @@
       "source_file": "business-logic/classic-settings-core/src/validators.rs",
       "source_decl": "pub use coerce::{coerce_setting_value, validate_setting_value};",
       "source_expr": "coerce::validate_setting_value",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_settings_structure",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators/structure.rs",
-      "source_decl": "pub fn validate_settings_structure(yaml: &Yaml)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "validate_settings_structure",
-      "kind": "reexport",
-      "crate": "classic-settings-core",
-      "owner_module": "settings",
-      "source_file": "business-logic/classic-settings-core/src/validators.rs",
-      "source_decl": "pub use structure::{IssueSeverity, ValidationIssue, validate_settings_structure};",
-      "source_expr": "structure::validate_settings_structure",
       "tier": "tier1"
     },
     {

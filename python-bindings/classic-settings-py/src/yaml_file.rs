@@ -1,13 +1,5 @@
 use pyo3::prelude::*;
 
-const SETTINGS_IGNORE_NONE_LIST: [&str; 5] = [
-    "SCAN Custom Path",
-    "MODS Folder Path",
-    "INI Folder Path",
-    "Root_Folder_Game",
-    "Root_Folder_Docs",
-];
-
 #[pyclass(module = "classic_settings", name = "YamlFile", from_py_object)]
 #[derive(Clone)]
 pub struct PyYamlFile {
@@ -21,14 +13,6 @@ impl PyYamlFile {
     fn Main() -> Self {
         Self {
             inner: classic_settings_core::YamlFile::Main,
-        }
-    }
-
-    #[classattr]
-    #[allow(non_snake_case)]
-    fn Settings() -> Self {
-        Self {
-            inner: classic_settings_core::YamlFile::Settings,
         }
     }
 
@@ -102,14 +86,7 @@ impl PyYamlFile {
     }
 }
 
-#[pyfunction]
-fn must_not_be_none(key: &str) -> bool {
-    classic_settings_core::must_not_be_none(key)
-}
-
 pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlFile>()?;
-    m.add("SETTINGS_IGNORE_NONE", SETTINGS_IGNORE_NONE_LIST.to_vec())?;
-    m.add_function(wrap_pyfunction!(must_not_be_none, m)?)?;
     Ok(())
 }

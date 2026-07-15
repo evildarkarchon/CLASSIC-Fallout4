@@ -216,7 +216,7 @@ The implemented flag name is `--tracebacks` to make Python-boundary behavior exp
 | --- | --- |
 | `classic-py scan logs` | Run fail-soft crash-log scanning through `classic_scanlog` and report per-log failures in structured output. |
 | `classic-py scan game` | Run game setup checks through `classic_scangame` and related bindings. |
-| `classic-py config inspect` | Load and summarize CLASSIC YAML/config state through `classic_config`. |
+| `classic-py config inspect` | Open and summarize typed User Settings at an explicit CLASSIC root through `classic_user_settings`. |
 | `classic-py config main-version` | Read the schema-gated main YAML version through the binding contract. |
 | `classic-py path find-game` | Resolve a game installation path through `classic_path` and registry-aware helpers. |
 | `classic-py path validate` | Validate paths through binding-backed validators. |

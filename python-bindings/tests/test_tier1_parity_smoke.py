@@ -4,9 +4,6 @@ from __future__ import annotations
 
 import importlib
 from pathlib import Path
-import subprocess
-import sys
-import textwrap
 from typing import Any, cast
 
 import pytest
@@ -95,51 +92,6 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
             "auto",
         )
 
-    config = classic_config.ClassicConfig()
-    assert config.game_version == "auto"
-    assert config.get_config_path().endswith("CLASSIC Settings.yaml")
-
-    config.paths = classic_config.PathConfig(game_root=str(tmp_path))
-    config.validate_paths()
-
-    config_path = tmp_path / "classic-settings.yaml"
-    config.save_to_yaml(str(config_path))
-    loaded = classic_config.ClassicConfig.load_from_yaml(str(config_path))
-    assert loaded.paths.game_root == str(tmp_path)
-
-    invalid_config_path = tmp_path / "invalid-classic-settings.yaml"
-    invalid_config_path.write_text("{ invalid: yaml: content: }}}", encoding="utf-8")
-    with pytest.raises(classic_config.RustConfigParseError):
-        classic_config.ClassicConfig.load_from_yaml(str(invalid_config_path))
-
-    with pytest.raises(classic_config.RustConfigIOError):
-        classic_config.ClassicConfig.load_from_yaml(
-            str(tmp_path / "missing-settings.yaml")
-        )
-
-    blocked_parent = tmp_path / "not-a-directory"
-    blocked_parent.write_text("content", encoding="utf-8")
-    with pytest.raises(classic_config.RustConfigIOError):
-        config.save_to_yaml(str(blocked_parent / "child.yaml"))
-
-    appdata_root = tmp_path / "appdata"
-    monkeypatch.setenv("APPDATA", str(appdata_root))
-    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
-    monkeypatch.delenv("HOME", raising=False)
-    resolved_default_settings = Path(classic_config.ClassicConfig().get_config_path())
-    resolved_default_settings.parent.mkdir(parents=True, exist_ok=True)
-    resolved_default_settings.write_text("fcx_mode: true\n", encoding="utf-8")
-    auto_loaded = classic_config.ClassicConfig.load_or_default()
-    assert auto_loaded.fcx_mode is True
-    assert auto_loaded.get_config_path() == str(resolved_default_settings)
-
-    resolved_default_settings.write_text(
-        "{ invalid: yaml: content: }}}", encoding="utf-8"
-    )
-    with pytest.raises(classic_config.RustConfigParseError):
-        classic_config.ClassicConfig.load_or_default()
-    resolved_default_settings.write_text("fcx_mode: true\n", encoding="utf-8")
-
     monkeypatch.chdir(tmp_path)
     local_yaml_dir = Path("CLASSIC Data")
     local_yaml_dir.mkdir()
@@ -155,11 +107,6 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
         encoding="utf-8",
     )
 
-    config.load_local_yaml_paths("Fallout4")
-    assert config.paths.game_root == "C:/Games/Fallout4"
-    assert config.paths.docs_root == "C:/Users/Test/Documents/My Games/Fallout4"
-
-    user_settings_before = resolved_default_settings.read_bytes()
     classic_config.persist_game_local_paths(
         local_yaml,
         "D:/Games/Fallout4",
@@ -171,7 +118,6 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
         'Root_Folder_Docs: "C:/Users/Test/Documents/My Games/Fallout4"'
         in local_yaml_after
     )
-    assert resolved_default_settings.read_bytes() == user_settings_before
 
     local_yaml.write_text("{ invalid: yaml: content: }}}", encoding="utf-8")
     with pytest.raises(classic_config.RustConfigParseError):
@@ -180,8 +126,6 @@ def _run_config_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
             "D:/Games/Fallout4",
             None,
         )
-    with pytest.raises(classic_config.RustConfigParseError):
-        config.load_local_yaml_paths("Fallout4")
 
     assert classic_config.YamlSource.MAIN.display_name() == "Main Database"
     assert (
@@ -321,30 +265,56 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     docs_root.mkdir()
     (game_root / "Fallout4.exe").write_text("stub", encoding="utf-8")
 
-    appdata_root = tmp_path / "scanlog-appdata"
-    monkeypatch.setenv("APPDATA", str(appdata_root))
-    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
-    monkeypatch.delenv("HOME", raising=False)
-
-    settings_path = Path(classic_config.ClassicConfig().get_config_path())
-    settings_path.parent.mkdir(parents=True, exist_ok=True)
-    settings = classic_config.ClassicConfig()
-    settings.fcx_mode = True
-    settings.paths = classic_config.PathConfig(
-        game_root=str(game_root),
-        docs_root=str(docs_root),
+    settings_path = tmp_path / "CLASSIC Settings.yaml"
+    settings_path.write_text(
+        "schema_version: \"1.0\"\n"
+        "CLASSIC_Settings:\n"
+        "  Managed Game: Fallout 4\n"
+        "  Game Version: Original\n"
+        "  FCX Mode: true\n"
+        f"  Game Folder Path: '{game_root.as_posix()}'\n"
+        f"  Documents Folder Path: '{docs_root.as_posix()}'\n",
+        encoding="utf-8",
     )
-    settings.save_to_yaml(str(settings_path))
 
     classic_scanlog.FcxModeHandler.reset_fcx_checks()
     first_handler = classic_scanlog.FcxModeHandler(True)
-    first_handler.check_fcx_mode()
+    first_handler.check_fcx_mode(str(tmp_path))
     first_messages = first_handler.get_fcx_messages()
     assert first_handler.has_results() is True
 
     second_handler = classic_scanlog.FcxModeHandler(True)
-    second_handler.check_fcx_mode()
+    second_handler.check_fcx_mode(str(tmp_path))
     assert second_handler.get_fcx_messages() == first_messages
+
+    disabled_handler = classic_scanlog.FcxModeHandler(False)
+    disabled_handler.check_fcx_mode(str(tmp_path))
+    assert disabled_handler.fcx_mode is False
+    assert disabled_handler.get_fcx_messages() == []
+
+    reenabled_handler = classic_scanlog.FcxModeHandler(True)
+    reenabled_handler.check_fcx_mode(str(tmp_path))
+    assert reenabled_handler.get_fcx_messages() == first_messages
+
+    second_root = tmp_path / "SecondRoot"
+    second_game_root = second_root / "GameRoot"
+    second_docs_root = second_root / "DocsRoot"
+    second_game_root.mkdir(parents=True)
+    second_docs_root.mkdir()
+    (second_game_root / "Fallout4VR.exe").write_text("stub", encoding="utf-8")
+    (second_root / "CLASSIC Settings.yaml").write_text(
+        "schema_version: \"1.0\"\n"
+        "CLASSIC_Settings:\n"
+        "  Managed Game: Fallout 4 VR\n"
+        "  Game Version: Original\n"
+        "  FCX Mode: true\n"
+        f"  Game Folder Path: '{second_game_root.as_posix()}'\n"
+        f"  Documents Folder Path: '{second_docs_root.as_posix()}'\n",
+        encoding="utf-8",
+    )
+    different_root_handler = classic_scanlog.FcxModeHandler(True)
+    different_root_handler.check_fcx_mode(str(second_root))
+    assert different_root_handler.get_fcx_messages() != first_messages
 
 
 def _run_version_registry_tier1_smoke(
@@ -477,25 +447,15 @@ CASE_RUNNERS = {
 
 
 def test_application_dir_override(tmp_path: Path) -> None:
-    """Settings resolution should honour the APP_DIR registry override."""
+    """Independent application-local YAML helpers expose the registry override."""
     import classic_config
 
     # Module auto-init should have set APP_DIR to cwd
     app_dir = classic_config.get_application_dir()
     assert app_dir is not None, "APP_DIR should be auto-set on import"
 
-    # Override to a custom directory and verify get_config_path reflects it
     classic_config.set_application_dir(str(tmp_path))
     assert classic_config.get_application_dir() == str(tmp_path)
-
-    config = classic_config.ClassicConfig()
-    config_path = Path(config.get_config_path())
-    assert config_path.parent == tmp_path
-
-    # Write a settings file there and verify load_or_default finds it
-    config_path.write_text("fcx_mode: true\n", encoding="utf-8")
-    loaded = classic_config.ClassicConfig.load_or_default()
-    assert loaded.fcx_mode is True
 
     # Restore the original override so other tests are unaffected
     if app_dir is not None:
@@ -509,38 +469,6 @@ def _run_application_dir_override(
 
 
 CASE_RUNNERS["application-dir-override"] = _run_application_dir_override
-
-
-def test_config_import_anchors_settings_to_script_directory(tmp_path: Path) -> None:
-    """classic_config should anchor settings lookup to the executed script directory."""
-
-    script_dir = tmp_path / "script-dir"
-    run_dir = tmp_path / "run-dir"
-    script_dir.mkdir()
-    run_dir.mkdir()
-
-    script_path = script_dir / "show_config_path.py"
-    script_path.write_text(
-        textwrap.dedent(
-            """\
-            import classic_config
-
-            print(classic_config.ClassicConfig().get_config_path())
-            """
-        ),
-        encoding="utf-8",
-    )
-
-    result = subprocess.run(
-        [sys.executable, str(script_path)],
-        cwd=run_dir,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == str(script_dir / "CLASSIC Settings.yaml")
 
 
 def test_parse_segments_parallel_deprecation_warning() -> None:

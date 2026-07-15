@@ -43,7 +43,7 @@ For crate-level behavior, see:
 
 ## `src/settings.rs` -> `classic::settings`
 
-This file (formerly `src/yaml.rs` -> `classic::yaml`; renamed during v9.1.0 Phase 1 Plan 2) exposes a stateful `YamlOps` wrapper over `classic_settings_core::YamlOperations` plus bridge-local `YamlValue` and `YamlCacheStatsDto` DTOs that CXX can move by value, AND the D-09 expansion surface: the settings-core cache operations and validator helpers mirroring the Python surface.
+This file (formerly `src/yaml.rs` -> `classic::yaml`; renamed during v9.1.0 Phase 1 Plan 2) exposes a stateful `YamlOps` wrapper over `classic_settings_core::YamlOperations` plus bridge-local `YamlValue` and `YamlCacheStatsDto` DTOs that CXX can move by value, AND the D-09 expansion surface: generic settings-core cache operations and scalar validator helpers mirroring the Python surface.
 
 It owns:
 
@@ -52,7 +52,7 @@ It owns:
 - YAML (path-backed) cache helpers `yaml_ops_clear_cache()`, `yaml_ops_cache_stats()`, and the narrowed `yaml_ops_cache_size()` adapter
 - settings-core cache-populating loaders `settings_load_sync`, `settings_load_async_blocking`, `settings_load_batch_sync`, `settings_load_batch_async_blocking` (return a `u32` doc count; the full `Arc<Vec<Yaml>>` does not cross CXX)
 - settings-core cache observability: `settings_cache_stats` (returns `SettingsCacheStats`), `settings_cache_size`, `settings_cache_keys`, `settings_is_cached`, `settings_invalidate`, `settings_clear_cache`, `settings_reset_cache_stats`
-- settings validators mirroring the Python surface: `settings_validate_structure` (returns `Vec<SettingsValidationIssue>`), `settings_validate_value`, and `settings_coerce_value` (returns `SettingsCoercedValue`)
+- generic scalar validators mirroring the Python surface: `settings_validate_value` and `settings_coerce_value` (returns `SettingsCoercedValue`)
 
 Current cache-observability behavior:
 
@@ -78,7 +78,7 @@ It owns:
 - flattened `IndexMap` access for suspect and mod dictionaries
 - settings cache helpers `settings_cache_clear()`, `settings_cache_stats()`, `settings_cache_size()`, and `reset_settings_cache_stats()`
 
-It does not expose the full `YamlDataCore` model, general `ClassicConfig` save APIs, or raw crashgen registry data.
+It does not expose the full `YamlDataCore` model, any User Settings save API, or raw crashgen registry data.
 
 ## `src/files.rs` -> `classic::files`
 
@@ -214,13 +214,12 @@ These return only a `u32` document count because the Rust APIs return `Arc<Vec<Y
 - `settings_cache_size() -> usize`, `settings_cache_keys() -> Vec<String>`, `settings_is_cached(key) -> bool`, `settings_invalidate(key) -> bool`, `settings_clear_cache()`, `settings_reset_cache_stats()` — forward to the matching settings-core APIs
 - `SettingsCacheStats` is a distinct shared struct from `YamlCacheStatsDto`: the settings cache has capacity `64` while the yaml file cache has capacity `128`. Confusing the two would silently swap cache numbers.
 
-### Settings validators (D-09 expansion)
+### Generic scalar validators (D-09 expansion)
 
-- `settings_validate_structure(yaml) -> Vec<SettingsValidationIssue>` forwards to `classic_settings_core::validators::validate_settings_structure(...)`
 - `settings_validate_value(value, expected_type) -> bool` forwards to `validate_setting_value(...)` with a 9-token case-insensitive type parser (`int`, `integer`, `bool`, `boolean`, `float`, `double`, `path`, `string`, `str`; `list`/`map`/`array` are rejected because the underlying `SettingType` enum has only five variants)
 - `settings_coerce_value(value, target_type) -> Result<SettingsCoercedValue>` forwards to `coerce_setting_value(...)` using the same 9-token parser
 
-New shared structs added in this expansion: `SettingsCacheStats`, `SettingsValidationIssue`, `SettingsCoercedValue`, `YamlCacheStatsDto`.
+Shared structs in this expansion: `SettingsCacheStats`, `SettingsCoercedValue`, `YamlCacheStatsDto`.
 
 ## `classic::config` entry points
 
@@ -799,7 +798,7 @@ Several entry points erase typed errors and return defaults instead:
 ## `src/config.rs`
 
 - exposes only selected `YamlDataCore` fields and helper methods
-- does not expose `ClassicConfig` at all
+- does not expose User Settings source discovery, schema, defaults, or persistence
 - drops most structured stack-rule fields, exposing only ids today
 - drops `crashgen_registry` and other richer YAML-derived structures
 

@@ -99,41 +99,17 @@ Contributor caveat:
 
 ## How Multiple Database Paths Are Configured
 
-There are two related path representations in active source.
-
-## `classic-config-core` runtime settings model
-
-[`business-logic/classic-config-core/src/config.rs`](../../business-logic/classic-config-core/src/config.rs) exposes:
-
-- `ClassicConfig.formid_databases: HashMap<String, Vec<PathBuf>>`
-- key: game name such as `Fallout4`
-- value: ordered list of zero or more database paths for that game
-
-Source-backed behavior:
-
-- missing `formid_databases` in YAML defaults to an empty map
-- multiple paths per game are preserved in YAML round-trip tests
-- the config layer stores paths as given; it does not resolve or validate them when loading
-- `validate_paths()` currently checks game/docs/mod folders, not FormID database files
-
-The contributor-facing YAML shape for this Rust type is:
-
-```yaml
-formid_databases:
-  Fallout4:
-    - databases/FOLON FormIDs.db
-    - D:/Custom/My FormIDs.db
-```
+`classic-user-settings-core` exclusively owns the persisted per-game path map at `CLASSIC_Settings.FormID Databases`. Maintained frontends select the active game's ordered strings and pass them into scan startup as explicit facts; scan-time code does not reopen or interpret User Settings.
 
 ## Active scan-time path assembly in `classic-cpp-bridge`
 
 The current C++ bridge is what actually assembles DB paths for production scan startup.
 
-[`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) resolves paths in this order:
+[`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) receives the frontend-selected configured entries as explicit request facts and resolves paths in this order:
 
 1. main DB: `CLASSIC Data/databases/{game} FormIDs Main.db`
 2. hardcoded extras from `hardcoded_formid_db_relpaths(game)`
-3. user-configured entries from `CLASSIC_Settings.FormID Databases.{game}` in `CLASSIC Settings.yaml`
+3. caller-projected configured entries from `CrashLogScanFacts.formid_database_paths`
 4. de-duplicate while preserving first occurrence
 
 Current hardcoded extras:
@@ -154,9 +130,8 @@ That behavior is covered by bridge tests.
 
 Current scan-time path handling in `classic-cpp-bridge`:
 
-- settings file path is `CLASSIC Settings.yaml` next to the executable / root install directory
 - user-configured absolute DB paths are used as-is after normalization
-- user-configured relative DB paths are resolved against `yaml_dir_data` (the `CLASSIC Data` directory), not the settings-file directory or repo root
+- user-configured relative DB paths are resolved against `yaml_dir_data` (the `CLASSIC Data` directory), not the User Settings directory or repo root
 - path normalization is component-based (`path.components().collect()`), mainly for de-duplication and path-shape cleanup
 
 Grounded example from bridge tests:

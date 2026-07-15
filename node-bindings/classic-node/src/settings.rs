@@ -47,8 +47,6 @@ fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
 pub enum JsYamlFile {
     /// CLASSIC Data/databases/CLASSIC Main.yaml
     Main,
-    /// CLASSIC Settings.yaml
-    Settings,
     /// CLASSIC Ignore.yaml
     Ignore,
     /// CLASSIC Data/databases/CLASSIC {Game}.yaml
@@ -64,7 +62,6 @@ pub enum JsYamlFile {
 fn js_to_core_yaml_file(file: &JsYamlFile) -> YamlFile {
     match file {
         JsYamlFile::Main => YamlFile::Main,
-        JsYamlFile::Settings => YamlFile::Settings,
         JsYamlFile::Ignore => YamlFile::Ignore,
         JsYamlFile::Game => YamlFile::Game,
         JsYamlFile::GameLocal => YamlFile::GameLocal,
@@ -76,7 +73,6 @@ fn js_to_core_yaml_file(file: &JsYamlFile) -> YamlFile {
 fn core_to_js_yaml_file(file: &YamlFile) -> JsYamlFile {
     match file {
         YamlFile::Main => JsYamlFile::Main,
-        YamlFile::Settings => JsYamlFile::Settings,
         YamlFile::Ignore => JsYamlFile::Ignore,
         YamlFile::Game => JsYamlFile::Game,
         YamlFile::GameLocal => JsYamlFile::GameLocal,

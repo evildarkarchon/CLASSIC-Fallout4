@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-14T23:59:19.424441+00:00",
+  "generated_at_utc": "2026-07-15T01:39:57.819818+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,11 +7,11 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 948,
-    "runtime_verified_total": 948,
+    "tracked_surface_total": 945,
+    "runtime_verified_total": 945,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 879,
+    "tier1_contract_total": 876,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -22,8 +22,8 @@
       "total": 168
     },
     "config": {
-      "runtime_verified": 109,
-      "total": 109
+      "runtime_verified": 106,
+      "total": 106
     },
     "database": {
       "runtime_verified": 14,
@@ -38,8 +38,8 @@
       "total": 9
     },
     "path": {
-      "runtime_verified": 25,
-      "total": 25
+      "runtime_verified": 27,
+      "total": 27
     },
     "perf": {
       "runtime_verified": 2,
@@ -58,8 +58,8 @@
       "total": 95
     },
     "settings": {
-      "runtime_verified": 47,
-      "total": 47
+      "runtime_verified": 45,
+      "total": 45
     },
     "shared": {
       "runtime_verified": 10,
@@ -3753,25 +3753,6 @@
       "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
-      "trackedId": "contract:config.ClassicConfig@rust",
-      "trackedType": "contract_row",
-      "contractId": "config.ClassicConfig@rust",
-      "ownerModule": "config",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "ClassicConfig@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-config",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "config-tier1-parity",
-      "fixtureRefs": [
-        "configSourceCases"
-      ],
-      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
-    },
-    {
       "trackedId": "contract:config-clear-yaml-cache",
       "trackedType": "contract_row",
       "contractId": "config-clear-yaml-cache",
@@ -4307,39 +4288,35 @@
       "trackedId": "contract:config-validate-settings-path",
       "trackedType": "contract_row",
       "contractId": "config-validate-settings-path",
-      "ownerModule": "config",
+      "ownerModule": "path",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
-      "rustSymbol": "PathConfig",
+      "rustSymbol": "validate_settings_path",
       "bindingIdentifier": "validateSettingsPath",
-      "coverageId": "node-tier1-config",
+      "coverageId": "node-tier1-path",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "config-tier1-parity",
-      "fixtureRefs": [
-        "configSourceCases"
-      ],
-      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+      "testCaseId": "path-tier1-parity",
+      "fixtureRefs": [],
+      "notes": null
     },
     {
       "trackedId": "contract:config-validate-settings-paths",
       "trackedType": "contract_row",
       "contractId": "config-validate-settings-paths",
-      "ownerModule": "config",
+      "ownerModule": "path",
       "tier": "tier1",
       "status": "matched",
       "classification": "runtime_verified",
-      "rustSymbol": "PathConfig",
+      "rustSymbol": "validate_settings_paths",
       "bindingIdentifier": "validateSettingsPaths",
-      "coverageId": "node-tier1-config",
+      "coverageId": "node-tier1-path",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "config-tier1-parity",
-      "fixtureRefs": [
-        "configSourceCases"
-      ],
-      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+      "testCaseId": "path-tier1-parity",
+      "fixtureRefs": [],
+      "notes": null
     },
     {
       "trackedId": "contract:config-yaml-document-class",
@@ -10234,23 +10211,6 @@
       "notes": null
     },
     {
-      "trackedId": "contract:settings.SETTINGS_IGNORE_NONE@rust",
-      "trackedType": "contract_row",
-      "contractId": "settings.SETTINGS_IGNORE_NONE@rust",
-      "ownerModule": "settings",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "SETTINGS_IGNORE_NONE@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-settings",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "settings-tier1-parity",
-      "fixtureRefs": [],
-      "notes": null
-    },
-    {
       "trackedId": "contract:settings.YamlFile@rust",
       "trackedType": "contract_row",
       "contractId": "settings.YamlFile@rust",
@@ -10626,23 +10586,6 @@
       "fixtureRefs": [
         "versionRegistryCases"
       ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:settings.must_not_be_none@rust",
-      "trackedType": "contract_row",
-      "contractId": "settings.must_not_be_none@rust",
-      "ownerModule": "settings",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "must_not_be_none@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-settings",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "settings-tier1-parity",
-      "fixtureRefs": [],
       "notes": null
     },
     {

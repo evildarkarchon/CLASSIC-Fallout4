@@ -26,6 +26,8 @@ active, but Wave 3a does not touch FCX state.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import classic_scanlog
 
 
@@ -237,6 +239,56 @@ def test_scan_run_execute_returns_targeted_rejections_as_discovery_data(tmp_path
     assert scan_result.to_dict()["status"] == "no_crash_logs_found"
 
 
+def test_scan_run_execute_projects_omitted_options_from_user_settings(tmp_path) -> None:
+    """Omitted Standard discovery paths and FCX setup facts come from User Settings."""
+    _write_scan_run_data_root(tmp_path)
+    game_root = tmp_path / "GameRoot"
+    docs_root = tmp_path / "DocsRoot"
+    xse_root = docs_root / "F4SE"
+    custom_scan_root = tmp_path / "Saved Custom Logs"
+    game_root.mkdir()
+    xse_root.mkdir(parents=True)
+    custom_scan_root.mkdir()
+    (game_root / "Fallout4.exe").write_text("stub", encoding="utf-8")
+    (xse_root / "crash-2026-03-06-12-00-00.log").write_text(
+        SAMPLE_CRASH_LOG, encoding="utf-8"
+    )
+    (custom_scan_root / "crash-2026-03-06-13-00-00.log").write_text(
+        SAMPLE_CRASH_LOG, encoding="utf-8"
+    )
+    (tmp_path / "CLASSIC Settings.yaml").write_text(
+        "schema_version: \"1.0\"\n"
+        "CLASSIC_Settings:\n"
+        "  Managed Game: Fallout 4\n"
+        "  Game Version: Original\n"
+        "  FCX Mode: true\n"
+        "  Simplify Logs: true\n"
+        "  Show FormID Values: false\n"
+        "  Move Unsolved Logs: false\n"
+        "  Max Concurrent Scans: 1\n"
+        f"  Game Folder Path: '{game_root.as_posix()}'\n"
+        f"  Documents Folder Path: '{docs_root.as_posix()}'\n"
+        f"  SCAN Custom Path: '{custom_scan_root.as_posix()}'\n",
+        encoding="utf-8",
+    )
+
+    scan_result = classic_scanlog.scan_run_execute(
+        str(tmp_path),
+        str(tmp_path / "CLASSIC Data"),
+        "Fallout4",
+        "auto",
+        [],
+    )
+
+    assert scan_result.discovery is not None
+    assert {Path(path).name for path in scan_result.discovery.accepted_logs} == {
+        "crash-2026-03-06-12-00-00.log",
+        "crash-2026-03-06-13-00-00.log",
+    }
+    assert scan_result.setup is not None
+    assert "provide_setup_context" not in scan_result.setup.actions
+
+
 def test_scan_run_execute_targeted_ignores_move_and_destination(tmp_path) -> None:
     """Targeted scan-run intent wins over move and destination inputs."""
     _write_scan_run_data_root(tmp_path)
@@ -287,6 +339,33 @@ def test_scan_run_execute_ignores_destination_when_movement_disabled(tmp_path) -
     assert len(results) == 1
     assert results[0].success is True
     assert results[0].moved_to_unsolved_logs is False
+
+
+def test_scan_run_execute_blank_destination_uses_default_when_movement_enabled(
+    tmp_path,
+) -> None:
+    """Whitespace-only destinations use configured/default Unsolved Logs behavior."""
+    _write_scan_run_data_root(tmp_path)
+    log_dir = tmp_path / "Crash Logs"
+    log_dir.mkdir()
+    crash_log = log_dir / "crash-2026-03-06-12-00-00.log"
+    crash_log.write_text(SAMPLE_CRASH_LOG, encoding="utf-8")
+
+    scan_result = classic_scanlog.scan_run_execute(
+        str(tmp_path),
+        str(tmp_path / "CLASSIC Data"),
+        "Fallout4",
+        "auto",
+        [],
+        move_unsolved_logs=True,
+        max_concurrent=1,
+        unsolved_logs_destination="  \t  ",
+        configured_documents_root=str(tmp_path / "Docs"),
+    )
+
+    assert scan_result.status == "completed"
+    assert len(scan_result.logs) == 1
+    assert scan_result.logs[0].success is True
 
 
 def test_scan_run_execute_relative_destination_fails_when_movement_enabled(tmp_path) -> None:

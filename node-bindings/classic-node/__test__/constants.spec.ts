@@ -28,15 +28,15 @@ describe("Constants bindings", () => {
   });
 
   describe("getAllYamlFiles", () => {
-    test("returns exactly 7 YAML file types", () => {
+    test("returns only the 6 non-User-Settings YAML file types", () => {
       const files = getAllYamlFiles();
-      expect(files).toHaveLength(7);
+      expect(files).toHaveLength(6);
     });
 
     test("contains all expected YAML file types", () => {
       const files = getAllYamlFiles();
       expect(files).toContain("Main");
-      expect(files).toContain("Settings");
+      expect(files).not.toContain("Settings");
       expect(files).toContain("Ignore");
       expect(files).toContain("Game");
       expect(files).toContain("GameLocal");
@@ -84,10 +84,6 @@ describe("Constants bindings", () => {
       expect(desc).toContain("CLASSIC Main.yaml");
     });
 
-    test("returns description for Settings", () => {
-      const desc = getYamlFileDescription("Settings");
-      expect(desc).toContain("CLASSIC Settings.yaml");
-    });
   });
 
   describe("getFallout4VersionInfo", () => {

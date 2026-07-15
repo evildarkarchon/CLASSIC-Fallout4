@@ -71,13 +71,13 @@ See: [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoi
 
 ### Node (NAPI-RS)
 
-The Node surface in [`classic-node`](../../node-bindings/classic-node/src/lib.rs) uses `#[napi(object)]` structs for DTOs, `JsXxx` wrapper types with `inner:` fields holding core Rust types, and async Rust functions that map naturally to JavaScript promises. NAPI-RS auto-converts `snake_case` Rust identifiers to `camelCase` at the JS boundary. User Settings exposes separate ordinary-update and explicit-bootstrap preview/commit pairs, scan preparation projects omitted settings from the typed snapshot, and Game Setup has both explicit-facts and explicit-root typed entry points. The intentional breaking Node cutover removed the flat `ClassicConfigJs`/`JsPathConfig`/`createDefaultConfig` surface while Rust retains temporary compatibility ownership until its later contraction. The committed [`index.d.ts`](../../node-bindings/classic-node/index.d.ts) is the tracked generated contract artifact.
+The Node surface in [`classic-node`](../../node-bindings/classic-node/src/lib.rs) uses `#[napi(object)]` structs for DTOs, `JsXxx` wrapper types with `inner:` fields holding core Rust types, and async Rust functions that map naturally to JavaScript promises. NAPI-RS auto-converts `snake_case` Rust identifiers to `camelCase` at the JS boundary. User Settings exposes separate ordinary-update and explicit-bootstrap preview/commit pairs, scan preparation projects omitted settings from the typed snapshot, and Game Setup has both explicit-facts and explicit-root typed entry points. The flat `ClassicConfigJs`/`JsPathConfig`/`createDefaultConfig` surface is removed across all layers. The committed [`index.d.ts`](../../node-bindings/classic-node/index.d.ts) is the tracked generated contract artifact.
 
 See: [`node-python-contract-map.md`](node-python-contract-map.md).
 
 ### Python (PyO3)
 
-The Python surface is a set of per-crate PyO3 modules under [`python-bindings/`](../../python-bindings/). Each module uses `#[pyclass]` wrappers with `#[getter]` properties and `#[pyo3(name="...")]` for Python-convention naming. Error conversion uses typed Python exception classes wired through `classic-shared-py`'s `define_exceptions!`, `register_exceptions!`, and `ToPyErr` trait.
+The Python surface is a set of per-crate PyO3 modules under [`python-bindings/`](../../python-bindings/). Each module uses `#[pyclass]` wrappers with `#[getter]` properties and `#[pyo3(name="...")]` for Python-convention naming. The intentional breaking User Settings cutover removed `ClassicConfig` and `PathConfig`; scan, FCX, Game Setup, inspection, updates, conflicts, and migrations use the explicit-root `classic_user_settings` contract.
 
 See: [`node-python-contract-map.md`](node-python-contract-map.md).
 

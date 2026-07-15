@@ -1,6 +1,6 @@
 # FormID Settings Boundary
 
-Contributor-facing notes for the current FormID database settings split between [`classic-config-core`](../../business-logic/classic-config-core), typed [`classic-user-settings-core`](../../business-logic/classic-user-settings-core), and scan-time intake in [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), consumed by [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
+Contributor-facing notes for the FormID database boundary between typed [`classic-user-settings-core`](../../business-logic/classic-user-settings-core) and explicit scan-time facts in [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), consumed by the maintained adapters.
 
 This page is intentionally narrow. It documents the active source-backed boundary contributors hit when tracing why configured FormID database paths do or do not affect scan startup.
 
@@ -12,7 +12,7 @@ Reference: [`AGENTS.md`](../../AGENTS.md).
 
 Use this page when you need to:
 
-- understand which settings shape `classic-config-core` persists today
+- understand the canonical typed User Settings shape
 - understand which settings shape active scan startup consumes through Crash Log Scan Intake today
 - trace how GUI or binding surfaces fit into that split
 - debug why a FormID database path saved through one surface does not show up during scanning
@@ -23,15 +23,7 @@ This page describes behavior visible in active Rust and C++-facing source today.
 
 ## Current Boundary At A Glance
 
-There are three active representations for per-game FormID database paths. Typed User Settings is the canonical persisted choice, and the native CLI, GUI, and TUI scan adapters project the selected game's entries into explicit scan facts. `ClassicConfig.formid_databases` remains a separate compatibility representation.
-
-## `classic-config-core` representation
-
-[`business-logic/classic-config-core/src/config.rs`](../../business-logic/classic-config-core/src/config.rs) defines:
-
-- `ClassicConfig.formid_databases: HashMap<String, Vec<PathBuf>>`
-- YAML key: top-level `formid_databases`
-- shape: snake_case map from game name to zero or more paths
+There are two active representations for per-game FormID database paths: the canonical persisted typed User Settings map and the selected game's explicit scan-startup facts.
 
 ## `classic-user-settings-core` representation
 
@@ -54,47 +46,9 @@ The typed read path retains relative strings exactly; Crash Log Scan preparation
 
 Important contributor takeaway:
 
-- these are not the same persisted representation
+- the typed map is the only persisted representation
 - `classic-user-settings-core` owns the typed canonical projection; the native CLI and GUI select the effective game and copy only that game's rows into `ScanRunRequestDto.formid_database_paths`
-- active scan startup does not currently read `ClassicConfig.formid_databases`
-- `ClassicConfig::load_from_yaml()` does not currently read `CLASSIC_Settings.FormID Databases.{game}` into `formid_databases`
 - `classic-cpp-bridge` converts the request vector into `CrashLogScanFacts`; scanlog-core owns path resolution, built-in ordering, and de-duplication
-
----
-
-## What `classic-config-core` Persists And Loads Today
-
-`ClassicConfig` is the active Rust settings model for runtime configuration APIs.
-
-Source-backed behavior from `config.rs`:
-
-- `Default::default()` initializes `formid_databases` as an empty `HashMap`
-- `from_yaml()` reads only the top-level `formid_databases` key
-- each game key maps to a `Vec<PathBuf>` and preserves multiple paths per game
-- missing `formid_databases` defaults to an empty map
-- `to_yaml()` writes only the top-level `formid_databases` key when the map is non-empty
-- `validate_paths()` checks `game_root`, `ini_folder`, `scan_custom`, and `mods_folder`, but not FormID database files
-
-Grounded YAML shape for the Rust config model:
-
-```yaml
-formid_databases:
-  Fallout4:
-    - databases/FOLON FormIDs.db
-    - D:/Custom/My FormIDs.db
-  Skyrim: []
-```
-
-Source-backed test coverage in the same file confirms:
-
-- empty-by-default behavior
-- missing-key fallback to empty
-- multi-path round-trip for one game
-- preservation of an explicit empty list such as `Skyrim: []`
-
-Practical limit:
-
-- this crate stores path strings as `PathBuf`s but does not resolve relative entries during load or save
 
 ---
 
@@ -153,18 +107,9 @@ Intake and bridge adapter tests cover contributor-relevant cases:
 
 The active repo surfaces are split across this same boundary.
 
-## Remaining binding surface that exposes `ClassicConfig.formid_databases`
+## Retired flat binding surface
 
-The Python compatibility wrapper still exposes the Rust `ClassicConfig` field directly:
-
-- [`python-bindings/classic-config-py/src/lib.rs`](../../python-bindings/classic-config-py/src/lib.rs)
-
-Current binding behavior:
-
-- getters return `HashMap<String, Vec<String>>`
-- setters write back into `ClassicConfig.formid_databases`
-
-This wrapper mirrors the Rust config model. The Node binding intentionally removed its `ClassicConfigJs` and `JsPathConfig` facade; its inspection and scan-start paths now use the canonical typed User Settings group.
+Node and Python do not expose a flat settings facade. Their inspection and scan-start paths use the canonical typed User Settings group.
 
 ## Surfaces that expose typed User Settings FormID databases
 
@@ -188,11 +133,10 @@ Contributor-visible GUI details:
 
 ## Why This Matters When Debugging Missing DB Paths
 
-This split is the main source-backed reason a contributor can see "saved" FormID DB paths that do not affect real scans.
+The typed-snapshot-to-explicit-facts handoff is the main place to inspect when a saved FormID DB path does not affect a scan.
 
 Common failure patterns:
 
-- a path saved through `ClassicConfig::save_to_yaml()` appears under top-level `formid_databases`, but native scan startup ignores it because the CLI consumes typed User Settings instead
 - a path accepted by the GUI appears under `CLASSIC_Settings.FormID Databases.{game}` and is reflected in the newly accepted typed snapshot; scan launch deliberately uses that snapshot rather than reopening or rediscovering the key
 - a relative path may look correct in YAML but resolves under `yaml_dir_data` (`CLASSIC Data`), not relative to the settings file itself
 - a missing DB file may not fail scan startup loudly because `DatabasePool::initialize()` later skips nonexistent files with a warning instead of a hard error
@@ -200,7 +144,6 @@ Common failure patterns:
 Practical debugging rule:
 
 - if the problem is "scan did not load my extra DB," inspect the typed snapshot and the adapter's selected `formid_database_paths` rows, then verify the path resolves under `CLASSIC Data` for relative entries
-- if the problem is "Rust config API did not round-trip my DB list," inspect the top-level `formid_databases` key instead
 
 ---
 
@@ -210,8 +153,6 @@ These details are source-backed today and matter for contributors, but they shou
 
 - `classic-scanlog-core` intake has no User Settings discovery or raw-key behavior; callers must provide configured paths explicitly
 - the native CLI consumes the typed group and the native GUI consumes the cohesive typed snapshot; other adapters remain responsible for projecting their own `CrashLogScanFacts`
-- `classic-config-core` currently ignores the nested `CLASSIC_Settings.FormID Databases.{game}` path
-- `classic-config-core` path validation does not validate FormID database files
 - bridge path normalization uses `path.components().collect()`; it does not canonicalize case or resolve symlinks
 - bridge de-duplication is path-based, not content-based
 - missing files are filtered later by [`classic-database-core`](../../business-logic/classic-database-core) during `DatabasePool::initialize()`, not during settings parsing
@@ -221,7 +162,6 @@ These details are source-backed today and matter for contributors, but they shou
 
 ## Related Docs
 
-- [`classic-config-core.md`](classic-config-core.md) - full Rust config API and runtime settings model
 - [`classic-user-settings-core.md`](classic-user-settings-core.md) - typed canonical User Settings projection and update preview
 - [`classic-scanlog-core.md`](classic-scanlog-core.md) - Crash Log Scan Intake and downstream analysis
 - [`classic-database-core.md`](classic-database-core.md) - database pool initialization and missing-file behavior

@@ -185,14 +185,6 @@ PYTHON_PHASE3_SYMBOL_ROUTE: dict[str, dict[str, str]] = {
     "xse_acronym": PYTHON_PHASE3_ROUTE_FAMILIES["Fallout4Version"],
     "xse_acronym_string": PYTHON_PHASE3_ROUTE_FAMILIES["Fallout4Version"],
     "xse_config": PYTHON_PHASE3_ROUTE_FAMILIES["Fallout4Version"],
-    "SETTINGS_IGNORE_NONE": {
-        **PYTHON_PHASE3_ROUTE_FAMILIES["YamlFile"],
-        "anchorExport": "YamlFile",
-    },
-    "must_not_be_none": {
-        **PYTHON_PHASE3_ROUTE_FAMILIES["YamlFile"],
-        "anchorExport": "must_not_be_none",
-    },
 }
 
 

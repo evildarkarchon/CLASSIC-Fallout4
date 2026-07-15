@@ -168,17 +168,7 @@ NODE_PHASE3_SYMBOL_ROUTE: dict[str, dict[str, str]] = {
         "rustCrate": "classic-shared-core",
         "idPrefix": "shared.",
     },
-    "SETTINGS_IGNORE_NONE@rust": {
-        "ownerModule": "settings",
-        "rustCrate": "classic-settings-core",
-        "idPrefix": "settings.",
-    },
     "YamlFile@rust": {
-        "ownerModule": "settings",
-        "rustCrate": "classic-settings-core",
-        "idPrefix": "settings.",
-    },
-    "must_not_be_none@rust": {
         "ownerModule": "settings",
         "rustCrate": "classic-settings-core",
         "idPrefix": "settings.",

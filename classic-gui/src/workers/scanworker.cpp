@@ -101,6 +101,16 @@ void ScanWorker::doScan(const QStringList& logPaths, const QString& yamlRoot, co
             emit error(QStringLiteral("No crash logs found"));
             return;
         }
+        if (runStatus == QStringLiteral("cancelled_before_discovery") ||
+            runStatus == QStringLiteral("cancelled")) {
+            const QString message =
+                scanResult.message.empty()
+                    ? QStringLiteral("Scan cancelled by user")
+                    : QString::fromUtf8(scanResult.message.data(), static_cast<int>(scanResult.message.size()));
+            // Cancellation is a run-level terminal state; never report it through the completed-scan path.
+            emit error(message);
+            return;
+        }
 
         total = static_cast<int>(scanResult.total);
 

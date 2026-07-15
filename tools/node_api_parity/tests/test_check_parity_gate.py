@@ -90,6 +90,8 @@ def test_node_gate_defaults_use_repo_root_paths() -> None:
         in source
     )
     assert "ClassicLib-rs/node-bindings/classic-node" not in source
+    assert '"rust_api_surface.json",' in source
+    assert '"node_api_surface.json",' in source
 
 
 def test_dts_freshness_defaults_use_repo_root_paths() -> None:

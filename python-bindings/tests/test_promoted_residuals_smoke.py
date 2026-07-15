@@ -57,11 +57,6 @@ def test_constants_yaml_file_enum_variant_and_method() -> None:
     assert "CLASSIC Main.yaml" in v.description()
 
 
-def test_constants_yaml_file_settings_variant() -> None:
-    v = classic_settings.YamlFile.Settings
-    assert v.as_str() == "Settings"
-
-
 def test_constants_yaml_file_game_variant() -> None:
     v = classic_settings.YamlFile.Game
     assert v.as_str() == "Game"
@@ -95,11 +90,6 @@ def test_constants_fallout4_version_original_variant() -> None:
 def test_constants_fallout4_version_vr_variant() -> None:
     v = classic_version_registry.Fallout4Version.Vr
     assert v.is_vr() is True
-
-
-def test_constants_must_not_be_none_free_function() -> None:
-    assert classic_settings.must_not_be_none("SCAN Custom Path") is True
-    assert classic_settings.must_not_be_none("Some Other Setting") is False
 
 
 # ---------------------------------------------------------------------------
@@ -951,7 +941,39 @@ def test_scangame_game_setup_intake_helpers_smoke() -> None:
         ("game_root", str(game_root))
     ]
     assert isinstance(result.path_updates[0], classic_scangame.GameSetupPathUpdate)
+    assert Path(result.game_executable) == configured_exe
     assert result.combined() == result.rendered_report
+
+
+def test_scangame_game_setup_intake_opens_canonical_user_settings(
+    tmp_path: Path,
+) -> None:
+    """Prepare Game Setup from typed User Settings without rewriting the document."""
+    game_root = tmp_path / "Fallout4"
+    game_root.mkdir()
+    game_executable = game_root / "Fallout4.exe"
+    game_executable.write_bytes(b"")
+    settings_path = tmp_path / "CLASSIC Settings.yaml"
+    settings_path.write_text(
+        "schema_version: \"1.0\"\n"
+        "CLASSIC_Settings:\n"
+        "  Managed Game: Fallout 4\n"
+        "  Game Version: Original\n"
+        f"  Game Folder Path: '{game_root.as_posix()}'\n"
+        f"  Game EXE Path: '{game_executable.as_posix()}'\n",
+        encoding="utf-8",
+    )
+    source_bytes = settings_path.read_bytes()
+
+    result = classic_scangame.run_game_setup_intake_from_user_settings(
+        str(tmp_path), None
+    )
+
+    assert isinstance(result, classic_scangame.GameSetupIntakeResult)
+    assert Path(result.game_root) == game_root
+    assert Path(result.game_executable) == game_executable
+    assert result.total_checks == len(result.checks)
+    assert settings_path.read_bytes() == source_bytes
     assert "Resolved game root from configured executable" in result.rendered_report
 
 

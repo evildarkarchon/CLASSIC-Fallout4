@@ -54,6 +54,7 @@ private slots:
     void mainwindow_seeds_targeted_report_dirs_before_scan_finishes();
     void mainwindow_deduplicates_report_dirs_before_results_setup();
     void scan_controller_disables_unsolved_relocation_for_targeted_runs();
+    void scan_worker_routes_cancelled_statuses_away_from_completion();
     void scan_worker_counts_per_log_failures_without_scan_level_error();
 };
 
@@ -1003,6 +1004,27 @@ void ScanSettingsWiringTests::scan_worker_counts_per_log_failures_without_scan_l
              "ScanWorker outer error handler should not masquerade as a completed per-log result");
     QVERIFY2(sourceText.contains(QStringLiteral("emit finished(total, successCount, errorCount);")),
              "ScanWorker should finish targeted scans with failed counts instead of aborting the whole scan");
+}
+
+void ScanSettingsWiringTests::scan_worker_routes_cancelled_statuses_away_from_completion()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
+    QFile sourceFile(sourcePath);
+    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
+    const qsizetype cancellationStart = sourceText.indexOf(QStringLiteral("cancelled_before_discovery"));
+    const qsizetype cancelledRun = sourceText.indexOf(QStringLiteral("cancelled"), cancellationStart + 1);
+    const qsizetype cancellationError = sourceText.indexOf(QStringLiteral("emit error(message);"), cancellationStart);
+    const qsizetype cancellationReturn = sourceText.indexOf(QStringLiteral("return;"), cancellationError);
+    const qsizetype completedRun = sourceText.indexOf(QStringLiteral("emit finished(total, successCount, errorCount);"));
+
+    QVERIFY2(cancellationStart >= 0, "ScanWorker should handle cancellation before discovery");
+    QVERIFY2(cancelledRun > cancellationStart, "ScanWorker should handle cancellation after discovery");
+    QVERIFY2(cancellationError > cancelledRun, "ScanWorker should emit a cancellation signal for both statuses");
+    QVERIFY2(cancellationReturn > cancellationError, "ScanWorker should return after emitting cancellation");
+    QVERIFY2(completedRun > cancellationReturn, "ScanWorker should return from cancellation before the completed-scan path");
 }
 
 QTEST_MAIN(ScanSettingsWiringTests)

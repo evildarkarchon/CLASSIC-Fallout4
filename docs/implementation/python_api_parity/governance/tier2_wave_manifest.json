@@ -837,50 +837,6 @@
       "wave": "wave3"
     },
     {
-      "gap_id": "config-011",
-      "owner_module": "config",
-      "ordinal_in_module": 11,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_config",
-      "python_export_path": "ClassicConfig.__init__",
-      "wave": "wave2"
-    },
-    {
-      "gap_id": "config-012",
-      "owner_module": "config",
-      "ordinal_in_module": 12,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_config",
-      "python_export_path": "ClassicConfig.__repr__",
-      "wave": "wave2"
-    },
-    {
-      "gap_id": "config-013",
-      "owner_module": "config",
-      "ordinal_in_module": 13,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_config",
-      "python_export_path": "PathConfig.__init__",
-      "wave": "wave2"
-    },
-    {
-      "gap_id": "config-014",
-      "owner_module": "config",
-      "ordinal_in_module": 14,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_config",
-      "python_export_path": "PathConfig.__repr__",
-      "wave": "wave2"
-    },
-    {
       "gap_id": "config-015",
       "owner_module": "config",
       "ordinal_in_module": 15,

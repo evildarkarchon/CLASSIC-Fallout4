@@ -7,7 +7,7 @@ Crate metadata:
 - Crate: `classic-config-core`
 - Description: `Pure Rust configuration loading business logic for CLASSIC`
 
-This crate loads curated CLASSIC YAML Data and retains transitional compatibility models. Canonical persisted user choices for every maintained interface are owned by `classic-user-settings-core`; the TUI does not open or save `ClassicConfig`.
+This crate loads curated CLASSIC YAML Data and generic non-User-Settings YAML sources. Canonical persisted user choices for every maintained interface are owned exclusively by `classic-user-settings-core`.
 
 Schema reference: [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md).
 
@@ -25,6 +25,7 @@ Use this crate when you need to:
 - load the three-file CLASSIC YAML dataset into a single Rust struct
 - apply version-registry-backed metadata fallbacks while building config data
 - hand configuration data to higher layers such as scanlog orchestration or bindings
+- load generic Main, Game, Game Local, Ignore, Test, and Cache YAML sources
 
 Do not use this crate for:
 
@@ -32,6 +33,7 @@ Do not use this crate for:
 - creating a Tokio runtime
 - converting config data into binding-specific wrapper types
 - crash-log analysis itself
+- locating, defaulting, validating, serializing, or persisting `CLASSIC Settings.yaml`
 
 Those concerns live in related crates such as [`classic-scanlog-core`](../../business-logic/classic-scanlog-core), [`classic-node`](../../node-bindings/classic-node), and [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge).
 
@@ -39,19 +41,17 @@ Those concerns live in related crates such as [`classic-scanlog-core`](../../bus
 
 ## Module Map
 
-### `config`
+### `yaml_source`
 
-Transitional compatibility representation for callers not yet removed by the ADR-0004 cleanup.
+Generic non-User-Settings CLASSIC YAML locations.
 
-- `YamlSource` - enum of standard CLASSIC YAML locations
-- `ClassicConfig` - persisted user/runtime settings
-- `PathConfig` - nested path settings used by `ClassicConfig`
+- `YamlSource` - enum of Main, Ignore, Game, Game Local, Test, and Cache locations
 
 ### `game_local`
 
 Independent persistence for runtime-discovered paths in a caller-selected Game Local YAML document.
 
-- `persist_game_local_paths(path, game_root, docs_root)` - root-reexported writer that updates supplied Game Local path keys without constructing or loading `ClassicConfig`
+- `persist_game_local_paths(path, game_root, docs_root)` - root-reexported writer that updates supplied Game Local path keys without opening User Settings
 
 ### `yamldata`
 
@@ -77,12 +77,11 @@ Bulk YAML dataset loader for scanlog/business logic.
 
 ## `YamlSource`
 
-`YamlSource` is the source-of-truth enum for standard CLASSIC YAML file locations.
+`YamlSource` identifies generic CLASSIC YAML file locations that are not User Settings. `classic-user-settings-core` separately owns the source and root-relative location of `CLASSIC Settings.yaml`.
 
 Variants:
 
 - `Main` -> `CLASSIC Data/databases/CLASSIC Main.yaml`
-- `Settings` -> `CLASSIC Settings.yaml`
 - `Ignore` -> `CLASSIC Ignore.yaml`
 - `Game` -> `CLASSIC Data/databases/CLASSIC {game}.yaml`
 - `GameLocal` -> `CLASSIC Data/CLASSIC {game} Local.yaml`
@@ -102,62 +101,13 @@ Contributor notes:
 - `YamlSource::Cache` uses the `CLASSIC` base directory for user config/cache paths.
 - `load()` reads the full YAML stream, merges documents with `classic-settings-core`, and returns one merged mapping.
 
-## `ClassicConfig`
-
-`ClassicConfig` is the transitional legacy flat-schema settings struct. New User Settings ownership lives in [`classic-user-settings-core`](classic-user-settings-core.md); maintained consumers migrate there through the staged ADR-0004 tickets before `ClassicConfig` is removed in the intentional breaking cutovers.
-
-The Node binding has completed that intentional breaking cutover. It no longer exports `ClassicConfigJs`, `JsPathConfig`, or `createDefaultConfig`; Node callers use the explicit-root User Settings API instead. Rust and the not-yet-contracted bindings retain this section only until the final ADR-0004 contraction.
-
-Key fields include:
-
-- feature flags such as `fcx_mode`, `show_formid_values`, `stat_logging`, `simplify_logs`
-- update settings such as `update_check` and `update_source`
-- game mode selection in `game_version`
-- UI behavior like `auto_switch_to_results` and `auto_refresh_interval_ms`
-- nested paths in `paths: PathConfig`
-- per-game FormID DB configuration in `formid_databases: HashMap<String, Vec<PathBuf>>`
-
-Important methods:
-
-- `load_from_yaml(path: &Path) -> anyhow::Result<Self>`
-- `save_to_yaml(&self, path: &Path) -> anyhow::Result<()>`
-- `load_or_default() -> anyhow::Result<Self>`
-- `get_config_path(&self) -> PathBuf`
-- `validate_paths(&self) -> anyhow::Result<()>`
-- `load_local_yaml_paths(&mut self, game: &str) -> anyhow::Result<()>`
-
-Behavior worth knowing:
-
-- missing scalar keys mostly fall back to defaults instead of erroring
-- `load_or_default()` searches in this order:
-  - `CLASSIC Settings.yaml`
-- `get_config_path()` is best-effort: it uses the application-directory `CLASSIC Settings.yaml` target when the executable directory can be resolved, with a final relative fallback only when that directory cannot be resolved
-- `save_to_yaml()` creates parent directories if needed
-- `save_to_yaml()` serializes YAML in `spawn_blocking()` because `YamlEmitter` is not `Send`
-- `load_local_yaml_paths()` is non-fatal when `CLASSIC Data/CLASSIC {game} Local.yaml` does not exist
-- field-level YAML shape and default details live in [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md)
-
 ## Game Local Path Persistence
 
 `classic_config_core::persist_game_local_paths(path, game_root, docs_root)` writes runtime-discovered paths to an explicit Game Local YAML path. `game_root` and `docs_root` are independent `Option<&Path>` updates: `None` leaves the corresponding key unchanged, and supplying neither path is a no-op that does not create a file.
 
-The writer creates parent directories when needed, merges an existing multi-document YAML stream, updates only `Game_Info.Root_Folder_Game` and `Game_Info.Root_Folder_Docs`, and preserves unrelated content. It neither constructs `ClassicConfig` nor reads or writes `CLASSIC Settings.yaml`.
+The writer creates parent directories when needed, merges an existing multi-document YAML stream, updates only `Game_Info.Root_Folder_Game` and `Game_Info.Root_Folder_Docs`, and preserves unrelated content. It never reads or writes `CLASSIC Settings.yaml`.
 
 Binding adapters expose the same operation as CXX `save_local_yaml_paths(...)`, Node `persistGameLocalPaths(...) -> Promise<void>`, and Python `persist_game_local_paths(...) -> None`. Each adapter only converts optional path values and delegates document behavior to the Rust writer.
-
-## `PathConfig`
-
-`PathConfig` stores path-oriented runtime settings.
-
-Fields:
-
-- `ini_folder: Option<PathBuf>`
-- `scan_custom: Option<PathBuf>`
-- `mods_folder: Option<PathBuf>`
-- `game_root: PathBuf`
-- `docs_root: Option<PathBuf>`
-
-The default `game_root` is intentionally empty. The source explicitly avoids hardcoded paths.
 
 ## `YamlDataCore`
 
@@ -231,26 +181,13 @@ These helpers bridge the config layer to [`classic-version-registry-core`](../..
 
 ## Loading And Processing Flow
 
-## `ClassicConfig` flow
-
-1. A caller loads `CLASSIC Settings.yaml` with `ClassicConfig::load_from_yaml()` or `load_or_default()`.
-2. The crate parses and merges every YAML document in the stream.
-3. YAML scalar fields are read with tolerant defaults.
-4. Nested `paths` and `formid_databases` are reconstructed.
-5. Optional post-processing may call:
-   - `load_local_yaml_paths(game)` to fill `game_root` and `docs_root` from merged `GameLocal`
-   - `validate_paths()` to fail fast on missing directories
-6. The config can be persisted again with `save_to_yaml()`.
-
-Read/write path policy is defined in [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md).
-
 ## Game Local persistence flow
 
 1. A caller supplies an explicit Game Local YAML path and either or both runtime path updates.
 2. `persist_game_local_paths()` returns without I/O when neither update is supplied; otherwise it creates the parent directory and merges only the Game Local document when it already exists.
 3. The supplied path keys are updated and unrelated Game Local keys are preserved before the document is saved.
 
-This flow is independent from the `ClassicConfig` flow and never opens or saves the User Settings document.
+This flow is independent from User Settings and never opens or saves that document.
 
 ## `YamlDataCore` flow
 
@@ -277,7 +214,7 @@ One subtle rule from the implementation: explicit values already present in `Gam
 
 The crate uses two error styles, depending on API family.
 
-## `ClassicConfig` / `YamlSource`
+## `YamlSource`
 
 These APIs return `anyhow::Result<_>` and add human-readable context with `anyhow::Context`.
 
@@ -302,7 +239,7 @@ Malformed optional substructures inside `Crashgen_Registry` are usually not fata
 
 This crate performs async file I/O and assumes the shared CLASSIC Tokio runtime model.
 
-- The crate exposes async APIs such as `YamlSource::load()`, `ClassicConfig::load_from_yaml()`, `ClassicConfig::save_to_yaml()`, `ClassicConfig::load_or_default()`, and `YamlDataCore::load_from_yaml_files()`.
+- The crate exposes async APIs such as `YamlSource::load()` and `YamlDataCore::load_from_yaml_files()`.
 - `lib.rs` re-exports `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core).
 - The crate-level docs explicitly say it should use the shared global runtime rather than creating its own runtime.
 - FFI/binding layers in this repo call these async APIs via `get_runtime().block_on(...)` rather than constructing separate runtimes.
@@ -362,29 +299,8 @@ C:/CLASSIC/CLASSIC Data/databases/CLASSIC Main.yaml
 C:/CLASSIC/CLASSIC Data/databases/CLASSIC Fallout4.yaml
 ```
 
-### Load or create runtime settings
-
-```rust
-use classic_config_core::ClassicConfig;
-
-# async fn example() -> anyhow::Result<()> {
-let mut config = ClassicConfig::load_or_default().await?;
-config.load_local_yaml_paths("Fallout4").await?;
-
-if let Err(err) = config.validate_paths() {
-    eprintln!("Path validation warning: {err}");
-}
-
-config.save_to_yaml(&config.get_config_path()).await?;
-# Ok(())
-# }
-```
-
----
-
 ## Contributor Notes And Known Limits
 
-- `ClassicConfig::from_yaml()` and `to_yaml()` are internal helpers, not public API.
 - `YamlDataCore` is a broad data container with many public fields; consumers often read fields directly instead of going through accessor methods.
 - The source documents a 15-30x speedup claim for parallel loading, but this page does not restate that as a benchmark guarantee.
 - the stable YAML shape contract now lives in [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md)

@@ -635,27 +635,6 @@ fn test_settings_clear_cache_is_idempotent() {
 // ── Validator tests (D-09 — new) ───────────────────────────────
 
 #[test]
-fn test_settings_validate_structure_happy_path() {
-    let issues = settings_validate_structure("CLASSIC_Settings:\n  VR Mode: false\n").unwrap();
-    assert!(issues.is_empty());
-}
-
-#[test]
-fn test_settings_validate_structure_non_mapping_root_is_error() {
-    let issues = settings_validate_structure("42").unwrap();
-    assert_eq!(issues.len(), 1);
-    assert_eq!(issues[0].severity, "error");
-}
-
-#[test]
-fn test_settings_validate_structure_empty_string() {
-    // Empty yaml -> no documents -> null-document error
-    let issues = settings_validate_structure("").unwrap();
-    assert_eq!(issues.len(), 1);
-    assert_eq!(issues[0].severity, "error");
-}
-
-#[test]
 fn test_settings_validate_value_int_happy() {
     assert!(settings_validate_value("42", "int").unwrap());
     assert!(settings_validate_value("42", "integer").unwrap());

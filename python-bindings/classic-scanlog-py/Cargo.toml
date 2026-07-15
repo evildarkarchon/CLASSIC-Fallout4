@@ -42,6 +42,7 @@ indexmap = { workspace = true }
 
 # Async stream processing for batch operations
 futures = { workspace = true }
+parking_lot = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

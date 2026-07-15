@@ -314,56 +314,10 @@ class YamlData:
 
         """
 
-class PathConfig:
-    """Path configuration for game directories and scan inputs."""
-
-    def __init__(
-        self,
-        ini_folder: str | None = None,
-        scan_custom: str | None = None,
-        mods_folder: str | None = None,
-        game_root: str = "",
-        docs_root: str | None = None,
-    ) -> None:
-        """Create a path configuration object."""
-
-    @property
-    def ini_folder(self) -> str | None:
-        """Path to the INI folder, if configured."""
-
-    @ini_folder.setter
-    def ini_folder(self, value: str | None) -> None: ...
-    @property
-    def scan_custom(self) -> str | None:
-        """Path to a custom scan folder, if configured."""
-
-    @scan_custom.setter
-    def scan_custom(self, value: str | None) -> None: ...
-    @property
-    def mods_folder(self) -> str | None:
-        """Path to the mods folder, if configured."""
-
-    @mods_folder.setter
-    def mods_folder(self, value: str | None) -> None: ...
-    @property
-    def game_root(self) -> str:
-        """Path to the game root directory."""
-
-    @game_root.setter
-    def game_root(self, value: str) -> None: ...
-    @property
-    def docs_root(self) -> str | None:
-        """Path to the documents root directory, if configured."""
-
-    @docs_root.setter
-    def docs_root(self, value: str | None) -> None: ...
-    def __repr__(self) -> str: ...
-
 class YamlSource:
     """Enum-like YAML source identifier."""
 
     MAIN: YamlSource
-    SETTINGS: YamlSource
     IGNORE: YamlSource
     GAME: YamlSource
     GAME_LOCAL: YamlSource
@@ -383,106 +337,6 @@ class YamlSource:
     def __str__(self) -> str: ...
     def __hash__(self) -> int: ...
     def __eq__(self, other: object) -> bool: ...
-
-class ClassicConfig:
-    """Runtime CLASSIC settings configuration."""
-
-    def __init__(self) -> None:
-        """Create a default runtime configuration."""
-
-    @staticmethod
-    def load_from_yaml(path: str | Path) -> ClassicConfig:
-        """Load a configuration from a YAML file."""
-
-    @staticmethod
-    def load_or_default() -> ClassicConfig:
-        """Load configuration from the default path or return defaults."""
-
-    def save_to_yaml(self, path: str | Path) -> None:
-        """Save the configuration to a YAML file."""
-
-    def get_config_path(self) -> str:
-        """Get the default config filename."""
-
-    def validate_paths(self) -> None:
-        """Validate configured filesystem paths."""
-
-    def load_local_yaml_paths(self, game: str) -> None:
-        """Load `game_root` and `docs_root` from the game's Local YAML."""
-
-    @property
-    def fcx_mode(self) -> bool:
-        """Whether FCX mode is enabled."""
-
-    @fcx_mode.setter
-    def fcx_mode(self, value: bool) -> None: ...
-    @property
-    def show_formid_values(self) -> bool:
-        """Whether FormID values are shown."""
-
-    @show_formid_values.setter
-    def show_formid_values(self, value: bool) -> None: ...
-    @property
-    def stat_logging(self) -> bool:
-        """Whether statistical logging is enabled."""
-
-    @stat_logging.setter
-    def stat_logging(self, value: bool) -> None: ...
-    @property
-    def move_unsolved_logs(self) -> bool:
-        """Whether unsolved logs are moved after scanning."""
-
-    @move_unsolved_logs.setter
-    def move_unsolved_logs(self, value: bool) -> None: ...
-    @property
-    def simplify_logs(self) -> bool:
-        """Whether logs are simplified."""
-
-    @simplify_logs.setter
-    def simplify_logs(self, value: bool) -> None: ...
-    @property
-    def update_check(self) -> bool:
-        """Whether startup update checks are enabled."""
-
-    @update_check.setter
-    def update_check(self, value: bool) -> None: ...
-    @property
-    def game_version(self) -> str:
-        """Selected game version mode."""
-
-    @game_version.setter
-    def game_version(self, value: str) -> None: ...
-    @property
-    def update_source(self) -> str:
-        """Configured update source."""
-
-    @update_source.setter
-    def update_source(self, value: str) -> None: ...
-    @property
-    def auto_switch_to_results(self) -> bool:
-        """Whether UI should switch to results automatically."""
-
-    @auto_switch_to_results.setter
-    def auto_switch_to_results(self, value: bool) -> None: ...
-    @property
-    def auto_refresh_interval_ms(self) -> int:
-        """Auto-refresh interval in milliseconds."""
-
-    @auto_refresh_interval_ms.setter
-    def auto_refresh_interval_ms(self, value: int) -> None: ...
-    @property
-    def paths(self) -> PathConfig:
-        """Path configuration."""
-
-    @paths.setter
-    def paths(self, value: PathConfig) -> None: ...
-    @property
-    def formid_databases(self) -> dict[str, list[str]]:
-        """Configured FormID database paths by game."""
-
-    @formid_databases.setter
-    def formid_databases(self, value: dict[str, list[str]]) -> None: ...
-    def __repr__(self) -> str: ...
 
 def clear_yaml_cache() -> None:
     """Clear the global YAML configuration cache.
@@ -542,12 +396,10 @@ def persist_game_local_paths(
     """
 
 def set_application_dir(path: str | Path) -> None:
-    """Override the directory used to resolve ``CLASSIC Settings.yaml``.
+    """Override the directory used by independent application-local YAML helpers.
 
-    By default this is set to the executed Python file's directory at import
-    time, falling back to ``os.getcwd()`` when no script file is available.
-    Call this before ``ClassicConfig.load_or_default()`` if you need a
-    different root.
+    User Settings APIs always take an explicit CLASSIC root and do not consult
+    this registry value.
 
     Args:
         path: Absolute path to the desired application directory.

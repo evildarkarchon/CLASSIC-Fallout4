@@ -78,6 +78,5 @@ export const crashgenStatusCases = [
 
 export const yamlDisplayNameCases = [
   { source: "Main", expected: "Main Database" },
-  { source: "Settings", expected: "Settings" },
   { source: "Ignore", expected: "Ignore List" },
 ] as const;

@@ -1355,8 +1355,13 @@ fn path_to_string(path: PathBuf) -> String {
     path.to_string_lossy().to_string()
 }
 
+/// Convert optional adapter text into a path after folding blank input to absence.
 fn optional_string_to_path(value: Option<String>) -> Option<PathBuf> {
-    value.filter(|path| !path.is_empty()).map(PathBuf::from)
+    value
+        .as_deref()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .map(PathBuf::from)
 }
 
 fn scan_run_setup_context_to_core(context: PyScanRunSetupContext) -> CrashLogScanSetupContext {
@@ -1461,7 +1466,7 @@ fn scan_run_result_to_py(result: CrashLogScanRunResult) -> PyScanRunResult {
 /// Standard versus Targeted Unsolved Logs behavior. Use `Orchestrator` methods
 /// only when callers explicitly need lower-level analysis results with report lines.
 #[pyfunction]
-#[pyo3(signature = (yaml_dir_root, yaml_dir_data, game, game_version, log_paths, show_formid_values=false, fcx_mode=false, simplify_logs=false, move_unsolved_logs=false, targeted_mode=false, max_concurrent=None, preserve_order=false, cancellation_token=None, unsolved_logs_destination=None, base_directory=None, custom_scan_directory=None, configured_documents_root=None, targeted_inputs=None, setup_context=None))]
+#[pyo3(signature = (yaml_dir_root, yaml_dir_data, game, game_version, log_paths, show_formid_values=None, fcx_mode=None, simplify_logs=None, move_unsolved_logs=None, targeted_mode=false, max_concurrent=None, preserve_order=false, cancellation_token=None, unsolved_logs_destination=None, base_directory=None, custom_scan_directory=None, configured_documents_root=None, targeted_inputs=None, setup_context=None))]
 #[allow(clippy::too_many_arguments)]
 pub fn scan_run_execute(
     py: Python<'_>,
@@ -1470,10 +1475,10 @@ pub fn scan_run_execute(
     game: String,
     game_version: String,
     log_paths: Vec<String>,
-    show_formid_values: bool,
-    fcx_mode: bool,
-    simplify_logs: bool,
-    move_unsolved_logs: bool,
+    show_formid_values: Option<bool>,
+    fcx_mode: Option<bool>,
+    simplify_logs: Option<bool>,
+    move_unsolved_logs: Option<bool>,
     targeted_mode: bool,
     max_concurrent: Option<usize>,
     preserve_order: bool,
@@ -1489,6 +1494,17 @@ pub fn scan_run_execute(
     let yaml_dir_data = PathBuf::from(yaml_dir_data);
     let user_settings = UserSettings::open(&yaml_dir_root);
     let scan_settings = user_settings.crash_log_scan_settings();
+    let setup_settings = user_settings.game_setup_settings();
+    let show_formid_values =
+        show_formid_values.unwrap_or_else(|| scan_settings.formid_value_lookup());
+    let fcx_mode = fcx_mode.unwrap_or_else(|| scan_settings.fcx_mode());
+    let simplify_logs = simplify_logs.unwrap_or_else(|| scan_settings.simplify_logs());
+    let move_unsolved_logs =
+        move_unsolved_logs.unwrap_or_else(|| scan_settings.move_unsolved_logs());
+    let max_concurrent = max_concurrent.or_else(|| {
+        let configured = scan_settings.max_concurrent_scans();
+        (configured != 0).then_some(configured as usize)
+    });
     let formid_database_paths = scan_settings
         .formid_databases()
         .get(&game)
@@ -1508,11 +1524,22 @@ pub fn scan_run_execute(
         CrashLogScanSource::Standard(StandardCrashLogScanSource {
             base_directory: optional_string_to_path(base_directory)
                 .unwrap_or_else(|| yaml_dir_root.clone()),
-            custom_scan_directory: optional_string_to_path(custom_scan_directory),
-            configured_documents_root: optional_string_to_path(configured_documents_root),
+            custom_scan_directory: optional_string_to_path(custom_scan_directory)
+                .or_else(|| scan_settings.custom_scan_input().map(PathBuf::from)),
+            configured_documents_root: optional_string_to_path(configured_documents_root)
+                .or_else(|| setup_settings.documents_root().map(PathBuf::from)),
         })
     };
-    let setup_context = setup_context.map(scan_run_setup_context_to_core);
+    let setup_context = setup_context
+        .map(scan_run_setup_context_to_core)
+        .or_else(|| {
+            fcx_mode.then(|| CrashLogScanSetupContext {
+                game_root: setup_settings.game_root().map(PathBuf::from),
+                docs_root: setup_settings.documents_root().map(PathBuf::from),
+                game_exe_path: setup_settings.game_executable().map(PathBuf::from),
+                xse_log_path: None,
+            })
+        });
 
     let result = without_gil_block_on(py, || async move {
         CrashLogScanRunService::execute(

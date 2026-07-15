@@ -13,8 +13,8 @@ Use this directory in this order:
 3. [`classic-perf-core.md`](classic-perf-core.md) - global timing sample collection, summaries, and scoped timer helpers
 4. [`classic-registry-core.md`](classic-registry-core.md) - process-wide typed singleton registry and convenience key helpers
 5. [`classic-message-core.md`](classic-message-core.md) - shared message DTOs, routing enums, and startup/log formatting helpers
-6. [`classic-settings-core.md`](classic-settings-core.md) - shared YAML stream parse/merge helpers, settings cache and sync/async loaders, plus the absorbed `YamlOperations` path-backed cache, merge-key resolver, and validator surface
-6a. [`classic-user-settings-core.md`](classic-user-settings-core.md) - typed, preservation-aware User Settings discovery, reversible migration plans, verified migration backups/restores, revision-anchored update previews, and conflict-safe atomic commits
+6. [`classic-settings-core.md`](classic-settings-core.md) - generic non-User-Settings YAML stream parse/merge helpers, cache and sync/async loaders, path-backed `YamlOperations`, merge-key resolution, and scalar validators
+6a. [`classic-user-settings-core.md`](classic-user-settings-core.md) - exclusive typed, preservation-aware User Settings source/location/default/schema/serialization owner with reversible migrations and conflict-safe commits
 7. [`classic-version-registry-core.md`](classic-version-registry-core.md) - version registry and OG/NG/AE/VR selection metadata
 8. [`classic-version-core.md`](classic-version-core.md) - version parsing, text extraction, and PE-version helpers plus direct Version Registry re-exports
 10. [`classic-web-core.md`](classic-web-core.md) - small URL, user-agent, and mod-site helper layer
@@ -22,7 +22,7 @@ Use this directory in this order:
 11a. [`yaml-update-delivery.md`](yaml-update-delivery.md) - cross-crate YAML-data update flow: schema_version contract, client load-precedence, manifest format, Pages-mirrored publish workflow
 11b. [`app-update-notification-delivery.md`](app-update-notification-delivery.md) - payload-free app-update notification channel: manifest schema, Pages-first + Releases fallback, classification model, maintainer publish workflow
 12. [`classic-config-core.md`](classic-config-core.md) - YAML/config loading built on top of YAML and Version Registry metadata, AND the absorbed crashgen rule model (formerly its own crate, merged into config-core in v9.1.0 Phase 2)
-13. [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md) - standalone runtime contract for settings discovery, merged YAML semantics, and consumed schema keys
+13. [`classic-config-core-yaml-schema.md`](classic-config-core-yaml-schema.md) - standalone runtime contract for generic source/cache paths, merged YAML semantics, and Main/Game/Ignore/Game Local keys
 14. [`classic-path-core.md`](classic-path-core.md) - game-path, documents-path, validation, and backup helpers
 15. [`classic-xse-core.md`](classic-xse-core.md) - XSE loader/version detection helpers used by setup checks and bindings
 16. [`game-setup-workflow.md`](game-setup-workflow.md) - current cross-crate setup/install validation flow across path, XSE, scangame, and version registry crates
@@ -54,18 +54,18 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `classic-perf-core` provides process-wide timing buckets, scoped timers, and summary computation for lightweight metrics collection
 - `classic-registry-core` provides process-wide typed singleton storage and key helpers for callers that share state across boundaries
 - `classic-message-core` provides shared message DTOs, routing enums, and structured/startup logging helpers used by bindings and bridge code
-- `classic-settings-core` provides shared YAML stream parsing/merge helpers, raw settings loading, a sync/async cache layer keyed by caller-chosen strings, plus the path-backed `YamlOperations` file cache with mtime-based invalidation (historical note: this owner absorbed the former `classic-yaml-core` crate during v9.1.0 Phase 1)
-- `classic-user-settings-core` owns root-relative User Settings discovery, typed cohesive groups, safe defaults/fallbacks, diagnostics, content revisions, deterministic reversible migration planning, verified retained migration backups/restores, semantic preservation, and conflict-safe atomic persistence; adapters retain presentation and consent
+- `classic-settings-core` provides generic non-User-Settings YAML stream parsing/merge helpers, a sync/async cache layer keyed by caller-chosen strings, scalar validators, and the path-backed `YamlOperations` file cache with mtime-based invalidation (historical note: this owner absorbed the former `classic-yaml-core` crate during v9.1.0 Phase 1)
+- `classic-user-settings-core` exclusively owns root-relative User Settings discovery, source selection, schema/default metadata, typed cohesive groups, diagnostics, serialization, semantic preservation, and conflict-safe atomic persistence; adapters retain presentation and consent
 - `classic-version-registry-core` loads registry-backed version and crashgen metadata on top of YAML helpers, and now owns the contributor-facing `Fallout4Version` / `NULL_VERSION` surface that used to live in the retired constants crate
 - `classic-shared-core` also owns the shared `GameId` enum used across bridge, web, and setup flows
-- `classic-settings-core` also owns `YamlFile`, `SETTINGS_IGNORE_NONE`, and `must_not_be_none()` alongside its YAML/cache helpers
+- `classic-settings-core` owns only non-User-Settings `YamlFile` variants alongside its generic YAML/cache helpers
 - `classic-version-core` adds low-level version parsing, text extraction, and PE-version helpers on top of constants and registry re-exports
 - `classic-web-core` provides small web-oriented helpers without owning an HTTP client or runtime
 - `classic-update-core` provides async GitHub release/update-check behavior for callers running on the shared runtime
 - `yaml-update-delivery.md` documents the cross-crate YAML-data update channel: the `schema_version` contract in `classic-settings-core`, `client_schemas::*` and `shippable::load_shippable_yaml` in `classic-config-core`, atomic install/rollback in `classic-file-io-core`, the `yaml_update` orchestrator in `classic-update-core`, and the Pages-mirrored maintainer publish workflow
 - `app-update-notification-delivery.md` documents the payload-free app-update notification channel: the `notification` module in `classic-update-core`, `notification_cache_dir` in `classic-path-core`, disjoint Pages path under `app-notification/`, and the `publish-app-notification.yml` maintainer workflow
 - `classic-config-core` loads YAML and uses Version Registry metadata to build config data; the typed crashgen rule model and evaluator now live at `classic_config_core::crashgen_rules::*` (historical note: this owner absorbed the former `classic-crashgen-settings-core` crate during v9.1.0 Phase 2)
-- `classic-config-core-yaml-schema.md` captures the runtime YAML contract for merged settings files and the Main/Game/Ignore sections that `classic-config-core` actually consumes
+- `classic-config-core-yaml-schema.md` captures the runtime YAML contract for generic merged Main/Game/Ignore and Game Local files that `classic-config-core` consumes
 - `classic-path-core` handles game-path discovery, documents-folder checks, path validation, and versioned backups
 - `classic-xse-core` builds on path/version helpers to resolve XSE Folder paths, detect XSE installation state, and parse XSE versions
 - `game-setup-workflow.md` explains how current setup/install validation is split across path, XSE, scangame, and Version Registry crates

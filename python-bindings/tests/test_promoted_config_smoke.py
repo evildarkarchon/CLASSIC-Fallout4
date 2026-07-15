@@ -1,7 +1,7 @@
 """Per-class smoke tests for Phase 3 Plan 06 — classic-config-py promotions.
 
-Covers 28 promoted contract rows:
-  - 26 deferred config backlog entries (15 rust-only @rust-suffixed + 11 python-only dunder/factory)
+Covers the surviving promoted contract rows:
+  - deferred config backlog entries for YAML Data and non-User-Settings helpers
   - 2 Tier-2 runtime-verified migrations (get_application_dir, set_application_dir)
 
 R1 HIGH: fixture-backed construction — every promoted #[pyclass] is either constructed
@@ -47,78 +47,29 @@ RUST_API_SURFACE = (
 
 
 # =============================================================================
-# #[pyclass] direct construction (4 classes)
+# #[pyclass] direct construction
 # =============================================================================
 
 
-def test_path_config_constructs_with_defaults() -> None:
-    """PathConfig — all-Optional __init__ signature, direct construct."""
-    path_config = classic_config.PathConfig()
-    assert path_config.ini_folder is None
-    assert path_config.scan_custom is None
-    assert path_config.mods_folder is None
-    # game_root is a required str with default ""
-    assert path_config.game_root == ""
-    assert path_config.docs_root is None
-    assert repr(path_config).startswith("PathConfig(")
-
-
-def test_path_config_constructs_with_all_fields() -> None:
-    """PathConfig — exercise setters and the full keyword constructor."""
-    path_config = classic_config.PathConfig(
-        ini_folder="/fake/ini",
-        scan_custom="/fake/scan",
-        mods_folder="/fake/mods",
-        game_root="/fake/root",
-        docs_root="/fake/docs",
-    )
-    assert path_config.ini_folder == "/fake/ini"
-    assert path_config.scan_custom == "/fake/scan"
-    assert path_config.mods_folder == "/fake/mods"
-    assert path_config.game_root == "/fake/root"
-    assert path_config.docs_root == "/fake/docs"
-    # Setter roundtrip on one field
-    path_config.ini_folder = None
-    assert path_config.ini_folder is None
-
-
-def test_classic_config_default_constructs() -> None:
-    """ClassicConfig — no-args #[new] + __repr__ + basic getters."""
-    cfg = classic_config.ClassicConfig()
-    # Default values from CoreClassicConfig::default()
-    assert isinstance(cfg.game_version, str)
-    assert isinstance(cfg.fcx_mode, bool)
-    assert isinstance(cfg.show_formid_values, bool)
-    # __repr__ must include the class name
-    assert "ClassicConfig(" in repr(cfg)
-    # Method call: validate_paths raises or returns None
-    try:
-        cfg.validate_paths()
-    except Exception:  # noqa: BLE001
-        pass  # Acceptable; we just exercise the call path
-
-
 def test_yaml_source_classattrs_and_dunders() -> None:
-    """YamlSource — 7 #[classattr] constants + __eq__/__hash__/__str__/__repr__."""
+    """YamlSource — 6 non-User-Settings constants plus standard dunders."""
     main = classic_config.YamlSource.MAIN
-    settings = classic_config.YamlSource.SETTINGS
     ignore = classic_config.YamlSource.IGNORE
     game = classic_config.YamlSource.GAME
     game_local = classic_config.YamlSource.GAME_LOCAL
     test = classic_config.YamlSource.TEST
     cache = classic_config.YamlSource.CACHE
 
-    # All seven constants must be distinct
-    all_sources = [main, settings, ignore, game, game_local, test, cache]
-    assert len({hash(s) for s in all_sources}) == 7
+    # All six constants must be distinct.
+    all_sources = [main, ignore, game, game_local, test, cache]
+    assert len({hash(s) for s in all_sources}) == 6
 
     # __eq__ dunder via ==
     assert main == classic_config.YamlSource.MAIN
-    assert main != settings
+    assert main != ignore
 
     # __str__ dunder
     assert str(main) == "MAIN"
-    assert str(settings) == "SETTINGS"
 
     # __repr__ dunder
     assert repr(main) == "YamlSource.MAIN"
@@ -309,7 +260,7 @@ def test_rust_only_symbols_in_core_surface() -> None:
         "SuspectStackCountRule",
         "SuspectStackRule",
         # Sub-module markers
-        "config",
+        "yaml_source",
         "yamldata",
         # Free functions
         "format_registry_game_version",

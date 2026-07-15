@@ -1237,6 +1237,7 @@ class GameSetupIntakeResult:
     path_update_count: int
     path_updates: list[GameSetupPathUpdate]
     game_root: str | None
+    game_executable: str | None
     docs_root: str | None
     checks: list[GameSetupCheck]
 
@@ -1245,6 +1246,11 @@ class GameSetupIntakeResult:
 
 def run_game_setup_intake(intake: GameSetupIntake) -> GameSetupIntakeResult:
     """Run Game Setup Intake."""
+
+def run_game_setup_intake_from_user_settings(
+    classic_root: str, xse_log_path: str | None = ...
+) -> GameSetupIntakeResult:
+    """Open typed User Settings at a CLASSIC root and run read-only Game Setup Intake."""
 
 def normalize_game_setup_version_selection(game_version: str | None = ...) -> str:
     """Normalize a raw Game Setup Intake version selection."""

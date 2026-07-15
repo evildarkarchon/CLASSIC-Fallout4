@@ -16,6 +16,15 @@ def user_settings_fixture_root() -> Path:
     )
 
 
+def test_classic_config_does_not_expose_retired_user_settings_facades() -> None:
+    """Expose User Settings without retaining the flat ClassicConfig facade."""
+    import classic_config
+
+    assert not hasattr(classic_config, "ClassicConfig")
+    assert not hasattr(classic_config, "PathConfig")
+    assert not hasattr(classic_config.YamlSource, "SETTINGS")
+
+
 def test_user_settings_published_defaults_require_no_filesystem_root(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

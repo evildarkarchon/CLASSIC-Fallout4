@@ -107,14 +107,7 @@ jobs:
         shell: pwsh
         run: pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Target python
 
-      # Must invoke pytest through `python -m pytest`, not the `pytest.exe`
-      # entrypoint. `classic_config.ClassicConfig.get_config_path()` anchors
-      # settings discovery to `sys.argv[0]`'s parent directory (see
-      # test_config_import_anchors_settings_to_script_directory). When pytest
-      # runs as a console-script .exe, sys.argv[0] becomes `.venv\Scripts\pytest.exe`,
-      # which `get_config_path()` treats as a script path and derives a bogus
-      # settings parent from. `-m pytest` keeps sys.argv[0] pointed at the
-      # pytest package file, preserving the expected script-directory shape.
+      # Use the repository-standard module invocation so local and CI commands match.
       - name: Run Python bindings smoke tests
         run: uv run --project python-bindings python -m pytest python-bindings/tests -q
 

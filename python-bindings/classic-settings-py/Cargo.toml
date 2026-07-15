@@ -25,8 +25,7 @@ classic-settings-core = { path = "../../business-logic/classic-settings-core" }
 # — mandatory dependency after folding in classic-yaml-py (plan 01-02 D-05/D-06)
 classic-shared-py = { path = "../../foundation/classic-shared-py" }
 
-# YAML parsing (needed for validate_settings_structure to parse raw strings,
-# and for the YamlOperations <-> Python conversion helpers folded in from yaml-py)
+# YAML representation for the generic YamlOperations/Python conversion helpers.
 yaml-rust2 = { workspace = true }
 
 [lints.rust]
