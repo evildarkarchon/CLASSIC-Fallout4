@@ -1,6 +1,9 @@
 use crate::CrashLogScanFacts;
 use crate::scan_run::contract;
-use crate::scan_run::test_support::{write_fixture_log, write_minimal_yaml_tree};
+use crate::scan_run::test_support::{InfrastructureFault, ScanRunTestHooks};
+use crate::scan_run::test_support::{
+    write_fixture_log, write_fixture_log_at, write_minimal_yaml_tree,
+};
 use crate::scan_run::{
     CrashLogScanDiscoverySource, CrashLogScanOutcome, CrashLogScanRunLogOutcome,
     CrashLogScanSetupContext, StandardCrashLogScanSource, StandardUnsolvedLogsIntent,
@@ -325,7 +328,7 @@ fn fcx_configuration_scan_failure_is_a_typed_intake_error() {
             inputs: vec![log_path],
         },
         CrashLogScanSetupContext {
-            game_root: Some(missing_game_root),
+            game_root: Some(missing_game_root.clone()),
             docs_root: Some(docs_root),
             game_exe_path: None,
             xse_log_path: None,
@@ -342,6 +345,7 @@ fn fcx_configuration_scan_failure_is_a_typed_intake_error() {
     };
 
     assert_eq!(error.stage, contract::InfrastructureErrorStage::Intake);
+    assert_eq!(error.path, Some(missing_game_root));
     assert!(error.message.contains("configuration issues"));
 }
 
@@ -550,7 +554,7 @@ fn standard_cancellation_during_discovery_discards_partial_results() {
         StandardCrashLogScanSource {
             base_directory: root.to_path_buf(),
             custom_scan_directory: None,
-            configured_documents_root: None,
+            configured_documents_root: Some(root.join("Documents")),
         },
         StandardUnsolvedLogsIntent::LeaveInPlace,
     );
@@ -1280,4 +1284,501 @@ fn observer_can_request_cancellation_before_discovered_logs_are_admitted() {
             .all(|log| { log.disposition == contract::LogDisposition::CancelledBeforeStart })
     );
     assert!(!started.load(Ordering::SeqCst));
+}
+
+/// Verifies live events retain completion order while terminal results retain discovery order.
+#[test]
+fn terminal_outcomes_remain_in_discovery_order_when_completion_is_out_of_order() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let first = write_fixture_log(&temp, "crash-slow-first.log");
+    let second = write_fixture_log(&temp, "crash-fast-second.log");
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    configuration.max_concurrent = Some(2);
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: vec![first.clone(), second.clone()],
+        },
+    );
+    let hooks = ScanRunTestHooks::default().with_analysis_delay(0, Duration::from_millis(100));
+    let mut finished = Vec::new();
+    let mut observer = |event| {
+        if let contract::Event::LogFinished { log, .. } = event {
+            finished.push(log.discovery_index);
+        }
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            Some(&mut observer),
+            hooks,
+        ))
+        .expect("both admitted logs should complete");
+
+    assert_eq!(finished, vec![1, 0]);
+    assert_eq!(
+        result
+            .logs
+            .iter()
+            .map(|log| (log.discovery_index, log.crash_log.clone()))
+            .collect::<Vec<_>>(),
+        vec![(0, first), (1, second)]
+    );
+}
+
+/// Verifies cancellation cannot publish Finished before Standard durable finalization resolves.
+#[test]
+fn admitted_standard_log_finishes_report_failure_and_movement_after_cancellation() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let _log = write_fixture_log_at(
+        &root.join("Crash Logs"),
+        "crash-cancelled-during-finalization.log",
+    );
+    let unsolved = root.join("Unsolved Logs");
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    configuration.max_concurrent = Some(1);
+    let request = contract::Request::standard(
+        configuration,
+        StandardCrashLogScanSource {
+            base_directory: root.to_path_buf(),
+            custom_scan_directory: None,
+            configured_documents_root: Some(root.join("Documents")),
+        },
+        StandardUnsolvedLogsIntent::MoveToCustom(unsolved.clone()),
+    );
+    let cancellation = contract::Cancellation::new();
+    let observer_cancellation = cancellation.clone();
+    let mut finished_saw_durable_state = false;
+    let mut observer = |event| match event {
+        contract::Event::DiscoveryCompleted(discovery) => {
+            let accepted = discovery
+                .accepted_logs
+                .first()
+                .expect("fixture should be discovered");
+            std::fs::create_dir(crate::report::autoscan_report_path(accepted))
+                .expect("a directory should force report persistence failure");
+        }
+        contract::Event::LogStarted(_) => observer_cancellation.cancel(),
+        contract::Event::LogFinished {
+            log: finished_log,
+            disposition,
+        } => {
+            assert_eq!(disposition, contract::LogDisposition::Failed);
+            let moved_log = unsolved.join(
+                finished_log
+                    .crash_log
+                    .file_name()
+                    .expect("discovered log should have a file name"),
+            );
+            finished_saw_durable_state = !finished_log.crash_log.exists() && moved_log.is_file();
+        }
+        _ => {}
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &cancellation,
+            Some(&mut observer),
+        ))
+        .expect("admitted cancellation should resolve as terminal result data");
+
+    assert!(finished_saw_durable_state);
+    assert_eq!(result.logs.len(), 1);
+    assert!(result.logs[0].moved_to_unsolved_logs);
+    assert_eq!(
+        result.logs[0]
+            .failures
+            .iter()
+            .map(|failure| failure.stage)
+            .collect::<Vec<_>>(),
+        vec![contract::LogFailureStage::ReportWrite]
+    );
+}
+
+/// Verifies a partial artifact move remains structured instead of being erased by a later failure.
+#[test]
+fn partial_unsolved_logs_movement_retains_moved_state_and_failure() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let _log = write_fixture_log_at(&root.join("Crash Logs"), "crash-partial-movement.log");
+    let unsolved = root.join("Unsolved Logs");
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    configuration.max_concurrent = Some(1);
+    let request = contract::Request::standard(
+        configuration,
+        StandardCrashLogScanSource {
+            base_directory: root.to_path_buf(),
+            custom_scan_directory: None,
+            configured_documents_root: None,
+        },
+        StandardUnsolvedLogsIntent::MoveToCustom(unsolved.clone()),
+    );
+    let hooks = ScanRunTestHooks::default()
+        .with_analysis_failure(0, "injected analysis failure")
+        .with_movement_failure_after(1, "injected report movement failure");
+    let mut observer = |event| {
+        if let contract::Event::DiscoveryCompleted(discovery) = event {
+            let accepted = discovery
+                .accepted_logs
+                .first()
+                .expect("fixture should be discovered");
+            std::fs::write(
+                crate::report::autoscan_report_path(accepted),
+                "existing report",
+            )
+            .expect("report fixture should be written");
+        }
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            Some(&mut observer),
+            hooks,
+        ))
+        .expect("per-log failures should not become a run-wide error");
+
+    assert_eq!(result.logs[0].disposition, contract::LogDisposition::Failed);
+    assert!(result.logs[0].moved_to_unsolved_logs);
+    let moved_log = unsolved.join(
+        result.logs[0]
+            .crash_log
+            .file_name()
+            .expect("discovered log should have a file name"),
+    );
+    let report = crate::report::autoscan_report_path(&result.logs[0].crash_log);
+    assert!(moved_log.is_file());
+    assert!(report.is_file());
+    assert_eq!(
+        result.logs[0]
+            .failures
+            .iter()
+            .map(|failure| (failure.stage, failure.message.as_str()))
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                contract::LogFailureStage::Analysis,
+                "injected analysis failure"
+            ),
+            (
+                contract::LogFailureStage::UnsolvedLogsFinalization,
+                "injected report movement failure"
+            ),
+        ]
+    );
+}
+
+/// Verifies the final Targeted request cannot relocate a log even when finalization fails.
+#[test]
+fn targeted_report_failure_cannot_trigger_unsolved_logs_movement() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let log = write_fixture_log(&temp, "crash-targeted-no-movement.log");
+    std::fs::create_dir(crate::report::autoscan_report_path(&log))
+        .expect("a directory should force report persistence failure");
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    configuration.max_concurrent = Some(1);
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: vec![log.clone()],
+        },
+    );
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("report failure should remain per-log result data");
+
+    assert!(log.is_file());
+    assert!(!result.logs[0].moved_to_unsolved_logs);
+    assert_eq!(
+        result.logs[0]
+            .failures
+            .iter()
+            .map(|failure| failure.stage)
+            .collect::<Vec<_>>(),
+        vec![contract::LogFailureStage::ReportWrite]
+    );
+}
+
+/// Verifies Standard collision handling preserves the existing artifact and picks a suffix.
+#[test]
+fn standard_unsolved_logs_collision_preserves_existing_destination() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let _log = write_fixture_log_at(&root.join("Crash Logs"), "crash-collision.log");
+    let unsolved = root.join("Unsolved Logs");
+    std::fs::create_dir_all(&unsolved).expect("destination should be created");
+    let existing = unsolved.join("crash-collision.log");
+    std::fs::write(&existing, "existing").expect("existing destination should be written");
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    configuration.max_concurrent = Some(1);
+    let request = contract::Request::standard(
+        configuration,
+        StandardCrashLogScanSource {
+            base_directory: root.to_path_buf(),
+            custom_scan_directory: None,
+            configured_documents_root: Some(root.join("Documents")),
+        },
+        StandardUnsolvedLogsIntent::MoveToCustom(unsolved.clone()),
+    );
+    let mut observer = |event| {
+        if let contract::Event::DiscoveryCompleted(discovery) = event {
+            let accepted = discovery
+                .accepted_logs
+                .first()
+                .expect("fixture should be discovered");
+            std::fs::create_dir(crate::report::autoscan_report_path(accepted))
+                .expect("a directory should force report persistence failure");
+        }
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &contract::Cancellation::new(),
+            Some(&mut observer),
+        ))
+        .expect("collision should be an ordinary per-log finalization outcome");
+
+    assert!(result.logs[0].moved_to_unsolved_logs);
+    assert_eq!(
+        std::fs::read_to_string(&existing).expect("existing destination should remain readable"),
+        "existing"
+    );
+    assert!(unsolved.join("crash-collision-1.log").is_file());
+}
+
+/// Verifies overlapping Standard runs atomically claim distinct collision destinations.
+#[test]
+fn overlapping_standard_runs_never_clobber_same_name_unsolved_logs() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let destination = temp.path().join("Unsolved Logs");
+    let build_run = |name: &str, contents: &str| {
+        let root = temp.path().join(name);
+        let data = root.join("CLASSIC Data");
+        write_minimal_yaml_tree(&root, &data);
+        let log = root.join("Crash Logs").join("crash-concurrent.log");
+        std::fs::create_dir_all(log.parent().expect("log should have a parent"))
+            .expect("Crash Logs directory should be created");
+        std::fs::write(&log, contents).expect("run-unique Crash Log should be written");
+        let request = contract::Request::standard(
+            contract::Configuration {
+                yaml_dir_root: root.clone(),
+                yaml_dir_data: data,
+                game: GameId::Fallout4,
+                game_version: "auto".to_string(),
+                options: contract::Options::new(false, false),
+                scan_facts: CrashLogScanFacts::default(),
+                max_concurrent: Some(1),
+            },
+            StandardCrashLogScanSource {
+                base_directory: root.clone(),
+                custom_scan_directory: None,
+                configured_documents_root: Some(root.join("Documents")),
+            },
+            StandardUnsolvedLogsIntent::MoveToCustom(destination.clone()),
+        );
+        let hooks = ScanRunTestHooks::default().with_analysis_failure(0, "injected failure");
+        (request, hooks)
+    };
+    let (first_request, first_hooks) = build_run("first", "first run");
+    let (second_request, second_hooks) = build_run("second", "second run");
+
+    let (first, second) = get_runtime().block_on(async {
+        let first_cancellation = contract::Cancellation::new();
+        let second_cancellation = contract::Cancellation::new();
+        tokio::join!(
+            contract::execute_with_test_hooks(
+                first_request,
+                &first_cancellation,
+                None,
+                first_hooks,
+            ),
+            contract::execute_with_test_hooks(
+                second_request,
+                &second_cancellation,
+                None,
+                second_hooks,
+            )
+        )
+    });
+
+    assert!(first.expect("first run should complete").logs[0].moved_to_unsolved_logs);
+    assert!(second.expect("second run should complete").logs[0].moved_to_unsolved_logs);
+    let mut contents = [
+        std::fs::read_to_string(destination.join("crash-concurrent.log"))
+            .expect("first destination should exist"),
+        std::fs::read_to_string(destination.join("crash-concurrent-1.log"))
+            .expect("collision destination should exist"),
+    ];
+    contents.sort();
+    assert_eq!(contents, ["first run", "second run"]);
+}
+
+/// Verifies a real destination filesystem error is preserved beside report failure.
+#[test]
+fn standard_unsolved_logs_filesystem_failure_is_structured() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let _log = write_fixture_log_at(&root.join("Crash Logs"), "crash-movement-error.log");
+    let blocked_destination = root.join("blocked-destination");
+    std::fs::write(&blocked_destination, "not a directory")
+        .expect("blocking destination file should be written");
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    configuration.max_concurrent = Some(1);
+    let request = contract::Request::standard(
+        configuration,
+        StandardCrashLogScanSource {
+            base_directory: root.to_path_buf(),
+            custom_scan_directory: None,
+            configured_documents_root: Some(root.join("Documents")),
+        },
+        StandardUnsolvedLogsIntent::MoveToCustom(blocked_destination),
+    );
+    let mut observer = |event| {
+        if let contract::Event::DiscoveryCompleted(discovery) = event {
+            let accepted = discovery
+                .accepted_logs
+                .first()
+                .expect("fixture should be discovered");
+            std::fs::create_dir(crate::report::autoscan_report_path(accepted))
+                .expect("a directory should force report persistence failure");
+        }
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &contract::Cancellation::new(),
+            Some(&mut observer),
+        ))
+        .expect("filesystem failure should remain per-log result data");
+
+    assert!(!result.logs[0].moved_to_unsolved_logs);
+    assert_eq!(
+        result.logs[0]
+            .failures
+            .iter()
+            .map(|failure| failure.stage)
+            .collect::<Vec<_>>(),
+        vec![
+            contract::LogFailureStage::ReportWrite,
+            contract::LogFailureStage::UnsolvedLogsFinalization,
+        ]
+    );
+}
+
+/// Verifies every stable infrastructure stage preserves its message and optional path.
+#[test]
+fn injected_infrastructure_failures_preserve_every_stable_contract_field() {
+    let cases = [
+        (
+            InfrastructureFault::RequestValidation,
+            contract::InfrastructureErrorStage::RequestValidation,
+            "Settings validation error",
+        ),
+        (
+            InfrastructureFault::Discovery,
+            contract::InfrastructureErrorStage::Discovery,
+            "File I/O error",
+        ),
+        (
+            InfrastructureFault::Intake,
+            contract::InfrastructureErrorStage::Intake,
+            "Configuration error",
+        ),
+        (
+            InfrastructureFault::FormIdDatabaseAccess,
+            contract::InfrastructureErrorStage::FormIdDatabaseAccess,
+            "Database error",
+        ),
+        (
+            InfrastructureFault::Initialization,
+            contract::InfrastructureErrorStage::Initialization,
+            "Analysis error",
+        ),
+        (
+            InfrastructureFault::InternalInvariant,
+            contract::InfrastructureErrorStage::InternalInvariant,
+            "Internal error",
+        ),
+    ];
+
+    for (index, (fault, stage, message_prefix)) in cases.into_iter().enumerate() {
+        let temp = tempdir().expect("tempdir should succeed");
+        let root = temp.path();
+        let data = root.join("CLASSIC Data");
+        write_minimal_yaml_tree(root, &data);
+        let log = write_fixture_log(&temp, &format!("crash-infrastructure-{index}.log"));
+        let expected_formid_path = data.join("databases").join("Fallout4 FormIDs Main.db");
+        let mut configuration = final_run_configuration();
+        configuration.yaml_dir_root = root.to_path_buf();
+        configuration.yaml_dir_data = data.clone();
+        configuration.max_concurrent = Some(1);
+        let request = contract::Request::targeted(
+            configuration,
+            TargetedCrashLogScanSource {
+                inputs: vec![log.clone()],
+            },
+        );
+        let raw_message = format!("injected {} failure", stage.as_str());
+        let expected_message = format!("{message_prefix}: {raw_message}");
+        let expected_path = match fault {
+            InfrastructureFault::Discovery => Some(log),
+            InfrastructureFault::Intake => Some(data),
+            InfrastructureFault::FormIdDatabaseAccess => Some(expected_formid_path),
+            InfrastructureFault::RequestValidation
+            | InfrastructureFault::Initialization
+            | InfrastructureFault::InternalInvariant => None,
+        };
+        let hooks = ScanRunTestHooks::default().with_infrastructure_failure(fault, raw_message);
+
+        let error = get_runtime()
+            .block_on(contract::execute_with_test_hooks(
+                request,
+                &contract::Cancellation::new(),
+                None,
+                hooks,
+            ))
+            .expect_err("injected infrastructure failure should stop the run");
+
+        assert_eq!(error.stage, stage);
+        assert_eq!(error.message, expected_message);
+        assert_eq!(error.path, expected_path);
+    }
 }

@@ -30,6 +30,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tokio::sync::mpsc;
 
+#[cfg(test)]
+use self::test_support::{InfrastructureFault, ScanRunTestHooks};
+
 const CANCELLED_BY_USER_MESSAGE: &str = "Cancelled by user";
 
 /// High-level facade for complete Crash Log Scan Runs.
@@ -64,6 +67,7 @@ impl CrashLogScanRunService {
             }
         })
         .await
+        .map_err(CrashLogScanRunServiceError::into_source)
     }
 }
 
@@ -78,15 +82,58 @@ pub(super) enum CrashLogScanRunServiceEvent {
     Log(CrashLogScanRunEvent),
 }
 
+/// Stage-aware internal error used by the final contract without changing the
+/// temporary public service facade's legacy `ScanLogError` surface.
+pub(super) struct CrashLogScanRunServiceError {
+    pub(super) stage: contract::InfrastructureErrorStage,
+    pub(super) message: String,
+    pub(super) path: Option<PathBuf>,
+    source: ScanLogError,
+}
+
+impl CrashLogScanRunServiceError {
+    /// Captures the lifecycle stage and relevant path at the point an error occurs.
+    fn new(
+        stage: contract::InfrastructureErrorStage,
+        path: Option<PathBuf>,
+        source: ScanLogError,
+    ) -> Self {
+        Self {
+            stage,
+            message: source.to_string(),
+            path,
+            source,
+        }
+    }
+
+    /// Restores the compatibility error expected by the transitional public facade.
+    fn into_source(self) -> ScanLogError {
+        self.source
+    }
+}
+
 /// Executes the provisional service while exposing complete lifecycle hooks to
 /// the final expand-step contract.
 pub(super) async fn execute_service<F>(
     request: CrashLogScanRunServiceRequest,
     mut on_event: F,
-) -> Result<CrashLogScanRunResult>
+) -> std::result::Result<CrashLogScanRunResult, CrashLogScanRunServiceError>
 where
     F: FnMut(CrashLogScanRunServiceEvent),
 {
+    let discovery_path = discovery_relevant_path(&request.source);
+    #[cfg(test)]
+    if let Some(error) = request
+        .test_hooks
+        .infrastructure_failure(InfrastructureFault::Discovery)
+    {
+        return Err(CrashLogScanRunServiceError::new(
+            contract::InfrastructureErrorStage::Discovery,
+            discovery_path,
+            error,
+        ));
+    }
+
     if cancellation_requested(request.cancellation.as_ref()) {
         return Ok(CrashLogScanRunResult::cancelled_before_discovery());
     }
@@ -95,7 +142,15 @@ where
     // carries this run's control across that crate boundary without creating a
     // new binding-facing API or process-global cancellation state.
     let Some(discovery) =
-        scope_cancellation(request.cancellation.clone(), discover_scan_source(&request)).await?
+        scope_cancellation(request.cancellation.clone(), discover_scan_source(&request))
+            .await
+            .map_err(|error| {
+                CrashLogScanRunServiceError::new(
+                    contract::InfrastructureErrorStage::Discovery,
+                    discovery_path,
+                    error,
+                )
+            })?
     else {
         return Ok(CrashLogScanRunResult::cancelled_before_discovery());
     };
@@ -109,7 +164,29 @@ where
         return Ok(CrashLogScanRunResult::cancelled_after_discovery(discovery));
     }
 
-    let (setup, setup_failed) = evaluate_setup_for_scan(&request)?;
+    let intake_path = request
+        .setup_context
+        .as_ref()
+        .and_then(|context| context.game_root.clone())
+        .or_else(|| Some(request.yaml_dir_data.clone()));
+    #[cfg(test)]
+    if let Some(error) = request
+        .test_hooks
+        .infrastructure_failure(InfrastructureFault::Intake)
+    {
+        return Err(CrashLogScanRunServiceError::new(
+            contract::InfrastructureErrorStage::Intake,
+            intake_path,
+            error,
+        ));
+    }
+    let (setup, setup_failed) = evaluate_setup_for_scan(&request).map_err(|error| {
+        CrashLogScanRunServiceError::new(
+            contract::InfrastructureErrorStage::Intake,
+            intake_path.clone(),
+            error,
+        )
+    })?;
     if setup_failed {
         let message = setup
             .as_ref()
@@ -137,7 +214,30 @@ where
     )
     .with_scan_facts(scan_facts)
     .prepare()
-    .await?;
+    .await
+    .map_err(|error| {
+        CrashLogScanRunServiceError::new(
+            contract::InfrastructureErrorStage::Intake,
+            intake_path,
+            error,
+        )
+    })?;
+
+    let database_path = ready.formid_readiness().database_paths().first().cloned();
+    #[cfg(test)]
+    if let Some(error) = request
+        .test_hooks
+        .infrastructure_failure(InfrastructureFault::FormIdDatabaseAccess)
+    {
+        return Err(service_execution_error(error, database_path));
+    }
+    #[cfg(test)]
+    if let Some(error) = request
+        .test_hooks
+        .infrastructure_failure(InfrastructureFault::Initialization)
+    {
+        return Err(service_execution_error(error, database_path));
+    }
 
     let effective_concurrency = resolve_batch_concurrency(
         discovery.accepted_logs.len(),
@@ -157,7 +257,10 @@ where
         configured_unsolved_logs_destination,
     );
     let setup_snapshot = setup.map(Arc::new);
-    let mut result = CrashLogScanRun::with_setup(ready, setup_snapshot.clone())
+    let run = CrashLogScanRun::with_setup(ready, setup_snapshot.clone());
+    #[cfg(test)]
+    let run = run.with_test_hooks(request.test_hooks.clone());
+    let mut result = run
         .run_scheduled(
             discovery.accepted_logs.clone(),
             intent,
@@ -166,10 +269,55 @@ where
             request.preserve_order,
             |event| on_event(CrashLogScanRunServiceEvent::Log(event)),
         )
-        .await?;
+        .await
+        .map_err(|error| service_execution_error(error, database_path.clone()))?;
+
+    #[cfg(test)]
+    if let Some(error) = request
+        .test_hooks
+        .infrastructure_failure(InfrastructureFault::InternalInvariant)
+    {
+        return Err(service_execution_error(error, database_path));
+    }
     result.discovery = Some(discovery);
     result.setup = setup_snapshot.as_deref().cloned();
     Ok(result)
+}
+
+/// Returns the most useful path for a failure while discovering the requested source.
+fn discovery_relevant_path(source: &CrashLogScanSource) -> Option<PathBuf> {
+    match source {
+        CrashLogScanSource::Standard(source) => Some(source.base_directory.clone()),
+        CrashLogScanSource::Targeted(source) => source.inputs.first().cloned(),
+    }
+}
+
+/// Classifies failures after intake at the exact execution boundary that produced them.
+fn service_execution_error(
+    error: ScanLogError,
+    database_path: Option<PathBuf>,
+) -> CrashLogScanRunServiceError {
+    let (stage, path) = match &error {
+        ScanLogError::InvalidInput(_) | ScanLogError::ValidationError(_) => {
+            (contract::InfrastructureErrorStage::RequestValidation, None)
+        }
+        ScanLogError::DatabaseError(_) => (
+            contract::InfrastructureErrorStage::FormIdDatabaseAccess,
+            database_path,
+        ),
+        ScanLogError::Internal(_) => (contract::InfrastructureErrorStage::InternalInvariant, None),
+        ScanLogError::IoError(_)
+        | ScanLogError::FileIOError(_)
+        | ScanLogError::ConfigError(_)
+        | ScanLogError::ParseError(_)
+        | ScanLogError::InvalidFormID(_)
+        | ScanLogError::AnalysisError(_)
+        | ScanLogError::RegexError(_)
+        | ScanLogError::PatternError(_)
+        | ScanLogError::ReportError(_)
+        | ScanLogError::GpuError(_) => (contract::InfrastructureErrorStage::Initialization, None),
+    };
+    CrashLogScanRunServiceError::new(stage, path, error)
 }
 
 /// Request for a complete Crash Log Scan Run.
@@ -198,6 +346,9 @@ pub struct CrashLogScanRunServiceRequest {
     pub cancellation: Option<Arc<AtomicBool>>,
     /// Return log outcomes in input order instead of completion order.
     pub preserve_order: bool,
+    /// Request-scoped deterministic hooks used only by internal behavior tests.
+    #[cfg(test)]
+    pub(crate) test_hooks: ScanRunTestHooks,
 }
 
 /// Source to discover Crash Logs for a complete scan run.
@@ -368,6 +519,8 @@ pub struct CrashLogScanSetupPathUpdate {
 pub struct CrashLogScanRun {
     ready: ScanReadyAnalysis,
     setup: Option<Arc<CrashLogScanSetupResult>>,
+    #[cfg(test)]
+    test_hooks: ScanRunTestHooks,
 }
 
 /// One phase notification produced by an admitted single-log analysis.
@@ -381,6 +534,8 @@ struct ScheduledLogPhase {
 struct SingleLogAnalysisEngine<'a> {
     orchestrator: &'a OrchestratorCore,
     unsolved_logs_destination: Option<&'a Path>,
+    #[cfg(test)]
+    test_hooks: &'a ScanRunTestHooks,
 }
 
 impl SingleLogAnalysisEngine<'_> {
@@ -392,19 +547,34 @@ impl SingleLogAnalysisEngine<'_> {
         phase_tx: mpsc::UnboundedSender<ScheduledLogPhase>,
     ) -> CrashLogScanRunLogOutcome {
         let log_path = crash_log.to_string_lossy().to_string();
-        let result = match self
-            .orchestrator
-            .process_log_with_progress(log_path.clone(), |phase| {
-                let _ = phase_tx.send(ScheduledLogPhase {
-                    input_index,
-                    crash_log: crash_log.clone(),
-                    phase,
-                });
-            })
-            .await
-        {
-            Ok(result) => result,
-            Err(error) => AnalysisResult::failure(log_path, error.to_string()),
+        #[cfg(test)]
+        if let Some(delay) = self.test_hooks.analysis_delay(input_index) {
+            tokio::time::sleep(delay).await;
+        }
+        #[cfg(test)]
+        let injected_result = self
+            .test_hooks
+            .analysis_failure(input_index)
+            .map(|message| AnalysisResult::failure(log_path.clone(), message.to_string()));
+        #[cfg(not(test))]
+        let injected_result: Option<AnalysisResult> = None;
+        let result = if let Some(result) = injected_result {
+            result
+        } else {
+            match self
+                .orchestrator
+                .process_log_with_progress(log_path.clone(), |phase| {
+                    let _ = phase_tx.send(ScheduledLogPhase {
+                        input_index,
+                        crash_log: crash_log.clone(),
+                        phase,
+                    });
+                })
+                .await
+            {
+                Ok(result) => result,
+                Err(error) => AnalysisResult::failure(log_path, error.to_string()),
+            }
         };
 
         finalize_log_outcome(
@@ -412,6 +582,8 @@ impl SingleLogAnalysisEngine<'_> {
             result,
             self.unsolved_logs_destination,
             self.orchestrator,
+            #[cfg(test)]
+            self.test_hooks,
         )
         .await
     }
@@ -421,12 +593,29 @@ impl CrashLogScanRun {
     /// Creates a Crash Log Scan Run module from prepared Crash Log Scan Intake output.
     #[must_use]
     pub fn new(ready: ScanReadyAnalysis) -> Self {
-        Self { ready, setup: None }
+        Self {
+            ready,
+            setup: None,
+            #[cfg(test)]
+            test_hooks: ScanRunTestHooks::default(),
+        }
     }
 
     /// Creates a run whose immutable FCX setup result is shared with every log analysis.
     fn with_setup(ready: ScanReadyAnalysis, setup: Option<Arc<CrashLogScanSetupResult>>) -> Self {
-        Self { ready, setup }
+        Self {
+            ready,
+            setup,
+            #[cfg(test)]
+            test_hooks: ScanRunTestHooks::default(),
+        }
+    }
+
+    #[cfg(test)]
+    /// Attaches request-scoped deterministic hooks without exposing them publicly.
+    fn with_test_hooks(mut self, test_hooks: ScanRunTestHooks) -> Self {
+        self.test_hooks = test_hooks;
+        self
     }
 
     /// Runs analysis for the selected Crash Logs and owns all run-level side effects.
@@ -509,6 +698,8 @@ impl CrashLogScanRun {
                 indexed.result,
                 unsolved_logs_destination.as_deref(),
                 &orchestrator,
+                #[cfg(test)]
+                &self.test_hooks,
             )
             .await;
             on_event(outcome.terminal_event(completed, total));
@@ -553,6 +744,8 @@ impl CrashLogScanRun {
             effective_concurrency,
             cancellation.as_ref(),
             &mut on_event,
+            #[cfg(test)]
+            &self.test_hooks,
         )
         .await;
         orchestrator.async_exit().await?;
@@ -605,6 +798,7 @@ async fn schedule_logs<F>(
     effective_concurrency: usize,
     cancellation: Option<&Arc<AtomicBool>>,
     on_event: &mut F,
+    #[cfg(test)] test_hooks: &ScanRunTestHooks,
 ) -> Vec<CrashLogScanRunLogOutcome>
 where
     F: FnMut(CrashLogScanRunEvent),
@@ -613,6 +807,8 @@ where
     let engine = SingleLogAnalysisEngine {
         orchestrator,
         unsolved_logs_destination,
+        #[cfg(test)]
+        test_hooks,
     };
 
     for (input_index, crash_log) in logs.iter().enumerate() {
@@ -1088,11 +1284,17 @@ pub enum CrashLogScanRunEventKind {
     Failed,
 }
 
+/// Completes report persistence and applicable Unsolved Logs movement for one admitted log.
+///
+/// This function never consults cancellation. It returns only after durable finalization
+/// resolves. Unsolved Logs destinations are claimed atomically, so overlapping runs cannot
+/// overwrite one another before their terminal events are published.
 async fn finalize_log_outcome(
     input_index: usize,
     result: AnalysisResult,
     unsolved_logs_destination: Option<&Path>,
     orchestrator: &OrchestratorCore,
+    #[cfg(test)] test_hooks: &ScanRunTestHooks,
 ) -> CrashLogScanRunLogOutcome {
     let crash_log = PathBuf::from(result.log_path.clone());
     let mut outcome = outcome_from_analysis(&result);
@@ -1128,16 +1330,21 @@ async fn finalize_log_outcome(
     if outcome == CrashLogScanOutcome::Failed
         && let Some(directory) = unsolved_logs_destination
     {
-        match move_unsolved_artifacts(&crash_log, directory).await {
-            Ok(moved) => moved_to_unsolved_logs = moved,
-            Err(move_error) => {
-                unsolved_logs_finalization_failed = true;
-                unsolved_logs_finalization_error = Some(move_error.to_string());
-                error = Some(match error {
-                    Some(existing) => format!("{existing}; {move_error}"),
-                    None => move_error.to_string(),
-                });
-            }
+        let finalization = move_unsolved_artifacts(
+            &crash_log,
+            directory,
+            #[cfg(test)]
+            test_hooks,
+        )
+        .await;
+        moved_to_unsolved_logs = finalization.moved_any;
+        if let Some(move_error) = finalization.error {
+            unsolved_logs_finalization_failed = true;
+            unsolved_logs_finalization_error = Some(move_error.clone());
+            error = Some(match error {
+                Some(existing) => format!("{existing}; {move_error}"),
+                None => move_error,
+            });
         }
     }
 
@@ -1494,13 +1701,49 @@ fn resolve_unsolved_logs_destination(
     }
 }
 
-async fn move_unsolved_artifacts(log_path: &Path, destination_dir: &Path) -> Result<bool> {
-    let autoscan_path = autoscan_report_path(log_path);
-    let moved_log = move_file_if_exists(log_path, destination_dir).await?;
-    let moved_report = move_file_if_exists(&autoscan_path, destination_dir).await?;
-    Ok(moved_log || moved_report)
+/// Complete best-effort movement state for both a Crash Log and its Autoscan Report.
+struct UnsolvedLogsFinalization {
+    moved_any: bool,
+    error: Option<String>,
 }
 
+/// Attempts both artifacts and retains partial success if either move fails.
+async fn move_unsolved_artifacts(
+    log_path: &Path,
+    destination_dir: &Path,
+    #[cfg(test)] test_hooks: &ScanRunTestHooks,
+) -> UnsolvedLogsFinalization {
+    let autoscan_path = autoscan_report_path(log_path);
+    let mut moved_any = false;
+    let mut errors = Vec::new();
+
+    for source in [log_path, autoscan_path.as_path()] {
+        #[cfg(test)]
+        if let Some(message) = test_hooks.movement_failure() {
+            errors.push(message);
+            continue;
+        }
+
+        match move_file_if_exists(source, destination_dir).await {
+            Ok(moved) => {
+                moved_any |= moved;
+                #[cfg(test)]
+                if moved {
+                    test_hooks.record_movement_success();
+                }
+            }
+            Err(error) => errors.push(error.to_string()),
+        }
+    }
+
+    UnsolvedLogsFinalization {
+        moved_any,
+        error: (!errors.is_empty()).then(|| errors.join("; ")),
+    }
+}
+
+/// Copies one existing artifact into an atomically claimed destination, syncs it, then deletes
+/// the source. Failures remove the incomplete claim on a best-effort basis and retain the source.
 async fn move_file_if_exists(source: &Path, destination_dir: &Path) -> Result<bool> {
     match tokio::fs::metadata(source).await {
         Ok(metadata) if metadata.is_file() => {}
@@ -1520,23 +1763,31 @@ async fn move_file_if_exists(source: &Path, destination_dir: &Path) -> Result<bo
     if source == destination {
         return Ok(false);
     }
-    let destination = next_available_destination(destination).await?;
 
-    match tokio::fs::rename(source, &destination).await {
-        Ok(()) => Ok(true),
-        Err(_) => {
-            tokio::fs::copy(source, &destination).await?;
-            tokio::fs::remove_file(source).await?;
-            Ok(true)
-        }
+    let mut source_file = tokio::fs::File::open(source).await?;
+    let (destination, mut destination_file) = claim_available_destination(destination).await?;
+    if let Err(error) = tokio::io::copy(&mut source_file, &mut destination_file).await {
+        drop(destination_file);
+        cleanup_incomplete_destination(&destination).await;
+        return Err(ScanLogError::IoError(error));
     }
+    if let Err(error) = destination_file.sync_all().await {
+        drop(destination_file);
+        cleanup_incomplete_destination(&destination).await;
+        return Err(ScanLogError::IoError(error));
+    }
+    drop(destination_file);
+    drop(source_file);
+
+    if let Err(error) = tokio::fs::remove_file(source).await {
+        cleanup_incomplete_destination(&destination).await;
+        return Err(ScanLogError::IoError(error));
+    }
+    Ok(true)
 }
 
-async fn next_available_destination(destination: PathBuf) -> Result<PathBuf> {
-    if !path_exists(&destination).await? {
-        return Ok(destination);
-    }
-
+/// Atomically reserves the first collision-safe destination without replacing existing data.
+async fn claim_available_destination(destination: PathBuf) -> Result<(PathBuf, tokio::fs::File)> {
     let parent = destination.parent().unwrap_or_else(|| Path::new(""));
     let stem = destination
         .file_stem()
@@ -1546,14 +1797,27 @@ async fn next_available_destination(destination: PathBuf) -> Result<PathBuf> {
         .extension()
         .map(|extension| extension.to_string_lossy());
 
-    for suffix in 1.. {
-        let candidate_name = match extension.as_ref() {
-            Some(extension) if !extension.is_empty() => format!("{stem}-{suffix}.{extension}"),
-            _ => format!("{stem}-{suffix}"),
+    for suffix in 0usize.. {
+        let candidate = if suffix == 0 {
+            destination.clone()
+        } else {
+            let candidate_name = match extension.as_ref() {
+                Some(extension) if !extension.is_empty() => {
+                    format!("{stem}-{suffix}.{extension}")
+                }
+                _ => format!("{stem}-{suffix}"),
+            };
+            parent.join(candidate_name)
         };
-        let candidate = parent.join(candidate_name);
-        if !path_exists(&candidate).await? {
-            return Ok(candidate);
+        match tokio::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&candidate)
+            .await
+        {
+            Ok(file) => return Ok((candidate, file)),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(error) => return Err(ScanLogError::IoError(error)),
         }
     }
 
@@ -1563,12 +1827,10 @@ async fn next_available_destination(destination: PathBuf) -> Result<PathBuf> {
     )))
 }
 
-async fn path_exists(path: &Path) -> Result<bool> {
-    match tokio::fs::metadata(path).await {
-        Ok(_) => Ok(true),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
-        Err(error) => Err(ScanLogError::IoError(error)),
-    }
+/// Removes a destination claim when copying cannot complete, preserving the source artifact.
+async fn cleanup_incomplete_destination(destination: &Path) {
+    // The originating I/O failure is more useful than a secondary best-effort cleanup error.
+    let _ = tokio::fs::remove_file(destination).await;
 }
 
 #[cfg(test)]

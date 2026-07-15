@@ -78,6 +78,7 @@ fn service_request(
         max_concurrent: Some(1),
         cancellation: None,
         preserve_order: true,
+        test_hooks: ScanRunTestHooks::default(),
     }
 }
 
@@ -577,11 +578,14 @@ fn move_unsolved_artifacts_preserves_existing_log_and_report_destinations() {
     std::fs::write(&unsolved_report_path, "stale report contents")
         .expect("stale report should be written");
 
-    let moved = get_runtime()
-        .block_on(move_unsolved_artifacts(&log_path, &unsolved_dir))
-        .expect("artifacts should move to unique destinations");
+    let moved = get_runtime().block_on(move_unsolved_artifacts(
+        &log_path,
+        &unsolved_dir,
+        &ScanRunTestHooks::default(),
+    ));
 
-    assert!(moved);
+    assert!(moved.moved_any);
+    assert!(moved.error.is_none());
     assert!(!log_path.exists());
     assert!(!report_path.exists());
     assert_eq!(

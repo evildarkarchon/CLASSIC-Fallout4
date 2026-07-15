@@ -12,17 +12,20 @@ mod tests;
 use super::{
     CrashLogScanDiscoveryResult, CrashLogScanOutcome, CrashLogScanRunEvent as LegacyEvent,
     CrashLogScanRunEventKind as LegacyEventKind, CrashLogScanRunLogOutcome as LegacyLogOutcome,
-    CrashLogScanRunResult as LegacyRunResult, CrashLogScanRunServiceEvent,
-    CrashLogScanRunServiceRequest, CrashLogScanSetupContext, CrashLogScanSetupResult,
-    CrashLogScanSource, StandardCrashLogScanSource, StandardUnsolvedLogsIntent,
-    TargetedCrashLogScanSource, execute_service,
+    CrashLogScanRunResult as LegacyRunResult, CrashLogScanRunServiceError,
+    CrashLogScanRunServiceEvent, CrashLogScanRunServiceRequest, CrashLogScanSetupContext,
+    CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanSource,
+    StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, execute_service,
 };
-use crate::{CrashLogScanFacts, CrashLogScanOptions, ScanLogError, ScanProgressPhase};
+use crate::{CrashLogScanFacts, CrashLogScanOptions, ScanProgressPhase};
 use classic_shared_core::GameId;
 use std::fmt;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+
+#[cfg(test)]
+use super::test_support::{InfrastructureFault, ScanRunTestHooks};
 
 /// Analysis flags that are valid with or without FCX Mode.
 ///
@@ -341,6 +344,8 @@ impl Request {
             cancellation: Some(cancellation.legacy_flag()),
             // Discovery order is mandatory in the final result contract.
             preserve_order: true,
+            #[cfg(test)]
+            test_hooks: ScanRunTestHooks::default(),
         }
     }
 }
@@ -672,30 +677,12 @@ impl InfrastructureError {
         }
     }
 
-    /// Maps provisional error categories into the final stable infrastructure stages.
-    fn from_legacy(error: ScanLogError, path: Option<PathBuf>) -> Self {
-        let stage = match &error {
-            ScanLogError::InvalidInput(_) | ScanLogError::ValidationError(_) => {
-                InfrastructureErrorStage::RequestValidation
-            }
-            ScanLogError::IoError(_) | ScanLogError::FileIOError(_) => {
-                InfrastructureErrorStage::Discovery
-            }
-            ScanLogError::ConfigError(_) => InfrastructureErrorStage::Intake,
-            ScanLogError::DatabaseError(_) => InfrastructureErrorStage::FormIdDatabaseAccess,
-            ScanLogError::Internal(_) => InfrastructureErrorStage::InternalInvariant,
-            ScanLogError::ParseError(_)
-            | ScanLogError::InvalidFormID(_)
-            | ScanLogError::AnalysisError(_)
-            | ScanLogError::RegexError(_)
-            | ScanLogError::PatternError(_)
-            | ScanLogError::ReportError(_)
-            | ScanLogError::GpuError(_) => InfrastructureErrorStage::Initialization,
-        };
+    /// Preserves the exact stage and path captured at the failing lifecycle boundary.
+    fn from_service(error: CrashLogScanRunServiceError) -> Self {
         Self {
-            stage,
-            message: error.to_string(),
-            path,
+            stage: error.stage,
+            message: error.message,
+            path: error.path,
         }
     }
 }
@@ -722,8 +709,44 @@ impl std::error::Error for InfrastructureError {}
 pub async fn execute(
     request: Request,
     cancellation: &Cancellation,
-    mut observer: Option<&mut dyn Observer>,
+    observer: Option<&mut dyn Observer>,
 ) -> Result<RunResult, InfrastructureError> {
+    execute_inner(
+        request,
+        cancellation,
+        observer,
+        #[cfg(test)]
+        ScanRunTestHooks::default(),
+    )
+    .await
+}
+
+#[cfg(test)]
+/// Executes through the public contract with request-scoped deterministic test controls.
+pub(crate) async fn execute_with_test_hooks(
+    request: Request,
+    cancellation: &Cancellation,
+    observer: Option<&mut dyn Observer>,
+    test_hooks: ScanRunTestHooks,
+) -> Result<RunResult, InfrastructureError> {
+    execute_inner(request, cancellation, observer, test_hooks).await
+}
+
+/// Shared implementation for the public operation and its request-scoped test harness.
+async fn execute_inner(
+    request: Request,
+    cancellation: &Cancellation,
+    mut observer: Option<&mut dyn Observer>,
+    #[cfg(test)] test_hooks: ScanRunTestHooks,
+) -> Result<RunResult, InfrastructureError> {
+    #[cfg(test)]
+    if let Some(error) = test_hooks.infrastructure_failure(InfrastructureFault::RequestValidation) {
+        return Err(InfrastructureError::request_validation(
+            error.to_string(),
+            None,
+        ));
+    }
+
     let max_concurrent = request.configuration().max_concurrent;
     if max_concurrent == Some(0) {
         return Err(InfrastructureError::request_validation(
@@ -733,6 +756,12 @@ pub async fn execute(
     }
 
     let legacy_request = request.into_legacy(cancellation);
+    #[cfg(test)]
+    let legacy_request = {
+        let mut legacy_request = legacy_request;
+        legacy_request.test_hooks = test_hooks;
+        legacy_request
+    };
     let mut effective_concurrency = None;
     let legacy_result = execute_service(legacy_request, |event| match event {
         CrashLogScanRunServiceEvent::DiscoveryCompleted(discovery) => {
@@ -754,7 +783,7 @@ pub async fn execute(
         }
     })
     .await
-    .map_err(|error| InfrastructureError::from_legacy(error, None))?;
+    .map_err(InfrastructureError::from_service)?;
 
     let LegacyRunResult {
         status,
