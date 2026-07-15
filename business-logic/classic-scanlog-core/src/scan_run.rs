@@ -4,13 +4,15 @@
 //! Autoscan Report writing, progress and cancellation semantics, failed-log accounting,
 //! and optional Unsolved Logs relocation.
 
+pub mod contract;
+
 use crate::error::{Result, ScanLogError};
 use crate::report::autoscan_report_path;
 use crate::{
     AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, ConfigIssue,
     CrashLogScanFacts, CrashLogScanIntake, CrashLogScanOptions, FcxModeHandler, FcxResetError,
     GLOBAL_FCX_HANDLER, IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase,
-    ScanReadyAnalysis,
+    ScanReadyAnalysis, resolve_batch_concurrency,
 };
 use classic_database_core::DatabasePool;
 use classic_file_io_core::{LogCollector, RejectedInput, resolve_targeted_inputs};
@@ -50,70 +52,115 @@ impl CrashLogScanRunService {
     where
         F: FnMut(CrashLogScanRunEvent),
     {
-        reset_fcx_state()?;
-
-        if cancellation_requested(request.cancellation.as_ref()) {
-            return Ok(CrashLogScanRunResult::cancelled_before_discovery());
-        }
-
-        let discovery = discover_scan_source(&request).await?;
-        if discovery.accepted_logs.is_empty() {
-            return Ok(CrashLogScanRunResult::no_logs_found(discovery));
-        }
-
-        let (setup, setup_failed) = evaluate_setup_for_scan(&request);
-        if setup_failed {
-            let message = setup
-                .as_ref()
-                .and_then(|setup| setup.message.clone())
-                .unwrap_or_else(|| "Crash Log Scan setup failed".to_string());
-            return Ok(CrashLogScanRunResult::setup_failed(
-                discovery, setup, message,
-            ));
-        }
-
-        let targeted_mode = matches!(&request.source, CrashLogScanSource::Targeted(_));
-        let mut scan_facts = request.scan_facts.clone();
-        if targeted_mode || !request.move_unsolved_logs {
-            // Intake validates configured destinations eagerly, so omit this fact
-            // when the accepted run intent guarantees relocation cannot occur.
-            scan_facts.unsolved_logs_destination = None;
-        }
-
-        let ready = CrashLogScanIntake::from_yaml_paths(
-            request.yaml_dir_root.clone(),
-            request.yaml_dir_data.clone(),
-            request.game.clone(),
-            request.game_version.clone(),
-            request.options,
-        )
-        .with_scan_facts(scan_facts)
-        .prepare()
-        .await?;
-
-        let configured_unsolved_logs_destination = ready
-            .unsolved_logs_destination()
-            .map(std::path::Path::to_path_buf);
-        let intent = CrashLogScanRunIntent::from_configured_flags(
-            targeted_mode,
-            request.move_unsolved_logs,
-            configured_unsolved_logs_destination,
-        );
-        let run_request = CrashLogScanRunRequest {
-            logs: discovery.accepted_logs.clone(),
-            intent,
-            max_concurrent: request.max_concurrent,
-            cancellation: request.cancellation.clone(),
-            preserve_order: request.preserve_order,
-        };
-
-        let mut result = CrashLogScanRun::new(ready)
-            .run_inner(run_request, on_event, false)
-            .await?;
-        result.discovery = Some(discovery);
-        result.setup = setup;
-        Ok(result)
+        let mut on_event = on_event;
+        execute_service(request, |event| {
+            if let CrashLogScanRunServiceEvent::Log(event) = event {
+                on_event(event);
+            }
+        })
+        .await
     }
+}
+
+/// Transitional lifecycle events used to route the final contract through the
+/// provisional service without delaying observation until the run has ended.
+pub(super) enum CrashLogScanRunServiceEvent {
+    /// Discovery completed with a retainable result.
+    DiscoveryCompleted(CrashLogScanDiscoveryResult),
+    /// Rust selected the effective concurrency for the discovered work volume.
+    EffectiveConcurrencySelected(usize),
+    /// Existing log-scoped progress event.
+    Log(CrashLogScanRunEvent),
+}
+
+/// Executes the provisional service while exposing complete lifecycle hooks to
+/// the final expand-step contract.
+pub(super) async fn execute_service<F>(
+    request: CrashLogScanRunServiceRequest,
+    mut on_event: F,
+) -> Result<CrashLogScanRunResult>
+where
+    F: FnMut(CrashLogScanRunServiceEvent),
+{
+    reset_fcx_state()?;
+
+    if cancellation_requested(request.cancellation.as_ref()) {
+        return Ok(CrashLogScanRunResult::cancelled_before_discovery());
+    }
+
+    let discovery = discover_scan_source(&request).await?;
+    on_event(CrashLogScanRunServiceEvent::DiscoveryCompleted(
+        discovery.clone(),
+    ));
+    if discovery.accepted_logs.is_empty() {
+        return Ok(CrashLogScanRunResult::no_logs_found(discovery));
+    }
+
+    let (setup, setup_failed) = evaluate_setup_for_scan(&request);
+    if setup_failed {
+        let message = setup
+            .as_ref()
+            .and_then(|setup| setup.message.clone())
+            .unwrap_or_else(|| "Crash Log Scan setup failed".to_string());
+        return Ok(CrashLogScanRunResult::setup_failed(
+            discovery, setup, message,
+        ));
+    }
+
+    let targeted_mode = matches!(&request.source, CrashLogScanSource::Targeted(_));
+    let mut scan_facts = request.scan_facts.clone();
+    if targeted_mode || !request.move_unsolved_logs {
+        // Intake validates configured destinations eagerly, so omit this fact
+        // when the accepted run intent guarantees relocation cannot occur.
+        scan_facts.unsolved_logs_destination = None;
+    }
+
+    let ready = CrashLogScanIntake::from_yaml_paths(
+        request.yaml_dir_root.clone(),
+        request.yaml_dir_data.clone(),
+        request.game.clone(),
+        request.game_version.clone(),
+        request.options,
+    )
+    .with_scan_facts(scan_facts)
+    .prepare()
+    .await?;
+
+    let effective_concurrency = resolve_batch_concurrency(
+        discovery.accepted_logs.len(),
+        normalize_scan_run_concurrency(request.max_concurrent),
+    )
+    .min(discovery.accepted_logs.len());
+    on_event(CrashLogScanRunServiceEvent::EffectiveConcurrencySelected(
+        effective_concurrency,
+    ));
+
+    let configured_unsolved_logs_destination = ready
+        .unsolved_logs_destination()
+        .map(std::path::Path::to_path_buf);
+    let intent = CrashLogScanRunIntent::from_configured_flags(
+        targeted_mode,
+        request.move_unsolved_logs,
+        configured_unsolved_logs_destination,
+    );
+    let run_request = CrashLogScanRunRequest {
+        logs: discovery.accepted_logs.clone(),
+        intent,
+        max_concurrent: request.max_concurrent,
+        cancellation: request.cancellation.clone(),
+        preserve_order: request.preserve_order,
+    };
+
+    let mut result = CrashLogScanRun::new(ready)
+        .run_inner(
+            run_request,
+            |event| on_event(CrashLogScanRunServiceEvent::Log(event)),
+            false,
+        )
+        .await?;
+    result.discovery = Some(discovery);
+    result.setup = setup;
+    Ok(result)
 }
 
 /// Request for a complete Crash Log Scan Run.
@@ -145,6 +192,7 @@ pub struct CrashLogScanRunServiceRequest {
 }
 
 /// Source to discover Crash Logs for a complete scan run.
+#[derive(Clone, Debug)]
 pub enum CrashLogScanSource {
     /// Standard discovery from CLASSIC's normal scan locations.
     Standard(StandardCrashLogScanSource),
@@ -153,6 +201,7 @@ pub enum CrashLogScanSource {
 }
 
 /// Standard Crash Log Scan Run discovery request.
+#[derive(Clone, Debug)]
 pub struct StandardCrashLogScanSource {
     /// Base directory where `Crash Logs/` and `Crash Logs/Pastebin/` are managed.
     pub base_directory: PathBuf,
@@ -163,6 +212,7 @@ pub struct StandardCrashLogScanSource {
 }
 
 /// Targeted Crash Log Scan Run discovery request.
+#[derive(Clone, Debug)]
 pub struct TargetedCrashLogScanSource {
     /// User-selected file or directory inputs.
     pub inputs: Vec<PathBuf>,
@@ -520,6 +570,7 @@ pub struct StandardCrashLogScanRunIntent {
 }
 
 /// Standard Crash Log Scan Run Unsolved Logs intent.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum StandardUnsolvedLogsIntent {
     /// Leave failed Crash Logs and Autoscan Reports in place.
     LeaveInPlace,
@@ -657,6 +708,14 @@ pub struct CrashLogScanRunLogOutcome {
     pub report_write_failed: bool,
     /// Whether the Crash Log or Autoscan Report was moved to Unsolved Logs.
     pub moved_to_unsolved_logs: bool,
+    /// Whether the requested Unsolved Logs finalization failed.
+    pub unsolved_logs_finalization_failed: bool,
+    /// Structured analysis failure message, excluding cancellation.
+    pub analysis_error: Option<String>,
+    /// Structured Autoscan Report persistence failure message.
+    pub report_write_error: Option<String>,
+    /// Structured Unsolved Logs finalization failure message.
+    pub unsolved_logs_finalization_error: Option<String>,
     /// Error message for failed or cancelled outcomes.
     pub error: Option<String>,
     /// Processing time in microseconds.
@@ -685,6 +744,13 @@ impl CrashLogScanRunLogOutcome {
             completed,
             total,
             success: self.outcome == CrashLogScanOutcome::Succeeded,
+            disposition: Some(match self.outcome {
+                CrashLogScanOutcome::Succeeded => contract::LogDisposition::Succeeded,
+                CrashLogScanOutcome::Failed => contract::LogDisposition::Failed,
+                CrashLogScanOutcome::CancelledBeforeStart => {
+                    contract::LogDisposition::CancelledBeforeStart
+                }
+            }),
         }
     }
 }
@@ -716,6 +782,8 @@ pub struct CrashLogScanRunEvent {
     pub total: usize,
     /// Whether a terminal event represents success.
     pub success: bool,
+    /// Final contract disposition for terminal events.
+    pub disposition: Option<contract::LogDisposition>,
 }
 
 impl CrashLogScanRunEvent {
@@ -735,6 +803,7 @@ impl CrashLogScanRunEvent {
             completed: event.completed,
             total: event.total,
             success: event.success,
+            disposition: None,
         })
     }
 }
@@ -764,8 +833,14 @@ async fn finalize_log_outcome(
     let crash_log = PathBuf::from(result.log_path.clone());
     let mut outcome = outcome_from_analysis(&result);
     let mut error = result.error.clone();
+    let analysis_error = if outcome == CrashLogScanOutcome::Failed {
+        result.error.clone()
+    } else {
+        None
+    };
     let mut autoscan_report = None;
     let mut report_write_failed = false;
+    let mut report_write_error = None;
 
     if result.success && !result.report_lines.is_empty() {
         match orchestrator
@@ -776,18 +851,24 @@ async fn finalize_log_outcome(
             Err(write_error) => {
                 outcome = CrashLogScanOutcome::Failed;
                 report_write_failed = true;
-                error = Some(write_error.to_string());
+                let message = write_error.to_string();
+                report_write_error = Some(message.clone());
+                error = Some(message);
             }
         }
     }
 
     let mut moved_to_unsolved_logs = false;
+    let mut unsolved_logs_finalization_failed = false;
+    let mut unsolved_logs_finalization_error = None;
     if outcome == CrashLogScanOutcome::Failed
         && let Some(directory) = unsolved_logs_destination
     {
         match move_unsolved_artifacts(&crash_log, directory).await {
             Ok(moved) => moved_to_unsolved_logs = moved,
             Err(move_error) => {
+                unsolved_logs_finalization_failed = true;
+                unsolved_logs_finalization_error = Some(move_error.to_string());
                 error = Some(match error {
                     Some(existing) => format!("{existing}; {move_error}"),
                     None => move_error.to_string(),
@@ -803,6 +884,10 @@ async fn finalize_log_outcome(
         outcome,
         report_write_failed,
         moved_to_unsolved_logs,
+        unsolved_logs_finalization_failed,
+        analysis_error,
+        report_write_error,
+        unsolved_logs_finalization_error,
         error,
         processing_time_us: result.processing_time_us,
         processing_time_ms: result.processing_time_ms,
@@ -1171,6 +1256,10 @@ fn reset_fcx_state() -> Result<()> {
         ))),
     }
 }
+
+#[cfg(test)]
+#[path = "scan_run_test_support.rs"]
+mod test_support;
 
 #[cfg(test)]
 #[path = "scan_run_tests.rs"]

@@ -70,6 +70,10 @@ Top-level scan pipeline and the main integration surface.
 
 Crash Log Scan Run owns discovery, optional FCX setup validation, and the post-intake transaction for accepted Crash Logs.
 
+- `scan_run::contract::execute(request, cancellation, observer)` - final single-operation Rust contract used by the coordinated cutover
+- `scan_run::contract::Request::{Standard, Targeted}` - tagged request whose constructors make FCX-without-context and Targeted Unsolved Logs movement unrepresentable
+- `scan_run::contract::{Cancellation, Observer, Event}` - separate opaque cancellation and optional non-controlling lifecycle observation
+- `scan_run::contract::{RunResult, LogResult, LogDisposition, InfrastructureError, InfrastructureErrorStage}` - retained discovery/concurrency, typed per-log dispositions, and stable run-wide failures
 - `CrashLogScanRunService` - high-level facade that owns Standard/Targeted discovery, FCX setup validation, intake preparation, and scan-run execution
 - `CrashLogScanRunServiceRequest` - YAML roots, game/version, scan options, source, setup context, movement, concurrency, cancellation, and ordering preference
 - `CrashLogScanSource`, `StandardCrashLogScanSource`, `TargetedCrashLogScanSource` - typed Standard versus Targeted discovery requests
@@ -259,9 +263,38 @@ Important constructors/mutators:
 - `mark_incomplete()`
 - `mark_failed()`
 
-## `CrashLogScanRun`
+## Crash Log Scan Run
+
+### Final `scan_run::contract` interface
+
+`scan_run::contract` is the final language-neutral Rust seam established for the coordinated cutover. It has one execution operation:
+
+- `contract::execute(request, cancellation, observer).await -> Result<contract::RunResult, contract::InfrastructureError>`
+- `request: contract::Request` is tagged `Standard(contract::StandardRequest)` or `Targeted(contract::TargetedRequest)`
+- `cancellation: &contract::Cancellation` is an opaque, cloneable cooperative control separate from the request
+- `observer: Option<&mut dyn contract::Observer>` is optional and non-controlling; an adapter requests stopping through the cancellation control
+
+`contract::Configuration` carries YAML roots, typed `GameId`, selected version mode, caller-projected `CrashLogScanFacts`, non-FCX analysis options, and optional explicit concurrency. `contract::Options` deliberately has no FCX boolean.
+
+The constructor matrix is exhaustive:
+
+- `Request::standard(...)` and `Request::standard_with_fcx(..., setup_context)` each accept `LeaveInPlace`, `MoveToConfiguredOrDefault`, or `MoveToCustom(path)`
+- `Request::targeted(...)` and `Request::targeted_with_fcx(..., setup_context)` accept a Targeted source and have no Unsolved Logs parameter
+- every FCX constructor requires `CrashLogScanSetupContext`; there is no FCX state that omits it
+
+Stable event variants are `DiscoveryCompleted`, `EffectiveConcurrencySelected`, `LogQueued`, `LogStarted`, `LogPhase`, and `LogFinished`. Log-scoped events carry a discovery index and path. `LogFinished` carries one of the stable dispositions: `Succeeded`, `Failed`, or `CancelledBeforeStart`. `LogResult.failures` independently preserves every applicable structured failure stage (`Analysis`, `ReportWrite`, and `UnsolvedLogsFinalization`) so a finalization failure cannot erase the preceding analysis or report failure.
+
+`contract::RunResult` retains completed discovery, Rust-selected effective concurrency once scheduling is reached, setup data, lifecycle status, aggregate counts, and per-log results in discovery order. An explicit concurrency value of zero is a typed request-validation failure; low-volume runs report effective concurrency capped by the discovered work volume.
+
+Run-wide failures use `contract::InfrastructureError { stage, message, path }`. Stable stages are `RequestValidation`, `Discovery`, `Intake`, `FormIdDatabaseAccess`, `Initialization`, and `InternalInvariant`. Expected states such as no logs, setup failure, and cancellation remain structured `RunResult` data rather than infrastructure errors.
+
+The expand implementation temporarily delegates execution to the same internals as `CrashLogScanRunService` through a transitional lifecycle hook. Discovery, effective concurrency, and log events reach the final observer during execution in that order, so an observer can request safe cancellation through the separate control. The dedicated discovery, scheduling/cancellation, and finalization tickets replace that compatibility routing. The operation is async and creates no runtime; callers enter it through `classic-shared-core`'s shared Tokio runtime.
+
+### Provisional expand-step interfaces
 
 `CrashLogScanRunService` is the public high-level facade for a full Crash Log Scan Run. It accepts typed Standard or Targeted source facts, optionally validates FCX setup, prepares intake, and executes accepted Crash Logs. `CrashLogScanRun` remains the lower prepared-run module for callers that already have `ScanReadyAnalysis` and an accepted log list.
+
+These interfaces remain temporarily available so existing C++, Node, Python, and TUI consumers can migrate through their dedicated cutover tickets. They are not alternate constructors or execution paths in the final `scan_run::contract` model and are removed/internalized by the coordinated contract step.
 
 Important service types:
 

@@ -1346,6 +1346,29 @@ fn process_logs_batch_with_events_emits_queued_started_and_terminal_events() {
 }
 
 #[test]
+fn process_logs_batch_cancelled_before_admission_never_emits_started() {
+    let orchestrator = make_fixture_orchestrator();
+    let cancellation = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+    let mut events = Vec::new();
+
+    let results = get_runtime().block_on(orchestrator.process_logs_batch_with_events(
+        vec!["missing-a.log".to_string()],
+        BatchScanOptions {
+            max_concurrent: Some(1),
+            preserve_order: true,
+            cancellation: Some(cancellation),
+        },
+        |event| events.push(event.kind),
+    ));
+
+    assert_eq!(results.len(), 1);
+    assert!(events.contains(&BatchScanEventKind::Queued));
+    assert!(events.contains(&BatchScanEventKind::Failed));
+    assert!(!events.contains(&BatchScanEventKind::Started));
+    assert!(!events.contains(&BatchScanEventKind::Phase));
+}
+
+#[test]
 fn drain_ready_batch_progress_events_flushes_phase_before_terminal_event() {
     use tokio::sync::mpsc;
 

@@ -1447,16 +1447,8 @@ impl OrchestratorCore {
                 let completed_counter = Arc::clone(&completed_counter);
                 let cancellation = cancellation.clone();
                 async move {
-                    let _ = progress_tx.send(BatchScanEvent {
-                        input_index,
-                        log_path: log_path.clone(),
-                        kind: BatchScanEventKind::Started,
-                        phase: ScanProgressPhase::Setup,
-                        completed: completed_counter.load(Ordering::Relaxed),
-                        total,
-                        success: false,
-                    });
-
+                    // Cancellation before admission keeps the log queued; a
+                    // Started event would contradict its terminal non-start disposition.
                     if cancellation
                         .as_ref()
                         .is_some_and(|cancel| cancel.load(Ordering::Relaxed))
@@ -1468,6 +1460,16 @@ impl OrchestratorCore {
                             AnalysisResult::failure(log_path, "Cancelled by user".to_string()),
                         );
                     }
+
+                    let _ = progress_tx.send(BatchScanEvent {
+                        input_index,
+                        log_path: log_path.clone(),
+                        kind: BatchScanEventKind::Started,
+                        phase: ScanProgressPhase::Setup,
+                        completed: completed_counter.load(Ordering::Relaxed),
+                        total,
+                        success: false,
+                    });
 
                     let mut last_phase = ScanProgressPhase::Setup;
                     let result = match self

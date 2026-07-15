@@ -192,6 +192,7 @@ fn scan_run_progress_formatter_uses_completion_count_and_filename() {
         completed: 2,
         total: 4,
         success: true,
+        disposition: None,
     };
 
     let (percent, status) = format_scan_run_progress(&event);

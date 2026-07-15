@@ -1,11 +1,10 @@
+use super::test_support::{FIXTURE_LOG_SMALL, write_fixture_log, write_minimal_yaml_tree};
 use super::*;
 use crate::{AnalysisConfig, FormIdReadiness, SHORT_SCAN_CACHE_PROFILE};
 use classic_shared_core::get_runtime;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tempfile::tempdir;
-
-const FIXTURE_LOG_SMALL: &str = include_str!("../benches/fixtures/crash-0DB9300.log");
 
 fn make_ready_analysis() -> ScanReadyAnalysis {
     make_ready_analysis_with(None, None)
@@ -32,55 +31,6 @@ fn make_ready_analysis_with(
         paths,
         unsolved_logs_destination,
     )
-}
-
-fn write_fixture_log(temp: &tempfile::TempDir, filename: &str) -> std::path::PathBuf {
-    let log_path = temp.path().join(filename);
-    std::fs::write(&log_path, FIXTURE_LOG_SMALL).expect("fixture log should be written");
-    log_path
-}
-
-fn write_minimal_yaml_tree(root: &std::path::Path, data: &std::path::Path) {
-    std::fs::create_dir_all(data.join("databases")).expect("database dir should be created");
-    std::fs::write(
-        data.join("databases").join("CLASSIC Main.yaml"),
-        concat!(
-            "CLASSIC_Info:\n",
-            "  version: \"v9.1.0\"\n",
-            "  version_date: \"2026-06-30\"\n",
-            "CLASSIC_Interface:\n",
-            "  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n",
-            "catch_log_records:\n",
-            "  - TESObjectREFR\n",
-            "exclude_log_records:\n",
-            "  - '(void*)'\n",
-        ),
-    )
-    .expect("main YAML should be written");
-    std::fs::write(
-        data.join("databases").join("CLASSIC Fallout4.yaml"),
-        concat!(
-            "Game_Info:\n",
-            "  XSE_Acronym: \"F4SE\"\n",
-            "  GameVersion: \"1.10.163\"\n",
-            "  CRASHGEN_LatestVer: \"1.28.6\"\n",
-            "  CRASHGEN_LogName: \"Buffout 4\"\n",
-            "  Main_Root_Name: \"Fallout4\"\n",
-            "Crashlog_Plugins_Exclude: []\n",
-            "Crashlog_Records_Exclude: []\n",
-            "Crashgen_Registry:\n",
-            "  default:\n",
-            "    display_section: \"\"\n",
-            "    ignore_keys: []\n",
-            "    checks: []\n",
-        ),
-    )
-    .expect("game YAML should be written");
-    std::fs::write(
-        root.join("CLASSIC Ignore.yaml"),
-        "CLASSIC_Ignore_Fallout4:\n  - IgnoreThis.dll\n",
-    )
-    .expect("ignore YAML should be written");
 }
 
 fn service_request(
