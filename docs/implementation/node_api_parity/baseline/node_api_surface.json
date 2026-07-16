@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T07:19:42.378469+00:00",
+  "generated_at_utc": "2026-07-16T08:26:39.478428+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -35,6 +35,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export const CRASH_LOG_PATTERN: string"
+    },
+    {
+      "export": "CrashSuspectAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class CrashSuspectAnalyzer {"
     },
     {
       "export": "CrashgenSettingsAnalyzer",
@@ -283,6 +291,62 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCrashLogScanSettings {"
+    },
+    {
+      "export": "JsCrashSuspectAnalysisInput",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashSuspectAnalysisInput {"
+    },
+    {
+      "export": "JsCrashSuspectAnalysisResult",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashSuspectAnalysisResult {"
+    },
+    {
+      "export": "JsCrashSuspectFinding",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashSuspectFinding {"
+    },
+    {
+      "export": "JsCrashSuspectFindingKind",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsCrashSuspectFindingKind {"
+    },
+    {
+      "export": "JsCrashSuspectMainErrorRule",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashSuspectMainErrorRule {"
+    },
+    {
+      "export": "JsCrashSuspectStackCountRule",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashSuspectStackCountRule {"
+    },
+    {
+      "export": "JsCrashSuspectStackRule",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashSuspectStackRule {"
     },
     {
       "export": "JsCrashgenCheckResult",

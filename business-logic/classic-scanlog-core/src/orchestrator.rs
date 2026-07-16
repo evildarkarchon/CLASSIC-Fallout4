@@ -10,6 +10,9 @@
 //! - Incomplete/failed log detection with statistics
 //! - Full analysis pipeline integration
 
+use crate::crash_suspect_analyzer::{
+    CrashSuspectAnalysisInput, CrashSuspectAnalysisResult, CrashSuspectAnalyzer,
+};
 use crate::crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 use crate::error::Result;
 use crate::formid_analyzer::FormIDAnalyzerCore;
@@ -22,12 +25,11 @@ use crate::plugin_analyzer::PluginAnalyzer;
 use crate::record_scanner::RecordScanner;
 use crate::report::{
     AutoscanReportAssembler, AutoscanReportContribution, AutoscanReportFacts, ModGuidanceGroup,
-    ReportFragment, ReportGenerator, write_autoscan_report,
+    ReportGenerator, write_autoscan_report,
 };
 use crate::scan_run::CrashLogScanSetupResult;
 use crate::segment_key;
 use crate::settings_validator::SettingsValidator;
-use crate::suspect_scanner::SuspectScanner;
 use crate::version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status,
     check_crashgen_version_status_with_exceptions, crashgen_version_gen,
@@ -81,11 +83,6 @@ struct CrashgenScanContext {
     crashgen_status: Option<CrashgenVersionStatus>,
     crashgen_version: Option<(u32, u32, u32)>,
     config_layout: ConfigLayout,
-}
-
-struct SuspectScanFragments {
-    fragments: Vec<ReportFragment>,
-    count: usize,
 }
 
 /// Resolve the effective concurrency for batch log processing.
@@ -708,7 +705,7 @@ pub struct OrchestratorCore {
     parser: LogParser,
     plugin_analyzer: Option<PluginAnalyzer>,
     formid_analyzer: FormIDAnalyzerCore,
-    suspect_scanner: Option<SuspectScanner>,
+    suspect_analyzer: CrashSuspectAnalyzer,
     /// Record scanner for named record detection
     record_scanner: Option<RecordScanner>,
     /// Settings validator for crash generator settings
@@ -888,16 +885,18 @@ impl OrchestratorCore {
             config.game_version_vr.clone(),
         )?);
 
-        // Initialize suspect scanner if suspect patterns are available
-        let suspect_scanner =
-            if !config.suspect_error_rules.is_empty() || !config.suspect_stack_rules.is_empty() {
-                Some(SuspectScanner::new(
-                    config.suspect_error_rules.clone(),
-                    config.suspect_stack_rules.clone(),
-                ))
-            } else {
-                None
-            };
+        let suspect_analyzer = CrashSuspectAnalyzer::new(
+            config.suspect_error_rules.clone(),
+            config.suspect_stack_rules.clone(),
+        )
+        .map_err(|error| {
+            crate::error::ScanLogError::ConfigError(format!(
+                "{} [{}]: {}",
+                error.analyzer().as_str(),
+                error.code().as_str(),
+                error.message()
+            ))
+        })?;
 
         // Extract values before moving config
         let show_formid_values = config.show_formid_values;
@@ -935,7 +934,7 @@ impl OrchestratorCore {
                 mods_freq,
                 mods_conf,
             )?,
-            suspect_scanner,
+            suspect_analyzer,
             record_scanner,
             settings_validator,
             db_pool: None,
@@ -1180,12 +1179,14 @@ impl OrchestratorCore {
 
         // Store plugins for mod detection - IndexMap preserves load order for Python parity
         let (plugins_map, plugin_count) = self.collect_plugins(&context);
-        let suspect_fragments = self.collect_suspect_fragments(&context, &crashgen.main_error);
-        contributions.extend(suspect_fragments.fragments.into_iter().map(|fragment| {
-            AutoscanReportContribution::CrashSuspectFinding {
-                lines: fragment.to_list(),
-            }
-        }));
+        let suspect_result = self.collect_suspect_findings(&context, &crashgen.main_error)?;
+        let suspect_count = suspect_result.findings.len();
+        contributions.extend(
+            suspect_result
+                .findings
+                .into_iter()
+                .map(|finding| AutoscanReportContribution::CrashSuspectFinding { finding }),
+        );
 
         // Mod detection (if we have plugin data)
         if let Some(ref plugins) = plugins_map {
@@ -1237,7 +1238,7 @@ impl OrchestratorCore {
         // Update statistics
         result.formid_count = formid_count;
         result.plugin_count = plugin_count;
-        result.suspect_count = suspect_fragments.count;
+        result.suspect_count = suspect_count;
 
         if let Some(phase_timings_us) = phase_timings_us.as_ref() {
             let phase_summary = phase_timings_us
@@ -1585,41 +1586,25 @@ impl OrchestratorCore {
             })
     }
 
-    fn collect_suspect_fragments(
+    /// Runs aggregate Crash Suspect analysis and preserves typed failures as analysis errors.
+    fn collect_suspect_findings(
         &self,
         context: &ScanAnalysisContext,
         main_error: &str,
-    ) -> SuspectScanFragments {
-        let Some(ref scanner) = self.suspect_scanner else {
-            return SuspectScanFragments {
-                fragments: Vec::new(),
-                count: 0,
-            };
-        };
-
-        let max_warn_length = 50;
-        let (error_fragment, error_found) = scanner
-            .suspect_scan_mainerror(main_error, max_warn_length)
-            .unwrap_or_else(|_| (ReportFragment::empty(), false));
-        let (stack_fragment, stack_found) = scanner
-            .suspect_scan_stack(main_error, &context.combined_crash_text, max_warn_length)
-            .unwrap_or_else(|_| (ReportFragment::empty(), false));
-        let dll_fragment =
-            SuspectScanner::check_dll_crash(main_error).unwrap_or_else(|_| ReportFragment::empty());
-
-        let mut fragments = Vec::new();
-        if error_found {
-            fragments.push(error_fragment);
-        }
-        if stack_found {
-            fragments.push(stack_fragment);
-        }
-        if !dll_fragment.is_empty() {
-            fragments.push(dll_fragment);
-        }
-
-        let count = fragments.len();
-        SuspectScanFragments { fragments, count }
+    ) -> Result<CrashSuspectAnalysisResult> {
+        self.suspect_analyzer
+            .analyze(CrashSuspectAnalysisInput {
+                main_error: main_error.to_string(),
+                call_stack: context.combined_crash_text.clone(),
+            })
+            .map_err(|error| {
+                crate::error::ScanLogError::AnalysisError(format!(
+                    "{} [{}]: {}",
+                    error.analyzer().as_str(),
+                    error.code().as_str(),
+                    error.message()
+                ))
+            })
     }
 
     fn collect_mod_contributions(
@@ -2025,7 +2010,7 @@ impl OrchestratorCore {
     /// A feature-complete orchestrator can replace Python's OrchestratorCore for
     /// both single-log and batch processing. This includes:
     /// - Plugin analysis support
-    /// - Suspect scanning support
+    /// - Crash Suspect analysis support
     /// - Optional database pool (not required for feature completeness)
     ///
     /// # Returns
@@ -2035,9 +2020,9 @@ impl OrchestratorCore {
     pub fn is_feature_complete(&self) -> bool {
         // Required features:
         // 1. Plugin analyzer must be available
-        // 2. Suspect scanner must be available
+        // 2. Crash Suspect Analyzer is mandatory and validated during construction
         // Database pool is optional (degrades gracefully)
-        self.plugin_analyzer.is_some() && self.suspect_scanner.is_some()
+        self.plugin_analyzer.is_some()
     }
 }
 

@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-16T07:19:42.380117+00:00`
-- Tier-1 contract rows: **875**
-- Tier-1 matched: **875**
+- Generated: `2026-07-16T08:26:39.480212+00:00`
+- Tier-1 contract rows: **882**
+- Tier-1 matched: **882**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -458,7 +458,6 @@
 | `scanlog.parser.StreamingIteratorParser@rust` | `scanlog` | `StreamingIteratorParser@rust` | `None` | `matched` |
 | `scanlog.parser.StreamingLogParser@rust` | `scanlog` | `StreamingLogParser@rust` | `None` | `matched` |
 | `scanlog.parser.StringPool@rust` | `scanlog` | `StringPool@rust` | `None` | `matched` |
-| `scanlog.suspect_scanner.SuspectScanner@rust` | `scanlog` | `SuspectScanner@rust` | `None` | `matched` |
 | `scanlog.plugin_analyzer.contains_plugin@rust` | `scanlog` | `contains_plugin@rust` | `None` | `matched` |
 | `scanlog.record_scanner.contains_record@rust` | `scanlog` | `contains_record@rust` | `None` | `matched` |
 | `scanlog.crashgen_registry.crashgen_registry@rust` | `scanlog` | `crashgen_registry@rust` | `None` | `matched` |
@@ -500,8 +499,16 @@
 | `scanlog.crashgen_settings_analyzer.CrashgenVersion` | `scanlog` | `CrashgenSettingsAnalysisInput` | `JsCrashgenVersion` | `matched` |
 | `scanlog.crashgen_settings_analyzer.DisabledSettingNotice` | `scanlog` | `DisabledSettingNotice` | `JsDisabledSettingNotice` | `matched` |
 | `scanlog.crashgen_settings_analyzer.crashgen_settings_analyzer@rust` | `scanlog` | `crashgen_settings_analyzer@rust` | `None` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisInput` | `scanlog` | `CrashSuspectAnalysisInput` | `JsCrashSuspectAnalysisInput` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisResult` | `scanlog` | `CrashSuspectAnalysisResult` | `JsCrashSuspectAnalysisResult` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalyzer` | `scanlog` | `CrashSuspectAnalyzer` | `CrashSuspectAnalyzer` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectFinding` | `scanlog` | `CrashSuspectFinding` | `JsCrashSuspectFinding` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectFindingKind` | `scanlog` | `CrashSuspectFindingKind` | `JsCrashSuspectFindingKind` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectMainErrorRule` | `scanlog` | `SuspectErrorRule` | `JsCrashSuspectMainErrorRule` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectStackCountRule` | `scanlog` | `SuspectStackCountRule` | `JsCrashSuspectStackCountRule` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectStackRule` | `scanlog` | `SuspectStackRule` | `JsCrashSuspectStackRule` | `matched` |
+| `scanlog.crash_suspect_analyzer.crash_suspect_analyzer@rust` | `scanlog` | `crash_suspect_analyzer@rust` | `None` | `matched` |
 | `scanlog.settings_validator.settings_validator@rust` | `scanlog` | `settings_validator@rust` | `None` | `matched` |
-| `scanlog.suspect_scanner.suspect_scanner@rust` | `scanlog` | `suspect_scanner@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.validate_formids_batch@rust` | `scanlog` | `validate_formids_batch@rust` | `None` | `matched` |
 | `scanlog.version.version@rust` | `scanlog` | `version@rust` | `None` | `matched` |
 | `scanlog.patterns.CRASH_LOG_PATTERN` | `scanlog` | `CRASH_LOG_PATTERN` | `CRASH_LOG_PATTERN` | `matched` |

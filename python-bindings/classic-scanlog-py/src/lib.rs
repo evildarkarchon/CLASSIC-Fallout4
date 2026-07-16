@@ -85,6 +85,7 @@ define_exceptions!(
 // Import all wrapper modules
 /// Conversion helpers for `CoreModExclude` ↔ Python dict round-tripping.
 pub mod core_mod_convert;
+pub mod crash_suspect_analyzer;
 /// Crashgen settings rule parsing helpers for Python inputs.
 pub mod crashgen_rules;
 pub mod crashgen_settings_analyzer;
@@ -102,10 +103,14 @@ pub mod record_scanner;
 pub mod report;
 pub mod scan_run;
 pub mod settings_validator;
-pub mod suspect_scanner;
 pub mod version;
 
 // Re-export all public types
+pub use crash_suspect_analyzer::{
+    PyCrashSuspectAnalysisInput, PyCrashSuspectAnalysisResult, PyCrashSuspectAnalyzer,
+    PyCrashSuspectFinding, PyCrashSuspectFindingKind, PyCrashSuspectMainErrorRule,
+    PyCrashSuspectStackCountRule, PyCrashSuspectStackRule,
+};
 pub use crashgen_settings_analyzer::{
     PyAnalyzerKind, PyAnalyzerSeverity, PyAutoscanReportPlacement, PyCrashgenExpectationKind,
     PyCrashgenExpectationOutcome, PyCrashgenSettingsAnalysisResult, PyCrashgenSettingsAnalyzer,
@@ -136,7 +141,6 @@ pub use scan_run::{
     PyScanRunStandardSource, PyScanRunTargetedSource, PyScanRunUnsolvedLogs, scan_run_execute,
 };
 pub use settings_validator::PySettingsValidator;
-pub use suspect_scanner::PySuspectScanner;
 pub use version::{
     PyCrashgenVersion, PyCrashgenVersionStatus, check_crashgen_version_status,
     parse_crashgen_version,
@@ -225,7 +229,6 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(contains_plugin, m)?)?;
 
     m.add_class::<PyPatternMatcher>()?;
-    m.add_class::<PySuspectScanner>()?;
 
     // Detectors
     m.add_class::<PyGpuDetector>()?;
@@ -241,6 +244,7 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Validators and run-result data
     crashgen_settings_analyzer::register(m)?;
+    crash_suspect_analyzer::register(m)?;
     m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;
@@ -289,7 +293,6 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(contains_plugin, m)?)?;
 
     m.add_class::<PyPatternMatcher>()?;
-    m.add_class::<PySuspectScanner>()?;
 
     // Detectors
     m.add_class::<PyGpuDetector>()?;
@@ -305,6 +308,7 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Validators and run-result data
     crashgen_settings_analyzer::register(m)?;
+    crash_suspect_analyzer::register(m)?;
     m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;

@@ -130,8 +130,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 258,
-      "contractIdsHash": "56af71b40ea8af0eff8989ba5cfe12e17a16832561f1aa2a7ca63903c26aa6b8",
+      "contractCount": 268,
+      "contractIdsHash": "acccd3849e44a0299094d1edf1ba583765f48ffb78a58eb2b95472f752e83383",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
@@ -140,7 +140,7 @@
         "PARITY_GAME_YAML",
         "PARITY_IGNORE_YAML"
       ],
-      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns); Plan 03 added 57 Wave 2 rows (mod_detector/suspect_scanner/settings_validator/fcx_handler/gpu_detector) per R9 with GLOBAL_FCX_HANDLER excluded; Plan 04 added 50 Wave 3a rows (orchestrator/papyrus/version/crashgen_registry/segment_key/error); Plan 05 added 46 Wave 3b report rows (StringPool/ReportFragment/ReportComposer/ReportGenerator/ParallelReportProcessor + report module marker). Issue #123 adds 33 final Crash Log Scan Run contract rows with dedicated public-seam tests. Issue #128 adds 22 shared analyzer and Crashgen Settings analyzer rows with dedicated public-seam tests. Supplementary smoke tests live in test_promoted_scanlog_wave1_smoke.py, test_promoted_scanlog_wave2_smoke.py, test_promoted_scanlog_wave3a_smoke.py, test_promoted_scanlog_report_smoke.py, test_scan_run_contract.py, and test_crashgen_settings_analyzer.py."
+      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns); Plan 03 added Wave 2 mod/settings/FCX/GPU rows, with the fragment-producing SuspectScanner retired by issue #129; Plan 04 added 50 Wave 3a rows; Plan 05 added 46 Wave 3b report rows. Issue #123 adds the final Crash Log Scan Run contract. Issues #128 and #129 add shared semantic analyzer contracts with dedicated public-seam tests. Supplementary smoke tests live in the promoted wave suites plus test_scan_run_contract.py, test_crashgen_settings_analyzer.py, and test_crash_suspect_analyzer.py."
     },
     {
       "coverageId": "python-tier1-scanlog-crashgen-settings-analyzer",
@@ -189,6 +189,41 @@
       "notes": "Exercises immutable construction, populated and explicit-empty semantic results, exact typed projections and stable analyzer errors, immutability, malformed configuration rejection, and concurrent handle reuse."
     },
     {
+      "coverageId": "python-tier1-scanlog-crash-suspect-analyzer",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_scanlog.CrashSuspectFindingKind",
+        "classic_scanlog.CrashSuspectFindingKind.value",
+        "classic_scanlog.CrashSuspectStackCountRule",
+        "classic_scanlog.CrashSuspectStackCountRule.__init__",
+        "classic_scanlog.CrashSuspectStackCountRule.substring",
+        "classic_scanlog.CrashSuspectStackCountRule.count",
+        "classic_scanlog.CrashSuspectMainErrorRule",
+        "classic_scanlog.CrashSuspectMainErrorRule.__init__",
+        "classic_scanlog.CrashSuspectStackRule",
+        "classic_scanlog.CrashSuspectStackRule.__init__",
+        "classic_scanlog.CrashSuspectAnalysisInput",
+        "classic_scanlog.CrashSuspectAnalysisInput.__init__",
+        "classic_scanlog.CrashSuspectFinding",
+        "classic_scanlog.CrashSuspectFinding.kind",
+        "classic_scanlog.CrashSuspectFinding.rule_id",
+        "classic_scanlog.CrashSuspectFinding.name",
+        "classic_scanlog.CrashSuspectFinding.severity",
+        "classic_scanlog.CrashSuspectAnalysisResult",
+        "classic_scanlog.CrashSuspectAnalysisResult.findings",
+        "classic_scanlog.CrashSuspectAnalyzer",
+        "classic_scanlog.CrashSuspectAnalyzer.__init__",
+        "classic_scanlog.CrashSuspectAnalyzer.kind",
+        "classic_scanlog.CrashSuspectAnalyzer.analyze"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_crash_suspect_analyzer.py",
+      "testCaseId": "crash-suspect-analyzer-runtime",
+      "notes": "Exercises immutable typed rule construction, one semantic finding per matched main-error rule, stack rule, and DLL notice, explicit-empty results, immutability, stable shared analyzer errors, and concurrent handle reuse without leaked findings."
+    },
+    {
       "coverageId": "python-tier1-scanlog-wave1-promoted",
       "classification": "runtime_verified",
       "ownerModule": "scanlog",
@@ -228,11 +263,6 @@
         "classic_scanlog.detect_mods_double",
         "classic_scanlog.detect_mods_important",
         "classic_scanlog.detect_mods_batch",
-        "classic_scanlog.SuspectScanner",
-        "classic_scanlog.SuspectScanner.suspect_scan_mainerror",
-        "classic_scanlog.SuspectScanner.suspect_scan_stack",
-        "classic_scanlog.SuspectScanner.scan_suspects_batch",
-        "classic_scanlog.SuspectScanner.check_dll_crash",
         "classic_scanlog.SettingsValidator",
         "classic_scanlog.SettingsValidator.scan_all_settings",
         "classic_scanlog.SettingsValidator.check_disabled_settings",
@@ -248,7 +278,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_promoted_scanlog_wave2_smoke.py",
       "testCaseId": "scanlog-wave2-promoted-smoke",
-      "notes": "Covers retained mod detection, suspect scanning, settings validation, run-scoped ConfigIssue result data, and GPU analysis. Process-global FCX controls are intentionally absent."
+      "notes": "Covers retained mod detection, settings validation, run-scoped ConfigIssue result data, and GPU analysis. Crash Suspect analysis moved to its dedicated semantic analyzer suite; process-global FCX controls are intentionally absent."
     },
     {
       "coverageId": "python-tier1-scanlog-wave3a-promoted",

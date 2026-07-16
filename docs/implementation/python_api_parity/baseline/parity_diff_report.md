@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-16T07:19:15.478050+00:00`
-- Tier-1 contract rows: **1244**
-- Tier-1 matched: **1244**
+- Generated: `2026-07-16T07:58:59.805569+00:00`
+- Tier-1 contract rows: **1254**
+- Tier-1 matched: **1254**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -970,14 +970,24 @@
 | `scanlog.settings_validator.SettingsValidator.scan_all_settings` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.scan_all_settings` | `matched` |
 | `scanlog.settings_validator.SettingsValidator@rust` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator` | `matched` |
 | `scanlog.settings_validator.settings_validator@rust` | `scanlog` | `settings_validator` | `classic_scanlog.SettingsValidator` | `matched` |
-| `scanlog.suspect_scanner.SuspectScanner` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner` | `matched` |
-| `scanlog.suspect_scanner.SuspectScanner.__init__` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner.__init__` | `matched` |
-| `scanlog.suspect_scanner.SuspectScanner.check_dll_crash` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner.check_dll_crash` | `matched` |
-| `scanlog.suspect_scanner.SuspectScanner.scan_suspects_batch` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner.scan_suspects_batch` | `matched` |
-| `scanlog.suspect_scanner.SuspectScanner.suspect_scan_mainerror` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner.suspect_scan_mainerror` | `matched` |
-| `scanlog.suspect_scanner.SuspectScanner.suspect_scan_stack` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner.suspect_scan_stack` | `matched` |
-| `scanlog.suspect_scanner.SuspectScanner@rust` | `scanlog` | `SuspectScanner` | `classic_scanlog.SuspectScanner` | `matched` |
-| `scanlog.suspect_scanner.suspect_scanner@rust` | `scanlog` | `suspect_scanner` | `classic_scanlog.SuspectScanner` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisInput@rust` | `scanlog` | `CrashSuspectAnalysisInput` | `classic_scanlog.CrashSuspectAnalysisInput` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisInput.__init__` | `scanlog` | `CrashSuspectAnalysisInput` | `classic_scanlog.CrashSuspectAnalysisInput.__init__` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisResult` | `scanlog` | `CrashSuspectAnalysisResult` | `classic_scanlog.CrashSuspectAnalysisResult` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisResult@rust` | `scanlog` | `CrashSuspectAnalysisResult` | `classic_scanlog.CrashSuspectAnalysisResult` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalyzer` | `scanlog` | `CrashSuspectAnalyzer` | `classic_scanlog.CrashSuspectAnalyzer` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalyzer.__init__` | `scanlog` | `CrashSuspectAnalyzer` | `classic_scanlog.CrashSuspectAnalyzer.__init__` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalyzer.analyze` | `scanlog` | `CrashSuspectAnalyzer` | `classic_scanlog.CrashSuspectAnalyzer.analyze` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectAnalyzer@rust` | `scanlog` | `CrashSuspectAnalyzer` | `classic_scanlog.CrashSuspectAnalyzer` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectFinding` | `scanlog` | `CrashSuspectFinding` | `classic_scanlog.CrashSuspectFinding` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectFinding@rust` | `scanlog` | `CrashSuspectFinding` | `classic_scanlog.CrashSuspectFinding` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectFindingKind` | `scanlog` | `CrashSuspectFindingKind` | `classic_scanlog.CrashSuspectFindingKind` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectMainErrorRule` | `scanlog` | `SuspectErrorRule` | `classic_scanlog.CrashSuspectMainErrorRule` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectMainErrorRule.__init__` | `scanlog` | `SuspectErrorRule` | `classic_scanlog.CrashSuspectMainErrorRule.__init__` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectStackCountRule` | `scanlog` | `SuspectStackCountRule` | `classic_scanlog.CrashSuspectStackCountRule` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectStackCountRule.__init__` | `scanlog` | `SuspectStackCountRule` | `classic_scanlog.CrashSuspectStackCountRule.__init__` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectStackRule` | `scanlog` | `SuspectStackRule` | `classic_scanlog.CrashSuspectStackRule` | `matched` |
+| `scanlog.crash_suspect_analyzer.CrashSuspectStackRule.__init__` | `scanlog` | `SuspectStackRule` | `classic_scanlog.CrashSuspectStackRule.__init__` | `matched` |
+| `scanlog.crash_suspect_analyzer.crash_suspect_analyzer@rust` | `scanlog` | `crash_suspect_analyzer` | `classic_scanlog.CrashSuspectAnalyzer` | `matched` |
 | `scanlog.version.CrashgenVersion.__eq__` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.__eq__` | `matched` |
 | `scanlog.version.CrashgenVersion.__hash__` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.__hash__` | `matched` |
 | `scanlog.version.CrashgenVersion.__init__` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion.__init__` | `matched` |

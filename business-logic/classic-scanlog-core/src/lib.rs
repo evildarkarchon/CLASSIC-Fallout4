@@ -24,6 +24,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 // Public utility modules and the final Crash Log Scan Run contract.
 pub mod analyzer;
+pub mod crash_suspect_analyzer;
 pub mod crashgen_registry;
 pub mod crashgen_settings_analyzer;
 pub mod error;
@@ -48,11 +49,14 @@ pub mod scan_run;
 mod scan_sidecar_settings;
 pub mod segment_key;
 pub mod settings_validator;
-pub mod suspect_scanner;
 pub mod version;
 
 // Re-export key types for convenience
 pub use analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};
+pub use crash_suspect_analyzer::{
+    CrashSuspectAnalysisInput, CrashSuspectAnalysisResult, CrashSuspectAnalyzer,
+    CrashSuspectFinding, CrashSuspectFindingKind,
+};
 pub use crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 pub use crashgen_settings_analyzer::{
     CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult,
@@ -87,7 +91,6 @@ pub use scan_run::{
     StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
 pub use settings_validator::SettingsValidator;
-pub use suspect_scanner::SuspectScanner;
 pub use version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status,
     check_crashgen_version_status_with_exceptions, crashgen_version_gen,

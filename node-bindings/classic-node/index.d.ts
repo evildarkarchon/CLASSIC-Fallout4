@@ -81,6 +81,25 @@ export declare class CrashgenSettingsAnalyzer {
   analyze(input: JsCrashgenSettingsAnalysisInput): JsCrashgenSettingsAnalysisResult
 }
 
+/** Immutable Node handle over validated Crash Suspect matcher configuration. */
+export declare class CrashSuspectAnalyzer {
+  /**
+   * Validates and compiles owned Crash Suspect rules into an immutable analyzer.
+   *
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  constructor(mainErrorRules: Array<JsCrashSuspectMainErrorRule>, stackRules: Array<JsCrashSuspectStackRule>)
+  /** Returns the stable focused-analyzer identity for this handle. */
+  get kind(): JsAnalyzerKind
+  /**
+   * Runs one aggregate semantic analysis over owned Crash Log evidence.
+   *
+   * @returns Individual typed findings, including an explicit empty array on no match.
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  analyze(input: JsCrashSuspectAnalysisInput): JsCrashSuspectAnalysisResult
+}
+
 /**
  * Multi-strategy documents path finder.
  *
@@ -2795,6 +2814,82 @@ export interface JsCrashLogScanSettings {
   maxConcurrentScans: number
   /** Provenance token for Max Concurrent Scans. */
   maxConcurrentScansOrigin: string
+}
+
+/** Owned input for one aggregate Crash Suspect analysis call. */
+export interface JsCrashSuspectAnalysisInput {
+  /** Main error extracted from the Crash Log. */
+  mainError: string
+  /** Complete call-stack evidence. */
+  callStack: string
+}
+
+/** Completed Crash Suspect analysis, including explicit empty success. */
+export interface JsCrashSuspectAnalysisResult {
+  /** Individual semantic findings in rule-configuration order. */
+  findings: Array<JsCrashSuspectFinding>
+}
+
+/** One semantic Crash Suspect Finding without report presentation fields. */
+export interface JsCrashSuspectFinding {
+  /** Evidence source that produced the finding. */
+  kind: JsCrashSuspectFindingKind
+  /** Stable rule identifier, absent for DLL involvement. */
+  ruleId?: string
+  /** Authored rule name, absent for DLL involvement. */
+  name?: string
+  /** Authored severity, absent for DLL involvement. */
+  severity?: number
+}
+
+/** Evidence source that produced one Crash Suspect Finding. */
+export declare const enum JsCrashSuspectFindingKind {
+  /** A configured main-error rule matched. */
+  MainErrorRule = 'main_error_rule',
+  /** A configured stack rule matched. */
+  StackRule = 'stack_rule',
+  /** The main error reports DLL involvement. */
+  DllInvolvement = 'dll_involvement'
+}
+
+/** One owned main-error rule used to construct the analyzer. */
+export interface JsCrashSuspectMainErrorRule {
+  /** Stable rule identifier. */
+  id: string
+  /** Authored display name. */
+  name: string
+  /** Authored severity used for ordering and presentation. */
+  severity: number
+  /** Main-error substrings where any match triggers the rule. */
+  mainErrorContainsAny: Array<string>
+}
+
+/** One minimum-occurrence condition in a Crash Suspect stack rule. */
+export interface JsCrashSuspectStackCountRule {
+  /** Substring counted in the call stack. */
+  substring: string
+  /** Minimum required non-overlapping occurrences. */
+  count: number
+}
+
+/** One owned stack rule used to construct the analyzer. */
+export interface JsCrashSuspectStackRule {
+  /** Stable rule identifier. */
+  id: string
+  /** Authored display name. */
+  name: string
+  /** Authored severity used for ordering and presentation. */
+  severity: number
+  /** Main-error substrings where any match is required when configured. */
+  mainErrorRequiredAny: Array<string>
+  /** Optional main-error substrings that can trigger the rule. */
+  mainErrorOptionalAny: Array<string>
+  /** Stack substrings where any match can trigger the rule. */
+  stackContainsAny: Array<string>
+  /** Stack substrings that suppress the rule. */
+  excludeIfStackContainsAny: Array<string>
+  /** Minimum-occurrence stack conditions. */
+  stackContainsAtLeast: Array<JsCrashSuspectStackCountRule>
 }
 
 /** Result from batch DDS validation for a single file. */

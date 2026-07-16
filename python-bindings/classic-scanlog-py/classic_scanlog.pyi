@@ -1358,87 +1358,6 @@ def detect_mods_batch(
     """
 
 # =============================================================================
-# Suspect Scanning (Phase 2)
-# =============================================================================
-
-class SuspectScanner:
-    """Suspect pattern matching using structured crash suspect rules."""
-
-    def __init__(
-        self,
-        suspect_error_rules: list[dict[str, Any]],
-        suspect_stack_rules: list[dict[str, Any]],
-    ) -> None:
-        """Create suspect scanner.
-
-        Args:
-            suspect_error_rules: Structured main-error suspect rules
-            suspect_stack_rules: Structured stack suspect rules
-
-        """
-
-    def suspect_scan_mainerror(
-        self, crashlog_mainerror: str, max_warn_length: int
-    ) -> tuple[list[str], bool]:
-        """Scan main error for suspects.
-
-        Args:
-            crashlog_mainerror: Main error message from crash log
-            max_warn_length: Maximum warning length for output
-
-        Returns:
-            Tuple of (suspect_lines, found_suspect)
-
-        """
-
-    def suspect_scan_stack(
-        self,
-        crashlog_mainerror: str,
-        segment_callstack_intact: str,
-        max_warn_length: int,
-    ) -> tuple[list[str], bool]:
-        """Scan call stack for suspects.
-
-        Uses signal modifier logic to match patterns across
-        main error and callstack.
-
-        Args:
-            crashlog_mainerror: Main error message
-            segment_callstack_intact: Call stack text
-            max_warn_length: Maximum warning length for output
-
-        Returns:
-            Tuple of (suspect_lines, found_suspect)
-
-        """
-
-    def scan_suspects_batch(
-        self, crash_logs: list[tuple[str, str]], max_warn_length: int
-    ) -> list[tuple[list[str], bool]]:
-        """Batch scan multiple crash logs.
-
-        Args:
-            crash_logs: List of (main_error, callstack) tuples
-            max_warn_length: Maximum warning length for output
-
-        Returns:
-            List of (suspect_lines, found_suspect) tuples
-
-        """
-
-    @staticmethod
-    def check_dll_crash(crashlog_mainerror: str) -> list[str]:
-        """Check for DLL-related crashes.
-
-        Args:
-            crashlog_mainerror: Main error message
-
-        Returns:
-            List of DLL crash indicators
-
-        """
-
-# =============================================================================
 # Settings Validation (Phase 2)
 # =============================================================================
 
@@ -1494,6 +1413,108 @@ class AnalyzerError(RuntimeError):
     analyzer_kind: AnalyzerKind
     code: str
     message: str
+
+class CrashSuspectFindingKind:
+    """Evidence source that produced one Crash Suspect Finding."""
+
+    MainErrorRule: CrashSuspectFindingKind
+    StackRule: CrashSuspectFindingKind
+    DllInvolvement: CrashSuspectFindingKind
+
+    @property
+    def value(self) -> str:
+        """Return the stable cross-language finding-kind token."""
+
+class CrashSuspectStackCountRule:
+    """Immutable minimum-occurrence stack condition."""
+
+    def __init__(self, substring: str, count: int) -> None: ...
+    @property
+    def substring(self) -> str: ...
+    @property
+    def count(self) -> int: ...
+
+class CrashSuspectMainErrorRule:
+    """Immutable owned main-error rule."""
+
+    def __init__(
+        self, id: str, name: str, severity: int, main_error_contains_any: list[str]
+    ) -> None: ...
+    @property
+    def id(self) -> str: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def severity(self) -> int: ...
+    @property
+    def main_error_contains_any(self) -> list[str]: ...
+
+class CrashSuspectStackRule:
+    """Immutable owned stack rule."""
+
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        severity: int,
+        main_error_required_any: list[str],
+        main_error_optional_any: list[str],
+        stack_contains_any: list[str],
+        exclude_if_stack_contains_any: list[str],
+        stack_contains_at_least: list[CrashSuspectStackCountRule],
+    ) -> None: ...
+    @property
+    def id(self) -> str: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def severity(self) -> int: ...
+    @property
+    def main_error_required_any(self) -> list[str]: ...
+    @property
+    def main_error_optional_any(self) -> list[str]: ...
+    @property
+    def stack_contains_any(self) -> list[str]: ...
+    @property
+    def exclude_if_stack_contains_any(self) -> list[str]: ...
+    @property
+    def stack_contains_at_least(self) -> list[CrashSuspectStackCountRule]: ...
+
+class CrashSuspectAnalysisInput:
+    """Immutable owned input for one aggregate Crash Suspect analysis call."""
+
+    def __init__(self, main_error: str, call_stack: str) -> None: ...
+
+class CrashSuspectFinding:
+    """Immutable semantic Crash Suspect Finding."""
+
+    @property
+    def kind(self) -> CrashSuspectFindingKind: ...
+    @property
+    def rule_id(self) -> str | None: ...
+    @property
+    def name(self) -> str | None: ...
+    @property
+    def severity(self) -> int | None: ...
+
+class CrashSuspectAnalysisResult:
+    """Completed analysis; an empty list explicitly means no findings."""
+
+    @property
+    def findings(self) -> list[CrashSuspectFinding]: ...
+
+class CrashSuspectAnalyzer:
+    """Immutable analyzer with validated, compiled Crash Suspect rules."""
+
+    def __init__(
+        self,
+        main_error_rules: list[CrashSuspectMainErrorRule],
+        stack_rules: list[CrashSuspectStackRule],
+    ) -> None: ...
+    @property
+    def kind(self) -> AnalyzerKind: ...
+    def analyze(self, input: CrashSuspectAnalysisInput) -> CrashSuspectAnalysisResult:
+        """Run aggregate semantic analysis without producing report lines."""
 
 class CrashgenExpectationOutcome:
     """Immutable semantic result from one YAML-backed expectation."""

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T07:19:36.553272+00:00",
+  "generated_at_utc": "2026-07-16T08:26:19.392065+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -4651,6 +4651,158 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "CrashSuspectAnalysisInput",
+      "export_path": "CrashSuspectAnalysisInput",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashSuspectAnalysisInput:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "CrashSuspectAnalysisInput.__init__",
+      "parent_class": "CrashSuspectAnalysisInput",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__(self, main_error: str, call_stack: str) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "CrashSuspectAnalysisResult",
+      "export_path": "CrashSuspectAnalysisResult",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashSuspectAnalysisResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "CrashSuspectAnalyzer",
+      "export_path": "CrashSuspectAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashSuspectAnalyzer:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "CrashSuspectAnalyzer.__init__",
+      "parent_class": "CrashSuspectAnalyzer",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__( self, main_error_rules: list[CrashSuspectMainErrorRule], stack_rules: list[CrashSuspectStackRule], ) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "analyze",
+      "export_path": "CrashSuspectAnalyzer.analyze",
+      "parent_class": "CrashSuspectAnalyzer",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def analyze(self, input: CrashSuspectAnalysisInput) -> CrashSuspectAnalysisResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "CrashSuspectFinding",
+      "export_path": "CrashSuspectFinding",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashSuspectFinding:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "CrashSuspectFindingKind",
+      "export_path": "CrashSuspectFindingKind",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashSuspectFindingKind:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "CrashSuspectMainErrorRule",
+      "export_path": "CrashSuspectMainErrorRule",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashSuspectMainErrorRule:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "CrashSuspectMainErrorRule.__init__",
+      "parent_class": "CrashSuspectMainErrorRule",
+      "kind": "method",
+      "arity": 4,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__( self, id: str, name: str, severity: int, main_error_contains_any: list[str] ) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "CrashSuspectStackCountRule",
+      "export_path": "CrashSuspectStackCountRule",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashSuspectStackCountRule:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "CrashSuspectStackCountRule.__init__",
+      "parent_class": "CrashSuspectStackCountRule",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__(self, substring: str, count: int) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "CrashSuspectStackRule",
+      "export_path": "CrashSuspectStackRule",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashSuspectStackRule:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "CrashSuspectStackRule.__init__",
+      "parent_class": "CrashSuspectStackRule",
+      "kind": "method",
+      "arity": 8,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__( self, id: str, name: str, severity: int, main_error_required_any: list[str], main_error_optional_any: list[str], stack_contains_any: list[str], exclude_if_stack_contains_any: list[str], stack_contains_at_least: list[CrashSuspectStackCountRule], ) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
       "export": "CrashgenExpectationKind",
       "export_path": "CrashgenExpectationKind",
       "kind": "class",
@@ -6632,76 +6784,6 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def intern_batch(self, strings: list[str]) -> list[str]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "SuspectScanner",
-      "export_path": "SuspectScanner",
-      "kind": "class",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "class SuspectScanner:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "__init__",
-      "export_path": "SuspectScanner.__init__",
-      "parent_class": "SuspectScanner",
-      "kind": "method",
-      "arity": 2,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def __init__( self, suspect_error_rules: list[dict[str, Any]], suspect_stack_rules: list[dict[str, Any]], ) -> None:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "check_dll_crash",
-      "export_path": "SuspectScanner.check_dll_crash",
-      "parent_class": "SuspectScanner",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def check_dll_crash(crashlog_mainerror: str) -> list[str]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "scan_suspects_batch",
-      "export_path": "SuspectScanner.scan_suspects_batch",
-      "parent_class": "SuspectScanner",
-      "kind": "method",
-      "arity": 2,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def scan_suspects_batch( self, crash_logs: list[tuple[str, str]], max_warn_length: int ) -> list[tuple[list[str], bool]]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "suspect_scan_mainerror",
-      "export_path": "SuspectScanner.suspect_scan_mainerror",
-      "parent_class": "SuspectScanner",
-      "kind": "method",
-      "arity": 2,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def suspect_scan_mainerror( self, crashlog_mainerror: str, max_warn_length: int ) -> tuple[list[str], bool]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "suspect_scan_stack",
-      "export_path": "SuspectScanner.suspect_scan_stack",
-      "parent_class": "SuspectScanner",
-      "kind": "method",
-      "arity": 3,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def suspect_scan_stack( self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int, ) -> tuple[list[str], bool]:"
     },
     {
       "module": "classic_scanlog",

@@ -353,17 +353,6 @@
       "wave": "wave1"
     },
     {
-      "gap_id": "scanlog-026",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 26,
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "rust_symbol": "SuspectScanner",
-      "python_module": null,
-      "python_export_path": null,
-      "wave": "wave1"
-    },
-    {
       "gap_id": "scanlog-027",
       "owner_module": "scanlog",
       "ordinal_in_module": 27,
@@ -623,17 +612,6 @@
       "gap_type": "rust_unmapped",
       "tier": "tier2",
       "rust_symbol": "settings_validator",
-      "python_module": null,
-      "python_export_path": null,
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-053",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 53,
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "rust_symbol": "suspect_scanner",
       "python_module": null,
       "python_export_path": null,
       "wave": "wave1"
@@ -2143,72 +2121,6 @@
       "rust_symbol": null,
       "python_module": "classic_scanlog",
       "python_export_path": "StringPool.intern_batch",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-211",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 211,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "SuspectScanner",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-212",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 212,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "SuspectScanner.__init__",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-213",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 213,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "SuspectScanner.check_dll_crash",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-214",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 214,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "SuspectScanner.scan_suspects_batch",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-215",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 215,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "SuspectScanner.suspect_scan_mainerror",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-216",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 216,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "SuspectScanner.suspect_scan_stack",
       "wave": "wave1"
     },
     {

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T07:19:36.542313+00:00",
+  "generated_at_utc": "2026-07-16T08:26:55.732753+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -8900,6 +8900,101 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CrashSuspectAnalysisInput",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crash_suspect_analyzer::{ CrashSuspectAnalysisInput, CrashSuspectAnalysisResult, CrashSuspectAnalyzer, CrashSuspectFinding, CrashSuspectFindingKind, };",
+      "source_expr": "crash_suspect_analyzer::CrashSuspectAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashSuspectAnalysisInput",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crash_suspect_analyzer.rs",
+      "source_decl": "pub struct CrashSuspectAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashSuspectAnalysisResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crash_suspect_analyzer::{ CrashSuspectAnalysisInput, CrashSuspectAnalysisResult, CrashSuspectAnalyzer, CrashSuspectFinding, CrashSuspectFindingKind, };",
+      "source_expr": "crash_suspect_analyzer::CrashSuspectAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashSuspectAnalysisResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crash_suspect_analyzer.rs",
+      "source_decl": "pub struct CrashSuspectAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashSuspectAnalyzer",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crash_suspect_analyzer::{ CrashSuspectAnalysisInput, CrashSuspectAnalysisResult, CrashSuspectAnalyzer, CrashSuspectFinding, CrashSuspectFindingKind, };",
+      "source_expr": "crash_suspect_analyzer::CrashSuspectAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashSuspectAnalyzer",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crash_suspect_analyzer.rs",
+      "source_decl": "pub struct CrashSuspectAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashSuspectFinding",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crash_suspect_analyzer.rs",
+      "source_decl": "pub enum CrashSuspectFinding",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashSuspectFinding",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crash_suspect_analyzer::{ CrashSuspectAnalysisInput, CrashSuspectAnalysisResult, CrashSuspectAnalyzer, CrashSuspectFinding, CrashSuspectFindingKind, };",
+      "source_expr": "crash_suspect_analyzer::CrashSuspectFinding",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashSuspectFindingKind",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crash_suspect_analyzer.rs",
+      "source_decl": "pub enum CrashSuspectFindingKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashSuspectFindingKind",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crash_suspect_analyzer::{ CrashSuspectAnalysisInput, CrashSuspectAnalysisResult, CrashSuspectAnalyzer, CrashSuspectFinding, CrashSuspectFindingKind, };",
+      "source_expr": "crash_suspect_analyzer::CrashSuspectFindingKind",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CrashgenEntry",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -9708,25 +9803,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "SuspectScanner",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use suspect_scanner::SuspectScanner;",
-      "source_expr": "suspect_scanner::SuspectScanner",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SuspectScanner",
-      "kind": "struct",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/suspect_scanner.rs",
-      "source_decl": "pub struct SuspectScanner",
-      "tier": "tier1"
-    },
-    {
       "symbol": "TargetedCrashLogScanSource",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -9791,6 +9867,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn add_pattern(&self, name: &str, pattern: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "analyze",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crash_suspect_analyzer.rs",
+      "source_decl": "pub fn analyze(\n        &self,\n        input: CrashSuspectAnalysisInput,\n    )",
       "tier": "tier1"
     },
     {
@@ -9983,16 +10069,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "check_dll_crash",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/suspect_scanner.rs",
-      "source_decl": "pub fn check_dll_crash(crashlog_mainerror: &str)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "check_for_updates",
       "kind": "function",
       "arity": 1,
@@ -10169,6 +10245,15 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
       "source_decl": "pub mod contract;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "crash_suspect_analyzer",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod crash_suspect_analyzer;",
       "tier": "tier1"
     },
     {
@@ -10631,6 +10716,15 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/analyzer.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crash_suspect_analyzer.rs",
       "source_decl": "pub const fn",
       "tier": "tier1"
     },
@@ -11230,6 +11324,16 @@
       "arity": 2,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crash_suspect_analyzer.rs",
+      "source_decl": "pub fn new(\n        main_error_rules: Vec<SuspectErrorRule>,\n        stack_rules: Vec<SuspectStackRule>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/crashgen_registry.rs",
       "source_decl": "pub fn new(entries: HashMap<String, CrashgenEntry>, default: CrashgenEntry)",
       "tier": "tier1"
@@ -11422,16 +11526,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/settings_validator.rs",
       "source_decl": "pub fn new(crashgen_name: String, entry: CrashgenEntry)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/suspect_scanner.rs",
-      "source_decl": "pub fn new(\n        suspect_error_rules: Vec<SuspectErrorRule>,\n        suspect_stack_rules: Vec<SuspectStackRule>,\n    )",
       "tier": "tier1"
     },
     {
@@ -11728,16 +11822,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "scan_suspects_batch",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/suspect_scanner.rs",
-      "source_decl": "pub fn scan_suspects_batch(\n        &self,\n        crash_logs: Vec<(String, String)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "segment_key",
       "kind": "module",
       "crate": "classic-scanlog-core",
@@ -11803,35 +11887,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/papyrus.rs",
       "source_decl": "pub fn stats(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "suspect_scan_mainerror",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/suspect_scanner.rs",
-      "source_decl": "pub fn suspect_scan_mainerror(\n        &self,\n        crashlog_mainerror: &str,\n        max_warn_length: usize,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "suspect_scan_stack",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/suspect_scanner.rs",
-      "source_decl": "pub fn suspect_scan_stack(\n        &self,\n        crashlog_mainerror: &str,\n        segment_callstack_intact: &str,\n        max_warn_length: usize,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "suspect_scanner",
-      "kind": "module",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub mod suspect_scanner;",
       "tier": "tier1"
     },
     {

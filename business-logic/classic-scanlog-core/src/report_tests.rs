@@ -1,4 +1,5 @@
 use super::*;
+use crate::CrashSuspectFinding;
 use crate::version::CrashgenVersionStatus;
 use classic_config_core::{AutoscanReportPlacement, OutcomeKind, RuleSeverity};
 
@@ -136,7 +137,11 @@ fn autoscan_report_assembler_applies_canonical_order_when_contributions_are_scra
                 lines: vec!["Plugin evidence\n".to_string()],
             },
             AutoscanReportContribution::CrashSuspectFinding {
-                lines: vec!["Suspect finding\n".to_string()],
+                finding: CrashSuspectFinding::MainErrorRule {
+                    rule_id: "suspect-rule".to_string(),
+                    name: "Suspect finding".to_string(),
+                    severity: 3,
+                },
             },
         ],
     );
@@ -248,6 +253,33 @@ fn autoscan_report_assembler_renders_fcx_content_from_run_setup() {
     assert!(text.contains("FCX LOCAL FILE CHECKS ARE ENABLED"));
     assert!(text.contains("Use FCX only with crash logs from your own installation"));
     assert!(text.contains("Run-owned setup facts"));
+}
+
+#[test]
+fn autoscan_report_assembler_owns_crash_suspect_presentation() {
+    let report_lines = AutoscanReportAssembler::new().assemble(
+        &base_facts(),
+        vec![
+            AutoscanReportContribution::CrashSuspectFinding {
+                finding: CrashSuspectFinding::MainErrorRule {
+                    rule_id: "main-error".to_string(),
+                    name: "Authored Suspect".to_string(),
+                    severity: 5,
+                },
+            },
+            AutoscanReportContribution::CrashSuspectFinding {
+                finding: CrashSuspectFinding::DllInvolvement,
+            },
+        ],
+    );
+    let text = report_lines.join("");
+
+    assert!(text.contains(
+        "- **Checking for Authored Suspect.................................. SUSPECT FOUND! > Severity : 5** \n\n-----\n"
+    ));
+    assert!(text.contains(
+        "* NOTICE : MAIN ERROR REPORTS THAT A DLL FILE WAS INVOLVED IN THIS CRASH! * \nIf that dll file belongs to a mod, that mod is a prime suspect for the crash. \n\n-----\n"
+    ));
 }
 
 #[test]

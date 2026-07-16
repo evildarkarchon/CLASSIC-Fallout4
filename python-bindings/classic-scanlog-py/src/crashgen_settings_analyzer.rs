@@ -371,7 +371,7 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
-fn analyzer_error_to_pyerr(error: CoreAnalyzerError) -> PyErr {
+pub(crate) fn analyzer_error_to_pyerr(error: CoreAnalyzerError) -> PyErr {
     let py_error = AnalyzerError::new_err(error.message().to_string());
     Python::attach(|py| {
         let value = py_error.value(py);

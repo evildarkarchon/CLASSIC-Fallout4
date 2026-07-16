@@ -315,19 +315,6 @@
       ]
     },
     {
-      "coverageId": "node-deferred-scanlog-029",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "SuspectScanner"
-      ]
-    },
-    {
       "coverageId": "node-deferred-scanlog-030",
       "classification": "deferred",
       "ownerModule": "scanlog",
@@ -650,19 +637,6 @@
       "bindingIdentifiers": [],
       "rustSymbols": [
         "settings_validator"
-      ]
-    },
-    {
-      "coverageId": "node-deferred-scanlog-057",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "suspect_scanner"
       ]
     },
     {

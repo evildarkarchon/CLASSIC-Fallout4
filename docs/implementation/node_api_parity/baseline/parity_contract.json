@@ -4062,14 +4062,6 @@
       "rustKind": "class"
     },
     {
-      "id": "scanlog.suspect_scanner.SuspectScanner@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "SuspectScanner@rust",
-      "rustKind": "class"
-    },
-    {
       "id": "scanlog.plugin_analyzer.contains_plugin@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -4428,19 +4420,99 @@
       "rustKind": "module"
     },
     {
+      "id": "scanlog.crash_suspect_analyzer.CrashSuspectAnalysisInput",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashSuspectAnalysisInput",
+      "rustKind": "struct",
+      "nodeExport": "JsCrashSuspectAnalysisInput",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.crash_suspect_analyzer.CrashSuspectAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashSuspectAnalysisResult",
+      "rustKind": "struct",
+      "nodeExport": "JsCrashSuspectAnalysisResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.crash_suspect_analyzer.CrashSuspectAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashSuspectAnalyzer",
+      "rustKind": "struct",
+      "nodeExport": "CrashSuspectAnalyzer",
+      "nodeKind": "class"
+    },
+    {
+      "id": "scanlog.crash_suspect_analyzer.CrashSuspectFinding",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashSuspectFinding",
+      "rustKind": "enum",
+      "nodeExport": "JsCrashSuspectFinding",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.crash_suspect_analyzer.CrashSuspectFindingKind",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashSuspectFindingKind",
+      "rustKind": "enum",
+      "nodeExport": "JsCrashSuspectFindingKind",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "scanlog.crash_suspect_analyzer.CrashSuspectMainErrorRule",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "SuspectErrorRule",
+      "rustKind": "struct",
+      "nodeExport": "JsCrashSuspectMainErrorRule",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.crash_suspect_analyzer.CrashSuspectStackCountRule",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "SuspectStackCountRule",
+      "rustKind": "struct",
+      "nodeExport": "JsCrashSuspectStackCountRule",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.crash_suspect_analyzer.CrashSuspectStackRule",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "SuspectStackRule",
+      "rustKind": "struct",
+      "nodeExport": "JsCrashSuspectStackRule",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.crash_suspect_analyzer.crash_suspect_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "crash_suspect_analyzer@rust",
+      "rustKind": "module"
+    },
+    {
       "id": "scanlog.settings_validator.settings_validator@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "settings_validator@rust",
-      "rustKind": "module"
-    },
-    {
-      "id": "scanlog.suspect_scanner.suspect_scanner@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "suspect_scanner@rust",
       "rustKind": "module"
     },
     {

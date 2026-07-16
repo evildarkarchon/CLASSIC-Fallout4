@@ -54,6 +54,12 @@ Current shape notes:
   its owned result separates `expectationOutcomes` from
   `disabledSettingNotices` and contains no report lines; failures retain stable
   `analyzerKind`, `code`, and `message` fields
+- independently useful Crash Suspect Analysis uses the synchronous immutable
+  `CrashSuspectAnalyzer` in
+  [`src/crash_suspect_analyzer.rs`](../../node-bindings/classic-node/src/crash_suspect_analyzer.rs);
+  `analyze(input)` returns one typed finding per matched main-error rule, stack
+  rule, or DLL involvement notice, returns `{ findings: [] }` on completed
+  no-match analysis, and never exposes report lines or padding mechanics
 - User Settings inspection uses `openUserSettings(classicRoot) -> JsUserSettingsSnapshot`, authored in [`src/user_settings.rs`](../../node-bindings/classic-node/src/user_settings.rs); it exposes typed Update Preferences, Crash Log Scan settings, Game Setup settings, and namespaced Frontend State plus source/schema/revision metadata, diagnostics, commit eligibility, and retained source bytes
 - `planUserSettingsMigration(classicRoot) -> JsUserSettingsMigrationPlanningResult` exposes the pure Rust migration-planning outcome, optional revision-anchored plan, version/location endpoints, ordered changes, exact original/proposed `Buffer` values, and structured diagnostics without applying the plan
 - `reverseUserSettingsMigrationPlan(plan) -> JsUserSettingsMigrationPlan` reconstructs an unattested core review plan and delegates the exact inverse to Rust, including the proposed-content SHA-256 base revision; it remains usable after the source root is removed, while malformed endpoint/change tokens reject with `migration_plan_review_invalid`
@@ -104,6 +110,12 @@ Current shape notes:
   outcome/result classes expose Python enums for kind, severity, and YAML-owned
   placement, release the GIL for analysis, and raise a typed `AnalyzerError`
   with kind/code/message attributes
+- `classic_scanlog.CrashSuspectAnalyzer` is the corresponding frozen reusable
+  Crash Suspect handle over immutable typed rule and input classes. Its
+  read-only findings expose a Python enum plus optional rule id, name, and
+  severity, release the GIL during analysis, and use the same typed
+  `AnalyzerError`; the retired fragment-producing `SuspectScanner` is not kept
+  as a compatibility alias
 - `ScanRunConfiguration` contains explicit YAML roots, game/version, analysis options, FormID database paths, optional configured Unsolved Logs destination, and optional positive concurrency. The adapter never opens User Settings; callers project one accepted settings snapshot into these facts
 - `ScanRunRequest.standard(...)`, `standard_with_fcx(...)`, `targeted(...)`, and `targeted_with_fcx(...)` are opaque invariant-preserving factories. Targeted factories accept no movement policy, and both FCX factories require `ScanRunSetupContext`
 - `ScanRunUnsolvedLogs` exposes Standard-only leave-in-place, configured/default movement, and custom-destination movement policies. `ScanRunCancellation` is a separate opaque monotonic control with no reset operation

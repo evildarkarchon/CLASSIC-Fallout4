@@ -6,8 +6,8 @@ use classic_config_core::{
     AutoscanReportPlacement, ConfigLayout, CrashgenSettingsSnapshot, OutcomeKind, RuleSeverity,
 };
 use classic_scanlog_core::{
-    AnalyzerError, AnalyzerKind, CrashgenEntry, CrashgenSettingsAnalysisInput,
-    CrashgenSettingsAnalysisResult, CrashgenSettingsAnalyzer as CoreCrashgenSettingsAnalyzer,
+    AnalyzerError, CrashgenEntry, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult,
+    CrashgenSettingsAnalyzer as CoreCrashgenSettingsAnalyzer,
 };
 use napi::bindgen_prelude::{JsObjectValue, ToNapiValue};
 use napi::{Env, JsError, JsValue};
@@ -342,8 +342,7 @@ fn placement_to_js(placement: AutoscanReportPlacement) -> JsAutoscanReportPlacem
 }
 
 /// Preserves the complete shared kind, code, and message in a Node error.
-fn analyzer_error_to_napi(env: Env, error: AnalyzerError) -> napi::Error {
-    debug_assert_eq!(error.analyzer(), AnalyzerKind::CrashgenSettings);
+pub(crate) fn analyzer_error_to_napi(env: Env, error: AnalyzerError) -> napi::Error {
     let analyzer_kind = error.analyzer().as_str();
     let code = error.code().as_str().to_string();
     let message = error.message().to_string();

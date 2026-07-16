@@ -141,7 +141,7 @@ their delivery contracts.
 
 ## `classic::scanner` Final Crash Log Scan Run
 
-### Focused Crashgen Settings analysis
+### Focused semantic analyzers
 
 `crashgen_settings_analyzer_new(...)` constructs one immutable analyzer from an
 owned configuration DTO. Construction validates the configuration and compiles
@@ -159,6 +159,15 @@ Construction and analysis failures use an explicit envelope containing
 `AnalyzerErrorDto`. Its `analyzer_kind`, stable `code`, and human-readable
 `message` mirror the Rust analyzer contract; no C++ layer reinterprets the
 error policy.
+
+`crash_suspect_analyzer_new(...)` follows the same immutable-handle and typed
+construction-envelope convention over owned main-error and stack rule DTOs.
+`crash_suspect_analyze(...)` accepts owned main-error and call-stack evidence
+and returns one `CrashSuspectFindingDto` per matched main-error rule, stack
+rule, or DLL involvement notice. Rule ids, names, and severities use explicit
+presence flags for the DLL variant; no DTO contains report lines, markdown, or
+padding widths. Invalid matcher configuration retains
+`AnalyzerKind::CrashSuspect` and the shared stable analyzer error code.
 
 ### Complete-run entry point
 

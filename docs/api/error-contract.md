@@ -21,9 +21,10 @@ Each binding surface adapts Rust `Result<T, E>` errors into the idiom expected b
 All focused analyzers originate one Rust `AnalyzerError` shape with three
 fields: stable `AnalyzerKind`, stable `AnalyzerErrorCode`, and a human-readable
 message. `AnalyzerKind::as_str()` and `AnalyzerErrorCode::as_str()` are the only
-machine-token source of truth. The initial Crashgen Settings Analyzer exposes
+machine-token source of truth. Crashgen Settings Analysis exposes
 `crashgen_settings` with `invalid_configuration` or
-`unsupported_configuration_version`.
+`unsupported_configuration_version`; Crash Suspect Analysis exposes
+`crash_suspect` with `invalid_configuration` for invalid rule or matcher state.
 
 - CXX uses an explicit typed construction/analysis envelope so no field is
   flattened into `rust::Error` text.

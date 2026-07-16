@@ -90,6 +90,81 @@ fn empty_input() -> ffi::CrashgenSettingsAnalysisInputDto {
     }
 }
 
+fn valid_crash_suspect_configuration() -> ffi::CrashSuspectAnalyzerConfigurationDto {
+    ffi::CrashSuspectAnalyzerConfigurationDto {
+        main_error_rules: vec![ffi::CrashSuspectMainErrorRuleDto {
+            id: "main-rule".to_string(),
+            name: "Main Rule".to_string(),
+            severity: 5,
+            main_error_contains_any: vec!["plugin.dll".to_string()],
+        }],
+        stack_rules: vec![ffi::CrashSuspectStackRuleDto {
+            id: "stack-rule".to_string(),
+            name: "Stack Rule".to_string(),
+            severity: 4,
+            main_error_required_any: Vec::new(),
+            main_error_optional_any: Vec::new(),
+            stack_contains_any: vec!["StackSignal".to_string()],
+            exclude_if_stack_contains_any: Vec::new(),
+            stack_contains_at_least: Vec::new(),
+        }],
+    }
+}
+
+#[test]
+fn crash_suspect_analysis_projects_individual_semantic_findings() {
+    let analyzer = crash_suspect_analyzer_new(valid_crash_suspect_configuration());
+
+    let execution = crash_suspect_analyze(
+        &analyzer,
+        ffi::CrashSuspectAnalysisInputDto {
+            main_error: "plugin.dll".to_string(),
+            call_stack: "StackSignal".to_string(),
+        },
+    );
+
+    assert!(execution.has_result, "{}", execution.error.message);
+    assert!(!execution.has_error);
+    assert_eq!(execution.result.findings.len(), 3);
+    let main = &execution.result.findings[0];
+    assert_eq!(main.kind, ffi::CrashSuspectFindingKind::MainErrorRule);
+    assert!(main.has_rule_id);
+    assert_eq!(main.rule_id, "main-rule");
+    assert!(main.has_name);
+    assert_eq!(main.name, "Main Rule");
+    assert!(main.has_severity);
+    assert_eq!(main.severity, 5);
+    assert_eq!(
+        execution.result.findings[1].kind,
+        ffi::CrashSuspectFindingKind::StackRule
+    );
+    let dll = &execution.result.findings[2];
+    assert_eq!(dll.kind, ffi::CrashSuspectFindingKind::DllInvolvement);
+    assert!(!dll.has_rule_id);
+    assert!(!dll.has_name);
+    assert!(!dll.has_severity);
+}
+
+#[test]
+fn crash_suspect_invalid_configuration_preserves_shared_error() {
+    let mut configuration = valid_crash_suspect_configuration();
+    configuration.main_error_rules[0].id.clear();
+    let analyzer = crash_suspect_analyzer_new(configuration);
+
+    let construction = crash_suspect_analyzer_construction_result(&analyzer);
+
+    assert!(!construction.has_analyzer);
+    assert!(construction.has_error);
+    assert_eq!(
+        construction.error.analyzer_kind,
+        ffi::AnalyzerKind::CrashSuspect
+    );
+    assert_eq!(
+        construction.error.code,
+        ffi::AnalyzerErrorCode::InvalidConfiguration
+    );
+}
+
 #[test]
 fn construction_status_exposes_a_valid_immutable_handle() {
     let analyzer = crashgen_settings_analyzer_new(valid_configuration());

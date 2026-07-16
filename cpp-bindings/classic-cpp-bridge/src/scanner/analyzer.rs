@@ -4,12 +4,15 @@ use std::collections::HashSet;
 
 use classic_config_core::{
     AutoscanReportPlacement as CoreAutoscanReportPlacement, ConfigLayout, CrashgenSettingsSnapshot,
-    OutcomeKind, RuleSeverity, parse_crashgen_expectations,
+    OutcomeKind, RuleSeverity, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule,
+    parse_crashgen_expectations,
 };
 use classic_scanlog_core::{
     AnalyzerError as CoreAnalyzerError, AnalyzerErrorCode as CoreAnalyzerErrorCode,
-    AnalyzerKind as CoreAnalyzerKind, CrashgenEntry, CrashgenExpectationOutcome,
-    CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult, CrashgenSettingsAnalyzer,
+    AnalyzerKind as CoreAnalyzerKind, CrashSuspectAnalysisInput, CrashSuspectAnalysisResult,
+    CrashSuspectAnalyzer, CrashSuspectFinding, CrashSuspectFindingKind, CrashgenEntry,
+    CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult,
+    CrashgenSettingsAnalyzer,
 };
 
 use super::ffi;
@@ -39,6 +42,167 @@ impl From<CoreAnalyzerError> for BridgeAnalyzerError {
 /// handles contain only immutable shared core state and are safe for concurrent calls.
 pub(crate) struct CxxCrashgenSettingsAnalyzer {
     inner: Result<CrashgenSettingsAnalyzer, BridgeAnalyzerError>,
+}
+
+/// Immutable CXX-owned handle for one validated Crash Suspect Analyzer.
+pub(crate) struct CxxCrashSuspectAnalyzer {
+    inner: Result<CrashSuspectAnalyzer, BridgeAnalyzerError>,
+}
+
+/// Constructs and validates a Crash Suspect Analyzer from owned bridge rules.
+pub(crate) fn crash_suspect_analyzer_new(
+    configuration: ffi::CrashSuspectAnalyzerConfigurationDto,
+) -> Box<CxxCrashSuspectAnalyzer> {
+    let main_error_rules = configuration
+        .main_error_rules
+        .into_iter()
+        .map(|rule| SuspectErrorRule {
+            id: rule.id,
+            name: rule.name,
+            severity: rule.severity,
+            main_error_contains_any: rule.main_error_contains_any,
+        })
+        .collect();
+    let stack_rules = configuration
+        .stack_rules
+        .into_iter()
+        .map(|rule| SuspectStackRule {
+            id: rule.id,
+            name: rule.name,
+            severity: rule.severity,
+            main_error_required_any: rule.main_error_required_any,
+            main_error_optional_any: rule.main_error_optional_any,
+            stack_contains_any: rule.stack_contains_any,
+            exclude_if_stack_contains_any: rule.exclude_if_stack_contains_any,
+            stack_contains_at_least: rule
+                .stack_contains_at_least
+                .into_iter()
+                .map(|count_rule| SuspectStackCountRule {
+                    substring: count_rule.substring,
+                    count: count_rule.count,
+                })
+                .collect(),
+        })
+        .collect();
+
+    Box::new(CxxCrashSuspectAnalyzer {
+        inner: CrashSuspectAnalyzer::new(main_error_rules, stack_rules).map_err(Into::into),
+    })
+}
+
+/// Returns the explicit typed status captured during Crash Suspect construction.
+pub(crate) fn crash_suspect_analyzer_construction_result(
+    analyzer: &CxxCrashSuspectAnalyzer,
+) -> ffi::CrashSuspectAnalyzerConstructionResultDto {
+    match &analyzer.inner {
+        Ok(_) => ffi::CrashSuspectAnalyzerConstructionResultDto {
+            has_analyzer: true,
+            has_error: false,
+            error: empty_error_dto(),
+        },
+        Err(error) => ffi::CrashSuspectAnalyzerConstructionResultDto {
+            has_analyzer: false,
+            has_error: true,
+            error: bridge_error_to_dto(error),
+        },
+    }
+}
+
+/// Runs aggregate Crash Suspect analysis and preserves the shared typed error envelope.
+pub(crate) fn crash_suspect_analyze(
+    analyzer: &CxxCrashSuspectAnalyzer,
+    input: ffi::CrashSuspectAnalysisInputDto,
+) -> ffi::CrashSuspectAnalysisExecutionResultDto {
+    let core_analyzer = match &analyzer.inner {
+        Ok(analyzer) => analyzer,
+        Err(error) => return crash_suspect_error_result(bridge_error_to_dto(error)),
+    };
+
+    match core_analyzer.analyze(CrashSuspectAnalysisInput {
+        main_error: input.main_error,
+        call_stack: input.call_stack,
+    }) {
+        Ok(result) => ffi::CrashSuspectAnalysisExecutionResultDto {
+            has_result: true,
+            result: crash_suspect_result_to_dto(result),
+            has_error: false,
+            error: empty_error_dto(),
+        },
+        Err(error) => crash_suspect_error_result(bridge_error_to_dto(&error.into())),
+    }
+}
+
+/// Projects one owned semantic Crash Suspect result without adding presentation data.
+fn crash_suspect_result_to_dto(
+    result: CrashSuspectAnalysisResult,
+) -> ffi::CrashSuspectAnalysisResultDto {
+    ffi::CrashSuspectAnalysisResultDto {
+        findings: result
+            .findings
+            .into_iter()
+            .map(crash_suspect_finding_to_dto)
+            .collect(),
+    }
+}
+
+/// Flattens optional rule facts for CXX while retaining the semantic finding kind.
+fn crash_suspect_finding_to_dto(finding: CrashSuspectFinding) -> ffi::CrashSuspectFindingDto {
+    let kind = match finding.kind() {
+        CrashSuspectFindingKind::MainErrorRule => ffi::CrashSuspectFindingKind::MainErrorRule,
+        CrashSuspectFindingKind::StackRule => ffi::CrashSuspectFindingKind::StackRule,
+        CrashSuspectFindingKind::DllInvolvement => ffi::CrashSuspectFindingKind::DllInvolvement,
+    };
+    match finding {
+        CrashSuspectFinding::MainErrorRule {
+            rule_id,
+            name,
+            severity,
+        } => ffi::CrashSuspectFindingDto {
+            kind,
+            has_rule_id: true,
+            rule_id,
+            has_name: true,
+            name,
+            has_severity: true,
+            severity,
+        },
+        CrashSuspectFinding::StackRule {
+            rule_id,
+            name,
+            severity,
+        } => ffi::CrashSuspectFindingDto {
+            kind,
+            has_rule_id: true,
+            rule_id,
+            has_name: true,
+            name,
+            has_severity: true,
+            severity,
+        },
+        CrashSuspectFinding::DllInvolvement => ffi::CrashSuspectFindingDto {
+            kind,
+            has_rule_id: false,
+            rule_id: String::new(),
+            has_name: false,
+            name: String::new(),
+            has_severity: false,
+            severity: 0,
+        },
+    }
+}
+
+/// Builds the error branch of the explicit Crash Suspect execution envelope.
+fn crash_suspect_error_result(
+    error: ffi::AnalyzerErrorDto,
+) -> ffi::CrashSuspectAnalysisExecutionResultDto {
+    ffi::CrashSuspectAnalysisExecutionResultDto {
+        has_result: false,
+        result: ffi::CrashSuspectAnalysisResultDto {
+            findings: Vec::new(),
+        },
+        has_error: true,
+        error,
+    }
 }
 
 /// Constructs and validates a Crashgen Settings Analyzer from owned bridge configuration.

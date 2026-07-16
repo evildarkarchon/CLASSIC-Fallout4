@@ -12,8 +12,10 @@ mod papyrus;
 mod util;
 
 pub(crate) use analyzer::{
-    CxxCrashgenSettingsAnalyzer, crashgen_settings_analyze,
-    crashgen_settings_analyzer_construction_result, crashgen_settings_analyzer_new,
+    CxxCrashSuspectAnalyzer, CxxCrashgenSettingsAnalyzer, crash_suspect_analyze,
+    crash_suspect_analyzer_construction_result, crash_suspect_analyzer_new,
+    crashgen_settings_analyze, crashgen_settings_analyzer_construction_result,
+    crashgen_settings_analyzer_new,
 };
 pub(crate) use contract::{
     ScanRunCancellation, ScanRunRequest, ScanRunUnsolvedLogs, scan_run_cancellation_cancel,
@@ -77,6 +79,14 @@ mod ffi {
         Og = 0,
         Vr = 1,
         Unknown = 2,
+    }
+
+    /// Evidence source that produced one Crash Suspect Finding.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum CrashSuspectFindingKind {
+        MainErrorRule = 0,
+        StackRule = 1,
+        DllInvolvement = 2,
     }
 
     /// Shared typed focused-analyzer error envelope payload.
@@ -163,6 +173,75 @@ mod ffi {
     struct CrashgenSettingsAnalysisExecutionResultDto {
         has_result: bool,
         result: CrashgenSettingsAnalysisResultDto,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
+    /// One minimum-occurrence condition in a Crash Suspect stack rule.
+    struct CrashSuspectStackCountRuleDto {
+        substring: String,
+        count: usize,
+    }
+
+    /// One owned main-error rule used to construct a Crash Suspect Analyzer.
+    struct CrashSuspectMainErrorRuleDto {
+        id: String,
+        name: String,
+        severity: i32,
+        main_error_contains_any: Vec<String>,
+    }
+
+    /// One owned stack rule used to construct a Crash Suspect Analyzer.
+    struct CrashSuspectStackRuleDto {
+        id: String,
+        name: String,
+        severity: i32,
+        main_error_required_any: Vec<String>,
+        main_error_optional_any: Vec<String>,
+        stack_contains_any: Vec<String>,
+        exclude_if_stack_contains_any: Vec<String>,
+        stack_contains_at_least: Vec<CrashSuspectStackCountRuleDto>,
+    }
+
+    /// Owned configuration for one immutable Crash Suspect Analyzer.
+    struct CrashSuspectAnalyzerConfigurationDto {
+        main_error_rules: Vec<CrashSuspectMainErrorRuleDto>,
+        stack_rules: Vec<CrashSuspectStackRuleDto>,
+    }
+
+    /// Explicit constructor status for an opaque Crash Suspect Analyzer handle.
+    struct CrashSuspectAnalyzerConstructionResultDto {
+        has_analyzer: bool,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
+    /// Owned input for one aggregate Crash Suspect analysis call.
+    struct CrashSuspectAnalysisInputDto {
+        main_error: String,
+        call_stack: String,
+    }
+
+    /// One semantic Crash Suspect Finding without report presentation fields.
+    struct CrashSuspectFindingDto {
+        kind: CrashSuspectFindingKind,
+        has_rule_id: bool,
+        rule_id: String,
+        has_name: bool,
+        name: String,
+        has_severity: bool,
+        severity: i32,
+    }
+
+    /// Completed Crash Suspect analysis, including explicit empty success.
+    struct CrashSuspectAnalysisResultDto {
+        findings: Vec<CrashSuspectFindingDto>,
+    }
+
+    /// Exactly one typed Crash Suspect result or shared analyzer error.
+    struct CrashSuspectAnalysisExecutionResultDto {
+        has_result: bool,
+        result: CrashSuspectAnalysisResultDto,
         has_error: bool,
         error: AnalyzerErrorDto,
     }
@@ -429,6 +508,7 @@ mod ffi {
     }
 
     extern "Rust" {
+        type CxxCrashSuspectAnalyzer;
         type CxxCrashgenSettingsAnalyzer;
         type ScanRunRequest;
         type ScanRunUnsolvedLogs;
@@ -454,6 +534,20 @@ mod ffi {
             analyzer: &CxxCrashgenSettingsAnalyzer,
             input: CrashgenSettingsAnalysisInputDto,
         ) -> CrashgenSettingsAnalysisExecutionResultDto;
+
+        /// Constructs and validates an immutable Crash Suspect Analyzer handle.
+        fn crash_suspect_analyzer_new(
+            configuration: CrashSuspectAnalyzerConfigurationDto,
+        ) -> Box<CxxCrashSuspectAnalyzer>;
+        /// Returns the typed status captured during Crash Suspect construction.
+        fn crash_suspect_analyzer_construction_result(
+            analyzer: &CxxCrashSuspectAnalyzer,
+        ) -> CrashSuspectAnalyzerConstructionResultDto;
+        /// Runs one aggregate Crash Suspect analysis over owned input.
+        fn crash_suspect_analyze(
+            analyzer: &CxxCrashSuspectAnalyzer,
+            input: CrashSuspectAnalysisInputDto,
+        ) -> CrashSuspectAnalysisExecutionResultDto;
 
         /// Creates Standard intent that leaves failed Crash Logs and reports in place.
         fn scan_run_unsolved_logs_leave_in_place() -> Box<ScanRunUnsolvedLogs>;

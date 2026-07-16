@@ -1,8 +1,8 @@
 """Per-class smoke tests for Phase 3 Plan 03 - scanlog Wave 2
 (detection and analysis).
 
-Covers the independently useful mod detection, suspect scanning, settings
-validation, run-result configuration issue, and GPU detection surfaces.
+Covers the independently useful mod detection, settings validation,
+run-result configuration issue, and GPU detection surfaces.
 
 Each ``#[pyclass]`` gets at least one test that constructs it and
 calls one real method (per Phase 3 D-07). Related free functions are
@@ -52,51 +52,6 @@ def test_detect_mods_batch_empty_returns_list_of_lists() -> None:
     assert len(result) == 2
     for sub in result:
         assert isinstance(sub, list)
-
-
-# =============================================================================
-# suspect_scanner sub-module: SuspectScanner
-# =============================================================================
-
-
-def test_suspect_scanner_construct_empty_rules() -> None:
-    """``SuspectScanner([], [])`` constructs with zero error and zero stack rules."""
-    scanner = classic_scanlog.SuspectScanner([], [])
-    assert scanner is not None
-
-
-def test_suspect_scanner_scan_mainerror_empty() -> None:
-    """``suspect_scan_mainerror("", 100)`` returns ``(list, bool)`` tuple."""
-    scanner = classic_scanlog.SuspectScanner([], [])
-    result = scanner.suspect_scan_mainerror("", 100)
-    assert isinstance(result, tuple)
-    assert len(result) == 2
-    assert isinstance(result[0], list)
-    assert isinstance(result[1], bool)
-    assert result[1] is False  # no rules => no suspects found
-
-
-def test_suspect_scanner_scan_stack_empty() -> None:
-    """``suspect_scan_stack("", "", 100)`` returns ``(list, bool)`` tuple."""
-    scanner = classic_scanlog.SuspectScanner([], [])
-    result = scanner.suspect_scan_stack("", "", 100)
-    assert isinstance(result, tuple)
-    assert isinstance(result[0], list)
-    assert isinstance(result[1], bool)
-
-
-def test_suspect_scanner_batch_empty() -> None:
-    """``scan_suspects_batch([], 100)`` returns an empty list."""
-    scanner = classic_scanlog.SuspectScanner([], [])
-    result = scanner.scan_suspects_batch([], 100)
-    assert isinstance(result, list)
-    assert result == []
-
-
-def test_suspect_scanner_check_dll_crash_static() -> None:
-    """``SuspectScanner.check_dll_crash("")`` returns a list (static method)."""
-    result = classic_scanlog.SuspectScanner.check_dll_crash("")
-    assert isinstance(result, list)
 
 
 # =============================================================================

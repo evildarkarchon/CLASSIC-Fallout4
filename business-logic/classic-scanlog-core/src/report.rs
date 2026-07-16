@@ -7,6 +7,7 @@
 //! - Efficient string building strategies
 
 // Error types not needed in pure Rust - using standard Result
+use crate::crash_suspect_analyzer::CrashSuspectFinding;
 use crate::error::{Result, ScanLogError};
 use crate::scan_run::CrashLogScanSetupResult;
 use crate::version::CrashgenVersionStatus;
@@ -49,6 +50,24 @@ pub(crate) async fn write_autoscan_report(
     Ok(autoscan_path)
 }
 
+/// Returns the legacy Crash Suspect source-group order owned by report assembly.
+fn crash_suspect_kind_rank(finding: &CrashSuspectFinding) -> u8 {
+    match finding {
+        CrashSuspectFinding::MainErrorRule { .. } => 0,
+        CrashSuspectFinding::StackRule { .. } => 1,
+        CrashSuspectFinding::DllInvolvement => 2,
+    }
+}
+
+/// Returns authored rule ordering facts when the finding came from a rule.
+fn crash_suspect_rule_order(finding: &CrashSuspectFinding) -> Option<(i32, &str)> {
+    match finding {
+        CrashSuspectFinding::MainErrorRule { name, severity, .. }
+        | CrashSuspectFinding::StackRule { name, severity, .. } => Some((*severity, name)),
+        CrashSuspectFinding::DllInvolvement => None,
+    }
+}
+
 /// Per-log facts that affect Autoscan Report rendering.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct AutoscanReportFacts {
@@ -71,7 +90,7 @@ pub(crate) enum AutoscanReportContribution {
         crashgen_name: String,
     },
     CrashSuspectFinding {
-        lines: Vec<String>,
+        finding: CrashSuspectFinding,
     },
     ModGuidance {
         group: ModGuidanceGroup,
@@ -143,13 +162,7 @@ impl AutoscanReportAssembler {
             Self::error_information_fragments(&contributions),
         ));
 
-        let suspect_fragments = Self::line_fragments(&contributions, |contribution| {
-            if let AutoscanReportContribution::CrashSuspectFinding { lines } = contribution {
-                Some(lines)
-            } else {
-                None
-            }
-        });
+        let suspect_fragments = Self::crash_suspect_fragments(&contributions);
         let found_suspect = !suspect_fragments.is_empty();
         composer.add(report_gen.generate_suspect_section_header());
         composer.add_many(suspect_fragments);
@@ -240,6 +253,64 @@ impl AutoscanReportAssembler {
             .filter_map(|contribution| {
                 let lines = select_lines(contribution)?;
                 (!lines.is_empty()).then(|| ReportFragment::from_lines(lines.clone()))
+            })
+            .collect()
+    }
+
+    /// Renders semantic Crash Suspect Findings at the sole presentation boundary.
+    fn crash_suspect_fragments(
+        contributions: &[AutoscanReportContribution],
+    ) -> Vec<ReportFragment> {
+        let mut findings = contributions
+            .iter()
+            .filter_map(|contribution| {
+                if let AutoscanReportContribution::CrashSuspectFinding { finding } = contribution {
+                    Some(finding)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+
+        // The analyzer preserves semantic rule order; canonical report grouping and sorting live here.
+        findings.sort_by(|left, right| {
+            crash_suspect_kind_rank(left)
+                .cmp(&crash_suspect_kind_rank(right))
+                .then_with(|| {
+                    match (
+                        crash_suspect_rule_order(left),
+                        crash_suspect_rule_order(right),
+                    ) {
+                        (Some((left_severity, left_name)), Some((right_severity, right_name))) => {
+                            right_severity
+                                .cmp(&left_severity)
+                                .then_with(|| left_name.cmp(right_name))
+                        }
+                        _ => std::cmp::Ordering::Equal,
+                    }
+                })
+        });
+
+        findings
+            .into_iter()
+            .map(|finding| {
+                ReportFragment::from_lines(match finding {
+                    CrashSuspectFinding::MainErrorRule { name, severity, .. }
+                    | CrashSuspectFinding::StackRule { name, severity, .. } => vec![
+                        format!(
+                            "- **Checking for {:.<width$} SUSPECT FOUND! > Severity : {}** \n\n",
+                            name,
+                            severity,
+                            width = 50
+                        ),
+                        "-----\n".to_string(),
+                    ],
+                    CrashSuspectFinding::DllInvolvement => vec![
+                        "* NOTICE : MAIN ERROR REPORTS THAT A DLL FILE WAS INVOLVED IN THIS CRASH! * \n".to_string(),
+                        "If that dll file belongs to a mod, that mod is a prime suspect for the crash. \n\n".to_string(),
+                        "-----\n".to_string(),
+                    ],
+                })
             })
             .collect()
     }

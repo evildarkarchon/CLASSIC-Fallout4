@@ -184,7 +184,7 @@ the canonical parser methods documented in source.
 
 ### Focused analyzers
 
-- `CrashgenSettingsAnalyzer` is the first complete semantic focused analyzer.
+- `CrashgenSettingsAnalyzer` is a complete semantic focused analyzer.
   Its fallible constructor validates typed Crashgen configuration and
   normalizes plugin predicate matcher state once. The immutable, cloneable
   handle accepts one owned `CrashgenSettingsAnalysisInput` and is `Send + Sync`.
@@ -193,11 +193,20 @@ the canonical parser methods documented in source.
   `disabled_setting_notices` are empty. Outcomes preserve the YAML-authored
   rule id, expanded message and fix, kind, severity, and YAML-owned Autoscan
   Report Placement without carrying markdown or report lines.
+- `CrashSuspectAnalyzer` validates and compiles owned main-error and stack rules
+  during construction. Its immutable, cloneable `Send + Sync` handle accepts
+  one owned `CrashSuspectAnalysisInput` containing main-error and call-stack
+  evidence.
+- `CrashSuspectAnalysisResult` contains one `CrashSuspectFinding` for each
+  matched main-error rule, matched stack rule, or DLL involvement notice. Rule
+  findings retain authored ids, names, and severities; DLL involvement retains
+  its typed kind. No finding carries markdown, padding widths, separators, or
+  code-authored report prose, and a completed no-match analysis is an explicit
+  empty result.
 - `FormIDAnalyzerCore` extracts, validates, and optionally resolves FormIDs.
 - `PluginAnalyzer` detects and classifies plugin references.
 - `RecordScanner` scans call stacks for named records and lazily caches its
   per-instance Aho-Corasick matchers with `std::sync::OnceLock`.
-- `SuspectScanner` applies suspect and error heuristics to supplied sections.
 - `SettingsValidator` is the temporary fragment-producing compatibility facade
   over `CrashgenSettingsAnalyzer`; new semantic consumers use the analyzer.
 - `GpuDetector` extracts GPU information.

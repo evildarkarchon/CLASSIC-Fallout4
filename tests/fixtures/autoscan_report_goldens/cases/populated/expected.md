@@ -25,6 +25,9 @@ second fix line
 
 ### Checking for Known Crash Messages, Errors and Suspects
 
+- **Checking for Secondary Error................................... SUSPECT FOUND! > Severity : 6** 
+
+-----
 - **Checking for Main Error Δ...................................... SUSPECT FOUND! > Severity : 5** 
 
 -----
