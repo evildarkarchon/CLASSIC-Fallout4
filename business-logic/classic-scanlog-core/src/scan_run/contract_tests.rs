@@ -369,46 +369,42 @@ fn fcx_disabled_run_has_no_setup_result_or_fcx_report_content() {
 #[test]
 fn fcx_configuration_scan_failure_is_a_typed_intake_error() {
     let temp = tempdir().expect("tempdir should succeed");
-    let root = temp.path();
-    let data = root.join("CLASSIC Data");
-    write_minimal_yaml_tree(root, &data);
-    let log_path = write_fixture_log(&temp, "crash-fcx-config-failure.log");
-    let docs_root = root.join("Documents");
-    std::fs::create_dir_all(&docs_root).expect("documents root should be created");
-    let missing_game_root = root.join("missing-game-root");
-    let request = contract::Request::targeted_with_fcx(
-        contract::Configuration {
-            yaml_dir_root: root.to_path_buf(),
-            yaml_dir_data: data,
-            game: GameId::Fallout4,
-            game_version: "Original".to_string(),
-            options: contract::Options::new(false, false),
-            scan_facts: CrashLogScanFacts::default(),
-            max_concurrent: Some(1),
-        },
-        TargetedCrashLogScanSource {
-            inputs: vec![log_path],
-        },
-        CrashLogScanSetupContext {
-            game_root: Some(missing_game_root.clone()),
-            docs_root: Some(docs_root),
-            game_exe_path: None,
-            xse_log_path: None,
-        },
-    );
-
-    let result = get_runtime().block_on(contract::execute(
-        request,
-        &contract::Cancellation::new(),
+    let missing_game_root = temp.path().join("missing-game-root");
+    // Exercise the post-intake seam directly so a real host registry installation cannot
+    // replace the deliberately missing configured root and make this failure test machine-specific.
+    let source = super::super::detect_setup_configuration_issues(
         None,
-    ));
-    let Err(error) = result else {
-        panic!("FCX configuration scan failure should be typed infrastructure data");
-    };
+        Some(missing_game_root.as_path()),
+        GameId::Fallout4.as_str(),
+    )
+    .expect_err("the missing fallback root should fail configuration scanning");
+    let error = super::super::CrashLogScanRunServiceError::new(
+        contract::InfrastructureErrorStage::Intake,
+        Some(missing_game_root.clone()),
+        source,
+    );
 
     assert_eq!(error.stage, contract::InfrastructureErrorStage::Intake);
     assert_eq!(error.path, Some(missing_game_root));
     assert!(error.message.contains("configuration issues"));
+}
+
+#[test]
+fn fcx_configuration_scan_uses_the_game_root_resolved_by_setup() {
+    let configured_root = PathBuf::from("C:/stale-configured-root");
+    let resolved_root = PathBuf::from("D:/resolved-game-root");
+
+    assert_eq!(
+        super::super::configuration_issue_scan_root(
+            Some(resolved_root.as_path()),
+            Some(configured_root.as_path()),
+        ),
+        Some(resolved_root.as_path())
+    );
+    assert_eq!(
+        super::super::configuration_issue_scan_root(None, Some(configured_root.as_path())),
+        Some(configured_root.as_path())
+    );
 }
 
 #[test]

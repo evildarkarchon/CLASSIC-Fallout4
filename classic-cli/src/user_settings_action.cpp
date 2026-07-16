@@ -51,6 +51,13 @@ void report_open_diagnostics(const classic::settings::CrashLogScanSettingsDto& s
     report_snapshot_diagnostics(setup, reported);
 }
 
+/// Returns whether a persisted FormID row applies to the selected scan game.
+bool formid_database_applies_to_game(const std::string& row_game, const std::string& selected_game) {
+    // Fallout 4 VR shares the Fallout 4 database corpus; User Settings intentionally stores
+    // those rows under Fallout4 so every maintained adapter consumes one canonical mapping.
+    return row_game == selected_game || (selected_game == "Fallout4VR" && row_game == "Fallout4");
+}
+
 } // namespace
 
 /// Persists the destination only after Rust validates the request and anchors it to a revision.
@@ -64,7 +71,10 @@ bool persist_unsolved_logs_destination_option(const CliArgs& args, const std::st
     update.has_unsolved_logs_destination_value = !args.reset_unsolved_logs_destination;
     update.unsolved_logs_destination = args.unsolved_logs_destination;
 
-    const auto preview = classic::settings::user_settings_preview_update(classic_root, update);
+    const auto current = classic::settings::user_settings_open_crash_log_scan_settings(classic_root);
+    const bool bootstrap = to_std_string(current.classification) == "missing";
+    const auto preview = bootstrap ? classic::settings::user_settings_preview_bootstrap(classic_root, update)
+                                   : classic::settings::user_settings_preview_update(classic_root, update);
     if (!preview.accepted) {
         for (const auto& diagnostic : preview.diagnostics) {
             fmt::print(stderr, "Error: User Settings update rejected [{}] {}: {}\n", std::string(diagnostic.code),
@@ -75,7 +85,9 @@ bool persist_unsolved_logs_destination_option(const CliArgs& args, const std::st
 
     classic::settings::UserSettingsCommitResultDto result{};
     try {
-        result = classic::settings::user_settings_commit_update(classic_root, preview.base_revision, update);
+        result = bootstrap
+                     ? classic::settings::user_settings_commit_bootstrap(classic_root, preview.base_revision, update)
+                     : classic::settings::user_settings_commit_update(classic_root, preview.base_revision, update);
     } catch (const rust::Error& error) {
         fmt::print(stderr, "Error: could not commit Unsolved Logs Destination: {}\n", std::string(error.what()));
         return false;
@@ -120,7 +132,7 @@ std::optional<PreparedScanUserSettings> prepare_scan_user_settings(const CliArgs
     prepared.game_version = args.game_version_was_explicit
                                 ? args.game_version
                                 : (uses_managed_game ? to_std_string(scan.game_version_selection) : "auto");
-    prepared.fcx_mode = scan.fcx_mode || args.fcx_mode;
+    prepared.fcx_mode = (uses_managed_game && scan.fcx_mode) || args.fcx_mode;
     prepared.show_formid_values = scan.formid_value_lookup || args.show_fid_values;
     prepared.simplify_logs = scan.simplify_logs || args.simplify_logs;
     prepared.move_unsolved_logs = scan.move_unsolved_logs;
@@ -136,7 +148,7 @@ std::optional<PreparedScanUserSettings> prepare_scan_user_settings(const CliArgs
         args.max_concurrent_was_explicit ? args.max_concurrent : scan.max_concurrent_scans;
 
     for (const auto& row : scan.formid_database_paths) {
-        if (to_std_string(row.game) == prepared.game) {
+        if (formid_database_applies_to_game(to_std_string(row.game), prepared.game)) {
             prepared.formid_database_paths.push_back(to_std_string(row.path));
         }
     }

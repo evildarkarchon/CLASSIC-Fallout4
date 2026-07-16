@@ -1294,13 +1294,11 @@ fn evaluate_setup_for_scan(
     }
 
     let game_setup = intake.run();
-    let configuration_issues = context
-        .game_root
-        .as_deref()
-        .or(game_setup.paths.game_root.as_deref())
-        .map(|game_root| detect_config_issues_for_scan(game_root, game_id.as_str()))
-        .transpose()?
-        .unwrap_or_default();
+    let configuration_issues = detect_setup_configuration_issues(
+        game_setup.paths.game_root.as_deref(),
+        context.game_root.as_deref(),
+        game_id.as_str(),
+    )?;
     let setup = CrashLogScanSetupResult::from_game_setup(game_setup, configuration_issues);
     let setup_failed = setup
         .checks
@@ -1310,6 +1308,26 @@ fn evaluate_setup_for_scan(
         || !setup.fatal_errors.is_empty();
 
     Ok((Some(setup), setup_failed))
+}
+
+/// Selects the setup-validated game root while retaining the configured root as a failure fallback.
+fn configuration_issue_scan_root<'a>(
+    resolved_game_root: Option<&'a Path>,
+    configured_game_root: Option<&'a Path>,
+) -> Option<&'a Path> {
+    resolved_game_root.or(configured_game_root)
+}
+
+/// Detects setup configuration issues under the resolved root, or the configured fallback.
+fn detect_setup_configuration_issues(
+    resolved_game_root: Option<&Path>,
+    configured_game_root: Option<&Path>,
+    game_name: &str,
+) -> Result<Vec<ConfigIssue>> {
+    configuration_issue_scan_root(resolved_game_root, configured_game_root)
+        .map(|game_root| detect_config_issues_for_scan(game_root, game_name))
+        .transpose()
+        .map(Option::unwrap_or_default)
 }
 
 /// Detects FCX configuration issues without collapsing scanner failures into an empty result.

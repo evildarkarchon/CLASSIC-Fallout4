@@ -959,8 +959,10 @@ void MainWindow::saveRememberedPath(RememberedPath path)
                     : std::optional<QString>{QDir::cleanPath(m_editCustomFolder->text().trimmed())};
         }
 
-        const auto result =
-            classic::gui::GameSetupUserSettings::commitSelectedPaths(m_dataRoot, m_guiSettings.revision, changes);
+        const auto result = m_guiSettings.revision == QStringLiteral("missing")
+                                ? classic::gui::GameSetupUserSettings::bootstrapWithSelectedPaths(m_dataRoot, changes)
+                                : classic::gui::GameSetupUserSettings::commitSelectedPaths(
+                                      m_dataRoot, m_guiSettings.revision, changes);
         if (result.status == QStringLiteral("conflict")) {
             QMessageBox::warning(this, QStringLiteral("User Settings Changed"),
                                  QStringLiteral("User Settings changed before the selected paths could be saved. "
@@ -1437,7 +1439,10 @@ void MainWindow::onScanCrashLogs()
         }
 
         setupGameExePath = QDir::cleanPath(launchSettings.setupGameExecutable.trimmed());
-        setupGameExePath = classic::gui::normalizeGameExecutablePath(setupGameExePath, setupGameRoot);
+        const auto executableName =
+            classic::path::resolve_fallout4_exe_name(launchSettings.gameVersion.toStdString());
+        setupGameExePath = classic::gui::normalizeGameExecutablePath(
+            setupGameExePath, setupGameRoot, classic::toQString(executableName));
         setupXseLogPath =
             resolveExistingXseLogPath(m_dataDir, launchSettings.game, launchSettings.gameVersion, setupDocsPath);
         launchSettings.setupGameRoot = setupGameRoot;

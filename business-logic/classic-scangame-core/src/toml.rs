@@ -383,6 +383,8 @@ impl CrashgenChecker {
             installed_plugins: self.installed_plugins.iter().cloned().collect(),
             settings: self.settings_snapshot(),
             config_layout: self.infer_config_layout(),
+            // A local TOML does not identify its installed binary version; the shared evaluator
+            // treats this as non-matching so version-gated rules are skipped without guessing.
             crashgen_version: None,
         };
         let evaluation = evaluate_rules(rules, &context);

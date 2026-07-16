@@ -87,6 +87,18 @@ void acceptNextQuestion()
     });
 }
 
+/// Finds a dialog button by its stable user-facing action label.
+QPushButton* findButton(SettingsDialog& dialog, const QString& text)
+{
+    const auto buttons = dialog.findChildren<QPushButton*>();
+    for (auto* button : buttons) {
+        if (button->text() == text) {
+            return button;
+        }
+    }
+    return nullptr;
+}
+
 /// Settings dialog whose FormID picker returns deterministic files for behavior tests.
 class TestableSettingsDialog final : public SettingsDialog {
 public:
@@ -110,10 +122,14 @@ class SettingsDialogBehaviorTests : public QObject {
 private slots:
     void cancel_discards_widget_changes_without_writing();
     void ok_commits_visible_settings_through_the_typed_update();
+    /// Verifies that explicit first-run save bootstraps settings and derives the VR executable.
+    void ok_bootstraps_missing_settings_with_the_selected_vr_executable();
     void validation_failure_keeps_the_original_document();
     void concurrent_change_surfaces_conflict_and_preserves_newer_values();
     void formid_add_button_accepts_multiple_files_and_deduplicates_paths();
     void reset_uses_rust_owned_defaults_and_clears_dependent_executable();
+    /// Verifies that rollback invalidates the reviewed update decision and disables Apply.
+    void rollback_requires_a_fresh_update_check_before_apply();
 };
 
 void SettingsDialogBehaviorTests::cancel_discards_widget_changes_without_writing()
@@ -209,6 +225,32 @@ void SettingsDialogBehaviorTests::ok_commits_visible_settings_through_the_typed_
     QFile persisted(root.filePath(QStringLiteral("CLASSIC Settings.yaml")));
     QVERIFY(persisted.open(QIODevice::ReadOnly));
     QVERIFY(persisted.readAll().contains("Future Setting: preserve"));
+}
+
+void SettingsDialogBehaviorTests::ok_bootstraps_missing_settings_with_the_selected_vr_executable()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    SettingsDialog dialog(root.path(), nullptr);
+    auto* version = dialog.findChild<QComboBox*>(QStringLiteral("settings.gameVersion"));
+    auto* gameRoot = dialog.findChild<QLineEdit*>(QStringLiteral("settings.gameRoot"));
+    auto* documentsRoot = dialog.findChild<QLineEdit*>(QStringLiteral("settings.documentsRoot"));
+    auto* ok = dialog.findChild<QPushButton*>(QStringLiteral("settings.okButton"));
+    QVERIFY(version);
+    QVERIFY(gameRoot);
+    QVERIFY(documentsRoot);
+    QVERIFY(ok);
+    version->setCurrentText(QStringLiteral("VR"));
+    gameRoot->setText(QStringLiteral("E:/Games/Fallout4VR"));
+    documentsRoot->setText(QStringLiteral("E:/Documents/Fallout4VR"));
+
+    QTest::mouseClick(ok, Qt::LeftButton);
+
+    QCOMPARE(dialog.result(), static_cast<int>(QDialog::Accepted));
+    const auto reopened = classic::gui::GuiUserSettings::open(root.path());
+    QCOMPARE(reopened.revision.startsWith(QStringLiteral("sha256:")), true);
+    QCOMPARE(reopened.scan.gameVersion, QStringLiteral("VR"));
+    QCOMPARE(reopened.gameSetup.gameExecutable.value(), QStringLiteral("E:/Games/Fallout4VR/Fallout4VR.exe"));
 }
 
 void SettingsDialogBehaviorTests::validation_failure_keeps_the_original_document()
@@ -321,6 +363,32 @@ void SettingsDialogBehaviorTests::reset_uses_rust_owned_defaults_and_clears_depe
     QCOMPARE(reopened.gameSetup.gameRoot, defaults.gameSetup.gameRoot);
     QCOMPARE(reopened.gameSetup.gameExecutable, defaults.gameSetup.gameExecutable);
     QCOMPARE(reopened.gameSetup.documentsRoot, defaults.gameSetup.documentsRoot);
+}
+
+void SettingsDialogBehaviorTests::rollback_requires_a_fresh_update_check_before_apply()
+{
+    QTemporaryDir root;
+    QVERIFY(root.isValid());
+    writeSettings(root.path(), dialogSettings());
+    SettingsDialog dialog(root.path(), nullptr);
+    auto* apply = findButton(dialog, QStringLiteral("Apply Data Updates"));
+    QVERIFY(apply);
+
+    YamlCheckResult check;
+    check.status = QStringLiteral("updateAvailable");
+    check.releaseTag = QStringLiteral("yaml-data-v2");
+    check.compatibleFileNames = {QStringLiteral("CLASSIC Fallout4.yaml")};
+    check.compatibleFileSha256 = {QString(64, QLatin1Char('a'))};
+    QVERIFY(QMetaObject::invokeMethod(&dialog, "onYamlCheckFinished", Qt::DirectConnection,
+                                      Q_ARG(YamlCheckResult, check)));
+    QVERIFY(apply->isEnabled());
+
+    YamlRollbackResult rollback;
+    rollback.rolledBack = check.compatibleFileNames;
+    QVERIFY(QMetaObject::invokeMethod(&dialog, "onYamlRollbackFinished", Qt::DirectConnection,
+                                      Q_ARG(YamlRollbackResult, rollback)));
+
+    QVERIFY(!apply->isEnabled());
 }
 
 QTEST_MAIN(SettingsDialogBehaviorTests)

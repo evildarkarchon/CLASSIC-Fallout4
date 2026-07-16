@@ -247,3 +247,35 @@ fn snapshot_uses_last_value_for_duplicate_key_in_section() {
 
     assert_eq!(snapshot.value_for("patches", "Achievements"), Some("false"));
 }
+
+#[test]
+fn version_predicate_does_not_match_when_crashgen_version_is_unknown() {
+    let rules = CrashgenSettingsRules {
+        version: 1,
+        preflight: vec![],
+        checks: vec![CheckRule {
+            id: "archive_limit".to_string(),
+            target: RuleTarget {
+                section: "Patches".to_string(),
+                key: "ArchiveLimit".to_string(),
+                value_type: TargetValueType::Bool,
+            },
+            when: Predicate::CrashgenVersionLt((1, 30, 0)),
+            expect: ExpectedValue::Bool(true),
+            messages: RuleMessages {
+                fail: "ArchiveLimit should be enabled".to_string(),
+                fix: None,
+                pass: None,
+            },
+            severity: RuleSeverity::Warning,
+        }],
+    };
+    let mut context = base_context();
+    context
+        .settings
+        .insert("Patches", "ArchiveLimit", "false".to_string());
+
+    let result = evaluate_rules(&rules, &context);
+
+    assert!(result.outcomes.is_empty());
+}

@@ -404,7 +404,7 @@ Source-visible behavior:
 
 - `PluginAny` compares against `EvaluationContext.installed_plugins` after trimming and lowercasing the predicate entries at evaluation time
 - `ConfigLayoutIs` is strict equality against the caller-provided `ConfigLayout`
-- `CrashgenVersionLt` returns `true` when `crashgen_version` is `None` (uses `Option::is_none_or(...)`)
+- `CrashgenVersionLt` returns `false` when `crashgen_version` is `None`, so callers that cannot provide a real detected version safely skip version-gated rules
 - `All`, `Any`, and `Not` compose recursively
 
 ### `EvaluationContext`
@@ -607,7 +607,7 @@ Note the import path: the types come from `classic_config_core::`, not the forme
 - The rule-model public surface is whatever stays `pub` in `src/crashgen_rules.rs` and is re-exported from `lib.rs`; there are no facade modules or selective re-exports.
 - The evaluator is synchronous and runtime-agnostic.
 - Rule lookup uses both `RuleTarget.section` and `RuleTarget.key`; section-scoped settings with the same key name do not collide.
-- `CrashgenVersionLt` treats a missing crashgen version as matching; if you change that, update downstream callers and docs together.
+- `CrashgenVersionLt` treats a missing crashgen version as non-matching so local-file scans do not apply version-gated advice without evidence.
 - Only `{crashgen_name}`, `{display_section}`, and `{setting}` are recognized in message templates.
 - There is no built-in loader validation API; schema validation currently happens upstream inside the same crate.
 - `classic-scanlog-core` still consumes this rule model even though its current `ConfigLayout` use is mostly `Og` vs `Unknown`.

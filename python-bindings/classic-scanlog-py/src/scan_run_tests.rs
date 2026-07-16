@@ -8,8 +8,9 @@ use classic_scanlog_core::{
 };
 
 use super::{
-    disposition_to_string, event_to_py, infrastructure_error_to_py, log_failure_stage_to_string,
-    log_result_to_py, phase_to_string, run_result_to_py, run_status_to_string, setup_to_py,
+    PyScanRunConfiguration, configuration_to_core, disposition_to_string, event_to_py,
+    infrastructure_error_to_py, log_failure_stage_to_string, log_result_to_py, phase_to_string,
+    run_result_to_py, run_status_to_string, setup_to_py,
 };
 
 const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
@@ -43,6 +44,24 @@ fn log_event() -> contract::LogEvent {
         completed: 2,
         total: 5,
     }
+}
+
+#[test]
+fn configuration_conversion_treats_blank_destination_as_absent() {
+    let configuration = PyScanRunConfiguration::new(
+        "C:/CLASSIC".to_string(),
+        "C:/CLASSIC/CLASSIC Data".to_string(),
+        "Fallout4".to_string(),
+        "auto".to_string(),
+        false,
+        false,
+        Vec::new(),
+        Some(" \t ".to_string()),
+        None,
+    );
+
+    let converted = configuration_to_core(&configuration).expect("configuration should convert");
+    assert!(converted.scan_facts.unsolved_logs_destination.is_none());
 }
 
 #[test]

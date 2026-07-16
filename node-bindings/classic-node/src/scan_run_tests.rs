@@ -27,6 +27,32 @@ fn log_event() -> LogEvent {
 }
 
 #[test]
+fn request_conversion_treats_blank_optional_paths_as_absent() {
+    let configuration = configuration_to_core(JsScanRunConfiguration {
+        yaml_dir_root: "C:/CLASSIC".to_string(),
+        yaml_dir_data: "C:/CLASSIC/CLASSIC Data".to_string(),
+        game: "Fallout4".to_string(),
+        game_version: "auto".to_string(),
+        show_formid_values: false,
+        simplify_logs: false,
+        formid_database_paths: Vec::new(),
+        unsolved_logs_destination: Some(" \t ".to_string()),
+        max_concurrent: None,
+    })
+    .expect("configuration should convert");
+    assert!(configuration.scan_facts.unsolved_logs_destination.is_none());
+
+    let source = standard_source_to_core(JsScanRunStandardSource {
+        base_directory: "C:/CLASSIC".to_string(),
+        custom_scan_directory: Some(String::new()),
+        configured_documents_root: Some(" \t ".to_string()),
+    })
+    .expect("standard source should convert");
+    assert!(source.custom_scan_directory.is_none());
+    assert!(source.configured_documents_root.is_none());
+}
+
+#[test]
 fn event_mapping_covers_every_variant_and_phase() {
     let discovery = CrashLogScanDiscoveryResult {
         source: CrashLogScanDiscoverySource::Targeted,

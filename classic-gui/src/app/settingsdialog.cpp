@@ -26,6 +26,7 @@
 #include "workers/yamlupdateworker.h"
 
 #include "classic_cxx_bridge/update.h"
+#include "classic_cxx_bridge/path.h"
 #include "rust/cxx.h"
 
 // ── Construction ───────────────────────────────────────────────────
@@ -478,12 +479,17 @@ bool SettingsDialog::saveSettings()
     try {
         static const char* gameVersionStrings[] = {"auto", "Original", "NextGen", "AnniversaryEdition", "VR"};
         const int versionIndex = m_comboGameVersion->currentIndex();
+        const QString selectedGameVersion =
+            versionIndex >= 0 && versionIndex <= 4 ? QString::fromLatin1(gameVersionStrings[versionIndex]) : QString{};
         const QString rawGameText = m_editGameFolder ? m_editGameFolder->text().trimmed() : QString();
         const QString gameText = rawGameText.isEmpty() ? QString() : QDir::cleanPath(rawGameText);
         const QString rawExePath = m_settingsSnapshot.gameSetup.gameExecutable.value_or(QString{}).trimmed();
         const QString exePath = rawExePath.isEmpty() ? QString() : QDir::cleanPath(rawExePath);
-        const QString normalizedExePath =
-            gameText.isEmpty() ? QString() : classic::gui::normalizeGameExecutablePath(exePath, gameText);
+        const auto executableName = classic::path::resolve_fallout4_exe_name(selectedGameVersion.toStdString());
+        const QString normalizedExePath = gameText.isEmpty()
+                                              ? QString()
+                                              : classic::gui::normalizeGameExecutablePath(
+                                                    exePath, gameText, classic::toQString(executableName));
         const QString rawIniText = m_editIniFolder->text().trimmed();
         const QString iniText = rawIniText.isEmpty() ? QString() : QDir::cleanPath(rawIniText);
 
@@ -491,8 +497,8 @@ bool SettingsDialog::saveSettings()
         changes.updateCheck = m_chkUpdateCheck->isChecked();
         changes.updateSource = m_comboUpdateSource->currentText();
         changes.autoSwitchAfterScan = m_chkAutoSwitchAfterScan->isChecked();
-        if (versionIndex >= 0 && versionIndex <= 4) {
-            changes.gameVersion = QString::fromLatin1(gameVersionStrings[versionIndex]);
+        if (!selectedGameVersion.isEmpty()) {
+            changes.gameVersion = selectedGameVersion;
         }
         changes.fcxMode = m_chkFcxMode->isChecked();
         changes.simplifyLogs = m_chkSimplifyLogs->isChecked();
@@ -515,7 +521,9 @@ bool SettingsDialog::saveSettings()
         }
         changes.formIdDatabases->insert(m_settingsSnapshot.gameSetup.managedGame, selectedDatabases);
 
-        const auto result = classic::gui::GuiUserSettings::commit(m_dataDir, m_settingsSnapshot.revision, changes);
+        const auto result = m_settingsSnapshot.revision == QStringLiteral("missing")
+                                ? classic::gui::GuiUserSettings::bootstrap(m_dataDir, changes)
+                                : classic::gui::GuiUserSettings::commit(m_dataDir, m_settingsSnapshot.revision, changes);
         if (result.status == QStringLiteral("conflict")) {
             QMessageBox::warning(this, QStringLiteral("User Settings Changed"),
                                  QStringLiteral("User Settings changed while the dialog was open. "
@@ -937,8 +945,10 @@ void SettingsDialog::onYamlRollbackFinished(YamlRollbackResult result)
     m_lblYamlUpdateStatus->setText(summary.join(QStringLiteral(" ")));
 
     m_btnCheckYamlUpdates->setEnabled(true);
-    const bool hasReviewedDecision = !m_approvedReleaseTag.isEmpty() && !m_approvedFileNames.isEmpty() &&
-                                     m_approvedFileSha256.size() == m_approvedFileNames.size();
-    m_btnApplyYamlUpdates->setEnabled(hasReviewedDecision);
+    // Rollback changes the installed-state base of any reviewed decision, so Apply requires a fresh Check.
+    m_approvedReleaseTag.clear();
+    m_approvedFileNames.clear();
+    m_approvedFileSha256.clear();
+    m_btnApplyYamlUpdates->setEnabled(false);
     m_btnRollbackYamlUpdates->setEnabled(true);
 }

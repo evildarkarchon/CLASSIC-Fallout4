@@ -47,8 +47,14 @@ def _install_user_settings_fake(
     monkeypatch.setitem(sys.modules, "classic_user_settings", module)
 
 
-def _install_final_scan_run_fake(fake: types.ModuleType, make_logs: object) -> None:
-    """Attach the final request/execution contract to a fake scanlog module."""
+def _install_final_scan_run_fake(
+    fake: types.ModuleType,
+    make_logs: object,
+    *,
+    status: str = "completed",
+    message: str | None = None,
+) -> None:
+    """Attach a selectable final request/execution result to a fake scanlog module."""
 
     class ScanRunConfiguration:
         def __init__(self, **values: object) -> None:
@@ -83,7 +89,8 @@ def _install_final_scan_run_fake(fake: types.ModuleType, make_logs: object) -> N
         succeeded = sum(item.disposition == "succeeded" for item in logs)
         cancelled = sum(item.disposition == "cancelled_before_start" for item in logs)
         result = types.SimpleNamespace(
-            status="completed",
+            status=status,
+            message=message,
             effective_concurrency=1,
             total=len(logs),
             succeeded=succeeded,
@@ -294,6 +301,50 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
     assert payload["data"]["successfulLogs"] == 1
     assert payload["data"]["failedLogs"] == 1
     assert payload["data"]["failures"] == [{"logPath": str(scan_dir / "bad.log"), "error": "malformed log"}]
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_exit_code"),
+    [
+        ("setup_failed", 1),
+        ("cancelled_before_discovery", 4),
+        ("cancelled", 4),
+    ],
+)
+def test_scan_logs_reports_unsuccessful_terminal_statuses(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    status: str,
+    expected_exit_code: int,
+) -> None:
+    """Terminal setup and cancellation outcomes must not render as successful scans."""
+
+    sys.path.insert(0, str(CLI_SRC))
+    from classic_py_cli.app import main
+
+    fake = types.ModuleType("classic_scanlog")
+    fake.__version__ = "test"
+    _install_final_scan_run_fake(
+        fake,
+        lambda _configuration, _paths: [],
+        status=status,
+        message=f"terminal {status}",
+    )
+    monkeypatch.setitem(sys.modules, "classic_scanlog", fake)
+    _install_user_settings_fake(monkeypatch)
+
+    code = main(["--json", "scan", "logs", "--path", str(tmp_path)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert code == expected_exit_code
+    assert payload["success"] is False
+    assert payload["exitCode"] == expected_exit_code
+    assert payload["error"] == {
+        "classification": "scan-run-terminal",
+        "status": status,
+        "message": f"terminal {status}",
+    }
 
 
 def test_scan_logs_consumes_final_result_and_event_contract(

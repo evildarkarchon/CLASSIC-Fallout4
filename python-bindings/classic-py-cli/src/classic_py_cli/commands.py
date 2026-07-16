@@ -658,6 +658,25 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             int(ExitCode.PRODUCT_FAILURE),
             data={"events": events, "observerError": observer_error},
         )
+    terminal_status = str(result.status)
+    if terminal_status == "setup_failed":
+        message = str(getattr(result, "message", None) or "Crash Log Scan setup failed")
+        return failure(
+            "scan logs",
+            message,
+            int(ExitCode.PRODUCT_FAILURE),
+            error={"classification": "scan-run-terminal", "status": terminal_status, "message": message},
+            data={"events": events, "observerError": observer_error},
+        )
+    if terminal_status in {"cancelled_before_discovery", "cancelled"}:
+        message = str(getattr(result, "message", None) or "Crash Log Scan Run was cancelled")
+        return failure(
+            "scan logs",
+            message,
+            int(ExitCode.INTERRUPTED),
+            error={"classification": "scan-run-terminal", "status": terminal_status, "message": message},
+            data={"events": events, "observerError": observer_error},
+        )
     results = list(result.logs)
     failures = [_scan_failure_summary(item) for item in results if not _scan_result_success(item)]
     report_evidence = [_scan_report_evidence(item) for item in results if _scan_result_success(item)]

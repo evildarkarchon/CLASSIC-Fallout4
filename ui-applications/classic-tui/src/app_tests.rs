@@ -171,6 +171,26 @@ CLASSIC_Settings:
 }
 
 #[test]
+fn scan_projection_reuses_fallout4_formid_databases_for_vr() {
+    let (_root, app) = app_with_settings_yaml(
+        r#"schema_version: "1.0"
+CLASSIC_Settings:
+  Managed Game: Fallout 4 VR
+  FormID Databases:
+    Fallout4:
+      - databases/fallout4.db
+    Fallout4VR:
+      - databases/vr-only.db
+"#,
+    );
+
+    let (game, databases) = app.scan_game_projection();
+
+    assert_eq!(game, classic_shared_core::GameId::Fallout4VR);
+    assert_eq!(databases, vec![PathBuf::from("databases/fallout4.db")]);
+}
+
+#[test]
 fn scan_complete_with_errors_updates_status_message() {
     let mut app = App::new_for_testing();
     app.handle_async_message(AsyncMessage::ScanFinished(Ok(RunResult {
@@ -225,6 +245,27 @@ fn active_scan_cancellation_uses_the_opaque_contract_control() {
         app.scan_status,
         "Cancellation requested; admitted logs will finish safely..."
     );
+}
+
+#[test]
+fn crash_scan_saves_edited_paths_before_projecting_settings() {
+    let (root, mut app) = app_with_settings_yaml(
+        "schema_version: \"1.0\"\nCLASSIC_Settings:\n  SCAN Custom Path: null\n",
+    );
+    let custom_root = tempfile::tempdir_in(std::env::current_dir().unwrap()).unwrap();
+    let custom_scan = custom_root.path().join("Edited Custom Scan");
+    std::fs::create_dir_all(&custom_scan).unwrap();
+    app.custom_scan_input
+        .set_value(custom_scan.to_string_lossy().to_string());
+
+    app.start_or_cancel_crash_scan();
+
+    let reopened = classic_user_settings_core::UserSettings::open(root.path());
+    assert_eq!(
+        reopened.crash_log_scan_settings().custom_scan_input(),
+        Some(custom_scan.to_string_lossy().as_ref())
+    );
+    app.start_or_cancel_crash_scan();
 }
 
 #[test]

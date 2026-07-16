@@ -524,7 +524,7 @@ fn evaluate_predicate(predicate: &Predicate, context: &EvaluationContext) -> boo
         Predicate::ConfigLayoutIs(layout) => context.config_layout == *layout,
         Predicate::CrashgenVersionLt(target) => context
             .crashgen_version
-            .is_none_or(|version| version < *target),
+            .is_some_and(|version| version < *target),
         Predicate::All(items) => items.iter().all(|item| evaluate_predicate(item, context)),
         Predicate::Any(items) => items.iter().any(|item| evaluate_predicate(item, context)),
         Predicate::Not(item) => !evaluate_predicate(item, context),

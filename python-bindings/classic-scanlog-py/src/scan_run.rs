@@ -858,7 +858,7 @@ fn configuration_to_core(value: &PyScanRunConfiguration) -> PyResult<contract::C
                 .iter()
                 .map(PathBuf::from)
                 .collect(),
-            unsolved_logs_destination: value.unsolved_logs_destination.as_ref().map(PathBuf::from),
+            unsolved_logs_destination: optional_path(value.unsolved_logs_destination.as_deref()),
         },
         max_concurrent: value.max_concurrent,
     })
@@ -898,6 +898,13 @@ fn required_path(value: String, label: &str) -> PyResult<PathBuf> {
         return Err(PyValueError::new_err(format!("{label} must not be blank")));
     }
     Ok(PathBuf::from(value))
+}
+
+/// Converts optional path text while treating blank binding sentinels as absent.
+fn optional_path(value: Option<&str>) -> Option<PathBuf> {
+    value
+        .filter(|path| !path.trim().is_empty())
+        .map(PathBuf::from)
 }
 
 fn path_to_string(path: PathBuf) -> String {

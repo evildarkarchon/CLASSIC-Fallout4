@@ -744,6 +744,12 @@ impl App {
             return;
         }
 
+        if let Err(error) = self.save_paths_from_inputs() {
+            self.scan_status = error;
+            self.status_clear_at = None;
+            return;
+        }
+
         self.start_crash_scan(None);
     }
 
@@ -994,10 +1000,15 @@ impl App {
         custom == crash || custom.starts_with(&crash)
     }
 
-    /// Projects the canonical managed game and its matching FormID databases from one snapshot.
+    /// Projects the canonical managed game and its analysis-data FormID databases from one snapshot.
     fn scan_game_projection(&self) -> (classic_shared_core::GameId, Vec<PathBuf>) {
         let managed_game = self.settings.game_setup_settings().managed_game();
-        let managed_game_key = managed_game.as_str().to_string();
+        // Fallout 4 VR keeps its runtime identity but shares Fallout 4's analysis data and FormID database rows.
+        let database_game = match managed_game {
+            classic_shared_core::GameId::Fallout4VR => classic_shared_core::GameId::Fallout4,
+            _ => managed_game,
+        };
+        let managed_game_key = database_game.as_str().to_string();
         let databases = self
             .settings
             .crash_log_scan_settings()

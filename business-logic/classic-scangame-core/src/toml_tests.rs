@@ -298,3 +298,42 @@ fn test_yaml_rules_use_target_toml_section() {
 
     assert!(issues.is_empty());
 }
+
+#[test]
+fn test_yaml_version_rules_are_skipped_when_local_crashgen_version_is_unknown() {
+    let temp_dir = TempDir::new().unwrap();
+    let buffout_dir = temp_dir.path().join("Buffout4");
+    fs::create_dir(&buffout_dir).unwrap();
+    fs::write(
+        buffout_dir.join("config.toml"),
+        "[Patches]\nArchiveLimit = false\n",
+    )
+    .unwrap();
+
+    let rules = CrashgenSettingsRules {
+        version: 1,
+        preflight: vec![],
+        checks: vec![CheckRule {
+            id: "archive_limit".to_string(),
+            target: RuleTarget {
+                section: "Patches".to_string(),
+                key: "ArchiveLimit".to_string(),
+                value_type: TargetValueType::Bool,
+            },
+            when: Predicate::CrashgenVersionLt((1, 30, 0)),
+            expect: ExpectedValue::Bool(true),
+            messages: RuleMessages {
+                fail: "ArchiveLimit should be enabled".to_string(),
+                fix: None,
+                pass: None,
+            },
+            severity: RuleSeverity::Warning,
+        }],
+    };
+
+    let mut checker = CrashgenChecker::new_with_rules(temp_dir.path(), "Buffout4", Some(rules));
+    let (report, issues) = checker.check().unwrap();
+
+    assert!(issues.is_empty());
+    assert!(!report.contains("ArchiveLimit should be enabled"));
+}

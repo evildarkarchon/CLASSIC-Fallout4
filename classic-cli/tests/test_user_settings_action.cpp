@@ -71,6 +71,14 @@ fs::path make_malformed_scan_settings_root() {
     return root;
 }
 
+/// Creates a first-run CLASSIC root without a User Settings document.
+fs::path make_missing_settings_root() {
+    const auto suffix = std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    const fs::path root = fs::temp_directory_path() / ("classic-cli-missing-settings-" + suffix);
+    fs::create_directories(root);
+    return root;
+}
+
 } // namespace
 
 TEST_CASE("native destination action commits and resets through typed User Settings", "[bridge][settings][commit]") {
@@ -93,6 +101,22 @@ TEST_CASE("native destination action commits and resets through typed User Setti
     const std::string content((std::istreambuf_iterator<char>(persisted)), std::istreambuf_iterator<char>());
     REQUIRE(content.find("Custom Scan Folder") != std::string::npos);
     REQUIRE(content.find("ThirdPartyPlugin") != std::string::npos);
+
+    std::error_code ec;
+    fs::remove_all(root, ec);
+}
+
+TEST_CASE("native destination action explicitly bootstraps missing User Settings", "[bridge][settings][commit]") {
+    const fs::path root = make_missing_settings_root();
+    CliArgs args{};
+    args.unsolved_logs_destination = "D:/CLASSIC/First Run Unsolved";
+
+    REQUIRE(persist_unsolved_logs_destination_option(args, root.string()));
+
+    const auto snapshot = classic::settings::user_settings_open_crash_log_scan_settings(root.string());
+    REQUIRE(std::string(snapshot.classification) == "current");
+    REQUIRE(snapshot.has_unsolved_logs_destination);
+    REQUIRE(std::string(snapshot.unsolved_logs_destination) == "D:/CLASSIC/First Run Unsolved");
 
     std::error_code ec;
     fs::remove_all(root, ec);
@@ -158,12 +182,44 @@ TEST_CASE("native scan preparation isolates cross-game CLI overrides", "[bridge]
     REQUIRE(prepared.has_value());
     REQUIRE(prepared->game == "Skyrim");
     REQUIRE(prepared->game_version == "auto");
+    REQUIRE_FALSE(prepared->fcx_mode);
     REQUIRE(prepared->custom_scan_directory.empty());
     REQUIRE(prepared->configured_documents_root.empty());
     REQUIRE(prepared->setup_game_root.empty());
     REQUIRE(prepared->setup_docs_root.empty());
     REQUIRE(prepared->setup_game_exe_path.empty());
     REQUIRE(prepared->formid_database_paths.empty());
+
+    std::error_code ec;
+    fs::remove_all(root, ec);
+}
+
+TEST_CASE("native scan preparation lets explicit FCX override cross-game isolation", "[bridge][settings][scan]") {
+    const fs::path root = make_scan_settings_root();
+    CliArgs args{};
+    args.game = "Skyrim";
+    args.game_was_explicit = true;
+    args.fcx_mode = true;
+
+    const auto prepared = prepare_scan_user_settings(args, root.string());
+
+    REQUIRE(prepared.has_value());
+    REQUIRE(prepared->fcx_mode);
+
+    std::error_code ec;
+    fs::remove_all(root, ec);
+}
+
+TEST_CASE("native Fallout 4 VR scans reuse Fallout 4 FormID database rows", "[bridge][settings][scan]") {
+    const fs::path root = make_scan_settings_root();
+    CliArgs args{};
+    args.game = "Fallout4VR";
+    args.game_was_explicit = true;
+
+    const auto prepared = prepare_scan_user_settings(args, root.string());
+
+    REQUIRE(prepared.has_value());
+    REQUIRE(prepared->formid_database_paths == std::vector<std::string>{"databases/custom.db"});
 
     std::error_code ec;
     fs::remove_all(root, ec);

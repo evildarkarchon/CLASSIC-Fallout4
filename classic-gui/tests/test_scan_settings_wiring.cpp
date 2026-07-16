@@ -16,6 +16,8 @@ private slots:
     void game_files_worker_catches_non_standard_exceptions();
     void mainwindow_wires_live_crash_scan_progress_updates();
     void mainwindow_does_not_use_deprecated_vr_mode_setting();
+    /// Verifies that explicit remembered-path saves can create a previously declined settings document.
+    void mainwindow_bootstraps_missing_settings_when_saving_remembered_paths();
     /// Verifies that detected and manual paths reach one final consent-gated commit.
     void mainwindow_defers_setup_commit_until_manual_completion();
     void mainwindow_preserves_legacy_settings_on_failed_migration();
@@ -208,6 +210,25 @@ void ScanSettingsWiringTests::mainwindow_does_not_use_deprecated_vr_mode_setting
              "MainWindow should not read deprecated CLASSIC_Settings.VR Mode");
 }
 
+void ScanSettingsWiringTests::mainwindow_bootstraps_missing_settings_when_saving_remembered_paths()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile file(sourcePath);
+    QVERIFY2(file.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString source = QString::fromUtf8(file.readAll());
+    const qsizetype start = source.indexOf(QStringLiteral("void MainWindow::saveRememberedPath"));
+    const qsizetype end = source.indexOf(QStringLiteral("\nvoid MainWindow::initResultsReportDir"), start);
+    QVERIFY2(start >= 0 && end > start, "saveRememberedPath should be readable as one function body");
+    const QString body = source.mid(start, end - start);
+
+    QVERIFY2(body.contains(QStringLiteral("m_guiSettings.revision == QStringLiteral(\"missing\")")) &&
+                 body.contains(QStringLiteral("bootstrapWithSelectedPaths")) &&
+                 body.contains(QStringLiteral("commitSelectedPaths")),
+             "Remembered-path saves should bootstrap missing settings and update existing settings");
+}
+
 void ScanSettingsWiringTests::mainwindow_defers_setup_commit_until_manual_completion()
 {
     const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
@@ -392,9 +413,9 @@ void ScanSettingsWiringTests::mainwindow_blocks_crash_logs_scan_when_fcx_enabled
     QVERIFY2(
         guardRegex.match(body).hasMatch(),
         "MainWindow crash-log scan should gate FCX mode on validated paths inside onScanCrashLogs() and return early");
-    QVERIFY2(
-        body.contains(QStringLiteral("classic::gui::normalizeGameExecutablePath(setupGameExePath, setupGameRoot)")),
-        "MainWindow FCX scan should use the shared executable normalization rule");
+    QVERIFY2(body.contains(QStringLiteral("resolve_fallout4_exe_name(launchSettings.gameVersion.toStdString())")) &&
+                 body.contains(QStringLiteral("classic::gui::normalizeGameExecutablePath(")),
+             "MainWindow FCX scan should use the selected version and shared executable normalization rule");
 }
 
 void ScanSettingsWiringTests::mainwindow_resets_stale_game_exe_path_outside_selected_root()

@@ -12,6 +12,8 @@ private slots:
     void validExecutableUnderRootIsPreserved();
     void executableOutsideRootUsesDefault();
     void missingExecutableUsesDefault();
+    /// Verifies that the caller-selected VR executable name controls the fallback path.
+    void missingVrExecutableUsesVersionSpecificDefault();
     void emptyRootLeavesExecutableUnchanged();
 };
 
@@ -26,7 +28,8 @@ void GamePathUtilsTests::validExecutableUnderRootIsPreserved()
     QVERIFY(executable.open(QIODevice::WriteOnly));
     executable.close();
 
-    QCOMPARE(classic::gui::normalizeGameExecutablePath(gameExePath, gameRoot), QDir::cleanPath(gameExePath));
+    QCOMPARE(classic::gui::normalizeGameExecutablePath(gameExePath, gameRoot, QStringLiteral("Fallout4.exe")),
+             QDir::cleanPath(gameExePath));
 }
 
 void GamePathUtilsTests::executableOutsideRootUsesDefault()
@@ -42,7 +45,7 @@ void GamePathUtilsTests::executableOutsideRootUsesDefault()
     QVERIFY(executable.open(QIODevice::WriteOnly));
     executable.close();
 
-    QCOMPARE(classic::gui::normalizeGameExecutablePath(otherExePath, gameRoot),
+    QCOMPARE(classic::gui::normalizeGameExecutablePath(otherExePath, gameRoot, QStringLiteral("Fallout4.exe")),
              QDir(gameRoot).filePath(QStringLiteral("Fallout4.exe")));
 }
 
@@ -53,13 +56,26 @@ void GamePathUtilsTests::missingExecutableUsesDefault()
     const QString gameRoot = temp.filePath(QStringLiteral("Fallout4"));
     QVERIFY(QDir().mkpath(gameRoot));
 
-    QCOMPARE(classic::gui::normalizeGameExecutablePath(temp.filePath(QStringLiteral("missing.exe")), gameRoot),
+    QCOMPARE(classic::gui::normalizeGameExecutablePath(temp.filePath(QStringLiteral("missing.exe")), gameRoot,
+                                                       QStringLiteral("Fallout4.exe")),
              QDir(gameRoot).filePath(QStringLiteral("Fallout4.exe")));
+}
+
+void GamePathUtilsTests::missingVrExecutableUsesVersionSpecificDefault()
+{
+    QTemporaryDir temp;
+    QVERIFY(temp.isValid());
+    const QString gameRoot = temp.filePath(QStringLiteral("Fallout4VR"));
+    QVERIFY(QDir().mkpath(gameRoot));
+
+    QCOMPARE(classic::gui::normalizeGameExecutablePath({}, gameRoot, QStringLiteral("Fallout4VR.exe")),
+             QDir(gameRoot).filePath(QStringLiteral("Fallout4VR.exe")));
 }
 
 void GamePathUtilsTests::emptyRootLeavesExecutableUnchanged()
 {
-    QCOMPARE(classic::gui::normalizeGameExecutablePath(QStringLiteral(" C:/Games/Fallout4.exe "), {}),
+    QCOMPARE(classic::gui::normalizeGameExecutablePath(QStringLiteral(" C:/Games/Fallout4.exe "), {},
+                                                       QStringLiteral("Fallout4.exe")),
              QStringLiteral("C:/Games/Fallout4.exe"));
 }
 

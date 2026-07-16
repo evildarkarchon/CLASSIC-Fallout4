@@ -540,7 +540,7 @@ fn configuration_to_core(value: JsScanRunConfiguration) -> napi::Result<contract
                 .into_iter()
                 .map(PathBuf::from)
                 .collect(),
-            unsolved_logs_destination: value.unsolved_logs_destination.map(PathBuf::from),
+            unsolved_logs_destination: optional_path(value.unsolved_logs_destination),
         },
         max_concurrent: value.max_concurrent.map(|value| value as usize),
     })
@@ -552,8 +552,8 @@ fn standard_source_to_core(
 ) -> napi::Result<StandardCrashLogScanSource> {
     Ok(StandardCrashLogScanSource {
         base_directory: required_path(value.base_directory, "baseDirectory")?,
-        custom_scan_directory: value.custom_scan_directory.map(PathBuf::from),
-        configured_documents_root: value.configured_documents_root.map(PathBuf::from),
+        custom_scan_directory: optional_path(value.custom_scan_directory),
+        configured_documents_root: optional_path(value.configured_documents_root),
     })
 }
 
@@ -582,6 +582,13 @@ fn required_path(value: String, label: &str) -> napi::Result<PathBuf> {
         ));
     }
     Ok(PathBuf::from(value))
+}
+
+/// Converts optional path text while treating blank binding sentinels as absent.
+fn optional_path(value: Option<String>) -> Option<PathBuf> {
+    value
+        .filter(|path| !path.trim().is_empty())
+        .map(PathBuf::from)
 }
 
 fn path_to_string(path: PathBuf) -> String {

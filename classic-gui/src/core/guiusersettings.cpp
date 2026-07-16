@@ -285,6 +285,31 @@ GuiUserSettingsSnapshot GuiUserSettings::publishedDefaults()
     return snapshotFrom(classic::settings::user_settings_gui_published_defaults());
 }
 
+GuiUserSettingsCommitResult GuiUserSettings::bootstrap(const QString& classicRoot,
+                                                       const GuiUserSettingsChanges& changes)
+{
+    const std::string root = toStdString(classicRoot);
+    const auto update = updateFrom(changes);
+    const auto preview = classic::settings::user_settings_preview_bootstrap(root, update);
+    if (!preview.accepted) {
+        return {QStringLiteral("rejected"), {}, {}, {}, diagnosticsFrom(preview.diagnostics)};
+    }
+
+    const QString previewRevision = classic::toQString(preview.base_revision);
+    if (previewRevision != QStringLiteral("missing")) {
+        return revisionConflict(QStringLiteral("missing"), previewRevision);
+    }
+
+    const auto committed = classic::settings::user_settings_commit_bootstrap(root, preview.base_revision, update);
+    return {
+        classic::toQString(committed.status),
+        classic::toQString(committed.revision),
+        classic::toQString(committed.expected_revision),
+        classic::toQString(committed.actual_revision),
+        diagnosticsFrom(committed.diagnostics),
+    };
+}
+
 GuiUserSettingsCommitResult GuiUserSettings::commit(const QString& classicRoot, const QString& expectedRevision,
                                                     const GuiUserSettingsChanges& changes)
 {

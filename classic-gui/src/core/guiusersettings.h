@@ -153,6 +153,12 @@ public:
     /// Opens all GUI-consumed typed groups from one source revision without persistence.
     static GuiUserSettingsSnapshot open(const QString& classicRoot);
 
+    /// Previews and atomically bootstraps a missing document with all selected changes.
+    ///
+    /// Returns `committed`, `conflict`, or `rejected`; this operation only accepts the
+    /// canonical `missing` base revision and never overwrites a concurrently created document.
+    static GuiUserSettingsCommitResult bootstrap(const QString& classicRoot, const GuiUserSettingsChanges& changes);
+
     /// Previews and atomically commits all selected changes against `expectedRevision`.
     ///
     /// Returns `committed`, `conflict`, or `rejected`; operational publication failures

@@ -7,9 +7,10 @@
 namespace classic::gui {
 
 /// Return an executable path that belongs to the selected game root.
-/// The saved path is preserved only when it exists directly under the root; otherwise the conventional
-/// `<gameRoot>/Fallout4.exe` path is returned. An empty root leaves the saved path unchanged.
-[[nodiscard]] inline QString normalizeGameExecutablePath(const QString& gameExePath, const QString& gameRoot)
+/// The saved path is preserved only when it exists directly under the root; otherwise the caller-provided
+/// version-specific executable name is placed under the root. An empty root leaves the saved path unchanged.
+[[nodiscard]] inline QString normalizeGameExecutablePath(const QString& gameExePath, const QString& gameRoot,
+                                                         const QString& fallbackExecutableName)
 {
     const QString trimmedExePath = gameExePath.trimmed();
     const QString normalizedExePath = trimmedExePath.isEmpty() ? QString{} : QDir::cleanPath(trimmedExePath);
@@ -28,7 +29,7 @@ namespace classic::gui {
         }
     }
 
-    return QDir::cleanPath(normalizedGameRoot + QStringLiteral("/Fallout4.exe"));
+    return QDir(normalizedGameRoot).filePath(fallbackExecutableName);
 }
 
 } // namespace classic::gui
