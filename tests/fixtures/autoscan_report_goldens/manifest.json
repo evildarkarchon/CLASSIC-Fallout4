@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "name": "empty-findings",
+      "fixtureDirectory": "cases/empty",
+      "crashLog": "crash-empty.log",
+      "expectedReport": "expected.md",
+      "gameVersion": "Original",
+      "showFormidValues": false,
+      "fcxMode": false,
+      "expected": {
+        "formidCount": 0,
+        "pluginCount": 1,
+        "suspectCount": 0
+      }
+    },
+    {
+      "name": "populated-findings",
+      "fixtureDirectory": "cases/populated",
+      "crashLog": "crash-populated.log",
+      "expectedReport": "expected.md",
+      "gameVersion": "Original",
+      "showFormidValues": true,
+      "fcxMode": false,
+      "formidDatabaseEntries": [
+        {
+          "formid": "ABCDEF",
+          "plugin": "AlphaConflict.esp",
+          "entry": "Lookup hit — café 雪"
+        }
+      ],
+      "expected": {
+        "formidCount": 4,
+        "pluginCount": 4,
+        "suspectCount": 3
+      }
+    },
+    {
+      "name": "fcx-mode",
+      "fixtureDirectory": "cases/fcx",
+      "crashLog": "crash-fcx.log",
+      "expectedReport": "expected.md",
+      "gameVersion": "AnniversaryEdition",
+      "showFormidValues": false,
+      "fcxMode": true,
+      "expected": {
+        "formidCount": 0,
+        "pluginCount": 1,
+        "suspectCount": 0
+      }
+    }
+  ]
+}

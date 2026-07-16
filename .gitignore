@@ -25,6 +25,7 @@ lcov.info
 *.build/
 *.dist/
 *.exe
+!tests/fixtures/autoscan_report_goldens/fcx-game/Fallout4.exe
 *.onefile-build/
 *.pdb
 build/
@@ -42,6 +43,7 @@ CLASSIC GFS Report.md
 CLASSIC Ignore.yaml
 !python-bindings/tests/fixtures/CLASSIC Ignore.yaml
 !tests/fixtures/crash_log_scan_run/CLASSIC Ignore.yaml
+!tests/fixtures/autoscan_report_goldens/cases/*/input/CLASSIC Ignore.yaml
 CLASSIC Settings.yaml
 Fallout4 FID*.txt
 FormID_List*

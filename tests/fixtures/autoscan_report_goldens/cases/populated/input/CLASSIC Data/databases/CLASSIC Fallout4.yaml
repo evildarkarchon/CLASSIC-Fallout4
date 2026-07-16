@@ -1,0 +1,91 @@
+Game_Info:
+  XSE_Acronym: F4SE
+  GameVersion: "1.10.163"
+  GameVersionNEW: "1.10.984"
+  CRASHGEN_LatestVer: "1.37.0"
+  CRASHGEN_LogName: "Buffout 4"
+  Main_Root_Name: Fallout4
+Warnings_CRASHGEN:
+  Warn_NOPlugins: "No plugins found"
+  Warn_Outdated: "Outdated"
+Crashlog_Plugins_Exclude: []
+Crashlog_Records_Exclude: []
+Crashlog_Error_Check:
+  - id: golden-main-error
+    name: Main Error Δ
+    severity: 5
+    main_error_contains_any: [MainSignal]
+Crashlog_Stack_Check:
+  - id: golden-stack
+    name: Stack Signal 雪
+    severity: 4
+    main_error_required_any: []
+    main_error_optional_any: []
+    stack_contains_any: [StackSignal]
+    exclude_if_stack_contains_any: []
+    stack_contains_at_least: []
+Mods_CONF:
+  - mod_a: AlphaConflict
+    mod_b: BetaConflict
+    name_a: Alpha Conflict café
+    name_b: Beta Conflict 雪
+    description: "Authored conflict line one\nAuthored conflict line two with trailing spaces  "
+    fix: "Keep exactly one plugin.  "
+    link: https://example.invalid/conflict
+Mods_CORE:
+  - detect: GpuOnly.dll
+    name: GPU-specific Important Mod
+    description: "Installed entry description"
+    gpu: nvidia
+    gpu_mismatch_warning: "Authored GPU warning Δ\nSecond warning line with trailing spaces  "
+  - detect: MissingCore
+    name: Missing Important Mod 雪
+    description: "First missing guidance line\nSecond missing guidance line with trailing spaces  "
+Mods_FREQ:
+  - id: frequent-golden
+    criteria:
+      any: [FrequentMod]
+    name: Frequent Guidance café
+    description: "First frequent line\nSecond frequent line with trailing spaces  \nUnicode line 雪"
+Mods_SOLU:
+  - id: solution-golden
+    criteria:
+      any: [SolutionMod]
+    name: Solution Guidance Δ
+    description: "First solution line\nSecond solution line with trailing spaces  "
+Crashgen_Registry:
+  "Buffout 4":
+    display_section: "[Patches]"
+    ignore_keys: []
+    checks: []
+    settings_rules_version: 1
+    settings_rules:
+      preflight:
+        - id: error-information-placement
+          when:
+            plugin_any: [expectation-trigger.dll]
+          action:
+            kind: notice
+            placement: error_information
+            severity: warning
+            message: "Error placement café\nsecond authored line with trailing spaces  "
+            fix: "Error placement fix 雪\nsecond fix line  "
+      checks:
+        - id: settings-placement
+          target:
+            section: Patches
+            key: StableSetting
+            type: bool
+          when:
+            plugin_any: [expectation-trigger.dll]
+          expect:
+            equals: true
+          messages:
+            fail: "StableSetting should be true"
+            fix: "Enable StableSetting"
+            pass: "Settings placement Δ\nsecond settings line with trailing spaces  "
+          severity: warning
+  default:
+    display_section: ""
+    ignore_keys: []
+    checks: []

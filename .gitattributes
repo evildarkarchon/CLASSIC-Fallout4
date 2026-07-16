@@ -22,5 +22,10 @@
 *.json   text
 *.toml   text
 
+# Autoscan Report characterization files are byte-exact fixtures. Do not let
+# checkout newline conversion alter their final-newline or trailing-space bytes.
+tests/fixtures/autoscan_report_goldens/cases/*/expected.md -text
+tests/fixtures/autoscan_report_goldens/fcx-game/Fallout4.exe -text
+
 # Use bd merge for beads JSONL files
 .beads/issues.jsonl merge=beads

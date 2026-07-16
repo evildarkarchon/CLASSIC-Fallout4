@@ -1,0 +1,23 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.37.0
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+0733512
+
+[Patches]
+EnabledSetting: true
+
+SYSTEM SPECS:
+    OS: Microsoft Windows 11 Pro
+    CPU: AMD Ryzen 7 7800X3D
+
+PROBABLE CALL STACK:
+    [0] Fallout4.exe+0733512
+    [1] Quiet stack frame
+
+MODULES:
+    Fallout4.exe v1.10.163.0
+F4SE PLUGINS:
+    buffout4.dll v1.37.0
+
+PLUGINS:
+    [01] QuietPlugin.esp

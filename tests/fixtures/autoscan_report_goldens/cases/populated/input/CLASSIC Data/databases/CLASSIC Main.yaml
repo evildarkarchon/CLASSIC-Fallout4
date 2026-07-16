@@ -1,0 +1,9 @@
+CLASSIC_Info:
+  version: "v9.1.0"
+  version_date: "2026-07-15"
+CLASSIC_Interface:
+  autoscan_text_Fallout4: "Autoscan Fallout 4"
+catch_log_records:
+  - NamedTarget
+exclude_log_records:
+  - "(void*)"

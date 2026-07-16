@@ -1,0 +1,35 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.37.0
+
+Unhandled exception "MainSignal Problematic.dll" at 0x7FF6EF4C3512 Fallout4.exe+0733512
+
+[Patches]
+StableSetting: true
+DisabledSetting: false
+
+SYSTEM SPECS:
+    OS: Microsoft Windows 11 Pro
+    CPU: AMD Ryzen 7 7800X3D
+    GPU #1: AMD Radeon RX 7900 XTX
+
+PROBABLE CALL STACK:
+    [0] StackSignal AlphaConflict.esp
+    [1] AlphaConflict.esp Form ID: 0x01ABCDEF
+    [2] AlphaConflict.esp Form ID: 0x01ABCDEF
+    [3] SolutionMod.esp Form ID: 0x01FEDCBA
+    [4] Form ID: 0x7F123456
+    NamedTarget: Unicode record 雪
+    NamedTarget: Unicode record 雪
+
+MODULES:
+    Fallout4.exe v1.10.163.0
+F4SE PLUGINS:
+    buffout4.dll v1.37.0
+    expectation-trigger.dll v1.0.0
+    GpuOnly.dll v1.0.0
+
+PLUGINS:
+    [01] AlphaConflict.esp
+    [02] BetaConflict.esp
+    [03] FrequentMod.esp
+    [04] SolutionMod.esp
