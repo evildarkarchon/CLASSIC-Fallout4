@@ -11,11 +11,73 @@ use crate::scan_run::{
 };
 use classic_shared_core::GameId;
 use classic_shared_core::get_runtime;
+use serde::Deserialize;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Barrier};
 use std::time::Duration;
 use tempfile::tempdir;
+
+const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/fixtures/crash_log_scan_run/manifest.json"
+));
+
+/// Shared structured-failure expectations consumed by every supported adapter.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SharedFailureFixtures {
+    log_result: SharedLogFailureResult,
+    infrastructure_errors: Vec<SharedInfrastructureFailure>,
+}
+
+/// One normalized failed log result with every durable failure stage.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SharedLogFailureResult {
+    discovery_index: usize,
+    crash_log: String,
+    autoscan_report: Option<String>,
+    disposition: String,
+    failures: Vec<SharedLogFailure>,
+    message: String,
+    moved_to_unsolved_logs: bool,
+    processing_time_us: u64,
+    processing_time_ms: u64,
+    formid_count: usize,
+    plugin_count: usize,
+    suspect_count: usize,
+}
+
+/// One ordered per-log failure expectation.
+#[derive(Debug, Deserialize)]
+struct SharedLogFailure {
+    stage: String,
+    message: String,
+}
+
+/// One normalized run-wide infrastructure failure expectation.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SharedInfrastructureFailure {
+    stage: String,
+    raw_message: String,
+    message: String,
+    path: Option<String>,
+}
+
+/// Loads the failure corpus used by core and binding mapping tests.
+fn shared_failure_fixtures() -> SharedFailureFixtures {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Manifest {
+        failure_fixtures: SharedFailureFixtures,
+    }
+
+    serde_json::from_str::<Manifest>(SHARED_SCAN_RUN_MANIFEST)
+        .expect("shared scan-run manifest should deserialize")
+        .failure_fixtures
+}
 
 fn final_run_configuration() -> contract::Configuration {
     contract::Configuration {
@@ -893,37 +955,55 @@ fn final_operation_rejects_zero_concurrency_with_typed_request_stage() {
 
 #[test]
 fn final_log_result_preserves_multiple_structured_failure_stages() {
+    let fixture = shared_failure_fixtures().log_result;
     let result = contract::LogResult::from(CrashLogScanRunLogOutcome {
-        input_index: 0,
-        crash_log: std::path::PathBuf::from("crash.log"),
-        autoscan_report: None,
+        input_index: fixture.discovery_index,
+        crash_log: std::path::PathBuf::from(&fixture.crash_log),
+        autoscan_report: fixture.autoscan_report.as_ref().map(PathBuf::from),
         outcome: CrashLogScanOutcome::Failed,
         report_write_failed: true,
-        moved_to_unsolved_logs: false,
+        moved_to_unsolved_logs: fixture.moved_to_unsolved_logs,
         unsolved_logs_finalization_failed: true,
-        analysis_error: None,
-        report_write_error: Some("report failed".to_string()),
-        unsolved_logs_finalization_error: Some("move failed".to_string()),
-        error: Some("report failed; move failed".to_string()),
-        processing_time_us: 0,
-        processing_time_ms: 0,
-        formid_count: 0,
-        plugin_count: 0,
-        suspect_count: 0,
+        analysis_error: Some(fixture.failures[0].message.clone()),
+        report_write_error: Some(fixture.failures[1].message.clone()),
+        unsolved_logs_finalization_error: Some(fixture.failures[2].message.clone()),
+        error: Some(fixture.message.clone()),
+        processing_time_us: fixture.processing_time_us,
+        processing_time_ms: fixture.processing_time_ms,
+        formid_count: fixture.formid_count,
+        plugin_count: fixture.plugin_count,
+        suspect_count: fixture.suspect_count,
     });
 
-    assert_eq!(result.disposition, contract::LogDisposition::Failed);
+    assert_eq!(result.discovery_index, fixture.discovery_index);
+    assert_eq!(result.crash_log, PathBuf::from(fixture.crash_log));
+    assert_eq!(
+        result.autoscan_report,
+        fixture.autoscan_report.map(PathBuf::from)
+    );
+    assert_eq!(result.disposition.as_str(), fixture.disposition);
     assert_eq!(
         result
             .failures
             .iter()
-            .map(|failure| failure.stage)
+            .map(|failure| (failure.stage.as_str(), failure.message.as_str()))
             .collect::<Vec<_>>(),
-        vec![
-            contract::LogFailureStage::ReportWrite,
-            contract::LogFailureStage::UnsolvedLogsFinalization,
-        ]
+        fixture
+            .failures
+            .iter()
+            .map(|failure| (failure.stage.as_str(), failure.message.as_str()))
+            .collect::<Vec<_>>()
     );
+    assert_eq!(result.message.as_deref(), Some(fixture.message.as_str()));
+    assert_eq!(
+        result.moved_to_unsolved_logs,
+        fixture.moved_to_unsolved_logs
+    );
+    assert_eq!(result.processing_time_us, fixture.processing_time_us);
+    assert_eq!(result.processing_time_ms, fixture.processing_time_ms);
+    assert_eq!(result.formid_count, fixture.formid_count);
+    assert_eq!(result.plugin_count, fixture.plugin_count);
+    assert_eq!(result.suspect_count, fixture.suspect_count);
 }
 
 #[test]
@@ -1706,46 +1786,42 @@ fn standard_unsolved_logs_filesystem_failure_is_structured() {
 /// Verifies every stable infrastructure stage preserves its message and optional path.
 #[test]
 fn injected_infrastructure_failures_preserve_every_stable_contract_field() {
+    let fixtures = shared_failure_fixtures().infrastructure_errors;
     let cases = [
         (
             InfrastructureFault::RequestValidation,
             contract::InfrastructureErrorStage::RequestValidation,
-            "Settings validation error",
         ),
         (
             InfrastructureFault::Discovery,
             contract::InfrastructureErrorStage::Discovery,
-            "File I/O error",
         ),
         (
             InfrastructureFault::Intake,
             contract::InfrastructureErrorStage::Intake,
-            "Configuration error",
         ),
         (
             InfrastructureFault::FormIdDatabaseAccess,
             contract::InfrastructureErrorStage::FormIdDatabaseAccess,
-            "Database error",
         ),
         (
             InfrastructureFault::Initialization,
             contract::InfrastructureErrorStage::Initialization,
-            "Analysis error",
         ),
         (
             InfrastructureFault::InternalInvariant,
             contract::InfrastructureErrorStage::InternalInvariant,
-            "Internal error",
         ),
     ];
 
-    for (index, (fault, stage, message_prefix)) in cases.into_iter().enumerate() {
+    assert_eq!(fixtures.len(), cases.len());
+    for ((fault, stage), fixture) in cases.into_iter().zip(fixtures) {
+        assert_eq!(fixture.stage, stage.as_str());
         let temp = tempdir().expect("tempdir should succeed");
         let root = temp.path();
         let data = root.join("CLASSIC Data");
         write_minimal_yaml_tree(root, &data);
-        let log = write_fixture_log(&temp, &format!("crash-infrastructure-{index}.log"));
-        let expected_formid_path = data.join("databases").join("Fallout4 FormIDs Main.db");
+        let log = write_fixture_log(&temp, "crash-shared-infrastructure.log");
         let mut configuration = final_run_configuration();
         configuration.yaml_dir_root = root.to_path_buf();
         configuration.yaml_dir_data = data.clone();
@@ -1756,17 +1832,12 @@ fn injected_infrastructure_failures_preserve_every_stable_contract_field() {
                 inputs: vec![log.clone()],
             },
         );
-        let raw_message = format!("injected {} failure", stage.as_str());
-        let expected_message = format!("{message_prefix}: {raw_message}");
-        let expected_path = match fault {
-            InfrastructureFault::Discovery => Some(log),
-            InfrastructureFault::Intake => Some(data),
-            InfrastructureFault::FormIdDatabaseAccess => Some(expected_formid_path),
-            InfrastructureFault::RequestValidation
-            | InfrastructureFault::Initialization
-            | InfrastructureFault::InternalInvariant => None,
-        };
-        let hooks = ScanRunTestHooks::default().with_infrastructure_failure(fault, raw_message);
+        let expected_path = fixture.path.as_ref().map(|path| root.join(path));
+        if fault == InfrastructureFault::Discovery {
+            assert_eq!(expected_path.as_ref(), Some(&log));
+        }
+        let hooks =
+            ScanRunTestHooks::default().with_infrastructure_failure(fault, fixture.raw_message);
 
         let error = get_runtime()
             .block_on(contract::execute_with_test_hooks(
@@ -1778,7 +1849,7 @@ fn injected_infrastructure_failures_preserve_every_stable_contract_field() {
             .expect_err("injected infrastructure failure should stop the run");
 
         assert_eq!(error.stage, stage);
-        assert_eq!(error.message, expected_message);
+        assert_eq!(error.message, fixture.message);
         assert_eq!(error.path, expected_path);
     }
 }

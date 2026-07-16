@@ -21,9 +21,7 @@ def test_catalog_maps_policy_to_all_required_surfaces() -> None:
 
 
 def test_catalog_classifies_existing_checks_and_known_gaps() -> None:
-    classifications = {
-        requirement.classification for requirement in REQUIREMENTS
-    }
+    classifications = {requirement.classification for requirement in REQUIREMENTS}
     assert {
         "existing_gate",
         "new_check",
@@ -59,3 +57,26 @@ def test_full_profile_includes_runtime_backstops() -> None:
         "python-runtime-smoke-tests",
     } <= command_ids
 
+
+def test_static_profiles_block_on_scan_run_variant_acknowledgements() -> None:
+    """The shared scan-run manifest is mandatory for every source-level profile."""
+
+    requirements = {requirement.id: requirement for requirement in REQUIREMENTS}
+    requirement = requirements["scan-run-contract-variants"]
+
+    assert requirement.blocking is True
+    assert requirement.profiles == (
+        "static",
+        "ci",
+        "full",
+        "cxx-ci",
+        "node-ci",
+        "python-ci",
+    )
+    assert requirement.command is not None
+    assert requirement.command.argv == (
+        "python",
+        "tools/binding_compliance/scan_run_contract.py",
+        "--repo-root",
+        ".",
+    )

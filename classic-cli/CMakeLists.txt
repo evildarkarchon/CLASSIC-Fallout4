@@ -220,6 +220,52 @@ if(Catch2_FOUND)
 
     target_include_directories(classic-cli-bridge-tests PRIVATE src/)
 
+    # CMake parses the shared JSON once so the native runner consumes the same
+    # request and expected-result values without adding a runtime JSON library.
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+        "${CMAKE_SOURCE_DIR}/../tests/fixtures/crash_log_scan_run/manifest.json"
+    )
+    file(READ "${CMAKE_SOURCE_DIR}/../tests/fixtures/crash_log_scan_run/manifest.json"
+         CLASSIC_SCAN_RUN_FIXTURE_JSON)
+    function(classic_scan_run_fixture_value output)
+        string(JSON value GET "${CLASSIC_SCAN_RUN_FIXTURE_JSON}" ${ARGN})
+        set(${output} "${value}" PARENT_SCOPE)
+    endfunction()
+    classic_scan_run_fixture_value(SCAN_STANDARD_SOURCE fixtures standard expected source)
+    classic_scan_run_fixture_value(SCAN_STANDARD_LOG_0 fixtures standard logs 0)
+    classic_scan_run_fixture_value(SCAN_STANDARD_LOG_1 fixtures standard logs 1)
+    classic_scan_run_fixture_value(SCAN_STANDARD_MAX fixtures standard maxConcurrent)
+    classic_scan_run_fixture_value(SCAN_STANDARD_EFFECTIVE fixtures standard expected effectiveConcurrency)
+    classic_scan_run_fixture_value(SCAN_STANDARD_ORDER_0 fixtures standard expected discoveryOrder 0)
+    classic_scan_run_fixture_value(SCAN_STANDARD_ORDER_1 fixtures standard expected discoveryOrder 1)
+    classic_scan_run_fixture_value(SCAN_STANDARD_DISPOSITION_0 fixtures standard expected dispositions 0)
+    classic_scan_run_fixture_value(SCAN_STANDARD_DISPOSITION_1 fixtures standard expected dispositions 1)
+    classic_scan_run_fixture_value(SCAN_STANDARD_ARTIFACT_SUFFIX fixtures standard expected artifactSuffix)
+    classic_scan_run_fixture_value(SCAN_TARGETED_SOURCE fixtures targeted expected source)
+    classic_scan_run_fixture_value(SCAN_TARGETED_INPUT_0 fixtures targeted inputs 0)
+    classic_scan_run_fixture_value(SCAN_TARGETED_INPUT_1 fixtures targeted inputs 1)
+    classic_scan_run_fixture_value(SCAN_TARGETED_INPUT_2 fixtures targeted inputs 2)
+    classic_scan_run_fixture_value(SCAN_TARGETED_ACCEPTED_0 fixtures targeted expected acceptedLogs 0)
+    classic_scan_run_fixture_value(SCAN_TARGETED_ACCEPTED_1 fixtures targeted expected acceptedLogs 1)
+    classic_scan_run_fixture_value(SCAN_TARGETED_REJECTED_0 fixtures targeted expected rejectedInputs 0)
+    classic_scan_run_fixture_value(SCAN_TARGETED_MAX fixtures targeted maxConcurrent)
+    classic_scan_run_fixture_value(SCAN_TARGETED_EFFECTIVE fixtures targeted expected effectiveConcurrency)
+    classic_scan_run_fixture_value(SCAN_TARGETED_ORDER_0 fixtures targeted expected discoveryOrder 0)
+    classic_scan_run_fixture_value(SCAN_TARGETED_ORDER_1 fixtures targeted expected discoveryOrder 1)
+    classic_scan_run_fixture_value(SCAN_TARGETED_DISPOSITION_0 fixtures targeted expected dispositions 0)
+    classic_scan_run_fixture_value(SCAN_TARGETED_DISPOSITION_1 fixtures targeted expected dispositions 1)
+    classic_scan_run_fixture_value(SCAN_TARGETED_ARTIFACT_SUFFIX fixtures targeted expected artifactSuffix)
+    string(JSON SCAN_TARGETED_UNSOLVED_COUNT LENGTH
+           "${CLASSIC_SCAN_RUN_FIXTURE_JSON}" fixtures targeted expected unsolvedLogsArtifacts)
+    configure_file(
+        tests/scan_run_fixture_config.h.in
+        "${CMAKE_CURRENT_BINARY_DIR}/generated/scan_run_fixture_config.h"
+        @ONLY
+    )
+    target_include_directories(classic-cli-bridge-tests PRIVATE
+        "${CMAKE_CURRENT_BINARY_DIR}/generated"
+    )
+
     target_link_libraries(classic-cli-bridge-tests PRIVATE
         Catch2::Catch2WithMain
         fmt::fmt
@@ -230,6 +276,7 @@ if(Catch2_FOUND)
     # User Settings short-circuit before installed-version validation or I/O.
     target_compile_definitions(classic-cli-bridge-tests PRIVATE
         CLASSIC_CLI_VERSION="not-a-version"
+        CLASSIC_REPO_ROOT="${CMAKE_SOURCE_DIR}/.."
     )
 
     if(MSVC)

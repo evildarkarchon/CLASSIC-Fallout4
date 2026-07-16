@@ -1,0 +1,721 @@
+{
+  "schemaVersion": 1,
+  "description": "Canonical observable inputs, outcomes, and adapter acknowledgements for the Rust-owned Crash Log Scan Run.",
+  "fixtureRoot": "tests/fixtures/crash_log_scan_run",
+  "fixtureFiles": [
+    "tests/fixtures/crash_log_scan_run/valid-crash.log",
+    "tests/fixtures/crash_log_scan_run/CLASSIC Ignore.yaml",
+    "tests/fixtures/crash_log_scan_run/CLASSIC Data/databases/CLASSIC Main.yaml",
+    "tests/fixtures/crash_log_scan_run/CLASSIC Data/databases/CLASSIC Fallout4.yaml"
+  ],
+  "fixtures": {
+    "standard": {
+      "logTemplate": "valid-crash.log",
+      "logs": [
+        "Crash Logs/crash-shared-standard-01.log",
+        "Crash Logs/crash-shared-standard-02.log"
+      ],
+      "maxConcurrent": 4,
+      "expected": {
+        "source": "standard",
+        "acceptedLogs": [
+          "Crash Logs/crash-shared-standard-01.log",
+          "Crash Logs/crash-shared-standard-02.log"
+        ],
+        "rejectedInputs": [],
+        "effectiveConcurrency": 2,
+        "discoveryOrder": [
+          0,
+          1
+        ],
+        "dispositions": [
+          "succeeded",
+          "succeeded"
+        ],
+        "artifactSuffix": "-AUTOSCAN.md"
+      }
+    },
+    "targeted": {
+      "logTemplate": "valid-crash.log",
+      "inputs": [
+        "Targeted/crash-shared-targeted-02.log",
+        "missing-input.txt",
+        "Targeted/crash-shared-targeted-01.log"
+      ],
+      "maxConcurrent": 4,
+      "expected": {
+        "source": "targeted",
+        "acceptedLogs": [
+          "Targeted/crash-shared-targeted-02.log",
+          "Targeted/crash-shared-targeted-01.log"
+        ],
+        "rejectedInputs": [
+          "missing-input.txt"
+        ],
+        "effectiveConcurrency": 2,
+        "discoveryOrder": [
+          0,
+          1
+        ],
+        "dispositions": [
+          "succeeded",
+          "succeeded"
+        ],
+        "artifactSuffix": "-AUTOSCAN.md",
+        "unsolvedLogsArtifacts": []
+      }
+    }
+  },
+  "failureFixtures": {
+    "logResult": {
+      "discoveryIndex": 3,
+      "crashLog": "logs/crash-shared-failure.log",
+      "autoscanReport": null,
+      "disposition": "failed",
+      "failures": [
+        {
+          "stage": "analysis",
+          "message": "shared analysis failure"
+        },
+        {
+          "stage": "report_write",
+          "message": "shared report write failure"
+        },
+        {
+          "stage": "unsolved_logs_finalization",
+          "message": "shared movement failure"
+        }
+      ],
+      "message": "shared analysis, report, and movement failures",
+      "movedToUnsolvedLogs": false,
+      "processingTimeUs": 1500,
+      "processingTimeMs": 1,
+      "formidCount": 2,
+      "pluginCount": 3,
+      "suspectCount": 4
+    },
+    "infrastructureErrors": [
+      {
+        "stage": "request_validation",
+        "rawMessage": "shared request validation failure",
+        "message": "Settings validation error: shared request validation failure",
+        "path": null
+      },
+      {
+        "stage": "discovery",
+        "rawMessage": "shared discovery failure",
+        "message": "File I/O error: shared discovery failure",
+        "path": "crash-shared-infrastructure.log"
+      },
+      {
+        "stage": "intake",
+        "rawMessage": "shared intake failure",
+        "message": "Configuration error: shared intake failure",
+        "path": "CLASSIC Data"
+      },
+      {
+        "stage": "formid_database_access",
+        "rawMessage": "shared FormID database failure",
+        "message": "Database error: shared FormID database failure",
+        "path": "CLASSIC Data/databases/Fallout4 FormIDs Main.db"
+      },
+      {
+        "stage": "initialization",
+        "rawMessage": "shared initialization failure",
+        "message": "Analysis error: shared initialization failure",
+        "path": null
+      },
+      {
+        "stage": "internal_invariant",
+        "rawMessage": "shared internal invariant failure",
+        "message": "Internal error: shared internal invariant failure",
+        "path": null
+      }
+    ]
+  },
+  "rustEnums": [
+    {
+      "category": "request",
+      "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "name": "Request"
+    },
+    {
+      "category": "event",
+      "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "name": "Event"
+    },
+    {
+      "category": "log_disposition",
+      "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "name": "LogDisposition"
+    },
+    {
+      "category": "log_failure_stage",
+      "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "name": "LogFailureStage"
+    },
+    {
+      "category": "infrastructure_error_stage",
+      "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "name": "InfrastructureErrorStage",
+      "renames": {
+        "FormIdDatabaseAccess": "formid_database_access"
+      }
+    },
+    {
+      "category": "run_status",
+      "path": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "name": "CrashLogScanRunStatus"
+    },
+    {
+      "category": "discovery_source",
+      "path": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "name": "CrashLogScanDiscoverySource"
+    },
+    {
+      "category": "unsolved_logs_intent",
+      "path": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "name": "StandardUnsolvedLogsIntent"
+    },
+    {
+      "category": "progress_phase",
+      "path": "business-logic/classic-scanlog-core/src/orchestrator.rs",
+      "name": "ScanProgressPhase"
+    }
+  ],
+  "contractVariants": [
+    "request.standard",
+    "request.targeted",
+    "event.discovery_completed",
+    "event.effective_concurrency_selected",
+    "event.log_queued",
+    "event.log_started",
+    "event.log_phase",
+    "event.log_finished",
+    "run_status.completed",
+    "run_status.no_crash_logs_found",
+    "run_status.setup_failed",
+    "run_status.cancelled_before_discovery",
+    "run_status.cancelled",
+    "discovery_source.standard",
+    "discovery_source.targeted",
+    "log_disposition.succeeded",
+    "log_disposition.failed",
+    "log_disposition.cancelled_before_start",
+    "log_failure_stage.analysis",
+    "log_failure_stage.report_write",
+    "log_failure_stage.unsolved_logs_finalization",
+    "infrastructure_error_stage.request_validation",
+    "infrastructure_error_stage.discovery",
+    "infrastructure_error_stage.intake",
+    "infrastructure_error_stage.formid_database_access",
+    "infrastructure_error_stage.initialization",
+    "infrastructure_error_stage.internal_invariant",
+    "unsolved_logs_intent.leave_in_place",
+    "unsolved_logs_intent.move_to_configured_or_default",
+    "unsolved_logs_intent.move_to_custom",
+    "progress_phase.setup",
+    "progress_phase.parse",
+    "progress_phase.analyze",
+    "progress_phase.finalize",
+    "cancellation_seam.pre_discovery",
+    "cancellation_seam.post_discovery_queued",
+    "cancellation_seam.admitted"
+  ],
+  "supportedAdapters": [
+    "rust",
+    "cxx",
+    "node",
+    "python"
+  ],
+  "adapters": {
+    "rust": {
+      "acknowledgedVariants": [
+        "request.standard",
+        "request.targeted",
+        "event.discovery_completed",
+        "event.effective_concurrency_selected",
+        "event.log_queued",
+        "event.log_started",
+        "event.log_phase",
+        "event.log_finished",
+        "run_status.completed",
+        "run_status.no_crash_logs_found",
+        "run_status.setup_failed",
+        "run_status.cancelled_before_discovery",
+        "run_status.cancelled",
+        "discovery_source.standard",
+        "discovery_source.targeted",
+        "log_disposition.succeeded",
+        "log_disposition.failed",
+        "log_disposition.cancelled_before_start",
+        "log_failure_stage.analysis",
+        "log_failure_stage.report_write",
+        "log_failure_stage.unsolved_logs_finalization",
+        "infrastructure_error_stage.request_validation",
+        "infrastructure_error_stage.discovery",
+        "infrastructure_error_stage.intake",
+        "infrastructure_error_stage.formid_database_access",
+        "infrastructure_error_stage.initialization",
+        "infrastructure_error_stage.internal_invariant",
+        "unsolved_logs_intent.leave_in_place",
+        "unsolved_logs_intent.move_to_configured_or_default",
+        "unsolved_logs_intent.move_to_custom",
+        "progress_phase.setup",
+        "progress_phase.parse",
+        "progress_phase.analyze",
+        "progress_phase.finalize",
+        "cancellation_seam.pre_discovery",
+        "cancellation_seam.post_discovery_queued",
+        "cancellation_seam.admitted"
+      ],
+      "evidence": [
+        {
+          "path": "business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs",
+          "contains": [
+            "final_contract_exposes_all_stable_variant_identifiers",
+            "targeted_cancellation_before_discovery_has_no_discovery_result",
+            "cancellation_while_queued_never_emits_started",
+            "cancellation_with_multiple_admitted_logs_preserves_their_durable_boundary",
+            "injected_infrastructure_failures_preserve_every_stable_contract_field"
+          ]
+        },
+        {
+          "path": "business-logic/classic-scanlog-core/tests/scan_run_contract_parity.rs",
+          "contains": [
+            "shared_standard_and_targeted_fixtures_match_normalized_contract"
+          ]
+        }
+      ]
+    },
+    "cxx": {
+      "acknowledgedVariants": [
+        "request.standard",
+        "request.targeted",
+        "event.discovery_completed",
+        "event.effective_concurrency_selected",
+        "event.log_queued",
+        "event.log_started",
+        "event.log_phase",
+        "event.log_finished",
+        "run_status.completed",
+        "run_status.no_crash_logs_found",
+        "run_status.setup_failed",
+        "run_status.cancelled_before_discovery",
+        "run_status.cancelled",
+        "discovery_source.standard",
+        "discovery_source.targeted",
+        "log_disposition.succeeded",
+        "log_disposition.failed",
+        "log_disposition.cancelled_before_start",
+        "log_failure_stage.analysis",
+        "log_failure_stage.report_write",
+        "log_failure_stage.unsolved_logs_finalization",
+        "infrastructure_error_stage.request_validation",
+        "infrastructure_error_stage.discovery",
+        "infrastructure_error_stage.intake",
+        "infrastructure_error_stage.formid_database_access",
+        "infrastructure_error_stage.initialization",
+        "infrastructure_error_stage.internal_invariant",
+        "unsolved_logs_intent.leave_in_place",
+        "unsolved_logs_intent.move_to_configured_or_default",
+        "unsolved_logs_intent.move_to_custom",
+        "progress_phase.setup",
+        "progress_phase.parse",
+        "progress_phase.analyze",
+        "progress_phase.finalize",
+        "cancellation_seam.pre_discovery",
+        "cancellation_seam.post_discovery_queued",
+        "cancellation_seam.admitted"
+      ],
+      "evidence": [
+        {
+          "path": "cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs",
+          "contains": [
+            "maps_every_core_enum_variant_to_a_typed_cxx_variant",
+            "event_mapping_covers_discovery_concurrency_and_every_log_variant",
+            "structured_result_mapping_preserves_pairs_options_failures_and_paths",
+            "shared_failure_fixture_maps_every_cxx_failure_field",
+            "execute_covers_standard_no_logs_and_cancellation_before_discovery"
+          ]
+        },
+        {
+          "path": "classic-cli/tests/test_scan_run_contract.cpp",
+          "contains": [
+            "CXX executes the shared Standard fixture with Rust-owned facts",
+            "CXX executes the shared Targeted fixture without Unsolved Logs movement",
+            "CXX shared cancellation fixture distinguishes every safe seam",
+            "Scan Run observer can cancel after adapter delivery failure"
+          ]
+        }
+      ]
+    },
+    "node": {
+      "acknowledgedVariants": [
+        "request.standard",
+        "request.targeted",
+        "event.discovery_completed",
+        "event.effective_concurrency_selected",
+        "event.log_queued",
+        "event.log_started",
+        "event.log_phase",
+        "event.log_finished",
+        "run_status.completed",
+        "run_status.no_crash_logs_found",
+        "run_status.setup_failed",
+        "run_status.cancelled_before_discovery",
+        "run_status.cancelled",
+        "discovery_source.standard",
+        "discovery_source.targeted",
+        "log_disposition.succeeded",
+        "log_disposition.failed",
+        "log_disposition.cancelled_before_start",
+        "log_failure_stage.analysis",
+        "log_failure_stage.report_write",
+        "log_failure_stage.unsolved_logs_finalization",
+        "infrastructure_error_stage.request_validation",
+        "infrastructure_error_stage.discovery",
+        "infrastructure_error_stage.intake",
+        "infrastructure_error_stage.formid_database_access",
+        "infrastructure_error_stage.initialization",
+        "infrastructure_error_stage.internal_invariant",
+        "unsolved_logs_intent.leave_in_place",
+        "unsolved_logs_intent.move_to_configured_or_default",
+        "unsolved_logs_intent.move_to_custom",
+        "progress_phase.setup",
+        "progress_phase.parse",
+        "progress_phase.analyze",
+        "progress_phase.finalize",
+        "cancellation_seam.pre_discovery",
+        "cancellation_seam.post_discovery_queued",
+        "cancellation_seam.admitted"
+      ],
+      "evidence": [
+        {
+          "path": "node-bindings/classic-node/src/scan_run_tests.rs",
+          "contains": [
+            "event_mapping_covers_every_variant_and_phase",
+            "terminal_mapping_preserves_every_status_failure_and_optional_path",
+            "shared_failure_fixture_maps_every_node_failure_field",
+            "infrastructure_mapping_covers_every_stage_with_and_without_paths"
+          ]
+        },
+        {
+          "path": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+          "contains": [
+            "shared Standard fixture writes durable reports and exposes every serialized event variant",
+            "shared Targeted fixture preserves discovery order, rejections, artifacts, and no movement",
+            "shared cancellation fixture distinguishes pre-discovery, queued, and admitted work",
+            "observer delivery failures stay separate and can request safe cancellation"
+          ]
+        }
+      ]
+    },
+    "python": {
+      "acknowledgedVariants": [
+        "request.standard",
+        "request.targeted",
+        "event.discovery_completed",
+        "event.effective_concurrency_selected",
+        "event.log_queued",
+        "event.log_started",
+        "event.log_phase",
+        "event.log_finished",
+        "run_status.completed",
+        "run_status.no_crash_logs_found",
+        "run_status.setup_failed",
+        "run_status.cancelled_before_discovery",
+        "run_status.cancelled",
+        "discovery_source.standard",
+        "discovery_source.targeted",
+        "log_disposition.succeeded",
+        "log_disposition.failed",
+        "log_disposition.cancelled_before_start",
+        "log_failure_stage.analysis",
+        "log_failure_stage.report_write",
+        "log_failure_stage.unsolved_logs_finalization",
+        "infrastructure_error_stage.request_validation",
+        "infrastructure_error_stage.discovery",
+        "infrastructure_error_stage.intake",
+        "infrastructure_error_stage.formid_database_access",
+        "infrastructure_error_stage.initialization",
+        "infrastructure_error_stage.internal_invariant",
+        "unsolved_logs_intent.leave_in_place",
+        "unsolved_logs_intent.move_to_configured_or_default",
+        "unsolved_logs_intent.move_to_custom",
+        "progress_phase.setup",
+        "progress_phase.parse",
+        "progress_phase.analyze",
+        "progress_phase.finalize",
+        "cancellation_seam.pre_discovery",
+        "cancellation_seam.post_discovery_queued",
+        "cancellation_seam.admitted"
+      ],
+      "evidence": [
+        {
+          "path": "python-bindings/classic-scanlog-py/src/scan_run_tests.rs",
+          "contains": [
+            "maps_every_stable_enum_identifier",
+            "maps_every_event_variant_and_variant_payload",
+            "maps_complete_log_result_and_all_failure_stages",
+            "shared_failure_fixture_maps_every_python_failure_field",
+            "maps_every_infrastructure_stage_and_optional_path"
+          ]
+        },
+        {
+          "path": "python-bindings/tests/test_scan_run_contract.py",
+          "contains": [
+            "test_standard_scan_run_persists_reports_in_discovery_order",
+            "test_targeted_scan_run_preserves_input_order_and_never_moves",
+            "test_shared_cancellation_fixture_distinguishes_safe_seams",
+            "test_scan_run_maps_no_logs_and_pre_discovery_cancellation"
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": {
+    "standard_end_to_end": {
+      "requiredOwners": [
+        "rust",
+        "cxx",
+        "node",
+        "python"
+      ],
+      "evidence": {
+        "rust": [
+          {
+            "path": "business-logic/classic-scanlog-core/tests/scan_run_contract_parity.rs",
+            "contains": [
+              "shared_standard_and_targeted_fixtures_match_normalized_contract"
+            ]
+          }
+        ],
+        "cxx": [
+          {
+            "path": "classic-cli/tests/test_scan_run_contract.cpp",
+            "contains": [
+              "shared Standard fixture"
+            ]
+          }
+        ],
+        "node": [
+          {
+            "path": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+            "contains": [
+              "shared Standard fixture"
+            ]
+          }
+        ],
+        "python": [
+          {
+            "path": "python-bindings/tests/test_scan_run_contract.py",
+            "contains": [
+              "shared Standard fixture"
+            ]
+          }
+        ]
+      }
+    },
+    "targeted_end_to_end": {
+      "requiredOwners": [
+        "rust",
+        "cxx",
+        "node",
+        "python"
+      ],
+      "evidence": {
+        "rust": [
+          {
+            "path": "business-logic/classic-scanlog-core/tests/scan_run_contract_parity.rs",
+            "contains": [
+              "shared_standard_and_targeted_fixtures_match_normalized_contract"
+            ]
+          }
+        ],
+        "cxx": [
+          {
+            "path": "classic-cli/tests/test_scan_run_contract.cpp",
+            "contains": [
+              "shared Targeted fixture"
+            ]
+          }
+        ],
+        "node": [
+          {
+            "path": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+            "contains": [
+              "shared Targeted fixture"
+            ]
+          }
+        ],
+        "python": [
+          {
+            "path": "python-bindings/tests/test_scan_run_contract.py",
+            "contains": [
+              "shared Targeted fixture"
+            ]
+          }
+        ]
+      }
+    },
+    "cancellation_boundaries": {
+      "requiredOwners": [
+        "rust",
+        "cxx",
+        "node",
+        "python"
+      ],
+      "evidence": {
+        "rust": [
+          {
+            "path": "business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs",
+            "contains": [
+              "targeted_cancellation_before_discovery_has_no_discovery_result",
+              "cancellation_while_queued_never_emits_started",
+              "cancellation_with_multiple_admitted_logs_preserves_their_durable_boundary"
+            ]
+          }
+        ],
+        "cxx": [
+          {
+            "path": "classic-cli/tests/test_scan_run_contract.cpp",
+            "contains": [
+              "CXX shared cancellation fixture distinguishes every safe seam"
+            ]
+          },
+          {
+            "path": "cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs",
+            "contains": [
+              "execute_covers_standard_no_logs_and_cancellation_before_discovery",
+              "structured_result_mapping_preserves_pairs_options_failures_and_paths"
+            ]
+          }
+        ],
+        "node": [
+          {
+            "path": "node-bindings/classic-node/src/scan_run_tests.rs",
+            "contains": [
+              "terminal_mapping_preserves_every_status_failure_and_optional_path"
+            ]
+          },
+          {
+            "path": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+            "contains": [
+              "shared cancellation fixture distinguishes pre-discovery, queued, and admitted work",
+              "observer delivery failures stay separate and can request safe cancellation"
+            ]
+          }
+        ],
+        "python": [
+          {
+            "path": "python-bindings/classic-scanlog-py/src/scan_run_tests.rs",
+            "contains": [
+              "maps_setup_and_run_optional_fields_without_loss"
+            ]
+          },
+          {
+            "path": "python-bindings/tests/test_scan_run_contract.py",
+            "contains": [
+              "test_shared_cancellation_fixture_distinguishes_safe_seams",
+              "test_scan_run_maps_no_logs_and_pre_discovery_cancellation",
+              "test_observer_failure_is_adapter_data_and_can_request_safe_cancellation"
+            ]
+          }
+        ]
+      }
+    },
+    "structured_failures": {
+      "requiredOwners": [
+        "rust",
+        "cxx",
+        "node",
+        "python"
+      ],
+      "evidence": {
+        "rust": [
+          {
+            "path": "business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs",
+            "contains": [
+              "final_log_result_preserves_multiple_structured_failure_stages",
+              "injected_infrastructure_failures_preserve_every_stable_contract_field"
+            ]
+          }
+        ],
+        "cxx": [
+          {
+            "path": "cpp-bindings/classic-cpp-bridge/src/scanner/contract_tests.rs",
+            "contains": [
+              "structured_result_mapping_preserves_pairs_options_failures_and_paths",
+              "shared_failure_fixture_maps_every_cxx_failure_field",
+              "maps_every_core_enum_variant_to_a_typed_cxx_variant"
+            ]
+          }
+        ],
+        "node": [
+          {
+            "path": "node-bindings/classic-node/src/scan_run_tests.rs",
+            "contains": [
+              "terminal_mapping_preserves_every_status_failure_and_optional_path",
+              "shared_failure_fixture_maps_every_node_failure_field",
+              "infrastructure_mapping_covers_every_stage_with_and_without_paths"
+            ]
+          }
+        ],
+        "python": [
+          {
+            "path": "python-bindings/classic-scanlog-py/src/scan_run_tests.rs",
+            "contains": [
+              "maps_complete_log_result_and_all_failure_stages",
+              "shared_failure_fixture_maps_every_python_failure_field",
+              "maps_every_infrastructure_stage_and_optional_path"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "presentations": {
+    "rust_owned_facts": {
+      "requiredOwners": [
+        "cli",
+        "gui",
+        "tui"
+      ],
+      "evidence": {
+        "cli": [
+          {
+            "path": "classic-cli/tests/test_scanner.cpp",
+            "contains": [
+              "CLI scan events report Rust-selected concurrency and live progress",
+              "CLI scan summaries retain the Rust-provided discovery order"
+            ]
+          }
+        ],
+        "gui": [
+          {
+            "path": "classic-gui/tests/test_scanrunpresentation.cpp",
+            "contains": [
+              "Rust-owned"
+            ]
+          },
+          {
+            "path": "classic-gui/tests/test_scan_progress_model.cpp",
+            "contains": [
+              "discovery"
+            ]
+          }
+        ],
+        "tui": [
+          {
+            "path": "ui-applications/classic-tui/src/scan_run_tests.rs",
+            "contains": [
+              "event_formatter_covers_the_complete_final_contract_stream",
+              "terminal_presentation_lists_mixed_outcomes_in_discovery_order"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

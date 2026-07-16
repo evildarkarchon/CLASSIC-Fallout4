@@ -100,6 +100,8 @@ Current shape notes:
 - observers receive all serialized discovery, concurrency, queued, started, phase, and finished variants. Callback exceptions remain adapter concerns; `cancel_on_observer_error=True` requests stopping only through the separate safe cancellation control
 - omitted concurrency selects adaptively; an explicit zero reaches centralized request validation and returns a typed `request_validation` infrastructure error
 
+Node and Python public-seam tests consume the same immutable corpus and normalized expectations from [`tests/fixtures/crash_log_scan_run/manifest.json`](../../tests/fixtures/crash_log_scan_run/manifest.json) as Rust and CXX. The canonical binding compliance profile compares the manifest's request, event, status, discovery, disposition, failure, infrastructure, movement, progress, and cancellation variants with the Rust inventory and requires explicit acknowledgement from both language adapters.
+
 ---
 
 ## How Contract Artifacts Relate To The Rust Wrappers

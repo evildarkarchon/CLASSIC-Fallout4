@@ -72,6 +72,38 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         ),
     ),
     ComplianceRequirement(
+        id="scan-run-contract-variants",
+        title="Crash Log Scan Run variants have cross-interface evidence",
+        surface="policy",
+        classification="new_check",
+        profiles=STATIC_PROFILES,
+        blocking=True,
+        summary=(
+            "Validates the shared Standard and Targeted fixture corpus, compares the "
+            "manifest with Rust enum inventory, and requires Rust, CXX, Node, Python, "
+            "CLI, GUI, and TUI acknowledgements for their owned facts."
+        ),
+        command=CommandSpec(
+            argv=(
+                "python",
+                "tools/binding_compliance/scan_run_contract.py",
+                "--repo-root",
+                ".",
+            )
+        ),
+        paths=(
+            "tools/binding_compliance/scan_run_contract.py",
+            "tests/fixtures/crash_log_scan_run/manifest.json",
+            "tests/fixtures/crash_log_scan_run/valid-crash.log",
+        ),
+        proves=(
+            "A new Rust contract enum variant cannot land without manifest registration.",
+            "Every registered variant is acknowledged by Rust, CXX, Node, and Python.",
+            "Shared Standard, Targeted, cancellation, and failure scenarios retain executable evidence.",
+            "CLI, GUI, and TUI tests consume Rust-owned discovery, scheduling, and terminal facts.",
+        ),
+    ),
+    ComplianceRequirement(
         id="policy-one-tier-contract",
         title="One-tier parity policy is documented",
         surface="policy",

@@ -152,7 +152,9 @@ struct InjectedMovementFailure {
     message: String,
 }
 
-pub(crate) const FIXTURE_LOG_SMALL: &str = include_str!("../benches/fixtures/crash-0DB9300.log");
+/// Shared valid Crash Log used by the cross-interface parity corpus.
+pub(crate) const FIXTURE_LOG_SMALL: &str =
+    include_str!("../../../tests/fixtures/crash_log_scan_run/valid-crash.log");
 
 pub(crate) fn write_fixture_log(temp: &tempfile::TempDir, filename: &str) -> PathBuf {
     let log_path = temp.path().join(filename);

@@ -4,6 +4,17 @@ use tempfile::tempdir;
 const FIXTURE_LOG_SMALL: &str = include_str!(
     "../../../../business-logic/classic-scanlog-core/benches/fixtures/crash-0DB9300.log"
 );
+const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/fixtures/crash_log_scan_run/manifest.json"
+));
+
+/// Loads the language-neutral structured-failure corpus for CXX mapping tests.
+fn shared_failure_fixtures() -> serde_json::Value {
+    serde_json::from_str::<serde_json::Value>(SHARED_SCAN_RUN_MANIFEST)
+        .expect("shared scan-run manifest should deserialize")["failureFixtures"]
+        .clone()
+}
 
 fn sample_configuration() -> ffi::ScanRunConfigurationDto {
     ffi::ScanRunConfigurationDto {
@@ -369,6 +380,117 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
     assert_eq!(error.message, "database unavailable");
     assert!(error.has_path);
     assert_eq!(error.path, "database-é.db");
+}
+
+#[test]
+fn shared_failure_fixture_maps_every_cxx_failure_field() {
+    let fixtures = shared_failure_fixtures();
+    let log = &fixtures["logResult"];
+    let stages = [
+        contract::LogFailureStage::Analysis,
+        contract::LogFailureStage::ReportWrite,
+        contract::LogFailureStage::UnsolvedLogsFinalization,
+    ];
+    let failures = log["failures"]
+        .as_array()
+        .expect("shared log failures should be an array");
+    let mapped = log_result_to_dto(contract::LogResult {
+        discovery_index: log["discoveryIndex"].as_u64().expect("discovery index") as usize,
+        crash_log: PathBuf::from(log["crashLog"].as_str().expect("crash log")),
+        autoscan_report: log["autoscanReport"].as_str().map(PathBuf::from),
+        disposition: contract::LogDisposition::Failed,
+        failures: stages
+            .into_iter()
+            .zip(failures)
+            .map(|(stage, failure)| contract::LogFailure {
+                stage,
+                message: failure["message"]
+                    .as_str()
+                    .expect("failure message")
+                    .to_string(),
+            })
+            .collect(),
+        message: Some(log["message"].as_str().expect("aggregate message").to_string()),
+        moved_to_unsolved_logs: log["movedToUnsolvedLogs"].as_bool().expect("movement flag"),
+        processing_time_us: log["processingTimeUs"].as_u64().expect("microseconds"),
+        processing_time_ms: log["processingTimeMs"].as_u64().expect("milliseconds"),
+        formid_count: log["formidCount"].as_u64().expect("FormID count") as usize,
+        plugin_count: log["pluginCount"].as_u64().expect("plugin count") as usize,
+        suspect_count: log["suspectCount"].as_u64().expect("suspect count") as usize,
+    });
+
+    assert_eq!(mapped.discovery_index, log["discoveryIndex"].as_u64().unwrap() as usize);
+    assert_eq!(mapped.crash_log, log["crashLog"].as_str().unwrap());
+    assert!(!mapped.has_autoscan_report);
+    assert_eq!(mapped.disposition, ffi::ScanRunContractLogDisposition::Failed);
+    assert_eq!(mapped.failures.len(), failures.len());
+    let expected_failure_stages = [
+        ffi::ScanRunContractLogFailureStage::Analysis,
+        ffi::ScanRunContractLogFailureStage::ReportWrite,
+        ffi::ScanRunContractLogFailureStage::UnsolvedLogsFinalization,
+    ];
+    for ((mapped_failure, expected), expected_stage) in mapped
+        .failures
+        .iter()
+        .zip(failures)
+        .zip(expected_failure_stages)
+    {
+        assert_eq!(mapped_failure.stage, expected_stage);
+        assert_eq!(
+            mapped_failure.message,
+            expected["message"].as_str().unwrap()
+        );
+    }
+    assert_eq!(mapped.message, log["message"].as_str().unwrap());
+    assert_eq!(
+        mapped.moved_to_unsolved_logs,
+        log["movedToUnsolvedLogs"].as_bool().unwrap()
+    );
+
+    let stage_pairs = [
+        (
+            contract::InfrastructureErrorStage::RequestValidation,
+            ffi::ScanRunContractInfrastructureErrorStage::RequestValidation,
+        ),
+        (
+            contract::InfrastructureErrorStage::Discovery,
+            ffi::ScanRunContractInfrastructureErrorStage::Discovery,
+        ),
+        (
+            contract::InfrastructureErrorStage::Intake,
+            ffi::ScanRunContractInfrastructureErrorStage::Intake,
+        ),
+        (
+            contract::InfrastructureErrorStage::FormIdDatabaseAccess,
+            ffi::ScanRunContractInfrastructureErrorStage::FormIdDatabaseAccess,
+        ),
+        (
+            contract::InfrastructureErrorStage::Initialization,
+            ffi::ScanRunContractInfrastructureErrorStage::Initialization,
+        ),
+        (
+            contract::InfrastructureErrorStage::InternalInvariant,
+            ffi::ScanRunContractInfrastructureErrorStage::InternalInvariant,
+        ),
+    ];
+    let infrastructure = fixtures["infrastructureErrors"]
+        .as_array()
+        .expect("shared infrastructure failures should be an array");
+    assert_eq!(infrastructure.len(), stage_pairs.len());
+    for ((core_stage, cxx_stage), expected) in stage_pairs.into_iter().zip(infrastructure) {
+        let mapped = infrastructure_error_to_dto(contract::InfrastructureError {
+            stage: core_stage,
+            message: expected["message"].as_str().unwrap().to_string(),
+            path: expected["path"].as_str().map(PathBuf::from),
+        });
+        assert_eq!(mapped.stage, cxx_stage);
+        assert_eq!(mapped.message, expected["message"].as_str().unwrap());
+        assert_eq!(mapped.has_path, !expected["path"].is_null());
+        assert_eq!(
+            mapped.path,
+            expected["path"].as_str().unwrap_or_default()
+        );
+    }
 }
 
 #[test]

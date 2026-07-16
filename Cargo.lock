@@ -747,6 +747,7 @@ dependencies = [
  "log",
  "pulldown-cmark",
  "semver",
+ "serde_json",
  "serial_test",
  "tempfile",
  "thiserror 2.0.18",
@@ -1109,6 +1110,7 @@ dependencies = [
  "pyo3",
  "rayon",
  "regex",
+ "serde_json",
  "serial_test",
  "tempfile",
 ]

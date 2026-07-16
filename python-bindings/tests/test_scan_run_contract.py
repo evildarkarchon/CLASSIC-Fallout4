@@ -1,5 +1,7 @@
 """Public contract tests for the final Python Crash Log Scan Run adapter."""
 
+import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -57,6 +59,13 @@ PLUGINS:
     [00] Fallout4.esm
 """
 
+SHARED_SCAN_RUN_FIXTURE_ROOT = (
+    Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "crash_log_scan_run"
+)
+SHARED_SCAN_RUN_MANIFEST = json.loads(
+    (SHARED_SCAN_RUN_FIXTURE_ROOT / "manifest.json").read_text(encoding="utf-8")
+)
+
 
 def _write_scan_run_data_root(root: Path) -> None:
     """Write the minimal YAML Data required by a real Crash Log Scan Run."""
@@ -79,6 +88,36 @@ def _write_logs(directory: Path, names: list[str]) -> list[Path]:
     for path in paths:
         path.write_text(SAMPLE_CRASH_LOG, encoding="utf-8")
     return paths
+
+
+def _copy_shared_scan_run_data_root(root: Path) -> None:
+    """Copy the language-neutral YAML corpus into one temporary Python run root."""
+
+    shutil.copytree(
+        SHARED_SCAN_RUN_FIXTURE_ROOT / "CLASSIC Data",
+        root / "CLASSIC Data",
+    )
+    shutil.copyfile(
+        SHARED_SCAN_RUN_FIXTURE_ROOT / "CLASSIC Ignore.yaml",
+        root / "CLASSIC Ignore.yaml",
+    )
+
+
+def _write_shared_scan_run_logs(root: Path, relatives: list[str]) -> list[Path]:
+    """Materialize shared valid logs at manifest-relative paths."""
+
+    source = SHARED_SCAN_RUN_FIXTURE_ROOT / "valid-crash.log"
+    paths = [root / relative for relative in relatives]
+    for path in paths:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, path)
+    return paths
+
+
+def _shared_relative(root: Path, path: str) -> str:
+    """Normalize one temporary path to the manifest's slash-separated form."""
+
+    return Path(path).relative_to(root).as_posix()
 
 
 def _configuration(
@@ -127,33 +166,47 @@ def test_request_factories_make_invalid_scan_intents_unrepresentable(
         str(tmp_path / "Unsolved Logs")
     )
 
-    assert classic_scanlog.ScanRunRequest.standard(
-        configuration, standard_source, movement
-    ) is not None
-    assert classic_scanlog.ScanRunRequest.standard_with_fcx(
-        configuration, standard_source, movement, setup_context
-    ) is not None
-    assert classic_scanlog.ScanRunRequest.standard(
-        configuration, standard_source, configured_movement
-    ) is not None
-    assert classic_scanlog.ScanRunRequest.standard(
-        configuration, standard_source, custom_movement
-    ) is not None
-    assert classic_scanlog.ScanRunRequest.targeted(
-        configuration, targeted_source
-    ) is not None
-    assert classic_scanlog.ScanRunRequest.targeted_with_fcx(
-        configuration, targeted_source, setup_context
-    ) is not None
+    assert (
+        classic_scanlog.ScanRunRequest.standard(
+            configuration, standard_source, movement
+        )
+        is not None
+    )
+    assert (
+        classic_scanlog.ScanRunRequest.standard_with_fcx(
+            configuration, standard_source, movement, setup_context
+        )
+        is not None
+    )
+    assert (
+        classic_scanlog.ScanRunRequest.standard(
+            configuration, standard_source, configured_movement
+        )
+        is not None
+    )
+    assert (
+        classic_scanlog.ScanRunRequest.standard(
+            configuration, standard_source, custom_movement
+        )
+        is not None
+    )
+    assert (
+        classic_scanlog.ScanRunRequest.targeted(configuration, targeted_source)
+        is not None
+    )
+    assert (
+        classic_scanlog.ScanRunRequest.targeted_with_fcx(
+            configuration, targeted_source, setup_context
+        )
+        is not None
+    )
 
     with pytest.raises(TypeError):
         classic_scanlog.ScanRunRequest.targeted(
             configuration, targeted_source, movement
         )
     with pytest.raises(TypeError):
-        classic_scanlog.ScanRunRequest.targeted_with_fcx(
-            configuration, targeted_source
-        )
+        classic_scanlog.ScanRunRequest.targeted_with_fcx(configuration, targeted_source)
 
 
 def test_scan_run_cancellation_is_opaque_and_monotonic() -> None:
@@ -295,8 +348,7 @@ def test_fcx_setup_materializes_typed_checks_and_path_updates(tmp_path: Path) ->
     assert isinstance(setup, classic_scanlog.ScanRunSetupResult)
     assert setup.checks
     assert all(
-        isinstance(check, classic_scanlog.ScanRunSetupCheck)
-        for check in setup.checks
+        isinstance(check, classic_scanlog.ScanRunSetupCheck) for check in setup.checks
     )
     assert [(update.kind, update.path) for update in setup.path_updates] == [
         ("game_root", str(game_root))
@@ -340,20 +392,24 @@ def test_standard_scan_run_persists_reports_in_discovery_order(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Standard execution returns discovery-ordered outcomes after durable reports exist."""
+    """The shared Standard fixture retains Rust-owned facts and durable reports."""
 
     import classic_scanlog
 
-    _write_scan_run_data_root(tmp_path)
-    crash_logs = _write_logs(
-        tmp_path / "Crash Logs",
-        ["crash-2026-03-06-12-00-00.log", "crash-2026-03-06-13-00-00.log"],
-    )
+    # shared Standard fixture
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["standard"]
+    expected = fixture["expected"]
+    _copy_shared_scan_run_data_root(tmp_path)
+    crash_logs = _write_shared_scan_run_logs(tmp_path, fixture["logs"])
     documents_root = tmp_path / "Documents"
     documents_root.mkdir()
     monkeypatch.chdir(tmp_path)
     request = classic_scanlog.ScanRunRequest.standard(
-        _configuration(classic_scanlog, tmp_path, max_concurrent=1),
+        _configuration(
+            classic_scanlog,
+            tmp_path,
+            max_concurrent=fixture["maxConcurrent"],
+        ),
         classic_scanlog.ScanRunStandardSource(
             base_directory=str(tmp_path),
             configured_documents_root=str(documents_root),
@@ -372,14 +428,18 @@ def test_standard_scan_run_persists_reports_in_discovery_order(
     assert execution.observer_error is None
     result = execution.result
     assert result.status == "completed"
-    assert result.effective_concurrency == 1
+    assert result.effective_concurrency == expected["effectiveConcurrency"]
     assert result.discovery.source == "standard"
-    assert result.discovery.accepted_logs == [str(path) for path in crash_logs]
-    assert [log.discovery_index for log in result.logs] == [0, 1]
+    assert [
+        _shared_relative(tmp_path, path) for path in result.discovery.accepted_logs
+    ] == expected["acceptedLogs"]
+    assert [log.discovery_index for log in result.logs] == expected["discoveryOrder"]
     assert [log.crash_log for log in result.logs] == [str(path) for path in crash_logs]
-    assert all(log.disposition == "succeeded" for log in result.logs)
+    assert [log.disposition for log in result.logs] == expected["dispositions"]
     assert all(Path(log.autoscan_report).is_file() for log in result.logs)
-    assert all(Path(log.autoscan_report).read_text(encoding="utf-8") for log in result.logs)
+    assert all(
+        Path(log.autoscan_report).read_text(encoding="utf-8") for log in result.logs
+    )
     assert {
         "discovery_completed",
         "effective_concurrency_selected",
@@ -390,19 +450,28 @@ def test_standard_scan_run_persists_reports_in_discovery_order(
     }.issubset({event.kind for event in events})
 
 
-def test_targeted_scan_run_preserves_input_order_and_never_moves(tmp_path: Path) -> None:
-    """Targeted execution preserves accepted input order and leaves artifacts in place."""
+def test_targeted_scan_run_preserves_input_order_and_never_moves(
+    tmp_path: Path,
+) -> None:
+    """The shared Targeted fixture retains order, rejections, and no-move behavior."""
 
     import classic_scanlog
 
-    _write_scan_run_data_root(tmp_path)
-    first, second = _write_logs(
-        tmp_path / "selected",
-        ["crash-first.log", "crash-second.log"],
+    # shared Targeted fixture
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["targeted"]
+    expected = fixture["expected"]
+    _copy_shared_scan_run_data_root(tmp_path)
+    _write_shared_scan_run_logs(
+        tmp_path,
+        [path for path in fixture["inputs"] if path.endswith(".log")],
     )
-    caller_order = [second, first]
+    caller_order = [tmp_path / path for path in fixture["inputs"]]
     request = classic_scanlog.ScanRunRequest.targeted(
-        _configuration(classic_scanlog, tmp_path, max_concurrent=2),
+        _configuration(
+            classic_scanlog,
+            tmp_path,
+            max_concurrent=fixture["maxConcurrent"],
+        ),
         classic_scanlog.ScanRunTargetedSource(
             inputs=[str(path) for path in caller_order]
         ),
@@ -417,11 +486,114 @@ def test_targeted_scan_run_preserves_input_order_and_never_moves(tmp_path: Path)
     assert execution.observer_error is None
     result = execution.result
     assert result.discovery.source == "targeted"
-    assert result.discovery.accepted_logs == [str(path) for path in caller_order]
-    assert [log.discovery_index for log in result.logs] == [0, 1]
-    assert [log.crash_log for log in result.logs] == [str(path) for path in caller_order]
+    assert [
+        _shared_relative(tmp_path, path) for path in result.discovery.accepted_logs
+    ] == expected["acceptedLogs"]
+    assert [
+        _shared_relative(tmp_path, rejected.path)
+        for rejected in result.discovery.rejected_inputs
+    ] == expected["rejectedInputs"]
+    assert result.effective_concurrency == expected["effectiveConcurrency"]
+    assert [log.discovery_index for log in result.logs] == expected["discoveryOrder"]
+    assert [
+        _shared_relative(tmp_path, log.crash_log) for log in result.logs
+    ] == expected["acceptedLogs"]
+    assert [log.disposition for log in result.logs] == expected["dispositions"]
     assert all(log.moved_to_unsolved_logs is False for log in result.logs)
     assert all(Path(log.autoscan_report).is_file() for log in result.logs)
+    assert expected["unsolvedLogsArtifacts"] == []
+    assert not (tmp_path / "Unsolved Logs").exists()
+
+
+def test_shared_cancellation_fixture_distinguishes_safe_seams(tmp_path: Path) -> None:
+    """Pre-discovery, queued, and admitted cancellation retain distinct facts."""
+
+    import classic_scanlog
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["targeted"]
+    expected_logs = fixture["expected"]["acceptedLogs"]
+
+    pre_root = tmp_path / "pre"
+    pre_root.mkdir()
+    _copy_shared_scan_run_data_root(pre_root)
+    pre_logs = _write_shared_scan_run_logs(pre_root, expected_logs)
+    pre_cancellation = classic_scanlog.ScanRunCancellation()
+    pre_cancellation.cancel()
+    pre_execution = classic_scanlog.scan_run_execute(
+        classic_scanlog.ScanRunRequest.targeted(
+            _configuration(classic_scanlog, pre_root),
+            classic_scanlog.ScanRunTargetedSource(
+                inputs=[str(path) for path in pre_logs]
+            ),
+        ),
+        pre_cancellation,
+    )
+    assert pre_execution.result.status == "cancelled_before_discovery"
+    assert pre_execution.result.discovery is None
+    assert pre_execution.result.logs == []
+
+    queued_root = tmp_path / "queued"
+    queued_root.mkdir()
+    _copy_shared_scan_run_data_root(queued_root)
+    queued_logs = _write_shared_scan_run_logs(queued_root, expected_logs)
+    queued_cancellation = classic_scanlog.ScanRunCancellation()
+    queued_events: list[str] = []
+
+    def cancel_while_queued(event: object) -> None:
+        """Cancel after queueing begins but before any log is admitted."""
+
+        queued_events.append(event.kind)
+        if event.kind == "log_queued":
+            queued_cancellation.cancel()
+
+    queued_execution = classic_scanlog.scan_run_execute(
+        classic_scanlog.ScanRunRequest.targeted(
+            _configuration(classic_scanlog, queued_root, max_concurrent=1),
+            classic_scanlog.ScanRunTargetedSource(
+                inputs=[str(path) for path in queued_logs]
+            ),
+        ),
+        queued_cancellation,
+        cancel_while_queued,
+    )
+    assert len(queued_execution.result.discovery.accepted_logs) == 2
+    assert [log.disposition for log in queued_execution.result.logs] == [
+        "cancelled_before_start",
+        "cancelled_before_start",
+    ]
+    assert all(log.autoscan_report is None for log in queued_execution.result.logs)
+    assert "log_started" not in queued_events
+
+    admitted_root = tmp_path / "admitted"
+    admitted_root.mkdir()
+    _copy_shared_scan_run_data_root(admitted_root)
+    admitted_logs = _write_shared_scan_run_logs(admitted_root, expected_logs)
+    admitted_cancellation = classic_scanlog.ScanRunCancellation()
+
+    def cancel_after_admission(event: object) -> None:
+        """Cancel after the first log starts so its durable unit must finish."""
+
+        if (
+            event.kind == "log_started"
+            and event.log is not None
+            and event.log.discovery_index == 0
+        ):
+            admitted_cancellation.cancel()
+
+    admitted_execution = classic_scanlog.scan_run_execute(
+        classic_scanlog.ScanRunRequest.targeted(
+            _configuration(classic_scanlog, admitted_root, max_concurrent=1),
+            classic_scanlog.ScanRunTargetedSource(
+                inputs=[str(path) for path in admitted_logs]
+            ),
+        ),
+        admitted_cancellation,
+        cancel_after_admission,
+    )
+    assert admitted_execution.result.logs[0].disposition == "succeeded"
+    assert Path(admitted_execution.result.logs[0].autoscan_report).is_file()
+    assert admitted_execution.result.logs[1].disposition == "cancelled_before_start"
+    assert admitted_execution.result.logs[1].autoscan_report is None
 
 
 def test_observer_failure_is_adapter_data_and_can_request_safe_cancellation(

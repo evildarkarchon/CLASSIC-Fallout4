@@ -5,6 +5,18 @@ use classic_scanlog_core::scan_run::contract::{
 };
 use classic_scanlog_core::{CrashLogScanRejectedInput, CrashLogScanRunStatus};
 
+const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../../tests/fixtures/crash_log_scan_run/manifest.json"
+));
+
+/// Loads the language-neutral structured-failure corpus for Node mapping tests.
+fn shared_failure_fixtures() -> serde_json::Value {
+    serde_json::from_str::<serde_json::Value>(SHARED_SCAN_RUN_MANIFEST)
+        .expect("shared scan-run manifest should deserialize")["failureFixtures"]
+        .clone()
+}
+
 fn log_event() -> LogEvent {
     LogEvent {
         discovery_index: 7,
@@ -191,4 +203,95 @@ fn infrastructure_mapping_covers_every_stage_with_and_without_paths() {
         path: None,
     });
     assert!(mapped.path.is_none());
+}
+
+#[test]
+fn shared_failure_fixture_maps_every_node_failure_field() {
+    let fixtures = shared_failure_fixtures();
+    let log = &fixtures["logResult"];
+    let core_stages = [
+        LogFailureStage::Analysis,
+        LogFailureStage::ReportWrite,
+        LogFailureStage::UnsolvedLogsFinalization,
+    ];
+    let failures = log["failures"]
+        .as_array()
+        .expect("shared log failures should be an array");
+    let mapped = log_result_to_js(LogResult {
+        discovery_index: log["discoveryIndex"].as_u64().expect("discovery index") as usize,
+        crash_log: PathBuf::from(log["crashLog"].as_str().expect("crash log")),
+        autoscan_report: log["autoscanReport"].as_str().map(PathBuf::from),
+        disposition: LogDisposition::Failed,
+        failures: core_stages
+            .into_iter()
+            .zip(failures)
+            .map(|(stage, failure)| LogFailure {
+                stage,
+                message: failure["message"]
+                    .as_str()
+                    .expect("failure message")
+                    .to_string(),
+            })
+            .collect(),
+        message: Some(
+            log["message"]
+                .as_str()
+                .expect("aggregate message")
+                .to_string(),
+        ),
+        moved_to_unsolved_logs: log["movedToUnsolvedLogs"].as_bool().expect("movement flag"),
+        processing_time_us: log["processingTimeUs"].as_u64().expect("microseconds"),
+        processing_time_ms: log["processingTimeMs"].as_u64().expect("milliseconds"),
+        formid_count: log["formidCount"].as_u64().expect("FormID count") as usize,
+        plugin_count: log["pluginCount"].as_u64().expect("plugin count") as usize,
+        suspect_count: log["suspectCount"].as_u64().expect("suspect count") as usize,
+    });
+
+    assert_eq!(
+        mapped.discovery_index,
+        log["discoveryIndex"].as_u64().unwrap() as u32
+    );
+    assert_eq!(mapped.crash_log, log["crashLog"].as_str().unwrap());
+    assert!(mapped.autoscan_report.is_none());
+    assert_eq!(mapped.disposition, log["disposition"].as_str().unwrap());
+    assert_eq!(mapped.failures.len(), failures.len());
+    for (mapped_failure, expected) in mapped.failures.iter().zip(failures) {
+        assert_eq!(mapped_failure.stage, expected["stage"].as_str().unwrap());
+        assert_eq!(
+            mapped_failure.message,
+            expected["message"].as_str().unwrap()
+        );
+    }
+    assert_eq!(mapped.message.as_deref(), log["message"].as_str());
+    assert_eq!(
+        mapped.moved_to_unsolved_logs,
+        log["movedToUnsolvedLogs"].as_bool().unwrap()
+    );
+    assert_eq!(
+        mapped.processing_time_us,
+        log["processingTimeUs"].as_u64().unwrap() as i64
+    );
+
+    let stages = [
+        InfrastructureErrorStage::RequestValidation,
+        InfrastructureErrorStage::Discovery,
+        InfrastructureErrorStage::Intake,
+        InfrastructureErrorStage::FormIdDatabaseAccess,
+        InfrastructureErrorStage::Initialization,
+        InfrastructureErrorStage::InternalInvariant,
+    ];
+    let infrastructure = fixtures["infrastructureErrors"]
+        .as_array()
+        .expect("shared infrastructure failures should be an array");
+    assert_eq!(infrastructure.len(), stages.len());
+    for (stage, expected) in stages.into_iter().zip(infrastructure) {
+        let mapped = infrastructure_error_to_js(InfrastructureError {
+            stage,
+            message: expected["message"].as_str().unwrap().to_string(),
+            path: expected["path"].as_str().map(PathBuf::from),
+        });
+        assert_eq!(mapped.stage, expected["stage"].as_str().unwrap());
+        assert_eq!(mapped.message, expected["message"].as_str().unwrap());
+        assert_eq!(mapped.path.as_deref(), expected["path"].as_str());
+    }
 }

@@ -49,6 +49,7 @@ tempfile = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module", "auto-initialize"] }
 serial_test = "3.2"
 criterion = "0.5"
+serde_json = { workspace = true }
 
 [[bench]]
 name = "gil_benchmarks"

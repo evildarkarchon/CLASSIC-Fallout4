@@ -1,6 +1,14 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
-import { join } from "path";
+import {
+  copyFileSync,
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  rmSync,
+} from "fs";
+import { dirname, join, relative } from "path";
 import { tmpdir } from "os";
 import {
   createAnalysisConfig,
@@ -140,6 +148,48 @@ CLASSIC_Ignore_Fallout4: []
 
 const MISSING_LOG_PATH = join("Z:", "nonexistent", "classic-fcx.log");
 
+const SHARED_SCAN_RUN_FIXTURE_ROOT = join(
+  import.meta.dir,
+  "..",
+  "..",
+  "..",
+  "tests",
+  "fixtures",
+  "crash_log_scan_run",
+);
+const SHARED_SCAN_RUN_MANIFEST = JSON.parse(
+  readFileSync(join(SHARED_SCAN_RUN_FIXTURE_ROOT, "manifest.json"), "utf8"),
+) as {
+  fixtures: {
+    standard: {
+      logs: string[];
+      maxConcurrent: number;
+      expected: {
+        acceptedLogs: string[];
+        effectiveConcurrency: number;
+        discoveryOrder: number[];
+        dispositions: string[];
+      };
+    };
+    targeted: {
+      inputs: string[];
+      maxConcurrent: number;
+      expected: {
+        acceptedLogs: string[];
+        rejectedInputs: string[];
+        effectiveConcurrency: number;
+        discoveryOrder: number[];
+        dispositions: string[];
+        unsolvedLogsArtifacts: string[];
+      };
+    };
+  };
+};
+const SHARED_VALID_CRASH_LOG = readFileSync(
+  join(SHARED_SCAN_RUN_FIXTURE_ROOT, "valid-crash.log"),
+  "utf8",
+);
+
 const normalizeYamlPath = (path: string): string => path.replace(/\\/g, "/");
 
 const writeFcxAppFixture = (name: string, withIssue: boolean): string => {
@@ -172,6 +222,36 @@ const writeScanRunDataRoot = (name: string): string => {
   writeFileSync(join(root, "CLASSIC Ignore.yaml"), IGNORE_YAML, "utf8");
   return root;
 };
+
+/** Copies the language-neutral YAML corpus into one temporary Node run root. */
+const writeSharedScanRunDataRoot = (name: string): string => {
+  const root = mkdtempSync(join(tmpdir(), `${name}-`));
+  const databaseDir = join(root, "CLASSIC Data", "databases");
+  mkdirSync(databaseDir, { recursive: true });
+  copyFileSync(
+    join(SHARED_SCAN_RUN_FIXTURE_ROOT, "CLASSIC Ignore.yaml"),
+    join(root, "CLASSIC Ignore.yaml"),
+  );
+  for (const name of ["CLASSIC Main.yaml", "CLASSIC Fallout4.yaml"]) {
+    copyFileSync(
+      join(SHARED_SCAN_RUN_FIXTURE_ROOT, "CLASSIC Data", "databases", name),
+      join(databaseDir, name),
+    );
+  }
+  return root;
+};
+
+/** Materializes one shared valid log at a manifest-relative path. */
+const writeSharedScanRunLog = (root: string, relativePath: string): string => {
+  const path = join(root, relativePath);
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, SHARED_VALID_CRASH_LOG, "utf8");
+  return path;
+};
+
+/** Normalizes one temporary path to the manifest's slash-separated form. */
+const sharedRelativePath = (root: string, path: string): string =>
+  relative(root, path).replace(/\\/g, "/");
 
 type ScanRunExecution = Awaited<ReturnType<typeof scanRunExecute>>;
 type ScanRunSuccess = Extract<ScanRunExecution, { result: unknown }>;
@@ -528,18 +608,18 @@ describe("final Crash Log Scan Run contract", () => {
     }
   });
 
-  test("Standard execution writes durable reports and exposes every serialized event variant", async () => {
-    const root = writeScanRunDataRoot("classic-node-scan-run-standard");
-    const logDir = join(root, "Crash Logs");
-    const logPath = join(logDir, "crash-2026-03-06-12-00-00.log");
+  test("shared Standard fixture writes durable reports and exposes every serialized event variant", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.standard;
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-standard");
     const events: JsScanRunEvent[] = [];
 
     try {
-      mkdirSync(logDir, { recursive: true });
-      writeFileSync(logPath, SAMPLE_CRASH_LOG, "utf8");
+      for (const log of fixture.logs) {
+        writeSharedScanRunLog(root, log);
+      }
 
       const request = ScanRunRequest.standard(
-        scanRunConfiguration(root),
+        scanRunConfiguration(root, { maxConcurrent: fixture.maxConcurrent }),
         {
           baseDirectory: root,
           configuredDocumentsRoot: join(root, "Docs"),
@@ -555,15 +635,22 @@ describe("final Crash Log Scan Run contract", () => {
         },
       );
       const scanResult = requireScanRunSuccess(execution).result;
-      const result = scanResult.logs[0];
-
-      expect(scanResult.total).toBe(1);
-      expect(scanResult.effectiveConcurrency).toBe(1);
-      expect(result.disposition).toBe("succeeded");
-      expect(result.failures).toEqual([]);
-      expect(result.discoveryIndex).toBe(0);
-      expect(result.autoscanReport).toContain("-AUTOSCAN.md");
-      expect(existsSync(result.autoscanReport!)).toBe(true);
+      expect(scanResult.discovery?.acceptedLogs.map((path) => sharedRelativePath(root, path))).toEqual(
+        fixture.expected.acceptedLogs,
+      );
+      expect(scanResult.effectiveConcurrency).toBe(fixture.expected.effectiveConcurrency);
+      expect(scanResult.logs.map((result) => result.discoveryIndex)).toEqual(
+        fixture.expected.discoveryOrder,
+      );
+      expect(scanResult.logs.map((result) => result.disposition)).toEqual(
+        fixture.expected.dispositions,
+      );
+      expect(scanResult.logs.every((result) => result.failures.length === 0)).toBe(true);
+      expect(
+        scanResult.logs.every(
+          (result) => result.autoscanReport && existsSync(result.autoscanReport),
+        ),
+      ).toBe(true);
       expect(events.map((event) => event.kind)).toEqual(
         expect.arrayContaining([
           "discovery_completed",
@@ -584,38 +671,128 @@ describe("final Crash Log Scan Run contract", () => {
     }
   });
 
-  test("Targeted execution preserves discovery order and durable artifacts", async () => {
-    const root = writeScanRunDataRoot("classic-node-scan-run-targeted");
-    const logDir = join(root, "incoming");
-    const secondPath = join(logDir, "crash-2026-03-06-12-00-02.log");
-    const firstPath = join(logDir, "crash-2026-03-06-12-00-01.log");
+  test("shared Targeted fixture preserves discovery order, rejections, artifacts, and no movement", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.targeted;
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-targeted");
 
     try {
-      mkdirSync(logDir, { recursive: true });
-      writeFileSync(firstPath, SAMPLE_CRASH_LOG, "utf8");
-      writeFileSync(secondPath, SAMPLE_CRASH_LOG, "utf8");
+      for (const input of fixture.inputs.filter((path) => path.endsWith(".log"))) {
+        writeSharedScanRunLog(root, input);
+      }
 
       const request = ScanRunRequest.targeted(
-        scanRunConfiguration(root, { maxConcurrent: 2 }),
-        { inputs: [secondPath, firstPath] },
+        scanRunConfiguration(root, { maxConcurrent: fixture.maxConcurrent }),
+        { inputs: fixture.inputs.map((path) => join(root, path)) },
       );
       const execution = await scanRunExecute(request, new ScanRunCancellation());
       const scanResult = requireScanRunSuccess(execution).result;
 
-      expect(scanResult.discovery?.acceptedLogs).toEqual([secondPath, firstPath]);
-      expect(scanResult.logs.map((result) => result.crashLog)).toEqual([
-        secondPath,
-        firstPath,
-      ]);
-      expect(scanResult.logs.map((result) => result.discoveryIndex)).toEqual([0, 1]);
-      expect(scanResult.logs.every((result) => result.disposition === "succeeded")).toBe(true);
+      expect(scanResult.discovery?.acceptedLogs.map((path) => sharedRelativePath(root, path))).toEqual(
+        fixture.expected.acceptedLogs,
+      );
+      expect(
+        scanResult.discovery?.rejectedInputs.map((input) => sharedRelativePath(root, input.path)),
+      ).toEqual(fixture.expected.rejectedInputs);
+      expect(scanResult.effectiveConcurrency).toBe(fixture.expected.effectiveConcurrency);
+      expect(scanResult.logs.map((result) => sharedRelativePath(root, result.crashLog))).toEqual(
+        fixture.expected.acceptedLogs,
+      );
+      expect(scanResult.logs.map((result) => result.discoveryIndex)).toEqual(
+        fixture.expected.discoveryOrder,
+      );
+      expect(scanResult.logs.map((result) => result.disposition)).toEqual(
+        fixture.expected.dispositions,
+      );
       expect(
         scanResult.logs.every(
           (result) => result.autoscanReport && existsSync(result.autoscanReport),
         ),
       ).toBe(true);
+      expect(scanResult.logs.every((result) => result.movedToUnsolvedLogs === false)).toBe(true);
+      expect(fixture.expected.unsolvedLogsArtifacts).toEqual([]);
+      expect(existsSync(join(root, "Unsolved Logs"))).toBe(false);
     } finally {
       rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("shared cancellation fixture distinguishes pre-discovery, queued, and admitted work", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.targeted;
+
+    const preRoot = writeSharedScanRunDataRoot("classic-node-scan-run-cancel-pre");
+    try {
+      const inputs = fixture.expected.acceptedLogs.map((path) =>
+        writeSharedScanRunLog(preRoot, path),
+      );
+      const cancellation = new ScanRunCancellation();
+      cancellation.cancel();
+      const execution = await scanRunExecute(
+        ScanRunRequest.targeted(scanRunConfiguration(preRoot), { inputs }),
+        cancellation,
+      );
+      const result = requireScanRunSuccess(execution).result;
+      expect(result.status).toBe("cancelled_before_discovery");
+      expect(result.discovery).toBeUndefined();
+      expect(result.logs).toEqual([]);
+    } finally {
+      rmSync(preRoot, { recursive: true, force: true });
+    }
+
+    const queuedRoot = writeSharedScanRunDataRoot("classic-node-scan-run-cancel-queued");
+    try {
+      const inputs = fixture.expected.acceptedLogs.map((path) =>
+        writeSharedScanRunLog(queuedRoot, path),
+      );
+      const cancellation = new ScanRunCancellation();
+      const queuedEvents: string[] = [];
+      const execution = await scanRunExecute(
+        ScanRunRequest.targeted(scanRunConfiguration(queuedRoot, { maxConcurrent: 1 }), {
+          inputs,
+        }),
+        cancellation,
+        (event) => {
+          queuedEvents.push(event.kind);
+          if (event.kind === "log_queued") cancellation.cancel();
+          return false;
+        },
+      );
+      const result = requireScanRunSuccess(execution).result;
+      expect(result.discovery?.acceptedLogs).toHaveLength(2);
+      expect(result.logs.map((log) => log.disposition)).toEqual([
+        "cancelled_before_start",
+        "cancelled_before_start",
+      ]);
+      expect(result.logs.every((log) => log.autoscanReport === undefined)).toBe(true);
+      expect(queuedEvents).not.toContain("log_started");
+    } finally {
+      rmSync(queuedRoot, { recursive: true, force: true });
+    }
+
+    const admittedRoot = writeSharedScanRunDataRoot("classic-node-scan-run-cancel-admitted");
+    try {
+      const inputs = fixture.expected.acceptedLogs.map((path) =>
+        writeSharedScanRunLog(admittedRoot, path),
+      );
+      const cancellation = new ScanRunCancellation();
+      const execution = await scanRunExecute(
+        ScanRunRequest.targeted(scanRunConfiguration(admittedRoot, { maxConcurrent: 1 }), {
+          inputs,
+        }),
+        cancellation,
+        (event) => {
+          if (event.kind === "log_started" && event.log?.discoveryIndex === 0) {
+            cancellation.cancel();
+          }
+          return false;
+        },
+      );
+      const result = requireScanRunSuccess(execution).result;
+      expect(result.logs[0]?.disposition).toBe("succeeded");
+      expect(existsSync(result.logs[0]?.autoscanReport!)).toBe(true);
+      expect(result.logs[1]?.disposition).toBe("cancelled_before_start");
+      expect(result.logs[1]?.autoscanReport).toBeUndefined();
+    } finally {
+      rmSync(admittedRoot, { recursive: true, force: true });
     }
   });
 

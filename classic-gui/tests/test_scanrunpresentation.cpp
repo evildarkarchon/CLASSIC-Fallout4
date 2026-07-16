@@ -8,6 +8,9 @@
 
 namespace {
 
+// Compliance anchor: these presentation cases consume Rust-owned terminal facts
+// without reconstructing discovery, scheduling, or outcome policy in Qt.
+
 /// Creates a result-bearing execution envelope for one expected lifecycle status.
 classic::scanner::ScanRunContractExecutionResult executionWithStatus(classic::scanner::ScanRunContractStatus status)
 {

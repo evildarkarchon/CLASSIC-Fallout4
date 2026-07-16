@@ -1,0 +1,26 @@
+Fallout 4 v1.10.163
+Buffout 4 v1.28.6
+
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+0733512
+
+[Compatibility]
+Achievements: true
+MemoryManager: false
+F4EE: false
+
+SYSTEM SPECS:
+    OS: Microsoft Windows 11 Pro
+    CPU: AMD Ryzen 7 7800X3D
+    GPU #1: Nvidia RTX 4070
+
+PROBABLE CALL STACK:
+    [0] Fallout4.exe+0733512
+
+MODULES:
+    Fallout4.exe v1.10.163.0
+
+PLUGINS:
+    [00] Fallout4.esm
+    [01] DLCRobot.esm
+    [02] DLCworkshop01.esm
+    [03] Unofficial Fallout 4 Patch.esp

@@ -55,6 +55,7 @@ classic-web-core = { path = "../../business-logic/classic-web-core" }
 [dev-dependencies]
 tempfile = { workspace = true }
 serial_test = "3.2"
+serde_json = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 # CXX FFI framework
