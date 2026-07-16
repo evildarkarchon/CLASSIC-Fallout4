@@ -99,9 +99,11 @@ Current shape notes:
 - some Python modules are support-oriented rather than one-to-one mirrors of a single business-logic crate, so check the binding crate before assuming ownership
 - complete Crash Log Scan Runs use only `ScanRunRequest` factories plus `scan_run_execute(request, cancellation, observer=None, cancel_on_observer_error=False) -> ScanRunExecution`; Python exports no orchestration, analysis-only execution, resettable batch token, direct report-writing, or global-FCX alternative
 - independently useful `classic_scanlog.CrashgenSettingsAnalyzer` is a frozen
-  reusable handle; its read-only outcome/result classes expose Python enums for
-  kind, severity, and YAML-owned placement, release the GIL for analysis, and
-  raise a typed `AnalyzerError` with kind/code/message attributes
+  reusable handle; `CrashgenSettingsAnalysisInput` owns the aggregate settings,
+  plugin, version, and layout facts passed to `analyze(input)`; its read-only
+  outcome/result classes expose Python enums for kind, severity, and YAML-owned
+  placement, release the GIL for analysis, and raise a typed `AnalyzerError`
+  with kind/code/message attributes
 - `ScanRunConfiguration` contains explicit YAML roots, game/version, analysis options, FormID database paths, optional configured Unsolved Logs destination, and optional positive concurrency. The adapter never opens User Settings; callers project one accepted settings snapshot into these facts
 - `ScanRunRequest.standard(...)`, `standard_with_fcx(...)`, `targeted(...)`, and `targeted_with_fcx(...)` are opaque invariant-preserving factories. Targeted factories accept no movement policy, and both FCX factories require `ScanRunSetupContext`
 - `ScanRunUnsolvedLogs` exposes Standard-only leave-in-place, configured/default movement, and custom-destination movement policies. `ScanRunCancellation` is a separate opaque monotonic control with no reset operation
