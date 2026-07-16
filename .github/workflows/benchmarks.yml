@@ -15,7 +15,7 @@ on:
     branches: [main]
   pull_request:
     types: [ready_for_review]
-    branches: [main]
+    branches: [classic-next]
 
 # Prevent parallel runs for the same PR
 concurrency:
