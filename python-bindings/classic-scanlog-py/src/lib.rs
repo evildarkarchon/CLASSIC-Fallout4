@@ -36,12 +36,6 @@
 //!     plugins = parser.extract_plugins(plugins_segment)
 //!     print(f"Found {len(plugins)} plugins")
 //!
-//!     # Detect mods with pattern matching (15-25x faster)
-//!     yaml_dict = {"problemmod": "Known Issue\nDetails..."}
-//!     mods_found = scanlog.detect_mods_single(yaml_dict, plugins)
-//!     for line in mods_found:
-//!         print(line, end="")
-//!
 //!     # GPU detection
 //!     gpu_detector = scanlog.PyGpuDetector()
 //!     gpu_info = gpu_detector.detect_gpu(lines)
@@ -59,7 +53,7 @@
 //! - **Log parsing**: 20-40x faster than Python with SIMD optimizations
 //! - **FormID extraction**: 25x faster than Python regex
 //! - **Pattern matching**: 5-10x faster with Rayon parallelism
-//! - **Mod detection**: 15-25x faster with compiled regex
+//! - **Mod Guidance analysis**: compiled immutable substring matchers
 //! - **DDS processing**: 40x faster with parallel batch operations
 //! - **Papyrus log analysis**: 15-30x faster than Python
 //! - **Complete analysis**: 50-200ms per log (Python: 2-3 seconds)
@@ -93,7 +87,7 @@ pub mod fcx_handler;
 pub mod formid;
 pub mod formid_analyzer;
 pub mod gpu_detector;
-pub mod mod_detector;
+pub mod mod_guidance_analyzer;
 pub mod papyrus;
 pub mod parser;
 pub mod patterns;
@@ -122,8 +116,11 @@ pub use formid_analyzer::{
     PyFormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
 };
 pub use gpu_detector::{PyGpuDetector, PyGpuInfo, PyGpuVendor};
-pub use mod_detector::{
-    detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
+pub use mod_guidance_analyzer::{
+    PyImportantModGuidance, PyModConflictGuidance, PyModGuidanceAnalysisInput,
+    PyModGuidanceAnalysisResult, PyModGuidanceAnalyzer, PyModGuidanceConflictRule,
+    PyModGuidanceCriteriaKind, PyModGuidanceImportantModRule, PyModGuidanceMatchState,
+    PyModGuidanceSolutionRule, PyModSolutionGuidance,
 };
 pub use papyrus::{PyPapyrusAnalyzer, PyPapyrusStats, papyrus_logging};
 pub use parser::PyLogParser;
@@ -236,15 +233,10 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyGpuVendor>()?;
     version::register(m)?;
 
-    // Mod detection
-    m.add_function(wrap_pyfunction!(detect_mods_single, m)?)?;
-    m.add_function(wrap_pyfunction!(detect_mods_double, m)?)?;
-    m.add_function(wrap_pyfunction!(detect_mods_important, m)?)?;
-    m.add_function(wrap_pyfunction!(detect_mods_batch, m)?)?;
-
     // Validators and run-result data
     crashgen_settings_analyzer::register(m)?;
     crash_suspect_analyzer::register(m)?;
+    mod_guidance_analyzer::register(m)?;
     m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;
@@ -300,15 +292,10 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyGpuVendor>()?;
     version::register(m)?;
 
-    // Mod detection
-    m.add_function(wrap_pyfunction!(detect_mods_single, m)?)?;
-    m.add_function(wrap_pyfunction!(detect_mods_double, m)?)?;
-    m.add_function(wrap_pyfunction!(detect_mods_important, m)?)?;
-    m.add_function(wrap_pyfunction!(detect_mods_batch, m)?)?;
-
     // Validators and run-result data
     crashgen_settings_analyzer::register(m)?;
     crash_suspect_analyzer::register(m)?;
+    mod_guidance_analyzer::register(m)?;
     m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;

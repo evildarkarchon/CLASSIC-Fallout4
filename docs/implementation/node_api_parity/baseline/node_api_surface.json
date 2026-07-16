@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T08:26:39.478428+00:00",
+  "generated_at_utc": "2026-07-16T09:01:31.973625+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -765,6 +765,22 @@
       "signature": "export interface JsGuiWindowGeometryUpdate {"
     },
     {
+      "export": "JsImportantModGuidance",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsImportantModGuidance {"
+    },
+    {
+      "export": "JsImportantModRule",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsImportantModRule {"
+    },
+    {
       "export": "JsIniCheckResult",
       "kind": "interface",
       "owner_module": "aux",
@@ -909,12 +925,68 @@
       "signature": "export interface JsModConflictEntry {"
     },
     {
+      "export": "JsModConflictGuidance",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModConflictGuidance {"
+    },
+    {
+      "export": "JsModConflictRule",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModConflictRule {"
+    },
+    {
       "export": "JsModDuplicateEntry",
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsModDuplicateEntry {"
+    },
+    {
+      "export": "JsModGuidanceAnalysisInput",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModGuidanceAnalysisInput {"
+    },
+    {
+      "export": "JsModGuidanceAnalysisResult",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModGuidanceAnalysisResult {"
+    },
+    {
+      "export": "JsModGuidanceCriteriaKind",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsModGuidanceCriteriaKind {"
+    },
+    {
+      "export": "JsModGuidanceMatchState",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsModGuidanceMatchState {"
+    },
+    {
+      "export": "JsModGuidancePlugin",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModGuidancePlugin {"
     },
     {
       "export": "JsModIniScanResult",
@@ -955,6 +1027,22 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsModSolutionEntry {"
+    },
+    {
+      "export": "JsModSolutionGuidance",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModSolutionGuidance {"
+    },
+    {
+      "export": "JsModSolutionRule",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsModSolutionRule {"
     },
     {
       "export": "JsNotificationDisplay",
@@ -1587,6 +1675,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface MetricsSummaryResult {"
+    },
+    {
+      "export": "ModGuidanceAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class ModGuidanceAnalyzer {"
     },
     {
       "export": "QueryParam",

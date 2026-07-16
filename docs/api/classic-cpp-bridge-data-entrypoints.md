@@ -169,6 +169,16 @@ presence flags for the DLL variant; no DTO contains report lines, markdown, or
 padding widths. Invalid matcher configuration retains
 `AnalyzerKind::CrashSuspect` and the shared stable analyzer error code.
 
+`mod_guidance_analyzer_new(...)` constructs the aggregate Mod Guidance handle
+from owned conflict, frequent-crash, solution, and important-mod DTOs. The
+construction result reports invalid rules or matcher state before the handle is
+used. `mod_guidance_analyze(...)` accepts owned plugin/load-order, optional GPU,
+and XSE-module facts and returns typed match state plus authored guidance in
+four semantic collections. The DTOs contain no report headings, group order,
+icons, separators, markdown, or rendered lines; construction and execution
+failures retain `AnalyzerKind::ModGuidance` and the shared stable analyzer error
+code.
+
 ### Complete-run entry point
 
 The only public complete-run operation is:

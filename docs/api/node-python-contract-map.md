@@ -60,6 +60,14 @@ Current shape notes:
   `analyze(input)` returns one typed finding per matched main-error rule, stack
   rule, or DLL involvement notice, returns `{ findings: [] }` on completed
   no-match analysis, and never exposes report lines or padding mechanics
+- independently useful Mod Guidance Analysis uses the synchronous immutable
+  `ModGuidanceAnalyzer` in
+  [`src/mod_guidance_analyzer.rs`](../../node-bindings/classic-node/src/mod_guidance_analyzer.rs);
+  one `analyze(input)` call evaluates conflict, frequent-crash, solution, and
+  important-mod rules and returns typed match state plus authored guidance.
+  Report headings, ordering, icons, separators, and markdown are not exported,
+  and the former fragment-producing detector functions have no compatibility
+  aliases
 - User Settings inspection uses `openUserSettings(classicRoot) -> JsUserSettingsSnapshot`, authored in [`src/user_settings.rs`](../../node-bindings/classic-node/src/user_settings.rs); it exposes typed Update Preferences, Crash Log Scan settings, Game Setup settings, and namespaced Frontend State plus source/schema/revision metadata, diagnostics, commit eligibility, and retained source bytes
 - `planUserSettingsMigration(classicRoot) -> JsUserSettingsMigrationPlanningResult` exposes the pure Rust migration-planning outcome, optional revision-anchored plan, version/location endpoints, ordered changes, exact original/proposed `Buffer` values, and structured diagnostics without applying the plan
 - `reverseUserSettingsMigrationPlan(plan) -> JsUserSettingsMigrationPlan` reconstructs an unattested core review plan and delegates the exact inverse to Rust, including the proposed-content SHA-256 base revision; it remains usable after the source root is removed, while malformed endpoint/change tokens reject with `migration_plan_review_invalid`
@@ -116,6 +124,12 @@ Current shape notes:
   severity, release the GIL during analysis, and use the same typed
   `AnalyzerError`; the retired fragment-producing `SuspectScanner` is not kept
   as a compatibility alias
+- `classic_scanlog.ModGuidanceAnalyzer` is a frozen aggregate semantic handle
+  over immutable conflict, solution, important-mod, and input classes. Its
+  result preserves typed match state and authored guidance in four collections,
+  releases the GIL during analysis, and raises the shared typed
+  `AnalyzerError`; the former fragment-producing `detect_mods_*` functions are
+  removed rather than retained as aliases
 - `ScanRunConfiguration` contains explicit YAML roots, game/version, analysis options, FormID database paths, optional configured Unsolved Logs destination, and optional positive concurrency. The adapter never opens User Settings; callers project one accepted settings snapshot into these facts
 - `ScanRunRequest.standard(...)`, `standard_with_fcx(...)`, `targeted(...)`, and `targeted_with_fcx(...)` are opaque invariant-preserving factories. Targeted factories accept no movement policy, and both FCX factories require `ScanRunSetupContext`
 - `ScanRunUnsolvedLogs` exposes Standard-only leave-in-place, configured/default movement, and custom-destination movement policies. `ScanRunCancellation` is a separate opaque monotonic control with no reset operation

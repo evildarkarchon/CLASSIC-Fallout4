@@ -70,14 +70,11 @@
 | `find_errors` | 1-5ms | **ADDED** | Error pattern matching |
 | `benchmark` | Variable | NOT NEEDED | Testing only |
 
-#### Mod Detector Module
+#### Mod Guidance Analyzer
 
 | Operation | Timing | GIL Status | Notes |
 |-----------|--------|------------|-------|
-| `detect_mods_single` | 2-20ms | **ADDED** | Pattern matching against plugins |
-| `detect_mods_double` | 2-20ms | **ADDED** | Pattern matching (conflict detection) |
-| `detect_mods_important` | 2-20ms | **ADDED** | Pattern matching with GPU/XSE |
-| `detect_mods_batch` | 5-100ms | **ADDED** | Batch detection (high priority) |
+| `ModGuidanceAnalyzer.analyze` | 2-20ms | **ADDED** | Aggregate conflict, frequent-crash, solution, and important-mod analysis over owned plugin/GPU/XSE facts |
 
 #### FormID Module
 

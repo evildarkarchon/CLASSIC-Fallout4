@@ -72,15 +72,8 @@ fn build_test_analyzer(
     db_pool: Option<Arc<DatabasePool>>,
     show_formid_values: bool,
 ) -> FormIDAnalyzerCore {
-    FormIDAnalyzerCore::new(
-        db_pool,
-        show_formid_values,
-        "Buffout 4".to_string(),
-        Vec::new(),
-        Vec::new(),
-        Vec::new(),
-    )
-    .expect("failed to build test analyzer")
+    FormIDAnalyzerCore::new(db_pool, show_formid_values, "Buffout 4".to_string())
+        .expect("failed to build test analyzer")
 }
 
 fn report_rows(lines: &[String]) -> Vec<&str> {

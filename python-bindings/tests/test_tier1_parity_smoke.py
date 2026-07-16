@@ -428,22 +428,6 @@ def test_generate_suspect_section_deprecation_warning() -> None:
     ]
 
 
-def test_formid_analyzer_legacy_dict_deprecation_warning() -> None:
-    """PyFormIDAnalyzerCore.__init__ emits DeprecationWarning when mods_single is a dict."""
-    import classic_scanlog
-
-    legacy_mods_single = {"TestMod": "Install TestMod fix"}
-
-    with pytest.warns(DeprecationWarning, match="mods_single as dict.*is deprecated"):
-        analyzer = classic_scanlog.FormIDAnalyzerCore(
-            show_formid_values=False,
-            crashgen_name="Buffout 4",
-            mods_single=legacy_mods_single,
-        )
-
-    assert analyzer is not None
-
-
 @pytest.mark.parametrize("case_id", get_runtime_coverage_case_ids(THIS_SUITE))
 def test_runtime_coverage_registry_cases(
     case_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

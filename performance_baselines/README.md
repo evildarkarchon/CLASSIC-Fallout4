@@ -17,15 +17,17 @@ Phase 5 proof for `classic-scanlog-core` stays in the existing `scanlog_benchmar
 ```powershell
 # Save a local before baseline for the Phase 5 groups only
 $env:BENCH_MODE = "thorough"
-cargo bench -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml --bench scanlog_benchmarks phase5_ -- --save-baseline phase5-before
+cargo bench -p classic-scanlog-core --bench scanlog_benchmarks phase5_ -- --save-baseline phase5-before
 
 # Compare the current Phase 5 groups against that saved baseline
-cargo bench -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml --bench scanlog_benchmarks phase5_ -- --baseline phase5-before
+cargo bench -p classic-scanlog-core --bench scanlog_benchmarks phase5_ -- --baseline phase5-before
 ```
 
-- Keep raw Criterion output under `ClassicLib-rs/target/criterion/` local-only by default.
+- Keep raw Criterion output under `target/criterion/` local-only by default.
 - Do not commit the raw `phase5-before` baseline directory unless a later request explicitly asks for a shareable export.
-- Phase 5 hotspots to compare live in `scanlog_benchmarks` under the `phase5_cached_regex_paths`, `phase5_detect_mods_important`, and `phase5_bridge_crash_pattern_replica` groups.
+- Phase 5 hotspots to compare live in `scanlog_benchmarks` under the
+  `phase5_mod_guidance_analyzer` and `phase5_bridge_crash_pattern_replica`
+  groups.
 - The committed proof artifact for this workflow lives at `.planning/phases/05-pattern-caching-and-performance/05-BENCHMARK-PROOF.md`.
 - Treat a stable comparison that clears the repo's existing `warning > 5%` threshold as the minimum meaningful win bar for this phase.
 - If a hotspot does not clear that bar, the Phase 5 summary must explain why the structural change still shipped per D-12 instead of claiming benchmark proof that is not there.

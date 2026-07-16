@@ -17,15 +17,15 @@ use crate::crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 use crate::error::Result;
 use crate::formid_analyzer::FormIDAnalyzerCore;
 use crate::gpu_detector::GpuDetector;
-use crate::mod_detector::{
-    detect_mods_double, detect_mods_freq, detect_mods_important, detect_mods_solutions,
+use crate::mod_guidance_analyzer::{
+    ModGuidanceAnalysisInput, ModGuidanceAnalysisResult, ModGuidanceAnalyzer,
 };
 use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
 use crate::record_scanner::RecordScanner;
 use crate::report::{
-    AutoscanReportAssembler, AutoscanReportContribution, AutoscanReportFacts, ModGuidanceGroup,
-    ReportGenerator, write_autoscan_report,
+    AutoscanReportAssembler, AutoscanReportContribution, AutoscanReportFacts, ReportGenerator,
+    write_autoscan_report,
 };
 use crate::scan_run::CrashLogScanSetupResult;
 use crate::segment_key;
@@ -706,6 +706,7 @@ pub struct OrchestratorCore {
     plugin_analyzer: Option<PluginAnalyzer>,
     formid_analyzer: FormIDAnalyzerCore,
     suspect_analyzer: CrashSuspectAnalyzer,
+    mod_guidance_analyzer: ModGuidanceAnalyzer,
     /// Record scanner for named record detection
     record_scanner: Option<RecordScanner>,
     /// Settings validator for crash generator settings
@@ -898,12 +899,24 @@ impl OrchestratorCore {
             ))
         })?;
 
+        let mod_guidance_analyzer = ModGuidanceAnalyzer::new(
+            config.mods_conf.clone(),
+            config.mods_freq.clone(),
+            config.mods_solu.clone(),
+            config.mods_core.clone(),
+        )
+        .map_err(|error| {
+            crate::error::ScanLogError::ConfigError(format!(
+                "{} [{}]: {}",
+                error.analyzer().as_str(),
+                error.code().as_str(),
+                error.message()
+            ))
+        })?;
+
         // Extract values before moving config
         let show_formid_values = config.show_formid_values;
         let crashgen_name = config.crashgen_name.clone();
-        let mods_core = config.mods_core.clone();
-        let mods_freq = config.mods_freq.clone();
-        let mods_conf = config.mods_conf.clone();
 
         // Initialize record scanner if we have records list
         let record_scanner = if !config.classic_records_list.is_empty() {
@@ -930,11 +943,9 @@ impl OrchestratorCore {
                 None, // No database pool initially
                 show_formid_values,
                 crashgen_name,
-                mods_core,
-                mods_freq,
-                mods_conf,
             )?,
             suspect_analyzer,
+            mod_guidance_analyzer,
             record_scanner,
             settings_validator,
             db_pool: None,
@@ -986,9 +997,6 @@ impl OrchestratorCore {
             Some(pool.clone()),
             self.config.show_formid_values,
             self.config.crashgen_name.clone(),
-            self.config.mods_core.clone(),
-            self.config.mods_freq.clone(),
-            self.config.mods_conf.clone(),
         )?;
         self.db_pool = Some(pool);
         Ok(self)
@@ -1008,9 +1016,6 @@ impl OrchestratorCore {
             Some(pool.clone()),
             self.config.show_formid_values,
             self.config.crashgen_name.clone(),
-            self.config.mods_core.clone(),
-            self.config.mods_freq.clone(),
-            self.config.mods_conf.clone(),
         )?;
         self.db_pool = Some(pool);
         Ok(())
@@ -1088,8 +1093,8 @@ impl OrchestratorCore {
     /// 5. Measures and reports processing time
     ///
     /// The function uses efficient async I/O and parallel processing where applicable.
-    /// More detailed analysis (FormID extraction, plugin detection, mod detection) can be
-    /// added by extending the implementation.
+    /// The pipeline includes FormID extraction, plugin evidence, and aggregate semantic
+    /// Mod Guidance analysis before canonical report assembly.
     ///
     /// # Arguments
     ///
@@ -1177,7 +1182,7 @@ impl OrchestratorCore {
         enter_phase(ScanProgressPhase::Analyze);
         let mut contributions = self.collect_settings_contributions(&context, &crashgen);
 
-        // Store plugins for mod detection - IndexMap preserves load order for Python parity
+        // Preserve plugin load order for semantic guidance and downstream report sorting.
         let (plugins_map, plugin_count) = self.collect_plugins(&context);
         let suspect_result = self.collect_suspect_findings(&context, &crashgen.main_error)?;
         let suspect_count = suspect_result.findings.len();
@@ -1188,9 +1193,11 @@ impl OrchestratorCore {
                 .map(|finding| AutoscanReportContribution::CrashSuspectFinding { finding }),
         );
 
-        // Mod detection (if we have plugin data)
+        // Mod Guidance is meaningful only after the parser has produced plugin facts.
         if let Some(ref plugins) = plugins_map {
-            contributions.extend(self.collect_mod_contributions(&context, plugins));
+            contributions.push(AutoscanReportContribution::ModGuidance {
+                result: self.collect_mod_guidance(&context, plugins)?,
+            });
             contributions.extend(self.collect_plugin_match_contributions(
                 &context,
                 plugins,
@@ -1607,12 +1614,12 @@ impl OrchestratorCore {
             })
     }
 
-    fn collect_mod_contributions(
+    /// Runs the aggregate Mod Guidance analyzer and preserves typed failures.
+    fn collect_mod_guidance(
         &self,
         context: &ScanAnalysisContext,
         plugins: &IndexMap<String, String>,
-    ) -> Vec<AutoscanReportContribution> {
-        let mut contributions = Vec::new();
+    ) -> Result<ModGuidanceAnalysisResult> {
         let user_gpu_string: Option<String> = if context.system_segment_lines.is_empty() {
             None
         } else {
@@ -1624,54 +1631,20 @@ impl OrchestratorCore {
                 Some(mfr.to_lowercase())
             }
         };
-        let user_gpu = user_gpu_string.as_deref();
-
-        if !self.config.mods_conf.is_empty()
-            && let Ok(conflict_lines) = detect_mods_double(&self.config.mods_conf, plugins.clone())
-            && !conflict_lines.is_empty()
-        {
-            contributions.push(AutoscanReportContribution::ModGuidance {
-                group: ModGuidanceGroup::MayConflict,
-                lines: conflict_lines,
-            });
-        }
-
-        if !self.config.mods_freq.is_empty()
-            && let Ok(freq_lines) = detect_mods_freq(&self.config.mods_freq, plugins)
-            && !freq_lines.is_empty()
-        {
-            contributions.push(AutoscanReportContribution::ModGuidance {
-                group: ModGuidanceGroup::FrequentCrashes,
-                lines: freq_lines,
-            });
-        }
-
-        if !self.config.mods_solu.is_empty()
-            && let Ok(solu_lines) = detect_mods_solutions(&self.config.mods_solu, plugins)
-            && !solu_lines.is_empty()
-        {
-            contributions.push(AutoscanReportContribution::ModGuidance {
-                group: ModGuidanceGroup::HasSolutions,
-                lines: solu_lines,
-            });
-        }
-
-        if !self.config.mods_core.is_empty()
-            && let Ok(important_lines) = detect_mods_important(
-                &self.config.mods_core,
-                plugins,
-                user_gpu,
-                &context.xse_modules_for_settings,
-            )
-            && !important_lines.is_empty()
-        {
-            contributions.push(AutoscanReportContribution::ModGuidance {
-                group: ModGuidanceGroup::ImportantMods,
-                lines: important_lines,
-            });
-        }
-
-        contributions
+        self.mod_guidance_analyzer
+            .analyze(ModGuidanceAnalysisInput {
+                plugins: plugins.clone(),
+                user_gpu: user_gpu_string,
+                xse_modules: context.xse_modules_for_settings.clone(),
+            })
+            .map_err(|error| {
+                crate::error::ScanLogError::AnalysisError(format!(
+                    "{} [{}]: {}",
+                    error.analyzer().as_str(),
+                    error.code().as_str(),
+                    error.message()
+                ))
+            })
     }
 
     fn collect_plugin_match_contributions(

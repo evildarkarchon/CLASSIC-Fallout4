@@ -1,8 +1,7 @@
-"""Per-class smoke tests for Phase 3 Plan 03 - scanlog Wave 2
-(detection and analysis).
+"""Per-class smoke tests for Phase 3 Plan 03 - scanlog Wave 2 analysis.
 
-Covers the independently useful mod detection, settings validation,
-run-result configuration issue, and GPU detection surfaces.
+Covers settings validation, run-result configuration issue, and GPU detection
+surfaces. Mod Guidance has a dedicated aggregate semantic analyzer suite.
 
 Each ``#[pyclass]`` gets at least one test that constructs it and
 calls one real method (per Phase 3 D-07). Related free functions are
@@ -18,41 +17,6 @@ from __future__ import annotations
 import pytest
 
 import classic_scanlog
-
-# =============================================================================
-# mod_detector sub-module (grouped free functions)
-# =============================================================================
-
-
-def test_detect_mods_single_empty_returns_list() -> None:
-    """``detect_mods_single({}, {})`` returns an empty ``list[str]``."""
-    result = classic_scanlog.detect_mods_single({}, {})
-    assert isinstance(result, list)
-    assert result == []
-
-
-def test_detect_mods_double_empty_returns_list() -> None:
-    """``detect_mods_double([], {})`` returns an empty ``list[str]``."""
-    result = classic_scanlog.detect_mods_double([], {})
-    assert isinstance(result, list)
-    assert result == []
-
-
-def test_detect_mods_important_empty_returns_list() -> None:
-    """``detect_mods_important([], {})`` returns an empty ``list[str]``."""
-    result = classic_scanlog.detect_mods_important([], {})
-    assert isinstance(result, list)
-    assert result == []
-
-
-def test_detect_mods_batch_empty_returns_list_of_lists() -> None:
-    """``detect_mods_batch({}, [{}, {}])`` returns one sub-list per plugin dict."""
-    result = classic_scanlog.detect_mods_batch({}, [{}, {}])
-    assert isinstance(result, list)
-    assert len(result) == 2
-    for sub in result:
-        assert isinstance(sub, list)
-
 
 # =============================================================================
 # settings_validator sub-module: SettingsValidator

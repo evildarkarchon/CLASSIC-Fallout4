@@ -111,6 +111,105 @@ fn valid_crash_suspect_configuration() -> ffi::CrashSuspectAnalyzerConfiguration
     }
 }
 
+fn valid_mod_guidance_configuration() -> ffi::ModGuidanceAnalyzerConfigurationDto {
+    ffi::ModGuidanceAnalyzerConfigurationDto {
+        conflicts: vec![
+            ffi::ModGuidanceConflictConfigurationDto {
+                mod_a: "AlphaPlugin".to_string(),
+                mod_b: "BetaPlugin".to_string(),
+                name_a: "Alpha Mod".to_string(),
+                name_b: "Beta Mod".to_string(),
+                description: "These mods conflict".to_string(),
+                fix: "Install the compatibility patch".to_string(),
+                has_link: true,
+                link: "https://example.com/patch".to_string(),
+            },
+            ffi::ModGuidanceConflictConfigurationDto {
+                mod_a: "GammaPlugin".to_string(),
+                mod_b: "DeltaPlugin".to_string(),
+                name_a: "Gamma Mod".to_string(),
+                name_b: "Delta Mod".to_string(),
+                description: "These mods also conflict".to_string(),
+                fix: "Remove one mod".to_string(),
+                has_link: false,
+                link: "ignored".to_string(),
+            },
+        ],
+        frequent_crashes: vec![ffi::ModGuidanceSolutionConfigurationDto {
+            id: "frequent-crash".to_string(),
+            criteria_kind: ffi::ModGuidanceCriteriaKind::Any,
+            criteria: vec!["FreqPart".to_string()],
+            exceptions: Vec::new(),
+            name: "Frequent Crash Mod".to_string(),
+            description: "Frequently appears in crash reports".to_string(),
+        }],
+        solutions: vec![ffi::ModGuidanceSolutionConfigurationDto {
+            id: "solution".to_string(),
+            criteria_kind: ffi::ModGuidanceCriteriaKind::All,
+            criteria: vec!["SolutionA".to_string(), "SolutionB".to_string()],
+            exceptions: Vec::new(),
+            name: "Solution Mod".to_string(),
+            description: "Use the documented solution".to_string(),
+        }],
+        important_mods: vec![
+            ffi::ModGuidanceImportantModConfigurationDto {
+                detect: "NvidiaFix".to_string(),
+                name: "NVIDIA Fix".to_string(),
+                description: "Fix for NVIDIA users".to_string(),
+                has_gpu: true,
+                gpu: "nvidia".to_string(),
+                has_gpu_mismatch_warning: true,
+                gpu_mismatch_warning: "This fix is not for your GPU".to_string(),
+                has_exclude_when_plugin_any: false,
+                exclude_when_plugin_any: Vec::new(),
+            },
+            ffi::ModGuidanceImportantModConfigurationDto {
+                detect: "MissingCore".to_string(),
+                name: "Missing Core Mod".to_string(),
+                description: "Install this important mod".to_string(),
+                has_gpu: false,
+                gpu: "ignored".to_string(),
+                has_gpu_mismatch_warning: false,
+                gpu_mismatch_warning: "ignored".to_string(),
+                has_exclude_when_plugin_any: false,
+                exclude_when_plugin_any: Vec::new(),
+            },
+        ],
+    }
+}
+
+fn matching_mod_guidance_input() -> ffi::ModGuidanceAnalysisInputDto {
+    ffi::ModGuidanceAnalysisInputDto {
+        plugins: vec![
+            ("AlphaPlugin.esp", "FE:001"),
+            ("BetaPlugin.esp", "FE:002"),
+            ("GammaPlugin.esp", "FE:003"),
+            ("DeltaPlugin.esp", "FE:004"),
+            ("FreqPart.esp", "FE:005"),
+            ("SolutionA.esp", "FE:006"),
+            ("SolutionB.esp", "FE:007"),
+        ]
+        .into_iter()
+        .map(|(name, id)| ffi::ModGuidancePluginDto {
+            name: name.to_string(),
+            id: id.to_string(),
+        })
+        .collect(),
+        has_user_gpu: true,
+        user_gpu: "amd".to_string(),
+        xse_modules: vec!["NvidiaFix.dll".to_string()],
+    }
+}
+
+fn empty_mod_guidance_configuration() -> ffi::ModGuidanceAnalyzerConfigurationDto {
+    ffi::ModGuidanceAnalyzerConfigurationDto {
+        conflicts: Vec::new(),
+        frequent_crashes: Vec::new(),
+        solutions: Vec::new(),
+        important_mods: Vec::new(),
+    }
+}
+
 #[test]
 fn crash_suspect_analysis_projects_individual_semantic_findings() {
     let analyzer = crash_suspect_analyzer_new(valid_crash_suspect_configuration());
@@ -163,6 +262,119 @@ fn crash_suspect_invalid_configuration_preserves_shared_error() {
         construction.error.code,
         ffi::AnalyzerErrorCode::InvalidConfiguration
     );
+}
+
+#[test]
+fn mod_guidance_analysis_projects_all_families_and_optional_presence() {
+    let analyzer = mod_guidance_analyzer_new(valid_mod_guidance_configuration());
+
+    let execution = mod_guidance_analyze(&analyzer, matching_mod_guidance_input());
+
+    assert!(execution.has_result, "{}", execution.error.message);
+    assert!(!execution.has_error);
+    assert_eq!(execution.result.conflicts.len(), 2);
+    let linked_conflict = &execution.result.conflicts[0];
+    assert_eq!(linked_conflict.state, ffi::ModGuidanceMatchState::Matched);
+    assert_eq!(linked_conflict.name_a, "Alpha Mod");
+    assert_eq!(linked_conflict.fix, "Install the compatibility patch");
+    assert!(linked_conflict.has_link);
+    assert_eq!(linked_conflict.link, "https://example.com/patch");
+    assert!(!execution.result.conflicts[1].has_link);
+    assert!(execution.result.conflicts[1].link.is_empty());
+
+    assert_eq!(execution.result.frequent_crashes.len(), 1);
+    let frequent = &execution.result.frequent_crashes[0];
+    assert_eq!(frequent.id, "frequent-crash");
+    assert_eq!(frequent.matched_plugin_ids, ["FE:005"]);
+
+    assert_eq!(execution.result.solutions.len(), 1);
+    assert_eq!(
+        execution.result.solutions[0].matched_plugin_ids,
+        ["FE:006", "FE:007"]
+    );
+
+    assert_eq!(execution.result.important_mods.len(), 2);
+    let mismatch = &execution.result.important_mods[0];
+    assert_eq!(mismatch.state, ffi::ModGuidanceMatchState::GpuMismatch);
+    assert!(mismatch.has_gpu);
+    assert_eq!(mismatch.gpu, "nvidia");
+    assert!(mismatch.has_gpu_mismatch_warning);
+    assert_eq!(
+        mismatch.gpu_mismatch_warning,
+        "This fix is not for your GPU"
+    );
+    let missing = &execution.result.important_mods[1];
+    assert_eq!(missing.state, ffi::ModGuidanceMatchState::Missing);
+    assert!(!missing.has_gpu);
+    assert!(missing.gpu.is_empty());
+    assert!(!missing.has_gpu_mismatch_warning);
+    assert!(missing.gpu_mismatch_warning.is_empty());
+}
+
+#[test]
+fn mod_guidance_projects_important_mod_plugin_exclusions() {
+    let mut configuration = valid_mod_guidance_configuration();
+    configuration.important_mods[0].has_exclude_when_plugin_any = true;
+    configuration.important_mods[0].exclude_when_plugin_any = vec!["Suppressor.esp".to_string()];
+    let analyzer = mod_guidance_analyzer_new(configuration);
+    let mut input = matching_mod_guidance_input();
+    input.plugins.push(ffi::ModGuidancePluginDto {
+        name: "Suppressor.esp".to_string(),
+        id: "FE:008".to_string(),
+    });
+
+    let execution = mod_guidance_analyze(&analyzer, input);
+
+    assert!(execution.has_result, "{}", execution.error.message);
+    assert_eq!(execution.result.important_mods.len(), 1);
+    assert_eq!(execution.result.important_mods[0].name, "Missing Core Mod");
+}
+
+#[test]
+fn mod_guidance_invalid_configuration_preserves_shared_typed_error() {
+    let mut configuration = valid_mod_guidance_configuration();
+    configuration.conflicts[0].mod_a.clear();
+    let analyzer = mod_guidance_analyzer_new(configuration);
+
+    let construction = mod_guidance_analyzer_construction_result(&analyzer);
+    let execution = mod_guidance_analyze(&analyzer, matching_mod_guidance_input());
+
+    assert!(!construction.has_analyzer);
+    assert!(construction.has_error);
+    assert_eq!(
+        construction.error.analyzer_kind,
+        ffi::AnalyzerKind::ModGuidance
+    );
+    assert_eq!(
+        construction.error.code,
+        ffi::AnalyzerErrorCode::InvalidConfiguration
+    );
+    assert!(construction.error.message.contains("conflict mod_a"));
+    assert!(!execution.has_result);
+    assert!(execution.has_error);
+    assert_eq!(execution.error.message, construction.error.message);
+}
+
+#[test]
+fn completed_mod_guidance_no_match_is_an_explicit_empty_result() {
+    let analyzer = mod_guidance_analyzer_new(empty_mod_guidance_configuration());
+
+    let execution = mod_guidance_analyze(
+        &analyzer,
+        ffi::ModGuidanceAnalysisInputDto {
+            plugins: Vec::new(),
+            has_user_gpu: false,
+            user_gpu: "ignored".to_string(),
+            xse_modules: Vec::new(),
+        },
+    );
+
+    assert!(execution.has_result, "{}", execution.error.message);
+    assert!(!execution.has_error);
+    assert!(execution.result.conflicts.is_empty());
+    assert!(execution.result.frequent_crashes.is_empty());
+    assert!(execution.result.solutions.is_empty());
+    assert!(execution.result.important_mods.is_empty());
 }
 
 #[test]

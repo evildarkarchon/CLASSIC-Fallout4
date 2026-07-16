@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-16T08:26:39.480212+00:00`
-- Tier-1 contract rows: **882**
-- Tier-1 matched: **882**
+- Generated: `2026-07-16T09:01:31.975700+00:00`
+- Tier-1 contract rows: **890**
+- Tier-1 matched: **890**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -462,10 +462,18 @@
 | `scanlog.record_scanner.contains_record@rust` | `scanlog` | `contains_record@rust` | `None` | `matched` |
 | `scanlog.crashgen_registry.crashgen_registry@rust` | `scanlog` | `crashgen_registry@rust` | `None` | `matched` |
 | `scanlog.version.crashgen_version_gen@rust` | `scanlog` | `crashgen_version_gen@rust` | `None` | `matched` |
-| `scanlog.mod_detector.detect_mods_batch@rust` | `scanlog` | `detect_mods_batch@rust` | `None` | `matched` |
-| `scanlog.mod_detector.detect_mods_double@rust` | `scanlog` | `detect_mods_double@rust` | `None` | `matched` |
-| `scanlog.mod_detector.detect_mods_important@rust` | `scanlog` | `detect_mods_important@rust` | `None` | `matched` |
-| `scanlog.mod_detector.detect_mods_single@rust` | `scanlog` | `detect_mods_single@rust` | `None` | `matched` |
+| `scanlog.mod_guidance_analyzer.ImportantModGuidance` | `scanlog` | `ImportantModGuidance` | `JsImportantModGuidance` | `matched` |
+| `scanlog.mod_guidance_analyzer.ImportantModRule` | `scanlog` | `CoreModEntry` | `JsImportantModRule` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModConflictGuidance` | `scanlog` | `ModConflictGuidance` | `JsModConflictGuidance` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModConflictRule` | `scanlog` | `ModConflictEntry` | `JsModConflictRule` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceAnalysisInput` | `scanlog` | `ModGuidanceAnalysisInput` | `JsModGuidanceAnalysisInput` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceAnalysisResult` | `scanlog` | `ModGuidanceAnalysisResult` | `JsModGuidanceAnalysisResult` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceAnalyzer` | `scanlog` | `ModGuidanceAnalyzer` | `ModGuidanceAnalyzer` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceCriteriaKind` | `scanlog` | `ModSolutionCriteria` | `JsModGuidanceCriteriaKind` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceMatchState` | `scanlog` | `ModGuidanceMatchState` | `JsModGuidanceMatchState` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidancePlugin` | `scanlog` | `ModGuidanceAnalysisInput` | `JsModGuidancePlugin` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModSolutionGuidance` | `scanlog` | `ModSolutionGuidance` | `JsModSolutionGuidance` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModSolutionRule` | `scanlog` | `ModSolutionEntry` | `JsModSolutionRule` | `matched` |
 | `scanlog.plugin_analyzer.detect_plugins_batch@rust` | `scanlog` | `detect_plugins_batch@rust` | `None` | `matched` |
 | `scanlog.error.error@rust` | `scanlog` | `error@rust` | `None` | `matched` |
 | `scanlog.formid.extract_formids_batch@rust` | `scanlog` | `extract_formids_batch@rust` | `None` | `matched` |
@@ -473,7 +481,7 @@
 | `scanlog.formid_analyzer.formid_analyzer@rust` | `scanlog` | `formid_analyzer@rust` | `None` | `matched` |
 | `scanlog.gpu_detector.gpu_detector@rust` | `scanlog` | `gpu_detector@rust` | `None` | `matched` |
 | `scanlog.formid.is_valid_formid@rust` | `scanlog` | `is_valid_formid@rust` | `None` | `matched` |
-| `scanlog.mod_detector.mod_detector@rust` | `scanlog` | `mod_detector@rust` | `None` | `matched` |
+| `scanlog.mod_guidance_analyzer.mod_guidance_analyzer@rust` | `scanlog` | `mod_guidance_analyzer@rust` | `None` | `matched` |
 | `scanlog.papyrus.papyrus@rust` | `scanlog` | `papyrus@rust` | `None` | `matched` |
 | `scanlog.parser.parser@rust` | `scanlog` | `parser@rust` | `None` | `matched` |
 | `scanlog.patterns.patterns@rust` | `scanlog` | `patterns@rust` | `None` | `matched` |

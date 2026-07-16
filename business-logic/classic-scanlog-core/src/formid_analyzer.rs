@@ -4,14 +4,12 @@
 //! functionality using pure Rust data structures.
 
 use crate::error::Result;
-use crate::mod_detector;
-use classic_config_core::{CoreModEntry, ModConflictEntry, ModSolutionEntry};
 use classic_database_core::DatabasePool;
 use indexmap::IndexMap;
 use rayon::prelude::*;
 use regex::Regex;
 use rustc_hash::FxHashMap; // Optimization 1.2: Faster hasher for FormID counting
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 
 fn compile_static_regex(pattern: &str, name: &str) -> Regex {
@@ -36,11 +34,6 @@ pub struct FormIDAnalyzerCore {
     crashgen_name: String,
     // Database pool for FormID lookups (from classic-database-core)
     db_pool: Option<Arc<DatabasePool>>,
-    // Mod detection dictionaries (from YAML configuration)
-    // These are used by the mod_detector module functions
-    important_mods: Vec<CoreModEntry>,  // game_mods_core
-    mods_single: Vec<ModSolutionEntry>, // structured game_mods_freq-style entries
-    mods_double: Vec<ModConflictEntry>, // game_mods_conf (conflicts)
 }
 
 #[derive(Debug)]
@@ -52,10 +45,10 @@ struct FormidReportCandidate {
 }
 
 impl FormIDAnalyzerCore {
-    /// Creates a new FormID analyzer with the specified configuration and mod databases.
+    /// Creates a new FormID analyzer with the specified FormID configuration.
     ///
     /// This constructor initializes the analyzer with all necessary configuration for FormID
-    /// extraction, validation, database lookups, and mod detection. The analyzer uses pure Rust
+    /// extraction, validation, and database lookups. The analyzer uses pure Rust
     /// data structures (no Python/PyO3 dependencies) for maximum performance.
     ///
     /// # Arguments
@@ -65,10 +58,6 @@ impl FormIDAnalyzerCore {
     /// * `show_formid_values` - Whether to include FormID value descriptions in reports
     ///   (requires a database pool)
     /// * `crashgen_name` - Name of the crash generator (e.g., "Buffout 4") for report text
-    /// * `important_mods` - Structured core mod entries for recommended-mod detection
-    /// * `mods_single` - Structured single-mod detection entries (game_mods_freq-style data)
-    /// * `mods_double` - Mod conflict detection entries (game_mods_conf)
-    ///
     /// # Returns
     ///
     /// Returns `Ok(FormIDAnalyzerCore)` with the configured analyzer.
@@ -81,17 +70,11 @@ impl FormIDAnalyzerCore {
         db_pool: Option<Arc<DatabasePool>>,
         show_formid_values: bool,
         crashgen_name: String,
-        important_mods: Vec<CoreModEntry>,
-        mods_single: Vec<ModSolutionEntry>,
-        mods_double: Vec<ModConflictEntry>,
     ) -> Result<Self> {
         Ok(Self {
             show_formid_values,
             crashgen_name,
             db_pool,
-            important_mods,
-            mods_single,
-            mods_double,
         })
     }
 
@@ -129,8 +112,7 @@ impl FormIDAnalyzerCore {
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let analyzer = FormIDAnalyzerCore::new(
-    ///     None, false, "Buffout 4".to_string(),
-    ///     Vec::new(), Vec::new(), Vec::new()
+    ///     None, false, "Buffout 4".to_string()
     /// )?;
     ///
     /// let callstack = vec![
@@ -213,8 +195,7 @@ impl FormIDAnalyzerCore {
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let analyzer = FormIDAnalyzerCore::new(
-    ///     None, false, "Buffout 4".to_string(),
-    ///     Vec::new(), Vec::new(), Vec::new()
+    ///     None, false, "Buffout 4".to_string()
     /// )?;
     ///
     /// let formids = vec![
@@ -395,8 +376,7 @@ impl FormIDAnalyzerCore {
     /// let analyzer = FormIDAnalyzerCore::new(
     ///     None, // No database
     ///     false,
-    ///     "Buffout 4".to_string(),
-    ///     Vec::new(), Vec::new(), Vec::new()
+    ///     "Buffout 4".to_string()
     /// )?;
     ///
     /// let result = analyzer.lookup_formid_value("012345", "Skyrim.esm").await;
@@ -410,165 +390,6 @@ impl FormIDAnalyzerCore {
         } else {
             None
         }
-    }
-
-    /// Detects known single mods in the crash log plugins list.
-    ///
-    /// This function delegates to the structured FREQ detector using the analyzer's
-    /// configured `mods_single` entries. It identifies frequently problematic mods,
-    /// solution-providing mods, and other known single-mod patterns.
-    ///
-    /// The detection uses the same structured criteria matching as the `Mods_FREQ`
-    /// autoscan section.
-    ///
-    /// # Arguments
-    ///
-    /// * `crashlog_plugins` - IndexMap of plugin names to load order IDs from the crash log
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(Vec<String>)` containing formatted report lines for each detected mod.
-    /// Each entry includes the plugin ID and mod-specific warning/recommendation text.
-    ///
-    /// # Errors
-    ///
-    /// Returns `Err(ScanLogError)` if:
-    /// - A mod has no warning text in the database (configuration error)
-    /// - Regex pattern compilation fails
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_config_core::{ModSolutionCriteria, ModSolutionEntry};
-    /// use classic_scanlog_core::FormIDAnalyzerCore;
-    /// use indexmap::IndexMap;
-    ///
-    /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let mods_single = vec![ModSolutionEntry {
-    ///     id: "problematic".to_string(),
-    ///     criteria: ModSolutionCriteria::Any(vec!["problematic".to_string()]),
-    ///     exceptions: Vec::new(),
-    ///     name: "Known Issue".to_string(),
-    ///     description: "Details...".to_string(),
-    /// }];
-    ///
-    /// let analyzer = FormIDAnalyzerCore::new(
-    ///     None, false, "Buffout 4".to_string(),
-    ///     Vec::new(), mods_single, Vec::new()
-    /// )?;
-    ///
-    /// let mut plugins = IndexMap::new();
-    /// plugins.insert("ProblematicMod.esp".to_string(), "12".to_string());
-    ///
-    /// let report = analyzer.detect_mods_single_basic(&plugins)?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn detect_mods_single_basic(
-        &self,
-        crashlog_plugins: &IndexMap<String, String>,
-    ) -> Result<Vec<String>> {
-        mod_detector::detect_mods_freq(&self.mods_single, crashlog_plugins)
-    }
-
-    /// Detects conflicting mod combinations in the crash log plugins list.
-    ///
-    /// This function delegates to `mod_detector::detect_mods_double()` using the analyzer's
-    /// configured `mods_double` entries. It identifies known problematic mod combinations
-    /// where two specific mods installed together can cause crashes or issues.
-    ///
-    /// # Arguments
-    ///
-    /// * `crashlog_plugins` - IndexMap of plugin names to load order IDs from the crash log
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(Vec<String>)` containing formatted caution messages for each detected conflict.
-    /// Empty vector if no conflicts found.
-    ///
-    /// # Errors
-    ///
-    /// Returns `Err(ScanLogError)` if regex pattern compilation fails.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_scanlog_core::FormIDAnalyzerCore;
-    /// use classic_config_core::ModConflictEntry;
-    /// use indexmap::IndexMap;
-    ///
-    /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let mods_double = vec![ModConflictEntry {
-    ///     mod_a: "modA".to_string(),
-    ///     mod_b: "modB".to_string(),
-    ///     name_a: "Mod A".to_string(),
-    ///     name_b: "Mod B".to_string(),
-    ///     description: "These mods conflict!".to_string(),
-    ///     fix: "Remove one.".to_string(),
-    ///     link: None,
-    /// }];
-    ///
-    /// let analyzer = FormIDAnalyzerCore::new(
-    ///     None, false, "Buffout 4".to_string(),
-    ///     Vec::new(), Vec::new(), mods_double
-    /// )?;
-    ///
-    /// let mut plugins = IndexMap::new();
-    /// plugins.insert("ModA.esp".to_string(), "12".to_string());
-    /// plugins.insert("ModB.esp".to_string(), "13".to_string());
-    ///
-    /// let report = analyzer.detect_mods_conflicts(&plugins)?;
-    /// assert!(!report.is_empty()); // Conflict detected
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn detect_mods_conflicts(
-        &self,
-        crashlog_plugins: &IndexMap<String, String>,
-    ) -> Result<Vec<String>> {
-        mod_detector::detect_mods_double(&self.mods_double, crashlog_plugins.clone())
-    }
-
-    /// Detects important/recommended mods and checks GPU compatibility.
-    ///
-    /// This function delegates to `mod_detector::detect_mods_important()` using the analyzer's
-    /// configured `important_mods` dictionary. It identifies essential mods (engine fixes,
-    /// performance patches, etc.) and checks if the user has them installed. It also performs
-    /// GPU-specific compatibility checks to warn about GPU-specific mods installed on wrong hardware.
-    ///
-    /// The function searches both plugin files and XSE module files (DLLs) to detect mods that
-    /// may not have plugin files but still provide functionality through script extender plugins.
-    ///
-    /// # Arguments
-    ///
-    /// * `crashlog_plugins` - IndexMap of plugin names to load order IDs from the crash log
-    /// * `user_gpu` - Optional GPU vendor the user has (e.g., "nvidia", "amd")
-    /// * `xse_modules` - Set of XSE module names (DLLs) loaded by the script extender
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(Vec<String>)` containing a formatted report with:
-    /// - "### Checking for Important Mods" header
-    /// - ✔️ markers for installed recommended mods
-    /// - ❌ markers for missing recommended mods with installation instructions
-    /// - ❓ warnings for GPU-incompatible mods (e.g., NVIDIA mod on AMD GPU)
-    ///
-    /// # Errors
-    ///
-    /// Returns `Err(ScanLogError)` if regex pattern compilation fails.
-    ///
-    pub fn detect_mods_important_basic(
-        &self,
-        crashlog_plugins: &IndexMap<String, String>,
-        user_gpu: Option<&str>,
-        xse_modules: &HashSet<String>,
-    ) -> Result<Vec<String>> {
-        mod_detector::detect_mods_important(
-            &self.important_mods,
-            crashlog_plugins,
-            user_gpu,
-            xse_modules,
-        )
     }
 }
 

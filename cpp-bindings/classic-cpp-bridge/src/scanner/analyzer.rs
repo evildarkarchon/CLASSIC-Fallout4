@@ -3,9 +3,14 @@
 use std::collections::HashSet;
 
 use classic_config_core::{
-    AutoscanReportPlacement as CoreAutoscanReportPlacement, ConfigLayout, CrashgenSettingsSnapshot,
-    OutcomeKind, RuleSeverity, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule,
-    parse_crashgen_expectations,
+    AutoscanReportPlacement as CoreAutoscanReportPlacement, ConfigLayout, CoreModEntry,
+    CoreModExclude, CrashgenSettingsSnapshot, ModConflictEntry, ModSolutionCriteria,
+    ModSolutionEntry, OutcomeKind, RuleSeverity, SuspectErrorRule, SuspectStackCountRule,
+    SuspectStackRule, parse_crashgen_expectations,
+};
+use classic_scanlog_core::mod_guidance_analyzer::{
+    ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult,
+    ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance,
 };
 use classic_scanlog_core::{
     AnalyzerError as CoreAnalyzerError, AnalyzerErrorCode as CoreAnalyzerErrorCode,
@@ -47,6 +52,240 @@ pub(crate) struct CxxCrashgenSettingsAnalyzer {
 /// Immutable CXX-owned handle for one validated Crash Suspect Analyzer.
 pub(crate) struct CxxCrashSuspectAnalyzer {
     inner: Result<CrashSuspectAnalyzer, BridgeAnalyzerError>,
+}
+
+/// Immutable CXX-owned handle for one validated aggregate Mod Guidance Analyzer.
+pub(crate) struct CxxModGuidanceAnalyzer {
+    inner: Result<ModGuidanceAnalyzer, BridgeAnalyzerError>,
+}
+
+/// Constructs and validates a Mod Guidance Analyzer from owned bridge configuration.
+pub(crate) fn mod_guidance_analyzer_new(
+    configuration: ffi::ModGuidanceAnalyzerConfigurationDto,
+) -> Box<CxxModGuidanceAnalyzer> {
+    Box::new(CxxModGuidanceAnalyzer {
+        inner: build_mod_guidance_analyzer(configuration),
+    })
+}
+
+/// Returns the explicit typed status captured during Mod Guidance construction.
+pub(crate) fn mod_guidance_analyzer_construction_result(
+    analyzer: &CxxModGuidanceAnalyzer,
+) -> ffi::ModGuidanceAnalyzerConstructionResultDto {
+    match &analyzer.inner {
+        Ok(_) => ffi::ModGuidanceAnalyzerConstructionResultDto {
+            has_analyzer: true,
+            has_error: false,
+            error: empty_error_dto(),
+        },
+        Err(error) => ffi::ModGuidanceAnalyzerConstructionResultDto {
+            has_analyzer: false,
+            has_error: true,
+            error: bridge_error_to_dto(error),
+        },
+    }
+}
+
+/// Runs aggregate Mod Guidance analysis and preserves the shared typed error envelope.
+pub(crate) fn mod_guidance_analyze(
+    analyzer: &CxxModGuidanceAnalyzer,
+    input: ffi::ModGuidanceAnalysisInputDto,
+) -> ffi::ModGuidanceAnalysisExecutionResultDto {
+    let core_analyzer = match &analyzer.inner {
+        Ok(analyzer) => analyzer,
+        Err(error) => return mod_guidance_error_result(bridge_error_to_dto(error)),
+    };
+
+    let plugins = input
+        .plugins
+        .into_iter()
+        .map(|plugin| (plugin.name, plugin.id))
+        .collect();
+    let core_input = ModGuidanceAnalysisInput {
+        plugins,
+        user_gpu: input.has_user_gpu.then_some(input.user_gpu),
+        xse_modules: input.xse_modules.into_iter().collect(),
+    };
+
+    match core_analyzer.analyze(core_input) {
+        Ok(result) => ffi::ModGuidanceAnalysisExecutionResultDto {
+            has_result: true,
+            result: mod_guidance_result_to_dto(result),
+            has_error: false,
+            error: empty_error_dto(),
+        },
+        Err(error) => mod_guidance_error_result(bridge_error_to_dto(&error.into())),
+    }
+}
+
+/// Converts owned CXX configuration into the authoritative core configuration model.
+fn build_mod_guidance_analyzer(
+    configuration: ffi::ModGuidanceAnalyzerConfigurationDto,
+) -> Result<ModGuidanceAnalyzer, BridgeAnalyzerError> {
+    let conflicts = configuration
+        .conflicts
+        .into_iter()
+        .map(|entry| ModConflictEntry {
+            mod_a: entry.mod_a,
+            mod_b: entry.mod_b,
+            name_a: entry.name_a,
+            name_b: entry.name_b,
+            description: entry.description,
+            fix: entry.fix,
+            link: entry.has_link.then_some(entry.link),
+        })
+        .collect();
+    let frequent_crashes = configuration
+        .frequent_crashes
+        .into_iter()
+        .map(mod_guidance_solution_configuration_to_core)
+        .collect::<Result<Vec<_>, _>>()?;
+    let solutions = configuration
+        .solutions
+        .into_iter()
+        .map(mod_guidance_solution_configuration_to_core)
+        .collect::<Result<Vec<_>, _>>()?;
+    let important_mods = configuration
+        .important_mods
+        .into_iter()
+        .map(|entry| CoreModEntry {
+            detect: entry.detect,
+            name: entry.name,
+            description: entry.description,
+            gpu: entry.has_gpu.then_some(entry.gpu),
+            gpu_mismatch_warning: entry
+                .has_gpu_mismatch_warning
+                .then_some(entry.gpu_mismatch_warning),
+            exclude_when: entry
+                .has_exclude_when_plugin_any
+                .then_some(CoreModExclude::PluginAny(entry.exclude_when_plugin_any)),
+        })
+        .collect();
+
+    ModGuidanceAnalyzer::new(conflicts, frequent_crashes, solutions, important_mods)
+        .map_err(Into::into)
+}
+
+/// Converts one bridge criteria discriminant into the core grouped criteria model.
+fn mod_guidance_solution_configuration_to_core(
+    entry: ffi::ModGuidanceSolutionConfigurationDto,
+) -> Result<ModSolutionEntry, BridgeAnalyzerError> {
+    let criteria = match entry.criteria_kind {
+        ffi::ModGuidanceCriteriaKind::Any => ModSolutionCriteria::Any(entry.criteria),
+        ffi::ModGuidanceCriteriaKind::All => ModSolutionCriteria::All(entry.criteria),
+        _ => {
+            return Err(BridgeAnalyzerError {
+                analyzer_kind: CoreAnalyzerKind::ModGuidance,
+                code: CoreAnalyzerErrorCode::InvalidConfiguration,
+                message: "Mod Guidance criteria kind is not supported".to_string(),
+            });
+        }
+    };
+    Ok(ModSolutionEntry {
+        id: entry.id,
+        criteria,
+        exceptions: entry.exceptions,
+        name: entry.name,
+        description: entry.description,
+    })
+}
+
+/// Projects one owned aggregate Mod Guidance result without report presentation data.
+fn mod_guidance_result_to_dto(
+    result: ModGuidanceAnalysisResult,
+) -> ffi::ModGuidanceAnalysisResultDto {
+    ffi::ModGuidanceAnalysisResultDto {
+        conflicts: result
+            .conflicts
+            .into_iter()
+            .map(mod_conflict_guidance_to_dto)
+            .collect(),
+        frequent_crashes: result
+            .frequent_crashes
+            .into_iter()
+            .map(mod_solution_guidance_to_dto)
+            .collect(),
+        solutions: result
+            .solutions
+            .into_iter()
+            .map(mod_solution_guidance_to_dto)
+            .collect(),
+        important_mods: result
+            .important_mods
+            .into_iter()
+            .map(important_mod_guidance_to_dto)
+            .collect(),
+    }
+}
+
+/// Projects one conflict while preserving optional link presence explicitly.
+fn mod_conflict_guidance_to_dto(guidance: ModConflictGuidance) -> ffi::ModConflictGuidanceDto {
+    let (has_link, link) = flatten_optional(guidance.link);
+    ffi::ModConflictGuidanceDto {
+        state: mod_guidance_match_state_to_dto(guidance.state),
+        mod_a: guidance.mod_a,
+        mod_b: guidance.mod_b,
+        name_a: guidance.name_a,
+        name_b: guidance.name_b,
+        description: guidance.description,
+        fix: guidance.fix,
+        has_link,
+        link,
+    }
+}
+
+/// Projects one frequent-crash or solution result with its matched load-order identifiers.
+fn mod_solution_guidance_to_dto(guidance: ModSolutionGuidance) -> ffi::ModSolutionGuidanceDto {
+    ffi::ModSolutionGuidanceDto {
+        state: mod_guidance_match_state_to_dto(guidance.state),
+        id: guidance.id,
+        name: guidance.name,
+        description: guidance.description,
+        matched_plugin_ids: guidance.matched_plugin_ids,
+    }
+}
+
+/// Projects one important-mod result with explicit GPU and warning presence.
+fn important_mod_guidance_to_dto(guidance: ImportantModGuidance) -> ffi::ImportantModGuidanceDto {
+    let (has_gpu, gpu) = flatten_optional(guidance.gpu);
+    let (has_gpu_mismatch_warning, gpu_mismatch_warning) =
+        flatten_optional(guidance.gpu_mismatch_warning);
+    ffi::ImportantModGuidanceDto {
+        state: mod_guidance_match_state_to_dto(guidance.state),
+        detect: guidance.detect,
+        name: guidance.name,
+        description: guidance.description,
+        has_gpu,
+        gpu,
+        has_gpu_mismatch_warning,
+        gpu_mismatch_warning,
+    }
+}
+
+/// Maps the shared core Mod Guidance match state to its stable CXX discriminant.
+fn mod_guidance_match_state_to_dto(state: ModGuidanceMatchState) -> ffi::ModGuidanceMatchState {
+    match state {
+        ModGuidanceMatchState::Matched => ffi::ModGuidanceMatchState::Matched,
+        ModGuidanceMatchState::Missing => ffi::ModGuidanceMatchState::Missing,
+        ModGuidanceMatchState::GpuMismatch => ffi::ModGuidanceMatchState::GpuMismatch,
+    }
+}
+
+/// Builds the error branch of the explicit Mod Guidance execution envelope.
+fn mod_guidance_error_result(
+    error: ffi::AnalyzerErrorDto,
+) -> ffi::ModGuidanceAnalysisExecutionResultDto {
+    ffi::ModGuidanceAnalysisExecutionResultDto {
+        has_result: false,
+        result: ffi::ModGuidanceAnalysisResultDto {
+            conflicts: Vec::new(),
+            frequent_crashes: Vec::new(),
+            solutions: Vec::new(),
+            important_mods: Vec::new(),
+        },
+        has_error: true,
+        error,
+    }
 }
 
 /// Constructs and validates a Crash Suspect Analyzer from owned bridge rules.

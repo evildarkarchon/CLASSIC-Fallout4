@@ -35,7 +35,7 @@ Expected output when fully accelerated:
   ✅ plugin_analyzer      : ACTIVE     (30x speedup)
   ✅ record_scanner       : ACTIVE     (40x speedup)
   ✅ report_generation    : ACTIVE     (75x speedup)
-  ✅ mod_detector         : ACTIVE     (35x speedup)
+  ✅ mod_guidance_analyzer: ACTIVE     (compiled semantic matching)
 
 💾 File I/O Components:
   ✅ file_io_core         : ACTIVE     (10-20x file ops, 30-40x DDS)
@@ -59,7 +59,7 @@ from ClassicLib.RustIntegration import is_rust_accelerated, get_performance_mult
 
 components = [
     "parser", "formid_analyzer", "plugin_analyzer", "record_scanner",
-    "report_generation", "mod_detector", "file_io_core", "database_pool"
+    "report_generation", "mod_guidance_analyzer", "file_io_core", "database_pool"
 ]
 
 for component in components:
@@ -82,7 +82,7 @@ def analyze_performance_by_category():
     categories = {
         "Core Performance (ScanLog)": [
             "parser", "formid_analyzer", "plugin_analyzer",
-            "record_scanner", "report_generation", "mod_detector"
+            "record_scanner", "report_generation", "mod_guidance_analyzer"
         ],
         "File I/O Operations": ["file_io_core"],
         "Database Operations": ["database_pool"]

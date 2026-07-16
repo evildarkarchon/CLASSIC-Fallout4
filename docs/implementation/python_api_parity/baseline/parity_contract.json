@@ -8016,7 +8016,7 @@
       "pythonModule": "classic_scanlog",
       "pythonExportPath": "FormIDAnalyzerCore.__init__",
       "pythonKind": "method",
-      "pythonArity": 5
+      "pythonArity": 2
     },
     {
       "id": "scanlog.formid_analyzer.FormIDAnalyzerCore.cache_plugins",
@@ -8276,103 +8276,190 @@
       "pythonKind": "class"
     },
     {
-      "id": "scanlog.mod_detector.detect_mods_batch",
+      "id": "scanlog.mod_guidance_analyzer.ImportantModGuidance",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "detect_mods_batch",
+      "rustSymbol": "ImportantModGuidance",
       "pythonModule": "classic_scanlog",
-      "pythonExportPath": "detect_mods_batch",
-      "pythonKind": "function",
-      "pythonArity": 2
+      "pythonExportPath": "ImportantModGuidance",
+      "pythonKind": "class"
     },
     {
-      "id": "scanlog.mod_detector.detect_mods_batch@rust",
+      "id": "scanlog.mod_guidance_analyzer.ModConflictGuidance",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "detect_mods_batch",
+      "rustSymbol": "ModConflictGuidance",
       "pythonModule": "classic_scanlog",
-      "pythonExportPath": "detect_mods_batch",
-      "pythonKind": "function",
-      "pythonArity": 2
+      "pythonExportPath": "ModConflictGuidance",
+      "pythonKind": "class"
     },
     {
-      "id": "scanlog.mod_detector.detect_mods_double",
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceAnalysisInput",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "detect_mods_double",
+      "rustSymbol": "ModGuidanceAnalysisInput",
       "pythonModule": "classic_scanlog",
-      "pythonExportPath": "detect_mods_double",
-      "pythonKind": "function",
-      "pythonArity": 2
+      "pythonExportPath": "ModGuidanceAnalysisInput",
+      "pythonKind": "class"
     },
     {
-      "id": "scanlog.mod_detector.detect_mods_double@rust",
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceAnalysisInput.__init__",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "detect_mods_double",
+      "rustSymbol": "ModGuidanceAnalysisInput",
       "pythonModule": "classic_scanlog",
-      "pythonExportPath": "detect_mods_double",
-      "pythonKind": "function",
-      "pythonArity": 2
+      "pythonExportPath": "ModGuidanceAnalysisInput.__init__",
+      "pythonKind": "method",
+      "pythonArity": 3
     },
     {
-      "id": "scanlog.mod_detector.detect_mods_important",
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceAnalysisResult",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "detect_mods_important",
+      "rustSymbol": "ModGuidanceAnalysisResult",
       "pythonModule": "classic_scanlog",
-      "pythonExportPath": "detect_mods_important",
-      "pythonKind": "function",
+      "pythonExportPath": "ModGuidanceAnalysisResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ModGuidanceAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ModGuidanceAnalyzer",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceAnalyzer.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ModGuidanceAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ModGuidanceAnalyzer.__init__",
+      "pythonKind": "method",
       "pythonArity": 4
     },
     {
-      "id": "scanlog.mod_detector.detect_mods_important@rust",
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceAnalyzer.analyze",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "detect_mods_important",
+      "rustSymbol": "ModGuidanceAnalyzer",
       "pythonModule": "classic_scanlog",
-      "pythonExportPath": "detect_mods_important",
-      "pythonKind": "function",
-      "pythonArity": 4
+      "pythonExportPath": "ModGuidanceAnalyzer.analyze",
+      "pythonKind": "method",
+      "pythonArity": 1
     },
     {
-      "id": "scanlog.mod_detector.detect_mods_single",
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceConflictRule",
       "tier": "tier1",
       "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "detect_mods_single",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ModConflictEntry",
       "pythonModule": "classic_scanlog",
-      "pythonExportPath": "detect_mods_single",
-      "pythonKind": "function",
-      "pythonArity": 2
+      "pythonExportPath": "ModGuidanceConflictRule",
+      "pythonKind": "class"
     },
     {
-      "id": "scanlog.mod_detector.detect_mods_single@rust",
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceConflictRule.__init__",
       "tier": "tier1",
       "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "detect_mods_single",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ModConflictEntry",
       "pythonModule": "classic_scanlog",
-      "pythonExportPath": "detect_mods_single",
-      "pythonKind": "function",
-      "pythonArity": 2
+      "pythonExportPath": "ModGuidanceConflictRule.__init__",
+      "pythonKind": "method",
+      "pythonArity": 7
     },
     {
-      "id": "scanlog.mod_detector.mod_detector@rust",
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceCriteriaKind",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ModSolutionCriteria",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ModGuidanceCriteriaKind",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceImportantModRule",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "CoreModEntry",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ModGuidanceImportantModRule",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceImportantModRule.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "CoreModEntry",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ModGuidanceImportantModRule.__init__",
+      "pythonKind": "method",
+      "pythonArity": 6
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceMatchState",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "mod_detector",
+      "rustSymbol": "ModGuidanceMatchState",
       "pythonModule": "classic_scanlog",
-      "pythonExportPath": "detect_mods_single",
-      "pythonKind": "function",
-      "pythonArity": 2
+      "pythonExportPath": "ModGuidanceMatchState",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceSolutionRule",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ModSolutionEntry",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ModGuidanceSolutionRule",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceSolutionRule.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ModSolutionEntry",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ModGuidanceSolutionRule.__init__",
+      "pythonKind": "method",
+      "pythonArity": 6
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModSolutionGuidance",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ModSolutionGuidance",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ModSolutionGuidance",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.mod_guidance_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "mod_guidance_analyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "ModGuidanceAnalyzer",
+      "pythonKind": "class"
     },
     {
       "id": "scanlog.papyrus.PapyrusAnalyzer.__init__",

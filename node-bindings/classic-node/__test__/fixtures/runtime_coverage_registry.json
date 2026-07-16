@@ -73,15 +73,15 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 96,
-      "contractIdsHash": "7249d0b418d34e7cfb710bbed3f472b8d6bf6586fea76d8b12e23511ab5f2ef3",
+      "contractCount": 104,
+      "contractIdsHash": "f79f03fe83a1f6da8374ad005bcea5a9bc932914231059a7c48b6cc13485430c",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
       "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 and #129 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, and #130 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "coverageId": "node-tier1-config",
@@ -194,6 +194,30 @@
       "testSuite": "node-bindings/classic-node/__test__/crash_suspect_analyzer.spec.ts",
       "testCaseId": "crash-suspect-analyzer-runtime",
       "notes": "Exercises immutable analyzer construction, one finding per main-error rule, stack rule, and DLL notice, explicit-empty results, handle reuse without leaked findings, absence of rendered lines, and stable shared analyzer errors."
+    },
+    {
+      "coverageId": "node-tier1-scanlog-mod-guidance-analyzer-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "JsImportantModGuidance",
+        "JsImportantModRule",
+        "JsModConflictGuidance",
+        "JsModConflictRule",
+        "JsModGuidanceAnalysisInput",
+        "JsModGuidanceAnalysisResult",
+        "JsModGuidanceCriteriaKind",
+        "JsModGuidanceMatchState",
+        "JsModGuidancePlugin",
+        "JsModSolutionGuidance",
+        "JsModSolutionRule",
+        "ModGuidanceAnalyzer"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/mod_guidance_analyzer.spec.ts",
+      "testCaseId": "mod-guidance-analyzer-runtime",
+      "notes": "Exercises immutable aggregate analyzer construction, ordered typed plugin facts, any/all criteria, authored conflict/frequent-crash/solution/important-mod fields, matched/missing/GPU-mismatch states, explicit-empty results, handle reuse without leaked findings, absence of rendered lines, and stable shared analyzer errors."
     },
     {
       "coverageId": "node-tier2-config-runtime",

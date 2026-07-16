@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T07:55:21Z",
+  "generated_at_utc": "2026-07-16T08:59:01Z",
   "schema_version": 1,
   "entries": [
     {
@@ -4011,6 +4011,31 @@
       ]
     },
     {
+      "id": "961e055bf0a35267",
+      "rustSymbol": "ModGuidanceCriteriaKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Any",
+        "All"
+      ]
+    },
+    {
+      "id": "1dd49731cac9d8b9",
+      "rustSymbol": "ModGuidanceMatchState",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Matched",
+        "Missing",
+        "GpuMismatch"
+      ]
+    },
+    {
       "id": "d8f7976d67cc2ff2",
       "rustSymbol": "ScanRunContractDiscoverySource",
       "kind": "enum",
@@ -4251,6 +4276,61 @@
           }
         ],
         "returnType": "bool"
+      }
+    },
+    {
+      "id": "01c3e73e182b287b",
+      "rustSymbol": "mod_guidance_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "analyzer",
+            "type": "&CxxModGuidanceAnalyzer"
+          },
+          {
+            "name": "input",
+            "type": "ModGuidanceAnalysisInputDto"
+          }
+        ],
+        "returnType": "ModGuidanceAnalysisExecutionResultDto"
+      }
+    },
+    {
+      "id": "3ae13a1cf0a920a7",
+      "rustSymbol": "mod_guidance_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "analyzer",
+            "type": "&CxxModGuidanceAnalyzer"
+          }
+        ],
+        "returnType": "ModGuidanceAnalyzerConstructionResultDto"
+      }
+    },
+    {
+      "id": "8e998a3a3c59e66b",
+      "rustSymbol": "mod_guidance_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "configuration",
+            "type": "ModGuidanceAnalyzerConfigurationDto"
+          }
+        ],
+        "returnType": "Box<CxxModGuidanceAnalyzer>"
       }
     },
     {
@@ -4599,6 +4679,14 @@
     {
       "id": "4703b74efa2672a7",
       "rustSymbol": "CxxCrashgenSettingsAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust"
+    },
+    {
+      "id": "22546314349a5a8a",
+      "rustSymbol": "CxxModGuidanceAnalyzer",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
@@ -5179,6 +5267,390 @@
         {
           "name": "severity",
           "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "fe3157d10e6b8468",
+      "rustSymbol": "ImportantModGuidanceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "state",
+          "type": "ModGuidanceMatchState"
+        },
+        {
+          "name": "detect",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "has_gpu",
+          "type": "bool"
+        },
+        {
+          "name": "gpu",
+          "type": "String"
+        },
+        {
+          "name": "has_gpu_mismatch_warning",
+          "type": "bool"
+        },
+        {
+          "name": "gpu_mismatch_warning",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "69b1449c33eeaab1",
+      "rustSymbol": "ModConflictGuidanceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "state",
+          "type": "ModGuidanceMatchState"
+        },
+        {
+          "name": "mod_a",
+          "type": "String"
+        },
+        {
+          "name": "mod_b",
+          "type": "String"
+        },
+        {
+          "name": "name_a",
+          "type": "String"
+        },
+        {
+          "name": "name_b",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "fix",
+          "type": "String"
+        },
+        {
+          "name": "has_link",
+          "type": "bool"
+        },
+        {
+          "name": "link",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "c6b830591749db47",
+      "rustSymbol": "ModGuidanceAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_result",
+          "type": "bool"
+        },
+        {
+          "name": "result",
+          "type": "ModGuidanceAnalysisResultDto"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "AnalyzerErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "508d6e3b22ee63e7",
+      "rustSymbol": "ModGuidanceAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "plugins",
+          "type": "Vec<ModGuidancePluginDto>"
+        },
+        {
+          "name": "has_user_gpu",
+          "type": "bool"
+        },
+        {
+          "name": "user_gpu",
+          "type": "String"
+        },
+        {
+          "name": "xse_modules",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "46a48b1b36ce4822",
+      "rustSymbol": "ModGuidanceAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "conflicts",
+          "type": "Vec<ModConflictGuidanceDto>"
+        },
+        {
+          "name": "frequent_crashes",
+          "type": "Vec<ModSolutionGuidanceDto>"
+        },
+        {
+          "name": "solutions",
+          "type": "Vec<ModSolutionGuidanceDto>"
+        },
+        {
+          "name": "important_mods",
+          "type": "Vec<ImportantModGuidanceDto>"
+        }
+      ]
+    },
+    {
+      "id": "f3580339444423d5",
+      "rustSymbol": "ModGuidanceAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "conflicts",
+          "type": "Vec<ModGuidanceConflictConfigurationDto>"
+        },
+        {
+          "name": "frequent_crashes",
+          "type": "Vec<ModGuidanceSolutionConfigurationDto>"
+        },
+        {
+          "name": "solutions",
+          "type": "Vec<ModGuidanceSolutionConfigurationDto>"
+        },
+        {
+          "name": "important_mods",
+          "type": "Vec<ModGuidanceImportantModConfigurationDto>"
+        }
+      ]
+    },
+    {
+      "id": "c80002d8a3e7b3a7",
+      "rustSymbol": "ModGuidanceAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_analyzer",
+          "type": "bool"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "AnalyzerErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "45cf99e3f023bb5a",
+      "rustSymbol": "ModGuidanceConflictConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "mod_a",
+          "type": "String"
+        },
+        {
+          "name": "mod_b",
+          "type": "String"
+        },
+        {
+          "name": "name_a",
+          "type": "String"
+        },
+        {
+          "name": "name_b",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "fix",
+          "type": "String"
+        },
+        {
+          "name": "has_link",
+          "type": "bool"
+        },
+        {
+          "name": "link",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "6aa94f829e72f06c",
+      "rustSymbol": "ModGuidanceImportantModConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "detect",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "has_gpu",
+          "type": "bool"
+        },
+        {
+          "name": "gpu",
+          "type": "String"
+        },
+        {
+          "name": "has_gpu_mismatch_warning",
+          "type": "bool"
+        },
+        {
+          "name": "gpu_mismatch_warning",
+          "type": "String"
+        },
+        {
+          "name": "has_exclude_when_plugin_any",
+          "type": "bool"
+        },
+        {
+          "name": "exclude_when_plugin_any",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "ed60b8f11bb8599e",
+      "rustSymbol": "ModGuidancePluginDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "id",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "6375a8f52b907c74",
+      "rustSymbol": "ModGuidanceSolutionConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "criteria_kind",
+          "type": "ModGuidanceCriteriaKind"
+        },
+        {
+          "name": "criteria",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "exceptions",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "847e1a3f99e995fc",
+      "rustSymbol": "ModSolutionGuidanceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "state",
+          "type": "ModGuidanceMatchState"
+        },
+        {
+          "name": "id",
+          "type": "String"
+        },
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "description",
+          "type": "String"
+        },
+        {
+          "name": "matched_plugin_ids",
+          "type": "Vec<String>"
         }
       ]
     },

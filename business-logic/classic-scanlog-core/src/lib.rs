@@ -32,7 +32,7 @@ pub(crate) mod fcx_handler;
 pub mod formid;
 pub mod formid_analyzer;
 pub mod gpu_detector;
-pub mod mod_detector;
+pub mod mod_guidance_analyzer;
 // These implementation modules retain focused characterization helpers that are
 // exercised only in their sibling unit tests.
 #[allow(dead_code)]
@@ -69,8 +69,9 @@ pub use formid_analyzer::{
     FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
 };
 pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};
-pub use mod_detector::{
-    detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
+pub use mod_guidance_analyzer::{
+    ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult,
+    ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance,
 };
 pub use orchestrator::ScanProgressPhase;
 pub(crate) use orchestrator::{AnalysisConfig, AnalysisResult, OrchestratorCore};

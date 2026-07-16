@@ -9,6 +9,9 @@
 // Error types not needed in pure Rust - using standard Result
 use crate::crash_suspect_analyzer::CrashSuspectFinding;
 use crate::error::{Result, ScanLogError};
+use crate::mod_guidance_analyzer::{
+    ImportantModGuidance, ModGuidanceAnalysisResult, ModGuidanceMatchState, ModSolutionGuidance,
+};
 use crate::scan_run::CrashLogScanSetupResult;
 use crate::version::CrashgenVersionStatus;
 use classic_config_core::{AutoscanReportPlacement, OutcomeKind, RuleSeverity};
@@ -68,6 +71,36 @@ fn crash_suspect_rule_order(finding: &CrashSuspectFinding) -> Option<(i32, &str)
     }
 }
 
+/// Parses regular and light-plugin identifiers into the canonical report sort key.
+fn parse_plugin_id_for_sort(plugin_id: &str) -> (bool, u32) {
+    let id = plugin_id.to_uppercase();
+    if id.starts_with("FE") && id.len() > 2 {
+        (true, u32::from_str_radix(&id[2..], 16).unwrap_or(0))
+    } else {
+        (false, u32::from_str_radix(&id, 16).unwrap_or(0))
+    }
+}
+
+/// Appends the legacy found-entry presentation for one semantic guidance item.
+fn append_mod_found_entry(lines: &mut Vec<String>, plugin_ids: &[String], title: &str, body: &str) {
+    let plugin_list = plugin_ids
+        .iter()
+        .map(|plugin_id| format!("[{plugin_id}]"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    lines.push(format!(
+        "**[!] FOUND : {plugin_list} {}**\n\n",
+        title.trim()
+    ));
+    for line in body.lines() {
+        if line.trim().is_empty() {
+            lines.push("  \n".to_string());
+        } else {
+            lines.push(format!("{line}  \n"));
+        }
+    }
+}
+
 /// Per-log facts that affect Autoscan Report rendering.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct AutoscanReportFacts {
@@ -93,8 +126,7 @@ pub(crate) enum AutoscanReportContribution {
         finding: CrashSuspectFinding,
     },
     ModGuidance {
-        group: ModGuidanceGroup,
-        lines: Vec<String>,
+        result: ModGuidanceAnalysisResult,
     },
     PluginEvidence {
         lines: Vec<String>,
@@ -358,18 +390,127 @@ impl AutoscanReportAssembler {
         contributions: &[AutoscanReportContribution],
         group: ModGuidanceGroup,
     ) -> Vec<ReportFragment> {
-        contributions
+        let lines = contributions
             .iter()
-            .filter_map(|contribution| match contribution {
-                AutoscanReportContribution::ModGuidance {
-                    group: contribution_group,
-                    lines,
-                } if *contribution_group == group && !lines.is_empty() => {
-                    Some(ReportFragment::from_lines(lines.clone()))
-                }
+            .find_map(|contribution| match contribution {
+                AutoscanReportContribution::ModGuidance { result } => Some(match group {
+                    ModGuidanceGroup::MayConflict => Self::render_mod_conflicts(result),
+                    ModGuidanceGroup::FrequentCrashes => {
+                        Self::render_mod_solutions(&result.frequent_crashes)
+                    }
+                    ModGuidanceGroup::HasSolutions => Self::render_mod_solutions(&result.solutions),
+                    ModGuidanceGroup::ImportantMods => {
+                        Self::render_important_mods(&result.important_mods)
+                    }
+                }),
                 _ => None,
             })
-            .collect()
+            .unwrap_or_default();
+
+        if lines.is_empty() {
+            Vec::new()
+        } else {
+            vec![ReportFragment::from_lines(lines)]
+        }
+    }
+
+    /// Renders matched conflict guidance without leaking formatting into the analyzer.
+    fn render_mod_conflicts(result: &ModGuidanceAnalysisResult) -> Vec<String> {
+        if result.conflicts.is_empty() {
+            return Vec::new();
+        }
+
+        let mut lines = vec!["[!] CAUTION : Conflicting mods detected\n".to_string()];
+        for conflict in &result.conflicts {
+            lines.push(format!(
+                "{} ❌ CONFLICTS WITH : {}\n",
+                conflict.name_a, conflict.name_b
+            ));
+            lines.push(format!("    {}\n", conflict.description));
+            lines.push(format!("    {}\n", conflict.fix));
+            if let Some(link) = &conflict.link {
+                lines.push(format!("    Link: {link}\n"));
+            }
+            lines.push("    -----\n\n".to_string());
+        }
+        lines
+    }
+
+    /// Sorts matched semantic entries by load order and renders their report bodies.
+    fn render_mod_solutions(entries: &[ModSolutionGuidance]) -> Vec<String> {
+        let mut ordered = entries
+            .iter()
+            .enumerate()
+            .map(|(index, entry)| {
+                let mut plugin_ids = entry.matched_plugin_ids.clone();
+                plugin_ids.sort_by_key(|plugin_id| parse_plugin_id_for_sort(plugin_id));
+                (index, entry, plugin_ids)
+            })
+            .collect::<Vec<_>>();
+        ordered.sort_by(|(left_index, _, left_ids), (right_index, _, right_ids)| {
+            let left_key = left_ids
+                .first()
+                .map(|id| parse_plugin_id_for_sort(id))
+                .unwrap_or((false, 0));
+            let right_key = right_ids
+                .first()
+                .map(|id| parse_plugin_id_for_sort(id))
+                .unwrap_or((false, 0));
+            left_key
+                .cmp(&right_key)
+                .then_with(|| left_index.cmp(right_index))
+        });
+
+        let mut lines = Vec::new();
+        for (_, entry, plugin_ids) in ordered {
+            append_mod_found_entry(&mut lines, &plugin_ids, &entry.name, &entry.description);
+        }
+        lines
+    }
+
+    /// Renders important-mod states while keeping icons and fallback prose private.
+    fn render_important_mods(entries: &[ImportantModGuidance]) -> Vec<String> {
+        let mut lines = Vec::new();
+        for entry in entries {
+            match entry.state {
+                ModGuidanceMatchState::Matched => {
+                    lines.push(format!("✔️ {} is installed!\n\n", entry.name));
+                }
+                ModGuidanceMatchState::GpuMismatch => {
+                    if let Some(warning) = &entry.gpu_mismatch_warning {
+                        let warning = warning.trim_end().replace('\n', "\n\n");
+                        lines.push(format!("❓ {warning}\n\n"));
+                    } else {
+                        let gpu = entry.gpu.as_deref().unwrap_or("UNKNOWN").to_uppercase();
+                        lines.push(format!(
+                            "❓ {} is installed, BUT IT SEEMS YOU DON'T HAVE AN {} GPU?\n\n",
+                            entry.name, gpu
+                        ));
+                        lines.push("IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS!\n\n".to_string());
+                    }
+                }
+                ModGuidanceMatchState::Missing => {
+                    let description_lines =
+                        entry.description.trim_end().lines().collect::<Vec<_>>();
+                    let first_line = description_lines
+                        .first()
+                        .map(|line| line.trim())
+                        .unwrap_or("");
+                    lines.push(format!(
+                        "❌ {} is not installed! {}  \n",
+                        entry.name, first_line
+                    ));
+                    for line in description_lines.iter().skip(1) {
+                        let line = line.trim();
+                        if !line.is_empty() {
+                            lines.push(format!("{line}  \n"));
+                        }
+                    }
+                    lines.push("\n".to_string());
+                }
+            }
+        }
+        lines
     }
 
     fn mod_guidance_header(

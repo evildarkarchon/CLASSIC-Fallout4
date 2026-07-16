@@ -25,6 +25,7 @@ mod crashgen_rules;
 mod crashgen_settings_analyzer;
 mod logging_contract;
 mod message;
+mod mod_guidance_analyzer;
 mod runtime;
 mod shared;
 mod version;

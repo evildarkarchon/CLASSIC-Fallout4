@@ -293,3 +293,36 @@ fn autoscan_report_assembler_preserves_report_generator_header_and_footer_text()
     assert!(text.starts_with(&generator.generate_header("crash.log").to_list().join("")));
     assert!(text.ends_with(&generator.generate_footer().to_list().join("")));
 }
+
+#[test]
+fn autoscan_report_assembler_sorts_solution_matches_by_plugin_load_order() {
+    let guidance = ModGuidanceAnalysisResult {
+        solutions: vec![
+            ModSolutionGuidance {
+                state: ModGuidanceMatchState::Matched,
+                id: "later-authored-entry".to_string(),
+                name: "Later Authored Entry".to_string(),
+                description: "Later body".to_string(),
+                matched_plugin_ids: vec!["10".to_string(), "02".to_string()],
+            },
+            ModSolutionGuidance {
+                state: ModGuidanceMatchState::Matched,
+                id: "middle-entry".to_string(),
+                name: "Middle Entry".to_string(),
+                description: "Middle body".to_string(),
+                matched_plugin_ids: vec!["05".to_string()],
+            },
+        ],
+        ..ModGuidanceAnalysisResult::default()
+    };
+
+    let report_lines = AutoscanReportAssembler::new().assemble(
+        &base_facts(),
+        vec![AutoscanReportContribution::ModGuidance { result: guidance }],
+    );
+    let text = report_lines.join("");
+
+    let earlier = text.find("[02], [10] Later Authored Entry").unwrap();
+    let middle = text.find("[05] Middle Entry").unwrap();
+    assert!(earlier < middle);
+}

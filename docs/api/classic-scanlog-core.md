@@ -203,6 +203,16 @@ the canonical parser methods documented in source.
   its typed kind. No finding carries markdown, padding widths, separators, or
   code-authored report prose, and a completed no-match analysis is an explicit
   empty result.
+- `ModGuidanceAnalyzer` validates owned conflict, frequent-crash, solution,
+  and important-mod configuration and compiles all literal matcher state during
+  construction. Its immutable, cloneable `Send + Sync` handle accepts one
+  owned `ModGuidanceAnalysisInput` containing plugin load-order ids, optional
+  GPU facts, and XSE module names.
+- `ModGuidanceAnalysisResult` preserves typed matched, missing, and GPU-mismatch
+  state together with authored names, descriptions, fixes, links, warnings,
+  and matched plugin ids. It carries no headings, group order, icons,
+  separators, markdown, or report lines; completed no-match analysis is an
+  explicit empty result.
 - `FormIDAnalyzerCore` extracts, validates, and optionally resolves FormIDs.
 - `PluginAnalyzer` detects and classifies plugin references.
 - `RecordScanner` scans call stacks for named records and lazily caches its
@@ -210,8 +220,8 @@ the canonical parser methods documented in source.
 - `SettingsValidator` is the temporary fragment-producing compatibility facade
   over `CrashgenSettingsAnalyzer`; new semantic consumers use the analyzer.
 - `GpuDetector` extracts GPU information.
-- the mod detector and crashgen version/registry helpers operate on supplied
-  data without owning a run lifecycle.
+- crashgen version/registry helpers operate on supplied data without owning a
+  run lifecycle.
 
 Batch-shaped helpers on these focused value operations remain ordinary utility
 APIs. They are not Crash Log admission, scheduling, cancellation, persistence,

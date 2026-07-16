@@ -1122,6 +1122,25 @@ export declare class JsXseChecker {
   validate(): string
 }
 
+/** Immutable Node handle over validated aggregate Mod Guidance configuration. */
+export declare class ModGuidanceAnalyzer {
+  /**
+   * Validates and compiles all four owned Mod Guidance rule families.
+   *
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  constructor(conflicts: Array<JsModConflictRule>, frequentCrashes: Array<JsModSolutionRule>, solutions: Array<JsModSolutionRule>, importantMods: Array<JsImportantModRule>)
+  /** Returns the stable focused-analyzer identity for this handle. */
+  get kind(): JsAnalyzerKind
+  /**
+   * Evaluates conflict, frequent-crash, solution, and important-mod guidance.
+   *
+   * @returns Typed semantic results, including four explicit empty arrays on no match.
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  analyze(input: JsModGuidanceAnalysisInput): JsModGuidanceAnalysisResult
+}
+
 /** Opaque monotonic cancellation control for one scan run. */
 export declare class ScanRunCancellation {
   /** Creates an uncancelled control. */
@@ -3303,6 +3322,38 @@ export interface JsGuiWindowGeometryUpdate {
   resultsTab?: JsWindowGeometryUpdate
 }
 
+/** One applicable important-mod result. */
+export interface JsImportantModGuidance {
+  /** Installed, missing, or GPU-mismatched state. */
+  state: JsModGuidanceMatchState
+  /** YAML-authored detection token retained as semantic identity. */
+  detect: string
+  /** Authored display name. */
+  name: string
+  /** Authored recommendation text. */
+  description: string
+  /** Optional authored GPU affinity. */
+  gpu?: string
+  /** Optional authored warning for an installed GPU mismatch. */
+  gpuMismatchWarning?: string
+}
+
+/** One owned important-mod rule used to construct the analyzer. */
+export interface JsImportantModRule {
+  /** Detection token matched against plugin and XSE module names. */
+  detect: string
+  /** Authored display name. */
+  name: string
+  /** Authored recommendation text. */
+  description: string
+  /** Optional authored GPU affinity. */
+  gpu?: string
+  /** Optional authored warning for an installed GPU mismatch. */
+  gpuMismatchWarning?: string
+  /** Optional plugin names where any installed entry suppresses this rule. */
+  excludeWhenPluginAny?: Array<string>
+}
+
 /**
  * Result of an INI file validation check.
  *
@@ -3504,12 +3555,98 @@ export interface JsModConflictEntry {
   link?: string
 }
 
+/** One matched YAML-authored mod conflict. */
+export interface JsModConflictGuidance {
+  /** Explicit semantic match state. */
+  state: JsModGuidanceMatchState
+  /** Matcher identity for the first mod. */
+  modA: string
+  /** Matcher identity for the second mod. */
+  modB: string
+  /** Authored display name for the first mod. */
+  nameA: string
+  /** Authored display name for the second mod. */
+  nameB: string
+  /** Authored explanation of the conflict. */
+  description: string
+  /** Authored remediation guidance. */
+  fix: string
+  /** Optional authored external reference. */
+  link?: string
+}
+
+/** One owned conflict rule used to construct the analyzer. */
+export interface JsModConflictRule {
+  /** Matcher identity for the first mod. */
+  modA: string
+  /** Matcher identity for the second mod. */
+  modB: string
+  /** Authored display name for the first mod. */
+  nameA: string
+  /** Authored display name for the second mod. */
+  nameB: string
+  /** Authored explanation of the conflict. */
+  description: string
+  /** Authored remediation guidance. */
+  fix: string
+  /** Optional authored external reference. */
+  link?: string
+}
+
 /** A duplicate configuration file entry. */
 export interface JsModDuplicateEntry {
   /** Lowercase filename. */
   fileName: string
   /** All paths where this file was found. */
   paths: Array<string>
+}
+
+/** Owned input for one aggregate Mod Guidance analysis call. */
+export interface JsModGuidanceAnalysisInput {
+  /** Installed plugins in load order. */
+  plugins: Array<JsModGuidancePlugin>
+  /** Detected GPU vendor, when available. */
+  userGpu?: string
+  /** Installed XSE module filenames. */
+  xseModules: Array<string>
+}
+
+/** Completed aggregate Mod Guidance analysis, including explicit empty success. */
+export interface JsModGuidanceAnalysisResult {
+  /** Matched conflicts in configuration order. */
+  conflicts: Array<JsModConflictGuidance>
+  /** Matched frequent-crash guidance in configuration order. */
+  frequentCrashes: Array<JsModSolutionGuidance>
+  /** Matched solution guidance in configuration order. */
+  solutions: Array<JsModSolutionGuidance>
+  /** Applicable important-mod states in configuration order. */
+  importantMods: Array<JsImportantModGuidance>
+}
+
+/** Match strategy for one frequent-crash or solution rule. */
+export declare const enum JsModGuidanceCriteriaKind {
+  /** Match when any configured criterion is present. */
+  Any = 'any',
+  /** Match only when every configured criterion is present. */
+  All = 'all'
+}
+
+/** Semantic match state shared by every Mod Guidance result family. */
+export declare const enum JsModGuidanceMatchState {
+  /** Configured guidance matched installed plugin or XSE evidence. */
+  Matched = 'matched',
+  /** An applicable important mod was not found. */
+  Missing = 'missing',
+  /** An installed GPU-specific mod does not match the detected GPU vendor. */
+  GpuMismatch = 'gpu_mismatch'
+}
+
+/** One ordered installed-plugin fact supplied for semantic analysis. */
+export interface JsModGuidancePlugin {
+  /** Installed plugin filename. */
+  name: string
+  /** Load-order identifier associated with the plugin. */
+  id: string
 }
 
 /** Result of a mod INI scan. */
@@ -3556,6 +3693,36 @@ export interface JsModSolutionEntry {
   criteria: JsModSolutionCriteria
   exceptions: Array<string>
   name: string
+  description: string
+}
+
+/** One matched frequent-crash or solution guidance entry. */
+export interface JsModSolutionGuidance {
+  /** Explicit semantic match state. */
+  state: JsModGuidanceMatchState
+  /** Stable YAML-authored entry identifier. */
+  id: string
+  /** Authored display name. */
+  name: string
+  /** Authored guidance body. */
+  description: string
+  /** Load-order identifiers whose plugins satisfied the criteria. */
+  matchedPluginIds: Array<string>
+}
+
+/** One owned frequent-crash or solution rule used to construct the analyzer. */
+export interface JsModSolutionRule {
+  /** Stable YAML-authored entry identifier. */
+  id: string
+  /** Whether any or all criteria must match. */
+  criteriaKind: JsModGuidanceCriteriaKind
+  /** Plugin-name substrings evaluated by the configured strategy. */
+  criteria: Array<string>
+  /** Plugin-name substrings that suppress an otherwise matched rule. */
+  exceptions: Array<string>
+  /** Authored display name. */
+  name: string
+  /** Authored guidance body. */
   description: string
 }
 

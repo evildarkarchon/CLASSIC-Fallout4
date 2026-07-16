@@ -17,7 +17,7 @@
 //! cargo bench --bench scanlog_benchmarks -- --test
 //! ```
 
-use criterion::{BatchSize, BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use std::collections::HashSet;
 use std::hint::black_box;
 use std::sync::Arc;
@@ -33,16 +33,10 @@ use classic_config_core::CoreModEntry;
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
     FormIDAnalyzerCore, LogParser, PatternMatcher, PluginAnalyzer, RecordScanner, contains_plugin,
-    contains_record, detect_mods_batch, detect_mods_single, detect_plugins_batch,
-    mod_detector::{
-        build_important_matcher_for_bench, build_important_mod_haystack_for_bench,
-        important_matcher_compile_count_for_bench, reset_important_matcher_cache_for_bench,
-    },
-    scan_records_batch,
+    contains_record, detect_plugins_batch, scan_records_batch,
 };
 use classic_shared_core::get_runtime;
 use indexmap::IndexMap;
-use regex::Regex;
 
 // =============================================================================
 // Real Crash Log Fixtures (embedded at compile time)
@@ -113,144 +107,6 @@ fn create_record_types() -> Vec<String> {
     ]
 }
 
-fn create_phase5_cached_regex_yaml() -> IndexMap<String, String> {
-    IndexMap::from([
-        (
-            "unofficial fallout 4 patch".to_string(),
-            "Unofficial Fallout 4 Patch\nBaseline hotspot token.".to_string(),
-        ),
-        (
-            "workshop framework".to_string(),
-            "Workshop Framework\nSynthetic cached-regex benchmark token.".to_string(),
-        ),
-        (
-            "sim settlements 2".to_string(),
-            "Sim Settlements 2\nSynthetic cached-regex benchmark token.".to_string(),
-        ),
-        (
-            "hudframework".to_string(),
-            "HUDFramework\nSynthetic cached-regex benchmark token.".to_string(),
-        ),
-        (
-            "looksmenu".to_string(),
-            "LooksMenu\nSynthetic cached-regex benchmark token.".to_string(),
-        ),
-        (
-            "fallui".to_string(),
-            "FallUI\nSynthetic cached-regex benchmark token.".to_string(),
-        ),
-    ])
-}
-
-fn create_phase5_cached_regex_yaml_variant(seed: usize) -> IndexMap<String, String> {
-    IndexMap::from([
-        (
-            format!("unofficial fallout 4 patch {seed}"),
-            format!("Unofficial Fallout 4 Patch {seed}\nBaseline hotspot token."),
-        ),
-        (
-            format!("workshop framework {seed}"),
-            format!("Workshop Framework {seed}\nSynthetic cached-regex benchmark token."),
-        ),
-        (
-            format!("sim settlements 2 {seed}"),
-            format!("Sim Settlements 2 {seed}\nSynthetic cached-regex benchmark token."),
-        ),
-        (
-            format!("hudframework {seed}"),
-            format!("HUDFramework {seed}\nSynthetic cached-regex benchmark token."),
-        ),
-        (
-            format!("looksmenu {seed}"),
-            format!("LooksMenu {seed}\nSynthetic cached-regex benchmark token."),
-        ),
-        (
-            format!("fallui {seed}"),
-            format!("FallUI {seed}\nSynthetic cached-regex benchmark token."),
-        ),
-    ])
-}
-
-fn create_phase5_synthetic_plugins(count: usize) -> IndexMap<String, String> {
-    let seed_plugins = [
-        "Unofficial Fallout 4 Patch.esp",
-        "Workshop Framework.esm",
-        "Sim Settlements 2.esm",
-        "HUDFramework.esm",
-        "LooksMenu.esp",
-        "FallUI.esp",
-    ];
-
-    let mut plugins = IndexMap::new();
-    for index in 0..count {
-        let id = format!("{:02X}", index % 0xFD);
-        let plugin_name = if index < seed_plugins.len() {
-            seed_plugins[index].to_string()
-        } else {
-            format!("SyntheticBenchmarkMod{:03}.esp", index)
-        };
-        plugins.insert(plugin_name, id);
-    }
-    plugins
-}
-
-fn create_phase5_synthetic_plugins_variant(seed: usize, count: usize) -> IndexMap<String, String> {
-    let seed_plugins = [
-        format!("Unofficial Fallout 4 Patch {seed}.esp"),
-        format!("Workshop Framework {seed}.esm"),
-        format!("Sim Settlements 2 {seed}.esm"),
-        format!("HUDFramework {seed}.esm"),
-        format!("LooksMenu {seed}.esp"),
-        format!("FallUI {seed}.esp"),
-    ];
-
-    let mut plugins = IndexMap::new();
-    for index in 0..count {
-        let id = format!("{:02X}", index % 0xFD);
-        let plugin_name = if index < seed_plugins.len() {
-            seed_plugins[index].clone()
-        } else {
-            format!("SyntheticBenchmarkMod{seed:03}_{index:03}.esp")
-        };
-        plugins.insert(plugin_name, id);
-    }
-    plugins
-}
-
-fn create_phase5_batch_plugins(
-    batch_size: usize,
-    plugins_per_log: usize,
-) -> Vec<IndexMap<String, String>> {
-    (0..batch_size)
-        .map(|batch_index| {
-            let mut plugins = create_phase5_synthetic_plugins(plugins_per_log);
-            plugins.insert(
-                format!("BatchUnique{:02}.esp", batch_index),
-                format!("{:02X}", (batch_index + plugins_per_log) % 0xFD),
-            );
-            plugins
-        })
-        .collect()
-}
-
-fn create_phase5_batch_plugins_variant(
-    seed: usize,
-    batch_size: usize,
-    plugins_per_log: usize,
-) -> Vec<IndexMap<String, String>> {
-    (0..batch_size)
-        .map(|batch_index| {
-            let mut plugins =
-                create_phase5_synthetic_plugins_variant(seed * 100 + batch_index, plugins_per_log);
-            plugins.insert(
-                format!("BatchUnique{seed:03}_{batch_index:02}.esp"),
-                format!("{:02X}", (batch_index + plugins_per_log) % 0xFD),
-            );
-            plugins
-        })
-        .collect()
-}
-
 fn create_phase5_important_entries() -> Vec<CoreModEntry> {
     vec![
         CoreModEntry {
@@ -294,70 +150,6 @@ fn create_phase5_important_xse_modules() -> HashSet<String> {
         "f4se_plugin_preloader.dll".to_string(),
         "x-cell-fo4.dll".to_string(),
     ])
-}
-
-fn phase5_important_combined_text(
-    plugins: &IndexMap<String, String>,
-    xse_modules: &HashSet<String>,
-) -> String {
-    let plugin_text = plugins.keys().map(|name| name.to_lowercase());
-    let xse_text = xse_modules.iter().map(|name| name.to_lowercase());
-    plugin_text.chain(xse_text).collect::<Vec<_>>().join("\n")
-}
-
-fn detect_mods_important_legacy_regex_count(
-    entries: &[CoreModEntry],
-    plugins: &IndexMap<String, String>,
-    xse_modules: &HashSet<String>,
-) -> usize {
-    let combined_text = phase5_important_combined_text(plugins, xse_modules);
-    entries
-        .iter()
-        .filter(|entry| {
-            let escaped = regex::escape(&entry.detect.to_lowercase());
-            Regex::new(&escaped)
-                .expect("legacy important-mod benchmark regex should compile")
-                .is_match(&combined_text)
-        })
-        .count()
-}
-
-fn detect_mods_important_aho_count(
-    entries: &[CoreModEntry],
-    plugins: &IndexMap<String, String>,
-    xse_modules: &HashSet<String>,
-) -> usize {
-    let combined_text = build_important_mod_haystack_for_bench(plugins, xse_modules);
-    let matcher = build_important_matcher_for_bench(entries)
-        .expect("important-mod aho benchmark matcher should build");
-
-    matcher.find_iter(&combined_text).count()
-}
-
-fn detect_mods_important_aho_uncached_count(
-    entries: &[CoreModEntry],
-    plugins: &IndexMap<String, String>,
-    xse_modules: &HashSet<String>,
-) -> usize {
-    reset_important_matcher_cache_for_bench();
-    detect_mods_important_aho_count(entries, plugins, xse_modules)
-}
-
-fn detect_mods_important_aho_cached_haystack_count(
-    entries: &[CoreModEntry],
-    combined_text: &str,
-) -> usize {
-    let matcher = build_important_matcher_for_bench(entries)
-        .expect("important-mod aho benchmark matcher should build");
-    matcher.find_iter(combined_text).count()
-}
-
-fn detect_mods_important_aho_compile_only(entries: &[CoreModEntry]) -> usize {
-    reset_important_matcher_cache_for_bench();
-    let _before = important_matcher_compile_count_for_bench();
-    let _matcher = build_important_matcher_for_bench(entries)
-        .expect("important-mod aho benchmark matcher should build");
-    important_matcher_compile_count_for_bench() as usize
 }
 
 fn extract_fixture_plugins(content: &str) -> IndexMap<String, String> {
@@ -470,15 +262,8 @@ fn formid_extraction_benchmarks(c: &mut Criterion) {
             BenchmarkId::new("extract_formids", name),
             &callstack_lines,
             |b, lines| {
-                let analyzer = FormIDAnalyzerCore::new(
-                    None,
-                    false,
-                    "Buffout 4".to_string(),
-                    Vec::new(),
-                    Vec::new(),
-                    Vec::new(),
-                )
-                .expect("analyzer creation should succeed");
+                let analyzer = FormIDAnalyzerCore::new(None, false, "Buffout 4".to_string())
+                    .expect("analyzer creation should succeed");
 
                 b.iter(|| analyzer.extract_formids(lines.clone()));
             },
@@ -526,9 +311,6 @@ fn formid_resolution_db_benchmarks(c: &mut Criterion) {
         Some(pool.clone()),
         true, // show_formid_values=true to force DB-backed value resolution path
         "Buffout 4".to_string(),
-        Vec::new(),
-        Vec::new(),
-        Vec::new(),
     )
     .expect("analyzer creation should succeed");
 
@@ -776,15 +558,8 @@ fn full_pipeline_benchmarks(c: &mut Criterion) {
                 let patterns = create_error_patterns();
                 let pattern_matcher =
                     PatternMatcher::new(patterns).expect("matcher creation should succeed");
-                let formid_analyzer = FormIDAnalyzerCore::new(
-                    None,
-                    false,
-                    "Buffout 4".to_string(),
-                    Vec::new(),
-                    Vec::new(),
-                    Vec::new(),
-                )
-                .expect("analyzer creation should succeed");
+                let formid_analyzer = FormIDAnalyzerCore::new(None, false, "Buffout 4".to_string())
+                    .expect("analyzer creation should succeed");
 
                 b.iter(|| {
                     let lines = log_to_lines(content);
@@ -835,15 +610,7 @@ fn parser_creation_benchmarks(c: &mut Criterion) {
     // FormID analyzer creation
     group.bench_function("formid_analyzer_creation", |b| {
         b.iter(|| {
-            FormIDAnalyzerCore::new(
-                None,
-                false,
-                "Buffout 4".to_string(),
-                Vec::new(),
-                Vec::new(),
-                Vec::new(),
-            )
-            .expect("should succeed")
+            FormIDAnalyzerCore::new(None, false, "Buffout 4".to_string()).expect("should succeed")
         });
     });
 
@@ -863,270 +630,40 @@ fn parser_creation_benchmarks(c: &mut Criterion) {
 }
 
 fn phase5_hotspot_benchmarks(c: &mut Criterion) {
-    let yaml_dict = create_phase5_cached_regex_yaml();
-    let synthetic_plugins = create_phase5_synthetic_plugins(48);
-    let batch_plugins = create_phase5_batch_plugins(16, 40);
     let important_entries = create_phase5_important_entries();
-    let synthetic_xse_modules = create_phase5_important_xse_modules();
-    let fixture_plugins = extract_fixture_plugins(SAMPLE_LOG_LARGE);
-    let fixture_xse_modules: HashSet<String> = HashSet::new();
+    let input = classic_scanlog_core::ModGuidanceAnalysisInput {
+        plugins: extract_fixture_plugins(SAMPLE_LOG_LARGE),
+        user_gpu: Some("amd".to_string()),
+        xse_modules: create_phase5_important_xse_modules(),
+    };
+    let analyzer = classic_scanlog_core::ModGuidanceAnalyzer::new(
+        Vec::new(),
+        Vec::new(),
+        Vec::new(),
+        important_entries.clone(),
+    )
+    .expect("semantic Mod Guidance analyzer should build");
 
-    let _ = detect_mods_single(yaml_dict.clone(), synthetic_plugins.clone())
-        .expect("single matcher cache priming should succeed");
-    let _ = detect_mods_batch(yaml_dict.clone(), batch_plugins.clone())
-        .expect("batch matcher cache priming should succeed");
-
-    let mut cached_regex_group = c.benchmark_group("phase5_cached_regex_paths");
-    cached_regex_group.throughput(Throughput::Elements(synthetic_plugins.len() as u64));
-    let mut single_uncached_seed = 0usize;
-    cached_regex_group.bench_function("detect_mods_single_synthetic_uncached", |b| {
-        b.iter_batched(
-            || {
-                let seed = single_uncached_seed;
-                single_uncached_seed += 1;
-                (
-                    create_phase5_cached_regex_yaml_variant(seed),
-                    create_phase5_synthetic_plugins_variant(seed, 48),
-                )
-            },
-            |(yaml_dict, plugins)| {
-                detect_mods_single(yaml_dict, plugins)
-                    .expect("single uncached benchmark should succeed")
-            },
-            BatchSize::SmallInput,
-        );
+    let mut guidance_group = c.benchmark_group("phase5_mod_guidance_analyzer");
+    guidance_group.bench_function("construction", |b| {
+        b.iter(|| {
+            classic_scanlog_core::ModGuidanceAnalyzer::new(
+                Vec::new(),
+                Vec::new(),
+                Vec::new(),
+                important_entries.clone(),
+            )
+            .expect("semantic Mod Guidance analyzer should build")
+        });
     });
-    cached_regex_group.bench_function("detect_mods_single_synthetic_cached", |b| {
-        b.iter_batched(
-            || (yaml_dict.clone(), synthetic_plugins.clone()),
-            |(yaml_dict, plugins)| {
-                detect_mods_single(yaml_dict, plugins)
-                    .expect("single cached benchmark should succeed")
-            },
-            BatchSize::SmallInput,
-        );
+    guidance_group.bench_function("aggregate_analysis", |b| {
+        b.iter(|| {
+            analyzer
+                .analyze(black_box(input.clone()))
+                .expect("semantic Mod Guidance analysis should succeed")
+        });
     });
-    let mut batch_uncached_seed = 0usize;
-    cached_regex_group.bench_function("detect_mods_batch_synthetic_uncached", |b| {
-        b.iter_batched(
-            || {
-                let seed = batch_uncached_seed;
-                batch_uncached_seed += 1;
-                (
-                    create_phase5_cached_regex_yaml_variant(seed),
-                    create_phase5_batch_plugins_variant(seed, 16, 40),
-                )
-            },
-            |(yaml_dict, plugins)| {
-                detect_mods_batch(yaml_dict, plugins)
-                    .expect("batch uncached benchmark should succeed")
-            },
-            BatchSize::SmallInput,
-        );
-    });
-    cached_regex_group.bench_function("detect_mods_batch_synthetic_cached", |b| {
-        b.iter_batched(
-            || (yaml_dict.clone(), batch_plugins.clone()),
-            |(yaml_dict, plugins)| {
-                detect_mods_batch(yaml_dict, plugins)
-                    .expect("batch cached benchmark should succeed")
-            },
-            BatchSize::SmallInput,
-        );
-    });
-    cached_regex_group.finish();
-
-    let synthetic_important_haystack =
-        build_important_mod_haystack_for_bench(&synthetic_plugins, &synthetic_xse_modules);
-    let fixture_important_haystack =
-        build_important_mod_haystack_for_bench(&fixture_plugins, &fixture_xse_modules);
-
-    reset_important_matcher_cache_for_bench();
-    let _ = build_important_matcher_for_bench(&important_entries)
-        .expect("important-mod cached matcher should build");
-
-    let mut important_group = c.benchmark_group("phase5_detect_mods_important");
-    important_group.bench_function("legacy_regex_plugin_and_xse_surface", |b| {
-        b.iter_batched(
-            || {
-                (
-                    important_entries.clone(),
-                    synthetic_plugins.clone(),
-                    synthetic_xse_modules.clone(),
-                )
-            },
-            |(entries, plugins, xse_modules)| {
-                black_box(detect_mods_important_legacy_regex_count(
-                    &entries,
-                    &plugins,
-                    &xse_modules,
-                ))
-            },
-            BatchSize::SmallInput,
-        );
-    });
-    important_group.bench_function("aho_compile_only_synthetic_literals", |b| {
-        b.iter_batched(
-            || important_entries.clone(),
-            |entries| black_box(detect_mods_important_aho_compile_only(&entries)),
-            BatchSize::SmallInput,
-        );
-    });
-    important_group.bench_function("aho_build_haystack_only_plugin_and_xse_surface", |b| {
-        b.iter_batched(
-            || (synthetic_plugins.clone(), synthetic_xse_modules.clone()),
-            |(plugins, xse_modules)| {
-                black_box(build_important_mod_haystack_for_bench(
-                    &plugins,
-                    &xse_modules,
-                ))
-            },
-            BatchSize::SmallInput,
-        );
-    });
-    important_group.bench_function("aho_build_haystack_only_real_fixture_plugin_surface", |b| {
-        b.iter_batched(
-            || (fixture_plugins.clone(), fixture_xse_modules.clone()),
-            |(plugins, xse_modules)| {
-                black_box(build_important_mod_haystack_for_bench(
-                    &plugins,
-                    &xse_modules,
-                ))
-            },
-            BatchSize::SmallInput,
-        );
-    });
-    important_group.bench_function("aho_uncached_plugin_and_xse_surface", |b| {
-        b.iter_batched(
-            || {
-                (
-                    important_entries.clone(),
-                    synthetic_plugins.clone(),
-                    synthetic_xse_modules.clone(),
-                )
-            },
-            |(entries, plugins, xse_modules)| {
-                black_box(detect_mods_important_aho_uncached_count(
-                    &entries,
-                    &plugins,
-                    &xse_modules,
-                ))
-            },
-            BatchSize::SmallInput,
-        );
-    });
-    important_group.bench_function("synthetic_plugin_and_xse_surface", |b| {
-        b.iter_batched(
-            || {
-                (
-                    important_entries.clone(),
-                    synthetic_plugins.clone(),
-                    synthetic_xse_modules.clone(),
-                )
-            },
-            |(entries, plugins, xse_modules)| {
-                black_box(detect_mods_important_aho_count(
-                    &entries,
-                    &plugins,
-                    &xse_modules,
-                ))
-            },
-            BatchSize::SmallInput,
-        );
-    });
-    important_group.bench_function("aho_cached_match_only_plugin_and_xse_surface", |b| {
-        b.iter_batched(
-            || {
-                (
-                    important_entries.clone(),
-                    synthetic_important_haystack.clone(),
-                )
-            },
-            |(entries, combined_text)| {
-                black_box(detect_mods_important_aho_cached_haystack_count(
-                    &entries,
-                    &combined_text,
-                ))
-            },
-            BatchSize::SmallInput,
-        );
-    });
-    important_group.bench_function("legacy_regex_real_fixture_plugin_surface", |b| {
-        b.iter_batched(
-            || {
-                (
-                    important_entries.clone(),
-                    fixture_plugins.clone(),
-                    fixture_xse_modules.clone(),
-                )
-            },
-            |(entries, plugins, xse_modules)| {
-                black_box(detect_mods_important_legacy_regex_count(
-                    &entries,
-                    &plugins,
-                    &xse_modules,
-                ))
-            },
-            BatchSize::SmallInput,
-        );
-    });
-    important_group.bench_function("aho_uncached_real_fixture_plugin_surface", |b| {
-        b.iter_batched(
-            || {
-                (
-                    important_entries.clone(),
-                    fixture_plugins.clone(),
-                    fixture_xse_modules.clone(),
-                )
-            },
-            |(entries, plugins, xse_modules)| {
-                black_box(detect_mods_important_aho_uncached_count(
-                    &entries,
-                    &plugins,
-                    &xse_modules,
-                ))
-            },
-            BatchSize::SmallInput,
-        );
-    });
-    important_group.bench_function("real_fixture_plugin_surface", |b| {
-        b.iter_batched(
-            || {
-                (
-                    important_entries.clone(),
-                    fixture_plugins.clone(),
-                    fixture_xse_modules.clone(),
-                )
-            },
-            |(entries, plugins, xse_modules)| {
-                black_box(detect_mods_important_aho_count(
-                    &entries,
-                    &plugins,
-                    &xse_modules,
-                ))
-            },
-            BatchSize::SmallInput,
-        );
-    });
-    important_group.bench_function("aho_cached_match_only_real_fixture_plugin_surface", |b| {
-        b.iter_batched(
-            || {
-                (
-                    important_entries.clone(),
-                    fixture_important_haystack.clone(),
-                )
-            },
-            |(entries, combined_text)| {
-                black_box(detect_mods_important_aho_cached_haystack_count(
-                    &entries,
-                    &combined_text,
-                ))
-            },
-            BatchSize::SmallInput,
-        );
-    });
-    important_group.finish();
-
+    guidance_group.finish();
     let bridge_fixture_lines: Vec<String> = SAMPLE_LOG_LARGE.lines().map(str::to_string).collect();
     let bridge_header_excerpt: Vec<String> = SAMPLE_LOG_LARGE
         .lines()

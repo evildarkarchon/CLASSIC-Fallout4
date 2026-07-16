@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-16T07:58:59.805569+00:00`
-- Tier-1 contract rows: **1254**
-- Tier-1 matched: **1254**
+- Generated: `2026-07-16T09:03:49.882177+00:00`
+- Tier-1 contract rows: **1263**
+- Tier-1 matched: **1263**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -819,15 +819,24 @@
 | `scanlog.gpu_detector.GpuVendor.__init__` | `scanlog` | `GpuVendor` | `classic_scanlog.GpuVendor.__init__` | `matched` |
 | `scanlog.gpu_detector.GpuVendor@rust` | `scanlog` | `GpuVendor` | `classic_scanlog.GpuVendor` | `matched` |
 | `scanlog.gpu_detector.gpu_detector@rust` | `scanlog` | `gpu_detector` | `classic_scanlog.GpuDetector` | `matched` |
-| `scanlog.mod_detector.detect_mods_batch` | `scanlog` | `detect_mods_batch` | `classic_scanlog.detect_mods_batch` | `matched` |
-| `scanlog.mod_detector.detect_mods_batch@rust` | `scanlog` | `detect_mods_batch` | `classic_scanlog.detect_mods_batch` | `matched` |
-| `scanlog.mod_detector.detect_mods_double` | `scanlog` | `detect_mods_double` | `classic_scanlog.detect_mods_double` | `matched` |
-| `scanlog.mod_detector.detect_mods_double@rust` | `scanlog` | `detect_mods_double` | `classic_scanlog.detect_mods_double` | `matched` |
-| `scanlog.mod_detector.detect_mods_important` | `scanlog` | `detect_mods_important` | `classic_scanlog.detect_mods_important` | `matched` |
-| `scanlog.mod_detector.detect_mods_important@rust` | `scanlog` | `detect_mods_important` | `classic_scanlog.detect_mods_important` | `matched` |
-| `scanlog.mod_detector.detect_mods_single` | `scanlog` | `detect_mods_single` | `classic_scanlog.detect_mods_single` | `matched` |
-| `scanlog.mod_detector.detect_mods_single@rust` | `scanlog` | `detect_mods_single` | `classic_scanlog.detect_mods_single` | `matched` |
-| `scanlog.mod_detector.mod_detector@rust` | `scanlog` | `mod_detector` | `classic_scanlog.detect_mods_single` | `matched` |
+| `scanlog.mod_guidance_analyzer.ImportantModGuidance` | `scanlog` | `ImportantModGuidance` | `classic_scanlog.ImportantModGuidance` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModConflictGuidance` | `scanlog` | `ModConflictGuidance` | `classic_scanlog.ModConflictGuidance` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceAnalysisInput` | `scanlog` | `ModGuidanceAnalysisInput` | `classic_scanlog.ModGuidanceAnalysisInput` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceAnalysisInput.__init__` | `scanlog` | `ModGuidanceAnalysisInput` | `classic_scanlog.ModGuidanceAnalysisInput.__init__` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceAnalysisResult` | `scanlog` | `ModGuidanceAnalysisResult` | `classic_scanlog.ModGuidanceAnalysisResult` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceAnalyzer` | `scanlog` | `ModGuidanceAnalyzer` | `classic_scanlog.ModGuidanceAnalyzer` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceAnalyzer.__init__` | `scanlog` | `ModGuidanceAnalyzer` | `classic_scanlog.ModGuidanceAnalyzer.__init__` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceAnalyzer.analyze` | `scanlog` | `ModGuidanceAnalyzer` | `classic_scanlog.ModGuidanceAnalyzer.analyze` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceConflictRule` | `scanlog` | `ModConflictEntry` | `classic_scanlog.ModGuidanceConflictRule` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceConflictRule.__init__` | `scanlog` | `ModConflictEntry` | `classic_scanlog.ModGuidanceConflictRule.__init__` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceCriteriaKind` | `scanlog` | `ModSolutionCriteria` | `classic_scanlog.ModGuidanceCriteriaKind` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceImportantModRule` | `scanlog` | `CoreModEntry` | `classic_scanlog.ModGuidanceImportantModRule` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceImportantModRule.__init__` | `scanlog` | `CoreModEntry` | `classic_scanlog.ModGuidanceImportantModRule.__init__` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceMatchState` | `scanlog` | `ModGuidanceMatchState` | `classic_scanlog.ModGuidanceMatchState` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceSolutionRule` | `scanlog` | `ModSolutionEntry` | `classic_scanlog.ModGuidanceSolutionRule` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModGuidanceSolutionRule.__init__` | `scanlog` | `ModSolutionEntry` | `classic_scanlog.ModGuidanceSolutionRule.__init__` | `matched` |
+| `scanlog.mod_guidance_analyzer.ModSolutionGuidance` | `scanlog` | `ModSolutionGuidance` | `classic_scanlog.ModSolutionGuidance` | `matched` |
+| `scanlog.mod_guidance_analyzer.mod_guidance_analyzer@rust` | `scanlog` | `mod_guidance_analyzer` | `classic_scanlog.ModGuidanceAnalyzer` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.__init__` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.__init__` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.analyze_to_string` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.analyze_to_string` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.check_for_updates` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.check_for_updates` | `matched` |

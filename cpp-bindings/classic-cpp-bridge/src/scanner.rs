@@ -12,10 +12,11 @@ mod papyrus;
 mod util;
 
 pub(crate) use analyzer::{
-    CxxCrashSuspectAnalyzer, CxxCrashgenSettingsAnalyzer, crash_suspect_analyze,
-    crash_suspect_analyzer_construction_result, crash_suspect_analyzer_new,
+    CxxCrashSuspectAnalyzer, CxxCrashgenSettingsAnalyzer, CxxModGuidanceAnalyzer,
+    crash_suspect_analyze, crash_suspect_analyzer_construction_result, crash_suspect_analyzer_new,
     crashgen_settings_analyze, crashgen_settings_analyzer_construction_result,
-    crashgen_settings_analyzer_new,
+    crashgen_settings_analyzer_new, mod_guidance_analyze,
+    mod_guidance_analyzer_construction_result, mod_guidance_analyzer_new,
 };
 pub(crate) use contract::{
     ScanRunCancellation, ScanRunRequest, ScanRunUnsolvedLogs, scan_run_cancellation_cancel,
@@ -87,6 +88,21 @@ mod ffi {
         MainErrorRule = 0,
         StackRule = 1,
         DllInvolvement = 2,
+    }
+
+    /// Grouped match behavior for one Mod Guidance configuration entry.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ModGuidanceCriteriaKind {
+        Any = 0,
+        All = 1,
+    }
+
+    /// Semantic match state shared by every Mod Guidance result family.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ModGuidanceMatchState {
+        Matched = 0,
+        Missing = 1,
+        GpuMismatch = 2,
     }
 
     /// Shared typed focused-analyzer error envelope payload.
@@ -242,6 +258,120 @@ mod ffi {
     struct CrashSuspectAnalysisExecutionResultDto {
         has_result: bool,
         result: CrashSuspectAnalysisResultDto,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
+    /// One owned YAML-authored Mod Guidance conflict configuration entry.
+    struct ModGuidanceConflictConfigurationDto {
+        mod_a: String,
+        mod_b: String,
+        name_a: String,
+        name_b: String,
+        description: String,
+        fix: String,
+        has_link: bool,
+        link: String,
+    }
+
+    /// One owned frequent-crash or solution configuration entry.
+    struct ModGuidanceSolutionConfigurationDto {
+        id: String,
+        criteria_kind: ModGuidanceCriteriaKind,
+        criteria: Vec<String>,
+        exceptions: Vec<String>,
+        name: String,
+        description: String,
+    }
+
+    /// One owned important-mod configuration entry.
+    struct ModGuidanceImportantModConfigurationDto {
+        detect: String,
+        name: String,
+        description: String,
+        has_gpu: bool,
+        gpu: String,
+        has_gpu_mismatch_warning: bool,
+        gpu_mismatch_warning: String,
+        has_exclude_when_plugin_any: bool,
+        exclude_when_plugin_any: Vec<String>,
+    }
+
+    /// Owned configuration for one immutable aggregate Mod Guidance Analyzer.
+    struct ModGuidanceAnalyzerConfigurationDto {
+        conflicts: Vec<ModGuidanceConflictConfigurationDto>,
+        frequent_crashes: Vec<ModGuidanceSolutionConfigurationDto>,
+        solutions: Vec<ModGuidanceSolutionConfigurationDto>,
+        important_mods: Vec<ModGuidanceImportantModConfigurationDto>,
+    }
+
+    /// Explicit constructor status for an opaque Mod Guidance Analyzer handle.
+    struct ModGuidanceAnalyzerConstructionResultDto {
+        has_analyzer: bool,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
+    /// One installed plugin name and its load-order identifier.
+    struct ModGuidancePluginDto {
+        name: String,
+        id: String,
+    }
+
+    /// Owned input for one aggregate Mod Guidance analysis call.
+    struct ModGuidanceAnalysisInputDto {
+        plugins: Vec<ModGuidancePluginDto>,
+        has_user_gpu: bool,
+        user_gpu: String,
+        xse_modules: Vec<String>,
+    }
+
+    /// One matched YAML-authored mod conflict.
+    struct ModConflictGuidanceDto {
+        state: ModGuidanceMatchState,
+        mod_a: String,
+        mod_b: String,
+        name_a: String,
+        name_b: String,
+        description: String,
+        fix: String,
+        has_link: bool,
+        link: String,
+    }
+
+    /// One matched frequent-crash or solution guidance entry.
+    struct ModSolutionGuidanceDto {
+        state: ModGuidanceMatchState,
+        id: String,
+        name: String,
+        description: String,
+        matched_plugin_ids: Vec<String>,
+    }
+
+    /// One applicable important-mod result.
+    struct ImportantModGuidanceDto {
+        state: ModGuidanceMatchState,
+        detect: String,
+        name: String,
+        description: String,
+        has_gpu: bool,
+        gpu: String,
+        has_gpu_mismatch_warning: bool,
+        gpu_mismatch_warning: String,
+    }
+
+    /// Completed aggregate Mod Guidance analysis, including explicit empty success.
+    struct ModGuidanceAnalysisResultDto {
+        conflicts: Vec<ModConflictGuidanceDto>,
+        frequent_crashes: Vec<ModSolutionGuidanceDto>,
+        solutions: Vec<ModSolutionGuidanceDto>,
+        important_mods: Vec<ImportantModGuidanceDto>,
+    }
+
+    /// Exactly one typed Mod Guidance result or shared analyzer error.
+    struct ModGuidanceAnalysisExecutionResultDto {
+        has_result: bool,
+        result: ModGuidanceAnalysisResultDto,
         has_error: bool,
         error: AnalyzerErrorDto,
     }
@@ -510,6 +640,7 @@ mod ffi {
     extern "Rust" {
         type CxxCrashSuspectAnalyzer;
         type CxxCrashgenSettingsAnalyzer;
+        type CxxModGuidanceAnalyzer;
         type ScanRunRequest;
         type ScanRunUnsolvedLogs;
         type ScanRunCancellation;
@@ -548,6 +679,20 @@ mod ffi {
             analyzer: &CxxCrashSuspectAnalyzer,
             input: CrashSuspectAnalysisInputDto,
         ) -> CrashSuspectAnalysisExecutionResultDto;
+
+        /// Constructs and validates an immutable aggregate Mod Guidance Analyzer handle.
+        fn mod_guidance_analyzer_new(
+            configuration: ModGuidanceAnalyzerConfigurationDto,
+        ) -> Box<CxxModGuidanceAnalyzer>;
+        /// Returns the typed status captured during Mod Guidance construction.
+        fn mod_guidance_analyzer_construction_result(
+            analyzer: &CxxModGuidanceAnalyzer,
+        ) -> ModGuidanceAnalyzerConstructionResultDto;
+        /// Runs one aggregate Mod Guidance analysis over owned Crash Log facts.
+        fn mod_guidance_analyze(
+            analyzer: &CxxModGuidanceAnalyzer,
+            input: ModGuidanceAnalysisInputDto,
+        ) -> ModGuidanceAnalysisExecutionResultDto;
 
         /// Creates Standard intent that leaves failed Crash Logs and reports in place.
         fn scan_run_unsolved_logs_leave_in_place() -> Box<ScanRunUnsolvedLogs>;

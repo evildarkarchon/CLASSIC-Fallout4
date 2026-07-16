@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T08:26:39.464319+00:00",
+  "generated_at_utc": "2026-07-16T09:01:31.968760+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -9120,6 +9120,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "ImportantModGuidance",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use mod_guidance_analyzer::{ ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult, ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance, };",
+      "source_expr": "mod_guidance_analyzer::ImportantModGuidance",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ImportantModGuidance",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
+      "source_decl": "pub struct ImportantModGuidance",
+      "tier": "tier1"
+    },
+    {
       "symbol": "InfrastructureError",
       "kind": "struct",
       "crate": "classic-scanlog-core",
@@ -9208,6 +9227,120 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/segment_key.rs",
       "source_decl": "pub const MODULES",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ModConflictGuidance",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use mod_guidance_analyzer::{ ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult, ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance, };",
+      "source_expr": "mod_guidance_analyzer::ModConflictGuidance",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ModConflictGuidance",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
+      "source_decl": "pub struct ModConflictGuidance",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ModGuidanceAnalysisInput",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use mod_guidance_analyzer::{ ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult, ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance, };",
+      "source_expr": "mod_guidance_analyzer::ModGuidanceAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ModGuidanceAnalysisInput",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
+      "source_decl": "pub struct ModGuidanceAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ModGuidanceAnalysisResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use mod_guidance_analyzer::{ ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult, ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance, };",
+      "source_expr": "mod_guidance_analyzer::ModGuidanceAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ModGuidanceAnalysisResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
+      "source_decl": "pub struct ModGuidanceAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ModGuidanceAnalyzer",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use mod_guidance_analyzer::{ ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult, ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance, };",
+      "source_expr": "mod_guidance_analyzer::ModGuidanceAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ModGuidanceAnalyzer",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
+      "source_decl": "pub struct ModGuidanceAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ModGuidanceMatchState",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
+      "source_decl": "pub enum ModGuidanceMatchState",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ModGuidanceMatchState",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use mod_guidance_analyzer::{ ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult, ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance, };",
+      "source_expr": "mod_guidance_analyzer::ModGuidanceMatchState",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ModSolutionGuidance",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use mod_guidance_analyzer::{ ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult, ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance, };",
+      "source_expr": "mod_guidance_analyzer::ModSolutionGuidance",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ModSolutionGuidance",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
+      "source_decl": "pub struct ModSolutionGuidance",
       "tier": "tier1"
     },
     {
@@ -9740,6 +9873,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "analyze",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
+      "source_decl": "pub fn analyze(\n        &self,\n        input: ModGuidanceAnalysisInput,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "analyze_batch",
       "kind": "function",
       "arity": 3,
@@ -9806,26 +9949,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn benchmark(&self, lines: &[Arc<str>], iterations: usize)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "build_important_matcher_for_bench",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
-      "source_decl": "pub fn build_important_matcher_for_bench(entries: &[CoreModEntry])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "build_important_mod_haystack_for_bench",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
-      "source_decl": "pub fn build_important_mod_haystack_for_bench(\n    crashlog_plugins: &IndexMap<String, String>,\n    xse_modules: &HashSet<String>,\n)",
       "tier": "tier1"
     },
     {
@@ -10162,116 +10285,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/crashgen_registry.rs",
       "source_decl": "pub fn default_entry(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "detect_mods_batch",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
-      "source_decl": "pub fn detect_mods_batch(\n    yaml_dict: IndexMap<String, String>,\n    crashlog_plugins_list: Vec<IndexMap<String, String>>,\n)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "detect_mods_batch",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
-      "source_expr": "mod_detector::detect_mods_batch",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "detect_mods_conflicts",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
-      "source_decl": "pub fn detect_mods_conflicts(\n        &self,\n        crashlog_plugins: &IndexMap<String, String>,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "detect_mods_double",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
-      "source_decl": "pub fn detect_mods_double(\n    entries: &[ModConflictEntry],\n    crashlog_plugins: IndexMap<String, String>,\n)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "detect_mods_double",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
-      "source_expr": "mod_detector::detect_mods_double",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "detect_mods_important",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
-      "source_decl": "pub fn detect_mods_important(\n    entries: &[CoreModEntry],\n    crashlog_plugins: &IndexMap<String, String>,\n    user_gpu: Option<&str>,\n    xse_modules: &HashSet<String>,\n)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "detect_mods_important",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
-      "source_expr": "mod_detector::detect_mods_important",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "detect_mods_important_basic",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
-      "source_decl": "pub fn detect_mods_important_basic(\n        &self,\n        crashlog_plugins: &IndexMap<String, String>,\n        user_gpu: Option<&str>,\n        xse_modules: &HashSet<String>,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "detect_mods_single",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
-      "source_decl": "pub fn detect_mods_single(\n    yaml_dict: IndexMap<String, String>,\n    crashlog_plugins: IndexMap<String, String>,\n)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "detect_mods_single",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use mod_detector::{ detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single, };",
-      "source_expr": "mod_detector::detect_mods_single",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "detect_mods_single_basic",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
-      "source_decl": "pub fn detect_mods_single_basic(\n        &self,\n        crashlog_plugins: &IndexMap<String, String>,\n    )",
       "tier": "tier1"
     },
     {
@@ -11020,16 +11033,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "important_matcher_compile_count_for_bench",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
-      "source_decl": "pub fn important_matcher_compile_count_for_bench()",
-      "tier": "tier1"
-    },
-    {
       "symbol": "intern",
       "kind": "function",
       "arity": 2,
@@ -11160,12 +11163,12 @@
       "tier": "tier1"
     },
     {
-      "symbol": "mod_detector",
+      "symbol": "mod_guidance_analyzer",
       "kind": "module",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub mod mod_detector;",
+      "source_decl": "pub mod mod_guidance_analyzer;",
       "tier": "tier1"
     },
     {
@@ -11221,11 +11224,11 @@
     {
       "symbol": "new",
       "kind": "function",
-      "arity": 6,
+      "arity": 3,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
-      "source_decl": "pub fn new(\n        db_pool: Option<Arc<DatabasePool>>,\n        show_formid_values: bool,\n        crashgen_name: String,\n        important_mods: Vec<CoreModEntry>,\n        mods_single: Vec<ModSolutionEntry>,\n        mods_double: Vec<ModConflictEntry>,\n    )",
+      "source_decl": "pub fn new(\n        db_pool: Option<Arc<DatabasePool>>,\n        show_formid_values: bool,\n        crashgen_name: String,\n    )",
       "tier": "tier1"
     },
     {
@@ -11246,6 +11249,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/gpu_detector.rs",
       "source_decl": "pub fn new()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 4,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
+      "source_decl": "pub fn new(\n        conflicts: Vec<ModConflictEntry>,\n        frequent_crashes: Vec<ModSolutionEntry>,\n        solutions: Vec<ModSolutionEntry>,\n        important_mods: Vec<CoreModEntry>,\n    )",
       "tier": "tier1"
     },
     {
@@ -11590,16 +11603,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn reset(&mut self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "reset_important_matcher_cache_for_bench",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/mod_detector.rs",
-      "source_decl": "pub fn reset_important_matcher_cache_for_bench()",
       "tier": "tier1"
     },
     {

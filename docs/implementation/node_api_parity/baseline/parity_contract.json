@@ -4094,36 +4094,124 @@
       "rustKind": "function"
     },
     {
-      "id": "scanlog.mod_detector.detect_mods_batch@rust",
+      "id": "scanlog.mod_guidance_analyzer.ImportantModGuidance",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "detect_mods_batch@rust",
-      "rustKind": "function"
+      "rustSymbol": "ImportantModGuidance",
+      "rustKind": "struct",
+      "nodeExport": "JsImportantModGuidance",
+      "nodeKind": "interface"
     },
     {
-      "id": "scanlog.mod_detector.detect_mods_double@rust",
+      "id": "scanlog.mod_guidance_analyzer.ImportantModRule",
       "tier": "tier1",
       "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "detect_mods_double@rust",
-      "rustKind": "function"
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "CoreModEntry",
+      "rustKind": "struct",
+      "nodeExport": "JsImportantModRule",
+      "nodeKind": "interface"
     },
     {
-      "id": "scanlog.mod_detector.detect_mods_important@rust",
+      "id": "scanlog.mod_guidance_analyzer.ModConflictGuidance",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "detect_mods_important@rust",
-      "rustKind": "function"
+      "rustSymbol": "ModConflictGuidance",
+      "rustKind": "struct",
+      "nodeExport": "JsModConflictGuidance",
+      "nodeKind": "interface"
     },
     {
-      "id": "scanlog.mod_detector.detect_mods_single@rust",
+      "id": "scanlog.mod_guidance_analyzer.ModConflictRule",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ModConflictEntry",
+      "rustKind": "struct",
+      "nodeExport": "JsModConflictRule",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceAnalysisInput",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "detect_mods_single@rust",
-      "rustKind": "function"
+      "rustSymbol": "ModGuidanceAnalysisInput",
+      "rustKind": "struct",
+      "nodeExport": "JsModGuidanceAnalysisInput",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ModGuidanceAnalysisResult",
+      "rustKind": "struct",
+      "nodeExport": "JsModGuidanceAnalysisResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ModGuidanceAnalyzer",
+      "rustKind": "struct",
+      "nodeExport": "ModGuidanceAnalyzer",
+      "nodeKind": "class"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceCriteriaKind",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ModSolutionCriteria",
+      "rustKind": "enum",
+      "nodeExport": "JsModGuidanceCriteriaKind",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidanceMatchState",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ModGuidanceMatchState",
+      "rustKind": "enum",
+      "nodeExport": "JsModGuidanceMatchState",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModGuidancePlugin",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ModGuidanceAnalysisInput",
+      "rustKind": "struct",
+      "nodeExport": "JsModGuidancePlugin",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModSolutionGuidance",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "ModSolutionGuidance",
+      "rustKind": "struct",
+      "nodeExport": "JsModSolutionGuidance",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.mod_guidance_analyzer.ModSolutionRule",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ModSolutionEntry",
+      "rustKind": "struct",
+      "nodeExport": "JsModSolutionRule",
+      "nodeKind": "interface"
     },
     {
       "id": "scanlog.plugin_analyzer.detect_plugins_batch@rust",
@@ -4182,11 +4270,11 @@
       "rustKind": "function"
     },
     {
-      "id": "scanlog.mod_detector.mod_detector@rust",
+      "id": "scanlog.mod_guidance_analyzer.mod_guidance_analyzer@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "mod_detector@rust",
+      "rustSymbol": "mod_guidance_analyzer@rust",
       "rustKind": "module"
     },
     {

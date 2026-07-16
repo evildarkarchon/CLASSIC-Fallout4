@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T08:26:19.392065+00:00",
+  "generated_at_utc": "2026-07-16T09:04:03.633301+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -5063,11 +5063,11 @@
       "export_path": "FormIDAnalyzerCore.__init__",
       "parent_class": "FormIDAnalyzerCore",
       "kind": "method",
-      "arity": 5,
+      "arity": 2,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def __init__( self, show_formid_values: bool, crashgen_name: str, important_mods: dict[str, str], mods_single: dict[str, str], mods_double: list[dict[str, str | None]], ) -> None:"
+      "signature": "def __init__( self, show_formid_values: bool = False, crashgen_name: str = \"\", ) -> None:"
     },
     {
       "module": "classic_scanlog",
@@ -5266,6 +5266,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def __init__(self, vendor_name: str) -> None:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ImportantModGuidance",
+      "export_path": "ImportantModGuidance",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ImportantModGuidance:"
     },
     {
       "module": "classic_scanlog",
@@ -5516,6 +5526,178 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def parse_segments_parallel( self, lines: list[str], chunk_size: int | None = None ) -> dict[str, list[str]]:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ModConflictGuidance",
+      "export_path": "ModConflictGuidance",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ModConflictGuidance:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ModGuidanceAnalysisInput",
+      "export_path": "ModGuidanceAnalysisInput",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ModGuidanceAnalysisInput:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "ModGuidanceAnalysisInput.__init__",
+      "parent_class": "ModGuidanceAnalysisInput",
+      "kind": "method",
+      "arity": 3,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__( self, plugins: dict[str, str], user_gpu: str | None = None, xse_modules: set[str] = ..., ) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ModGuidanceAnalysisResult",
+      "export_path": "ModGuidanceAnalysisResult",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ModGuidanceAnalysisResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ModGuidanceAnalyzer",
+      "export_path": "ModGuidanceAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ModGuidanceAnalyzer:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "ModGuidanceAnalyzer.__init__",
+      "parent_class": "ModGuidanceAnalyzer",
+      "kind": "method",
+      "arity": 4,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__( self, conflicts: list[ModGuidanceConflictRule], frequent_crashes: list[ModGuidanceSolutionRule], solutions: list[ModGuidanceSolutionRule], important_mods: list[ModGuidanceImportantModRule], ) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "analyze",
+      "export_path": "ModGuidanceAnalyzer.analyze",
+      "parent_class": "ModGuidanceAnalyzer",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def analyze(self, input: ModGuidanceAnalysisInput) -> ModGuidanceAnalysisResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ModGuidanceConflictRule",
+      "export_path": "ModGuidanceConflictRule",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ModGuidanceConflictRule:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "ModGuidanceConflictRule.__init__",
+      "parent_class": "ModGuidanceConflictRule",
+      "kind": "method",
+      "arity": 7,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__( self, mod_a: str, mod_b: str, name_a: str, name_b: str, description: str, fix: str, link: str | None = None, ) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ModGuidanceCriteriaKind",
+      "export_path": "ModGuidanceCriteriaKind",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ModGuidanceCriteriaKind:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ModGuidanceImportantModRule",
+      "export_path": "ModGuidanceImportantModRule",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ModGuidanceImportantModRule:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "ModGuidanceImportantModRule.__init__",
+      "parent_class": "ModGuidanceImportantModRule",
+      "kind": "method",
+      "arity": 6,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__( self, detect: str, name: str, description: str, gpu: str | None = None, gpu_mismatch_warning: str | None = None, exclude_when_plugin_any: list[str] | None = None, ) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ModGuidanceMatchState",
+      "export_path": "ModGuidanceMatchState",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ModGuidanceMatchState:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ModGuidanceSolutionRule",
+      "export_path": "ModGuidanceSolutionRule",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ModGuidanceSolutionRule:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "ModGuidanceSolutionRule.__init__",
+      "parent_class": "ModGuidanceSolutionRule",
+      "kind": "method",
+      "arity": 6,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__( self, id: str, criteria_kind: ModGuidanceCriteriaKind, criteria: list[str], exceptions: list[str], name: str, description: str, ) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ModSolutionGuidance",
+      "export_path": "ModSolutionGuidance",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ModSolutionGuidance:"
     },
     {
       "module": "classic_scanlog",
@@ -6817,50 +6999,6 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def contains_record( text: str, target_records: list[str], ignore_records: list[str] ) -> bool:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "detect_mods_batch",
-      "export_path": "detect_mods_batch",
-      "kind": "function",
-      "arity": 2,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def detect_mods_batch( yaml_dict: dict[str, str], crashlog_plugins_list: list[dict[str, str]] ) -> list[list[str]]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "detect_mods_double",
-      "export_path": "detect_mods_double",
-      "kind": "function",
-      "arity": 2,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def detect_mods_double( entries: list[dict[str, str | None]], crashlog_plugins: dict[str, str] ) -> list[str]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "detect_mods_important",
-      "export_path": "detect_mods_important",
-      "kind": "function",
-      "arity": 4,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def detect_mods_important( entries: list[dict[str, str | None]], crashlog_plugins: dict[str, str], user_gpu: str | None = None, xse_modules: set[str] = ..., ) -> list[str]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "detect_mods_single",
-      "export_path": "detect_mods_single",
-      "kind": "function",
-      "arity": 2,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def detect_mods_single( yaml_dict: dict[str, str], crashlog_plugins: dict[str, str] ) -> list[str]:"
     },
     {
       "module": "classic_scanlog",

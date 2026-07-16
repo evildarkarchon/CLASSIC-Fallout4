@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 442,
-    "current_total": 442,
-    "matched": 442,
+    "contract_total": 460,
+    "current_total": 460,
+    "matched": 460,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -1665,6 +1665,22 @@
       "reason": "-"
     },
     {
+      "id": "961e055bf0a35267",
+      "rustSymbol": "ModGuidanceCriteriaKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1dd49731cac9d8b9",
+      "rustSymbol": "ModGuidanceMatchState",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "d8f7976d67cc2ff2",
       "rustSymbol": "ScanRunContractDiscoverySource",
       "kind": "enum",
@@ -1779,6 +1795,30 @@
     {
       "id": "57a72189be1829d2",
       "rustSymbol": "detect_vr_log",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "01c3e73e182b287b",
+      "rustSymbol": "mod_guidance_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3ae13a1cf0a920a7",
+      "rustSymbol": "mod_guidance_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8e998a3a3c59e66b",
+      "rustSymbol": "mod_guidance_analyzer_new",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -1939,6 +1979,14 @@
     {
       "id": "4703b74efa2672a7",
       "rustSymbol": "CxxCrashgenSettingsAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "22546314349a5a8a",
+      "rustSymbol": "CxxModGuidanceAnalyzer",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -2131,6 +2179,102 @@
     {
       "id": "0ea85cd7a4b6a5fb",
       "rustSymbol": "FcxIssueDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fe3157d10e6b8468",
+      "rustSymbol": "ImportantModGuidanceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "69b1449c33eeaab1",
+      "rustSymbol": "ModConflictGuidanceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c6b830591749db47",
+      "rustSymbol": "ModGuidanceAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "508d6e3b22ee63e7",
+      "rustSymbol": "ModGuidanceAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "46a48b1b36ce4822",
+      "rustSymbol": "ModGuidanceAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f3580339444423d5",
+      "rustSymbol": "ModGuidanceAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c80002d8a3e7b3a7",
+      "rustSymbol": "ModGuidanceAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "45cf99e3f023bb5a",
+      "rustSymbol": "ModGuidanceConflictConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6aa94f829e72f06c",
+      "rustSymbol": "ModGuidanceImportantModConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ed60b8f11bb8599e",
+      "rustSymbol": "ModGuidancePluginDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6375a8f52b907c74",
+      "rustSymbol": "ModGuidanceSolutionConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "847e1a3f99e995fc",
+      "rustSymbol": "ModSolutionGuidanceDto",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

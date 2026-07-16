@@ -4,7 +4,7 @@ This standalone module provides high-performance crash log analysis with:
 - Fast log parsing with pattern matching (150x speedup)
 - FormID extraction and validation (50x speedup)
 - Plugin and record detection (30-40x speedup)
-- Mod detection algorithms (35x speedup)
+- Aggregate semantic Mod Guidance analysis
 - Independent batch analysis helpers
 - Report generation (75x speedup)
 """
@@ -131,22 +131,14 @@ class FormIDAnalyzerCore:
 
     def __init__(
         self,
-        show_formid_values: bool,
-        crashgen_name: str,
-        important_mods: dict[str, str],
-        mods_single: dict[str, str],
-        mods_double: list[dict[str, str | None]],
+        show_formid_values: bool = False,
+        crashgen_name: str = "",
     ) -> None:
         """Create FormID analyzer core.
 
         Args:
             show_formid_values: Whether to show FormID values in output
             crashgen_name: Name of the crash generator (e.g., "Buffout 4")
-            important_mods: Dictionary of important/problematic plugins
-            mods_single: Single-pass mod detection database.
-                .. deprecated:: Pass structured ``ModSolutionEntry`` format instead.
-            mods_double: List of mod conflict entry dicts with keys:
-                mod_a, mod_b, name_a, name_b, description, fix, link (optional)
 
         """
 
@@ -1287,76 +1279,6 @@ def contains_plugin(text: str, plugin: str) -> bool:
 
     """
 
-def detect_mods_single(
-    yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]
-) -> list[str]:
-    """Detect mods using single-pass algorithm.
-
-    Fast detection for simple mod identification.
-
-    Args:
-        yaml_dict: Mod database dictionary {mod_signature: warning_message}
-        crashlog_plugins: Dictionary of plugins from crash log {plugin_name: details}
-
-    Returns:
-        List of warning messages for detected mods
-
-    """
-
-def detect_mods_double(
-    entries: list[dict[str, str | None]], crashlog_plugins: dict[str, str]
-) -> list[str]:
-    """Detect conflicting mod pairs from structured conflict entries.
-
-    Checks if both mods from any conflict entry are present in the plugin list.
-
-    Args:
-        entries: List of mod conflict entry dicts with keys:
-            mod_a, mod_b, name_a, name_b, description, fix, link (optional)
-        crashlog_plugins: Dictionary of plugins from crash log {plugin_name: details}
-
-    Returns:
-        List of warning messages for detected mod conflicts
-
-    """
-
-def detect_mods_important(
-    entries: list[dict[str, str | None]],
-    crashlog_plugins: dict[str, str],
-    user_gpu: str | None = None,
-    xse_modules: set[str] = ...,
-) -> list[str]:
-    """Detect important mods (core mods, framework mods).
-
-    Prioritizes detection of essential mods that affect stability.
-
-    Args:
-        entries: List of core mod entry dicts with keys: detect, name, description, gpu (optional)
-        crashlog_plugins: Dictionary of plugins from crash log {plugin_name: details}
-        user_gpu: Optional GPU vendor the user has ("nvidia", "amd", "intel")
-        xse_modules: Set of XSE module names for additional checking
-
-    Returns:
-        List of warning messages for detected important mods
-
-    """
-
-def detect_mods_batch(
-    yaml_dict: dict[str, str], crashlog_plugins_list: list[dict[str, str]]
-) -> list[list[str]]:
-    """Detect mods in multiple crash logs (35x speedup).
-
-    Parallel mod detection across multiple crash logs.
-
-    Args:
-        yaml_dict: Mod database dictionary {mod_signature: warning_message}
-        crashlog_plugins_list: List of plugin dictionaries, one per crash log
-
-    Returns:
-        List of warning message lists, one per crash log
-
-    """
-
 # =============================================================================
 # Settings Validation (Phase 2)
 # =============================================================================
@@ -1413,6 +1335,192 @@ class AnalyzerError(RuntimeError):
     analyzer_kind: AnalyzerKind
     code: str
     message: str
+
+class ModGuidanceMatchState:
+    """Semantic state shared by aggregate Mod Guidance result families."""
+
+    Matched: ModGuidanceMatchState
+    Missing: ModGuidanceMatchState
+    GpuMismatch: ModGuidanceMatchState
+
+    @property
+    def value(self) -> str:
+        """Return the stable cross-language match-state token."""
+
+class ModGuidanceCriteriaKind:
+    """Grouped match strategy for a frequent-crash or solution rule."""
+
+    Any: ModGuidanceCriteriaKind
+    All: ModGuidanceCriteriaKind
+
+    @property
+    def value(self) -> str:
+        """Return ``any`` or ``all``."""
+
+class ModGuidanceConflictRule:
+    """Immutable owned conflict rule."""
+
+    def __init__(
+        self,
+        mod_a: str,
+        mod_b: str,
+        name_a: str,
+        name_b: str,
+        description: str,
+        fix: str,
+        link: str | None = None,
+    ) -> None: ...
+    @property
+    def mod_a(self) -> str: ...
+    @property
+    def mod_b(self) -> str: ...
+    @property
+    def name_a(self) -> str: ...
+    @property
+    def name_b(self) -> str: ...
+    @property
+    def description(self) -> str: ...
+    @property
+    def fix(self) -> str: ...
+    @property
+    def link(self) -> str | None: ...
+
+class ModGuidanceSolutionRule:
+    """Immutable owned frequent-crash or solution rule."""
+
+    def __init__(
+        self,
+        id: str,
+        criteria_kind: ModGuidanceCriteriaKind,
+        criteria: list[str],
+        exceptions: list[str],
+        name: str,
+        description: str,
+    ) -> None: ...
+    @property
+    def id(self) -> str: ...
+    @property
+    def criteria_kind(self) -> ModGuidanceCriteriaKind: ...
+    @property
+    def criteria(self) -> list[str]: ...
+    @property
+    def exceptions(self) -> list[str]: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def description(self) -> str: ...
+
+class ModGuidanceImportantModRule:
+    """Immutable owned important-mod rule."""
+
+    def __init__(
+        self,
+        detect: str,
+        name: str,
+        description: str,
+        gpu: str | None = None,
+        gpu_mismatch_warning: str | None = None,
+        exclude_when_plugin_any: list[str] | None = None,
+    ) -> None: ...
+    @property
+    def detect(self) -> str: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def description(self) -> str: ...
+    @property
+    def gpu(self) -> str | None: ...
+    @property
+    def gpu_mismatch_warning(self) -> str | None: ...
+    @property
+    def exclude_when_plugin_any(self) -> list[str] | None: ...
+
+class ModGuidanceAnalysisInput:
+    """Immutable owned facts for one aggregate Mod Guidance call."""
+
+    def __init__(
+        self,
+        plugins: dict[str, str],
+        user_gpu: str | None = None,
+        xse_modules: set[str] = ...,
+    ) -> None: ...
+
+class ModConflictGuidance:
+    """Immutable semantic conflict result."""
+
+    @property
+    def state(self) -> ModGuidanceMatchState: ...
+    @property
+    def mod_a(self) -> str: ...
+    @property
+    def mod_b(self) -> str: ...
+    @property
+    def name_a(self) -> str: ...
+    @property
+    def name_b(self) -> str: ...
+    @property
+    def description(self) -> str: ...
+    @property
+    def fix(self) -> str: ...
+    @property
+    def link(self) -> str | None: ...
+
+class ModSolutionGuidance:
+    """Immutable semantic frequent-crash or solution result."""
+
+    @property
+    def state(self) -> ModGuidanceMatchState: ...
+    @property
+    def id(self) -> str: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def description(self) -> str: ...
+    @property
+    def matched_plugin_ids(self) -> list[str]: ...
+
+class ImportantModGuidance:
+    """Immutable semantic important-mod result."""
+
+    @property
+    def state(self) -> ModGuidanceMatchState: ...
+    @property
+    def detect(self) -> str: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def description(self) -> str: ...
+    @property
+    def gpu(self) -> str | None: ...
+    @property
+    def gpu_mismatch_warning(self) -> str | None: ...
+
+class ModGuidanceAnalysisResult:
+    """Completed aggregate analysis, including explicit empty success."""
+
+    @property
+    def conflicts(self) -> list[ModConflictGuidance]: ...
+    @property
+    def frequent_crashes(self) -> list[ModSolutionGuidance]: ...
+    @property
+    def solutions(self) -> list[ModSolutionGuidance]: ...
+    @property
+    def important_mods(self) -> list[ImportantModGuidance]: ...
+
+class ModGuidanceAnalyzer:
+    """Immutable analyzer over validated aggregate Mod Guidance rules."""
+
+    def __init__(
+        self,
+        conflicts: list[ModGuidanceConflictRule],
+        frequent_crashes: list[ModGuidanceSolutionRule],
+        solutions: list[ModGuidanceSolutionRule],
+        important_mods: list[ModGuidanceImportantModRule],
+    ) -> None: ...
+    @property
+    def kind(self) -> AnalyzerKind: ...
+    def analyze(self, input: ModGuidanceAnalysisInput) -> ModGuidanceAnalysisResult:
+        """Run aggregate semantic analysis without producing report lines."""
 
 class CrashSuspectFindingKind:
     """Evidence source that produced one Crash Suspect Finding."""

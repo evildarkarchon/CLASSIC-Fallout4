@@ -1202,8 +1202,10 @@ fn process_log_renders_structured_mods_solu_any_matches() {
         Some(&"01".to_string())
     );
     assert!(
-        !detect_mods_solutions(&orchestrator.config.mods_solu, &plugins)
-            .expect("structured matcher should succeed")
+        !orchestrator
+            .collect_mod_guidance(&context, &plugins)
+            .expect("aggregate Mod Guidance analysis should succeed")
+            .solutions
             .is_empty(),
         "structured matcher should detect the configured entry"
     );
