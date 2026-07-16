@@ -8118,132 +8118,13 @@
       "pythonKind": "class"
     },
     {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "FormIDAnalyzerCore",
-      "pythonKind": "class"
-    },
-    {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore.__init__",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "FormIDAnalyzerCore.__init__",
-      "pythonKind": "method",
-      "pythonArity": 2
-    },
-    {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore.cache_plugins",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "FormIDAnalyzerCore.cache_plugins",
-      "pythonKind": "method",
-      "pythonArity": 2
-    },
-    {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore.extract_formids",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "FormIDAnalyzerCore.extract_formids",
-      "pythonKind": "method",
-      "pythonArity": 1
-    },
-    {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore.extract_formids_nocopy",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "FormIDAnalyzerCore.extract_formids_nocopy",
-      "pythonKind": "method",
-      "pythonArity": 1
-    },
-    {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore.extract_plugin_index",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "FormIDAnalyzerCore.extract_plugin_index",
-      "pythonKind": "method",
-      "pythonArity": 1
-    },
-    {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore.formid_match",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "FormIDAnalyzerCore.formid_match",
-      "pythonKind": "method",
-      "pythonArity": 2
-    },
-    {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore.is_valid_formid",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "FormIDAnalyzerCore.is_valid_formid",
-      "pythonKind": "method",
-      "pythonArity": 1
-    },
-    {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore.parse_formid",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "FormIDAnalyzerCore.parse_formid",
-      "pythonKind": "method",
-      "pythonArity": 1
-    },
-    {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore.process_formids_cached",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "FormIDAnalyzerCore.process_formids_cached",
-      "pythonKind": "method",
-      "pythonArity": 2
-    },
-    {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "FormIDAnalyzerCore",
-      "pythonKind": "class"
-    },
-    {
       "id": "scanlog.formid_analyzer.formid_analyzer@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "formid_analyzer",
       "pythonModule": "classic_scanlog",
-      "pythonExportPath": "FormIDAnalyzerCore",
+      "pythonExportPath": "FormIDAnalyzer",
       "pythonKind": "class"
     },
     {
@@ -8672,6 +8553,120 @@
       "rustSymbol": "NamedRecordFinding",
       "pythonModule": "classic_scanlog",
       "pythonExportPath": "NamedRecordFinding",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFinding",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFinding",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFinding",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalysisInput",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFindingAnalysisInput",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalysisInput",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFindingAnalysisInput.__init__",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalysisResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFindingAnalysisResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFindingAnalyzer",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalyzer.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFindingAnalyzer.__init__",
+      "pythonKind": "method",
+      "pythonArity": 0
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalyzer.analyze",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFindingAnalyzer.analyze",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDPlugin",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDPlugin",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDPlugin",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDPlugin.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDPlugin",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDPlugin.__init__",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDValueLookupStatus",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDValueLookupStatus",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDValueLookupStatus",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.formid_finding_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "formid_finding_analyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "FormIDFindingAnalyzer",
       "pythonKind": "class"
     },
     {

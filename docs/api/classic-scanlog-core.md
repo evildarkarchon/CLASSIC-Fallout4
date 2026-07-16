@@ -160,8 +160,9 @@ Focused semantic analyzers use a separate shared `AnalyzerError` containing an
 stable analyzer tokens are `crashgen_settings`, `crash_suspect`,
 `mod_guidance`, `plugin_evidence`, `formid_finding`, and
 `named_record_finding`. The first implemented codes are
-`invalid_configuration` and `unsupported_configuration_version`; adapters must
-project these tokens rather than inventing language-specific spellings.
+`invalid_configuration`, `unsupported_configuration_version`,
+`malformed_result`, and `operational_failure`; adapters must project these
+tokens rather than inventing language-specific spellings.
 
 ---
 
@@ -228,7 +229,14 @@ the canonical parser methods documented in source.
 - `NamedRecordFindingAnalysisResult` carries no report text or sorting policy;
   completed no-match analysis is an explicit empty result. Autoscan Report
   Assembly alone sorts findings and renders the legacy named-record prose.
-- `FormIDAnalyzerCore` extracts, validates, and optionally resolves FormIDs.
+- `FormIDFindingAnalyzer` accepts owned Crash Log lines and plugin/prefix facts,
+  aggregates distinct canonical FormIDs with checked occurrence counts, resolves
+  plugins, and optionally enriches resolved findings through the opaque strict
+  `FormIdValueLookup` facade. Its result retains unresolved identifiers and
+  distinguishes lookup disabled, miss, and hit states without carrying report
+  prose. Lookup misses are data; malformed replies and operational failures use
+  the shared typed analyzer error. Public free batch extraction and validation
+  helpers remain available for independent utility use.
 - `PluginAnalyzer` retains independently useful load-order parsing, plugin-limit,
   filtering, and batch detection utilities; its former report-producing match
   methods are removed.

@@ -86,6 +86,7 @@ pub mod crashgen_settings_analyzer;
 pub mod fcx_handler;
 pub mod formid;
 pub mod formid_analyzer;
+pub mod formid_finding_analyzer;
 pub mod gpu_detector;
 pub mod mod_guidance_analyzer;
 pub mod named_record_finding_analyzer;
@@ -114,8 +115,11 @@ pub use crashgen_settings_analyzer::{
 };
 pub use fcx_handler::PyConfigIssue;
 pub use formid::PyRustFormIDAnalyzer;
-pub use formid_analyzer::{
-    PyFormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
+pub use formid_analyzer::{extract_formids_batch, is_valid_formid, validate_formids_batch};
+pub use formid_finding_analyzer::{
+    PyFormIDFinding, PyFormIDFindingAnalysisInput, PyFormIDFindingAnalysisResult,
+    PyFormIDFindingAnalyzer, PyFormIDFindingLookupEntry, PyFormIDFindingLookupReplyKind,
+    PyFormIDPlugin, PyFormIDValueLookupStatus,
 };
 pub use gpu_detector::{PyGpuDetector, PyGpuInfo, PyGpuVendor};
 pub use mod_guidance_analyzer::{
@@ -221,7 +225,6 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // FormID analysis
     m.add_class::<PyRustFormIDAnalyzer>()?;
-    m.add_class::<PyFormIDAnalyzerCore>()?;
     m.add_function(wrap_pyfunction!(extract_formids_batch, m)?)?;
     m.add_function(wrap_pyfunction!(is_valid_formid, m)?)?;
     m.add_function(wrap_pyfunction!(validate_formids_batch, m)?)?;
@@ -247,6 +250,7 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     crashgen_settings_analyzer::register(m)?;
     crash_suspect_analyzer::register(m)?;
     mod_guidance_analyzer::register(m)?;
+    formid_finding_analyzer::register(m)?;
     named_record_finding_analyzer::register(m)?;
     plugin_evidence_analyzer::register(m)?;
     m.add_class::<PySettingsValidator>()?;
@@ -282,7 +286,6 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // FormID analysis
     m.add_class::<PyRustFormIDAnalyzer>()?;
-    m.add_class::<PyFormIDAnalyzerCore>()?;
     m.add_function(wrap_pyfunction!(extract_formids_batch, m)?)?;
     m.add_function(wrap_pyfunction!(is_valid_formid, m)?)?;
     m.add_function(wrap_pyfunction!(validate_formids_batch, m)?)?;
@@ -308,6 +311,7 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     crashgen_settings_analyzer::register(m)?;
     crash_suspect_analyzer::register(m)?;
     mod_guidance_analyzer::register(m)?;
+    formid_finding_analyzer::register(m)?;
     named_record_finding_analyzer::register(m)?;
     plugin_evidence_analyzer::register(m)?;
     m.add_class::<PySettingsValidator>()?;

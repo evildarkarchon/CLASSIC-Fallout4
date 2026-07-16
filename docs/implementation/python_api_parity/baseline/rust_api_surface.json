@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T12:48:15.256003+00:00",
+  "generated_at_utc": "2026-07-16T23:32:45.304640+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -9367,22 +9367,117 @@
       "tier": "tier1"
     },
     {
-      "symbol": "FormIDAnalyzerCore",
+      "symbol": "FormIDFinding",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
-      "source_expr": "formid_analyzer::FormIDAnalyzerCore",
+      "source_decl": "pub use formid_finding_analyzer::{ FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, };",
+      "source_expr": "formid_finding_analyzer::FormIDFinding",
       "tier": "tier1"
     },
     {
-      "symbol": "FormIDAnalyzerCore",
+      "symbol": "FormIDFinding",
       "kind": "struct",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
-      "source_decl": "pub struct FormIDAnalyzerCore",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub struct FormIDFinding",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDFindingAnalysisInput",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_finding_analyzer::{ FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, };",
+      "source_expr": "formid_finding_analyzer::FormIDFindingAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDFindingAnalysisInput",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub struct FormIDFindingAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDFindingAnalysisResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_finding_analyzer::{ FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, };",
+      "source_expr": "formid_finding_analyzer::FormIDFindingAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDFindingAnalysisResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub struct FormIDFindingAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDFindingAnalyzer",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_finding_analyzer::{ FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, };",
+      "source_expr": "formid_finding_analyzer::FormIDFindingAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDFindingAnalyzer",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub struct FormIDFindingAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDPlugin",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_finding_analyzer::{ FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, };",
+      "source_expr": "formid_finding_analyzer::FormIDPlugin",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDPlugin",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub struct FormIDPlugin",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDValueLookupStatus",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub enum FormIDValueLookupStatus",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDValueLookupStatus",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_finding_analyzer::{ FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, };",
+      "source_expr": "formid_finding_analyzer::FormIDValueLookupStatus",
       "tier": "tier1"
     },
     {
@@ -10877,16 +10972,6 @@
       "arity": 2,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
-      "source_decl": "pub fn extract_formids(&self, segment_callstack: Vec<String>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "extract_formids",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn extract_formids(&self, lines: &[String])",
       "tier": "tier1"
@@ -10917,7 +11002,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
+      "source_decl": "pub use formid_analyzer::{extract_formids_batch, is_valid_formid, validate_formids_batch};",
       "source_expr": "formid_analyzer::extract_formids_batch",
       "tier": "tier1"
     },
@@ -11246,6 +11331,15 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod formid_analyzer;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "formid_finding_analyzer",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod formid_finding_analyzer;",
       "tier": "tier1"
     },
     {
@@ -11583,7 +11677,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
+      "source_decl": "pub use formid_analyzer::{extract_formids_batch, is_valid_formid, validate_formids_batch};",
       "source_expr": "formid_analyzer::is_valid_formid",
       "tier": "tier1"
     },
@@ -11728,11 +11822,11 @@
     {
       "symbol": "new",
       "kind": "function",
-      "arity": 3,
+      "arity": 1,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
-      "source_decl": "pub fn new(\n        db_pool: Option<Arc<DatabasePool>>,\n        show_formid_values: bool,\n        crashgen_name: String,\n    )",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub fn new(value_lookup: FormIdValueLookup)",
       "tier": "tier1"
     },
     {
@@ -12321,7 +12415,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
+      "source_decl": "pub use formid_analyzer::{extract_formids_batch, is_valid_formid, validate_formids_batch};",
       "source_expr": "formid_analyzer::validate_formids_batch",
       "tier": "tier1"
     },

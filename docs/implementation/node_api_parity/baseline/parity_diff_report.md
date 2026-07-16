@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-16T12:49:33.394777+00:00`
-- Tier-1 contract rows: **909**
-- Tier-1 matched: **909**
+- Generated: `2026-07-16T23:32:13.035085+00:00`
+- Tier-1 contract rows: **915**
+- Tier-1 matched: **915**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -441,7 +441,6 @@
 | `scanlog.crashgen_registry.CrashgenEntry@rust` | `scanlog` | `CrashgenEntry@rust` | `None` | `matched` |
 | `scanlog.crashgen_registry.CrashgenRegistry@rust` | `scanlog` | `CrashgenRegistry@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.FormIDAnalyzer@rust` | `scanlog` | `FormIDAnalyzer@rust` | `None` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore@rust` | `scanlog` | `FormIDAnalyzerCore@rust` | `None` | `matched` |
 | `scanlog.gpu_detector.GpuDetector@rust` | `scanlog` | `GpuDetector@rust` | `None` | `matched` |
 | `scanlog.gpu_detector.GpuVendor@rust` | `scanlog` | `GpuVendor@rust` | `None` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer@rust` | `scanlog` | `PapyrusAnalyzer@rust` | `None` | `matched` |
@@ -475,6 +474,13 @@
 | `scanlog.mod_guidance_analyzer.ModSolutionGuidance` | `scanlog` | `ModSolutionGuidance` | `JsModSolutionGuidance` | `matched` |
 | `scanlog.mod_guidance_analyzer.ModSolutionRule` | `scanlog` | `ModSolutionEntry` | `JsModSolutionRule` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFinding` | `scanlog` | `NamedRecordFinding` | `JsNamedRecordFinding` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFinding` | `scanlog` | `FormIDFinding` | `JsFormIdFinding` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput` | `scanlog` | `FormIDFindingAnalysisInput` | `JsFormIdFindingAnalysisInput` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult` | `scanlog` | `FormIDFindingAnalysisResult` | `JsFormIdFindingAnalysisResult` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalyzer` | `scanlog` | `FormIDFindingAnalyzer` | `FormIdFindingAnalyzer` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDPlugin` | `scanlog` | `FormIDPlugin` | `JsFormIdPlugin` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDValueLookupStatus` | `scanlog` | `FormIDValueLookupStatus` | `JsFormIdValueLookupStatus` | `matched` |
+| `scanlog.formid_finding_analyzer.formid_finding_analyzer@rust` | `scanlog` | `formid_finding_analyzer@rust` | `None` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput` | `scanlog` | `NamedRecordFindingAnalysisInput` | `JsNamedRecordFindingAnalysisInput` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult` | `scanlog` | `NamedRecordFindingAnalysisResult` | `JsNamedRecordFindingAnalysisResult` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer` | `scanlog` | `NamedRecordFindingAnalyzer` | `NamedRecordFindingAnalyzer` | `matched` |

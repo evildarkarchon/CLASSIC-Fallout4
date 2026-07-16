@@ -1,6 +1,6 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-16T12:48:14.975614+00:00`
+- Generated: `2026-07-16T23:32:45.317739+00:00`
 - Tier-1 contract rows: **1289**
 - Tier-1 matched: **1289**
 - Tier-1 missing Rust: **0**
@@ -805,18 +805,7 @@
 | `scanlog.formid_analyzer.FormIDAnalyzer.extract_formids` | `scanlog` | `RustFormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer.extract_formids` | `matched` |
 | `scanlog.formid_analyzer.FormIDAnalyzer.parse_formid` | `scanlog` | `RustFormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer.parse_formid` | `matched` |
 | `scanlog.formid_analyzer.FormIDAnalyzer@rust` | `scanlog` | `FormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.__init__` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.__init__` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.cache_plugins` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.cache_plugins` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.extract_formids` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.extract_formids` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.extract_formids_nocopy` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.extract_formids_nocopy` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.extract_plugin_index` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.extract_plugin_index` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.formid_match` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.formid_match` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.is_valid_formid` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.is_valid_formid` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.parse_formid` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.parse_formid` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.process_formids_cached` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.process_formids_cached` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore@rust` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore` | `matched` |
-| `scanlog.formid_analyzer.formid_analyzer@rust` | `scanlog` | `formid_analyzer` | `classic_scanlog.FormIDAnalyzerCore` | `matched` |
+| `scanlog.formid_analyzer.formid_analyzer@rust` | `scanlog` | `formid_analyzer` | `classic_scanlog.FormIDAnalyzer` | `matched` |
 | `scanlog.formid_analyzer.is_valid_formid` | `scanlog` | `is_valid_formid` | `classic_scanlog.is_valid_formid` | `matched` |
 | `scanlog.formid_analyzer.is_valid_formid@rust` | `scanlog` | `is_valid_formid` | `classic_scanlog.is_valid_formid` | `matched` |
 | `scanlog.formid_analyzer.validate_formids_batch` | `scanlog` | `validate_formids_batch` | `classic_scanlog.validate_formids_batch` | `matched` |
@@ -858,6 +847,17 @@
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer.analyze` | `scanlog` | `PluginEvidenceAnalyzer` | `classic_scanlog.PluginEvidenceAnalyzer.analyze` | `matched` |
 | `scanlog.plugin_evidence_analyzer.plugin_evidence_analyzer@rust` | `scanlog` | `plugin_evidence_analyzer` | `classic_scanlog.PluginEvidenceAnalyzer` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFinding` | `scanlog` | `NamedRecordFinding` | `classic_scanlog.NamedRecordFinding` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFinding` | `scanlog` | `FormIDFinding` | `classic_scanlog.FormIDFinding` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput` | `scanlog` | `FormIDFindingAnalysisInput` | `classic_scanlog.FormIDFindingAnalysisInput` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput.__init__` | `scanlog` | `FormIDFindingAnalysisInput` | `classic_scanlog.FormIDFindingAnalysisInput.__init__` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult` | `scanlog` | `FormIDFindingAnalysisResult` | `classic_scanlog.FormIDFindingAnalysisResult` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalyzer` | `scanlog` | `FormIDFindingAnalyzer` | `classic_scanlog.FormIDFindingAnalyzer` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalyzer.__init__` | `scanlog` | `FormIDFindingAnalyzer` | `classic_scanlog.FormIDFindingAnalyzer.__init__` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalyzer.analyze` | `scanlog` | `FormIDFindingAnalyzer` | `classic_scanlog.FormIDFindingAnalyzer.analyze` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDPlugin` | `scanlog` | `FormIDPlugin` | `classic_scanlog.FormIDPlugin` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDPlugin.__init__` | `scanlog` | `FormIDPlugin` | `classic_scanlog.FormIDPlugin.__init__` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDValueLookupStatus` | `scanlog` | `FormIDValueLookupStatus` | `classic_scanlog.FormIDValueLookupStatus` | `matched` |
+| `scanlog.formid_finding_analyzer.formid_finding_analyzer@rust` | `scanlog` | `formid_finding_analyzer` | `classic_scanlog.FormIDFindingAnalyzer` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput` | `scanlog` | `NamedRecordFindingAnalysisInput` | `classic_scanlog.NamedRecordFindingAnalysisInput` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput.__init__` | `scanlog` | `NamedRecordFindingAnalysisInput` | `classic_scanlog.NamedRecordFindingAnalysisInput.__init__` | `matched` |
 | `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult` | `scanlog` | `NamedRecordFindingAnalysisResult` | `classic_scanlog.NamedRecordFindingAnalysisResult` | `matched` |

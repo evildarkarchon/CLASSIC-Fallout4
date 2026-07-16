@@ -744,3 +744,81 @@ fn one_immutable_handle_is_safe_for_concurrent_owned_calls() {
         assert_eq!(execution.result.disabled_setting_notices.len(), 2);
     }
 }
+
+#[test]
+fn formid_finding_cxx_projects_owned_optional_values_and_unresolved_identifiers() {
+    let analyzer = formid_finding_analyzer_in_memory_new(vec![ffi::FormIDFindingLookupEntryDto {
+        formid: "123456".to_string(),
+        plugin: "Found.esp".to_string(),
+        reply_kind: ffi::FormIDFindingLookupReplyKind::Found,
+        value: "Resolved value".to_string(),
+        error_message: String::new(),
+    }]);
+    let construction = formid_finding_analyzer_construction_result(&analyzer);
+    let execution = formid_finding_analyze(
+        &analyzer,
+        ffi::FormIDFindingAnalysisInputDto {
+            crash_lines: vec![
+                "Form ID: 0x01123456".to_string(),
+                "Form ID: 0x02ABCDEF".to_string(),
+            ],
+            plugins: vec![ffi::FormIDPluginDto {
+                name: "Found.esp".to_string(),
+                prefix: "01".to_string(),
+            }],
+        },
+    );
+
+    assert!(construction.has_analyzer);
+    assert!(execution.has_result, "{}", execution.error.message);
+    assert_eq!(execution.result.findings.len(), 2);
+    let found = &execution.result.findings[0];
+    assert!(found.has_plugin);
+    assert_eq!(found.plugin, "Found.esp");
+    assert_eq!(
+        found.value_lookup_status,
+        ffi::FormIDValueLookupStatus::Found
+    );
+    assert!(found.has_value);
+    assert_eq!(found.value, "Resolved value");
+    let unresolved = &execution.result.findings[1];
+    assert!(!unresolved.has_plugin);
+    assert_eq!(
+        unresolved.value_lookup_status,
+        ffi::FormIDValueLookupStatus::NotApplicable
+    );
+    assert!(!unresolved.has_value);
+}
+
+#[test]
+fn formid_finding_cxx_preserves_lookup_failure_as_shared_error() {
+    let analyzer = formid_finding_analyzer_in_memory_new(vec![ffi::FormIDFindingLookupEntryDto {
+        formid: "123456".to_string(),
+        plugin: "Broken.esp".to_string(),
+        reply_kind: ffi::FormIDFindingLookupReplyKind::OperationalFailure,
+        value: String::new(),
+        error_message: "fixture offline".to_string(),
+    }]);
+    let execution = formid_finding_analyze(
+        &analyzer,
+        ffi::FormIDFindingAnalysisInputDto {
+            crash_lines: vec!["Form ID: 0x01123456".to_string()],
+            plugins: vec![ffi::FormIDPluginDto {
+                name: "Broken.esp".to_string(),
+                prefix: "01".to_string(),
+            }],
+        },
+    );
+
+    assert!(!execution.has_result);
+    assert!(execution.has_error);
+    assert_eq!(
+        execution.error.analyzer_kind,
+        ffi::AnalyzerKind::FormIdFinding
+    );
+    assert_eq!(
+        execution.error.code,
+        ffi::AnalyzerErrorCode::OperationalFailure
+    );
+    assert!(execution.error.message.contains("fixture offline"));
+}

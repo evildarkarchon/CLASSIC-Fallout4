@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T12:49:33.392957+00:00",
+  "generated_at_utc": "2026-07-16T23:32:13.033203+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -115,6 +115,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface FileIoConfig {"
+    },
+    {
+      "export": "FormIdFindingAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class FormIdFindingAnalyzer {"
     },
     {
       "export": "GamePathFinder",
@@ -613,6 +621,38 @@
       "signature": "export interface JsFileOperationResult {"
     },
     {
+      "export": "JsFormIdFinding",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdFinding {"
+    },
+    {
+      "export": "JsFormIdFindingAnalysisInput",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdFindingAnalysisInput {"
+    },
+    {
+      "export": "JsFormIdFindingAnalysisResult",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdFindingAnalysisResult {"
+    },
+    {
+      "export": "JsFormIdPlugin",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdPlugin {"
+    },
+    {
       "export": "JsFormIdValueLookup",
       "kind": "class",
       "owner_module": "database",
@@ -643,6 +683,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare const enum JsFormIdValueLookupOutcomeKind {"
+    },
+    {
+      "export": "JsFormIdValueLookupStatus",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsFormIdValueLookupStatus {"
     },
     {
       "export": "JsFrontendPreferences",

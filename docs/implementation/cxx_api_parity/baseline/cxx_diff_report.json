@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 500,
-    "current_total": 500,
-    "matched": 500,
+    "contract_total": 515,
+    "current_total": 515,
+    "matched": 515,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -1825,6 +1825,22 @@
       "reason": "-"
     },
     {
+      "id": "265e1c864e00bf37",
+      "rustSymbol": "FormIDFindingLookupReplyKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fcec1e0fdd22e089",
+      "rustSymbol": "FormIDValueLookupStatus",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "961e055bf0a35267",
       "rustSymbol": "ModGuidanceCriteriaKind",
       "kind": "enum",
@@ -1955,6 +1971,46 @@
     {
       "id": "57a72189be1829d2",
       "rustSymbol": "detect_vr_log",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "689dceccfd9be6f8",
+      "rustSymbol": "formid_finding_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7d25ad92f2c615d5",
+      "rustSymbol": "formid_finding_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6ea8c0bd04ed0292",
+      "rustSymbol": "formid_finding_analyzer_disabled_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "404672c761345c3a",
+      "rustSymbol": "formid_finding_analyzer_in_memory_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fdc0f6289d855f5c",
+      "rustSymbol": "formid_finding_analyzer_sqlite_new",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -2193,6 +2249,14 @@
       "reason": "-"
     },
     {
+      "id": "bf67a6d66d028b53",
+      "rustSymbol": "CxxFormIDFindingAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "22546314349a5a8a",
       "rustSymbol": "CxxModGuidanceAnalyzer",
       "kind": "opaque",
@@ -2403,6 +2467,62 @@
     {
       "id": "0ea85cd7a4b6a5fb",
       "rustSymbol": "FcxIssueDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6e77a9e1d9541360",
+      "rustSymbol": "FormIDFindingAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "48f6fbdd9235bd22",
+      "rustSymbol": "FormIDFindingAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a3856cf8f6be5926",
+      "rustSymbol": "FormIDFindingAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "172a534212badf25",
+      "rustSymbol": "FormIDFindingAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c3aea1f2c53cfc93",
+      "rustSymbol": "FormIDFindingDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "70f4c969d985e22e",
+      "rustSymbol": "FormIDFindingLookupEntryDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "16758b137ae088f8",
+      "rustSymbol": "FormIDPluginDto",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

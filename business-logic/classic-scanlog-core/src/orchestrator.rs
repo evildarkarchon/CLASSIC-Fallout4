@@ -15,7 +15,9 @@ use crate::crash_suspect_analyzer::{
 };
 use crate::crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 use crate::error::Result;
-use crate::formid_analyzer::FormIDAnalyzerCore;
+use crate::formid_finding_analyzer::{
+    FormIDFindingAnalysisInput, FormIDFindingAnalyzer, FormIDPlugin,
+};
 use crate::gpu_detector::GpuDetector;
 use crate::mod_guidance_analyzer::{
     ModGuidanceAnalysisInput, ModGuidanceAnalysisResult, ModGuidanceAnalyzer,
@@ -45,7 +47,7 @@ use classic_config_core::{
     ConfigLayout, CoreModEntry, CrashgenSettingsSnapshot, ModConflictEntry, ModSolutionEntry,
     SuspectErrorRule, SuspectStackRule,
 };
-use classic_database_core::DatabasePool;
+use classic_database_core::{DatabasePool, FormIdValueLookup};
 use classic_file_io_core::FileIOCore;
 use classic_version_registry_core::{
     CrashgenConfig, GameVersion as RegistryGameVersion, VersionInfo, get_version_registry,
@@ -711,7 +713,7 @@ pub struct OrchestratorCore {
     parser: LogParser,
     plugin_analyzer: Option<PluginAnalyzer>,
     plugin_evidence_analyzer: PluginEvidenceAnalyzer,
-    formid_analyzer: FormIDAnalyzerCore,
+    formid_finding_analyzer: FormIDFindingAnalyzer,
     suspect_analyzer: CrashSuspectAnalyzer,
     mod_guidance_analyzer: ModGuidanceAnalyzer,
     /// Immutable semantic analyzer for named record evidence.
@@ -930,10 +932,6 @@ impl OrchestratorCore {
             ))
         })?;
 
-        // Extract values before moving config
-        let show_formid_values = config.show_formid_values;
-        let crashgen_name = config.crashgen_name.clone();
-
         // An absent handle means Named Record Finding analysis is not configured.
         let named_record_finding_analyzer = if !config.classic_records_list.is_empty() {
             Some(
@@ -965,11 +963,7 @@ impl OrchestratorCore {
             parser: LogParser::new(None)?,
             plugin_analyzer,
             plugin_evidence_analyzer,
-            formid_analyzer: FormIDAnalyzerCore::new(
-                None, // No database pool initially
-                show_formid_values,
-                crashgen_name,
-            )?,
+            formid_finding_analyzer: FormIDFindingAnalyzer::new(FormIdValueLookup::disabled()),
             suspect_analyzer,
             mod_guidance_analyzer,
             named_record_finding_analyzer,
@@ -1019,13 +1013,18 @@ impl OrchestratorCore {
     /// # }
     /// ```
     pub fn with_database_pool(mut self, pool: Arc<DatabasePool>) -> Result<Self> {
-        self.formid_analyzer = FormIDAnalyzerCore::new(
-            Some(pool.clone()),
-            self.config.show_formid_values,
-            self.config.crashgen_name.clone(),
-        )?;
+        self.formid_finding_analyzer = self.formid_finding_analyzer_for_pool(pool.clone());
         self.db_pool = Some(pool);
         Ok(self)
+    }
+
+    /// Creates the semantic FormID analyzer selected by this orchestrator's lookup policy.
+    fn formid_finding_analyzer_for_pool(&self, pool: Arc<DatabasePool>) -> FormIDFindingAnalyzer {
+        FormIDFindingAnalyzer::new(if self.config.show_formid_values {
+            FormIdValueLookup::shared_pool(pool)
+        } else {
+            FormIdValueLookup::disabled()
+        })
     }
 
     /// Attaches a database pool for async FormID lookups on an existing orchestrator.
@@ -1038,11 +1037,7 @@ impl OrchestratorCore {
     ///
     /// * `pool` - The database connection pool to use for FormID lookups
     pub fn attach_database_pool(&mut self, pool: Arc<DatabasePool>) -> Result<()> {
-        self.formid_analyzer = FormIDAnalyzerCore::new(
-            Some(pool.clone()),
-            self.config.show_formid_values,
-            self.config.crashgen_name.clone(),
-        )?;
+        self.formid_finding_analyzer = self.formid_finding_analyzer_for_pool(pool.clone());
         self.db_pool = Some(pool);
         Ok(())
     }
@@ -1230,11 +1225,7 @@ impl OrchestratorCore {
         }
 
         let (formid_record_contributions, formid_count) = self
-            .collect_formid_and_record_contributions(
-                &context,
-                plugins_map.as_ref(),
-                &crashgen.effective_crashgen_name,
-            )
+            .collect_formid_and_record_contributions(&context, plugins_map.as_ref())
             .await?;
         contributions.extend(formid_record_contributions);
 
@@ -1697,32 +1688,44 @@ impl OrchestratorCore {
             })
     }
 
+    /// Runs aggregate FormID and Named Record analysis and retains completed-empty results.
     async fn collect_formid_and_record_contributions(
         &self,
         context: &ScanAnalysisContext,
         plugins_map: Option<&IndexMap<String, String>>,
-        effective_crashgen_name: &str,
     ) -> Result<(Vec<AutoscanReportContribution>, usize)> {
         let mut contributions = Vec::new();
         let mut formid_count = 0;
         if !context.combined_crash_lines.is_empty() {
-            let formids = self
-                .formid_analyzer
-                .extract_formids(context.combined_crash_lines.clone());
-            formid_count = formids.len();
-
-            if formid_count > 0 {
-                let empty_plugins = IndexMap::new();
-                let plugins_ref = plugins_map.unwrap_or(&empty_plugins);
-                let formid_report_lines = self
-                    .formid_analyzer
-                    .formid_match_with_crashgen_name(formids, plugins_ref, effective_crashgen_name)
-                    .await?;
-
-                contributions.push(AutoscanReportContribution::FormIdFinding {
-                    lines: formid_report_lines,
-                });
-            }
+            let plugins = plugins_map
+                .into_iter()
+                .flat_map(|plugins| plugins.iter())
+                .map(|(name, prefix)| FormIDPlugin {
+                    name: name.clone(),
+                    prefix: prefix.clone(),
+                })
+                .collect();
+            let result = self
+                .formid_finding_analyzer
+                .analyze(FormIDFindingAnalysisInput {
+                    crash_lines: context.combined_crash_lines.clone(),
+                    plugins,
+                })
+                .await
+                .map_err(|error| {
+                    crate::error::ScanLogError::AnalysisError(format!(
+                        "{} [{}]: {}",
+                        error.analyzer().as_str(),
+                        error.code().as_str(),
+                        error.message()
+                    ))
+                })?;
+            formid_count = result
+                .findings
+                .iter()
+                .map(|finding| finding.occurrences as usize)
+                .sum();
+            contributions.push(AutoscanReportContribution::FormIdFinding { result });
         }
 
         if let Some(ref analyzer) = self.named_record_finding_analyzer

@@ -122,130 +122,6 @@ class FormIDAnalyzer:
 
         """
 
-class FormIDAnalyzerCore:
-    """Core FormID analysis functionality with optimizations.
-
-    Provides high-performance FormID extraction, validation, and matching
-    with zero-copy optimizations and plugin caching for repeated operations.
-    """
-
-    def __init__(
-        self,
-        show_formid_values: bool = False,
-        crashgen_name: str = "",
-    ) -> None:
-        """Create FormID analyzer core.
-
-        Args:
-            show_formid_values: Whether to show FormID values in output
-            crashgen_name: Name of the crash generator (e.g., "Buffout 4")
-
-        """
-
-    def extract_formids(self, segment_callstack: list[str]) -> list[str]:
-        """Extract FormIDs from callstack segment.
-
-        Standard extraction method that processes a callstack segment
-        and returns all found FormIDs.
-
-        Args:
-            segment_callstack: List of callstack lines to search
-
-        Returns:
-            List of FormID strings found in the segment
-
-        """
-
-    def extract_formids_nocopy(self, segment_callstack: list[str]) -> list[str]:
-        """Extract FormIDs using zero-copy optimization.
-
-        Optimized extraction that avoids unnecessary data copies by
-        directly processing Python list strings.
-
-        Args:
-            segment_callstack: List of callstack lines to search
-
-        Returns:
-            List of FormID strings found in the segment
-
-        """
-
-    def cache_plugins(self, cache_key: str, plugins: dict[str, str]) -> None:
-        """Cache plugin mappings for efficient repeated use.
-
-        Stores plugin data on the Rust side to avoid repeated conversions
-        from Python dictionaries. Use a stable cache_key to identify the
-        plugin set.
-
-        Args:
-            cache_key: Unique identifier for this plugin set (e.g., MD5 hash)
-            plugins: Dictionary mapping plugin names to paths/details
-
-        """
-
-    def process_formids_cached(self, formids: list[str], cache_key: str) -> list[str]:
-        """Process FormIDs using cached plugin mappings.
-
-        Uses previously cached plugins for efficient FormID matching and
-        report generation without Python/Rust boundary overhead.
-
-        Args:
-            formids: List of FormID strings to process
-            cache_key: Cache key from previous cache_plugins() call
-
-        Returns:
-            List of formatted report lines for the FormID matches
-
-        """
-
-    def formid_match(self, formids: list[str], plugins: dict[str, str]) -> list[str]:
-        """Match FormIDs against plugins and return formatted report lines.
-
-        This function correlates extracted FormIDs with plugin load order IDs from
-        the crash log, generating a report section with plugin associations and counts.
-
-        Args:
-            formids: FormID strings extracted from callstack (e.g., "Form ID: 12345678")
-            plugins: Mapping of plugin names to their load order IDs
-
-        Returns:
-            A list of formatted report lines ready for inclusion in the analysis report.
-
-        """
-
-    def is_valid_formid(self, formid: str) -> bool:
-        """Check if FormID string is valid.
-
-        Args:
-            formid: FormID string to validate
-
-        Returns:
-            True if valid hex FormID
-
-        """
-
-    def parse_formid(self, formid: str) -> int | None:
-        """Parse FormID string to integer.
-
-        Args:
-            formid: FormID string (hex format)
-
-        Returns:
-            Parsed FormID integer or None if invalid
-
-        """
-
-    def extract_plugin_index(self, formid: str) -> int | None:
-        """Extract plugin index from FormID.
-
-        Args:
-            formid: FormID string
-
-        Returns:
-            Plugin index (0-255) or None if invalid
-
-        """
-
 # =============================================================================
 # Log Parsing
 # =============================================================================
@@ -1614,6 +1490,76 @@ class PluginEvidenceAnalyzer:
     def kind(self) -> AnalyzerKind: ...
     def analyze(self, input: PluginEvidenceAnalysisInput) -> PluginEvidenceAnalysisResult:
         """Run aggregate semantic analysis without producing report lines."""
+
+class FormIDFindingLookupReplyKind:
+    """Callback-free deterministic lookup reply category."""
+
+    Missing: FormIDFindingLookupReplyKind
+    Found: FormIDFindingLookupReplyKind
+    OperationalFailure: FormIDFindingLookupReplyKind
+
+class FormIDFindingLookupEntry:
+    """Immutable owned deterministic FormID lookup reply."""
+
+    def __init__(
+        self,
+        formid: str,
+        plugin: str,
+        reply_kind: FormIDFindingLookupReplyKind,
+        value: str | None = None,
+        error_message: str | None = None,
+    ) -> None: ...
+
+class FormIDPlugin:
+    """Immutable plugin identity and load-order prefix."""
+
+    def __init__(self, name: str, prefix: str) -> None: ...
+
+class FormIDFindingAnalysisInput:
+    """Immutable owned input for one aggregate FormID Finding call."""
+
+    def __init__(self, crash_lines: list[str], plugins: list[FormIDPlugin]) -> None: ...
+
+class FormIDValueLookupStatus:
+    """Semantic state of optional FormID Value Lookup."""
+
+    NotApplicable: FormIDValueLookupStatus
+    Disabled: FormIDValueLookupStatus
+    Missing: FormIDValueLookupStatus
+    Found: FormIDValueLookupStatus
+
+class FormIDFinding:
+    """Immutable distinct FormID Finding including unresolved identifiers."""
+
+    @property
+    def identifier(self) -> str: ...
+    @property
+    def occurrences(self) -> int: ...
+    @property
+    def plugin(self) -> str | None: ...
+    @property
+    def value_lookup_status(self) -> FormIDValueLookupStatus: ...
+    @property
+    def value(self) -> str | None: ...
+
+class FormIDFindingAnalysisResult:
+    """Completed semantic analysis, including explicit empty success."""
+
+    @property
+    def findings(self) -> list[FormIDFinding]: ...
+
+class FormIDFindingAnalyzer:
+    """Immutable aggregate FormID Finding analyzer."""
+
+    def __init__(self) -> None: ...
+    @staticmethod
+    def in_memory(entries: list[FormIDFindingLookupEntry]) -> FormIDFindingAnalyzer: ...
+    @staticmethod
+    def sqlite(database_path: str, game_table: str) -> FormIDFindingAnalyzer: ...
+    @property
+    def kind(self) -> AnalyzerKind: ...
+    def analyze(self, input: FormIDFindingAnalysisInput) -> FormIDFindingAnalysisResult:
+        """Run async Rust analysis on the shared runtime while releasing the GIL."""
 
 class NamedRecordFindingAnalysisInput:
     """Immutable owned input for one aggregate Named Record Finding analysis call."""

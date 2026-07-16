@@ -8,6 +8,10 @@ use classic_config_core::{
     ModSolutionEntry, OutcomeKind, RuleSeverity, SuspectErrorRule, SuspectStackCountRule,
     SuspectStackRule, parse_crashgen_expectations,
 };
+use classic_database_core::{
+    FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupError,
+    FormIdValueLookupInMemoryReply,
+};
 use classic_scanlog_core::mod_guidance_analyzer::{
     ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult,
     ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance,
@@ -17,12 +21,14 @@ use classic_scanlog_core::{
     AnalyzerKind as CoreAnalyzerKind, CrashSuspectAnalysisInput, CrashSuspectAnalysisResult,
     CrashSuspectAnalyzer, CrashSuspectFinding, CrashSuspectFindingKind, CrashgenEntry,
     CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult,
-    CrashgenSettingsAnalyzer, NamedRecordFindingAnalysisInput, NamedRecordFindingAnalysisResult,
-    NamedRecordFindingAnalyzer, PluginEvidenceAnalysisInput, PluginEvidenceAnalysisResult,
-    PluginEvidenceAnalyzer,
+    CrashgenSettingsAnalyzer, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult,
+    FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, NamedRecordFindingAnalysisInput,
+    NamedRecordFindingAnalysisResult, NamedRecordFindingAnalyzer, PluginEvidenceAnalysisInput,
+    PluginEvidenceAnalysisResult, PluginEvidenceAnalyzer,
 };
 
 use super::ffi;
+use crate::runtime_support::block_on;
 
 /// Bridge-owned error payload used for carrier decoding and core error projection.
 #[derive(Clone, Debug)]
@@ -69,6 +75,176 @@ pub(crate) struct CxxPluginEvidenceAnalyzer {
 /// Immutable CXX-owned handle for one validated Named Record Finding Analyzer.
 pub(crate) struct CxxNamedRecordFindingAnalyzer {
     inner: Result<NamedRecordFindingAnalyzer, BridgeAnalyzerError>,
+}
+
+/// Immutable CXX-owned handle for one aggregate FormID Finding Analyzer.
+pub(crate) struct CxxFormIDFindingAnalyzer {
+    inner: Result<FormIDFindingAnalyzer, BridgeAnalyzerError>,
+}
+
+/// Constructs a FormID Finding Analyzer with value lookup explicitly disabled.
+pub(crate) fn formid_finding_analyzer_disabled_new() -> Box<CxxFormIDFindingAnalyzer> {
+    Box::new(CxxFormIDFindingAnalyzer {
+        inner: Ok(FormIDFindingAnalyzer::new(FormIdValueLookup::disabled())),
+    })
+}
+
+/// Constructs a FormID Finding Analyzer from fully owned deterministic lookup replies.
+pub(crate) fn formid_finding_analyzer_in_memory_new(
+    entries: Vec<ffi::FormIDFindingLookupEntryDto>,
+) -> Box<CxxFormIDFindingAnalyzer> {
+    let entries = entries
+        .into_iter()
+        .map(|entry| {
+            let reply = match entry.reply_kind {
+                ffi::FormIDFindingLookupReplyKind::Missing => {
+                    FormIdValueLookupInMemoryReply::Value(None)
+                }
+                ffi::FormIDFindingLookupReplyKind::Found => {
+                    FormIdValueLookupInMemoryReply::Value(Some(entry.value))
+                }
+                ffi::FormIDFindingLookupReplyKind::OperationalFailure => {
+                    FormIdValueLookupInMemoryReply::OperationalFailure(entry.error_message)
+                }
+                _ => {
+                    return Err(BridgeAnalyzerError {
+                        analyzer_kind: CoreAnalyzerKind::FormIdFinding,
+                        code: CoreAnalyzerErrorCode::InvalidConfiguration,
+                        message: "FormID Finding lookup reply kind is not supported".to_string(),
+                    });
+                }
+            };
+            Ok(FormIdValueLookupEntry::new(
+                entry.formid,
+                entry.plugin,
+                reply,
+            ))
+        })
+        .collect::<Result<Vec<_>, BridgeAnalyzerError>>();
+    Box::new(CxxFormIDFindingAnalyzer {
+        inner: entries
+            .map(|entries| FormIDFindingAnalyzer::new(FormIdValueLookup::in_memory(entries))),
+    })
+}
+
+/// Constructs a FormID Finding Analyzer over one owned SQLite lookup adapter.
+pub(crate) fn formid_finding_analyzer_sqlite_new(
+    database_path: &str,
+    game_table: &str,
+) -> Box<CxxFormIDFindingAnalyzer> {
+    let lookup = block_on(FormIdValueLookup::sqlite(
+        database_path.into(),
+        game_table.to_string(),
+    ));
+    Box::new(CxxFormIDFindingAnalyzer {
+        inner: lookup
+            .map(FormIDFindingAnalyzer::new)
+            .map_err(lookup_error_to_bridge),
+    })
+}
+
+/// Returns the explicit typed status captured during FormID Finding construction.
+pub(crate) fn formid_finding_analyzer_construction_result(
+    analyzer: &CxxFormIDFindingAnalyzer,
+) -> ffi::FormIDFindingAnalyzerConstructionResultDto {
+    match &analyzer.inner {
+        Ok(_) => ffi::FormIDFindingAnalyzerConstructionResultDto {
+            has_analyzer: true,
+            has_error: false,
+            error: empty_error_dto(),
+        },
+        Err(error) => ffi::FormIDFindingAnalyzerConstructionResultDto {
+            has_analyzer: false,
+            has_error: true,
+            error: bridge_error_to_dto(error),
+        },
+    }
+}
+
+/// Runs aggregate FormID Finding analysis on the process-wide shared runtime.
+pub(crate) fn formid_finding_analyze(
+    analyzer: &CxxFormIDFindingAnalyzer,
+    input: ffi::FormIDFindingAnalysisInputDto,
+) -> ffi::FormIDFindingAnalysisExecutionResultDto {
+    let core_analyzer = match &analyzer.inner {
+        Ok(analyzer) => analyzer,
+        Err(error) => return formid_finding_error_result(bridge_error_to_dto(error)),
+    };
+    let input = FormIDFindingAnalysisInput {
+        crash_lines: input.crash_lines,
+        plugins: input
+            .plugins
+            .into_iter()
+            .map(|plugin| FormIDPlugin {
+                name: plugin.name,
+                prefix: plugin.prefix,
+            })
+            .collect(),
+    };
+
+    match block_on(core_analyzer.analyze(input)) {
+        Ok(result) => ffi::FormIDFindingAnalysisExecutionResultDto {
+            has_result: true,
+            result: formid_finding_result_to_dto(result),
+            has_error: false,
+            error: empty_error_dto(),
+        },
+        Err(error) => formid_finding_error_result(bridge_error_to_dto(&error.into())),
+    }
+}
+
+/// Projects one semantic FormID result into owned records and explicit option flags.
+fn formid_finding_result_to_dto(
+    result: FormIDFindingAnalysisResult,
+) -> ffi::FormIDFindingAnalysisResultDto {
+    ffi::FormIDFindingAnalysisResultDto {
+        findings: result
+            .findings
+            .into_iter()
+            .map(|finding| ffi::FormIDFindingDto {
+                identifier: finding.identifier,
+                occurrences: finding.occurrences,
+                has_plugin: finding.plugin.is_some(),
+                plugin: finding.plugin.unwrap_or_default(),
+                value_lookup_status: match finding.value_lookup_status {
+                    FormIDValueLookupStatus::NotApplicable => {
+                        ffi::FormIDValueLookupStatus::NotApplicable
+                    }
+                    FormIDValueLookupStatus::Disabled => ffi::FormIDValueLookupStatus::Disabled,
+                    FormIDValueLookupStatus::Missing => ffi::FormIDValueLookupStatus::Missing,
+                    FormIDValueLookupStatus::Found => ffi::FormIDValueLookupStatus::Found,
+                },
+                has_value: finding.value.is_some(),
+                value: finding.value.unwrap_or_default(),
+            })
+            .collect(),
+    }
+}
+
+/// Builds the error branch of the explicit FormID Finding execution envelope.
+fn formid_finding_error_result(
+    error: ffi::AnalyzerErrorDto,
+) -> ffi::FormIDFindingAnalysisExecutionResultDto {
+    ffi::FormIDFindingAnalysisExecutionResultDto {
+        has_result: false,
+        result: ffi::FormIDFindingAnalysisResultDto {
+            findings: Vec::new(),
+        },
+        has_error: true,
+        error,
+    }
+}
+
+/// Maps a lookup-handle construction failure into the shared analyzer error shape.
+fn lookup_error_to_bridge(error: FormIdValueLookupError) -> BridgeAnalyzerError {
+    BridgeAnalyzerError {
+        analyzer_kind: CoreAnalyzerKind::FormIdFinding,
+        code: match error.code() {
+            "malformed_result" => CoreAnalyzerErrorCode::MalformedResult,
+            _ => CoreAnalyzerErrorCode::OperationalFailure,
+        },
+        message: error.message().to_string(),
+    }
 }
 
 /// Constructs and validates a Named Record Finding Analyzer from owned matcher configuration.
@@ -833,6 +1009,8 @@ fn bridge_error_to_dto(error: &BridgeAnalyzerError) -> ffi::AnalyzerErrorDto {
             CoreAnalyzerErrorCode::UnsupportedConfigurationVersion => {
                 ffi::AnalyzerErrorCode::UnsupportedConfigurationVersion
             }
+            CoreAnalyzerErrorCode::MalformedResult => ffi::AnalyzerErrorCode::MalformedResult,
+            CoreAnalyzerErrorCode::OperationalFailure => ffi::AnalyzerErrorCode::OperationalFailure,
         },
         message: error.message.clone(),
     }

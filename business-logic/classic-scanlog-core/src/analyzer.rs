@@ -40,6 +40,10 @@ pub enum AnalyzerErrorCode {
     InvalidConfiguration,
     /// The supplied configuration version is not supported by this build.
     UnsupportedConfigurationVersion,
+    /// An analyzer dependency returned malformed semantic data.
+    MalformedResult,
+    /// An analyzer dependency could not complete its operation.
+    OperationalFailure,
 }
 
 impl AnalyzerErrorCode {
@@ -48,6 +52,8 @@ impl AnalyzerErrorCode {
         match self {
             Self::InvalidConfiguration => "invalid_configuration",
             Self::UnsupportedConfigurationVersion => "unsupported_configuration_version",
+            Self::MalformedResult => "malformed_result",
+            Self::OperationalFailure => "operational_failure",
         }
     }
 }

@@ -31,6 +31,7 @@ pub mod error;
 pub(crate) mod fcx_handler;
 pub mod formid;
 pub mod formid_analyzer;
+pub mod formid_finding_analyzer;
 pub mod gpu_detector;
 pub mod mod_guidance_analyzer;
 pub mod named_record_finding_analyzer;
@@ -67,8 +68,10 @@ pub use crashgen_settings_analyzer::{
 pub use error::ScanLogError;
 pub use fcx_handler::ConfigIssue;
 pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};
-pub use formid_analyzer::{
-    FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
+pub use formid_analyzer::{extract_formids_batch, is_valid_formid, validate_formids_batch};
+pub use formid_finding_analyzer::{
+    FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer,
+    FormIDPlugin, FormIDValueLookupStatus,
 };
 pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};
 pub use mod_guidance_analyzer::{

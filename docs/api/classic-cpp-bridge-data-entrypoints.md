@@ -219,6 +219,17 @@ A present result with an empty `findings` vector means analysis completed with
 no matches. The bridge projects no headings, sorting policy, prose, or markdown;
 failures retain `AnalyzerKind::NamedRecordFinding` and the shared stable code.
 
+The `formid_finding_analyzer_*_new(...)` constructors create the aggregate
+FormID Finding handle over disabled lookup, owned in-memory replies, or one
+SQLite adapter. Construction and analysis run through the process-wide shared
+runtime. `formid_finding_analyze(...)` accepts owned Crash Log lines and
+plugin/prefix records, then returns canonical identifiers, checked occurrence
+counts, explicit plugin/value presence flags, and a typed lookup status.
+Unresolved identifiers remain in the result; lookup misses are successful data,
+while malformed replies and operational failures use the shared analyzer
+envelope. No DTO exposes caches, database internals, matcher inputs, report
+prose, or markdown.
+
 ### Complete-run entry point
 
 The only public complete-run operation is:

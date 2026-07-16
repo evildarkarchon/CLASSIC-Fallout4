@@ -131,7 +131,7 @@
         "tier": "tier1"
       },
       "contractCount": 291,
-      "contractIdsHash": "e7d79af23b3ec3f1f0ab80c40d9c2de0e8065b4790071e3ea8afdf2f72d5d5c6",
+      "contractIdsHash": "4584364701db54632bb688e60e8986ec2af596c9428b4599e45735638896b482",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
@@ -140,7 +140,7 @@
         "PARITY_GAME_YAML",
         "PARITY_IGNORE_YAML"
       ],
-      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns); Plan 03 added Wave 2 settings/FCX/GPU rows, with report-producing mod detection retired by issue #130 and the fragment-producing SuspectScanner retired by issue #129; Plan 04 added 50 Wave 3a rows; Plan 05 added 46 Wave 3b report rows. Issue #123 adds the final Crash Log Scan Run contract. Issues #128, #129, #130, #131, and #132 add shared semantic analyzer contracts with dedicated public-seam tests. Supplementary smoke tests live in the promoted wave suites plus test_scan_run_contract.py, test_crashgen_settings_analyzer.py, test_crash_suspect_analyzer.py, test_mod_guidance_analyzer.py, test_plugin_evidence_analyzer.py, and test_named_record_finding_analyzer.py."
+      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns); Plan 03 added Wave 2 settings/FCX/GPU rows, with report-producing mod detection retired by issue #130 and the fragment-producing SuspectScanner retired by issue #129; Plan 04 added 50 Wave 3a rows; Plan 05 added 46 Wave 3b report rows. Issue #123 adds the final Crash Log Scan Run contract. Issues #128 through #134 add shared semantic analyzer contracts with dedicated public-seam tests. Supplementary smoke tests live in the promoted wave suites plus the focused analyzer and final-run suites named by their dedicated registry entries."
     },
     {
       "coverageId": "python-tier1-scanlog-crashgen-settings-analyzer",
@@ -321,6 +321,40 @@
       "notes": "Exercises frozen typed inputs and outputs, semantic plugin identities and occurrence counts, explicit-empty completed results, shared typed construction errors, immutability, and concurrent handle reuse."
     },
     {
+      "coverageId": "python-tier1-scanlog-formid-finding-analyzer",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_scanlog.FormIDFindingLookupReplyKind",
+        "classic_scanlog.FormIDFindingLookupEntry",
+        "classic_scanlog.FormIDFindingLookupEntry.__init__",
+        "classic_scanlog.FormIDPlugin",
+        "classic_scanlog.FormIDPlugin.__init__",
+        "classic_scanlog.FormIDFindingAnalysisInput",
+        "classic_scanlog.FormIDFindingAnalysisInput.__init__",
+        "classic_scanlog.FormIDValueLookupStatus",
+        "classic_scanlog.FormIDFinding",
+        "classic_scanlog.FormIDFinding.identifier",
+        "classic_scanlog.FormIDFinding.occurrences",
+        "classic_scanlog.FormIDFinding.plugin",
+        "classic_scanlog.FormIDFinding.value_lookup_status",
+        "classic_scanlog.FormIDFinding.value",
+        "classic_scanlog.FormIDFindingAnalysisResult",
+        "classic_scanlog.FormIDFindingAnalysisResult.findings",
+        "classic_scanlog.FormIDFindingAnalyzer",
+        "classic_scanlog.FormIDFindingAnalyzer.__init__",
+        "classic_scanlog.FormIDFindingAnalyzer.in_memory",
+        "classic_scanlog.FormIDFindingAnalyzer.sqlite",
+        "classic_scanlog.FormIDFindingAnalyzer.kind",
+        "classic_scanlog.FormIDFindingAnalyzer.analyze"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_formid_finding_analyzer.py",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "notes": "Exercises typed aggregation, plugin-prefix resolution, retained unresolved identifiers, explicit lookup hits and misses, optional values, and shared typed lookup failures."
+    },
+    {
       "coverageId": "python-tier1-scanlog-named-record-finding-analyzer",
       "classification": "runtime_verified",
       "ownerModule": "scanlog",
@@ -356,7 +390,6 @@
         "classic_scanlog.LogParser.clear_caches",
         "classic_scanlog.ScanOutput",
         "classic_scanlog.FormIDAnalyzer",
-        "classic_scanlog.FormIDAnalyzerCore",
         "classic_scanlog.RecordScanner",
         "classic_scanlog.PluginAnalyzer",
         "classic_scanlog.PatternMatcher",

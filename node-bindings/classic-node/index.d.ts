@@ -214,6 +214,26 @@ export declare class DocumentsChecker {
   get gameName(): string
 }
 
+/** Immutable Node handle over aggregate semantic FormID Finding analysis. */
+export declare class FormIdFindingAnalyzer {
+  /**
+   * Creates an analyzer over an existing opaque FormID Value Lookup handle.
+   *
+   * The analyzer clones the core facade, so the JavaScript lookup and analyzer
+   * handles may be reused independently without exposing adapter internals.
+   */
+  constructor(valueLookup: JsFormIdValueLookup)
+  /** Returns the stable focused-analyzer identity for this handle. */
+  get kind(): JsAnalyzerKind
+  /**
+   * Runs one aggregate semantic analysis on CLASSIC's shared runtime.
+   *
+   * @returns Typed resolved and unresolved findings, including explicit empty success.
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  analyze(input: JsFormIdFindingAnalysisInput): Promise<JsFormIdFindingAnalysisResult>
+}
+
 /**
  * Multi-strategy game path finder.
  *
@@ -3107,6 +3127,42 @@ export interface JsFileOperationResult {
   errors: Array<string>
 }
 
+/** One distinct semantic FormID Finding. */
+export interface JsFormIdFinding {
+  /** Canonical uppercase eight-digit FormID including its load-order prefix. */
+  identifier: string
+  /** Number of matching occurrences in the supplied evidence. */
+  occurrences: number
+  /** Resolved plugin name, absent when the prefix is unresolved. */
+  plugin?: string
+  /** Semantic lookup state distinct from the optional value payload. */
+  valueLookupStatus: JsFormIdValueLookupStatus
+  /** Human-readable value returned by a successful lookup hit. */
+  value?: string
+}
+
+/** Owned Crash Log facts for one aggregate FormID Finding analysis call. */
+export interface JsFormIdFindingAnalysisInput {
+  /** Crash Log evidence lines in caller-provided casing. */
+  crashLines: Array<string>
+  /** Parsed plugin identities and load-order prefixes. */
+  plugins: Array<JsFormIdPlugin>
+}
+
+/** Completed FormID Finding analysis, including explicit empty success. */
+export interface JsFormIdFindingAnalysisResult {
+  /** Distinct findings in canonical identifier order. */
+  findings: Array<JsFormIdFinding>
+}
+
+/** One owned plugin identity and its load-order prefix. */
+export interface JsFormIdPlugin {
+  /** Plugin filename in caller-provided casing. */
+  name: string
+  /** Two-digit full-plugin or five-digit `FE` light-plugin prefix. */
+  prefix: string
+}
+
 /**
  * One owned reply used to configure a deterministic in-memory FormID lookup.
  *
@@ -3140,6 +3196,18 @@ export declare const enum JsFormIdValueLookupOutcomeKind {
   /** Lookup completed successfully without a value. */
   Missing = 'missing',
   /** Lookup completed successfully with an owned value. */
+  Found = 'found'
+}
+
+/** Stable semantic state of optional value lookup for one finding. */
+export declare const enum JsFormIdValueLookupStatus {
+  /** The identifier did not resolve to a plugin, so lookup was inapplicable. */
+  NotApplicable = 'not_applicable',
+  /** Value lookup was explicitly disabled. */
+  Disabled = 'disabled',
+  /** Lookup completed successfully without finding a value. */
+  Missing = 'missing',
+  /** Lookup completed successfully and returned a value. */
   Found = 'found'
 }
 

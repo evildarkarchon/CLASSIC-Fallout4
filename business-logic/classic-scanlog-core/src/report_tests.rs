@@ -1,7 +1,8 @@
 use super::*;
 use crate::version::CrashgenVersionStatus;
 use crate::{
-    CrashSuspectFinding, NamedRecordFinding, NamedRecordFindingAnalysisResult, PluginEvidence,
+    CrashSuspectFinding, FormIDFinding, FormIDFindingAnalysisResult, FormIDValueLookupStatus,
+    NamedRecordFinding, NamedRecordFindingAnalysisResult, PluginEvidence,
     PluginEvidenceAnalysisResult,
 };
 use classic_config_core::{AutoscanReportPlacement, OutcomeKind, RuleSeverity};
@@ -133,7 +134,15 @@ fn autoscan_report_assembler_applies_canonical_order_when_contributions_are_scra
         &base_facts(),
         vec![
             AutoscanReportContribution::FormIdFinding {
-                lines: vec!["FormID finding\n".to_string()],
+                result: FormIDFindingAnalysisResult {
+                    findings: vec![FormIDFinding {
+                        identifier: "01123456".to_string(),
+                        occurrences: 1,
+                        plugin: Some("plugin.esp".to_string()),
+                        value_lookup_status: FormIDValueLookupStatus::Disabled,
+                        value: None,
+                    }],
+                },
             },
             expectation("Settings placement", AutoscanReportPlacement::Settings),
             AutoscanReportContribution::PluginEvidence {
@@ -173,6 +182,64 @@ fn autoscan_report_assembler_applies_canonical_order_when_contributions_are_scra
     assert!(settings < plugin);
     assert!(plugin < formid);
     assert!(formid < footer);
+}
+
+#[test]
+fn autoscan_report_assembler_renders_resolved_formids_and_omits_unresolved_identifiers() {
+    let report_lines = AutoscanReportAssembler::new().assemble(
+        &base_facts(),
+        vec![AutoscanReportContribution::FormIdFinding {
+            result: FormIDFindingAnalysisResult {
+                findings: vec![
+                    FormIDFinding {
+                        identifier: "03999999".to_string(),
+                        occurrences: 4,
+                        plugin: None,
+                        value_lookup_status: FormIDValueLookupStatus::NotApplicable,
+                        value: None,
+                    },
+                    FormIDFinding {
+                        identifier: "02123456".to_string(),
+                        occurrences: 2,
+                        plugin: Some("Missing.esp".to_string()),
+                        value_lookup_status: FormIDValueLookupStatus::Missing,
+                        value: None,
+                    },
+                    FormIDFinding {
+                        identifier: "01ABCDEF".to_string(),
+                        occurrences: 1,
+                        plugin: Some("Found.esp".to_string()),
+                        value_lookup_status: FormIDValueLookupStatus::Found,
+                        value: Some("Resolved value".to_string()),
+                    },
+                ],
+            },
+        }],
+    );
+    let text = report_lines.join("");
+
+    assert!(text.contains("- Found.esp | 01ABCDEF | Resolved value | 1\n"));
+    assert!(text.contains("- Missing.esp | 02123456 | 2\n"));
+    assert!(!text.contains("03999999"));
+    assert!(text.contains("These Form IDs were caught by Buffout 4"));
+}
+
+#[test]
+fn autoscan_report_assembler_preserves_legacy_output_for_completed_empty_formid_analysis() {
+    let absent = AutoscanReportAssembler::new()
+        .assemble(&base_facts(), Vec::new())
+        .join("");
+    let completed_empty = AutoscanReportAssembler::new()
+        .assemble(
+            &base_facts(),
+            vec![AutoscanReportContribution::FormIdFinding {
+                result: FormIDFindingAnalysisResult::default(),
+            }],
+        )
+        .join("");
+
+    assert!(!absent.contains("### Checking FormIDs"));
+    assert_eq!(completed_empty, absent);
 }
 
 #[test]

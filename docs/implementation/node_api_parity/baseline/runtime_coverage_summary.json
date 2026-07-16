@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T12:49:33.399752+00:00",
+  "generated_at_utc": "2026-07-16T23:32:13.041387+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,11 +7,11 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1033,
-    "runtime_verified_total": 1033,
+    "tracked_surface_total": 1045,
+    "runtime_verified_total": 1045,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 909,
+    "tier1_contract_total": 915,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -54,8 +54,8 @@
       "total": 77
     },
     "scanlog": {
-      "runtime_verified": 178,
-      "total": 178
+      "runtime_verified": 190,
+      "total": 190
     },
     "settings": {
       "runtime_verified": 45,
@@ -7961,25 +7961,6 @@
       "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, #131, and #132 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
-      "trackedId": "contract:scanlog.formid_analyzer.FormIDAnalyzerCore@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.formid_analyzer.FormIDAnalyzerCore@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "FormIDAnalyzerCore@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "final Crash Log Scan Run contract",
-      "fixtureRefs": [
-        "tests/fixtures/crash_log_scan_run"
-      ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, #131, and #132 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
-    },
-    {
       "trackedId": "contract:scanlog.gpu_detector.GpuDetector@rust",
       "trackedType": "contract_row",
       "contractId": "scanlog.gpu_detector.GpuDetector@rust",
@@ -8597,6 +8578,139 @@
       "classification": "runtime_verified",
       "rustSymbol": "NamedRecordFinding",
       "bindingIdentifier": "JsNamedRecordFinding",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, #131, and #132 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.FormIDFinding",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.FormIDFinding",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIDFinding",
+      "bindingIdentifier": "JsFormIdFinding",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, #131, and #132 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIDFindingAnalysisInput",
+      "bindingIdentifier": "JsFormIdFindingAnalysisInput",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, #131, and #132 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIDFindingAnalysisResult",
+      "bindingIdentifier": "JsFormIdFindingAnalysisResult",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, #131, and #132 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.FormIDFindingAnalyzer",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.FormIDFindingAnalyzer",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIDFindingAnalyzer",
+      "bindingIdentifier": "FormIdFindingAnalyzer",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, #131, and #132 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.FormIDPlugin",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.FormIDPlugin",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIDPlugin",
+      "bindingIdentifier": "JsFormIdPlugin",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, #131, and #132 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.FormIDValueLookupStatus",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.FormIDValueLookupStatus",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIDValueLookupStatus",
+      "bindingIdentifier": "JsFormIdValueLookupStatus",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, #131, and #132 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.formid_finding_analyzer@rust",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.formid_finding_analyzer@rust",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "formid_finding_analyzer@rust",
+      "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
@@ -18197,6 +18311,120 @@
       "owner": null,
       "deferReason": null,
       "notes": "Exercises distinct typed records and occurrence counts, explicit-empty completed results, immutable handle reuse without leaked findings, absence of rendered report prose, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:FormIdFindingAnalyzer",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "FormIdFindingAnalyzer",
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:JsFormIdFinding",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFormIdFinding",
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:JsFormIdFindingAnalysisInput",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFormIdFindingAnalysisInput",
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:JsFormIdFindingAnalysisResult",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFormIdFindingAnalysisResult",
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:JsFormIdPlugin",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFormIdPlugin",
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:JsFormIdValueLookupStatus",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFormIdValueLookupStatus",
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
     },
     {
       "trackedId": "binding:JsConfigDuplicateDetector",

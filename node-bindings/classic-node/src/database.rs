@@ -633,6 +633,13 @@ pub struct JsFormIdValueLookup {
     inner: CoreFormIdValueLookup,
 }
 
+impl JsFormIdValueLookup {
+    /// Clones the opaque core facade for another thin in-crate adapter.
+    pub(crate) fn core_clone(&self) -> CoreFormIdValueLookup {
+        self.inner.clone()
+    }
+}
+
 #[napi]
 impl JsFormIdValueLookup {
     /// Creates a lookup that explicitly performs no value resolution.

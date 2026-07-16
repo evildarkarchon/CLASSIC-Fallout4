@@ -30,7 +30,11 @@ Mod Guidance Analysis exposes `mod_guidance` with `invalid_configuration` for
   Analysis exposes `plugin_evidence` with `invalid_configuration` for invalid
   ignore configuration or matcher state; Named Record Finding Analysis exposes
   `named_record_finding` with `invalid_configuration` for invalid target/ignore
-  configuration, matcher construction, or checked-count analysis failures.
+  configuration, matcher construction, or checked-count analysis failures;
+  FormID Finding Analysis exposes `formid_finding` with
+  `invalid_configuration` for invalid owned facts, `malformed_result` for an
+  invalid strict-lookup reply, or `operational_failure` for lookup execution.
+  A lookup miss is successful result data and never an analyzer error.
 
 - CXX uses an explicit typed construction/analysis envelope so no field is
   flattened into `rust::Error` text.

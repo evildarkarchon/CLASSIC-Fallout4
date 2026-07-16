@@ -73,8 +73,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 114,
-      "contractIdsHash": "3188c444fe7f69e66c903e3e7f7062018d0a7f03ee8a69d62aafc5847c92cf8f",
+      "contractCount": 120,
+      "contractIdsHash": "8662aa127d818bf1f414c6b85e4bddf6f7919ce3e670561600adf0d9b552d853",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
       "testCaseId": "final Crash Log Scan Run contract",
@@ -250,6 +250,24 @@
       "testSuite": "node-bindings/classic-node/__test__/named_record_finding_analyzer.spec.ts",
       "testCaseId": "named-record-finding-analyzer-runtime",
       "notes": "Exercises distinct typed records and occurrence counts, explicit-empty completed results, immutable handle reuse without leaked findings, absence of rendered report prose, and stable shared analyzer errors."
+    },
+    {
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "FormIdFindingAnalyzer",
+        "JsFormIdFinding",
+        "JsFormIdFindingAnalysisInput",
+        "JsFormIdFindingAnalysisResult",
+        "JsFormIdPlugin",
+        "JsFormIdValueLookupStatus"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
     },
     {
       "coverageId": "node-tier2-config-runtime",

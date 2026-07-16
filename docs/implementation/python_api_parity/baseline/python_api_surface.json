@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T12:48:15.266463+00:00",
+  "generated_at_utc": "2026-07-16T23:32:45.315572+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -5173,121 +5173,167 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "FormIDAnalyzerCore",
-      "export_path": "FormIDAnalyzerCore",
+      "export": "FormIDFinding",
+      "export_path": "FormIDFinding",
       "kind": "class",
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "class FormIDAnalyzerCore:"
+      "signature": "class FormIDFinding:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "FormIDFindingAnalysisInput",
+      "export_path": "FormIDFindingAnalysisInput",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class FormIDFindingAnalysisInput:"
     },
     {
       "module": "classic_scanlog",
       "export": "__init__",
-      "export_path": "FormIDAnalyzerCore.__init__",
-      "parent_class": "FormIDAnalyzerCore",
+      "export_path": "FormIDFindingAnalysisInput.__init__",
+      "parent_class": "FormIDFindingAnalysisInput",
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def __init__( self, show_formid_values: bool = False, crashgen_name: str = \"\", ) -> None:"
+      "signature": "def __init__(self, crash_lines: list[str], plugins: list[FormIDPlugin]) -> None: ..."
     },
     {
       "module": "classic_scanlog",
-      "export": "cache_plugins",
-      "export_path": "FormIDAnalyzerCore.cache_plugins",
-      "parent_class": "FormIDAnalyzerCore",
+      "export": "FormIDFindingAnalysisResult",
+      "export_path": "FormIDFindingAnalysisResult",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class FormIDFindingAnalysisResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "FormIDFindingAnalyzer",
+      "export_path": "FormIDFindingAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class FormIDFindingAnalyzer:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "FormIDFindingAnalyzer.__init__",
+      "parent_class": "FormIDFindingAnalyzer",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__(self) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "analyze",
+      "export_path": "FormIDFindingAnalyzer.analyze",
+      "parent_class": "FormIDFindingAnalyzer",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def analyze(self, input: FormIDFindingAnalysisInput) -> FormIDFindingAnalysisResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "in_memory",
+      "export_path": "FormIDFindingAnalyzer.in_memory",
+      "parent_class": "FormIDFindingAnalyzer",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def in_memory(entries: list[FormIDFindingLookupEntry]) -> FormIDFindingAnalyzer: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "sqlite",
+      "export_path": "FormIDFindingAnalyzer.sqlite",
+      "parent_class": "FormIDFindingAnalyzer",
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def cache_plugins(self, cache_key: str, plugins: dict[str, str]) -> None:"
+      "signature": "def sqlite(database_path: str, game_table: str) -> FormIDFindingAnalyzer: ..."
     },
     {
       "module": "classic_scanlog",
-      "export": "extract_formids",
-      "export_path": "FormIDAnalyzerCore.extract_formids",
-      "parent_class": "FormIDAnalyzerCore",
-      "kind": "method",
-      "arity": 1,
+      "export": "FormIDFindingLookupEntry",
+      "export_path": "FormIDFindingLookupEntry",
+      "kind": "class",
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def extract_formids(self, segment_callstack: list[str]) -> list[str]:"
+      "signature": "class FormIDFindingLookupEntry:"
     },
     {
       "module": "classic_scanlog",
-      "export": "extract_formids_nocopy",
-      "export_path": "FormIDAnalyzerCore.extract_formids_nocopy",
-      "parent_class": "FormIDAnalyzerCore",
+      "export": "__init__",
+      "export_path": "FormIDFindingLookupEntry.__init__",
+      "parent_class": "FormIDFindingLookupEntry",
       "kind": "method",
-      "arity": 1,
+      "arity": 5,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def extract_formids_nocopy(self, segment_callstack: list[str]) -> list[str]:"
+      "signature": "def __init__( self, formid: str, plugin: str, reply_kind: FormIDFindingLookupReplyKind, value: str | None = None, error_message: str | None = None, ) -> None: ..."
     },
     {
       "module": "classic_scanlog",
-      "export": "extract_plugin_index",
-      "export_path": "FormIDAnalyzerCore.extract_plugin_index",
-      "parent_class": "FormIDAnalyzerCore",
-      "kind": "method",
-      "arity": 1,
+      "export": "FormIDFindingLookupReplyKind",
+      "export_path": "FormIDFindingLookupReplyKind",
+      "kind": "class",
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def extract_plugin_index(self, formid: str) -> int | None:"
+      "signature": "class FormIDFindingLookupReplyKind:"
     },
     {
       "module": "classic_scanlog",
-      "export": "formid_match",
-      "export_path": "FormIDAnalyzerCore.formid_match",
-      "parent_class": "FormIDAnalyzerCore",
-      "kind": "method",
-      "arity": 2,
+      "export": "FormIDPlugin",
+      "export_path": "FormIDPlugin",
+      "kind": "class",
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def formid_match(self, formids: list[str], plugins: dict[str, str]) -> list[str]:"
+      "signature": "class FormIDPlugin:"
     },
     {
       "module": "classic_scanlog",
-      "export": "is_valid_formid",
-      "export_path": "FormIDAnalyzerCore.is_valid_formid",
-      "parent_class": "FormIDAnalyzerCore",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def is_valid_formid(self, formid: str) -> bool:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "parse_formid",
-      "export_path": "FormIDAnalyzerCore.parse_formid",
-      "parent_class": "FormIDAnalyzerCore",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def parse_formid(self, formid: str) -> int | None:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "process_formids_cached",
-      "export_path": "FormIDAnalyzerCore.process_formids_cached",
-      "parent_class": "FormIDAnalyzerCore",
+      "export": "__init__",
+      "export_path": "FormIDPlugin.__init__",
+      "parent_class": "FormIDPlugin",
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def process_formids_cached(self, formids: list[str], cache_key: str) -> list[str]:"
+      "signature": "def __init__(self, name: str, prefix: str) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "FormIDValueLookupStatus",
+      "export_path": "FormIDValueLookupStatus",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class FormIDValueLookupStatus:"
     },
     {
       "module": "classic_scanlog",

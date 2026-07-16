@@ -9,6 +9,7 @@
 // Error types not needed in pure Rust - using standard Result
 use crate::crash_suspect_analyzer::CrashSuspectFinding;
 use crate::error::{Result, ScanLogError};
+use crate::formid_finding_analyzer::FormIDFindingAnalysisResult;
 use crate::mod_guidance_analyzer::{
     ImportantModGuidance, ModGuidanceAnalysisResult, ModGuidanceMatchState, ModSolutionGuidance,
 };
@@ -134,7 +135,7 @@ pub(crate) enum AutoscanReportContribution {
         result: PluginEvidenceAnalysisResult,
     },
     FormIdFinding {
-        lines: Vec<String>,
+        result: FormIDFindingAnalysisResult,
     },
     NamedRecordFinding {
         result: NamedRecordFindingAnalysisResult,
@@ -233,13 +234,7 @@ impl AutoscanReportAssembler {
         Self::add_section_with_header(
             &mut composer,
             report_gen.generate_formid_section_header(),
-            Self::line_fragments(&contributions, |contribution| {
-                if let AutoscanReportContribution::FormIdFinding { lines } = contribution {
-                    Some(lines)
-                } else {
-                    None
-                }
-            }),
+            Self::formid_finding_fragments(&contributions, &facts.crashgen_name),
         );
         Self::add_section_with_header(
             &mut composer,
@@ -249,6 +244,71 @@ impl AutoscanReportAssembler {
 
         composer.add(report_gen.generate_footer());
         composer.compose().to_list()
+    }
+
+    /// Renders present FormID Finding results while preserving absent analysis as no section.
+    fn formid_finding_fragments(
+        contributions: &[AutoscanReportContribution],
+        crashgen_name: &str,
+    ) -> Vec<ReportFragment> {
+        contributions
+            .iter()
+            .filter_map(|contribution| match contribution {
+                AutoscanReportContribution::FormIdFinding { result }
+                    if !result.findings.is_empty() =>
+                {
+                    Some(ReportFragment::from_lines(Self::render_formid_findings(
+                        result,
+                        crashgen_name,
+                    )))
+                }
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Owns canonical FormID sorting, resolved-value formatting, and report prose.
+    fn render_formid_findings(
+        result: &FormIDFindingAnalysisResult,
+        crashgen_name: &str,
+    ) -> Vec<String> {
+        let mut findings = result
+            .findings
+            .iter()
+            .filter(|finding| finding.plugin.is_some())
+            .collect::<Vec<_>>();
+        findings.sort_by(|left, right| left.identifier.cmp(&right.identifier));
+        let mut lines = findings
+            .into_iter()
+            .map(|finding| {
+                let plugin = finding
+                    .plugin
+                    .as_deref()
+                    .expect("resolved FormID findings always have a plugin");
+                match finding.value.as_deref() {
+                    Some(value) => format!(
+                        "- {plugin} | {} | {value} | {}\n",
+                        finding.identifier, finding.occurrences
+                    ),
+                    None => format!(
+                        "- {plugin} | {} | {}\n",
+                        finding.identifier, finding.occurrences
+                    ),
+                }
+            })
+            .collect::<Vec<_>>();
+        lines.push(
+            "\n[Last number counts how many times each Form ID shows up in the crash log.]\n"
+                .to_string(),
+        );
+        lines.push(format!(
+            "These Form IDs were caught by {crashgen_name} and some of them might be related to this crash.\n"
+        ));
+        lines.push(
+            "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n"
+                .to_string(),
+        );
+        lines
     }
 
     /// Renders a present Plugin Evidence result while preserving absent analysis as no section.
@@ -360,22 +420,6 @@ impl AutoscanReportAssembler {
         }
         composer.add(header);
         composer.add_many(fragments);
-    }
-
-    fn line_fragments<F>(
-        contributions: &[AutoscanReportContribution],
-        select_lines: F,
-    ) -> Vec<ReportFragment>
-    where
-        F: Fn(&AutoscanReportContribution) -> Option<&Vec<String>>,
-    {
-        contributions
-            .iter()
-            .filter_map(|contribution| {
-                let lines = select_lines(contribution)?;
-                (!lines.is_empty()).then(|| ReportFragment::from_lines(lines.clone()))
-            })
-            .collect()
     }
 
     /// Renders semantic Crash Suspect Findings at the sole presentation boundary.

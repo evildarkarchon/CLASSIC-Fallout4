@@ -12,12 +12,14 @@ mod papyrus;
 mod util;
 
 pub(crate) use analyzer::{
-    CxxCrashSuspectAnalyzer, CxxCrashgenSettingsAnalyzer, CxxModGuidanceAnalyzer,
-    CxxNamedRecordFindingAnalyzer, CxxPluginEvidenceAnalyzer, crash_suspect_analyze,
-    crash_suspect_analyzer_construction_result, crash_suspect_analyzer_new,
+    CxxCrashSuspectAnalyzer, CxxCrashgenSettingsAnalyzer, CxxFormIDFindingAnalyzer,
+    CxxModGuidanceAnalyzer, CxxNamedRecordFindingAnalyzer, CxxPluginEvidenceAnalyzer,
+    crash_suspect_analyze, crash_suspect_analyzer_construction_result, crash_suspect_analyzer_new,
     crashgen_settings_analyze, crashgen_settings_analyzer_construction_result,
-    crashgen_settings_analyzer_new, mod_guidance_analyze,
-    mod_guidance_analyzer_construction_result, mod_guidance_analyzer_new,
+    crashgen_settings_analyzer_new, formid_finding_analyze,
+    formid_finding_analyzer_construction_result, formid_finding_analyzer_disabled_new,
+    formid_finding_analyzer_in_memory_new, formid_finding_analyzer_sqlite_new,
+    mod_guidance_analyze, mod_guidance_analyzer_construction_result, mod_guidance_analyzer_new,
     named_record_finding_analyze, named_record_finding_analyzer_construction_result,
     named_record_finding_analyzer_new, plugin_evidence_analyze,
     plugin_evidence_analyzer_construction_result, plugin_evidence_analyzer_new,
@@ -53,6 +55,8 @@ mod ffi {
     enum AnalyzerErrorCode {
         InvalidConfiguration = 0,
         UnsupportedConfigurationVersion = 1,
+        MalformedResult = 2,
+        OperationalFailure = 3,
     }
 
     /// Semantic category of one Crashgen Expectation Outcome.
@@ -417,6 +421,75 @@ mod ffi {
         error: AnalyzerErrorDto,
     }
 
+    /// Stable semantic state of optional FormID Value Lookup for one finding.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum FormIDValueLookupStatus {
+        NotApplicable = 0,
+        Disabled = 1,
+        Missing = 2,
+        Found = 3,
+    }
+
+    /// Callback-free deterministic lookup reply kind used during analyzer construction.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum FormIDFindingLookupReplyKind {
+        Missing = 0,
+        Found = 1,
+        OperationalFailure = 2,
+    }
+
+    /// One owned deterministic FormID lookup reply.
+    struct FormIDFindingLookupEntryDto {
+        formid: String,
+        plugin: String,
+        reply_kind: FormIDFindingLookupReplyKind,
+        value: String,
+        error_message: String,
+    }
+
+    /// One owned plugin identity and load-order prefix.
+    struct FormIDPluginDto {
+        name: String,
+        prefix: String,
+    }
+
+    /// Owned Crash Log facts for one aggregate FormID Finding analysis call.
+    struct FormIDFindingAnalysisInputDto {
+        crash_lines: Vec<String>,
+        plugins: Vec<FormIDPluginDto>,
+    }
+
+    /// One distinct semantic FormID Finding with explicit optional fields.
+    struct FormIDFindingDto {
+        identifier: String,
+        occurrences: u32,
+        has_plugin: bool,
+        plugin: String,
+        value_lookup_status: FormIDValueLookupStatus,
+        has_value: bool,
+        value: String,
+    }
+
+    /// Completed FormID Finding analysis, including unresolved identifiers.
+    struct FormIDFindingAnalysisResultDto {
+        findings: Vec<FormIDFindingDto>,
+    }
+
+    /// Explicit constructor status for an opaque FormID Finding Analyzer handle.
+    struct FormIDFindingAnalyzerConstructionResultDto {
+        has_analyzer: bool,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
+    /// Exactly one typed FormID Finding result or shared analyzer error.
+    struct FormIDFindingAnalysisExecutionResultDto {
+        has_result: bool,
+        result: FormIDFindingAnalysisResultDto,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
     /// Owned matcher configuration for one immutable Named Record Finding Analyzer.
     struct NamedRecordFindingAnalyzerConfigurationDto {
         target_records: Vec<String>,
@@ -720,6 +793,7 @@ mod ffi {
         type CxxCrashgenSettingsAnalyzer;
         type CxxModGuidanceAnalyzer;
         type CxxPluginEvidenceAnalyzer;
+        type CxxFormIDFindingAnalyzer;
         type CxxNamedRecordFindingAnalyzer;
         type ScanRunRequest;
         type ScanRunUnsolvedLogs;
@@ -787,6 +861,27 @@ mod ffi {
             analyzer: &CxxPluginEvidenceAnalyzer,
             input: PluginEvidenceAnalysisInputDto,
         ) -> PluginEvidenceAnalysisExecutionResultDto;
+
+        /// Constructs an immutable FormID Finding Analyzer with lookup disabled.
+        fn formid_finding_analyzer_disabled_new() -> Box<CxxFormIDFindingAnalyzer>;
+        /// Constructs an immutable analyzer from owned deterministic lookup replies.
+        fn formid_finding_analyzer_in_memory_new(
+            entries: Vec<FormIDFindingLookupEntryDto>,
+        ) -> Box<CxxFormIDFindingAnalyzer>;
+        /// Constructs an immutable analyzer over one owned SQLite lookup adapter.
+        fn formid_finding_analyzer_sqlite_new(
+            database_path: &str,
+            game_table: &str,
+        ) -> Box<CxxFormIDFindingAnalyzer>;
+        /// Returns the typed status captured during FormID Finding construction.
+        fn formid_finding_analyzer_construction_result(
+            analyzer: &CxxFormIDFindingAnalyzer,
+        ) -> FormIDFindingAnalyzerConstructionResultDto;
+        /// Runs aggregate FormID Finding analysis through the shared runtime.
+        fn formid_finding_analyze(
+            analyzer: &CxxFormIDFindingAnalyzer,
+            input: FormIDFindingAnalysisInputDto,
+        ) -> FormIDFindingAnalysisExecutionResultDto;
 
         /// Constructs and validates an immutable Named Record Finding Analyzer handle.
         fn named_record_finding_analyzer_new(

@@ -3926,14 +3926,6 @@
       "rustKind": "class"
     },
     {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore@rust",
-      "rustKind": "class"
-    },
-    {
       "id": "scanlog.gpu_detector.GpuDetector@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -4222,6 +4214,74 @@
       "rustKind": "struct",
       "nodeExport": "JsNamedRecordFinding",
       "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFinding",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFinding",
+      "rustKind": "struct",
+      "nodeExport": "JsFormIdFinding",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalysisInput",
+      "rustKind": "struct",
+      "nodeExport": "JsFormIdFindingAnalysisInput",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalysisResult",
+      "rustKind": "struct",
+      "nodeExport": "JsFormIdFindingAnalysisResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalyzer",
+      "rustKind": "struct",
+      "nodeExport": "FormIdFindingAnalyzer",
+      "nodeKind": "class"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDPlugin",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDPlugin",
+      "rustKind": "struct",
+      "nodeExport": "JsFormIdPlugin",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDValueLookupStatus",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDValueLookupStatus",
+      "rustKind": "enum",
+      "nodeExport": "JsFormIdValueLookupStatus",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.formid_finding_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "formid_finding_analyzer@rust",
+      "rustKind": "module"
     },
     {
       "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput",

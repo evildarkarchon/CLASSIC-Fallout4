@@ -145,21 +145,8 @@ def test_formid_analyzer_clear_cache() -> None:
 
 
 # ============================================================================
-# formid_analyzer sub-module: PyFormIDAnalyzerCore + free functions
+# formid_analyzer sub-module: independently useful free functions
 # ============================================================================
-
-
-def test_formid_analyzer_core_construct_default() -> None:
-    """FormIDAnalyzerCore() with all defaults."""
-    core = classic_scanlog.FormIDAnalyzerCore()
-    assert core is not None
-
-
-def test_formid_analyzer_core_extract_formids_empty() -> None:
-    """FormIDAnalyzerCore.extract_formids([]) returns list[str]."""
-    core = classic_scanlog.FormIDAnalyzerCore()
-    result = core.extract_formids([])
-    assert isinstance(result, list)
 
 
 def test_formid_analyzer_free_functions_group() -> None:

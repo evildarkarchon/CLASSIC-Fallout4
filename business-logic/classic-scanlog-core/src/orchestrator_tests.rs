@@ -651,6 +651,26 @@ fn scan_analysis_context_builds_from_arc_sections() {
 }
 
 #[test]
+fn formid_analysis_contribution_retains_completed_empty_result() {
+    let orchestrator = make_fixture_orchestrator();
+    let segments = HashMap::from([(
+        segment_key::CALLSTACK.to_string(),
+        vec![Arc::<str>::from("stack frame without a FormID")],
+    )]);
+    let context = ScanAnalysisContext::from_arc_sections(Vec::new(), &segments);
+
+    let (contributions, formid_count) = classic_shared_core::get_runtime()
+        .block_on(orchestrator.collect_formid_and_record_contributions(&context, None))
+        .expect("completed empty FormID analysis should succeed");
+
+    assert_eq!(formid_count, 0);
+    assert!(matches!(
+        contributions.as_slice(),
+        [AutoscanReportContribution::FormIdFinding { result }] if result.findings.is_empty()
+    ));
+}
+
+#[test]
 fn resolve_effective_crashgen_name_falls_back_for_ambiguous_modules() {
     let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     config.crashgen_name = "Buffout 4".to_string();

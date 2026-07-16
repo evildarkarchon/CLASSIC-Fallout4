@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T12:46:18Z",
+  "generated_at_utc": "2026-07-16T23:30:52Z",
   "entries": [
     {
       "id": "b0d609f9ed78e468",
@@ -4312,7 +4312,9 @@
       "blockOrigin": "Rust",
       "variants": [
         "InvalidConfiguration",
-        "UnsupportedConfigurationVersion"
+        "UnsupportedConfigurationVersion",
+        "MalformedResult",
+        "OperationalFailure"
       ]
     },
     {
@@ -4393,6 +4395,33 @@
         "Info",
         "Warning",
         "Error"
+      ]
+    },
+    {
+      "id": "265e1c864e00bf37",
+      "rustSymbol": "FormIDFindingLookupReplyKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Missing",
+        "Found",
+        "OperationalFailure"
+      ]
+    },
+    {
+      "id": "fcec1e0fdd22e089",
+      "rustSymbol": "FormIDValueLookupStatus",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "NotApplicable",
+        "Disabled",
+        "Missing",
+        "Found"
       ]
     },
     {
@@ -4661,6 +4690,94 @@
           }
         ],
         "returnType": "bool"
+      }
+    },
+    {
+      "id": "689dceccfd9be6f8",
+      "rustSymbol": "formid_finding_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "analyzer",
+            "type": "&CxxFormIDFindingAnalyzer"
+          },
+          {
+            "name": "input",
+            "type": "FormIDFindingAnalysisInputDto"
+          }
+        ],
+        "returnType": "FormIDFindingAnalysisExecutionResultDto"
+      }
+    },
+    {
+      "id": "7d25ad92f2c615d5",
+      "rustSymbol": "formid_finding_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "analyzer",
+            "type": "&CxxFormIDFindingAnalyzer"
+          }
+        ],
+        "returnType": "FormIDFindingAnalyzerConstructionResultDto"
+      }
+    },
+    {
+      "id": "6ea8c0bd04ed0292",
+      "rustSymbol": "formid_finding_analyzer_disabled_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [],
+        "returnType": "Box<CxxFormIDFindingAnalyzer>"
+      }
+    },
+    {
+      "id": "404672c761345c3a",
+      "rustSymbol": "formid_finding_analyzer_in_memory_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "entries",
+            "type": "Vec<FormIDFindingLookupEntryDto>"
+          }
+        ],
+        "returnType": "Box<CxxFormIDFindingAnalyzer>"
+      }
+    },
+    {
+      "id": "fdc0f6289d855f5c",
+      "rustSymbol": "formid_finding_analyzer_sqlite_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "database_path",
+            "type": "&str"
+          },
+          {
+            "name": "game_table",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Box<CxxFormIDFindingAnalyzer>"
       }
     },
     {
@@ -5174,6 +5291,14 @@
     {
       "id": "4703b74efa2672a7",
       "rustSymbol": "CxxCrashgenSettingsAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust"
+    },
+    {
+      "id": "bf67a6d66d028b53",
+      "rustSymbol": "CxxFormIDFindingAnalyzer",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
@@ -5777,6 +5902,172 @@
         },
         {
           "name": "severity",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "6e77a9e1d9541360",
+      "rustSymbol": "FormIDFindingAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_result",
+          "type": "bool"
+        },
+        {
+          "name": "result",
+          "type": "FormIDFindingAnalysisResultDto"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "AnalyzerErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "48f6fbdd9235bd22",
+      "rustSymbol": "FormIDFindingAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "crash_lines",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "plugins",
+          "type": "Vec<FormIDPluginDto>"
+        }
+      ]
+    },
+    {
+      "id": "a3856cf8f6be5926",
+      "rustSymbol": "FormIDFindingAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "findings",
+          "type": "Vec<FormIDFindingDto>"
+        }
+      ]
+    },
+    {
+      "id": "172a534212badf25",
+      "rustSymbol": "FormIDFindingAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_analyzer",
+          "type": "bool"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "AnalyzerErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "c3aea1f2c53cfc93",
+      "rustSymbol": "FormIDFindingDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "identifier",
+          "type": "String"
+        },
+        {
+          "name": "occurrences",
+          "type": "u32"
+        },
+        {
+          "name": "has_plugin",
+          "type": "bool"
+        },
+        {
+          "name": "plugin",
+          "type": "String"
+        },
+        {
+          "name": "value_lookup_status",
+          "type": "FormIDValueLookupStatus"
+        },
+        {
+          "name": "has_value",
+          "type": "bool"
+        },
+        {
+          "name": "value",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "70f4c969d985e22e",
+      "rustSymbol": "FormIDFindingLookupEntryDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "formid",
+          "type": "String"
+        },
+        {
+          "name": "plugin",
+          "type": "String"
+        },
+        {
+          "name": "reply_kind",
+          "type": "FormIDFindingLookupReplyKind"
+        },
+        {
+          "name": "value",
+          "type": "String"
+        },
+        {
+          "name": "error_message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "16758b137ae088f8",
+      "rustSymbol": "FormIDPluginDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "name",
+          "type": "String"
+        },
+        {
+          "name": "prefix",
           "type": "String"
         }
       ]

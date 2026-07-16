@@ -168,7 +168,7 @@ The active Rust path is:
    Intake builds the private analysis configuration and resolves DB file paths.
 2. If `show_formid_values` is `true`, it creates a `DatabasePool` and calls `initialize(resolved_paths)`.
 3. The private scan-run engine attaches that pool before analyzing admitted logs.
-4. `FormIDAnalyzerCore::formid_match()` batches `(formid_suffix, plugin)` pairs and calls `get_entries_batch()`.
+4. `FormIDFindingAnalyzer::analyze()` batches resolved `(formid_suffix, plugin)` pairs through the strict `FormIdValueLookup` facade.
 5. Report lines include the description only when a lookup succeeds.
 
 Fail-soft behavior visible in source:
@@ -178,7 +178,7 @@ Fail-soft behavior visible in source:
 - if some DB files are missing, initialization still succeeds if at least one usable file remains
 - if per-database queries fail, lookup continues against other pools and unresolved rows simply render without descriptions
 
-The owned `FormIdValueLookup` facade added ahead of the semantic FormID Finding cutover does not use that fail-soft rule. Its disabled, missing, and found states are semantic outcomes; malformed values and database failures have distinct typed error codes. The current `FormIDAnalyzerCore` continues to use the legacy pool path until the coordinated semantic analyzer change consumes the facade.
+The owned `FormIdValueLookup` facade consumed by semantic FormID Finding Analysis does not use that fail-soft rule. Its disabled, missing, and found states are semantic outcomes; malformed values and database failures have distinct typed error codes that the analyzer projects into the shared analyzer error envelope.
 
 ---
 
