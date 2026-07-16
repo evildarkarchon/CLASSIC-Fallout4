@@ -1,7 +1,7 @@
 {
   "contractVersion": "1.0.0",
   "phase": "phase1",
-  "description": "Live one-tier 858-row Node vs Rust parity contract for high-level APIs, preserving the 706-row enforcement floor.",
+  "description": "Live one-tier 875-row Node vs Rust parity contract for high-level APIs, preserving the 706-row enforcement floor.",
   "tierDefinitions": {
     "tier1": "Must-have high-level APIs required by app workflows and cross-language integration."
   },
@@ -4259,6 +4259,172 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "segment_key@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.analyzer.AnalyzerError",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalyzerError",
+      "rustKind": "struct",
+      "nodeExport": "CrashgenSettingsAnalyzer",
+      "nodeKind": "class"
+    },
+    {
+      "id": "scanlog.analyzer.AnalyzerErrorCode",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalyzerErrorCode",
+      "rustKind": "enum",
+      "nodeExport": "CrashgenSettingsAnalyzer",
+      "nodeKind": "class"
+    },
+    {
+      "id": "scanlog.analyzer.AnalyzerKind",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalyzerKind",
+      "rustKind": "enum",
+      "nodeExport": "JsAnalyzerKind",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "scanlog.analyzer.AnalyzerResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalyzerResult",
+      "rustKind": "type",
+      "nodeExport": "JsCrashgenSettingsAnalysisResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.analyzer.analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "analyzer@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.AnalyzerSeverity",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "RuleSeverity",
+      "rustKind": "enum",
+      "nodeExport": "JsCrashgenExpectationSeverity",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.AutoscanReportPlacement",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "AutoscanReportPlacement",
+      "rustKind": "enum",
+      "nodeExport": "JsAutoscanReportPlacement",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenConfigLayout",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "ConfigLayout",
+      "rustKind": "enum",
+      "nodeExport": "JsCrashgenConfigLayout",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenExpectationKind",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "OutcomeKind",
+      "rustKind": "enum",
+      "nodeExport": "JsCrashgenExpectationOutcomeKind",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenExpectationOutcome",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenExpectationOutcome",
+      "rustKind": "struct",
+      "nodeExport": "JsCrashgenExpectationOutcome",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenSetting",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalysisInput",
+      "rustKind": "struct",
+      "nodeExport": "JsCrashgenSetting",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisInput",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalysisInput",
+      "rustKind": "struct",
+      "nodeExport": "JsCrashgenSettingsAnalysisInput",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalysisResult",
+      "rustKind": "struct",
+      "nodeExport": "JsCrashgenSettingsAnalysisResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalyzer",
+      "rustKind": "struct",
+      "nodeExport": "CrashgenSettingsAnalyzer",
+      "nodeKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenVersion",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalysisInput",
+      "rustKind": "struct",
+      "nodeExport": "JsCrashgenVersion",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.DisabledSettingNotice",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "DisabledSettingNotice",
+      "rustKind": "struct",
+      "nodeExport": "JsDisabledSettingNotice",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.crashgen_settings_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "crashgen_settings_analyzer@rust",
       "rustKind": "module"
     },
     {

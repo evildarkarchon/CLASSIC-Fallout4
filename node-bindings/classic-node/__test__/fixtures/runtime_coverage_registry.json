@@ -73,15 +73,15 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 72,
-      "contractIdsHash": "3dfff13f27e1ffeaf0ec59d553653af4f10a9245c2626a9871a6bf85cb0d6a3e",
+      "contractCount": 89,
+      "contractIdsHash": "7b6302e8c664070dd6fe052148366406684fdf30974bea4d27ed26204114c3d6",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
       "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issue #128 adds 17 focused-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "coverageId": "node-tier1-config",
@@ -150,6 +150,30 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/scangame.spec.ts",
       "testCaseId": "scanlog-tier2-scangame"
+    },
+    {
+      "coverageId": "node-tier1-scanlog-crashgen-settings-analyzer-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "CrashgenSettingsAnalyzer",
+        "JsAnalyzerKind",
+        "JsAutoscanReportPlacement",
+        "JsCrashgenConfigLayout",
+        "JsCrashgenExpectationOutcome",
+        "JsCrashgenExpectationOutcomeKind",
+        "JsCrashgenExpectationSeverity",
+        "JsCrashgenSetting",
+        "JsCrashgenSettingsAnalysisInput",
+        "JsCrashgenSettingsAnalysisResult",
+        "JsCrashgenVersion",
+        "JsDisabledSettingNotice"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/crashgen_settings_analyzer.spec.ts",
+      "testCaseId": "crashgen-settings-analyzer-runtime",
+      "notes": "Exercises real immutable analyzer construction, populated and explicit-empty semantic results, handle reuse, exact string-enum projection, separate Disabled Setting Notices, absence of rendered lines, and stable Node error codes. The complementary Node runtime smoke lives in runtime.node.test.mjs."
     },
     {
       "coverageId": "node-tier2-config-runtime",

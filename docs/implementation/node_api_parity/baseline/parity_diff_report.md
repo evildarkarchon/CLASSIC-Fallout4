@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-16T01:57:09.446254+00:00`
-- Tier-1 contract rows: **858**
-- Tier-1 matched: **858**
+- Generated: `2026-07-16T07:19:42.380117+00:00`
+- Tier-1 contract rows: **875**
+- Tier-1 matched: **875**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -483,6 +483,23 @@
 | `scanlog.report.report@rust` | `scanlog` | `report@rust` | `None` | `matched` |
 | `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `scan_records_batch@rust` | `None` | `matched` |
 | `scanlog.segment_key.segment_key@rust` | `scanlog` | `segment_key@rust` | `None` | `matched` |
+| `scanlog.analyzer.AnalyzerError` | `scanlog` | `AnalyzerError` | `CrashgenSettingsAnalyzer` | `matched` |
+| `scanlog.analyzer.AnalyzerErrorCode` | `scanlog` | `AnalyzerErrorCode` | `CrashgenSettingsAnalyzer` | `matched` |
+| `scanlog.analyzer.AnalyzerKind` | `scanlog` | `AnalyzerKind` | `JsAnalyzerKind` | `matched` |
+| `scanlog.analyzer.AnalyzerResult` | `scanlog` | `AnalyzerResult` | `JsCrashgenSettingsAnalysisResult` | `matched` |
+| `scanlog.analyzer.analyzer@rust` | `scanlog` | `analyzer@rust` | `None` | `matched` |
+| `scanlog.crashgen_settings_analyzer.AnalyzerSeverity` | `scanlog` | `RuleSeverity` | `JsCrashgenExpectationSeverity` | `matched` |
+| `scanlog.crashgen_settings_analyzer.AutoscanReportPlacement` | `scanlog` | `AutoscanReportPlacement` | `JsAutoscanReportPlacement` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenConfigLayout` | `scanlog` | `ConfigLayout` | `JsCrashgenConfigLayout` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenExpectationKind` | `scanlog` | `OutcomeKind` | `JsCrashgenExpectationOutcomeKind` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenExpectationOutcome` | `scanlog` | `CrashgenExpectationOutcome` | `JsCrashgenExpectationOutcome` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSetting` | `scanlog` | `CrashgenSettingsAnalysisInput` | `JsCrashgenSetting` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisInput` | `scanlog` | `CrashgenSettingsAnalysisInput` | `JsCrashgenSettingsAnalysisInput` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisResult` | `scanlog` | `CrashgenSettingsAnalysisResult` | `JsCrashgenSettingsAnalysisResult` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer` | `scanlog` | `CrashgenSettingsAnalyzer` | `CrashgenSettingsAnalyzer` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenVersion` | `scanlog` | `CrashgenSettingsAnalysisInput` | `JsCrashgenVersion` | `matched` |
+| `scanlog.crashgen_settings_analyzer.DisabledSettingNotice` | `scanlog` | `DisabledSettingNotice` | `JsDisabledSettingNotice` | `matched` |
+| `scanlog.crashgen_settings_analyzer.crashgen_settings_analyzer@rust` | `scanlog` | `crashgen_settings_analyzer@rust` | `None` | `matched` |
 | `scanlog.settings_validator.settings_validator@rust` | `scanlog` | `settings_validator@rust` | `None` | `matched` |
 | `scanlog.suspect_scanner.suspect_scanner@rust` | `scanlog` | `suspect_scanner@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.validate_formids_batch@rust` | `scanlog` | `validate_formids_batch@rust` | `None` | `matched` |

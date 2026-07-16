@@ -10,7 +10,7 @@ use std::collections::HashSet;
 use crate::py_adapters::crashgen_entry_from_py;
 
 /// Convert a Python section-to-settings mapping into the Rust settings snapshot.
-fn crashgen_snapshot_from_py_sections(
+pub(crate) fn crashgen_snapshot_from_py_sections(
     crashgen: &Bound<'_, PyDict>,
 ) -> PyResult<CrashgenSettingsSnapshot> {
     let mut snapshot = CrashgenSettingsSnapshot::new();

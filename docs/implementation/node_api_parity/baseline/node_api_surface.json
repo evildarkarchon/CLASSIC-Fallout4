@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T01:57:09.444448+00:00",
+  "generated_at_utc": "2026-07-16T07:19:42.378469+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -35,6 +35,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export const CRASH_LOG_PATTERN: string"
+    },
+    {
+      "export": "CrashgenSettingsAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class CrashgenSettingsAnalyzer {"
     },
     {
       "export": "DEFAULT_CACHE_CLEANUP_INTERVAL",
@@ -141,12 +149,28 @@
       "signature": "export interface JsAddressLibraryConfig {"
     },
     {
+      "export": "JsAnalyzerKind",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsAnalyzerKind {"
+    },
+    {
       "export": "JsApprovedUpdate",
       "kind": "interface",
       "owner_module": "aux",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsApprovedUpdate {"
+    },
+    {
+      "export": "JsAutoscanReportPlacement",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsAutoscanReportPlacement {"
     },
     {
       "export": "JsBa2Issues",
@@ -285,6 +309,38 @@
       "signature": "export interface JsCrashgenConfig {"
     },
     {
+      "export": "JsCrashgenConfigLayout",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsCrashgenConfigLayout {"
+    },
+    {
+      "export": "JsCrashgenExpectationOutcome",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenExpectationOutcome {"
+    },
+    {
+      "export": "JsCrashgenExpectationOutcomeKind",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsCrashgenExpectationOutcomeKind {"
+    },
+    {
+      "export": "JsCrashgenExpectationSeverity",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsCrashgenExpectationSeverity {"
+    },
+    {
       "export": "JsCrashgenRegistryEntry",
       "kind": "interface",
       "owner_module": "version_registry",
@@ -301,12 +357,44 @@
       "signature": "export interface JsCrashgenReport {"
     },
     {
+      "export": "JsCrashgenSetting",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenSetting {"
+    },
+    {
+      "export": "JsCrashgenSettingsAnalysisInput",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenSettingsAnalysisInput {"
+    },
+    {
+      "export": "JsCrashgenSettingsAnalysisResult",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenSettingsAnalysisResult {"
+    },
+    {
       "export": "JsCrashgenSettingsRules",
       "kind": "interface",
       "owner_module": "version_registry",
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsCrashgenSettingsRules {"
+    },
+    {
+      "export": "JsCrashgenVersion",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsCrashgenVersion {"
     },
     {
       "export": "JsCrashgenVersionInfo",
@@ -363,6 +451,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsDdsIssue {"
+    },
+    {
+      "export": "JsDisabledSettingNotice",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsDisabledSettingNotice {"
     },
     {
       "export": "JsDuplicateGroup",

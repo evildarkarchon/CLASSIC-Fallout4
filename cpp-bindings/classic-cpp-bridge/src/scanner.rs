@@ -6,10 +6,15 @@
 //! The CXX bridge declarations stay in this façade module while implementation
 //! concerns live in private scanner submodules.
 
+mod analyzer;
 mod contract;
 mod papyrus;
 mod util;
 
+pub(crate) use analyzer::{
+    CxxCrashgenSettingsAnalyzer, crashgen_settings_analyze,
+    crashgen_settings_analyzer_construction_result, crashgen_settings_analyzer_new,
+};
 pub(crate) use contract::{
     ScanRunCancellation, ScanRunRequest, ScanRunUnsolvedLogs, scan_run_cancellation_cancel,
     scan_run_cancellation_is_cancelled, scan_run_cancellation_new, scan_run_contract_execute,
@@ -25,6 +30,143 @@ pub(crate) use util::{detect_crash_pattern, detect_vr_log};
 
 #[cxx::bridge(namespace = "classic::scanner")]
 mod ffi {
+    /// Focused semantic analyzer identity shared across language bindings.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum AnalyzerKind {
+        CrashgenSettings = 0,
+        CrashSuspect = 1,
+        ModGuidance = 2,
+        PluginEvidence = 3,
+        FormIdFinding = 4,
+        NamedRecordFinding = 5,
+    }
+
+    /// Stable machine-readable category for a focused analyzer failure.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum AnalyzerErrorCode {
+        InvalidConfiguration = 0,
+        UnsupportedConfigurationVersion = 1,
+    }
+
+    /// Semantic category of one Crashgen Expectation Outcome.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum CrashgenExpectationOutcomeKind {
+        Notice = 0,
+        Issue = 1,
+        Success = 2,
+    }
+
+    /// Authored severity retained from a Crashgen Expectation.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum CrashgenExpectationSeverity {
+        Info = 0,
+        Warning = 1,
+        Error = 2,
+    }
+
+    /// YAML-owned Autoscan Report destination for one expectation outcome.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum AutoscanReportPlacement {
+        Settings = 0,
+        ErrorInformation = 1,
+    }
+
+    /// Detected layout of the analyzed Crashgen configuration.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum CrashgenConfigLayout {
+        Og = 0,
+        Vr = 1,
+        Unknown = 2,
+    }
+
+    /// Shared typed focused-analyzer error envelope payload.
+    struct AnalyzerErrorDto {
+        analyzer_kind: AnalyzerKind,
+        code: AnalyzerErrorCode,
+        message: String,
+    }
+
+    /// Owned configuration used to construct an immutable Crashgen Settings Analyzer.
+    struct CrashgenSettingsAnalyzerConfigurationDto {
+        crashgen_name: String,
+        display_section: String,
+        ignore_keys: Vec<String>,
+        has_settings_rules: bool,
+        has_settings_rules_version: bool,
+        settings_rules_version: u32,
+        settings_rules_json: String,
+    }
+
+    /// Explicit constructor status for an opaque Crashgen Settings Analyzer handle.
+    ///
+    /// Exactly one presence flag is true. When `has_error` is false, the
+    /// placeholder `error` fields must be ignored.
+    struct CrashgenSettingsAnalyzerConstructionResultDto {
+        has_analyzer: bool,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
+    /// One owned final Crashgen setting supplied for semantic analysis.
+    struct CrashgenSettingDto {
+        has_section: bool,
+        section: String,
+        key: String,
+        value: String,
+    }
+
+    /// Owned input for one aggregate Crashgen Settings Analysis call.
+    struct CrashgenSettingsAnalysisInputDto {
+        settings: Vec<CrashgenSettingDto>,
+        installed_plugins: Vec<String>,
+        has_crashgen_version: bool,
+        crashgen_version_major: u32,
+        crashgen_version_minor: u32,
+        crashgen_version_patch: u32,
+        config_layout: CrashgenConfigLayout,
+    }
+
+    /// One typed, unrendered result from a YAML-authored Crashgen Expectation.
+    struct CrashgenExpectationOutcomeDto {
+        rule_id: String,
+        kind: CrashgenExpectationOutcomeKind,
+        severity: CrashgenExpectationSeverity,
+        message: String,
+        has_fix: bool,
+        fix: String,
+        placement: AutoscanReportPlacement,
+        has_section: bool,
+        section: String,
+        has_setting: bool,
+        setting: String,
+        has_expected: bool,
+        expected: String,
+        has_actual: bool,
+        actual: String,
+    }
+
+    /// One universal notice for a non-ignored disabled Crashgen setting.
+    struct DisabledSettingNoticeDto {
+        setting_name: String,
+    }
+
+    /// Completed aggregate Crashgen Settings Analysis, including explicit empty success.
+    struct CrashgenSettingsAnalysisResultDto {
+        expectation_outcomes: Vec<CrashgenExpectationOutcomeDto>,
+        disabled_setting_notices: Vec<DisabledSettingNoticeDto>,
+    }
+
+    /// Exactly one typed analysis result or typed analyzer error.
+    ///
+    /// Presence flags are authoritative; fields in the absent branch contain
+    /// placeholders required by CXX shared DTOs.
+    struct CrashgenSettingsAnalysisExecutionResultDto {
+        has_result: bool,
+        result: CrashgenSettingsAnalysisResultDto,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum ScanRunContractProgressPhase {
         Setup = 0,
@@ -287,9 +429,31 @@ mod ffi {
     }
 
     extern "Rust" {
+        type CxxCrashgenSettingsAnalyzer;
         type ScanRunRequest;
         type ScanRunUnsolvedLogs;
         type ScanRunCancellation;
+
+        /// Constructs and validates an immutable analyzer handle from owned configuration.
+        ///
+        /// The handle retains a typed construction error when parsing, validation, or
+        /// matcher compilation fails. Call `crashgen_settings_analyzer_construction_result`
+        /// before analysis to inspect that status without relying on CXX exceptions.
+        fn crashgen_settings_analyzer_new(
+            configuration: CrashgenSettingsAnalyzerConfigurationDto,
+        ) -> Box<CxxCrashgenSettingsAnalyzer>;
+        /// Returns the typed success/error status captured during analyzer construction.
+        fn crashgen_settings_analyzer_construction_result(
+            analyzer: &CxxCrashgenSettingsAnalyzer,
+        ) -> CrashgenSettingsAnalyzerConstructionResultDto;
+        /// Runs one aggregate semantic analysis over owned input.
+        ///
+        /// The immutable handle may be reused concurrently. Invalid construction and
+        /// analysis failures are returned through the explicit typed error envelope.
+        fn crashgen_settings_analyze(
+            analyzer: &CxxCrashgenSettingsAnalyzer,
+            input: CrashgenSettingsAnalysisInputDto,
+        ) -> CrashgenSettingsAnalysisExecutionResultDto;
 
         /// Creates Standard intent that leaves failed Crash Logs and reports in place.
         fn scan_run_unsolved_logs_leave_in_place() -> Box<ScanRunUnsolvedLogs>;

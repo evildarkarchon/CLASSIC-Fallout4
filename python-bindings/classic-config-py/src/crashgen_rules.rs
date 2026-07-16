@@ -1,4 +1,6 @@
-use classic_config_core::{CrashgenSettingsRules, parse_crashgen_expectations};
+use classic_config_core::{
+    CrashgenExpectationParseResult, CrashgenSettingsRules, parse_crashgen_expectations,
+};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
 use serde_json::{Map, Number, Value};
@@ -38,7 +40,15 @@ fn pyany_to_document(value: &Bound<'_, PyAny>) -> Value {
 /// carrier-neutral Crashgen Expectation document and parsed by
 /// `classic-config-core`.
 pub fn parse_settings_rules(value: &Bound<'_, PyAny>) -> Option<CrashgenSettingsRules> {
-    parse_crashgen_expectations(&pyany_to_document(value), None).rules
+    parse_settings_rules_with_diagnostics(value, None).rules
+}
+
+/// Parse Python rule input while retaining diagnostics for strict analyzer construction.
+pub fn parse_settings_rules_with_diagnostics(
+    value: &Bound<'_, PyAny>,
+    default_version: Option<u32>,
+) -> CrashgenExpectationParseResult {
+    parse_crashgen_expectations(&pyany_to_document(value), default_version)
 }
 
 #[cfg(test)]

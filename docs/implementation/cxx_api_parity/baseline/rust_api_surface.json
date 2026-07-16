@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T01:51:09Z",
+  "generated_at_utc": "2026-07-16T06:50:02Z",
   "entries": [
     {
       "id": "b0d609f9ed78e468",
@@ -3918,6 +3918,85 @@
       ]
     },
     {
+      "id": "ec6f769e1fa773a7",
+      "rustSymbol": "AnalyzerErrorCode",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "InvalidConfiguration",
+        "UnsupportedConfigurationVersion"
+      ]
+    },
+    {
+      "id": "af3dafea3acc6f3c",
+      "rustSymbol": "AnalyzerKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "CrashgenSettings",
+        "CrashSuspect",
+        "ModGuidance",
+        "PluginEvidence",
+        "FormIdFinding",
+        "NamedRecordFinding"
+      ]
+    },
+    {
+      "id": "85ecdba27cb0e319",
+      "rustSymbol": "AutoscanReportPlacement",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Settings",
+        "ErrorInformation"
+      ]
+    },
+    {
+      "id": "8d09ade750ccd944",
+      "rustSymbol": "CrashgenConfigLayout",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Og",
+        "Vr",
+        "Unknown"
+      ]
+    },
+    {
+      "id": "ae5e2640e3a9f7bc",
+      "rustSymbol": "CrashgenExpectationOutcomeKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Notice",
+        "Issue",
+        "Success"
+      ]
+    },
+    {
+      "id": "48978a1988cae0c4",
+      "rustSymbol": "CrashgenExpectationSeverity",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Info",
+        "Warning",
+        "Error"
+      ]
+    },
+    {
       "id": "d8f7976d67cc2ff2",
       "rustSymbol": "ScanRunContractDiscoverySource",
       "kind": "enum",
@@ -4015,6 +4094,61 @@
         "CancelledBeforeDiscovery",
         "Cancelled"
       ]
+    },
+    {
+      "id": "50ad3eff99e57376",
+      "rustSymbol": "crashgen_settings_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "analyzer",
+            "type": "&CxxCrashgenSettingsAnalyzer"
+          },
+          {
+            "name": "input",
+            "type": "CrashgenSettingsAnalysisInputDto"
+          }
+        ],
+        "returnType": "CrashgenSettingsAnalysisExecutionResultDto"
+      }
+    },
+    {
+      "id": "6e3ae84672f1f96b",
+      "rustSymbol": "crashgen_settings_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "analyzer",
+            "type": "&CxxCrashgenSettingsAnalyzer"
+          }
+        ],
+        "returnType": "CrashgenSettingsAnalyzerConstructionResultDto"
+      }
+    },
+    {
+      "id": "65319264323580ea",
+      "rustSymbol": "crashgen_settings_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "configuration",
+            "type": "CrashgenSettingsAnalyzerConfigurationDto"
+          }
+        ],
+        "returnType": "Box<CxxCrashgenSettingsAnalyzer>"
+      }
     },
     {
       "id": "997880f5a0bc006d",
@@ -4386,6 +4520,14 @@
       }
     },
     {
+      "id": "4703b74efa2672a7",
+      "rustSymbol": "CxxCrashgenSettingsAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust"
+    },
+    {
       "id": "19f1b50474db40e6",
       "rustSymbol": "CxxPapyrusAnalyzer",
       "kind": "opaque",
@@ -4424,6 +4566,280 @@
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust"
+    },
+    {
+      "id": "7460d2a3d9eb44fb",
+      "rustSymbol": "AnalyzerErrorDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "analyzer_kind",
+          "type": "AnalyzerKind"
+        },
+        {
+          "name": "code",
+          "type": "AnalyzerErrorCode"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "9b4543106d933b14",
+      "rustSymbol": "CrashgenExpectationOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "rule_id",
+          "type": "String"
+        },
+        {
+          "name": "kind",
+          "type": "CrashgenExpectationOutcomeKind"
+        },
+        {
+          "name": "severity",
+          "type": "CrashgenExpectationSeverity"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        },
+        {
+          "name": "has_fix",
+          "type": "bool"
+        },
+        {
+          "name": "fix",
+          "type": "String"
+        },
+        {
+          "name": "placement",
+          "type": "AutoscanReportPlacement"
+        },
+        {
+          "name": "has_section",
+          "type": "bool"
+        },
+        {
+          "name": "section",
+          "type": "String"
+        },
+        {
+          "name": "has_setting",
+          "type": "bool"
+        },
+        {
+          "name": "setting",
+          "type": "String"
+        },
+        {
+          "name": "has_expected",
+          "type": "bool"
+        },
+        {
+          "name": "expected",
+          "type": "String"
+        },
+        {
+          "name": "has_actual",
+          "type": "bool"
+        },
+        {
+          "name": "actual",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "7e45bc7ac1be0f8e",
+      "rustSymbol": "CrashgenSettingDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_section",
+          "type": "bool"
+        },
+        {
+          "name": "section",
+          "type": "String"
+        },
+        {
+          "name": "key",
+          "type": "String"
+        },
+        {
+          "name": "value",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "ce187e85df00ac6b",
+      "rustSymbol": "CrashgenSettingsAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_result",
+          "type": "bool"
+        },
+        {
+          "name": "result",
+          "type": "CrashgenSettingsAnalysisResultDto"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "AnalyzerErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "6d94354720a39a71",
+      "rustSymbol": "CrashgenSettingsAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "settings",
+          "type": "Vec<CrashgenSettingDto>"
+        },
+        {
+          "name": "installed_plugins",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "has_crashgen_version",
+          "type": "bool"
+        },
+        {
+          "name": "crashgen_version_major",
+          "type": "u32"
+        },
+        {
+          "name": "crashgen_version_minor",
+          "type": "u32"
+        },
+        {
+          "name": "crashgen_version_patch",
+          "type": "u32"
+        },
+        {
+          "name": "config_layout",
+          "type": "CrashgenConfigLayout"
+        }
+      ]
+    },
+    {
+      "id": "7fa662ff3e46b0c5",
+      "rustSymbol": "CrashgenSettingsAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "expectation_outcomes",
+          "type": "Vec<CrashgenExpectationOutcomeDto>"
+        },
+        {
+          "name": "disabled_setting_notices",
+          "type": "Vec<DisabledSettingNoticeDto>"
+        }
+      ]
+    },
+    {
+      "id": "2b468bc86eb00370",
+      "rustSymbol": "CrashgenSettingsAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "crashgen_name",
+          "type": "String"
+        },
+        {
+          "name": "display_section",
+          "type": "String"
+        },
+        {
+          "name": "ignore_keys",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "has_settings_rules",
+          "type": "bool"
+        },
+        {
+          "name": "has_settings_rules_version",
+          "type": "bool"
+        },
+        {
+          "name": "settings_rules_version",
+          "type": "u32"
+        },
+        {
+          "name": "settings_rules_json",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "d75f50d970f14b4d",
+      "rustSymbol": "CrashgenSettingsAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_analyzer",
+          "type": "bool"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "AnalyzerErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "6944744ebbb7e4de",
+      "rustSymbol": "DisabledSettingNoticeDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "setting_name",
+          "type": "String"
+        }
+      ]
     },
     {
       "id": "0ea85cd7a4b6a5fb",

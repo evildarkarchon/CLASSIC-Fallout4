@@ -8,12 +8,12 @@
 //! and appends Disabled Setting Notices for all non-ignored disabled settings.
 
 use crate::crashgen_registry::CrashgenEntry;
-use crate::error::Result;
-use crate::report::{AutoscanReportContribution, CrashgenExpectationContribution, ReportFragment};
-use classic_config_core::{
-    AutoscanReportPlacement, ConfigLayout, CrashgenSettingsSnapshot, EvaluationContext,
-    evaluate_rules,
+use crate::crashgen_settings_analyzer::{
+    CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult, CrashgenSettingsAnalyzer,
 };
+use crate::error::{Result, ScanLogError};
+use crate::report::{AutoscanReportContribution, CrashgenExpectationContribution, ReportFragment};
+use classic_config_core::{AutoscanReportPlacement, ConfigLayout, CrashgenSettingsSnapshot};
 use std::collections::HashSet;
 
 #[derive(Clone, Debug)]
@@ -38,8 +38,8 @@ impl BucketedSettingsFragment {
 pub struct SettingsValidator {
     /// Resolved crashgen name for use in human-readable messages.
     crashgen_name: String,
-    /// Pre-resolved registry entry for this crashgen.
-    entry: CrashgenEntry,
+    /// Validated semantic analyzer constructed once for this compatibility facade.
+    analyzer: std::result::Result<CrashgenSettingsAnalyzer, crate::AnalyzerError>,
 }
 
 impl SettingsValidator {
@@ -50,9 +50,10 @@ impl SettingsValidator {
     /// * `crashgen_name` - Display name of the crash generator (e.g., `"Buffout 4"`)
     /// * `entry` - Pre-resolved `CrashgenEntry` from the `CrashgenRegistry`
     pub fn new(crashgen_name: String, entry: CrashgenEntry) -> Self {
+        let analyzer = CrashgenSettingsAnalyzer::new(crashgen_name.clone(), entry);
         Self {
             crashgen_name,
-            entry,
+            analyzer,
         }
     }
 
@@ -101,33 +102,26 @@ impl SettingsValidator {
         crashgen_version: Option<(u32, u32, u32)>,
         config_layout: ConfigLayout,
     ) -> Result<Vec<AutoscanReportContribution>> {
-        let mut contributions = Vec::new();
-
-        if let Some(rules) = self.entry.settings_rules.as_ref() {
-            let context = EvaluationContext {
+        let analysis = self.analyze(crashgen, xse_modules, crashgen_version, config_layout)?;
+        let mut contributions = analysis
+            .expectation_outcomes
+            .into_iter()
+            .map(|outcome| {
+                AutoscanReportContribution::CrashgenExpectation(CrashgenExpectationContribution {
+                    kind: outcome.kind,
+                    severity: outcome.severity,
+                    message: outcome.message,
+                    fix: outcome.fix,
+                    placement: outcome.placement,
+                })
+            })
+            .collect::<Vec<_>>();
+        contributions.extend(analysis.disabled_setting_notices.into_iter().map(|notice| {
+            AutoscanReportContribution::DisabledSettingNotice {
+                setting_name: notice.setting_name,
                 crashgen_name: self.crashgen_name.clone(),
-                display_section: self.entry.display_section.clone(),
-                installed_plugins: xse_modules.clone(),
-                settings: crashgen.clone(),
-                config_layout,
-                crashgen_version,
-            };
-            let evaluation = evaluate_rules(rules, &context);
-
-            for outcome in evaluation.outcomes {
-                contributions.push(AutoscanReportContribution::CrashgenExpectation(
-                    CrashgenExpectationContribution {
-                        kind: outcome.kind,
-                        severity: outcome.severity,
-                        message: outcome.message,
-                        fix: outcome.fix,
-                        placement: outcome.bucket,
-                    },
-                ));
             }
-        }
-
-        contributions.extend(self.disabled_setting_notice_contributions(crashgen));
+        }));
 
         Ok(contributions)
     }
@@ -141,39 +135,54 @@ impl SettingsValidator {
         &self,
         crashgen: &CrashgenSettingsSnapshot,
     ) -> Result<ReportFragment> {
-        let lines = self
-            .disabled_setting_notice_contributions(crashgen)
+        let analysis = self.analyze(crashgen, &HashSet::new(), None, ConfigLayout::Unknown)?;
+        let lines = analysis
+            .disabled_setting_notices
             .into_iter()
-            .filter_map(|contribution| {
-                contribution
-                    .legacy_settings_fragment()
-                    .map(|(_, fragment)| fragment.to_list())
+            .flat_map(|notice| {
+                AutoscanReportContribution::DisabledSettingNotice {
+                    setting_name: notice.setting_name,
+                    crashgen_name: self.crashgen_name.clone(),
+                }
+                .legacy_settings_fragment()
+                .map(|(_, fragment)| fragment.to_list())
+                .unwrap_or_default()
             })
-            .flatten()
             .collect();
 
         Ok(ReportFragment::from_lines(lines))
     }
 
-    fn disabled_setting_notice_contributions(
+    fn analyze(
         &self,
         crashgen: &CrashgenSettingsSnapshot,
-    ) -> Vec<AutoscanReportContribution> {
-        let mut contributions = Vec::new();
-        for setting in crashgen.final_settings() {
-            let setting_name = setting.key.to_string();
-
-            if let Ok(false) = setting.value.parse::<bool>()
-                && !self.entry.ignore_keys.contains(&setting_name)
-            {
-                contributions.push(AutoscanReportContribution::DisabledSettingNotice {
-                    setting_name,
-                    crashgen_name: self.crashgen_name.clone(),
-                });
-            }
-        }
-
-        contributions
+        xse_modules: &HashSet<String>,
+        crashgen_version: Option<(u32, u32, u32)>,
+        config_layout: ConfigLayout,
+    ) -> Result<CrashgenSettingsAnalysisResult> {
+        let analyzer = self.analyzer.as_ref().map_err(|error| {
+            ScanLogError::ConfigError(format!(
+                "{} [{}]: {}",
+                error.analyzer().as_str(),
+                error.code().as_str(),
+                error.message()
+            ))
+        })?;
+        analyzer
+            .analyze(CrashgenSettingsAnalysisInput {
+                settings: crashgen.clone(),
+                installed_plugins: xse_modules.clone(),
+                crashgen_version,
+                config_layout,
+            })
+            .map_err(|error| {
+                ScanLogError::AnalysisError(format!(
+                    "{} [{}]: {}",
+                    error.analyzer().as_str(),
+                    error.code().as_str(),
+                    error.message()
+                ))
+            })
     }
 }
 

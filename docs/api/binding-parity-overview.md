@@ -33,9 +33,17 @@ Each shared Rust crate and its corresponding binding module across all three sur
 | `classic-resource-core` | **Not exposed** | [`resource.rs`](../../node-bindings/classic-node/src/resource.rs) | [`classic-resource-py`](../../python-bindings/classic-resource-py/) |
 | `classic-database-core` | [`database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs) | [`database.rs`](../../node-bindings/classic-node/src/database.rs) | [`classic-database-py`](../../python-bindings/classic-database-py/) |
 | `classic-scangame-core` | [`scangame.rs`](../../cpp-bindings/classic-cpp-bridge/src/scangame.rs) | [`scangame.rs`](../../node-bindings/classic-node/src/scangame.rs) | [`classic-scangame-py`](../../python-bindings/classic-scangame-py/) |
-| `classic-scanlog-core` | [`scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) | [`scanlog.rs`](../../node-bindings/classic-node/src/scanlog.rs) | [`classic-scanlog-py`](../../python-bindings/classic-scanlog-py/) |
+| `classic-scanlog-core` | [`scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) | [`scanlog.rs`](../../node-bindings/classic-node/src/scanlog.rs) + [`crashgen_settings_analyzer.rs`](../../node-bindings/classic-node/src/crashgen_settings_analyzer.rs) | [`classic-scanlog-py`](../../python-bindings/classic-scanlog-py/) |
 
 **Historical Phase 3 note (v9.1.0):** the retired constants crate, Python wrapper crate, and binding-side `constants` modules no longer exist as parity owners. `Fallout4Version` and `NULL_VERSION` now belong to `classic-version-registry-core`, `YamlFile` plus settings constants belong to `classic-settings-core`, and `GameId` belongs to `classic-shared-core` with matching C++ `shared.rs`, Node `shared.rs`, and `classic-shared-py` exposure.
+
+**Semantic analyzer contract:** `CrashgenSettingsAnalyzer` is projected through
+all three bindings as an immutable reusable handle over owned input. Each
+surface returns typed Crashgen Expectation Outcomes separately from Disabled
+Setting Notices, preserves YAML-owned placement and authored guidance, and
+represents completed no-match analysis with an explicit result containing two
+empty collections. Stable analyzer and error tokens originate in Rust; see
+[`error-contract.md`](error-contract.md#shared-focused-analyzer-errors).
 
 **Note on app-update notification surface (`classic-update-core`):** the `notification` module adds a single cross-binding entry point in addition to the legacy `GithubClient` surface. Contract map:
 

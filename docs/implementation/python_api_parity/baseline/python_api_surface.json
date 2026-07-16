@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T01:55:07.504736+00:00",
+  "generated_at_utc": "2026-07-16T07:19:36.553272+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -4577,6 +4577,46 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "AnalyzerError",
+      "export_path": "AnalyzerError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class AnalyzerError(RuntimeError):"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "AnalyzerKind",
+      "export_path": "AnalyzerKind",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class AnalyzerKind:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "AnalyzerSeverity",
+      "export_path": "AnalyzerSeverity",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class AnalyzerSeverity:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "AutoscanReportPlacement",
+      "export_path": "AutoscanReportPlacement",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class AutoscanReportPlacement:"
+    },
+    {
+      "module": "classic_scanlog",
       "export": "ConfigIssue",
       "export_path": "ConfigIssue",
       "kind": "class",
@@ -4608,6 +4648,92 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def format_report(self) -> str:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "CrashgenExpectationKind",
+      "export_path": "CrashgenExpectationKind",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashgenExpectationKind:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "CrashgenExpectationOutcome",
+      "export_path": "CrashgenExpectationOutcome",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashgenExpectationOutcome:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "CrashgenSettingsAnalysisInput",
+      "export_path": "CrashgenSettingsAnalysisInput",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashgenSettingsAnalysisInput:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "CrashgenSettingsAnalysisInput.__init__",
+      "parent_class": "CrashgenSettingsAnalysisInput",
+      "kind": "method",
+      "arity": 4,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__( self, settings: dict[str, dict[str, str]], installed_plugins: set[str], crashgen_version: tuple[int, int, int] | None = None, config_layout: str | None = None, ) -> None:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "CrashgenSettingsAnalysisResult",
+      "export_path": "CrashgenSettingsAnalysisResult",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashgenSettingsAnalysisResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "CrashgenSettingsAnalyzer",
+      "export_path": "CrashgenSettingsAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class CrashgenSettingsAnalyzer:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "CrashgenSettingsAnalyzer.__init__",
+      "parent_class": "CrashgenSettingsAnalyzer",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__(self, crashgen_name: str, crashgen_entry: dict[str, Any]) -> None:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "analyze",
+      "export_path": "CrashgenSettingsAnalyzer.analyze",
+      "parent_class": "CrashgenSettingsAnalyzer",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def analyze(self, input: CrashgenSettingsAnalysisInput) -> CrashgenSettingsAnalysisResult:"
     },
     {
       "module": "classic_scanlog",
@@ -4676,6 +4802,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class CrashgenVersionStatus:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "DisabledSettingNotice",
+      "export_path": "DisabledSettingNotice",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class DisabledSettingNotice:"
     },
     {
       "module": "classic_scanlog",

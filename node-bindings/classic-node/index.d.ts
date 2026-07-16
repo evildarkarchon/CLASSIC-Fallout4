@@ -52,6 +52,36 @@ export declare class BackupManager {
 }
 
 /**
+ * Immutable Node handle over validated, compiled Crashgen Settings configuration.
+ *
+ * Construction and analysis failures throw errors whose `analyzerKind`,
+ * `code`, and `message` preserve the complete shared core error contract.
+ */
+export declare class CrashgenSettingsAnalyzer {
+  /**
+   * Validates and compiles one Crashgen registry entry into an immutable analyzer.
+   *
+   * @param crashgenName Display name used by authored message templates.
+   * @param entry Owned registry entry containing ignore keys and expectations.
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  constructor(crashgenName: string, entry: JsCrashgenRegistryEntry)
+  /** Returns the stable focused-analyzer identity for this handle. */
+  get kind(): JsAnalyzerKind
+  /**
+   * Runs aggregate semantic analysis over one owned Crash Log input.
+   *
+   * A successful call always returns a result object, including when both
+   * arrays are empty. The result contains no rendered report lines.
+   *
+   * @param input Owned settings, plugin, version, and layout facts.
+   * @returns Typed expectation outcomes and separate disabled-setting notices.
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  analyze(input: JsCrashgenSettingsAnalysisInput): JsCrashgenSettingsAnalysisResult
+}
+
+/**
  * Multi-strategy documents path finder.
  *
  * Locates the game's documents folder (containing INI files, saves, and logs)
@@ -2403,6 +2433,22 @@ export interface JsAddressLibraryConfig {
   nexusUrl: string
 }
 
+/** Focused semantic analyzer identity shared across language bindings. */
+export declare const enum JsAnalyzerKind {
+  /** Crashgen Expectations and Disabled Setting Notices. */
+  CrashgenSettings = 'crashgen_settings',
+  /** Known crash messages, stack patterns, and DLL involvement. */
+  CrashSuspect = 'crash_suspect',
+  /** Conflict, frequent-crash, solution, and important-mod guidance. */
+  ModGuidance = 'mod_guidance',
+  /** Plugin identity and occurrence evidence. */
+  PluginEvidence = 'plugin_evidence',
+  /** Resolved and unresolved FormID evidence. */
+  FormIdFinding = 'formid_finding',
+  /** Authored named-record evidence. */
+  NamedRecordFinding = 'named_record_finding'
+}
+
 /**
  * Reviewed decision captured from a prior `checkYamlUpdate` call.
  *
@@ -2419,6 +2465,14 @@ export interface JsApprovedUpdate {
   fileNames: Array<string>
   /** SHA-256 digests aligned with `fileNames`. */
   fileSha256: Array<string>
+}
+
+/** YAML-owned Autoscan Report destination for one expectation outcome. */
+export declare const enum JsAutoscanReportPlacement {
+  /** Settings-related destination. */
+  Settings = 'settings',
+  /** Promoted destination inside Error Information. */
+  ErrorInformation = 'error_information'
 }
 
 /** Issues detected during BA2 archive scanning. */
@@ -2554,6 +2608,60 @@ export interface JsCrashgenConfig {
   hasCompatibleRange: boolean
 }
 
+/** Detected layout of the analyzed Crashgen configuration. */
+export declare const enum JsCrashgenConfigLayout {
+  /** Buffout 4 OG layout (`Buffout4/config.toml`). */
+  Og = 'og',
+  /** VR layout (`Buffout4.toml`). */
+  Vr = 'vr',
+  /** Layout could not be determined. */
+  Unknown = 'unknown'
+}
+
+/** One typed, unrendered result from a YAML-authored Crashgen Expectation. */
+export interface JsCrashgenExpectationOutcome {
+  /** Stable identifier authored for the originating rule. */
+  ruleId: string
+  /** Semantic outcome category. */
+  kind: JsCrashgenExpectationOutcomeKind
+  /** Authored severity. */
+  severity: JsCrashgenExpectationSeverity
+  /** Authored and template-expanded message without report markup. */
+  message: string
+  /** Optional authored and template-expanded fix without report markup. */
+  fix?: string
+  /** YAML-owned destination used later by Autoscan Report Assembly. */
+  placement: JsAutoscanReportPlacement
+  /** Target section for setting checks, when applicable. */
+  section?: string
+  /** Target setting key for setting checks, when applicable. */
+  setting?: string
+  /** Expected setting value for setting checks, when applicable. */
+  expected?: string
+  /** Actual setting value for setting checks, when applicable. */
+  actual?: string
+}
+
+/** Semantic category of one Crashgen Expectation Outcome. */
+export declare const enum JsCrashgenExpectationOutcomeKind {
+  /** Informational or compatibility notice. */
+  Notice = 'notice',
+  /** Failed expectation. */
+  Issue = 'issue',
+  /** Successful expectation with authored pass guidance. */
+  Success = 'success'
+}
+
+/** Authored severity retained from a Crashgen Expectation. */
+export declare const enum JsCrashgenExpectationSeverity {
+  /** Informational guidance. */
+  Info = 'info',
+  /** Warning guidance. */
+  Warning = 'warning',
+  /** Error guidance. */
+  Error = 'error'
+}
+
 export interface JsCrashgenRegistryEntry {
   displaySection: string
   ignoreKeys: Array<string>
@@ -2577,10 +2685,50 @@ export interface JsCrashgenReport {
   installedPlugins: Array<string>
 }
 
+/** One owned final Crashgen setting supplied for semantic analysis. */
+export interface JsCrashgenSetting {
+  /** Section containing the setting, or `undefined` for an unscoped setting. */
+  section?: string
+  /** Exact setting key after caller-side parsing. */
+  key: string
+  /** Final setting value represented as text. */
+  value: string
+}
+
+/** Owned input for one aggregate Crashgen Settings Analysis call. */
+export interface JsCrashgenSettingsAnalysisInput {
+  /** Final scoped and unscoped settings for one Crash Log. */
+  settings: Array<JsCrashgenSetting>
+  /** Installed XSE plugin module names used by expectation predicates. */
+  installedPlugins: Array<string>
+  /** Parsed Crashgen version, when available. */
+  crashgenVersion?: JsCrashgenVersion
+  /** Detected Crashgen configuration layout. */
+  configLayout: JsCrashgenConfigLayout
+}
+
+/** Completed Crashgen Settings Analysis, including explicit empty success arrays. */
+export interface JsCrashgenSettingsAnalysisResult {
+  /** YAML-backed Crashgen Expectation Outcomes in evaluator order. */
+  expectationOutcomes: Array<JsCrashgenExpectationOutcome>
+  /** Universal Disabled Setting Notices kept separate from expectations. */
+  disabledSettingNotices: Array<JsDisabledSettingNotice>
+}
+
 export interface JsCrashgenSettingsRules {
   version: number
   preflight: Array<JsPreflightRule>
   checks: Array<JsCheckRule>
+}
+
+/** Parsed Crashgen version used by version predicates. */
+export interface JsCrashgenVersion {
+  /** Major version component. */
+  major: number
+  /** Minor version component. */
+  minor: number
+  /** Patch version component. */
+  patch: number
 }
 
 /** Parsed crash generator version components. */
@@ -2661,6 +2809,12 @@ export interface JsDdsBatchResult {
 export interface JsDdsIssue {
   /** Human-readable description of the issue. */
   message: string
+}
+
+/** Universal notice for one non-ignored disabled Crashgen setting. */
+export interface JsDisabledSettingNotice {
+  /** Disabled setting key exactly as retained by the settings snapshot. */
+  settingName: string
 }
 
 /** Duplicate group information. */

@@ -20,6 +20,7 @@ futures = { workspace = true }
 
 # Data structures
 indexmap = { workspace = true }
+serde_json = { workspace = true }
 yaml-rust2 = { workspace = true }
 
 # Error handling
@@ -55,7 +56,6 @@ classic-web-core = { path = "../../business-logic/classic-web-core" }
 [dev-dependencies]
 tempfile = { workspace = true }
 serial_test = "3.2"
-serde_json = { workspace = true }
 
 [target.'cfg(windows)'.dependencies]
 # CXX FFI framework

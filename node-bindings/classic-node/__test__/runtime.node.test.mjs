@@ -142,6 +142,85 @@ test("loads native binding in Node runtime", () => {
   assert.equal(typeof classic.getVersionById, "function");
 });
 
+test("runs the focused Crashgen Settings Analyzer contract in Node", () => {
+  const entry = {
+    displaySection: "[Compatibility]",
+    ignoreKeys: [],
+    checks: [],
+    settingsRulesVersion: 1,
+    settingsRules: {
+      version: 1,
+      preflight: [],
+      checks: [
+        {
+          id: "setting_check",
+          target: {
+            section: "Patches",
+            key: "Achievements",
+            valueType: "bool",
+          },
+          when: {},
+          expect: { equals: false },
+          messages: { fail: "Expectation failed", fix: "Expectation fix" },
+          severity: "error",
+        },
+      ],
+    },
+  };
+  const analyzer = new classic.CrashgenSettingsAnalyzer("Buffout 4", entry);
+
+  assert.equal(analyzer.kind, "crashgen_settings");
+  assert.deepEqual(
+    analyzer.analyze({
+      settings: [
+        { section: "Patches", key: "Achievements", value: "true" },
+        { section: "Compatibility", key: "Disabled", value: "false" },
+      ],
+      installedPlugins: [],
+      configLayout: "og",
+    }),
+    {
+      expectationOutcomes: [
+        {
+          ruleId: "setting_check",
+          kind: "issue",
+          severity: "error",
+          message: "Expectation failed",
+          fix: "Expectation fix",
+          placement: "settings",
+          section: "Patches",
+          setting: "Achievements",
+          expected: "false",
+          actual: "true",
+        },
+      ],
+      disabledSettingNotices: [{ settingName: "Disabled" }],
+    },
+  );
+  assert.deepEqual(analyzer.analyze({
+    settings: [],
+    installedPlugins: [],
+    configLayout: "unknown",
+  }), {
+    expectationOutcomes: [],
+    disabledSettingNotices: [],
+  });
+
+  assert.throws(
+    () => new classic.CrashgenSettingsAnalyzer("Buffout 4", {
+      ...entry,
+      settingsRulesVersion: 2,
+      settingsRules: { ...entry.settingsRules, version: 2 },
+    }),
+    (error) => {
+      assert.equal(error.analyzerKind, "crashgen_settings");
+      assert.equal(error.code, "unsupported_configuration_version");
+      assert.equal(error.message, "unsupported Crashgen Expectations version 2");
+      return true;
+    },
+  );
+});
+
 test("exposes only the User Settings replacement contract in Node", () => {
   const root = mkdtempSync(join(tmpdir(), "classic-node-runtime-user-settings-"));
 

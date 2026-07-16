@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T01:55:07.489779+00:00",
+  "generated_at_utc": "2026-07-16T07:19:36.542313+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -8615,6 +8615,82 @@
       "tier": "tier1"
     },
     {
+      "symbol": "AnalyzerError",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};",
+      "source_expr": "analyzer::AnalyzerError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AnalyzerError",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/analyzer.rs",
+      "source_decl": "pub struct AnalyzerError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AnalyzerErrorCode",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/analyzer.rs",
+      "source_decl": "pub enum AnalyzerErrorCode",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AnalyzerErrorCode",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};",
+      "source_expr": "analyzer::AnalyzerErrorCode",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AnalyzerKind",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/analyzer.rs",
+      "source_decl": "pub enum AnalyzerKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AnalyzerKind",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};",
+      "source_expr": "analyzer::AnalyzerKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AnalyzerResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};",
+      "source_expr": "analyzer::AnalyzerResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "AnalyzerResult",
+      "kind": "type",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/analyzer.rs",
+      "source_decl": "pub type AnalyzerResult",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CALLSTACK",
       "kind": "const",
       "crate": "classic-scanlog-core",
@@ -8843,6 +8919,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CrashgenExpectationOutcome",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crashgen_settings_analyzer::{ CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult, CrashgenSettingsAnalyzer, DisabledSettingNotice, };",
+      "source_expr": "crashgen_settings_analyzer::CrashgenExpectationOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenExpectationOutcome",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crashgen_settings_analyzer.rs",
+      "source_decl": "pub struct CrashgenExpectationOutcome",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CrashgenRegistry",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -8859,6 +8954,63 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/crashgen_registry.rs",
       "source_decl": "pub struct CrashgenRegistry",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenSettingsAnalysisInput",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crashgen_settings_analyzer::{ CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult, CrashgenSettingsAnalyzer, DisabledSettingNotice, };",
+      "source_expr": "crashgen_settings_analyzer::CrashgenSettingsAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenSettingsAnalysisInput",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crashgen_settings_analyzer.rs",
+      "source_decl": "pub struct CrashgenSettingsAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenSettingsAnalysisResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crashgen_settings_analyzer::{ CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult, CrashgenSettingsAnalyzer, DisabledSettingNotice, };",
+      "source_expr": "crashgen_settings_analyzer::CrashgenSettingsAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenSettingsAnalysisResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crashgen_settings_analyzer.rs",
+      "source_decl": "pub struct CrashgenSettingsAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenSettingsAnalyzer",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crashgen_settings_analyzer::{ CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult, CrashgenSettingsAnalyzer, DisabledSettingNotice, };",
+      "source_expr": "crashgen_settings_analyzer::CrashgenSettingsAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "CrashgenSettingsAnalyzer",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crashgen_settings_analyzer.rs",
+      "source_decl": "pub struct CrashgenSettingsAnalyzer",
       "tier": "tier1"
     },
     {
@@ -8897,6 +9049,25 @@
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use version::{ CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, check_crashgen_version_status_with_exceptions, crashgen_version_gen, };",
       "source_expr": "version::CrashgenVersionStatus",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DisabledSettingNotice",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use crashgen_settings_analyzer::{ CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult, CrashgenSettingsAnalyzer, DisabledSettingNotice, };",
+      "source_expr": "crashgen_settings_analyzer::DisabledSettingNotice",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "DisabledSettingNotice",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crashgen_settings_analyzer.rs",
+      "source_decl": "pub struct DisabledSettingNotice",
       "tier": "tier1"
     },
     {
@@ -9623,6 +9794,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "analyze",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crashgen_settings_analyzer.rs",
+      "source_decl": "pub fn analyze(\n        &self,\n        mut input: CrashgenSettingsAnalysisInput,\n    )",
+      "tier": "tier1"
+    },
+    {
       "symbol": "analyze_batch",
       "kind": "function",
       "arity": 3,
@@ -9660,6 +9841,15 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/papyrus.rs",
       "source_decl": "pub fn analyze_to_string(&mut self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "analyzer",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod analyzer;",
       "tier": "tier1"
     },
     {
@@ -9988,6 +10178,15 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod crashgen_registry;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "crashgen_settings_analyzer",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod crashgen_settings_analyzer;",
       "tier": "tier1"
     },
     {
@@ -10404,6 +10603,42 @@
       "kind": "const",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/analyzer.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/analyzer.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/analyzer.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/analyzer.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
       "source_decl": "pub const fn",
       "tier": "tier1"
@@ -10589,6 +10824,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/report.rs",
       "source_decl": "pub fn from_lines_pooled(lines: Vec<String>, pool: &StringPool)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "from_parsed_configuration",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crashgen_settings_analyzer.rs",
+      "source_decl": "pub fn from_parsed_configuration(\n        crashgen_name: String,\n        entry: CrashgenEntry,\n        diagnostics: Vec<CrashgenExpectationParseDiagnostic>,\n    )",
       "tier": "tier1"
     },
     {
@@ -10961,6 +11206,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/analyzer.rs",
+      "source_decl": "pub fn message(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "mod_detector",
       "kind": "module",
       "crate": "classic-scanlog-core",
@@ -10977,6 +11232,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/crashgen_registry.rs",
       "source_decl": "pub fn new(entries: HashMap<String, CrashgenEntry>, default: CrashgenEntry)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/crashgen_settings_analyzer.rs",
+      "source_decl": "pub fn new(crashgen_name: String, entry: CrashgenEntry)",
       "tier": "tier1"
     },
     {

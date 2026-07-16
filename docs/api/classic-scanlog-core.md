@@ -155,6 +155,14 @@ UnsolvedLogsFinalization}` inside `RunResult`. See
 [`error-contract.md`](error-contract.md) for the CXX, Node, and Python
 projections.
 
+Focused semantic analyzers use a separate shared `AnalyzerError` containing an
+`AnalyzerKind`, stable `AnalyzerErrorCode`, and human-readable message. The
+stable analyzer tokens are `crashgen_settings`, `crash_suspect`,
+`mod_guidance`, `plugin_evidence`, `formid_finding`, and
+`named_record_finding`. The first implemented codes are
+`invalid_configuration` and `unsupported_configuration_version`; adapters must
+project these tokens rather than inventing language-specific spellings.
+
 ---
 
 ## Independently Useful Public Utilities
@@ -176,12 +184,22 @@ the canonical parser methods documented in source.
 
 ### Focused analyzers
 
+- `CrashgenSettingsAnalyzer` is the first complete semantic focused analyzer.
+  Its fallible constructor validates typed Crashgen configuration and
+  normalizes plugin predicate matcher state once. The immutable, cloneable
+  handle accepts one owned `CrashgenSettingsAnalysisInput` and is `Send + Sync`.
+- `CrashgenSettingsAnalysisResult` always represents completed analysis,
+  including the explicit success case where both `expectation_outcomes` and
+  `disabled_setting_notices` are empty. Outcomes preserve the YAML-authored
+  rule id, expanded message and fix, kind, severity, and YAML-owned Autoscan
+  Report Placement without carrying markdown or report lines.
 - `FormIDAnalyzerCore` extracts, validates, and optionally resolves FormIDs.
 - `PluginAnalyzer` detects and classifies plugin references.
 - `RecordScanner` scans call stacks for named records and lazily caches its
   per-instance Aho-Corasick matchers with `std::sync::OnceLock`.
 - `SuspectScanner` applies suspect and error heuristics to supplied sections.
-- `SettingsValidator` evaluates supplied settings data.
+- `SettingsValidator` is the temporary fragment-producing compatibility facade
+  over `CrashgenSettingsAnalyzer`; new semantic consumers use the analyzer.
 - `GpuDetector` extracts GPU information.
 - the mod detector and crashgen version/registry helpers operate on supplied
   data without owning a run lifecycle.

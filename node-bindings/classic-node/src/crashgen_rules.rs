@@ -1,6 +1,7 @@
 use classic_config_core::{
-    AutoscanReportPlacement, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate,
-    PreflightActionKind, RuleSeverity, TargetValueType, parse_crashgen_expectations,
+    AutoscanReportPlacement, ConfigLayout, CrashgenExpectationParseResult, CrashgenSettingsRules,
+    ExpectedValue, Predicate, PreflightActionKind, RuleSeverity, TargetValueType,
+    parse_crashgen_expectations,
 };
 use serde_json::{Map, Value, json};
 
@@ -112,10 +113,6 @@ fn predicate_to_json(predicate: &Predicate) -> Value {
     }
 }
 
-fn optional_string_value(value: Option<String>) -> Value {
-    value.map(Value::String).unwrap_or(Value::Null)
-}
-
 fn js_rules_to_document(rules: JsCrashgenSettingsRules) -> Value {
     let mut root = Map::new();
     root.insert("version".to_string(), json!(rules.version));
@@ -145,17 +142,17 @@ fn js_rules_to_document(rules: JsCrashgenSettingsRules) -> Value {
 fn js_preflight_rule_to_document(rule: JsPreflightRule) -> Value {
     let mut action = Map::new();
     action.insert("kind".to_string(), Value::String(rule.action.kind));
-    action.insert(
-        "placement".to_string(),
-        optional_string_value(rule.action.placement),
-    );
-    action.insert(
-        "bucket".to_string(),
-        optional_string_value(rule.action.bucket),
-    );
+    if let Some(placement) = rule.action.placement {
+        action.insert("placement".to_string(), Value::String(placement));
+    }
+    if let Some(bucket) = rule.action.bucket {
+        action.insert("bucket".to_string(), Value::String(bucket));
+    }
     action.insert("severity".to_string(), Value::String(rule.action.severity));
     action.insert("message".to_string(), Value::String(rule.action.message));
-    action.insert("fix".to_string(), optional_string_value(rule.action.fix));
+    if let Some(fix) = rule.action.fix {
+        action.insert("fix".to_string(), Value::String(fix));
+    }
 
     json!({
         "id": rule.id,
@@ -165,6 +162,15 @@ fn js_preflight_rule_to_document(rule: JsPreflightRule) -> Value {
 }
 
 fn js_check_rule_to_document(rule: JsCheckRule) -> Value {
+    let mut messages = Map::new();
+    messages.insert("fail".to_string(), Value::String(rule.messages.fail));
+    if let Some(fix) = rule.messages.fix {
+        messages.insert("fix".to_string(), Value::String(fix));
+    }
+    if let Some(pass) = rule.messages.pass {
+        messages.insert("pass".to_string(), Value::String(pass));
+    }
+
     json!({
         "id": rule.id,
         "target": {
@@ -176,11 +182,7 @@ fn js_check_rule_to_document(rule: JsCheckRule) -> Value {
         "expect": {
             "equals": rule.expect.equals,
         },
-        "messages": {
-            "fail": rule.messages.fail,
-            "fix": rule.messages.fix,
-            "pass": rule.messages.pass,
-        },
+        "messages": Value::Object(messages),
         "severity": rule.severity,
     })
 }
@@ -190,8 +192,21 @@ fn js_check_rule_to_document(rule: JsCheckRule) -> Value {
 mod tests;
 
 pub fn js_rules_to_core(rules: Option<JsCrashgenSettingsRules>) -> Option<CrashgenSettingsRules> {
-    let rules = rules?;
-    parse_crashgen_expectations(&js_rules_to_document(rules), None).rules
+    parse_js_rules_to_core(rules, None).rules
+}
+
+/// Converts Node rule objects through the carrier-neutral parser while retaining diagnostics.
+///
+/// Focused analyzer construction passes this complete result to Rust core so
+/// core can apply strict validation without duplicating parsing policy here.
+pub fn parse_js_rules_to_core(
+    rules: Option<JsCrashgenSettingsRules>,
+    default_version: Option<u32>,
+) -> CrashgenExpectationParseResult {
+    let Some(rules) = rules else {
+        return CrashgenExpectationParseResult::default();
+    };
+    parse_crashgen_expectations(&js_rules_to_document(rules), default_version)
 }
 
 pub fn core_rules_to_js(rules: Option<&CrashgenSettingsRules>) -> Option<JsCrashgenSettingsRules> {

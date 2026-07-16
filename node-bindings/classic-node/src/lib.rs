@@ -21,6 +21,7 @@ extern crate napi_derive;
 
 // Wave 1: Core Infrastructure
 mod crashgen_rules;
+mod crashgen_settings_analyzer;
 mod logging_contract;
 mod message;
 mod runtime;

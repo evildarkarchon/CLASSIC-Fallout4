@@ -87,6 +87,7 @@ define_exceptions!(
 pub mod core_mod_convert;
 /// Crashgen settings rule parsing helpers for Python inputs.
 pub mod crashgen_rules;
+pub mod crashgen_settings_analyzer;
 pub mod fcx_handler;
 pub mod formid;
 pub mod formid_analyzer;
@@ -105,6 +106,11 @@ pub mod suspect_scanner;
 pub mod version;
 
 // Re-export all public types
+pub use crashgen_settings_analyzer::{
+    PyAnalyzerKind, PyAnalyzerSeverity, PyAutoscanReportPlacement, PyCrashgenExpectationKind,
+    PyCrashgenExpectationOutcome, PyCrashgenSettingsAnalysisResult, PyCrashgenSettingsAnalyzer,
+    PyDisabledSettingNotice,
+};
 pub use fcx_handler::PyConfigIssue;
 pub use formid::PyRustFormIDAnalyzer;
 pub use formid_analyzer::{
@@ -234,6 +240,7 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(detect_mods_batch, m)?)?;
 
     // Validators and run-result data
+    crashgen_settings_analyzer::register(m)?;
     m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;
@@ -297,6 +304,7 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(detect_mods_batch, m)?)?;
 
     // Validators and run-result data
+    crashgen_settings_analyzer::register(m)?;
     m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;

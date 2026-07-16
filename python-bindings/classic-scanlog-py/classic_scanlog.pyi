@@ -1442,6 +1442,122 @@ class SuspectScanner:
 # Settings Validation (Phase 2)
 # =============================================================================
 
+class AnalyzerKind:
+    """Stable focused-analyzer identifier."""
+
+    CrashgenSettings: AnalyzerKind
+    CrashSuspect: AnalyzerKind
+    ModGuidance: AnalyzerKind
+    PluginEvidence: AnalyzerKind
+    FormIdFinding: AnalyzerKind
+    NamedRecordFinding: AnalyzerKind
+
+    @property
+    def code(self) -> str:
+        """Return the stable cross-language analyzer token."""
+
+class CrashgenExpectationKind:
+    """Semantic kind of a Crashgen Expectation outcome."""
+
+    Notice: CrashgenExpectationKind
+    Issue: CrashgenExpectationKind
+    Success: CrashgenExpectationKind
+
+    @property
+    def value(self) -> str:
+        """Return ``notice``, ``issue``, or ``success``."""
+
+class AnalyzerSeverity:
+    """Severity attached to a Crashgen Expectation outcome."""
+
+    Info: AnalyzerSeverity
+    Warning: AnalyzerSeverity
+    Error: AnalyzerSeverity
+
+    @property
+    def value(self) -> str:
+        """Return the stable lowercase severity token."""
+
+class AutoscanReportPlacement:
+    """YAML-owned destination for a Crashgen Expectation outcome."""
+
+    Settings: AutoscanReportPlacement
+    ErrorInformation: AutoscanReportPlacement
+
+    @property
+    def value(self) -> str:
+        """Return ``settings`` or ``error_information``."""
+
+class AnalyzerError(RuntimeError):
+    """Typed focused-analyzer construction or execution failure."""
+
+    analyzer_kind: AnalyzerKind
+    code: str
+    message: str
+
+class CrashgenExpectationOutcome:
+    """Immutable semantic result from one YAML-backed expectation."""
+
+    @property
+    def rule_id(self) -> str: ...
+    @property
+    def kind(self) -> CrashgenExpectationKind: ...
+    @property
+    def severity(self) -> AnalyzerSeverity: ...
+    @property
+    def message(self) -> str: ...
+    @property
+    def fix(self) -> str | None: ...
+    @property
+    def placement(self) -> AutoscanReportPlacement: ...
+    @property
+    def section(self) -> str | None: ...
+    @property
+    def setting(self) -> str | None: ...
+    @property
+    def expected(self) -> str | None: ...
+    @property
+    def actual(self) -> str | None: ...
+
+class DisabledSettingNotice:
+    """Immutable semantic notice for one non-ignored disabled setting."""
+
+    @property
+    def setting_name(self) -> str: ...
+
+class CrashgenSettingsAnalysisInput:
+    """Immutable owned input for one aggregate Crashgen Settings Analysis call."""
+
+    def __init__(
+        self,
+        settings: dict[str, dict[str, str]],
+        installed_plugins: set[str],
+        crashgen_version: tuple[int, int, int] | None = None,
+        config_layout: str | None = None,
+    ) -> None:
+        """Own settings, plugin, version, and layout facts for analysis."""
+
+class CrashgenSettingsAnalysisResult:
+    """Completed analysis; empty lists explicitly mean no findings."""
+
+    @property
+    def expectation_outcomes(self) -> list[CrashgenExpectationOutcome]: ...
+    @property
+    def disabled_setting_notices(self) -> list[DisabledSettingNotice]: ...
+
+class CrashgenSettingsAnalyzer:
+    """Immutable analyzer with validated, compiled Crashgen configuration."""
+
+    def __init__(self, crashgen_name: str, crashgen_entry: dict[str, Any]) -> None:
+        """Validate configuration and construct the shared analyzer handle."""
+
+    @property
+    def kind(self) -> AnalyzerKind:
+        """Return ``AnalyzerKind.CrashgenSettings``."""
+
+    def analyze(self, input: CrashgenSettingsAnalysisInput) -> CrashgenSettingsAnalysisResult:
+        """Run aggregate semantic analysis without producing report lines."""
+
 class SettingsValidator:
     """Settings validation for Crashgen Expectations.
 

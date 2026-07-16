@@ -16,6 +16,22 @@ Each binding surface adapts Rust `Result<T, E>` errors into the idiom expected b
 - Node (NAPI-RS) -- `napi::Error` with structured `code` fields
 - Python (PyO3) -- typed Python exception classes
 
+### Shared focused-analyzer errors
+
+All focused analyzers originate one Rust `AnalyzerError` shape with three
+fields: stable `AnalyzerKind`, stable `AnalyzerErrorCode`, and a human-readable
+message. `AnalyzerKind::as_str()` and `AnalyzerErrorCode::as_str()` are the only
+machine-token source of truth. The initial Crashgen Settings Analyzer exposes
+`crashgen_settings` with `invalid_configuration` or
+`unsupported_configuration_version`.
+
+- CXX uses an explicit typed construction/analysis envelope so no field is
+  flattened into `rust::Error` text.
+- Node throws `napi::Error` with `error.analyzerKind`, `error.code`, and
+  `error.message` set to the exact stable Rust analyzer kind, code, and message.
+- Python raises `classic_scanlog.AnalyzerError` with `analyzer_kind`, `code`,
+  and `message` attributes.
+
 ---
 
 ## C++ (CXX Bridge)

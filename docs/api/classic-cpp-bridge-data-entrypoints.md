@@ -141,6 +141,27 @@ their delivery contracts.
 
 ## `classic::scanner` Final Crash Log Scan Run
 
+### Focused Crashgen Settings analysis
+
+`crashgen_settings_analyzer_new(...)` constructs one immutable analyzer from an
+owned configuration DTO. Construction validates the configuration and compiles
+matcher state once; callers inspect the construction envelope before sharing
+the opaque handle across concurrent calls.
+
+`crashgen_settings_analyze(...)` accepts one aggregate owned input and returns
+typed Crashgen expectation outcomes separately from disabled-setting notices.
+The bridge preserves the YAML-authored message, fix, severity, kind, and
+Autoscan Report placement without rendering report lines. A successful analysis
+with no findings is represented by a present result containing two empty
+vectors.
+
+Construction and analysis failures use an explicit envelope containing
+`AnalyzerErrorDto`. Its `analyzer_kind`, stable `code`, and human-readable
+`message` mirror the Rust analyzer contract; no C++ layer reinterprets the
+error policy.
+
+### Complete-run entry point
+
 The only public complete-run operation is:
 
 ```cpp

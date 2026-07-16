@@ -48,6 +48,12 @@ Current shape notes:
 - the Rust files in `src/` are the authored adapter layer that drive that generated contract
 - the intentional User Settings cutover is breaking: `ClassicConfigJs`, `JsPathConfig`, and `createDefaultConfig` are no longer exported; no permanent flat-schema facade remains
 - complete Crash Log Scan Runs use only `scanRunExecute(request, cancellation, observer?, cancelOnObserverError?) -> Promise<JsScanRunSuccess | JsScanRunFailure>`, authored in [`src/scan_run.rs`](../../node-bindings/classic-node/src/scan_run.rs); Node exports no orchestration, analysis-only execution, batch lifecycle, direct report-writing, or global-FCX alternative
+- independently useful Crashgen Settings Analysis uses the synchronous immutable
+  `CrashgenSettingsAnalyzer` in
+  [`src/crashgen_settings_analyzer.rs`](../../node-bindings/classic-node/src/crashgen_settings_analyzer.rs);
+  its owned result separates `expectationOutcomes` from
+  `disabledSettingNotices` and contains no report lines; failures retain stable
+  `analyzerKind`, `code`, and `message` fields
 - User Settings inspection uses `openUserSettings(classicRoot) -> JsUserSettingsSnapshot`, authored in [`src/user_settings.rs`](../../node-bindings/classic-node/src/user_settings.rs); it exposes typed Update Preferences, Crash Log Scan settings, Game Setup settings, and namespaced Frontend State plus source/schema/revision metadata, diagnostics, commit eligibility, and retained source bytes
 - `planUserSettingsMigration(classicRoot) -> JsUserSettingsMigrationPlanningResult` exposes the pure Rust migration-planning outcome, optional revision-anchored plan, version/location endpoints, ordered changes, exact original/proposed `Buffer` values, and structured diagnostics without applying the plan
 - `reverseUserSettingsMigrationPlan(plan) -> JsUserSettingsMigrationPlan` reconstructs an unattested core review plan and delegates the exact inverse to Rust, including the proposed-content SHA-256 base revision; it remains usable after the source root is removed, while malformed endpoint/change tokens reject with `migration_plan_review_invalid`
@@ -92,6 +98,10 @@ Current shape notes:
 - Python does not export `classic_config.ClassicConfig` or `PathConfig`; those flat models are removed from the Rust/CXX ownership surface as well
 - some Python modules are support-oriented rather than one-to-one mirrors of a single business-logic crate, so check the binding crate before assuming ownership
 - complete Crash Log Scan Runs use only `ScanRunRequest` factories plus `scan_run_execute(request, cancellation, observer=None, cancel_on_observer_error=False) -> ScanRunExecution`; Python exports no orchestration, analysis-only execution, resettable batch token, direct report-writing, or global-FCX alternative
+- independently useful `classic_scanlog.CrashgenSettingsAnalyzer` is a frozen
+  reusable handle; its read-only outcome/result classes expose Python enums for
+  kind, severity, and YAML-owned placement, release the GIL for analysis, and
+  raise a typed `AnalyzerError` with kind/code/message attributes
 - `ScanRunConfiguration` contains explicit YAML roots, game/version, analysis options, FormID database paths, optional configured Unsolved Logs destination, and optional positive concurrency. The adapter never opens User Settings; callers project one accepted settings snapshot into these facts
 - `ScanRunRequest.standard(...)`, `standard_with_fcx(...)`, `targeted(...)`, and `targeted_with_fcx(...)` are opaque invariant-preserving factories. Targeted factories accept no movement policy, and both FCX factories require `ScanRunSetupContext`
 - `ScanRunUnsolvedLogs` exposes Standard-only leave-in-place, configured/default movement, and custom-destination movement policies. `ScanRunCancellation` is a separate opaque monotonic control with no reset operation

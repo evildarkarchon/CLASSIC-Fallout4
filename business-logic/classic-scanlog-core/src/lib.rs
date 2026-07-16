@@ -23,7 +23,9 @@
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 // Public utility modules and the final Crash Log Scan Run contract.
+pub mod analyzer;
 pub mod crashgen_registry;
+pub mod crashgen_settings_analyzer;
 pub mod error;
 pub(crate) mod fcx_handler;
 pub mod formid;
@@ -50,7 +52,12 @@ pub mod suspect_scanner;
 pub mod version;
 
 // Re-export key types for convenience
+pub use analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};
 pub use crashgen_registry::{CrashgenEntry, CrashgenRegistry};
+pub use crashgen_settings_analyzer::{
+    CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult,
+    CrashgenSettingsAnalyzer, DisabledSettingNotice,
+};
 pub use error::ScanLogError;
 pub use fcx_handler::ConfigIssue;
 pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};

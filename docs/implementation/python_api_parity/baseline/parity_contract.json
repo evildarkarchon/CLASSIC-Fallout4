@@ -9589,6 +9589,239 @@
       "pythonKind": "class"
     },
     {
+      "id": "scanlog.analyzer.AnalyzerError",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalyzerError",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalyzerError",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.analyzer.AnalyzerError@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalyzerError",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalyzerError",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.analyzer.AnalyzerErrorCode@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalyzerErrorCode",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalyzerError",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.analyzer.AnalyzerKind",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalyzerKind",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalyzerKind",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.analyzer.AnalyzerKind@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalyzerKind",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalyzerKind",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.analyzer.AnalyzerResult@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "AnalyzerResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalyzerError",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.analyzer.analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "analyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalyzerKind",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.AnalyzerSeverity",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "RuleSeverity",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AnalyzerSeverity",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.AutoscanReportPlacement",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "AutoscanReportPlacement",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "AutoscanReportPlacement",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenExpectationKind",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "OutcomeKind",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenExpectationKind",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenExpectationOutcome",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenExpectationOutcome",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenExpectationOutcome",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenExpectationOutcome@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenExpectationOutcome",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenExpectationOutcome",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisInput@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalysisInput",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenSettingsAnalysisInput",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisInput.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalysisInput",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenSettingsAnalysisInput.__init__",
+      "pythonKind": "method",
+      "pythonArity": 4
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalysisResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenSettingsAnalysisResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisResult@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalysisResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenSettingsAnalysisResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenSettingsAnalyzer",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenSettingsAnalyzer.__init__",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer.analyze",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenSettingsAnalyzer.analyze",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "CrashgenSettingsAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenSettingsAnalyzer",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.DisabledSettingNotice",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "DisabledSettingNotice",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "DisabledSettingNotice",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.DisabledSettingNotice@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "DisabledSettingNotice",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "DisabledSettingNotice",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.crashgen_settings_analyzer.crashgen_settings_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "crashgen_settings_analyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "CrashgenSettingsAnalyzer",
+      "pythonKind": "class"
+    },
+    {
       "id": "scanlog.settings_validator.SettingsValidator",
       "tier": "tier1",
       "ownerModule": "scanlog",

@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-16T01:55:07.508378+00:00`
-- Tier-1 contract rows: **1221**
-- Tier-1 matched: **1221**
+- Generated: `2026-07-16T07:19:15.478050+00:00`
+- Tier-1 contract rows: **1244**
+- Tier-1 matched: **1244**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -941,6 +941,29 @@
 | `scanlog.report.StringPool@rust` | `scanlog` | `StringPool` | `classic_scanlog.StringPool` | `matched` |
 | `scanlog.report.report@rust` | `scanlog` | `report` | `classic_scanlog.ReportComposer` | `matched` |
 | `scanlog.segment_key.segment_key@rust` | `scanlog` | `segment_key` | `classic_scanlog.CrashgenVersion` | `matched` |
+| `scanlog.analyzer.AnalyzerError` | `scanlog` | `AnalyzerError` | `classic_scanlog.AnalyzerError` | `matched` |
+| `scanlog.analyzer.AnalyzerError@rust` | `scanlog` | `AnalyzerError` | `classic_scanlog.AnalyzerError` | `matched` |
+| `scanlog.analyzer.AnalyzerErrorCode@rust` | `scanlog` | `AnalyzerErrorCode` | `classic_scanlog.AnalyzerError` | `matched` |
+| `scanlog.analyzer.AnalyzerKind` | `scanlog` | `AnalyzerKind` | `classic_scanlog.AnalyzerKind` | `matched` |
+| `scanlog.analyzer.AnalyzerKind@rust` | `scanlog` | `AnalyzerKind` | `classic_scanlog.AnalyzerKind` | `matched` |
+| `scanlog.analyzer.AnalyzerResult@rust` | `scanlog` | `AnalyzerResult` | `classic_scanlog.AnalyzerError` | `matched` |
+| `scanlog.analyzer.analyzer@rust` | `scanlog` | `analyzer` | `classic_scanlog.AnalyzerKind` | `matched` |
+| `scanlog.crashgen_settings_analyzer.AnalyzerSeverity` | `scanlog` | `RuleSeverity` | `classic_scanlog.AnalyzerSeverity` | `matched` |
+| `scanlog.crashgen_settings_analyzer.AutoscanReportPlacement` | `scanlog` | `AutoscanReportPlacement` | `classic_scanlog.AutoscanReportPlacement` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenExpectationKind` | `scanlog` | `OutcomeKind` | `classic_scanlog.CrashgenExpectationKind` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenExpectationOutcome` | `scanlog` | `CrashgenExpectationOutcome` | `classic_scanlog.CrashgenExpectationOutcome` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenExpectationOutcome@rust` | `scanlog` | `CrashgenExpectationOutcome` | `classic_scanlog.CrashgenExpectationOutcome` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisInput@rust` | `scanlog` | `CrashgenSettingsAnalysisInput` | `classic_scanlog.CrashgenSettingsAnalysisInput` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisInput.__init__` | `scanlog` | `CrashgenSettingsAnalysisInput` | `classic_scanlog.CrashgenSettingsAnalysisInput.__init__` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisResult` | `scanlog` | `CrashgenSettingsAnalysisResult` | `classic_scanlog.CrashgenSettingsAnalysisResult` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisResult@rust` | `scanlog` | `CrashgenSettingsAnalysisResult` | `classic_scanlog.CrashgenSettingsAnalysisResult` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer` | `scanlog` | `CrashgenSettingsAnalyzer` | `classic_scanlog.CrashgenSettingsAnalyzer` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer.__init__` | `scanlog` | `CrashgenSettingsAnalyzer` | `classic_scanlog.CrashgenSettingsAnalyzer.__init__` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer.analyze` | `scanlog` | `CrashgenSettingsAnalyzer` | `classic_scanlog.CrashgenSettingsAnalyzer.analyze` | `matched` |
+| `scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer@rust` | `scanlog` | `CrashgenSettingsAnalyzer` | `classic_scanlog.CrashgenSettingsAnalyzer` | `matched` |
+| `scanlog.crashgen_settings_analyzer.DisabledSettingNotice` | `scanlog` | `DisabledSettingNotice` | `classic_scanlog.DisabledSettingNotice` | `matched` |
+| `scanlog.crashgen_settings_analyzer.DisabledSettingNotice@rust` | `scanlog` | `DisabledSettingNotice` | `classic_scanlog.DisabledSettingNotice` | `matched` |
+| `scanlog.crashgen_settings_analyzer.crashgen_settings_analyzer@rust` | `scanlog` | `crashgen_settings_analyzer` | `classic_scanlog.CrashgenSettingsAnalyzer` | `matched` |
 | `scanlog.settings_validator.SettingsValidator` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator` | `matched` |
 | `scanlog.settings_validator.SettingsValidator.__init__` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.__init__` | `matched` |
 | `scanlog.settings_validator.SettingsValidator.check_disabled_settings` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.check_disabled_settings` | `matched` |
