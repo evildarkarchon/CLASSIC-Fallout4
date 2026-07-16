@@ -33,6 +33,7 @@ pub mod formid;
 pub mod formid_analyzer;
 pub mod gpu_detector;
 pub mod mod_guidance_analyzer;
+pub mod named_record_finding_analyzer;
 // These implementation modules retain focused characterization helpers that are
 // exercised only in their sibling unit tests.
 #[allow(dead_code)]
@@ -73,6 +74,10 @@ pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};
 pub use mod_guidance_analyzer::{
     ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult,
     ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance,
+};
+pub use named_record_finding_analyzer::{
+    NamedRecordFinding, NamedRecordFindingAnalysisInput, NamedRecordFindingAnalysisResult,
+    NamedRecordFindingAnalyzer,
 };
 pub use orchestrator::ScanProgressPhase;
 pub(crate) use orchestrator::{AnalysisConfig, AnalysisResult, OrchestratorCore};

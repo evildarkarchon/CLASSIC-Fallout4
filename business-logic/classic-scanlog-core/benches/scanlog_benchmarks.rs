@@ -32,8 +32,9 @@ mod db_fixtures;
 use classic_config_core::CoreModEntry;
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
-    FormIDAnalyzerCore, LogParser, PatternMatcher, PluginAnalyzer, RecordScanner, contains_plugin,
-    contains_record, detect_plugins_batch, scan_records_batch,
+    FormIDAnalyzerCore, LogParser, NamedRecordFindingAnalysisInput, NamedRecordFindingAnalyzer,
+    PatternMatcher, PluginAnalyzer, RecordScanner, contains_plugin, contains_record,
+    detect_plugins_batch, scan_records_batch,
 };
 use classic_shared_core::get_runtime;
 use indexmap::IndexMap;
@@ -500,16 +501,20 @@ fn record_scanning_benchmarks(c: &mut Criterion) {
             },
         );
 
-        // Benchmark record scanner with full config
+        // Benchmark semantic Named Record Finding analysis with compiled configuration.
         group.bench_with_input(
-            BenchmarkId::new("record_scanner_scan", name),
+            BenchmarkId::new("named_record_finding_analyzer", name),
             content,
             |b, content| {
-                let scanner =
-                    RecordScanner::new(record_types.clone(), vec![], "Buffout 4".to_string());
+                let analyzer =
+                    NamedRecordFindingAnalyzer::new(record_types.clone(), Vec::new()).unwrap();
 
                 let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
-                b.iter(|| scanner.scan_named_records(&lines));
+                b.iter(|| {
+                    analyzer.analyze(NamedRecordFindingAnalysisInput {
+                        crash_lines: lines.clone(),
+                    })
+                });
             },
         );
     }
@@ -617,7 +622,7 @@ fn parser_creation_benchmarks(c: &mut Criterion) {
     // Record scanner creation
     group.bench_function("record_scanner_creation", |b| {
         let record_types = create_record_types();
-        b.iter(|| RecordScanner::new(record_types.clone(), vec![], "Buffout 4".to_string()));
+        b.iter(|| RecordScanner::new(record_types.clone(), vec![]));
     });
 
     // Pattern matcher creation with 15 patterns

@@ -188,6 +188,14 @@ means analysis completed without evidence; an absent result is reserved for an
 error envelope. No Plugin Evidence DTO contains report prose or markdown, and
 failures retain `AnalyzerKind::PluginEvidence` plus the shared stable error code.
 
+`named_record_finding_analyzer_new(...)` validates owned target/ignore patterns,
+compiles matcher state, and returns the same immutable-handle construction
+envelope. `named_record_finding_analyze(...)` accepts owned Crash Log lines and
+returns distinct `NamedRecordFindingDto` values with exact occurrence counts.
+A present result with an empty `findings` vector means analysis completed with
+no matches. The bridge projects no headings, sorting policy, prose, or markdown;
+failures retain `AnalyzerKind::NamedRecordFinding` and the shared stable code.
+
 ### Complete-run entry point
 
 The only public complete-run operation is:

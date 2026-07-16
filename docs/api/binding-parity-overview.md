@@ -33,12 +33,13 @@ Each shared Rust crate and its corresponding binding module across all three sur
 | `classic-resource-core` | **Not exposed** | [`resource.rs`](../../node-bindings/classic-node/src/resource.rs) | [`classic-resource-py`](../../python-bindings/classic-resource-py/) |
 | `classic-database-core` | [`database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs) | [`database.rs`](../../node-bindings/classic-node/src/database.rs) | [`classic-database-py`](../../python-bindings/classic-database-py/) |
 | `classic-scangame-core` | [`scangame.rs`](../../cpp-bindings/classic-cpp-bridge/src/scangame.rs) | [`scangame.rs`](../../node-bindings/classic-node/src/scangame.rs) | [`classic-scangame-py`](../../python-bindings/classic-scangame-py/) |
-| `classic-scanlog-core` | [`scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) | [`scanlog.rs`](../../node-bindings/classic-node/src/scanlog.rs) + [`crashgen_settings_analyzer.rs`](../../node-bindings/classic-node/src/crashgen_settings_analyzer.rs) + [`crash_suspect_analyzer.rs`](../../node-bindings/classic-node/src/crash_suspect_analyzer.rs) + [`mod_guidance_analyzer.rs`](../../node-bindings/classic-node/src/mod_guidance_analyzer.rs) + [`plugin_evidence_analyzer.rs`](../../node-bindings/classic-node/src/plugin_evidence_analyzer.rs) | [`classic-scanlog-py`](../../python-bindings/classic-scanlog-py/) |
+| `classic-scanlog-core` | [`scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) | [`scanlog.rs`](../../node-bindings/classic-node/src/scanlog.rs) + [`crashgen_settings_analyzer.rs`](../../node-bindings/classic-node/src/crashgen_settings_analyzer.rs) + [`crash_suspect_analyzer.rs`](../../node-bindings/classic-node/src/crash_suspect_analyzer.rs) + [`mod_guidance_analyzer.rs`](../../node-bindings/classic-node/src/mod_guidance_analyzer.rs) + [`plugin_evidence_analyzer.rs`](../../node-bindings/classic-node/src/plugin_evidence_analyzer.rs) + [`named_record_finding_analyzer.rs`](../../node-bindings/classic-node/src/named_record_finding_analyzer.rs) | [`classic-scanlog-py`](../../python-bindings/classic-scanlog-py/) |
 
 **Historical Phase 3 note (v9.1.0):** the retired constants crate, Python wrapper crate, and binding-side `constants` modules no longer exist as parity owners. `Fallout4Version` and `NULL_VERSION` now belong to `classic-version-registry-core`, `YamlFile` plus settings constants belong to `classic-settings-core`, and `GameId` belongs to `classic-shared-core` with matching C++ `shared.rs`, Node `shared.rs`, and `classic-shared-py` exposure.
 
 **Semantic analyzer contract:** `CrashgenSettingsAnalyzer`,
-`CrashSuspectAnalyzer`, `ModGuidanceAnalyzer`, and `PluginEvidenceAnalyzer` are projected through all
+`CrashSuspectAnalyzer`, `ModGuidanceAnalyzer`, `PluginEvidenceAnalyzer`, and
+`NamedRecordFindingAnalyzer` are projected through all
 three bindings as immutable reusable handles over owned input. Crashgen
 Settings Analysis returns typed
 Crashgen Expectation Outcomes separately from Disabled Setting Notices and
@@ -47,7 +48,9 @@ returns one typed finding per main-error rule, stack rule, or DLL involvement
 notice. Mod Guidance Analysis evaluates conflict, frequent-crash, solution, and
 important-mod configuration in one call while preserving authored guidance and
 typed match state. Plugin Evidence Analysis returns normalized plugin identities
-and per-line occurrence counts without report prose. All four represent completed no-match analysis with
+and per-line occurrence counts without report prose. Named Record Finding
+Analysis returns distinct exact record identities and occurrence counts while
+leaving sorting and prose to Autoscan Report Assembly. All five represent completed no-match analysis with
 explicit empty results and expose no report presentation mechanics. Stable analyzer and error tokens
 originate in Rust; see
 [`error-contract.md`](error-contract.md#shared-focused-analyzer-errors).

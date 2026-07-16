@@ -63,11 +63,11 @@ pub(crate) struct AutoscanReportFacts {
 pub(crate) enum AutoscanReportContribution {
     CrashgenExpectation(CrashgenExpectationContribution),
     DisabledSettingNotice { setting_name: String, crashgen_name: String },
-    CrashSuspectFinding { lines: Vec<String> },
-    ModGuidance { group: ModGuidanceGroup, lines: Vec<String> },
-    PluginEvidence { lines: Vec<String> },
+    CrashSuspectFinding { finding: CrashSuspectFinding },
+    ModGuidance { result: ModGuidanceAnalysisResult },
+    PluginEvidence { result: PluginEvidenceAnalysisResult },
     FormIdFinding { lines: Vec<String> },
-    NamedRecordFinding { lines: Vec<String> },
+    NamedRecordFinding { result: NamedRecordFindingAnalysisResult },
 }
 
 pub(crate) struct CrashgenExpectationContribution {
@@ -96,10 +96,10 @@ Implementation notes:
 ## Contribution Rules
 
 - Crashgen Expectation Outcomes and Disabled Setting Notices should become structured contributions in the first slice.
-- Crash suspect, Mod Guidance, Plugin Evidence, FormID Finding, and Named Record Finding payloads can temporarily carry existing report-facing body lines to preserve behavior.
-- Mod Guidance should carry a semantic group so assembly renders current subheaders.
-- Plugin Evidence, FormID Finding, and Named Record Finding should carry body lines only; assembly renders their section headers.
-- Crash Suspect Finding should carry body lines only; assembly always renders the crash-suspect section and the existing no-suspect footer when there are no findings.
+- Crash Suspect, Mod Guidance, Plugin Evidence, and Named Record Finding payloads now carry typed semantic results; FormID Finding remains the temporary report-facing body-line payload.
+- Mod Guidance carries semantic match state and authored guidance; assembly owns groups and subheaders.
+- Plugin Evidence and Named Record Finding carry identity/count records; assembly owns sorting, prose, markdown, and completed-empty rendering.
+- Crash Suspect Finding carries one typed finding; assembly always renders the crash-suspect section and the existing no-suspect footer when there are no findings.
 - Preserve within-category ordering exactly. Crashgen Expectation outcomes render in evaluator order. Settings-placement outcomes render before Disabled Setting Notices. Same-kind body-line contributions preserve input order.
 
 Canonical report section order for tests:

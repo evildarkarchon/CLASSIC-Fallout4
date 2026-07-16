@@ -221,12 +221,21 @@ the canonical parser methods documented in source.
   with per-line occurrence counts in candidate order. It carries no report prose,
   markdown, headings, or sorting policy; completed no-match analysis is an
   explicit empty result.
+- `NamedRecordFindingAnalyzer` validates owned target/ignore patterns and compiles
+  both Aho-Corasick matchers during construction. Its immutable, cloneable
+  `Send + Sync` handle accepts owned Crash Log lines and returns distinct exact
+  extracted records with checked occurrence counts in first-observed order.
+- `NamedRecordFindingAnalysisResult` carries no report text or sorting policy;
+  completed no-match analysis is an explicit empty result. Autoscan Report
+  Assembly alone sorts findings and renders the legacy named-record prose.
 - `FormIDAnalyzerCore` extracts, validates, and optionally resolves FormIDs.
 - `PluginAnalyzer` retains independently useful load-order parsing, plugin-limit,
   filtering, and batch detection utilities; its former report-producing match
   methods are removed.
-- `RecordScanner` scans call stacks for named records and lazily caches its
-  per-instance Aho-Corasick matchers with `std::sync::OnceLock`.
+- `RecordScanner` remains a utility-only raw record extractor and lazily caches
+  its per-instance Aho-Corasick matchers with `std::sync::OnceLock`. Its former
+  report-producing `scan_named_records` family is removed; `contains_record`
+  and the record batch utilities remain public.
 - `SettingsValidator` is the temporary fragment-producing compatibility facade
   over `CrashgenSettingsAnalyzer`; new semantic consumers use the analyzer.
 - `GpuDetector` extracts GPU information.

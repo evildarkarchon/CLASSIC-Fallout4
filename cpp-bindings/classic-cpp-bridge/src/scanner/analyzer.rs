@@ -17,7 +17,8 @@ use classic_scanlog_core::{
     AnalyzerKind as CoreAnalyzerKind, CrashSuspectAnalysisInput, CrashSuspectAnalysisResult,
     CrashSuspectAnalyzer, CrashSuspectFinding, CrashSuspectFindingKind, CrashgenEntry,
     CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult,
-    CrashgenSettingsAnalyzer, PluginEvidenceAnalysisInput, PluginEvidenceAnalysisResult,
+    CrashgenSettingsAnalyzer, NamedRecordFindingAnalysisInput, NamedRecordFindingAnalysisResult,
+    NamedRecordFindingAnalyzer, PluginEvidenceAnalysisInput, PluginEvidenceAnalysisResult,
     PluginEvidenceAnalyzer,
 };
 
@@ -63,6 +64,95 @@ pub(crate) struct CxxModGuidanceAnalyzer {
 /// Immutable CXX-owned handle for one validated Plugin Evidence Analyzer.
 pub(crate) struct CxxPluginEvidenceAnalyzer {
     inner: Result<PluginEvidenceAnalyzer, BridgeAnalyzerError>,
+}
+
+/// Immutable CXX-owned handle for one validated Named Record Finding Analyzer.
+pub(crate) struct CxxNamedRecordFindingAnalyzer {
+    inner: Result<NamedRecordFindingAnalyzer, BridgeAnalyzerError>,
+}
+
+/// Constructs and validates a Named Record Finding Analyzer from owned matcher configuration.
+pub(crate) fn named_record_finding_analyzer_new(
+    configuration: ffi::NamedRecordFindingAnalyzerConfigurationDto,
+) -> Box<CxxNamedRecordFindingAnalyzer> {
+    Box::new(CxxNamedRecordFindingAnalyzer {
+        inner: NamedRecordFindingAnalyzer::new(
+            configuration.target_records,
+            configuration.ignored_records,
+        )
+        .map_err(Into::into),
+    })
+}
+
+/// Returns the explicit typed status captured during Named Record Finding construction.
+pub(crate) fn named_record_finding_analyzer_construction_result(
+    analyzer: &CxxNamedRecordFindingAnalyzer,
+) -> ffi::NamedRecordFindingAnalyzerConstructionResultDto {
+    match &analyzer.inner {
+        Ok(_) => ffi::NamedRecordFindingAnalyzerConstructionResultDto {
+            has_analyzer: true,
+            has_error: false,
+            error: empty_error_dto(),
+        },
+        Err(error) => ffi::NamedRecordFindingAnalyzerConstructionResultDto {
+            has_analyzer: false,
+            has_error: true,
+            error: bridge_error_to_dto(error),
+        },
+    }
+}
+
+/// Runs aggregate Named Record Finding analysis and preserves the shared typed error envelope.
+pub(crate) fn named_record_finding_analyze(
+    analyzer: &CxxNamedRecordFindingAnalyzer,
+    input: ffi::NamedRecordFindingAnalysisInputDto,
+) -> ffi::NamedRecordFindingAnalysisExecutionResultDto {
+    let core_analyzer = match &analyzer.inner {
+        Ok(analyzer) => analyzer,
+        Err(error) => return named_record_finding_error_result(bridge_error_to_dto(error)),
+    };
+
+    match core_analyzer.analyze(NamedRecordFindingAnalysisInput {
+        crash_lines: input.crash_lines,
+    }) {
+        Ok(result) => ffi::NamedRecordFindingAnalysisExecutionResultDto {
+            has_result: true,
+            result: named_record_finding_result_to_dto(result),
+            has_error: false,
+            error: empty_error_dto(),
+        },
+        Err(error) => named_record_finding_error_result(bridge_error_to_dto(&error.into())),
+    }
+}
+
+/// Projects one owned semantic Named Record Finding result without presentation data.
+fn named_record_finding_result_to_dto(
+    result: NamedRecordFindingAnalysisResult,
+) -> ffi::NamedRecordFindingAnalysisResultDto {
+    ffi::NamedRecordFindingAnalysisResultDto {
+        findings: result
+            .findings
+            .into_iter()
+            .map(|finding| ffi::NamedRecordFindingDto {
+                record: finding.record,
+                occurrences: finding.occurrences,
+            })
+            .collect(),
+    }
+}
+
+/// Builds the error branch of the explicit Named Record Finding execution envelope.
+fn named_record_finding_error_result(
+    error: ffi::AnalyzerErrorDto,
+) -> ffi::NamedRecordFindingAnalysisExecutionResultDto {
+    ffi::NamedRecordFindingAnalysisExecutionResultDto {
+        has_result: false,
+        result: ffi::NamedRecordFindingAnalysisResultDto {
+            findings: Vec::new(),
+        },
+        has_error: true,
+        error,
+    }
 }
 
 /// Constructs and validates a Plugin Evidence Analyzer from owned ignore configuration.

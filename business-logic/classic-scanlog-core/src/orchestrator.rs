@@ -20,6 +20,9 @@ use crate::gpu_detector::GpuDetector;
 use crate::mod_guidance_analyzer::{
     ModGuidanceAnalysisInput, ModGuidanceAnalysisResult, ModGuidanceAnalyzer,
 };
+use crate::named_record_finding_analyzer::{
+    NamedRecordFindingAnalysisInput, NamedRecordFindingAnalyzer,
+};
 use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
 use crate::plugin_evidence_analyzer::{
@@ -711,8 +714,8 @@ pub struct OrchestratorCore {
     formid_analyzer: FormIDAnalyzerCore,
     suspect_analyzer: CrashSuspectAnalyzer,
     mod_guidance_analyzer: ModGuidanceAnalyzer,
-    /// Record scanner for named record detection
-    record_scanner: Option<RecordScanner>,
+    /// Immutable semantic analyzer for named record evidence.
+    named_record_finding_analyzer: Option<NamedRecordFindingAnalyzer>,
     /// Settings validator for crash generator settings
     settings_validator: SettingsValidator,
     /// Optional database pool for async FormID lookups
@@ -931,13 +934,22 @@ impl OrchestratorCore {
         let show_formid_values = config.show_formid_values;
         let crashgen_name = config.crashgen_name.clone();
 
-        // Initialize record scanner if we have records list
-        let record_scanner = if !config.classic_records_list.is_empty() {
-            Some(RecordScanner::new(
-                config.classic_records_list.clone(),
-                config.ignore_records.clone(),
-                config.crashgen_name.clone(),
-            ))
+        // An absent handle means Named Record Finding analysis is not configured.
+        let named_record_finding_analyzer = if !config.classic_records_list.is_empty() {
+            Some(
+                NamedRecordFindingAnalyzer::new(
+                    config.classic_records_list.clone(),
+                    config.ignore_records.clone(),
+                )
+                .map_err(|error| {
+                    crate::error::ScanLogError::ConfigError(format!(
+                        "{} [{}]: {}",
+                        error.analyzer().as_str(),
+                        error.code().as_str(),
+                        error.message()
+                    ))
+                })?,
+            )
         } else {
             None
         };
@@ -960,7 +972,7 @@ impl OrchestratorCore {
             )?,
             suspect_analyzer,
             mod_guidance_analyzer,
-            record_scanner,
+            named_record_finding_analyzer,
             settings_validator,
             db_pool: None,
             initialized: false,
@@ -1713,20 +1725,22 @@ impl OrchestratorCore {
             }
         }
 
-        if let Some(ref record_scanner) = self.record_scanner
+        if let Some(ref analyzer) = self.named_record_finding_analyzer
             && !context.combined_crash_lines.is_empty()
         {
-            let (record_report, _matches) = record_scanner
-                .try_scan_named_records_with_crashgen_name_and_lowercase(
-                    &context.combined_crash_lines,
-                    &context.combined_crash_lower_lines,
-                    effective_crashgen_name,
-                )?;
-            if !record_report.is_empty() {
-                contributions.push(AutoscanReportContribution::NamedRecordFinding {
-                    lines: record_report,
-                });
-            }
+            let result = analyzer
+                .analyze(NamedRecordFindingAnalysisInput {
+                    crash_lines: context.combined_crash_lines.clone(),
+                })
+                .map_err(|error| {
+                    crate::error::ScanLogError::AnalysisError(format!(
+                        "{} [{}]: {}",
+                        error.analyzer().as_str(),
+                        error.code().as_str(),
+                        error.message()
+                    ))
+                })?;
+            contributions.push(AutoscanReportContribution::NamedRecordFinding { result });
         }
 
         Ok((contributions, formid_count))
@@ -1751,7 +1765,6 @@ impl OrchestratorCore {
         RecordScanner::new(
             self.config.classic_records_list.clone(),
             self.config.ignore_records.clone(),
-            self.config.crashgen_name.clone(),
         )
     }
 

@@ -73,15 +73,15 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 109,
-      "contractIdsHash": "1d3c4a7392f8819b147c7d3b00c6a5fb4bfea9bbde4eafcdac3da982916406fd",
+      "contractCount": 114,
+      "contractIdsHash": "3188c444fe7f69e66c903e3e7f7062018d0a7f03ee8a69d62aafc5847c92cf8f",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
       "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, #131, and #132 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "coverageId": "node-tier1-config",
@@ -234,6 +234,22 @@
       "testSuite": "node-bindings/classic-node/__test__/plugin_evidence_analyzer.spec.ts",
       "testCaseId": "plugin-evidence-analyzer-runtime",
       "notes": "Exercises typed plugin identities and occurrence counts, explicit-empty completed results, handle reuse without leaked evidence, absence of rendered report prose, and stable shared analyzer errors."
+    },
+    {
+      "coverageId": "node-tier1-scanlog-named-record-finding-analyzer-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "JsNamedRecordFinding",
+        "JsNamedRecordFindingAnalysisInput",
+        "JsNamedRecordFindingAnalysisResult",
+        "NamedRecordFindingAnalyzer"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/named_record_finding_analyzer.spec.ts",
+      "testCaseId": "named-record-finding-analyzer-runtime",
+      "notes": "Exercises distinct typed records and occurrence counts, explicit-empty completed results, immutable handle reuse without leaked findings, absence of rendered report prose, and stable shared analyzer errors."
     },
     {
       "coverageId": "node-tier2-config-runtime",

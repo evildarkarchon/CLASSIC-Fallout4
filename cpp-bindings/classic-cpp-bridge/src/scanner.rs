@@ -13,12 +13,14 @@ mod util;
 
 pub(crate) use analyzer::{
     CxxCrashSuspectAnalyzer, CxxCrashgenSettingsAnalyzer, CxxModGuidanceAnalyzer,
-    CxxPluginEvidenceAnalyzer, crash_suspect_analyze, crash_suspect_analyzer_construction_result,
-    crash_suspect_analyzer_new, crashgen_settings_analyze,
-    crashgen_settings_analyzer_construction_result, crashgen_settings_analyzer_new,
-    mod_guidance_analyze, mod_guidance_analyzer_construction_result, mod_guidance_analyzer_new,
-    plugin_evidence_analyze, plugin_evidence_analyzer_construction_result,
-    plugin_evidence_analyzer_new,
+    CxxNamedRecordFindingAnalyzer, CxxPluginEvidenceAnalyzer, crash_suspect_analyze,
+    crash_suspect_analyzer_construction_result, crash_suspect_analyzer_new,
+    crashgen_settings_analyze, crashgen_settings_analyzer_construction_result,
+    crashgen_settings_analyzer_new, mod_guidance_analyze,
+    mod_guidance_analyzer_construction_result, mod_guidance_analyzer_new,
+    named_record_finding_analyze, named_record_finding_analyzer_construction_result,
+    named_record_finding_analyzer_new, plugin_evidence_analyze,
+    plugin_evidence_analyzer_construction_result, plugin_evidence_analyzer_new,
 };
 pub(crate) use contract::{
     ScanRunCancellation, ScanRunRequest, ScanRunUnsolvedLogs, scan_run_cancellation_cancel,
@@ -415,6 +417,43 @@ mod ffi {
         error: AnalyzerErrorDto,
     }
 
+    /// Owned matcher configuration for one immutable Named Record Finding Analyzer.
+    struct NamedRecordFindingAnalyzerConfigurationDto {
+        target_records: Vec<String>,
+        ignored_records: Vec<String>,
+    }
+
+    /// Explicit constructor status for an opaque Named Record Finding Analyzer handle.
+    struct NamedRecordFindingAnalyzerConstructionResultDto {
+        has_analyzer: bool,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
+    /// Owned Crash Log lines for one aggregate Named Record Finding analysis call.
+    struct NamedRecordFindingAnalysisInputDto {
+        crash_lines: Vec<String>,
+    }
+
+    /// One distinct named record and its exact occurrence count.
+    struct NamedRecordFindingDto {
+        record: String,
+        occurrences: u32,
+    }
+
+    /// Completed Named Record Finding analysis, including explicit empty success.
+    struct NamedRecordFindingAnalysisResultDto {
+        findings: Vec<NamedRecordFindingDto>,
+    }
+
+    /// Exactly one typed Named Record Finding result or shared analyzer error.
+    struct NamedRecordFindingAnalysisExecutionResultDto {
+        has_result: bool,
+        result: NamedRecordFindingAnalysisResultDto,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum ScanRunContractProgressPhase {
         Setup = 0,
@@ -681,6 +720,7 @@ mod ffi {
         type CxxCrashgenSettingsAnalyzer;
         type CxxModGuidanceAnalyzer;
         type CxxPluginEvidenceAnalyzer;
+        type CxxNamedRecordFindingAnalyzer;
         type ScanRunRequest;
         type ScanRunUnsolvedLogs;
         type ScanRunCancellation;
@@ -747,6 +787,20 @@ mod ffi {
             analyzer: &CxxPluginEvidenceAnalyzer,
             input: PluginEvidenceAnalysisInputDto,
         ) -> PluginEvidenceAnalysisExecutionResultDto;
+
+        /// Constructs and validates an immutable Named Record Finding Analyzer handle.
+        fn named_record_finding_analyzer_new(
+            configuration: NamedRecordFindingAnalyzerConfigurationDto,
+        ) -> Box<CxxNamedRecordFindingAnalyzer>;
+        /// Returns the typed status captured during Named Record Finding construction.
+        fn named_record_finding_analyzer_construction_result(
+            analyzer: &CxxNamedRecordFindingAnalyzer,
+        ) -> NamedRecordFindingAnalyzerConstructionResultDto;
+        /// Runs one aggregate Named Record Finding analysis over owned Crash Log lines.
+        fn named_record_finding_analyze(
+            analyzer: &CxxNamedRecordFindingAnalyzer,
+            input: NamedRecordFindingAnalysisInputDto,
+        ) -> NamedRecordFindingAnalysisExecutionResultDto;
 
         /// Creates Standard intent that leaves failed Crash Logs and reports in place.
         fn scan_run_unsolved_logs_leave_in_place() -> Box<ScanRunUnsolvedLogs>;

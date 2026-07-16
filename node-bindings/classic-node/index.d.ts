@@ -1141,6 +1141,25 @@ export declare class ModGuidanceAnalyzer {
   analyze(input: JsModGuidanceAnalysisInput): JsModGuidanceAnalysisResult
 }
 
+/** Immutable Node handle over validated, compiled Named Record Finding configuration. */
+export declare class NamedRecordFindingAnalyzer {
+  /**
+   * Validates configuration and compiles matcher state immediately.
+   *
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  constructor(targetRecords: Array<string>, ignoredRecords: Array<string>)
+  /** Returns the stable focused-analyzer identity for this handle. */
+  get kind(): JsAnalyzerKind
+  /**
+   * Runs one aggregate semantic analysis over owned Crash Log lines.
+   *
+   * @returns Typed distinct findings, including an explicit empty array on no match.
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  analyze(input: JsNamedRecordFindingAnalysisInput): JsNamedRecordFindingAnalysisResult
+}
+
 /** Immutable Node handle over validated Plugin Evidence configuration. */
 export declare class PluginEvidenceAnalyzer {
   /**
@@ -3743,6 +3762,26 @@ export interface JsModSolutionRule {
   name: string
   /** Authored guidance body. */
   description: string
+}
+
+/** One distinct named record and its exact occurrence count. */
+export interface JsNamedRecordFinding {
+  /** Extracted record text in its source casing. */
+  record: string
+  /** Number of exact extracted record occurrences. */
+  occurrences: number
+}
+
+/** Owned Crash Log lines for one aggregate Named Record Finding analysis call. */
+export interface JsNamedRecordFindingAnalysisInput {
+  /** Crash Log lines in caller-provided casing. */
+  crashLines: Array<string>
+}
+
+/** Completed Named Record Finding analysis, including explicit empty success. */
+export interface JsNamedRecordFindingAnalysisResult {
+  /** Distinct typed findings in first-observed order. */
+  findings: Array<JsNamedRecordFinding>
 }
 
 /** Optional display payload attached to a notification manifest. */

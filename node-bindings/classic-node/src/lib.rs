@@ -26,6 +26,7 @@ mod crashgen_settings_analyzer;
 mod logging_contract;
 mod message;
 mod mod_guidance_analyzer;
+mod named_record_finding_analyzer;
 mod plugin_evidence_analyzer;
 mod runtime;
 mod shared;

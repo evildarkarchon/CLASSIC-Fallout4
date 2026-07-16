@@ -4214,6 +4214,54 @@
       "nodeKind": "interface"
     },
     {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFinding",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFinding",
+      "rustKind": "struct",
+      "nodeExport": "JsNamedRecordFinding",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFindingAnalysisInput",
+      "rustKind": "struct",
+      "nodeExport": "JsNamedRecordFindingAnalysisInput",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFindingAnalysisResult",
+      "rustKind": "struct",
+      "nodeExport": "JsNamedRecordFindingAnalysisResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFindingAnalyzer",
+      "rustKind": "struct",
+      "nodeExport": "NamedRecordFindingAnalyzer",
+      "nodeKind": "class"
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "named_record_finding_analyzer@rust",
+      "rustKind": "module"
+    },
+    {
       "id": "scanlog.plugin_evidence_analyzer.PluginEvidence",
       "tier": "tier1",
       "ownerModule": "scanlog",

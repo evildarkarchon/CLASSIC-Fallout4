@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T10:37:10.706110+00:00",
+  "generated_at_utc": "2026-07-16T11:47:29.014486+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -5701,6 +5701,82 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "NamedRecordFinding",
+      "export_path": "NamedRecordFinding",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class NamedRecordFinding:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "NamedRecordFindingAnalysisInput",
+      "export_path": "NamedRecordFindingAnalysisInput",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class NamedRecordFindingAnalysisInput:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "NamedRecordFindingAnalysisInput.__init__",
+      "parent_class": "NamedRecordFindingAnalysisInput",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__(self, crash_lines: list[str]) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "NamedRecordFindingAnalysisResult",
+      "export_path": "NamedRecordFindingAnalysisResult",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class NamedRecordFindingAnalysisResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "NamedRecordFindingAnalyzer",
+      "export_path": "NamedRecordFindingAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class NamedRecordFindingAnalyzer:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "NamedRecordFindingAnalyzer.__init__",
+      "parent_class": "NamedRecordFindingAnalyzer",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__( self, target_records: list[str], ignored_records: list[str] ) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "analyze",
+      "export_path": "NamedRecordFindingAnalyzer.analyze",
+      "parent_class": "NamedRecordFindingAnalyzer",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def analyze( self, input: NamedRecordFindingAnalysisInput ) -> NamedRecordFindingAnalysisResult:"
+    },
+    {
+      "module": "classic_scanlog",
       "export": "PapyrusAnalyzer",
       "export_path": "PapyrusAnalyzer",
       "kind": "class",
@@ -6139,11 +6215,11 @@
       "export_path": "RecordScanner.__init__",
       "parent_class": "RecordScanner",
       "kind": "method",
-      "arity": 3,
+      "arity": 2,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def __init__( self, target_records: list[str], ignore_records: list[str], crashgen_name: str ) -> None:"
+      "signature": "def __init__(self, target_records: list[str], ignore_records: list[str]) -> None:"
     },
     {
       "module": "classic_scanlog",
@@ -6168,18 +6244,6 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def extract_records(self, segment_callstack: list[str]) -> list[str]:"
-    },
-    {
-      "module": "classic_scanlog",
-      "export": "scan_named_records",
-      "export_path": "RecordScanner.scan_named_records",
-      "parent_class": "RecordScanner",
-      "kind": "method",
-      "arity": 1,
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def scan_named_records( self, segment_callstack: list[str] ) -> tuple[list[str], list[str]]:"
     },
     {
       "module": "classic_scanlog",

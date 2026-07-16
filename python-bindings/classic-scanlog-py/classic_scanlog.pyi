@@ -533,34 +533,12 @@ class RecordScanner:
     pattern matching algorithms.
     """
 
-    def __init__(
-        self, target_records: list[str], ignore_records: list[str], crashgen_name: str
-    ) -> None:
+    def __init__(self, target_records: list[str], ignore_records: list[str]) -> None:
         """Create record scanner.
 
         Args:
             target_records: List of target record names to scan for
             ignore_records: List of record names to ignore during scanning
-            crashgen_name: Name of the crash generator (e.g., "Buffout4", "Crash Logger")
-
-        """
-
-    def scan_named_records(
-        self, segment_callstack: list[str]
-    ) -> tuple[list[str], list[str]]:
-        """Scan named records from callstack segment.
-
-        Scans the callstack segment for configured named records and returns
-        both the formatted report lines and the list of matched record names.
-
-        Args:
-            segment_callstack: List of callstack lines to scan
-
-        Returns:
-            Tuple containing:
-                - List of formatted report lines
-                - List of matched record names
-
         """
 
     def extract_records(self, segment_callstack: list[str]) -> list[str]:
@@ -1635,6 +1613,38 @@ class PluginEvidenceAnalyzer:
     @property
     def kind(self) -> AnalyzerKind: ...
     def analyze(self, input: PluginEvidenceAnalysisInput) -> PluginEvidenceAnalysisResult:
+        """Run aggregate semantic analysis without producing report lines."""
+
+class NamedRecordFindingAnalysisInput:
+    """Immutable owned input for one aggregate Named Record Finding analysis call."""
+
+    def __init__(self, crash_lines: list[str]) -> None: ...
+
+class NamedRecordFinding:
+    """Immutable distinct named record and exact occurrence count."""
+
+    @property
+    def record(self) -> str: ...
+    @property
+    def occurrences(self) -> int: ...
+
+class NamedRecordFindingAnalysisResult:
+    """Completed analysis; an empty list explicitly means no findings."""
+
+    @property
+    def findings(self) -> list[NamedRecordFinding]: ...
+
+class NamedRecordFindingAnalyzer:
+    """Immutable analyzer with validated, compiled Named Record Finding configuration."""
+
+    def __init__(
+        self, target_records: list[str], ignored_records: list[str]
+    ) -> None: ...
+    @property
+    def kind(self) -> AnalyzerKind: ...
+    def analyze(
+        self, input: NamedRecordFindingAnalysisInput
+    ) -> NamedRecordFindingAnalysisResult:
         """Run aggregate semantic analysis without producing report lines."""
 
 class CrashgenExpectationOutcome:

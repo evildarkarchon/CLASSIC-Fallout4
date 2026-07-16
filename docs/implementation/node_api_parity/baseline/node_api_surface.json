@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T10:17:29.852647+00:00",
+  "generated_at_utc": "2026-07-16T12:02:20.309142+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -1045,6 +1045,30 @@
       "signature": "export interface JsModSolutionRule {"
     },
     {
+      "export": "JsNamedRecordFinding",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsNamedRecordFinding {"
+    },
+    {
+      "export": "JsNamedRecordFindingAnalysisInput",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsNamedRecordFindingAnalysisInput {"
+    },
+    {
+      "export": "JsNamedRecordFindingAnalysisResult",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsNamedRecordFindingAnalysisResult {"
+    },
+    {
       "export": "JsNotificationDisplay",
       "kind": "interface",
       "owner_module": "aux",
@@ -1707,6 +1731,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class ModGuidanceAnalyzer {"
+    },
+    {
+      "export": "NamedRecordFindingAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class NamedRecordFindingAnalyzer {"
     },
     {
       "export": "PluginEvidenceAnalyzer",

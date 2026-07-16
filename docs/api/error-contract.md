@@ -26,9 +26,11 @@ machine-token source of truth. Crashgen Settings Analysis exposes
 `unsupported_configuration_version`; Crash Suspect Analysis exposes
 `crash_suspect` with `invalid_configuration` for invalid rule or matcher state;
 Mod Guidance Analysis exposes `mod_guidance` with `invalid_configuration` for
-invalid conflict, solution, important-mod, or matcher state; Plugin Evidence
-Analysis exposes `plugin_evidence` with `invalid_configuration` for invalid
-ignore configuration or matcher state.
+  invalid conflict, solution, important-mod, or matcher state; Plugin Evidence
+  Analysis exposes `plugin_evidence` with `invalid_configuration` for invalid
+  ignore configuration or matcher state; Named Record Finding Analysis exposes
+  `named_record_finding` with `invalid_configuration` for invalid target/ignore
+  configuration, matcher construction, or checked-count analysis failures.
 
 - CXX uses an explicit typed construction/analysis envelope so no field is
   flattened into `rust::Error` text.

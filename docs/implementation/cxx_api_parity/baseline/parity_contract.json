@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T08:59:01Z",
+  "generated_at_utc": "2026-07-16T11:29:09Z",
   "schema_version": 1,
   "entries": [
     {
@@ -3919,181 +3919,6 @@
       ]
     },
     {
-      "id": "aa6e69d7d60eb97b",
-      "rustSymbol": "plugin_evidence_analyze",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "analyzer",
-            "type": "&CxxPluginEvidenceAnalyzer"
-          },
-          {
-            "name": "input",
-            "type": "PluginEvidenceAnalysisInputDto"
-          }
-        ],
-        "returnType": "PluginEvidenceAnalysisExecutionResultDto"
-      }
-    },
-    {
-      "id": "c7d2c667f19e6ea6",
-      "rustSymbol": "plugin_evidence_analyzer_construction_result",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "analyzer",
-            "type": "&CxxPluginEvidenceAnalyzer"
-          }
-        ],
-        "returnType": "PluginEvidenceAnalyzerConstructionResultDto"
-      }
-    },
-    {
-      "id": "f5cefbf986abfcbe",
-      "rustSymbol": "plugin_evidence_analyzer_new",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "configuration",
-            "type": "PluginEvidenceAnalyzerConfigurationDto"
-          }
-        ],
-        "returnType": "Box<CxxPluginEvidenceAnalyzer>"
-      }
-    },
-    {
-      "id": "19fef74c8d0d7844",
-      "rustSymbol": "CxxPluginEvidenceAnalyzer",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
-    },
-    {
-      "id": "9c82ff3b30e1c2d1",
-      "rustSymbol": "PluginEvidenceAnalysisExecutionResultDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "has_result",
-          "type": "bool"
-        },
-        {
-          "name": "result",
-          "type": "PluginEvidenceAnalysisResultDto"
-        },
-        {
-          "name": "has_error",
-          "type": "bool"
-        },
-        {
-          "name": "error",
-          "type": "AnalyzerErrorDto"
-        }
-      ]
-    },
-    {
-      "id": "997085eb0ecef6fe",
-      "rustSymbol": "PluginEvidenceAnalysisInputDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "call_stack",
-          "type": "Vec<String>"
-        },
-        {
-          "name": "plugins",
-          "type": "Vec<String>"
-        }
-      ]
-    },
-    {
-      "id": "94a5ec11a8b1a70b",
-      "rustSymbol": "PluginEvidenceAnalysisResultDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "evidence",
-          "type": "Vec<PluginEvidenceDto>"
-        }
-      ]
-    },
-    {
-      "id": "11d94ca071c64892",
-      "rustSymbol": "PluginEvidenceAnalyzerConfigurationDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "ignored_plugins",
-          "type": "Vec<String>"
-        }
-      ]
-    },
-    {
-      "id": "5aa7722a75cca7e7",
-      "rustSymbol": "PluginEvidenceAnalyzerConstructionResultDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "has_analyzer",
-          "type": "bool"
-        },
-        {
-          "name": "has_error",
-          "type": "bool"
-        },
-        {
-          "name": "error",
-          "type": "AnalyzerErrorDto"
-        }
-      ]
-    },
-    {
-      "id": "54f9de9ccb9d0060",
-      "rustSymbol": "PluginEvidenceDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "plugin",
-          "type": "String"
-        },
-        {
-          "name": "occurrences",
-          "type": "u32"
-        }
-      ]
-    },
-    {
       "id": "ec6f769e1fa773a7",
       "rustSymbol": "AnalyzerErrorCode",
       "kind": "enum",
@@ -4509,6 +4334,61 @@
       }
     },
     {
+      "id": "ded80043dbedb369",
+      "rustSymbol": "named_record_finding_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "analyzer",
+            "type": "&CxxNamedRecordFindingAnalyzer"
+          },
+          {
+            "name": "input",
+            "type": "NamedRecordFindingAnalysisInputDto"
+          }
+        ],
+        "returnType": "NamedRecordFindingAnalysisExecutionResultDto"
+      }
+    },
+    {
+      "id": "ee18a8096bfe511f",
+      "rustSymbol": "named_record_finding_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "analyzer",
+            "type": "&CxxNamedRecordFindingAnalyzer"
+          }
+        ],
+        "returnType": "NamedRecordFindingAnalyzerConstructionResultDto"
+      }
+    },
+    {
+      "id": "fed8112c3cf307c7",
+      "rustSymbol": "named_record_finding_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "configuration",
+            "type": "NamedRecordFindingAnalyzerConfigurationDto"
+          }
+        ],
+        "returnType": "Box<CxxNamedRecordFindingAnalyzer>"
+      }
+    },
+    {
       "id": "21d3f385eae475d7",
       "rustSymbol": "on_scan_run_event",
       "kind": "function",
@@ -4629,6 +4509,61 @@
           }
         ],
         "returnType": "Result<()>"
+      }
+    },
+    {
+      "id": "aa6e69d7d60eb97b",
+      "rustSymbol": "plugin_evidence_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "analyzer",
+            "type": "&CxxPluginEvidenceAnalyzer"
+          },
+          {
+            "name": "input",
+            "type": "PluginEvidenceAnalysisInputDto"
+          }
+        ],
+        "returnType": "PluginEvidenceAnalysisExecutionResultDto"
+      }
+    },
+    {
+      "id": "c7d2c667f19e6ea6",
+      "rustSymbol": "plugin_evidence_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "analyzer",
+            "type": "&CxxPluginEvidenceAnalyzer"
+          }
+        ],
+        "returnType": "PluginEvidenceAnalyzerConstructionResultDto"
+      }
+    },
+    {
+      "id": "f5cefbf986abfcbe",
+      "rustSymbol": "plugin_evidence_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "configuration",
+            "type": "PluginEvidenceAnalyzerConfigurationDto"
+          }
+        ],
+        "returnType": "Box<CxxPluginEvidenceAnalyzer>"
       }
     },
     {
@@ -4868,8 +4803,24 @@
       "blockOrigin": "Rust"
     },
     {
+      "id": "a3bba0a791a308d8",
+      "rustSymbol": "CxxNamedRecordFindingAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust"
+    },
+    {
       "id": "19f1b50474db40e6",
       "rustSymbol": "CxxPapyrusAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust"
+    },
+    {
+      "id": "19fef74c8d0d7844",
+      "rustSymbol": "CxxPluginEvidenceAnalyzer",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
@@ -5830,6 +5781,118 @@
       ]
     },
     {
+      "id": "f8945bac678ecaa0",
+      "rustSymbol": "NamedRecordFindingAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_result",
+          "type": "bool"
+        },
+        {
+          "name": "result",
+          "type": "NamedRecordFindingAnalysisResultDto"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "AnalyzerErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "3d55e037871f72a3",
+      "rustSymbol": "NamedRecordFindingAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "crash_lines",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "c37a62fb49f26295",
+      "rustSymbol": "NamedRecordFindingAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "findings",
+          "type": "Vec<NamedRecordFindingDto>"
+        }
+      ]
+    },
+    {
+      "id": "fea1f9e52eb0eb49",
+      "rustSymbol": "NamedRecordFindingAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "target_records",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "ignored_records",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "156eb8732e58b00d",
+      "rustSymbol": "NamedRecordFindingAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_analyzer",
+          "type": "bool"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "AnalyzerErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "2b0ac3bc94081e21",
+      "rustSymbol": "NamedRecordFindingDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "record",
+          "type": "String"
+        },
+        {
+          "name": "occurrences",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "id": "668e1b029522e8b3",
       "rustSymbol": "PapyrusStatsDto",
       "kind": "struct",
@@ -5860,6 +5923,118 @@
         {
           "name": "dumps_stacks_ratio",
           "type": "f64"
+        }
+      ]
+    },
+    {
+      "id": "9c82ff3b30e1c2d1",
+      "rustSymbol": "PluginEvidenceAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_result",
+          "type": "bool"
+        },
+        {
+          "name": "result",
+          "type": "PluginEvidenceAnalysisResultDto"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "AnalyzerErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "997085eb0ecef6fe",
+      "rustSymbol": "PluginEvidenceAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "call_stack",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "plugins",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "94a5ec11a8b1a70b",
+      "rustSymbol": "PluginEvidenceAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "evidence",
+          "type": "Vec<PluginEvidenceDto>"
+        }
+      ]
+    },
+    {
+      "id": "11d94ca071c64892",
+      "rustSymbol": "PluginEvidenceAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "ignored_plugins",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "5aa7722a75cca7e7",
+      "rustSymbol": "PluginEvidenceAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_analyzer",
+          "type": "bool"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "AnalyzerErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "54f9de9ccb9d0060",
+      "rustSymbol": "PluginEvidenceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "plugin",
+          "type": "String"
+        },
+        {
+          "name": "occurrences",
+          "type": "u32"
         }
       ]
     },

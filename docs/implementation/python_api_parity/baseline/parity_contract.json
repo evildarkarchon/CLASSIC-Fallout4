@@ -8545,6 +8545,89 @@
       "pythonKind": "class"
     },
     {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFinding",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFinding",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "NamedRecordFinding",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFindingAnalysisInput",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "NamedRecordFindingAnalysisInput",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFindingAnalysisInput",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "NamedRecordFindingAnalysisInput.__init__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFindingAnalysisResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "NamedRecordFindingAnalysisResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFindingAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "NamedRecordFindingAnalyzer",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFindingAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "NamedRecordFindingAnalyzer.__init__",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer.analyze",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFindingAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "NamedRecordFindingAnalyzer.analyze",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "named_record_finding_analyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "NamedRecordFindingAnalyzer",
+      "pythonKind": "class"
+    },
+    {
       "id": "scanlog.papyrus.PapyrusAnalyzer.__init__",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -9142,7 +9225,7 @@
       "pythonModule": "classic_scanlog",
       "pythonExportPath": "RecordScanner.__init__",
       "pythonKind": "method",
-      "pythonArity": 3
+      "pythonArity": 2
     },
     {
       "id": "scanlog.record_scanner.RecordScanner.clear_cache",
@@ -9163,17 +9246,6 @@
       "rustSymbol": "RecordScanner",
       "pythonModule": "classic_scanlog",
       "pythonExportPath": "RecordScanner.extract_records",
-      "pythonKind": "method",
-      "pythonArity": 1
-    },
-    {
-      "id": "scanlog.record_scanner.RecordScanner.scan_named_records",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "RecordScanner",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "RecordScanner.scan_named_records",
       "pythonKind": "method",
       "pythonArity": 1
     },

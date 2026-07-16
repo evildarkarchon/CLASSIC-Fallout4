@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 470,
-    "current_total": 470,
-    "matched": 470,
+    "contract_total": 480,
+    "current_total": 480,
+    "matched": 480,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -1609,86 +1609,6 @@
       "reason": "-"
     },
     {
-      "id": "aa6e69d7d60eb97b",
-      "rustSymbol": "plugin_evidence_analyze",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "c7d2c667f19e6ea6",
-      "rustSymbol": "plugin_evidence_analyzer_construction_result",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "f5cefbf986abfcbe",
-      "rustSymbol": "plugin_evidence_analyzer_new",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "19fef74c8d0d7844",
-      "rustSymbol": "CxxPluginEvidenceAnalyzer",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "9c82ff3b30e1c2d1",
-      "rustSymbol": "PluginEvidenceAnalysisExecutionResultDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "997085eb0ecef6fe",
-      "rustSymbol": "PluginEvidenceAnalysisInputDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "94a5ec11a8b1a70b",
-      "rustSymbol": "PluginEvidenceAnalysisResultDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "11d94ca071c64892",
-      "rustSymbol": "PluginEvidenceAnalyzerConfigurationDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "5aa7722a75cca7e7",
-      "rustSymbol": "PluginEvidenceAnalyzerConstructionResultDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "54f9de9ccb9d0060",
-      "rustSymbol": "PluginEvidenceDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "ec6f769e1fa773a7",
       "rustSymbol": "AnalyzerErrorCode",
       "kind": "enum",
@@ -1905,6 +1825,30 @@
       "reason": "-"
     },
     {
+      "id": "ded80043dbedb369",
+      "rustSymbol": "named_record_finding_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ee18a8096bfe511f",
+      "rustSymbol": "named_record_finding_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fed8112c3cf307c7",
+      "rustSymbol": "named_record_finding_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "21d3f385eae475d7",
       "rustSymbol": "on_scan_run_event",
       "kind": "function",
@@ -1955,6 +1899,30 @@
     {
       "id": "610a788c7852f628",
       "rustSymbol": "papyrus_start_monitoring",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "aa6e69d7d60eb97b",
+      "rustSymbol": "plugin_evidence_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c7d2c667f19e6ea6",
+      "rustSymbol": "plugin_evidence_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f5cefbf986abfcbe",
+      "rustSymbol": "plugin_evidence_analyzer_new",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -2073,8 +2041,24 @@
       "reason": "-"
     },
     {
+      "id": "a3bba0a791a308d8",
+      "rustSymbol": "CxxNamedRecordFindingAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "19f1b50474db40e6",
       "rustSymbol": "CxxPapyrusAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "19fef74c8d0d7844",
+      "rustSymbol": "CxxPluginEvidenceAnalyzer",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -2361,8 +2345,104 @@
       "reason": "-"
     },
     {
+      "id": "f8945bac678ecaa0",
+      "rustSymbol": "NamedRecordFindingAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3d55e037871f72a3",
+      "rustSymbol": "NamedRecordFindingAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c37a62fb49f26295",
+      "rustSymbol": "NamedRecordFindingAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fea1f9e52eb0eb49",
+      "rustSymbol": "NamedRecordFindingAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "156eb8732e58b00d",
+      "rustSymbol": "NamedRecordFindingAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2b0ac3bc94081e21",
+      "rustSymbol": "NamedRecordFindingDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "668e1b029522e8b3",
       "rustSymbol": "PapyrusStatsDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "9c82ff3b30e1c2d1",
+      "rustSymbol": "PluginEvidenceAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "997085eb0ecef6fe",
+      "rustSymbol": "PluginEvidenceAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "94a5ec11a8b1a70b",
+      "rustSymbol": "PluginEvidenceAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "11d94ca071c64892",
+      "rustSymbol": "PluginEvidenceAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5aa7722a75cca7e7",
+      "rustSymbol": "PluginEvidenceAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "54f9de9ccb9d0060",
+      "rustSymbol": "PluginEvidenceDto",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

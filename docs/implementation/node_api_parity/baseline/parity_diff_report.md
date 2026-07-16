@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-16T10:17:29.854396+00:00`
-- Tier-1 contract rows: **895**
-- Tier-1 matched: **895**
+- Generated: `2026-07-16T12:02:20.310899+00:00`
+- Tier-1 contract rows: **900**
+- Tier-1 matched: **900**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -474,6 +474,11 @@
 | `scanlog.mod_guidance_analyzer.ModGuidancePlugin` | `scanlog` | `ModGuidanceAnalysisInput` | `JsModGuidancePlugin` | `matched` |
 | `scanlog.mod_guidance_analyzer.ModSolutionGuidance` | `scanlog` | `ModSolutionGuidance` | `JsModSolutionGuidance` | `matched` |
 | `scanlog.mod_guidance_analyzer.ModSolutionRule` | `scanlog` | `ModSolutionEntry` | `JsModSolutionRule` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFinding` | `scanlog` | `NamedRecordFinding` | `JsNamedRecordFinding` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput` | `scanlog` | `NamedRecordFindingAnalysisInput` | `JsNamedRecordFindingAnalysisInput` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult` | `scanlog` | `NamedRecordFindingAnalysisResult` | `JsNamedRecordFindingAnalysisResult` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer` | `scanlog` | `NamedRecordFindingAnalyzer` | `NamedRecordFindingAnalyzer` | `matched` |
+| `scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust` | `scanlog` | `named_record_finding_analyzer@rust` | `None` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidence` | `scanlog` | `PluginEvidence` | `JsPluginEvidence` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput` | `scanlog` | `PluginEvidenceAnalysisInput` | `JsPluginEvidenceAnalysisInput` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisResult` | `scanlog` | `PluginEvidenceAnalysisResult` | `JsPluginEvidenceAnalysisResult` | `matched` |

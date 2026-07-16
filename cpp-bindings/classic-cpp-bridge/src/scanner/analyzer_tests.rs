@@ -487,6 +487,75 @@ fn plugin_evidence_handle_is_safe_for_concurrent_owned_calls() {
 }
 
 #[test]
+fn named_record_finding_projects_owned_typed_counts_and_explicit_empty_success() {
+    let analyzer =
+        named_record_finding_analyzer_new(ffi::NamedRecordFindingAnalyzerConfigurationDto {
+            target_records: vec!["ActorBase".to_string()],
+            ignored_records: vec!["System".to_string()],
+        });
+    let construction = named_record_finding_analyzer_construction_result(&analyzer);
+    let populated = named_record_finding_analyze(
+        &analyzer,
+        ffi::NamedRecordFindingAnalysisInputDto {
+            crash_lines: vec![
+                "ActorBase_Player".to_string(),
+                "ActorBase_System".to_string(),
+                "ActorBase_Player".to_string(),
+            ],
+        },
+    );
+    let empty = named_record_finding_analyze(
+        &analyzer,
+        ffi::NamedRecordFindingAnalysisInputDto {
+            crash_lines: vec!["unrelated".to_string()],
+        },
+    );
+
+    assert!(construction.has_analyzer);
+    assert!(!construction.has_error);
+    assert!(populated.has_result);
+    assert!(!populated.has_error);
+    assert_eq!(populated.result.findings.len(), 1);
+    assert_eq!(populated.result.findings[0].record, "ActorBase_Player");
+    assert_eq!(populated.result.findings[0].occurrences, 2);
+    assert!(empty.has_result);
+    assert!(empty.result.findings.is_empty());
+}
+
+#[test]
+fn named_record_finding_invalid_configuration_uses_shared_typed_error_envelope() {
+    let analyzer =
+        named_record_finding_analyzer_new(ffi::NamedRecordFindingAnalyzerConfigurationDto {
+            target_records: vec![" ".to_string()],
+            ignored_records: Vec::new(),
+        });
+    let construction = named_record_finding_analyzer_construction_result(&analyzer);
+    let execution = named_record_finding_analyze(
+        &analyzer,
+        ffi::NamedRecordFindingAnalysisInputDto {
+            crash_lines: Vec::new(),
+        },
+    );
+
+    assert!(!construction.has_analyzer);
+    assert!(construction.has_error);
+    assert_eq!(
+        construction.error.analyzer_kind,
+        ffi::AnalyzerKind::NamedRecordFinding
+    );
+    assert_eq!(
+        construction.error.code,
+        ffi::AnalyzerErrorCode::InvalidConfiguration
+    );
+    assert!(!execution.has_result);
+    assert!(execution.has_error);
+    assert_eq!(
+        execution.error.analyzer_kind,
+        ffi::AnalyzerKind::NamedRecordFinding
+    );
+}
+
+#[test]
 fn construction_status_exposes_a_valid_immutable_handle() {
     let analyzer = crashgen_settings_analyzer_new(valid_configuration());
 

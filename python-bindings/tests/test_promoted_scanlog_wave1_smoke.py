@@ -182,29 +182,21 @@ def test_formid_analyzer_free_functions_group() -> None:
 
 
 def test_record_scanner_construct() -> None:
-    """RecordScanner(target_records, ignore_records, crashgen_name) - all required positional."""
-    scanner = classic_scanlog.RecordScanner([], [], "Buffout 4")
+    """RecordScanner(target_records, ignore_records) keeps raw extraction public."""
+    scanner = classic_scanlog.RecordScanner([], [])
     assert scanner is not None
 
 
 def test_record_scanner_extract_records_empty() -> None:
     """RecordScanner.extract_records([]) returns list[str]."""
-    scanner = classic_scanlog.RecordScanner([], [], "Buffout 4")
+    scanner = classic_scanlog.RecordScanner([], [])
     result = scanner.extract_records([])
     assert isinstance(result, list)
 
 
-def test_record_scanner_scan_named_records_returns_tuple() -> None:
-    """RecordScanner.scan_named_records([]) returns tuple[list[str], list[str]]."""
-    scanner = classic_scanlog.RecordScanner([], [], "Buffout 4")
-    result = scanner.scan_named_records([])
-    assert isinstance(result, tuple)
-    assert len(result) == 2
-
-
 def test_record_scanner_clear_cache() -> None:
     """RecordScanner.clear_cache() runs without raising."""
-    scanner = classic_scanlog.RecordScanner([], [], "Buffout 4")
+    scanner = classic_scanlog.RecordScanner([], [])
     scanner.clear_cache()
 
 

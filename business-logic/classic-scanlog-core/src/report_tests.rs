@@ -1,6 +1,9 @@
 use super::*;
 use crate::version::CrashgenVersionStatus;
-use crate::{CrashSuspectFinding, PluginEvidence, PluginEvidenceAnalysisResult};
+use crate::{
+    CrashSuspectFinding, NamedRecordFinding, NamedRecordFindingAnalysisResult, PluginEvidence,
+    PluginEvidenceAnalysisResult,
+};
 use classic_config_core::{AutoscanReportPlacement, OutcomeKind, RuleSeverity};
 
 fn base_facts() -> AutoscanReportFacts {
@@ -219,6 +222,36 @@ fn autoscan_report_assembler_distinguishes_absent_from_completed_empty_plugin_ev
 
     assert!(!absent.contains("COULDN'T FIND ANY PLUGIN SUSPECTS"));
     assert!(completed_empty.contains("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n"));
+}
+
+#[test]
+fn autoscan_report_assembler_owns_named_record_sorting_counts_and_legacy_prose() {
+    let report_lines = AutoscanReportAssembler::new().assemble(
+        &base_facts(),
+        vec![AutoscanReportContribution::NamedRecordFinding {
+            result: NamedRecordFindingAnalysisResult {
+                findings: vec![
+                    NamedRecordFinding {
+                        record: "Weapon_Pistol".to_string(),
+                        occurrences: 1,
+                    },
+                    NamedRecordFinding {
+                        record: "ActorBase_Player".to_string(),
+                        occurrences: 2,
+                    },
+                ],
+            },
+        }],
+    );
+    let text = report_lines.join("");
+
+    let actor = text.find("- ActorBase_Player | 2\n").unwrap();
+    let weapon = text.find("- Weapon_Pistol | 1\n").unwrap();
+    assert!(actor < weapon);
+    assert!(text.contains(
+        "[Last number counts how many times each Named Record shows up in the crash log.]\n"
+    ));
+    assert!(text.contains("These records were caught by Buffout 4"));
 }
 
 #[test]

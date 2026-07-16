@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-16T10:18:40.639931+00:00`
-- Tier-1 contract rows: **1270**
-- Tier-1 matched: **1270**
+- Generated: `2026-07-16T11:47:28.518336+00:00`
+- Tier-1 contract rows: **1277**
+- Tier-1 matched: **1277**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -845,6 +845,14 @@
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer.__init__` | `scanlog` | `PluginEvidenceAnalyzer` | `classic_scanlog.PluginEvidenceAnalyzer.__init__` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer.analyze` | `scanlog` | `PluginEvidenceAnalyzer` | `classic_scanlog.PluginEvidenceAnalyzer.analyze` | `matched` |
 | `scanlog.plugin_evidence_analyzer.plugin_evidence_analyzer@rust` | `scanlog` | `plugin_evidence_analyzer` | `classic_scanlog.PluginEvidenceAnalyzer` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFinding` | `scanlog` | `NamedRecordFinding` | `classic_scanlog.NamedRecordFinding` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput` | `scanlog` | `NamedRecordFindingAnalysisInput` | `classic_scanlog.NamedRecordFindingAnalysisInput` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput.__init__` | `scanlog` | `NamedRecordFindingAnalysisInput` | `classic_scanlog.NamedRecordFindingAnalysisInput.__init__` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult` | `scanlog` | `NamedRecordFindingAnalysisResult` | `classic_scanlog.NamedRecordFindingAnalysisResult` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer` | `scanlog` | `NamedRecordFindingAnalyzer` | `classic_scanlog.NamedRecordFindingAnalyzer` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer.__init__` | `scanlog` | `NamedRecordFindingAnalyzer` | `classic_scanlog.NamedRecordFindingAnalyzer.__init__` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer.analyze` | `scanlog` | `NamedRecordFindingAnalyzer` | `classic_scanlog.NamedRecordFindingAnalyzer.analyze` | `matched` |
+| `scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust` | `scanlog` | `named_record_finding_analyzer` | `classic_scanlog.NamedRecordFindingAnalyzer` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.__init__` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.__init__` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.analyze_to_string` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.analyze_to_string` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.check_for_updates` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.check_for_updates` | `matched` |
@@ -903,7 +911,6 @@
 | `scanlog.record_scanner.RecordScanner.__init__` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner.__init__` | `matched` |
 | `scanlog.record_scanner.RecordScanner.clear_cache` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner.clear_cache` | `matched` |
 | `scanlog.record_scanner.RecordScanner.extract_records` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner.extract_records` | `matched` |
-| `scanlog.record_scanner.RecordScanner.scan_named_records` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner.scan_named_records` | `matched` |
 | `scanlog.record_scanner.RecordScanner@rust` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner` | `matched` |
 | `scanlog.record_scanner.contains_record` | `scanlog` | `contains_record` | `classic_scanlog.contains_record` | `matched` |
 | `scanlog.record_scanner.contains_record@rust` | `scanlog` | `contains_record` | `classic_scanlog.contains_record` | `matched` |

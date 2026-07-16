@@ -88,6 +88,7 @@ pub mod formid;
 pub mod formid_analyzer;
 pub mod gpu_detector;
 pub mod mod_guidance_analyzer;
+pub mod named_record_finding_analyzer;
 pub mod papyrus;
 pub mod parser;
 pub mod patterns;
@@ -122,6 +123,10 @@ pub use mod_guidance_analyzer::{
     PyModGuidanceAnalysisResult, PyModGuidanceAnalyzer, PyModGuidanceConflictRule,
     PyModGuidanceCriteriaKind, PyModGuidanceImportantModRule, PyModGuidanceMatchState,
     PyModGuidanceSolutionRule, PyModSolutionGuidance,
+};
+pub use named_record_finding_analyzer::{
+    PyNamedRecordFinding, PyNamedRecordFindingAnalysisInput, PyNamedRecordFindingAnalysisResult,
+    PyNamedRecordFindingAnalyzer,
 };
 pub use papyrus::{PyPapyrusAnalyzer, PyPapyrusStats, papyrus_logging};
 pub use parser::PyLogParser;
@@ -242,6 +247,7 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     crashgen_settings_analyzer::register(m)?;
     crash_suspect_analyzer::register(m)?;
     mod_guidance_analyzer::register(m)?;
+    named_record_finding_analyzer::register(m)?;
     plugin_evidence_analyzer::register(m)?;
     m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
@@ -302,6 +308,7 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     crashgen_settings_analyzer::register(m)?;
     crash_suspect_analyzer::register(m)?;
     mod_guidance_analyzer::register(m)?;
+    named_record_finding_analyzer::register(m)?;
     plugin_evidence_analyzer::register(m)?;
     m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;

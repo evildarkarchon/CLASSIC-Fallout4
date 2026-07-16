@@ -12,6 +12,7 @@ use crate::error::{Result, ScanLogError};
 use crate::mod_guidance_analyzer::{
     ImportantModGuidance, ModGuidanceAnalysisResult, ModGuidanceMatchState, ModSolutionGuidance,
 };
+use crate::named_record_finding_analyzer::NamedRecordFindingAnalysisResult;
 use crate::plugin_evidence_analyzer::PluginEvidenceAnalysisResult;
 use crate::scan_run::CrashLogScanSetupResult;
 use crate::version::CrashgenVersionStatus;
@@ -136,7 +137,7 @@ pub(crate) enum AutoscanReportContribution {
         lines: Vec<String>,
     },
     NamedRecordFinding {
-        lines: Vec<String>,
+        result: NamedRecordFindingAnalysisResult,
     },
 }
 
@@ -243,13 +244,7 @@ impl AutoscanReportAssembler {
         Self::add_section_with_header(
             &mut composer,
             report_gen.generate_record_section_header(),
-            Self::line_fragments(&contributions, |contribution| {
-                if let AutoscanReportContribution::NamedRecordFinding { lines } = contribution {
-                    Some(lines)
-                } else {
-                    None
-                }
-            }),
+            Self::named_record_finding_fragments(&contributions, &facts.crashgen_name),
         );
 
         composer.add(report_gen.generate_footer());
@@ -303,6 +298,53 @@ impl AutoscanReportAssembler {
         ));
         lines.push(
             "You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n"
+                .to_string(),
+        );
+        lines
+    }
+
+    /// Renders a present Named Record Finding result while preserving absent analysis as no section.
+    fn named_record_finding_fragments(
+        contributions: &[AutoscanReportContribution],
+        crashgen_name: &str,
+    ) -> Vec<ReportFragment> {
+        contributions
+            .iter()
+            .filter_map(|contribution| match contribution {
+                AutoscanReportContribution::NamedRecordFinding { result } => {
+                    Some(ReportFragment::from_lines(
+                        Self::render_named_record_findings(result, crashgen_name),
+                    ))
+                }
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Owns canonical sorting, occurrence formatting, and prose for Named Record Findings.
+    fn render_named_record_findings(
+        result: &NamedRecordFindingAnalysisResult,
+        crashgen_name: &str,
+    ) -> Vec<String> {
+        if result.findings.is_empty() {
+            return vec!["* COULDN'T FIND ANY NAMED RECORDS *\n\n".to_string()];
+        }
+
+        let mut findings = result.findings.iter().collect::<Vec<_>>();
+        findings.sort_by(|left, right| left.record.cmp(&right.record));
+        let mut lines = findings
+            .into_iter()
+            .map(|finding| format!("- {} | {}\n", finding.record, finding.occurrences))
+            .collect::<Vec<_>>();
+        lines.push(
+            "\n[Last number counts how many times each Named Record shows up in the crash log.]\n"
+                .to_string(),
+        );
+        lines.push(format!(
+            "These records were caught by {crashgen_name} and some of them might be related to this crash.\n"
+        ));
+        lines.push(
+            "Named records should give extra info on involved game objects, record types or mod files.\n\n"
                 .to_string(),
         );
         lines
