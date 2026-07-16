@@ -80,6 +80,7 @@ Current shape notes:
   `analyze(input)` returns distinct exact records with occurrence counts and
   `{ findings: [] }` for completed no-match analysis. Matcher construction and
   execution failures use the shared typed analyzer error, and no report text is exported
+- `FormIdValueLookup` in [`src/database.rs`](../../node-bindings/classic-node/src/database.rs) is an opaque callback-free handle over disabled, owned in-memory, SQLite, and existing shared-pool adapters. `lookup` and positional `lookupBatch` return `disabled`, `missing`, or `found` outcome data; malformed replies and operational failures reject with stable `code`, optional FormID/plugin context, and a message
 - User Settings inspection uses `openUserSettings(classicRoot) -> JsUserSettingsSnapshot`, authored in [`src/user_settings.rs`](../../node-bindings/classic-node/src/user_settings.rs); it exposes typed Update Preferences, Crash Log Scan settings, Game Setup settings, and namespaced Frontend State plus source/schema/revision metadata, diagnostics, commit eligibility, and retained source bytes
 - `planUserSettingsMigration(classicRoot) -> JsUserSettingsMigrationPlanningResult` exposes the pure Rust migration-planning outcome, optional revision-anchored plan, version/location endpoints, ordered changes, exact original/proposed `Buffer` values, and structured diagnostics without applying the plan
 - `reverseUserSettingsMigrationPlan(plan) -> JsUserSettingsMigrationPlan` reconstructs an unattested core review plan and delegates the exact inverse to Rust, including the proposed-content SHA-256 base revision; it remains usable after the source root is removed, while malformed endpoint/change tokens reject with `migration_plan_review_invalid`
@@ -154,6 +155,7 @@ Current shape notes:
   raises the shared typed `AnalyzerError`. The report-producing
   `RecordScanner.scan_named_records` method is removed while raw extraction,
   contains, and batch utilities remain public
+- `classic_database.FormIdValueLookup` is the matching opaque callback-free lookup handle. Owned `FormIdValueLookupEntry` records configure deterministic in-memory replies; async single and positional batch methods return read-only outcome records, while `FormIdValueLookupError` retains `code`, optional `formid`/`plugin`, and `message`
 - `ScanRunConfiguration` contains explicit YAML roots, game/version, analysis options, FormID database paths, optional configured Unsolved Logs destination, and optional positive concurrency. The adapter never opens User Settings; callers project one accepted settings snapshot into these facts
 - `ScanRunRequest.standard(...)`, `standard_with_fcx(...)`, `targeted(...)`, and `targeted_with_fcx(...)` are opaque invariant-preserving factories. Targeted factories accept no movement policy, and both FCX factories require `ScanRunSetupContext`
 - `ScanRunUnsolvedLogs` exposes Standard-only leave-in-place, configured/default movement, and custom-destination movement policies. `ScanRunCancellation` is a separate opaque monotonic control with no reset operation

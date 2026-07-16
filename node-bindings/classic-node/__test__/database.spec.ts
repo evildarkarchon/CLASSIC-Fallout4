@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import {
   JsDatabasePool,
+  JsFormIdValueLookup,
   getDefaultCacheTtl,
   getBatchCacheTtl,
   getMaxCacheTtl,
@@ -14,6 +15,12 @@ import {
   DEFAULT_CACHE_CLEANUP_THRESHOLD,
   DEFAULT_CACHE_CLEANUP_INTERVAL,
 } from "../index.js";
+
+type FormIdLookupError = Error & {
+  code: string;
+  formid?: string;
+  plugin?: string;
+};
 
 // ============================================================================
 // Cache TTL Constants
@@ -103,6 +110,111 @@ describe("DatabasePool construction", () => {
   test("cache is empty on construction", () => {
     const pool = new JsDatabasePool("Fallout4");
     expect(pool.cacheSize()).toBe(0);
+  });
+});
+
+// ============================================================================
+// Strict FormID Value Lookup
+// ============================================================================
+
+describe("FormID Value Lookup", () => {
+  test("disabled lookup returns an explicit disabled outcome", async () => {
+    const lookup = JsFormIdValueLookup.disabled();
+
+    expect(await lookup.lookup("00012345", "Fallout4.esm")).toEqual({
+      kind: "disabled",
+    });
+  });
+
+  test("in-memory lookup keeps hits, misses, and positional batches distinct", async () => {
+    const lookup = JsFormIdValueLookup.inMemory([
+      {
+        formid: "00012345",
+        plugin: "Fallout4.esm",
+        value: "Laser Musket",
+      },
+    ]);
+
+    expect(await lookup.lookup("00012345", "fallout4.ESM")).toEqual({
+      kind: "found",
+      value: "Laser Musket",
+    });
+    expect(await lookup.lookup("00FFFFFF", "Missing.esp")).toEqual({
+      kind: "missing",
+    });
+    expect(
+      await lookup.lookupBatch([
+        ["00FFFFFF", "Missing.esp"],
+        ["00012345", "Fallout4.esm"],
+      ]),
+    ).toEqual([
+      { kind: "missing" },
+      { kind: "found", value: "Laser Musket" },
+    ]);
+  });
+
+  test("malformed results reject with stable lookup fields", async () => {
+    const lookup = JsFormIdValueLookup.inMemory([
+      {
+        formid: "00012345",
+        plugin: "Fallout4.esm",
+        value: "  \t ",
+      },
+    ]);
+
+    try {
+      await lookup.lookup("00012345", "Fallout4.esm");
+      throw new Error("lookup unexpectedly succeeded");
+    } catch (error) {
+      const typed = error as FormIdLookupError;
+      expect(typed.code).toBe("malformed_result");
+      expect(typed.formid).toBe("00012345");
+      expect(typed.plugin).toBe("Fallout4.esm");
+      expect(typed.message).toContain("blank value");
+    }
+  });
+
+  test("operational failures reject without becoming misses", async () => {
+    const lookup = JsFormIdValueLookup.inMemory([
+      {
+        formid: "00012345",
+        plugin: "Fallout4.esm",
+        operationalFailure: "fixture offline",
+      },
+    ]);
+
+    try {
+      await lookup.lookup("00012345", "Fallout4.esm");
+      throw new Error("lookup unexpectedly succeeded");
+    } catch (error) {
+      const typed = error as FormIdLookupError;
+      expect(typed.code).toBe("operational_failure");
+      expect(typed.formid).toBe("00012345");
+      expect(typed.plugin).toBe("Fallout4.esm");
+      expect(typed.message).toContain("fixture offline");
+    }
+  });
+
+  test("shared-pool and SQLite factories preserve operational semantics", async () => {
+    const pool = new JsDatabasePool("Fallout4");
+    const shared = JsFormIdValueLookup.fromSharedPool(pool);
+    expect(await shared.lookup("00012345", "Fallout4.esm")).toEqual({
+      kind: "missing",
+    });
+
+    try {
+      await JsFormIdValueLookup.sqlite(
+        "Z:\\nonexistent\\path\\formids.db",
+        "Fallout4",
+      );
+      throw new Error("SQLite construction unexpectedly succeeded");
+    } catch (error) {
+      const typed = error as FormIdLookupError;
+      expect(typed.code).toBe("operational_failure");
+      expect(typed.formid).toBeUndefined();
+      expect(typed.plugin).toBeUndefined();
+      expect(typed.message).toContain("database file not found");
+    }
   });
 });
 

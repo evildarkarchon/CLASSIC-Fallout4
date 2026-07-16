@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 480,
-    "current_total": 480,
-    "matched": 480,
+    "contract_total": 500,
+    "current_total": 500,
+    "matched": 500,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -449,6 +449,30 @@
       "reason": "-"
     },
     {
+      "id": "955a22a24ee7f2dd",
+      "rustSymbol": "FormIdValueLookupErrorCode",
+      "kind": "enum",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d2d830b8ac7fbc53",
+      "rustSymbol": "FormIdValueLookupOutcomeKind",
+      "kind": "enum",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "34e356ed10413add",
+      "rustSymbol": "FormIdValueLookupReplyKind",
+      "kind": "enum",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "698065f32540d11b",
       "rustSymbol": "db_pool_cache_size",
       "kind": "function",
@@ -537,6 +561,62 @@
       "reason": "-"
     },
     {
+      "id": "f4288dd77f48c72f",
+      "rustSymbol": "formid_value_lookup_construction_result",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0d69b0b22b9fbde8",
+      "rustSymbol": "formid_value_lookup_disabled_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d3d9018357b7889d",
+      "rustSymbol": "formid_value_lookup_in_memory_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c69d1717bf7d1c64",
+      "rustSymbol": "formid_value_lookup_lookup",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "95bf308a567246e7",
+      "rustSymbol": "formid_value_lookup_lookup_batch",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4150711535568f88",
+      "rustSymbol": "formid_value_lookup_shared_pool_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "815a782f66901232",
+      "rustSymbol": "formid_value_lookup_sqlite_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "dddc8330ff698837",
       "rustSymbol": "DbPool",
       "kind": "opaque",
@@ -545,8 +625,88 @@
       "reason": "-"
     },
     {
+      "id": "dca796d041e6d369",
+      "rustSymbol": "FormIdValueLookup",
+      "kind": "opaque",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "866877a98c3624dc",
       "rustSymbol": "FormIdEntryDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "360ff525def88b92",
+      "rustSymbol": "FormIdValueLookupBatchExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5c08976f3b42149e",
+      "rustSymbol": "FormIdValueLookupBatchInputDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b3e18bf9899c7c68",
+      "rustSymbol": "FormIdValueLookupConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c004995b34b6c45c",
+      "rustSymbol": "FormIdValueLookupErrorDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "97d4c71e6760fe72",
+      "rustSymbol": "FormIdValueLookupExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "42c6d7d6f9e0dea4",
+      "rustSymbol": "FormIdValueLookupInMemoryConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3b7621f5bf49007c",
+      "rustSymbol": "FormIdValueLookupInMemoryEntryDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e6e6b1b967769d27",
+      "rustSymbol": "FormIdValueLookupKeyDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ae86867785f1b30d",
+      "rustSymbol": "FormIdValueLookupOutcomeDto",
       "kind": "struct",
       "bridgeModule": "database",
       "status": "matched",

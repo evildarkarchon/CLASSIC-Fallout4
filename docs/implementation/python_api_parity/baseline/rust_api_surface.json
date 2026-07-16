@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T11:47:28.501963+00:00",
+  "generated_at_utc": "2026-07-16T12:48:15.256003+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -1366,6 +1366,101 @@
       "tier": "tier1"
     },
     {
+      "symbol": "FormIdValueLookup",
+      "kind": "reexport",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/lib.rs",
+      "source_decl": "pub use formid_value_lookup::{ FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupError, FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome, };",
+      "source_expr": "formid_value_lookup::FormIdValueLookup",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookup",
+      "kind": "struct",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub struct FormIdValueLookup",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupEntry",
+      "kind": "reexport",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/lib.rs",
+      "source_decl": "pub use formid_value_lookup::{ FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupError, FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome, };",
+      "source_expr": "formid_value_lookup::FormIdValueLookupEntry",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupEntry",
+      "kind": "struct",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub struct FormIdValueLookupEntry",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupError",
+      "kind": "reexport",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/lib.rs",
+      "source_decl": "pub use formid_value_lookup::{ FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupError, FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome, };",
+      "source_expr": "formid_value_lookup::FormIdValueLookupError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupError",
+      "kind": "struct",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub struct FormIdValueLookupError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupInMemoryReply",
+      "kind": "enum",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub enum FormIdValueLookupInMemoryReply",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupInMemoryReply",
+      "kind": "reexport",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/lib.rs",
+      "source_decl": "pub use formid_value_lookup::{ FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupError, FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome, };",
+      "source_expr": "formid_value_lookup::FormIdValueLookupInMemoryReply",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupOutcome",
+      "kind": "enum",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub enum FormIdValueLookupOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupOutcome",
+      "kind": "reexport",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/lib.rs",
+      "source_decl": "pub use formid_value_lookup::{ FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupError, FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome, };",
+      "source_expr": "formid_value_lookup::FormIdValueLookupOutcome",
+      "tier": "tier1"
+    },
+    {
       "symbol": "MAX_CACHE_CLEANUP_INTERVAL_SECS",
       "kind": "const",
       "crate": "classic-database-core",
@@ -1538,6 +1633,34 @@
       "tier": "tier1"
     },
     {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "formid",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub fn formid(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "from_normalized_plugin",
       "kind": "function",
       "arity": 3,
@@ -1618,6 +1741,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "in_memory",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub fn in_memory(entries: Vec<FormIdValueLookupEntry>)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "is_available",
       "kind": "function",
       "arity": 1,
@@ -1635,6 +1768,26 @@
       "owner_module": "database",
       "source_file": "business-logic/classic-database-core/src/pool_sqlx.rs",
       "source_decl": "pub fn is_expired(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub fn message(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub fn new(\n        formid: impl AsRef<str>,\n        plugin: impl AsRef<str>,\n        reply: FormIdValueLookupInMemoryReply,\n    )",
       "tier": "tier1"
     },
     {
@@ -1675,6 +1828,16 @@
       "owner_module": "database",
       "source_file": "business-logic/classic-database-core/src/pool_sqlx.rs",
       "source_decl": "pub fn normalize_plugin(plugin: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "plugin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub fn plugin(&self)",
       "tier": "tier1"
     },
     {
@@ -1745,6 +1908,16 @@
       "owner_module": "database",
       "source_file": "business-logic/classic-database-core/src/pool_sqlx.rs",
       "source_decl": "pub fn set_max_connections(&self, max_connections: usize)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "shared_pool",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub fn shared_pool(pool: Arc<DatabasePool>)",
       "tier": "tier1"
     },
     {

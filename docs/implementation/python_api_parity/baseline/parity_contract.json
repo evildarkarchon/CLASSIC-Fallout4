@@ -3242,6 +3242,126 @@
       "pythonKind": "function"
     },
     {
+      "id": "database.formid_value_lookup.FormIdValueLookupError",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupError",
+      "pythonModule": "classic_database",
+      "pythonExportPath": "FormIdValueLookupError",
+      "pythonKind": "class"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookupEntry",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupEntry",
+      "pythonModule": "classic_database",
+      "pythonExportPath": "FormIdValueLookupEntry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookupEntry.__init__",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupEntry",
+      "pythonModule": "classic_database",
+      "pythonExportPath": "FormIdValueLookupEntry.__init__",
+      "pythonKind": "method"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookupInMemoryReply@rust",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupInMemoryReply",
+      "pythonModule": "classic_database",
+      "pythonExportPath": "FormIdValueLookupEntry",
+      "pythonKind": "class"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookupOutcome",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupOutcome",
+      "pythonModule": "classic_database",
+      "pythonExportPath": "FormIdValueLookupOutcome",
+      "pythonKind": "class"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookup",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookup",
+      "pythonModule": "classic_database",
+      "pythonExportPath": "FormIdValueLookup",
+      "pythonKind": "class"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookup.disabled",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookup",
+      "pythonModule": "classic_database",
+      "pythonExportPath": "FormIdValueLookup.disabled",
+      "pythonKind": "method"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookup.in_memory",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookup",
+      "pythonModule": "classic_database",
+      "pythonExportPath": "FormIdValueLookup.in_memory",
+      "pythonKind": "method"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookup.sqlite",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookup",
+      "pythonModule": "classic_database",
+      "pythonExportPath": "FormIdValueLookup.sqlite",
+      "pythonKind": "method"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookup.from_shared_pool",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookup",
+      "pythonModule": "classic_database",
+      "pythonExportPath": "FormIdValueLookup.from_shared_pool",
+      "pythonKind": "method"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookup.lookup",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookup",
+      "pythonModule": "classic_database",
+      "pythonExportPath": "FormIdValueLookup.lookup",
+      "pythonKind": "method"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookup.lookup_batch",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookup",
+      "pythonModule": "classic_database",
+      "pythonExportPath": "FormIdValueLookup.lookup_batch",
+      "pythonKind": "method"
+    },
+    {
       "id": "file_io.core.BackupInfo@rust",
       "tier": "tier1",
       "ownerModule": "file_io",

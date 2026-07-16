@@ -97,7 +97,7 @@ An Autoscan Report Contribution produced from FormIDs extracted from crash evide
 _Avoid_: FormID, formid fragment, formatted Form ID line
 
 **FormID Value Lookup**:
-The optional database-backed resolution of FormIDs into human-readable value descriptions for Autoscan Report output. It is performance-sensitive during large Crash Log Scan Runs.
+The optional resolution of FormIDs into human-readable value descriptions for Autoscan Report output. Its owned facade distinguishes disabled lookup, a successful miss, and a successful hit as data; malformed replies and operational failures remain typed errors. It is performance-sensitive during large Crash Log Scan Runs.
 _Avoid_: FormID database query setting, show formid values, DB query mode
 
 **Named Record Finding**:

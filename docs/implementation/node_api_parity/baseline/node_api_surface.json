@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T12:02:20.309142+00:00",
+  "generated_at_utc": "2026-07-16T12:49:33.392957+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -611,6 +611,38 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsFileOperationResult {"
+    },
+    {
+      "export": "JsFormIdValueLookup",
+      "kind": "class",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsFormIdValueLookup {"
+    },
+    {
+      "export": "JsFormIdValueLookupEntry",
+      "kind": "interface",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdValueLookupEntry {"
+    },
+    {
+      "export": "JsFormIdValueLookupOutcome",
+      "kind": "interface",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdValueLookupOutcome {"
+    },
+    {
+      "export": "JsFormIdValueLookupOutcomeKind",
+      "kind": "const_enum",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsFormIdValueLookupOutcomeKind {"
     },
     {
       "export": "JsFrontendPreferences",

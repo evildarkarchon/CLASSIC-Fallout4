@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T11:47:29.014486+00:00",
+  "generated_at_utc": "2026-07-16T13:09:57.061747+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -582,6 +582,130 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-database-py/classic_database.pyi",
       "signature": "def set_max_connections(self, max_connections: int) -> None:"
+    },
+    {
+      "module": "classic_database",
+      "export": "FormIdValueLookup",
+      "export_path": "FormIdValueLookup",
+      "kind": "class",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "class FormIdValueLookup:"
+    },
+    {
+      "module": "classic_database",
+      "export": "disabled",
+      "export_path": "FormIdValueLookup.disabled",
+      "parent_class": "FormIdValueLookup",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "def disabled() -> FormIdValueLookup: ..."
+    },
+    {
+      "module": "classic_database",
+      "export": "from_shared_pool",
+      "export_path": "FormIdValueLookup.from_shared_pool",
+      "parent_class": "FormIdValueLookup",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "def from_shared_pool(pool: DatabasePool) -> FormIdValueLookup: ..."
+    },
+    {
+      "module": "classic_database",
+      "export": "in_memory",
+      "export_path": "FormIdValueLookup.in_memory",
+      "parent_class": "FormIdValueLookup",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "def in_memory(entries: list[FormIdValueLookupEntry]) -> FormIdValueLookup: ..."
+    },
+    {
+      "module": "classic_database",
+      "export": "lookup",
+      "export_path": "FormIdValueLookup.lookup",
+      "parent_class": "FormIdValueLookup",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "async def lookup(self, formid: str, plugin: str) -> FormIdValueLookupOutcome: ..."
+    },
+    {
+      "module": "classic_database",
+      "export": "lookup_batch",
+      "export_path": "FormIdValueLookup.lookup_batch",
+      "parent_class": "FormIdValueLookup",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "async def lookup_batch( self, pairs: list[tuple[str, str]] ) -> list[FormIdValueLookupOutcome]: ..."
+    },
+    {
+      "module": "classic_database",
+      "export": "sqlite",
+      "export_path": "FormIdValueLookup.sqlite",
+      "parent_class": "FormIdValueLookup",
+      "kind": "method",
+      "arity": 2,
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "async def sqlite(database_path: str, game_table: str) -> FormIdValueLookup: ..."
+    },
+    {
+      "module": "classic_database",
+      "export": "FormIdValueLookupEntry",
+      "export_path": "FormIdValueLookupEntry",
+      "kind": "class",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "class FormIdValueLookupEntry:"
+    },
+    {
+      "module": "classic_database",
+      "export": "__init__",
+      "export_path": "FormIdValueLookupEntry.__init__",
+      "parent_class": "FormIdValueLookupEntry",
+      "kind": "method",
+      "arity": 4,
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "def __init__( self, formid: str, plugin: str, value: str | None = None, operational_failure: str | None = None, ) -> None: ..."
+    },
+    {
+      "module": "classic_database",
+      "export": "FormIdValueLookupError",
+      "export_path": "FormIdValueLookupError",
+      "kind": "class",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "class FormIdValueLookupError(Exception):"
+    },
+    {
+      "module": "classic_database",
+      "export": "FormIdValueLookupOutcome",
+      "export_path": "FormIdValueLookupOutcome",
+      "kind": "class",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-database-py/classic_database.pyi",
+      "signature": "class FormIdValueLookupOutcome:"
     },
     {
       "module": "classic_database",

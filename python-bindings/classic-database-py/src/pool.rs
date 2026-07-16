@@ -11,7 +11,9 @@
 
 use classic_database_core::{
     BATCH_CACHE_TTL_SECS, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD,
-    DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabasePool, MAX_CACHE_TTL_SECS,
+    DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabasePool, FormIdValueLookup,
+    FormIdValueLookupEntry, FormIdValueLookupError as CoreFormIdValueLookupError,
+    FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome, MAX_CACHE_TTL_SECS,
 };
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -21,7 +23,188 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 // Use the error conversion function from lib.rs
-use crate::to_pyerr;
+use crate::{FormIdValueLookupError, to_pyerr};
+
+/// One owned deterministic reply used to construct an in-memory lookup facade.
+#[pyclass(name = "FormIdValueLookupEntry", frozen, get_all, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyFormIdValueLookupEntry {
+    /// FormID suffix to match exactly.
+    pub formid: String,
+    /// Plugin to match case-insensitively.
+    pub plugin: String,
+    /// Successful value; `None` represents a miss when no failure is supplied.
+    pub value: Option<String>,
+    /// Deterministic operational failure message.
+    pub operational_failure: Option<String>,
+}
+
+#[pymethods]
+impl PyFormIdValueLookupEntry {
+    /// Creates one fully owned in-memory lookup reply.
+    #[new]
+    #[pyo3(signature = (formid, plugin, value=None, operational_failure=None))]
+    pub fn new(
+        formid: String,
+        plugin: String,
+        value: Option<String>,
+        operational_failure: Option<String>,
+    ) -> PyResult<Self> {
+        if value.is_some() && operational_failure.is_some() {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "value and operational_failure are mutually exclusive",
+            ));
+        }
+        Ok(Self {
+            formid,
+            plugin,
+            value,
+            operational_failure,
+        })
+    }
+}
+
+impl PyFormIdValueLookupEntry {
+    fn to_core(&self) -> FormIdValueLookupEntry {
+        let reply = self.operational_failure.as_ref().map_or_else(
+            || FormIdValueLookupInMemoryReply::Value(self.value.clone()),
+            |message| FormIdValueLookupInMemoryReply::OperationalFailure(message.clone()),
+        );
+        FormIdValueLookupEntry::new(&self.formid, &self.plugin, reply)
+    }
+}
+
+/// One successful semantic FormID Value Lookup result.
+#[pyclass(name = "FormIdValueLookupOutcome", frozen, get_all)]
+pub struct PyFormIdValueLookupOutcome {
+    /// Stable outcome kind: `disabled`, `missing`, or `found`.
+    pub kind: String,
+    /// Owned value for `found`; otherwise `None`.
+    pub value: Option<String>,
+}
+
+impl From<FormIdValueLookupOutcome> for PyFormIdValueLookupOutcome {
+    fn from(outcome: FormIdValueLookupOutcome) -> Self {
+        match outcome {
+            FormIdValueLookupOutcome::Disabled => Self {
+                kind: "disabled".to_string(),
+                value: None,
+            },
+            FormIdValueLookupOutcome::Missing => Self {
+                kind: "missing".to_string(),
+                value: None,
+            },
+            FormIdValueLookupOutcome::Found(value) => Self {
+                kind: "found".to_string(),
+                value: Some(value),
+            },
+        }
+    }
+}
+
+/// Opaque callback-free FormID Value Lookup facade.
+#[pyclass(name = "FormIdValueLookup", frozen)]
+pub struct PyFormIdValueLookup {
+    inner: FormIdValueLookup,
+}
+
+#[pymethods]
+impl PyFormIdValueLookup {
+    /// Creates an explicitly disabled lookup facade.
+    #[staticmethod]
+    pub fn disabled() -> Self {
+        Self {
+            inner: FormIdValueLookup::disabled(),
+        }
+    }
+
+    /// Creates a deterministic facade from owned replies without callbacks.
+    #[staticmethod]
+    pub fn in_memory(py: Python<'_>, entries: Vec<Py<PyFormIdValueLookupEntry>>) -> PyResult<Self> {
+        let entries = entries
+            .iter()
+            .map(|entry| entry.borrow(py).to_core())
+            .collect();
+        Ok(Self {
+            inner: FormIdValueLookup::in_memory(entries),
+        })
+    }
+
+    /// Opens one owned SQLite adapter on CLASSIC's shared Tokio runtime.
+    #[staticmethod]
+    pub fn sqlite<'py>(
+        py: Python<'py>,
+        database_path: String,
+        game_table: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        future_into_py(py, async move {
+            FormIdValueLookup::sqlite(PathBuf::from(database_path), game_table)
+                .await
+                .map(|inner| Self { inner })
+                .map_err(formid_value_lookup_error_to_pyerr)
+        })
+    }
+
+    /// Creates a facade over an existing shared database pool.
+    #[staticmethod]
+    pub fn from_shared_pool(pool: &PyDatabasePool) -> Self {
+        Self {
+            inner: FormIdValueLookup::shared_pool(std::sync::Arc::new(pool.inner.clone())),
+        }
+    }
+
+    /// Looks up one FormID/plugin pair asynchronously.
+    pub fn lookup<'py>(
+        &self,
+        py: Python<'py>,
+        formid: String,
+        plugin: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let lookup = self.inner.clone();
+        future_into_py(py, async move {
+            lookup
+                .lookup(&formid, &plugin)
+                .await
+                .map(PyFormIdValueLookupOutcome::from)
+                .map_err(formid_value_lookup_error_to_pyerr)
+        })
+    }
+
+    /// Looks up an owned batch and returns one positional outcome per pair.
+    pub fn lookup_batch<'py>(
+        &self,
+        py: Python<'py>,
+        pairs: Vec<(String, String)>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let lookup = self.inner.clone();
+        future_into_py(py, async move {
+            lookup
+                .lookup_batch(pairs)
+                .await
+                .map(|outcomes| {
+                    outcomes
+                        .into_iter()
+                        .map(PyFormIdValueLookupOutcome::from)
+                        .collect::<Vec<_>>()
+                })
+                .map_err(formid_value_lookup_error_to_pyerr)
+        })
+    }
+}
+
+/// Converts a strict lookup error while retaining its stable typed attributes.
+fn formid_value_lookup_error_to_pyerr(error: CoreFormIdValueLookupError) -> PyErr {
+    let py_error = FormIdValueLookupError::new_err(error.message().to_string());
+    Python::attach(|py| {
+        let value = py_error.value(py);
+        // These attributes keep malformed replies distinct from operational failures.
+        let _ = value.setattr("code", error.code());
+        let _ = value.setattr("formid", error.formid());
+        let _ = value.setattr("plugin", error.plugin());
+        let _ = value.setattr("message", error.message());
+    });
+    py_error
+}
 
 /// Get the default cache TTL for single log operations (300 seconds).
 #[pyfunction]

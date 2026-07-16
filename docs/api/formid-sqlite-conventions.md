@@ -47,6 +47,7 @@ Source-backed notes:
 - `get_entry()` issues `SELECT entry FROM {table} WHERE formid=? AND plugin=?`, then retries with `COLLATE nocase` on `plugin`
 - `get_entries_batch()` issues repeated `SELECT formid, plugin, entry FROM {table} WHERE formid=? AND plugin=?` clauses joined by `UNION ALL`, then does the same `COLLATE nocase` fallback for unresolved pairs
 - current code is optimized around `(formid, plugin)` lookups; the composite primary key used in tests matches that access pattern
+- `FormIdValueLookup` uses private strict variants of those single and batch queries so SQL and row-decoding failures remain errors rather than missing values
 
 Implementation-defined caveat:
 
@@ -177,6 +178,8 @@ Fail-soft behavior visible in source:
 - if some DB files are missing, initialization still succeeds if at least one usable file remains
 - if per-database queries fail, lookup continues against other pools and unresolved rows simply render without descriptions
 
+The owned `FormIdValueLookup` facade added ahead of the semantic FormID Finding cutover does not use that fail-soft rule. Its disabled, missing, and found states are semantic outcomes; malformed values and database failures have distinct typed error codes. The current `FormIDAnalyzerCore` continues to use the legacy pool path until the coordinated semantic analyzer change consumes the facade.
+
 ---
 
 ## Limits And Non-Contract Behavior
@@ -187,6 +190,7 @@ These details are visible in source today, but contributors should treat them ca
 - because lookups iterate `DashMap` pool entries, contributors should not rely on a stable precedence order between separate DB files when duplicate `(formid, plugin)` rows exist
 - `DatabasePool::initialize()` sorts and de-duplicates the requested path list for connection-allocation planning, but lookup iteration order should still be treated as implementation-defined
 - uninitialized or closed pools return `Ok(None)` for lookups instead of a hard error
+- a strict facade over such a pool can still represent a genuine no-row result as `Missing`, but any SQL or row-decode failure encountered by the strict query becomes `operational_failure`
 - missing DB files do not surface `DatabaseError::NotFound` in the normal initialization path; they are logged and skipped
 - `optimize()` currently runs `ANALYZE` only; `VACUUM` is not attempted because pools are opened read-only
 - scan-time DB opening uses read-only SQLite connections with `synchronous=NORMAL`, `cache_size=10000`, `temp_store=MEMORY`, and `mmap_size=30000000`

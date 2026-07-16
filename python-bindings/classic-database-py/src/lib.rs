@@ -81,6 +81,13 @@
 use classic_shared::{define_exceptions, register_exceptions};
 use pyo3::prelude::*;
 
+pyo3::create_exception!(
+    classic_database,
+    FormIdValueLookupError,
+    pyo3::exceptions::PyException,
+    "Typed exception for malformed FormID lookup replies and operational failures."
+);
+
 // Define the standard 3-tier exception hierarchy using the shared macro
 // Note: third parameter is called "parse" in macro but we use QueryError for database
 define_exceptions!(
@@ -93,7 +100,8 @@ define_exceptions!(
 mod pool;
 
 pub use pool::{
-    PyDatabasePool, py_get_batch_cache_ttl, py_get_default_cache_cleanup_interval,
+    PyDatabasePool, PyFormIdValueLookup, PyFormIdValueLookupEntry, PyFormIdValueLookupOutcome,
+    py_get_batch_cache_ttl, py_get_default_cache_cleanup_interval,
     py_get_default_cache_cleanup_threshold, py_get_default_cache_ttl,
     py_get_default_query_cache_capacity, py_get_max_cache_ttl,
 };
@@ -129,12 +137,38 @@ pub fn to_pyerr(err: classic_database_core::DatabaseError) -> PyErr {
     }
 }
 
+/// Connects PyO3 coroutine scheduling to CLASSIC's process-wide Tokio runtime.
+///
+/// Import fails if this extension was previously attached to a different
+/// runtime, because silently accepting that state would violate the one-runtime
+/// contract for every async database method.
+fn initialize_async_runtime() -> PyResult<()> {
+    let shared_runtime = classic_shared_core::get_runtime();
+    match pyo3_async_runtimes::tokio::init_with_runtime(shared_runtime) {
+        Ok(()) => Ok(()),
+        Err(()) if std::ptr::eq(pyo3_async_runtimes::tokio::get_runtime(), shared_runtime) => {
+            Ok(())
+        }
+        Err(()) => Err(pyo3::exceptions::PyRuntimeError::new_err(
+            "classic_database async scheduling was already attached to a different Tokio runtime",
+        )),
+    }
+}
+
 /// Python module initialization
 #[pymodule]
 fn classic_database(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    initialize_async_runtime()?;
     classic_shared::configure_python_stdio(m.py());
 
     m.add_class::<PyDatabasePool>()?;
+    m.add_class::<PyFormIdValueLookupEntry>()?;
+    m.add_class::<PyFormIdValueLookupOutcome>()?;
+    m.add_class::<PyFormIdValueLookup>()?;
+    m.add(
+        "FormIdValueLookupError",
+        m.py().get_type::<FormIdValueLookupError>(),
+    )?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
     // Add cache TTL helper functions

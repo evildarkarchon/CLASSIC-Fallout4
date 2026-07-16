@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-16T11:47:28.518336+00:00`
-- Tier-1 contract rows: **1277**
-- Tier-1 matched: **1277**
+- Generated: `2026-07-16T12:48:14.975614+00:00`
+- Tier-1 contract rows: **1289**
+- Tier-1 matched: **1289**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -325,6 +325,18 @@
 | `database.pool.get_default_cache_ttl` | `database` | `DatabasePool` | `classic_database.get_default_cache_ttl` | `matched` |
 | `database.pool.get_default_query_cache_capacity` | `database` | `DatabasePool` | `classic_database.get_default_query_cache_capacity` | `matched` |
 | `database.pool.get_max_cache_ttl` | `database` | `DatabasePool` | `classic_database.get_max_cache_ttl` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupError` | `database` | `FormIdValueLookupError` | `classic_database.FormIdValueLookupError` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupEntry` | `database` | `FormIdValueLookupEntry` | `classic_database.FormIdValueLookupEntry` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupEntry.__init__` | `database` | `FormIdValueLookupEntry` | `classic_database.FormIdValueLookupEntry.__init__` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupInMemoryReply@rust` | `database` | `FormIdValueLookupInMemoryReply` | `classic_database.FormIdValueLookupEntry` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupOutcome` | `database` | `FormIdValueLookupOutcome` | `classic_database.FormIdValueLookupOutcome` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup.disabled` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.disabled` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup.in_memory` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.in_memory` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup.sqlite` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.sqlite` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup.from_shared_pool` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.from_shared_pool` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup.lookup` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.lookup` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup.lookup_batch` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.lookup_batch` | `matched` |
 | `file_io.core.BackupInfo@rust` | `file_io` | `BackupInfo` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.BackupManager@rust` | `file_io` | `BackupManager` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.BackupType@rust` | `file_io` | `BackupType` | `classic_file_io.FileIOCore` | `matched` |

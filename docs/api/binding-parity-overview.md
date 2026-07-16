@@ -37,6 +37,8 @@ Each shared Rust crate and its corresponding binding module across all three sur
 
 **Historical Phase 3 note (v9.1.0):** the retired constants crate, Python wrapper crate, and binding-side `constants` modules no longer exist as parity owners. `Fallout4Version` and `NULL_VERSION` now belong to `classic-version-registry-core`, `YamlFile` plus settings constants belong to `classic-settings-core`, and `GameId` belongs to `classic-shared-core` with matching C++ `shared.rs`, Node `shared.rs`, and `classic-shared-py` exposure.
 
+`classic-database-core` also exposes the strict owned `FormIdValueLookup` facade across all three adapters. Each binding uses an opaque handle plus owned in-memory reply records and typed outcomes/errors for disabled, missing, found, malformed-result, and operational-failure states. SQLite and shared-pool work run through the existing shared runtime; no callback or binding-owned runtime is part of the contract.
+
 **Semantic analyzer contract:** `CrashgenSettingsAnalyzer`,
 `CrashSuspectAnalyzer`, `ModGuidanceAnalyzer`, `PluginEvidenceAnalyzer`, and
 `NamedRecordFindingAnalyzer` are projected through all

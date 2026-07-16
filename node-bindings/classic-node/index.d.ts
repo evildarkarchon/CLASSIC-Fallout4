@@ -794,6 +794,66 @@ export declare class JsFileIO {
 }
 
 /**
+ * Opaque owned facade for strict callback-free FormID Value Lookup adapters.
+ *
+ * Construct instances through `disabled`, `inMemory`, `sqlite`, or
+ * `fromSharedPool`. Successful operations keep disabled, missing, and found
+ * outcomes distinct; malformed adapter data and operational failures reject
+ * with stable error metadata.
+ */
+export declare class JsFormIdValueLookup {
+  /** Creates a lookup that explicitly performs no value resolution. */
+  static disabled(): JsFormIdValueLookup
+  /**
+   * Creates a deterministic lookup from fully owned entries.
+   *
+   * Each entry must set at most one of `value` and `operationalFailure`.
+   * Omitting both configures a successful miss for that key.
+   *
+   * @param entries - Owned deterministic replies keyed by FormID and plugin.
+   */
+  static inMemory(entries: Array<JsFormIdValueLookupEntry>): JsFormIdValueLookup
+  /**
+   * Opens one owned SQLite lookup adapter on the shared CLASSIC runtime.
+   *
+   * @param databasePath - Existing SQLite database file.
+   * @param gameTable - Game table name such as `Fallout4`.
+   * @throws an error with stable `code`, `formid`, `plugin`, and `message`
+   * metadata when adapter initialization fails.
+   */
+  static sqlite(databasePath: string, gameTable: string): JsFormIdValueLookup
+  /**
+   * Creates an adapter over an existing shared database pool.
+   *
+   * The facade retains a clone of the pool's shared state, so no callback or
+   * additional runtime crosses the JavaScript boundary.
+   *
+   * @param pool - Existing Node database pool to share.
+   */
+  static fromSharedPool(pool: JsDatabasePool): JsFormIdValueLookup
+  /**
+   * Looks up one FormID/plugin pair on the shared CLASSIC runtime.
+   *
+   * @param formid - FormID suffix to resolve.
+   * @param plugin - Plugin name, matched case-insensitively.
+   * @throws an error with stable `code`, `formid`, `plugin`, and `message`
+   * metadata for malformed results and operational failures.
+   */
+  lookup(formid: string, plugin: string): Promise<JsFormIdValueLookupOutcome>
+  /**
+   * Looks up an owned batch with one positional outcome per input pair.
+   *
+   * Any malformed reply or operational failure rejects the whole operation,
+   * so a partial batch cannot be mistaken for a completed result.
+   *
+   * @param pairs - Array of exact `[formid, plugin]` pairs.
+   * @throws an error with stable `code`, `formid`, `plugin`, and `message`
+   * metadata for malformed results and operational failures.
+   */
+  lookupBatch(pairs: Array<Array<string>>): Promise<JsFormIdValueLookupOutcome[]>
+}
+
+/**
  * Game file manager for backup, restore, and remove operations.
  *
  * Operates on a game root directory and a backup root directory, matching
@@ -3045,6 +3105,42 @@ export interface JsFileOperationResult {
   filesAffected: number
   /** Error messages for any failures encountered (non-fatal). */
   errors: Array<string>
+}
+
+/**
+ * One owned reply used to configure a deterministic in-memory FormID lookup.
+ *
+ * Omit both optional fields for a successful miss. Set `value` for a hit
+ * (including a blank value when testing malformed adapter data), or set
+ * `operationalFailure` for a deterministic hard failure.
+ */
+export interface JsFormIdValueLookupEntry {
+  /** The FormID suffix to match. */
+  formid: string
+  /** The plugin name to match case-insensitively. */
+  plugin: string
+  /** Successful owned value, or `undefined` for a configured miss. */
+  value?: string
+  /** Deterministic operational failure detail. */
+  operationalFailure?: string
+}
+
+/** Owned semantic result of one strict FormID lookup. */
+export interface JsFormIdValueLookupOutcome {
+  /** Stable success category. */
+  kind: JsFormIdValueLookupOutcomeKind
+  /** Owned value for `found`; `undefined` for `disabled` and `missing`. */
+  value?: string
+}
+
+/** Stable semantic category returned by a successful strict lookup. */
+export declare const enum JsFormIdValueLookupOutcomeKind {
+  /** Lookup was explicitly disabled. */
+  Disabled = 'disabled',
+  /** Lookup completed successfully without a value. */
+  Missing = 'missing',
+  /** Lookup completed successfully with an owned value. */
+  Found = 'found'
 }
 
 /** Remembered presentation preferences shared by maintained frontends. */

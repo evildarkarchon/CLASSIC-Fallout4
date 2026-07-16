@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-16T12:02:20.310899+00:00`
-- Tier-1 contract rows: **900**
-- Tier-1 matched: **900**
+- Generated: `2026-07-16T12:49:33.394777+00:00`
+- Tier-1 contract rows: **909**
+- Tier-1 matched: **909**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -623,6 +623,15 @@
 | `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
 | `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
 | `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup` | `database` | `FormIdValueLookup` | `JsFormIdValueLookup` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupEntry` | `database` | `FormIdValueLookupEntry` | `JsFormIdValueLookupEntry` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupOutcome` | `database` | `FormIdValueLookupOutcome` | `JsFormIdValueLookupOutcome` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupOutcomeKind` | `database` | `FormIdValueLookupOutcome` | `JsFormIdValueLookupOutcomeKind` | `matched` |
+| `database.FormIdValueLookup@rust` | `database` | `FormIdValueLookup@rust` | `None` | `matched` |
+| `database.FormIdValueLookupEntry@rust` | `database` | `FormIdValueLookupEntry@rust` | `None` | `matched` |
+| `database.FormIdValueLookupError@rust` | `database` | `FormIdValueLookupError@rust` | `None` | `matched` |
+| `database.FormIdValueLookupInMemoryReply@rust` | `database` | `FormIdValueLookupInMemoryReply@rust` | `None` | `matched` |
+| `database.FormIdValueLookupOutcome@rust` | `database` | `FormIdValueLookupOutcome@rust` | `None` | `matched` |
 | `database.BATCH_CACHE_TTL_SECS@rust` | `database` | `BATCH_CACHE_TTL_SECS@rust` | `None` | `matched` |
 | `database.CacheEntry@rust` | `database` | `CacheEntry@rust` | `None` | `matched` |
 | `database.CacheKey@rust` | `database` | `CacheKey@rust` | `None` | `matched` |

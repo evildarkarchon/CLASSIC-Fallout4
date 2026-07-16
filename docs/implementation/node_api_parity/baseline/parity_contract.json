@@ -5527,6 +5527,86 @@
       "rustKind": "function"
     },
     {
+      "id": "database.formid_value_lookup.FormIdValueLookup",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookup",
+      "rustKind": "struct",
+      "nodeExport": "JsFormIdValueLookup",
+      "nodeKind": "class"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookupEntry",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupEntry",
+      "rustKind": "struct",
+      "nodeExport": "JsFormIdValueLookupEntry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookupOutcome",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupOutcome",
+      "rustKind": "enum",
+      "nodeExport": "JsFormIdValueLookupOutcome",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookupOutcomeKind",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupOutcome",
+      "rustKind": "enum",
+      "nodeExport": "JsFormIdValueLookupOutcomeKind",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "database.FormIdValueLookup@rust",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookup@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "database.FormIdValueLookupEntry@rust",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupEntry@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "database.FormIdValueLookupError@rust",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupError@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "database.FormIdValueLookupInMemoryReply@rust",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupInMemoryReply@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "database.FormIdValueLookupOutcome@rust",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupOutcome@rust",
+      "rustKind": "reexport"
+    },
+    {
       "id": "database.BATCH_CACHE_TTL_SECS@rust",
       "tier": "tier1",
       "ownerModule": "database",

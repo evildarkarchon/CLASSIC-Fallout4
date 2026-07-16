@@ -375,12 +375,13 @@
         "ownerModule": "database",
         "tier": "tier1"
       },
-      "contractCount": 14,
-      "contractIdsHash": "3c4bd255d9c615d7b5dcb827dd795131595556e2817a2dd68076d3da639208d5",
+      "contractCount": 23,
+      "contractIdsHash": "e1b0fd3cd7ed56e714401431922933e4f3b9f19151b2b235851a37b274a35f1e",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
-      "fixtureRefs": []
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "coverageId": "node-tier1-file-io",

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T12:02:20.315756+00:00",
+  "generated_at_utc": "2026-07-16T12:49:33.399752+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,11 +7,11 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1024,
-    "runtime_verified_total": 1024,
+    "tracked_surface_total": 1033,
+    "runtime_verified_total": 1033,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 900,
+    "tier1_contract_total": 909,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -26,8 +26,8 @@
       "total": 104
     },
     "database": {
-      "runtime_verified": 14,
-      "total": 14
+      "runtime_verified": 23,
+      "total": 23
     },
     "file_io": {
       "runtime_verified": 24,
@@ -11415,6 +11415,159 @@
       "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookup",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookup",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookup",
+      "bindingIdentifier": "JsFormIdValueLookup",
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookupEntry",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookupEntry",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupEntry",
+      "bindingIdentifier": "JsFormIdValueLookupEntry",
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookupOutcome",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookupOutcome",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupOutcome",
+      "bindingIdentifier": "JsFormIdValueLookupOutcome",
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookupOutcomeKind",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookupOutcomeKind",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupOutcome",
+      "bindingIdentifier": "JsFormIdValueLookupOutcomeKind",
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.FormIdValueLookup@rust",
+      "trackedType": "contract_row",
+      "contractId": "database.FormIdValueLookup@rust",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookup@rust",
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.FormIdValueLookupEntry@rust",
+      "trackedType": "contract_row",
+      "contractId": "database.FormIdValueLookupEntry@rust",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupEntry@rust",
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.FormIdValueLookupError@rust",
+      "trackedType": "contract_row",
+      "contractId": "database.FormIdValueLookupError@rust",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupError@rust",
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.FormIdValueLookupInMemoryReply@rust",
+      "trackedType": "contract_row",
+      "contractId": "database.FormIdValueLookupInMemoryReply@rust",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupInMemoryReply@rust",
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.FormIdValueLookupOutcome@rust",
+      "trackedType": "contract_row",
+      "contractId": "database.FormIdValueLookupOutcome@rust",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupOutcome@rust",
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
       "trackedId": "contract:database.BATCH_CACHE_TTL_SECS@rust",
       "trackedType": "contract_row",
       "contractId": "database.BATCH_CACHE_TTL_SECS@rust",
@@ -11429,7 +11582,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.CacheEntry@rust",
@@ -11446,7 +11599,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.CacheKey@rust",
@@ -11463,7 +11616,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.DEFAULT_CACHE_TTL_SECS@rust",
@@ -11480,7 +11633,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.DatabaseError@rust",
@@ -11497,7 +11650,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.DatabasePool@rust",
@@ -11514,7 +11667,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MAX_CACHE_CLEANUP_INTERVAL_SECS@rust",
@@ -11531,7 +11684,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MAX_CACHE_CLEANUP_OP_THRESHOLD@rust",
@@ -11548,7 +11701,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MAX_CACHE_TTL_SECS@rust",
@@ -11565,7 +11718,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MAX_QUERY_CACHE_CAPACITY@rust",
@@ -11582,7 +11735,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MIN_CACHE_CLEANUP_INTERVAL_SECS@rust",
@@ -11599,7 +11752,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MIN_CACHE_CLEANUP_OP_THRESHOLD@rust",
@@ -11616,7 +11769,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MIN_QUERY_CACHE_CAPACITY@rust",
@@ -11633,7 +11786,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.PoolStatistics@rust",
@@ -11650,7 +11803,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:file_io.BackupType@rust",

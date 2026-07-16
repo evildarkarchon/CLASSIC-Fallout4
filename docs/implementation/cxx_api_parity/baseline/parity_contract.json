@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T11:29:09Z",
+  "generated_at_utc": "2026-07-16T12:46:18Z",
   "schema_version": 1,
   "entries": [
     {
@@ -996,6 +996,44 @@
       ]
     },
     {
+      "id": "955a22a24ee7f2dd",
+      "rustSymbol": "FormIdValueLookupErrorCode",
+      "kind": "enum",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "MalformedResult",
+        "OperationalFailure"
+      ]
+    },
+    {
+      "id": "d2d830b8ac7fbc53",
+      "rustSymbol": "FormIdValueLookupOutcomeKind",
+      "kind": "enum",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Disabled",
+        "Missing",
+        "Found"
+      ]
+    },
+    {
+      "id": "34e356ed10413add",
+      "rustSymbol": "FormIdValueLookupReplyKind",
+      "kind": "enum",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Missing",
+        "Found",
+        "OperationalFailure"
+      ]
+    },
+    {
       "id": "698065f32540d11b",
       "rustSymbol": "db_pool_cache_size",
       "kind": "function",
@@ -1231,8 +1269,146 @@
       }
     },
     {
+      "id": "f4288dd77f48c72f",
+      "rustSymbol": "formid_value_lookup_construction_result",
+      "kind": "function",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "lookup",
+            "type": "&FormIdValueLookup"
+          }
+        ],
+        "returnType": "FormIdValueLookupConstructionResultDto"
+      }
+    },
+    {
+      "id": "0d69b0b22b9fbde8",
+      "rustSymbol": "formid_value_lookup_disabled_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [],
+        "returnType": "Box<FormIdValueLookup>"
+      }
+    },
+    {
+      "id": "d3d9018357b7889d",
+      "rustSymbol": "formid_value_lookup_in_memory_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "configuration",
+            "type": "FormIdValueLookupInMemoryConfigurationDto"
+          }
+        ],
+        "returnType": "Box<FormIdValueLookup>"
+      }
+    },
+    {
+      "id": "c69d1717bf7d1c64",
+      "rustSymbol": "formid_value_lookup_lookup",
+      "kind": "function",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "lookup",
+            "type": "&FormIdValueLookup"
+          },
+          {
+            "name": "formid",
+            "type": "&str"
+          },
+          {
+            "name": "plugin",
+            "type": "&str"
+          }
+        ],
+        "returnType": "FormIdValueLookupExecutionResultDto"
+      }
+    },
+    {
+      "id": "95bf308a567246e7",
+      "rustSymbol": "formid_value_lookup_lookup_batch",
+      "kind": "function",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "lookup",
+            "type": "&FormIdValueLookup"
+          },
+          {
+            "name": "input",
+            "type": "FormIdValueLookupBatchInputDto"
+          }
+        ],
+        "returnType": "FormIdValueLookupBatchExecutionResultDto"
+      }
+    },
+    {
+      "id": "4150711535568f88",
+      "rustSymbol": "formid_value_lookup_shared_pool_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "pool",
+            "type": "&DbPool"
+          }
+        ],
+        "returnType": "Box<FormIdValueLookup>"
+      }
+    },
+    {
+      "id": "815a782f66901232",
+      "rustSymbol": "formid_value_lookup_sqlite_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "database_path",
+            "type": "&str"
+          },
+          {
+            "name": "game_table",
+            "type": "&str"
+          }
+        ],
+        "returnType": "Box<FormIdValueLookup>"
+      }
+    },
+    {
       "id": "dddc8330ff698837",
       "rustSymbol": "DbPool",
+      "kind": "opaque",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust"
+    },
+    {
+      "id": "dca796d041e6d369",
+      "rustSymbol": "FormIdValueLookup",
       "kind": "opaque",
       "bridgeModule": "database",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
@@ -1261,6 +1437,216 @@
         {
           "name": "found",
           "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "360ff525def88b92",
+      "rustSymbol": "FormIdValueLookupBatchExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_outcomes",
+          "type": "bool"
+        },
+        {
+          "name": "outcomes",
+          "type": "Vec<FormIdValueLookupOutcomeDto>"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "FormIdValueLookupErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "5c08976f3b42149e",
+      "rustSymbol": "FormIdValueLookupBatchInputDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "pairs",
+          "type": "Vec<FormIdValueLookupKeyDto>"
+        }
+      ]
+    },
+    {
+      "id": "b3e18bf9899c7c68",
+      "rustSymbol": "FormIdValueLookupConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_lookup",
+          "type": "bool"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "FormIdValueLookupErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "c004995b34b6c45c",
+      "rustSymbol": "FormIdValueLookupErrorDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "code",
+          "type": "FormIdValueLookupErrorCode"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        },
+        {
+          "name": "has_formid",
+          "type": "bool"
+        },
+        {
+          "name": "formid",
+          "type": "String"
+        },
+        {
+          "name": "has_plugin",
+          "type": "bool"
+        },
+        {
+          "name": "plugin",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "97d4c71e6760fe72",
+      "rustSymbol": "FormIdValueLookupExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_outcome",
+          "type": "bool"
+        },
+        {
+          "name": "outcome",
+          "type": "FormIdValueLookupOutcomeDto"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "FormIdValueLookupErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "42c6d7d6f9e0dea4",
+      "rustSymbol": "FormIdValueLookupInMemoryConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "entries",
+          "type": "Vec<FormIdValueLookupInMemoryEntryDto>"
+        }
+      ]
+    },
+    {
+      "id": "3b7621f5bf49007c",
+      "rustSymbol": "FormIdValueLookupInMemoryEntryDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "formid",
+          "type": "String"
+        },
+        {
+          "name": "plugin",
+          "type": "String"
+        },
+        {
+          "name": "reply_kind",
+          "type": "FormIdValueLookupReplyKind"
+        },
+        {
+          "name": "value",
+          "type": "String"
+        },
+        {
+          "name": "error_message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "e6e6b1b967769d27",
+      "rustSymbol": "FormIdValueLookupKeyDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "formid",
+          "type": "String"
+        },
+        {
+          "name": "plugin",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "ae86867785f1b30d",
+      "rustSymbol": "FormIdValueLookupOutcomeDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/database.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "formid",
+          "type": "String"
+        },
+        {
+          "name": "plugin",
+          "type": "String"
+        },
+        {
+          "name": "kind",
+          "type": "FormIdValueLookupOutcomeKind"
+        },
+        {
+          "name": "value",
+          "type": "String"
         }
       ]
     },

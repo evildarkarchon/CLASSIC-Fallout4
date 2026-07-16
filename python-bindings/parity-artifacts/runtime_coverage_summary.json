@@ -1,16 +1,16 @@
 {
-  "generated_at_utc": "2026-07-16T11:47:28.527685+00:00",
+  "generated_at_utc": "2026-07-16T12:48:14.983011+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1636,
-    "runtime_verified_total": 1636,
+    "tracked_surface_total": 1648,
+    "runtime_verified_total": 1648,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 1277,
+    "tier1_contract_total": 1289,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -21,8 +21,8 @@
       "total": 42
     },
     "database": {
-      "runtime_verified": 44,
-      "total": 44
+      "runtime_verified": 56,
+      "total": 56
     },
     "file_io": {
       "runtime_verified": 95,
@@ -5256,7 +5256,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.BATCH_CACHE_TTL_SECS@rust",
@@ -5273,7 +5273,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.CacheEntry@rust",
@@ -5290,7 +5290,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.CacheKey@rust",
@@ -5307,7 +5307,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DEFAULT_CACHE_CLEANUP_INTERVAL_SECS@rust",
@@ -5324,7 +5324,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DEFAULT_CACHE_CLEANUP_OP_THRESHOLD@rust",
@@ -5341,7 +5341,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DEFAULT_CACHE_TTL_SECS@rust",
@@ -5358,7 +5358,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DEFAULT_QUERY_CACHE_CAPACITY@rust",
@@ -5375,7 +5375,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool",
@@ -5392,7 +5392,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.__init__",
@@ -5409,7 +5409,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.clear_cache",
@@ -5426,7 +5426,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.close",
@@ -5443,7 +5443,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.get_cache_capacity",
@@ -5460,7 +5460,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.get_cache_cleanup_interval",
@@ -5477,7 +5477,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.get_cache_cleanup_threshold",
@@ -5494,7 +5494,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.get_entries_batch",
@@ -5511,7 +5511,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.get_entry",
@@ -5528,7 +5528,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.get_game_table",
@@ -5545,7 +5545,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.get_max_connections",
@@ -5562,7 +5562,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.get_stats",
@@ -5579,7 +5579,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.initialize",
@@ -5596,7 +5596,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.is_available",
@@ -5613,7 +5613,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.optimize",
@@ -5630,7 +5630,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.rebalance_connections",
@@ -5647,7 +5647,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.recalculate_max_connections",
@@ -5664,7 +5664,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.set_cache_capacity",
@@ -5681,7 +5681,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.set_cache_cleanup_interval",
@@ -5698,7 +5698,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.set_cache_cleanup_threshold",
@@ -5715,7 +5715,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.set_cache_ttl",
@@ -5732,7 +5732,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.set_game_table",
@@ -5749,7 +5749,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.DatabasePool.set_max_connections",
@@ -5766,7 +5766,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.MAX_CACHE_CLEANUP_INTERVAL_SECS@rust",
@@ -5783,7 +5783,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.MAX_CACHE_CLEANUP_OP_THRESHOLD@rust",
@@ -5800,7 +5800,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.MAX_CACHE_TTL_SECS@rust",
@@ -5817,7 +5817,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.MAX_QUERY_CACHE_CAPACITY@rust",
@@ -5834,7 +5834,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.MIN_CACHE_CLEANUP_INTERVAL_SECS@rust",
@@ -5851,7 +5851,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.MIN_CACHE_CLEANUP_OP_THRESHOLD@rust",
@@ -5868,7 +5868,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.MIN_QUERY_CACHE_CAPACITY@rust",
@@ -5885,7 +5885,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.PoolStatistics@rust",
@@ -5902,7 +5902,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.get_batch_cache_ttl",
@@ -5919,7 +5919,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.get_default_cache_cleanup_threshold",
@@ -5936,7 +5936,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.get_default_cache_ttl",
@@ -5953,7 +5953,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.get_default_query_cache_capacity",
@@ -5970,7 +5970,7 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:database.pool.get_max_cache_ttl",
@@ -5987,7 +5987,211 @@
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "database-residuals-smoke",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookupError",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookupError",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupError",
+      "bindingIdentifier": "classic_database.FormIdValueLookupError",
+      "coverageId": "python-tier1-database",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookupEntry",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookupEntry",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupEntry",
+      "bindingIdentifier": "classic_database.FormIdValueLookupEntry",
+      "coverageId": "python-tier1-database",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookupEntry.__init__",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookupEntry.__init__",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupEntry",
+      "bindingIdentifier": "classic_database.FormIdValueLookupEntry.__init__",
+      "coverageId": "python-tier1-database",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookupInMemoryReply@rust",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookupInMemoryReply@rust",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupInMemoryReply",
+      "bindingIdentifier": "classic_database.FormIdValueLookupEntry",
+      "coverageId": "python-tier1-database",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookupOutcome",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookupOutcome",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupOutcome",
+      "bindingIdentifier": "classic_database.FormIdValueLookupOutcome",
+      "coverageId": "python-tier1-database",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookup",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookup",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookup",
+      "bindingIdentifier": "classic_database.FormIdValueLookup",
+      "coverageId": "python-tier1-database",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookup.disabled",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookup.disabled",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookup",
+      "bindingIdentifier": "classic_database.FormIdValueLookup.disabled",
+      "coverageId": "python-tier1-database",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookup.in_memory",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookup.in_memory",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookup",
+      "bindingIdentifier": "classic_database.FormIdValueLookup.in_memory",
+      "coverageId": "python-tier1-database",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookup.sqlite",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookup.sqlite",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookup",
+      "bindingIdentifier": "classic_database.FormIdValueLookup.sqlite",
+      "coverageId": "python-tier1-database",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookup.from_shared_pool",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookup.from_shared_pool",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookup",
+      "bindingIdentifier": "classic_database.FormIdValueLookup.from_shared_pool",
+      "coverageId": "python-tier1-database",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookup.lookup",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookup.lookup",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookup",
+      "bindingIdentifier": "classic_database.FormIdValueLookup.lookup",
+      "coverageId": "python-tier1-database",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookup.lookup_batch",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookup.lookup_batch",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookup",
+      "bindingIdentifier": "classic_database.FormIdValueLookup.lookup_batch",
+      "coverageId": "python-tier1-database",
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
+      "testCaseId": "database-residuals-smoke",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "trackedId": "contract:file_io.core.BackupInfo@rust",

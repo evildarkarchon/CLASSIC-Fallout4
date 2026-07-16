@@ -684,10 +684,11 @@
         "ownerModule": "database",
         "tier": "tier1"
       },
-      "contractCount": 44,
-      "contractIdsHash": "5cc9a223e7f0758a9295722d9e758829dd81b5f4178f6b43d528767184b314a5",
+      "contractCount": 56,
+      "contractIdsHash": "c5d15a084939b7d7bd723d42636119578443ee2e5b3eddd8208c0e262942e524",
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
-      "testCaseId": "database-residuals-smoke"
+      "testCaseId": "database-residuals-smoke",
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by python-bindings/tests/test_formid_value_lookup.py."
     },
     {
       "coverageId": "python-tier1-resource",
