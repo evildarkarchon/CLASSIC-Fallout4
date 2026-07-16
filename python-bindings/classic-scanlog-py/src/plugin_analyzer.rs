@@ -5,7 +5,6 @@ use classic_shared::{pydict_to_indexmap_str, without_gil};
 use indexmap::IndexMap;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use std::collections::HashSet;
 
 /// Convert IndexMap to Python dict, preserving insertion order
 /// Python 3.7+ dicts maintain insertion order, so this is safe
@@ -17,7 +16,7 @@ fn indexmap_to_pydict(py: Python<'_>, map: IndexMap<String, String>) -> PyResult
     Ok(dict.into())
 }
 
-/// Python wrapper for PluginAnalyzer
+/// Python wrapper for load-order parsing, limit validation, filtering, and batch utilities.
 #[pyclass(name = "PluginAnalyzer")]
 pub struct PyPluginAnalyzer {
     inner: PluginAnalyzer,
@@ -25,22 +24,24 @@ pub struct PyPluginAnalyzer {
 
 #[pymethods]
 impl PyPluginAnalyzer {
-    /// Creates a new plugin analyzer for Bethesda game crash logs.
+    /// Creates a utility analyzer for Bethesda game crash logs.
     ///
-    /// This constructor initializes an analyzer that can scan crash logs for plugin references,
-    /// check plugin limits, match plugins against callstacks, and filter ignored plugins.
+    /// This constructor initializes load-order parsing, plugin-limit checks, and ignored-plugin
+    /// filtering. Semantic call-stack matching is owned by `PluginEvidenceAnalyzer`.
     ///
     /// # Arguments
     ///
-    /// * `game_ignore_plugins` - List of game-specific plugins to ignore during analysis
+    /// * `game_ignore_plugins` - Legacy compatibility input retained for the stable constructor;
+    ///   semantic ignores are configured on `PluginEvidenceAnalyzer`
     /// * `ignore_list` - Additional custom plugins to ignore
-    /// * `crashgen_name` - Name of the crash generator (e.g., "Buffout4", "Crash Logger")
+    /// * `crashgen_name` - Legacy compatibility input retained for the stable constructor; report
+    ///   prose is owned by Autoscan Report Assembly
     /// * `game_version` - Base game version string (default: empty)
     /// * `game_version_vr` - VR version string if applicable (default: empty)
     ///
     /// # Returns
     ///
-    /// A new `PyPluginAnalyzer` instance ready to analyze crash logs.
+    /// A new `PyPluginAnalyzer` instance ready to parse and validate load orders.
     ///
     /// # Errors
     ///
@@ -136,22 +137,6 @@ impl PyPluginAnalyzer {
         without_gil(py, || {
             self.inner
                 .check_plugin_limit(&segment_plugins, &game_version, &version_current)
-        })
-        .map_err(crate::to_pyerr)
-    }
-
-    /// Match plugins
-    ///
-    /// Releases GIL during plugin matching to allow concurrent Python threads.
-    pub fn plugin_match(
-        &self,
-        py: Python<'_>,
-        segment_callstack_lower: Vec<String>,
-        crashlog_plugins_lower: HashSet<String>,
-    ) -> PyResult<Vec<String>> {
-        without_gil(py, || {
-            self.inner
-                .plugin_match(segment_callstack_lower, crashlog_plugins_lower)
         })
         .map_err(crate::to_pyerr)
     }

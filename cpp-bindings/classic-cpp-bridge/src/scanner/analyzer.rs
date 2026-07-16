@@ -17,7 +17,8 @@ use classic_scanlog_core::{
     AnalyzerKind as CoreAnalyzerKind, CrashSuspectAnalysisInput, CrashSuspectAnalysisResult,
     CrashSuspectAnalyzer, CrashSuspectFinding, CrashSuspectFindingKind, CrashgenEntry,
     CrashgenExpectationOutcome, CrashgenSettingsAnalysisInput, CrashgenSettingsAnalysisResult,
-    CrashgenSettingsAnalyzer,
+    CrashgenSettingsAnalyzer, PluginEvidenceAnalysisInput, PluginEvidenceAnalysisResult,
+    PluginEvidenceAnalyzer,
 };
 
 use super::ffi;
@@ -57,6 +58,92 @@ pub(crate) struct CxxCrashSuspectAnalyzer {
 /// Immutable CXX-owned handle for one validated aggregate Mod Guidance Analyzer.
 pub(crate) struct CxxModGuidanceAnalyzer {
     inner: Result<ModGuidanceAnalyzer, BridgeAnalyzerError>,
+}
+
+/// Immutable CXX-owned handle for one validated Plugin Evidence Analyzer.
+pub(crate) struct CxxPluginEvidenceAnalyzer {
+    inner: Result<PluginEvidenceAnalyzer, BridgeAnalyzerError>,
+}
+
+/// Constructs and validates a Plugin Evidence Analyzer from owned ignore configuration.
+pub(crate) fn plugin_evidence_analyzer_new(
+    configuration: ffi::PluginEvidenceAnalyzerConfigurationDto,
+) -> Box<CxxPluginEvidenceAnalyzer> {
+    Box::new(CxxPluginEvidenceAnalyzer {
+        inner: PluginEvidenceAnalyzer::new(configuration.ignored_plugins).map_err(Into::into),
+    })
+}
+
+/// Returns the explicit typed status captured during Plugin Evidence construction.
+pub(crate) fn plugin_evidence_analyzer_construction_result(
+    analyzer: &CxxPluginEvidenceAnalyzer,
+) -> ffi::PluginEvidenceAnalyzerConstructionResultDto {
+    match &analyzer.inner {
+        Ok(_) => ffi::PluginEvidenceAnalyzerConstructionResultDto {
+            has_analyzer: true,
+            has_error: false,
+            error: empty_error_dto(),
+        },
+        Err(error) => ffi::PluginEvidenceAnalyzerConstructionResultDto {
+            has_analyzer: false,
+            has_error: true,
+            error: bridge_error_to_dto(error),
+        },
+    }
+}
+
+/// Runs aggregate Plugin Evidence analysis and preserves the shared typed error envelope.
+pub(crate) fn plugin_evidence_analyze(
+    analyzer: &CxxPluginEvidenceAnalyzer,
+    input: ffi::PluginEvidenceAnalysisInputDto,
+) -> ffi::PluginEvidenceAnalysisExecutionResultDto {
+    let core_analyzer = match &analyzer.inner {
+        Ok(analyzer) => analyzer,
+        Err(error) => return plugin_evidence_error_result(bridge_error_to_dto(error)),
+    };
+
+    match core_analyzer.analyze(PluginEvidenceAnalysisInput {
+        call_stack: input.call_stack,
+        plugins: input.plugins,
+    }) {
+        Ok(result) => ffi::PluginEvidenceAnalysisExecutionResultDto {
+            has_result: true,
+            result: plugin_evidence_result_to_dto(result),
+            has_error: false,
+            error: empty_error_dto(),
+        },
+        Err(error) => plugin_evidence_error_result(bridge_error_to_dto(&error.into())),
+    }
+}
+
+/// Projects one owned semantic Plugin Evidence result without presentation data.
+fn plugin_evidence_result_to_dto(
+    result: PluginEvidenceAnalysisResult,
+) -> ffi::PluginEvidenceAnalysisResultDto {
+    ffi::PluginEvidenceAnalysisResultDto {
+        evidence: result
+            .evidence
+            .into_iter()
+            .map(|entry| ffi::PluginEvidenceDto {
+                plugin: entry.plugin,
+                occurrences: entry.occurrences,
+            })
+            .collect(),
+    }
+}
+
+/// Builds the error branch of the explicit Plugin Evidence execution envelope.
+fn plugin_evidence_error_result(
+    error: ffi::AnalyzerErrorDto,
+) -> ffi::PluginEvidenceAnalysisExecutionResultDto {
+    ffi::PluginEvidenceAnalysisExecutionResultDto {
+        has_result: false,
+        result: ffi::PluginEvidenceAnalysisResultDto {
+            evidence: Vec::new(),
+        },
+        has_error: true,
+        error,
+    }
 }
 
 /// Constructs and validates a Mod Guidance Analyzer from owned bridge configuration.

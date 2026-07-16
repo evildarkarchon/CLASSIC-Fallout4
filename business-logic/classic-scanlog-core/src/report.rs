@@ -12,6 +12,7 @@ use crate::error::{Result, ScanLogError};
 use crate::mod_guidance_analyzer::{
     ImportantModGuidance, ModGuidanceAnalysisResult, ModGuidanceMatchState, ModSolutionGuidance,
 };
+use crate::plugin_evidence_analyzer::PluginEvidenceAnalysisResult;
 use crate::scan_run::CrashLogScanSetupResult;
 use crate::version::CrashgenVersionStatus;
 use classic_config_core::{AutoscanReportPlacement, OutcomeKind, RuleSeverity};
@@ -129,7 +130,7 @@ pub(crate) enum AutoscanReportContribution {
         result: ModGuidanceAnalysisResult,
     },
     PluginEvidence {
-        lines: Vec<String>,
+        result: PluginEvidenceAnalysisResult,
     },
     FormIdFinding {
         lines: Vec<String>,
@@ -226,13 +227,7 @@ impl AutoscanReportAssembler {
         Self::add_section_with_header(
             &mut composer,
             report_gen.generate_plugin_suspect_header(),
-            Self::line_fragments(&contributions, |contribution| {
-                if let AutoscanReportContribution::PluginEvidence { lines } = contribution {
-                    Some(lines)
-                } else {
-                    None
-                }
-            }),
+            Self::plugin_evidence_fragments(&contributions, &facts.crashgen_name),
         );
         Self::add_section_with_header(
             &mut composer,
@@ -259,6 +254,58 @@ impl AutoscanReportAssembler {
 
         composer.add(report_gen.generate_footer());
         composer.compose().to_list()
+    }
+
+    /// Renders a present Plugin Evidence result while preserving absent analysis as no section.
+    fn plugin_evidence_fragments(
+        contributions: &[AutoscanReportContribution],
+        crashgen_name: &str,
+    ) -> Vec<ReportFragment> {
+        contributions
+            .iter()
+            .filter_map(|contribution| match contribution {
+                AutoscanReportContribution::PluginEvidence { result } => Some(
+                    ReportFragment::from_lines(Self::render_plugin_evidence(result, crashgen_name)),
+                ),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Owns canonical sorting and prose for typed Plugin Evidence.
+    fn render_plugin_evidence(
+        result: &PluginEvidenceAnalysisResult,
+        crashgen_name: &str,
+    ) -> Vec<String> {
+        if result.evidence.is_empty() {
+            return vec!["* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n".to_string()];
+        }
+
+        let mut evidence = result.evidence.iter().collect::<Vec<_>>();
+        evidence.sort_by(|left, right| {
+            right
+                .occurrences
+                .cmp(&left.occurrences)
+                .then_with(|| left.plugin.cmp(&right.plugin))
+        });
+        let mut lines = vec!["The following PLUGINS were found in the CRASH STACK:\n".to_string()];
+        lines.extend(
+            evidence
+                .into_iter()
+                .map(|entry| format!("- {} | {}\n", entry.plugin, entry.occurrences)),
+        );
+        lines.push(
+            "\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n"
+                .to_string(),
+        );
+        lines.push(format!(
+            "These Plugins were caught by {crashgen_name} and some of them might be responsible for this crash.\n"
+        ));
+        lines.push(
+            "You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n"
+                .to_string(),
+        );
+        lines
     }
 
     fn add_section_with_header(

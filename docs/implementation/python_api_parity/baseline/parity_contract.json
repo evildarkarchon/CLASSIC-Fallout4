@@ -8462,6 +8462,89 @@
       "pythonKind": "class"
     },
     {
+      "id": "scanlog.plugin_evidence_analyzer.PluginEvidence",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PluginEvidence",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PluginEvidence",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PluginEvidenceAnalysisInput",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PluginEvidenceAnalysisInput",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PluginEvidenceAnalysisInput",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PluginEvidenceAnalysisInput.__init__",
+      "pythonKind": "method",
+      "pythonArity": 2
+    },
+    {
+      "id": "scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PluginEvidenceAnalysisResult",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PluginEvidenceAnalysisResult",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PluginEvidenceAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PluginEvidenceAnalyzer",
+      "pythonKind": "class"
+    },
+    {
+      "id": "scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer.__init__",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PluginEvidenceAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PluginEvidenceAnalyzer.__init__",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer.analyze",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PluginEvidenceAnalyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PluginEvidenceAnalyzer.analyze",
+      "pythonKind": "method",
+      "pythonArity": 1
+    },
+    {
+      "id": "scanlog.plugin_evidence_analyzer.plugin_evidence_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "plugin_evidence_analyzer",
+      "pythonModule": "classic_scanlog",
+      "pythonExportPath": "PluginEvidenceAnalyzer",
+      "pythonKind": "class"
+    },
+    {
       "id": "scanlog.papyrus.PapyrusAnalyzer.__init__",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -8975,17 +9058,6 @@
       "pythonExportPath": "PluginAnalyzer.loadorder_scan_log",
       "pythonKind": "method",
       "pythonArity": 3
-    },
-    {
-      "id": "scanlog.plugin_analyzer.PluginAnalyzer.plugin_match",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "PluginAnalyzer",
-      "pythonModule": "classic_scanlog",
-      "pythonExportPath": "PluginAnalyzer.plugin_match",
-      "pythonKind": "method",
-      "pythonArity": 2
     },
     {
       "id": "scanlog.plugin_analyzer.PluginAnalyzer@rust",

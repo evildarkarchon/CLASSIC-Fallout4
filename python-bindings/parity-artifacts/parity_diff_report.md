@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-16T09:03:49.882177+00:00`
-- Tier-1 contract rows: **1263**
-- Tier-1 matched: **1263**
+- Generated: `2026-07-16T10:18:40.639931+00:00`
+- Tier-1 contract rows: **1270**
+- Tier-1 matched: **1270**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -837,6 +837,14 @@
 | `scanlog.mod_guidance_analyzer.ModGuidanceSolutionRule.__init__` | `scanlog` | `ModSolutionEntry` | `classic_scanlog.ModGuidanceSolutionRule.__init__` | `matched` |
 | `scanlog.mod_guidance_analyzer.ModSolutionGuidance` | `scanlog` | `ModSolutionGuidance` | `classic_scanlog.ModSolutionGuidance` | `matched` |
 | `scanlog.mod_guidance_analyzer.mod_guidance_analyzer@rust` | `scanlog` | `mod_guidance_analyzer` | `classic_scanlog.ModGuidanceAnalyzer` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidence` | `scanlog` | `PluginEvidence` | `classic_scanlog.PluginEvidence` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput` | `scanlog` | `PluginEvidenceAnalysisInput` | `classic_scanlog.PluginEvidenceAnalysisInput` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput.__init__` | `scanlog` | `PluginEvidenceAnalysisInput` | `classic_scanlog.PluginEvidenceAnalysisInput.__init__` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisResult` | `scanlog` | `PluginEvidenceAnalysisResult` | `classic_scanlog.PluginEvidenceAnalysisResult` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer` | `scanlog` | `PluginEvidenceAnalyzer` | `classic_scanlog.PluginEvidenceAnalyzer` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer.__init__` | `scanlog` | `PluginEvidenceAnalyzer` | `classic_scanlog.PluginEvidenceAnalyzer.__init__` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer.analyze` | `scanlog` | `PluginEvidenceAnalyzer` | `classic_scanlog.PluginEvidenceAnalyzer.analyze` | `matched` |
+| `scanlog.plugin_evidence_analyzer.plugin_evidence_analyzer@rust` | `scanlog` | `plugin_evidence_analyzer` | `classic_scanlog.PluginEvidenceAnalyzer` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.__init__` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.__init__` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.analyze_to_string` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.analyze_to_string` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.check_for_updates` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.check_for_updates` | `matched` |
@@ -885,7 +893,6 @@
 | `scanlog.plugin_analyzer.PluginAnalyzer.check_plugin_limit` | `scanlog` | `PluginAnalyzer` | `classic_scanlog.PluginAnalyzer.check_plugin_limit` | `matched` |
 | `scanlog.plugin_analyzer.PluginAnalyzer.filter_ignored_plugins` | `scanlog` | `PluginAnalyzer` | `classic_scanlog.PluginAnalyzer.filter_ignored_plugins` | `matched` |
 | `scanlog.plugin_analyzer.PluginAnalyzer.loadorder_scan_log` | `scanlog` | `PluginAnalyzer` | `classic_scanlog.PluginAnalyzer.loadorder_scan_log` | `matched` |
-| `scanlog.plugin_analyzer.PluginAnalyzer.plugin_match` | `scanlog` | `PluginAnalyzer` | `classic_scanlog.PluginAnalyzer.plugin_match` | `matched` |
 | `scanlog.plugin_analyzer.PluginAnalyzer@rust` | `scanlog` | `PluginAnalyzer` | `classic_scanlog.PluginAnalyzer` | `matched` |
 | `scanlog.plugin_analyzer.contains_plugin` | `scanlog` | `contains_plugin` | `classic_scanlog.contains_plugin` | `matched` |
 | `scanlog.plugin_analyzer.contains_plugin@rust` | `scanlog` | `contains_plugin` | `classic_scanlog.contains_plugin` | `matched` |

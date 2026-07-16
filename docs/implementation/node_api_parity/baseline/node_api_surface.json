@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T09:01:31.973625+00:00",
+  "generated_at_utc": "2026-07-16T10:17:29.852647+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -1085,6 +1085,30 @@
       "signature": "export interface JsPeVersion {"
     },
     {
+      "export": "JsPluginEvidence",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsPluginEvidence {"
+    },
+    {
+      "export": "JsPluginEvidenceAnalysisInput",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsPluginEvidenceAnalysisInput {"
+    },
+    {
+      "export": "JsPluginEvidenceAnalysisResult",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsPluginEvidenceAnalysisResult {"
+    },
+    {
       "export": "JsPoolStatistics",
       "kind": "interface",
       "owner_module": "aux",
@@ -1683,6 +1707,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class ModGuidanceAnalyzer {"
+    },
+    {
+      "export": "PluginEvidenceAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class PluginEvidenceAnalyzer {"
     },
     {
       "export": "QueryParam",

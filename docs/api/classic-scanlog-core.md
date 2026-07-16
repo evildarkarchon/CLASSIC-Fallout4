@@ -213,8 +213,18 @@ the canonical parser methods documented in source.
   and matched plugin ids. It carries no headings, group order, icons,
   separators, markdown, or report lines; completed no-match analysis is an
   explicit empty result.
+- `PluginEvidenceAnalyzer` validates and normalizes owned game-plugin ignore
+  configuration during construction. Its immutable, cloneable `Send + Sync`
+  handle accepts one owned `PluginEvidenceAnalysisInput` containing call-stack
+  lines and plugin identities in caller-provided casing.
+- `PluginEvidenceAnalysisResult` contains normalized `PluginEvidence` identities
+  with per-line occurrence counts in candidate order. It carries no report prose,
+  markdown, headings, or sorting policy; completed no-match analysis is an
+  explicit empty result.
 - `FormIDAnalyzerCore` extracts, validates, and optionally resolves FormIDs.
-- `PluginAnalyzer` detects and classifies plugin references.
+- `PluginAnalyzer` retains independently useful load-order parsing, plugin-limit,
+  filtering, and batch detection utilities; its former report-producing match
+  methods are removed.
 - `RecordScanner` scans call stacks for named records and lazily caches its
   per-instance Aho-Corasick matchers with `std::sync::OnceLock`.
 - `SettingsValidator` is the temporary fragment-producing compatibility facade

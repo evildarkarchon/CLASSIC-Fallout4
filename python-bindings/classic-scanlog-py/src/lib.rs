@@ -92,6 +92,7 @@ pub mod papyrus;
 pub mod parser;
 pub mod patterns;
 pub mod plugin_analyzer;
+pub mod plugin_evidence_analyzer;
 mod py_adapters;
 pub mod record_scanner;
 pub mod report;
@@ -126,6 +127,10 @@ pub use papyrus::{PyPapyrusAnalyzer, PyPapyrusStats, papyrus_logging};
 pub use parser::PyLogParser;
 pub use patterns::PyPatternMatcher;
 pub use plugin_analyzer::{PyPluginAnalyzer, contains_plugin, detect_plugins_batch};
+pub use plugin_evidence_analyzer::{
+    PyPluginEvidence, PyPluginEvidenceAnalysisInput, PyPluginEvidenceAnalysisResult,
+    PyPluginEvidenceAnalyzer,
+};
 pub use record_scanner::{PyRecordScanner, contains_record, scan_records_batch};
 pub use report::{
     PyParallelReportProcessor, PyReportComposer, PyReportFragment, PyReportGenerator, PyStringPool,
@@ -237,6 +242,7 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     crashgen_settings_analyzer::register(m)?;
     crash_suspect_analyzer::register(m)?;
     mod_guidance_analyzer::register(m)?;
+    plugin_evidence_analyzer::register(m)?;
     m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;
@@ -296,6 +302,7 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     crashgen_settings_analyzer::register(m)?;
     crash_suspect_analyzer::register(m)?;
     mod_guidance_analyzer::register(m)?;
+    plugin_evidence_analyzer::register(m)?;
     m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;

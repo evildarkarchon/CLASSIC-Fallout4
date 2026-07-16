@@ -4,6 +4,11 @@ This brief captures the accepted design from the entry #2 grilling session for `
 
 Use this as an implementation brief for an agent. Canonical domain language is in [`CONTEXT.md`](../../CONTEXT.md). The data-owned placement decision is recorded in [`docs/adr/0003-autoscan-report-placement-yaml-data.md`](../adr/0003-autoscan-report-placement-yaml-data.md).
 
+> Historical status: the `lines` payloads below describe the temporary first
+> assembly slice. Crash Suspect, Mod Guidance, and Plugin Evidence have since
+> moved to typed semantic payloads; the current contract is documented in
+> [`docs/api/classic-scanlog-core.md`](../api/classic-scanlog-core.md).
+
 ## Target
 
 Deepen Autoscan Report Assembly inside `business-logic/classic-scanlog-core/src/report.rs` so callers cross one seam to turn scan facts and Autoscan Report Contributions into final Autoscan Report lines.

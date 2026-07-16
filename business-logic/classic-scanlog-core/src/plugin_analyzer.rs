@@ -4,7 +4,6 @@
 
 use crate::error::Result;
 use crate::version::crashgen_version_gen;
-use aho_corasick::AhoCorasickBuilder;
 use classic_version_registry_core::{GameVersion as RegistryGameVersion, get_version_registry};
 use indexmap::IndexMap;
 use rayon::prelude::*;
@@ -67,9 +66,7 @@ fn insert_plugin_if_new(
 
 /// Core plugin analyzer - pure Rust implementation (NO PyO3)
 pub struct PluginAnalyzer {
-    lower_plugins_ignore: HashSet<String>,
     ignore_plugins_list: HashSet<String>,
-    crashgen_name: String,
     game_version: String,
     game_version_vr: String,
 }
@@ -77,15 +74,16 @@ pub struct PluginAnalyzer {
 impl PluginAnalyzer {
     /// Creates a new plugin analyzer with the specified configuration and ignore lists.
     ///
-    /// This constructor initializes the analyzer with all necessary configuration for plugin
-    /// detection, filtering, and version-specific behavior. The analyzer converts all ignore
-    /// lists to lowercase for case-insensitive matching.
+    /// This constructor initializes load-order parsing, filtering, and version-specific
+    /// behavior. Plugin Evidence matching is owned separately by `PluginEvidenceAnalyzer`.
     ///
     /// # Arguments
     ///
-    /// * `game_ignore_plugins` - Game-specific plugins to ignore (e.g., base game ESMs)
+    /// * `_game_ignore_plugins` - Retained for the stable load-order utility constructor; game
+    ///   ignores are consumed by `PluginEvidenceAnalyzer` for semantic matching.
     /// * `ignore_list` - User-defined additional plugins to ignore
-    /// * `crashgen_name` - Name of crash generator for report text (e.g., "Buffout 4")
+    /// * `_crashgen_name` - Retained for the stable load-order utility constructor; report prose
+    ///   is owned by Autoscan Report Assembly.
     /// * `game_version` - Base game version string (e.g., "1.10.163")
     /// * `game_version_vr` - VR version string for VR-specific checks
     ///
@@ -115,25 +113,17 @@ impl PluginAnalyzer {
     /// # }
     /// ```
     pub fn new(
-        game_ignore_plugins: Vec<String>,
+        _game_ignore_plugins: Vec<String>,
         ignore_list: Vec<String>,
-        crashgen_name: String,
+        _crashgen_name: String,
         game_version: String,
         game_version_vr: String,
     ) -> Result<Self> {
-        // Convert to lowercase sets for case-insensitive matching
-        let lower_plugins_ignore: HashSet<String> = game_ignore_plugins
-            .iter()
-            .map(|s| s.to_lowercase())
-            .collect();
-
         let ignore_plugins_list: HashSet<String> =
             ignore_list.iter().map(|s| s.to_lowercase()).collect();
 
         Ok(Self {
-            lower_plugins_ignore,
             ignore_plugins_list,
-            crashgen_name,
             game_version,
             game_version_vr,
         })
@@ -407,138 +397,6 @@ impl PluginAnalyzer {
             .into_iter()
             .find(|info| info.is_compatible_with(&detected))
             .map(|info| info.short_name.to_ascii_uppercase())
-    }
-
-    /// Matches plugins found in crash call stack and generates a suspect report with counts.
-    ///
-    /// This method searches the call stack for mentions of plugins from the crash log, counting
-    /// how many times each plugin appears. It filters out ignored plugins and lines containing
-    /// "modified by:" to avoid false positives. Results are sorted by count (descending) for
-    /// prioritized investigation.
-    ///
-    /// # Arguments
-    ///
-    /// * `segment_callstack_lower` - Lowercase call stack lines
-    /// * `crashlog_plugins_lower` - Set of lowercase plugin names from crash log
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(Vec<String>)` containing formatted report with plugin counts and explanations.
-    ///
-    /// # Performance
-    ///
-    /// - Processes ~10,000 call stack lines/second
-    /// - Uses HashMap for O(1) count updates
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_scanlog_core::PluginAnalyzer;
-    /// use std::collections::HashSet;
-    ///
-    /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let analyzer = PluginAnalyzer::new(
-    ///     vec![], vec![], "Buffout 4".to_string(),
-    ///     "1.10.163".to_string(), "1.10.163vr".to_string()
-    /// )?;
-    ///
-    /// let callstack = vec!["mymod.esp function call".to_string()];
-    /// let mut plugins = HashSet::new();
-    /// plugins.insert("mymod.esp".to_string());
-    ///
-    /// let report = analyzer.plugin_match(callstack, plugins)?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn plugin_match(
-        &self,
-        segment_callstack_lower: Vec<String>,
-        crashlog_plugins_lower: HashSet<String>,
-    ) -> Result<Vec<String>> {
-        self.plugin_match_with_crashgen_name(
-            segment_callstack_lower,
-            crashlog_plugins_lower,
-            &self.crashgen_name,
-        )
-    }
-
-    /// Like [`Self::plugin_match`] but allows overriding the crashgen label used in report text.
-    pub fn plugin_match_with_crashgen_name(
-        &self,
-        segment_callstack_lower: Vec<String>,
-        crashlog_plugins_lower: HashSet<String>,
-        crashgen_name: &str,
-    ) -> Result<Vec<String>> {
-        self.plugin_match_with_crashgen_name_from_lowered(
-            &segment_callstack_lower,
-            &crashlog_plugins_lower,
-            crashgen_name,
-        )
-    }
-
-    /// Like [`Self::plugin_match_with_crashgen_name`] but borrows already-lowercased data.
-    pub fn plugin_match_with_crashgen_name_from_lowered(
-        &self,
-        segment_callstack_lower: &[String],
-        crashlog_plugins_lower: &HashSet<String>,
-        crashgen_name: &str,
-    ) -> Result<Vec<String>> {
-        let mut lines = Vec::new();
-
-        let relevant_lines: Vec<&str> = segment_callstack_lower
-            .iter()
-            .map(String::as_str)
-            .filter(|line| !line.contains("modified by:"))
-            .collect();
-
-        let plugin_patterns: Vec<&String> = crashlog_plugins_lower
-            .iter()
-            .filter(|plugin| !self.lower_plugins_ignore.contains(*plugin))
-            .collect();
-
-        let mut plugins_matches: HashMap<String, usize> = HashMap::new();
-
-        if !plugin_patterns.is_empty() && !relevant_lines.is_empty() {
-            let matcher = AhoCorasickBuilder::new()
-                .ascii_case_insensitive(false)
-                .build(
-                    plugin_patterns
-                        .iter()
-                        .map(|plugin| plugin.as_str())
-                        .collect::<Vec<_>>(),
-                )?;
-
-            for line in relevant_lines {
-                let mut matched_pattern_indexes = HashSet::new();
-                for matched in matcher.find_iter(line) {
-                    if matched_pattern_indexes.insert(matched.pattern().as_usize())
-                        && let Some(plugin) = plugin_patterns.get(matched.pattern().as_usize())
-                    {
-                        *plugins_matches.entry((**plugin).clone()).or_insert(0) += 1;
-                    }
-                }
-            }
-        }
-
-        if !plugins_matches.is_empty() {
-            lines.push("The following PLUGINS were found in the CRASH STACK:\n".to_string());
-
-            // Sort by count (descending) then by name for consistent output
-            let mut sorted_matches: Vec<_> = plugins_matches.into_iter().collect();
-            sorted_matches.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
-
-            for (plugin, count) in sorted_matches {
-                lines.push(format!("- {} | {}\n", plugin, count));
-            }
-
-            lines.push("\n[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n".to_string());
-            lines.push(format!("These Plugins were caught by {} and some of them might be responsible for this crash.\n", crashgen_name));
-            lines.push("You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n".to_string());
-        } else {
-            lines.push("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n".to_string());
-        }
-
-        Ok(lines)
     }
 
     /// Filters out ignored plugins from crash log plugin list using configured ignore lists.

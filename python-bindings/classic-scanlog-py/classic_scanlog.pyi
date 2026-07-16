@@ -448,10 +448,9 @@ class PatternMatcher:
 # =============================================================================
 
 class PluginAnalyzer:
-    """Plugin matching and analysis (30x speedup).
+    """Load-order parsing, limit validation, filtering, and batch utilities.
 
-    Analyzes plugin lists against configuration data to detect
-    problematic plugins, conflicts, and missing dependencies.
+    Semantic call-stack matching is owned by PluginEvidenceAnalyzer.
     """
 
     def __init__(
@@ -465,9 +464,9 @@ class PluginAnalyzer:
         """Create plugin analyzer.
 
         Args:
-            game_ignore_plugins: List of game-specific plugins to ignore during analysis
+            game_ignore_plugins: Legacy compatibility input; semantic ignores are configured on PluginEvidenceAnalyzer
             ignore_list: Additional custom plugins to ignore
-            crashgen_name: Name of the crash generator (e.g., "Buffout4", "Crash Logger")
+            crashgen_name: Legacy compatibility input; Autoscan Report Assembly owns report prose
             game_version: Base game version string (default: empty)
             game_version_vr: VR version string if applicable (default: empty)
 
@@ -509,20 +508,6 @@ class PluginAnalyzer:
 
         Returns:
             Tuple of (plugin_limit_triggered, limit_check_disabled)
-
-        """
-
-    def plugin_match(
-        self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]
-    ) -> list[str]:
-        """Match plugins found in crash call stack.
-
-        Args:
-            segment_callstack_lower: Lowercase call stack lines
-            crashlog_plugins_lower: Set of lowercase plugin names from crash log
-
-        Returns:
-            List of formatted report lines for plugin matches
 
         """
 
@@ -1622,6 +1607,34 @@ class CrashSuspectAnalyzer:
     @property
     def kind(self) -> AnalyzerKind: ...
     def analyze(self, input: CrashSuspectAnalysisInput) -> CrashSuspectAnalysisResult:
+        """Run aggregate semantic analysis without producing report lines."""
+
+class PluginEvidenceAnalysisInput:
+    """Immutable owned input for one aggregate Plugin Evidence analysis call."""
+
+    def __init__(self, call_stack: list[str], plugins: list[str]) -> None: ...
+
+class PluginEvidence:
+    """Immutable typed plugin identity and occurrence count."""
+
+    @property
+    def plugin(self) -> str: ...
+    @property
+    def occurrences(self) -> int: ...
+
+class PluginEvidenceAnalysisResult:
+    """Completed analysis; an empty list explicitly means no evidence."""
+
+    @property
+    def evidence(self) -> list[PluginEvidence]: ...
+
+class PluginEvidenceAnalyzer:
+    """Immutable analyzer with validated Plugin Evidence ignore configuration."""
+
+    def __init__(self, ignored_plugins: list[str]) -> None: ...
+    @property
+    def kind(self) -> AnalyzerKind: ...
+    def analyze(self, input: PluginEvidenceAnalysisInput) -> PluginEvidenceAnalysisResult:
         """Run aggregate semantic analysis without producing report lines."""
 
 class CrashgenExpectationOutcome:

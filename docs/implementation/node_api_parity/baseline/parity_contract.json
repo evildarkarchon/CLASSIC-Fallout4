@@ -1,7 +1,7 @@
 {
   "contractVersion": "1.0.0",
   "phase": "phase1",
-  "description": "Live one-tier 875-row Node vs Rust parity contract for high-level APIs, preserving the 706-row enforcement floor.",
+  "description": "Live one-tier 895-row Node vs Rust parity contract for high-level APIs, preserving the 706-row enforcement floor.",
   "tierDefinitions": {
     "tier1": "Must-have high-level APIs required by app workflows and cross-language integration."
   },
@@ -4212,6 +4212,54 @@
       "rustKind": "struct",
       "nodeExport": "JsModSolutionRule",
       "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.plugin_evidence_analyzer.PluginEvidence",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PluginEvidence",
+      "rustKind": "struct",
+      "nodeExport": "JsPluginEvidence",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PluginEvidenceAnalysisInput",
+      "rustKind": "struct",
+      "nodeExport": "JsPluginEvidenceAnalysisInput",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PluginEvidenceAnalysisResult",
+      "rustKind": "struct",
+      "nodeExport": "JsPluginEvidenceAnalysisResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "PluginEvidenceAnalyzer",
+      "rustKind": "struct",
+      "nodeExport": "PluginEvidenceAnalyzer",
+      "nodeKind": "class"
+    },
+    {
+      "id": "scanlog.plugin_evidence_analyzer.plugin_evidence_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "plugin_evidence_analyzer@rust",
+      "rustKind": "module"
     },
     {
       "id": "scanlog.plugin_analyzer.detect_plugins_batch@rust",

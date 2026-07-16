@@ -13,10 +13,12 @@ mod util;
 
 pub(crate) use analyzer::{
     CxxCrashSuspectAnalyzer, CxxCrashgenSettingsAnalyzer, CxxModGuidanceAnalyzer,
-    crash_suspect_analyze, crash_suspect_analyzer_construction_result, crash_suspect_analyzer_new,
-    crashgen_settings_analyze, crashgen_settings_analyzer_construction_result,
-    crashgen_settings_analyzer_new, mod_guidance_analyze,
-    mod_guidance_analyzer_construction_result, mod_guidance_analyzer_new,
+    CxxPluginEvidenceAnalyzer, crash_suspect_analyze, crash_suspect_analyzer_construction_result,
+    crash_suspect_analyzer_new, crashgen_settings_analyze,
+    crashgen_settings_analyzer_construction_result, crashgen_settings_analyzer_new,
+    mod_guidance_analyze, mod_guidance_analyzer_construction_result, mod_guidance_analyzer_new,
+    plugin_evidence_analyze, plugin_evidence_analyzer_construction_result,
+    plugin_evidence_analyzer_new,
 };
 pub(crate) use contract::{
     ScanRunCancellation, ScanRunRequest, ScanRunUnsolvedLogs, scan_run_cancellation_cancel,
@@ -376,6 +378,43 @@ mod ffi {
         error: AnalyzerErrorDto,
     }
 
+    /// Owned ignore configuration for one immutable Plugin Evidence Analyzer.
+    struct PluginEvidenceAnalyzerConfigurationDto {
+        ignored_plugins: Vec<String>,
+    }
+
+    /// Explicit constructor status for an opaque Plugin Evidence Analyzer handle.
+    struct PluginEvidenceAnalyzerConstructionResultDto {
+        has_analyzer: bool,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
+    /// Owned input for one aggregate Plugin Evidence analysis call.
+    struct PluginEvidenceAnalysisInputDto {
+        call_stack: Vec<String>,
+        plugins: Vec<String>,
+    }
+
+    /// One typed plugin identity and its call-stack occurrence count.
+    struct PluginEvidenceDto {
+        plugin: String,
+        occurrences: u32,
+    }
+
+    /// Completed Plugin Evidence analysis, including explicit empty success.
+    struct PluginEvidenceAnalysisResultDto {
+        evidence: Vec<PluginEvidenceDto>,
+    }
+
+    /// Exactly one typed Plugin Evidence result or shared analyzer error.
+    struct PluginEvidenceAnalysisExecutionResultDto {
+        has_result: bool,
+        result: PluginEvidenceAnalysisResultDto,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum ScanRunContractProgressPhase {
         Setup = 0,
@@ -641,6 +680,7 @@ mod ffi {
         type CxxCrashSuspectAnalyzer;
         type CxxCrashgenSettingsAnalyzer;
         type CxxModGuidanceAnalyzer;
+        type CxxPluginEvidenceAnalyzer;
         type ScanRunRequest;
         type ScanRunUnsolvedLogs;
         type ScanRunCancellation;
@@ -693,6 +733,20 @@ mod ffi {
             analyzer: &CxxModGuidanceAnalyzer,
             input: ModGuidanceAnalysisInputDto,
         ) -> ModGuidanceAnalysisExecutionResultDto;
+
+        /// Constructs and validates an immutable Plugin Evidence Analyzer handle.
+        fn plugin_evidence_analyzer_new(
+            configuration: PluginEvidenceAnalyzerConfigurationDto,
+        ) -> Box<CxxPluginEvidenceAnalyzer>;
+        /// Returns the typed status captured during Plugin Evidence construction.
+        fn plugin_evidence_analyzer_construction_result(
+            analyzer: &CxxPluginEvidenceAnalyzer,
+        ) -> PluginEvidenceAnalyzerConstructionResultDto;
+        /// Runs one aggregate Plugin Evidence analysis over owned Crash Log facts.
+        fn plugin_evidence_analyze(
+            analyzer: &CxxPluginEvidenceAnalyzer,
+            input: PluginEvidenceAnalysisInputDto,
+        ) -> PluginEvidenceAnalysisExecutionResultDto;
 
         /// Creates Standard intent that leaves failed Crash Logs and reports in place.
         fn scan_run_unsolved_logs_leave_in_place() -> Box<ScanRunUnsolvedLogs>;

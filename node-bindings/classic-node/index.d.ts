@@ -1141,6 +1141,25 @@ export declare class ModGuidanceAnalyzer {
   analyze(input: JsModGuidanceAnalysisInput): JsModGuidanceAnalysisResult
 }
 
+/** Immutable Node handle over validated Plugin Evidence configuration. */
+export declare class PluginEvidenceAnalyzer {
+  /**
+   * Validates and normalizes owned plugin-ignore configuration.
+   *
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  constructor(ignoredPlugins: Array<string>)
+  /** Returns the stable focused-analyzer identity for this handle. */
+  get kind(): JsAnalyzerKind
+  /**
+   * Runs one aggregate semantic analysis over owned Crash Log evidence.
+   *
+   * @returns Typed evidence, including an explicit empty array on no match.
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  analyze(input: JsPluginEvidenceAnalysisInput): JsPluginEvidenceAnalysisResult
+}
+
 /** Opaque monotonic cancellation control for one scan run. */
 export declare class ScanRunCancellation {
   /** Creates an uncancelled control. */
@@ -3795,6 +3814,28 @@ export interface JsPeVersion {
   minor: number
   patch: number
   build: number
+}
+
+/** One typed plugin identity and its call-stack occurrence count. */
+export interface JsPluginEvidence {
+  /** Normalized plugin identity. */
+  plugin: string
+  /** Number of call-stack lines containing the plugin identity. */
+  occurrences: number
+}
+
+/** Owned input for one aggregate Plugin Evidence analysis call. */
+export interface JsPluginEvidenceAnalysisInput {
+  /** Call-stack lines in caller-provided casing. */
+  callStack: Array<string>
+  /** Plugin identities parsed from the Crash Log. */
+  plugins: Array<string>
+}
+
+/** Completed Plugin Evidence analysis, including explicit empty success. */
+export interface JsPluginEvidenceAnalysisResult {
+  /** Typed Plugin Evidence in candidate order. */
+  evidence: Array<JsPluginEvidence>
 }
 
 /**

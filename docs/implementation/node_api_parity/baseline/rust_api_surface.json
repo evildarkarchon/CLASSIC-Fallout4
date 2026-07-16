@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T09:01:31.968760+00:00",
+  "generated_at_utc": "2026-07-16T10:17:29.841292+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -9466,6 +9466,82 @@
       "tier": "tier1"
     },
     {
+      "symbol": "PluginEvidence",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use plugin_evidence_analyzer::{ PluginEvidence, PluginEvidenceAnalysisInput, PluginEvidenceAnalysisResult, PluginEvidenceAnalyzer, };",
+      "source_expr": "plugin_evidence_analyzer::PluginEvidence",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PluginEvidence",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_evidence_analyzer.rs",
+      "source_decl": "pub struct PluginEvidence",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PluginEvidenceAnalysisInput",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use plugin_evidence_analyzer::{ PluginEvidence, PluginEvidenceAnalysisInput, PluginEvidenceAnalysisResult, PluginEvidenceAnalyzer, };",
+      "source_expr": "plugin_evidence_analyzer::PluginEvidenceAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PluginEvidenceAnalysisInput",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_evidence_analyzer.rs",
+      "source_decl": "pub struct PluginEvidenceAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PluginEvidenceAnalysisResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use plugin_evidence_analyzer::{ PluginEvidence, PluginEvidenceAnalysisInput, PluginEvidenceAnalysisResult, PluginEvidenceAnalyzer, };",
+      "source_expr": "plugin_evidence_analyzer::PluginEvidenceAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PluginEvidenceAnalysisResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_evidence_analyzer.rs",
+      "source_decl": "pub struct PluginEvidenceAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PluginEvidenceAnalyzer",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use plugin_evidence_analyzer::{ PluginEvidence, PluginEvidenceAnalysisInput, PluginEvidenceAnalysisResult, PluginEvidenceAnalyzer, };",
+      "source_expr": "plugin_evidence_analyzer::PluginEvidenceAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "PluginEvidenceAnalyzer",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_evidence_analyzer.rs",
+      "source_decl": "pub struct PluginEvidenceAnalyzer",
+      "tier": "tier1"
+    },
+    {
       "symbol": "REGISTERS",
       "kind": "const",
       "crate": "classic-scanlog-core",
@@ -9880,6 +9956,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
       "source_decl": "pub fn analyze(\n        &self,\n        input: ModGuidanceAnalysisInput,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "analyze",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_evidence_analyzer.rs",
+      "source_decl": "pub fn analyze(\n        &self,\n        input: PluginEvidenceAnalysisInput,\n    )",
       "tier": "tier1"
     },
     {
@@ -11328,7 +11414,17 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
-      "source_decl": "pub fn new(\n        game_ignore_plugins: Vec<String>,\n        ignore_list: Vec<String>,\n        crashgen_name: String,\n        game_version: String,\n        game_version_vr: String,\n    )",
+      "source_decl": "pub fn new(\n        _game_ignore_plugins: Vec<String>,\n        ignore_list: Vec<String>,\n        _crashgen_name: String,\n        game_version: String,\n        game_version_vr: String,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/plugin_evidence_analyzer.rs",
+      "source_decl": "pub fn new(ignored_plugins: Vec<String>)",
       "tier": "tier1"
     },
     {
@@ -11508,33 +11604,12 @@
       "tier": "tier1"
     },
     {
-      "symbol": "plugin_match",
-      "kind": "function",
-      "arity": 3,
+      "symbol": "plugin_evidence_analyzer",
+      "kind": "module",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
-      "source_decl": "pub fn plugin_match(\n        &self,\n        segment_callstack_lower: Vec<String>,\n        crashlog_plugins_lower: HashSet<String>,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "plugin_match_with_crashgen_name",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
-      "source_decl": "pub fn plugin_match_with_crashgen_name(\n        &self,\n        segment_callstack_lower: Vec<String>,\n        crashlog_plugins_lower: HashSet<String>,\n        crashgen_name: &str,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "plugin_match_with_crashgen_name_from_lowered",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
-      "source_decl": "pub fn plugin_match_with_crashgen_name_from_lowered(\n        &self,\n        segment_callstack_lower: &[String],\n        crashlog_plugins_lower: &HashSet<String>,\n        crashgen_name: &str,\n    )",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod plugin_evidence_analyzer;",
       "tier": "tier1"
     },
     {

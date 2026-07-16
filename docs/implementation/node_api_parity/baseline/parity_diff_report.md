@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-16T09:01:31.975700+00:00`
-- Tier-1 contract rows: **890**
-- Tier-1 matched: **890**
+- Generated: `2026-07-16T10:17:29.854396+00:00`
+- Tier-1 contract rows: **895**
+- Tier-1 matched: **895**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -474,6 +474,11 @@
 | `scanlog.mod_guidance_analyzer.ModGuidancePlugin` | `scanlog` | `ModGuidanceAnalysisInput` | `JsModGuidancePlugin` | `matched` |
 | `scanlog.mod_guidance_analyzer.ModSolutionGuidance` | `scanlog` | `ModSolutionGuidance` | `JsModSolutionGuidance` | `matched` |
 | `scanlog.mod_guidance_analyzer.ModSolutionRule` | `scanlog` | `ModSolutionEntry` | `JsModSolutionRule` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidence` | `scanlog` | `PluginEvidence` | `JsPluginEvidence` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput` | `scanlog` | `PluginEvidenceAnalysisInput` | `JsPluginEvidenceAnalysisInput` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisResult` | `scanlog` | `PluginEvidenceAnalysisResult` | `JsPluginEvidenceAnalysisResult` | `matched` |
+| `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer` | `scanlog` | `PluginEvidenceAnalyzer` | `PluginEvidenceAnalyzer` | `matched` |
+| `scanlog.plugin_evidence_analyzer.plugin_evidence_analyzer@rust` | `scanlog` | `plugin_evidence_analyzer@rust` | `None` | `matched` |
 | `scanlog.plugin_analyzer.detect_plugins_batch@rust` | `scanlog` | `detect_plugins_batch@rust` | `None` | `matched` |
 | `scanlog.error.error@rust` | `scanlog` | `error@rust` | `None` | `matched` |
 | `scanlog.formid.extract_formids_batch@rust` | `scanlog` | `extract_formids_batch@rust` | `None` | `matched` |

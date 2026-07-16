@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T08:59:01Z",
+  "generated_at_utc": "2026-07-16T10:18:40Z",
   "entries": [
     {
       "id": "b0d609f9ed78e468",
@@ -4456,6 +4456,61 @@
       }
     },
     {
+      "id": "aa6e69d7d60eb97b",
+      "rustSymbol": "plugin_evidence_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "analyzer",
+            "type": "&CxxPluginEvidenceAnalyzer"
+          },
+          {
+            "name": "input",
+            "type": "PluginEvidenceAnalysisInputDto"
+          }
+        ],
+        "returnType": "PluginEvidenceAnalysisExecutionResultDto"
+      }
+    },
+    {
+      "id": "c7d2c667f19e6ea6",
+      "rustSymbol": "plugin_evidence_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "analyzer",
+            "type": "&CxxPluginEvidenceAnalyzer"
+          }
+        ],
+        "returnType": "PluginEvidenceAnalyzerConstructionResultDto"
+      }
+    },
+    {
+      "id": "f5cefbf986abfcbe",
+      "rustSymbol": "plugin_evidence_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "configuration",
+            "type": "PluginEvidenceAnalyzerConfigurationDto"
+          }
+        ],
+        "returnType": "Box<CxxPluginEvidenceAnalyzer>"
+      }
+    },
+    {
       "id": "923b1638b9731c37",
       "rustSymbol": "scan_run_cancellation_cancel",
       "kind": "function",
@@ -4694,6 +4749,14 @@
     {
       "id": "19f1b50474db40e6",
       "rustSymbol": "CxxPapyrusAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust"
+    },
+    {
+      "id": "19fef74c8d0d7844",
+      "rustSymbol": "CxxPluginEvidenceAnalyzer",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
@@ -5684,6 +5747,118 @@
         {
           "name": "dumps_stacks_ratio",
           "type": "f64"
+        }
+      ]
+    },
+    {
+      "id": "9c82ff3b30e1c2d1",
+      "rustSymbol": "PluginEvidenceAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_result",
+          "type": "bool"
+        },
+        {
+          "name": "result",
+          "type": "PluginEvidenceAnalysisResultDto"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "AnalyzerErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "997085eb0ecef6fe",
+      "rustSymbol": "PluginEvidenceAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "call_stack",
+          "type": "Vec<String>"
+        },
+        {
+          "name": "plugins",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "94a5ec11a8b1a70b",
+      "rustSymbol": "PluginEvidenceAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "evidence",
+          "type": "Vec<PluginEvidenceDto>"
+        }
+      ]
+    },
+    {
+      "id": "11d94ca071c64892",
+      "rustSymbol": "PluginEvidenceAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "ignored_plugins",
+          "type": "Vec<String>"
+        }
+      ]
+    },
+    {
+      "id": "5aa7722a75cca7e7",
+      "rustSymbol": "PluginEvidenceAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_analyzer",
+          "type": "bool"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "AnalyzerErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "54f9de9ccb9d0060",
+      "rustSymbol": "PluginEvidenceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "plugin",
+          "type": "String"
+        },
+        {
+          "name": "occurrences",
+          "type": "u32"
         }
       ]
     },

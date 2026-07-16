@@ -179,6 +179,15 @@ icons, separators, markdown, or rendered lines; construction and execution
 failures retain `AnalyzerKind::ModGuidance` and the shared stable analyzer error
 code.
 
+`plugin_evidence_analyzer_new(...)` validates owned plugin-ignore configuration
+and returns the same immutable-handle construction envelope.
+`plugin_evidence_analyze(...)` accepts owned call-stack lines and plugin
+identities, then returns `PluginEvidenceDto` records containing normalized
+identity and occurrence count. A present result with an empty `evidence` vector
+means analysis completed without evidence; an absent result is reserved for an
+error envelope. No Plugin Evidence DTO contains report prose or markdown, and
+failures retain `AnalyzerKind::PluginEvidence` plus the shared stable error code.
+
 ### Complete-run entry point
 
 The only public complete-run operation is:

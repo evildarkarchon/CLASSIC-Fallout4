@@ -130,8 +130,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 277,
-      "contractIdsHash": "282feb5a7351fa580c73aca3250561ec5a783b267226aef9c2598799036eb780",
+      "contractCount": 284,
+      "contractIdsHash": "6c38497d2ba933593b1ace464623411d11a0385765f9436487b02ee3449c2c02",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
@@ -140,7 +140,7 @@
         "PARITY_GAME_YAML",
         "PARITY_IGNORE_YAML"
       ],
-      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns); Plan 03 added Wave 2 settings/FCX/GPU rows, with report-producing mod detection retired by issue #130 and the fragment-producing SuspectScanner retired by issue #129; Plan 04 added 50 Wave 3a rows; Plan 05 added 46 Wave 3b report rows. Issue #123 adds the final Crash Log Scan Run contract. Issues #128, #129, and #130 add shared semantic analyzer contracts with dedicated public-seam tests. Supplementary smoke tests live in the promoted wave suites plus test_scan_run_contract.py, test_crashgen_settings_analyzer.py, test_crash_suspect_analyzer.py, and test_mod_guidance_analyzer.py."
+      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns); Plan 03 added Wave 2 settings/FCX/GPU rows, with report-producing mod detection retired by issue #130 and the fragment-producing SuspectScanner retired by issue #129; Plan 04 added 50 Wave 3a rows; Plan 05 added 46 Wave 3b report rows. Issue #123 adds the final Crash Log Scan Run contract. Issues #128, #129, #130, and #131 add shared semantic analyzer contracts with dedicated public-seam tests. Supplementary smoke tests live in the promoted wave suites plus test_scan_run_contract.py, test_crashgen_settings_analyzer.py, test_crash_suspect_analyzer.py, test_mod_guidance_analyzer.py, and test_plugin_evidence_analyzer.py."
     },
     {
       "coverageId": "python-tier1-scanlog-crashgen-settings-analyzer",
@@ -296,6 +296,29 @@
       "testSuite": "python-bindings/tests/test_mod_guidance_analyzer.py",
       "testCaseId": "mod-guidance-analyzer-runtime",
       "notes": "Exercises immutable typed construction for conflicts, frequent-crash rules, solution rules, and important mods; one aggregate semantic call preserving authored data and explicit match states; explicit-empty results; shared typed construction errors; immutability; and concurrent handle reuse."
+    },
+    {
+      "coverageId": "python-tier1-scanlog-plugin-evidence-analyzer",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "classic_scanlog.PluginEvidenceAnalysisInput",
+        "classic_scanlog.PluginEvidenceAnalysisInput.__init__",
+        "classic_scanlog.PluginEvidence",
+        "classic_scanlog.PluginEvidence.plugin",
+        "classic_scanlog.PluginEvidence.occurrences",
+        "classic_scanlog.PluginEvidenceAnalysisResult",
+        "classic_scanlog.PluginEvidenceAnalysisResult.evidence",
+        "classic_scanlog.PluginEvidenceAnalyzer",
+        "classic_scanlog.PluginEvidenceAnalyzer.__init__",
+        "classic_scanlog.PluginEvidenceAnalyzer.kind",
+        "classic_scanlog.PluginEvidenceAnalyzer.analyze"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "python-bindings/tests/test_plugin_evidence_analyzer.py",
+      "testCaseId": "plugin-evidence-analyzer-runtime",
+      "notes": "Exercises frozen typed inputs and outputs, semantic plugin identities and occurrence counts, explicit-empty completed results, shared typed construction errors, immutability, and concurrent handle reuse."
     },
     {
       "coverageId": "python-tier1-scanlog-wave1-promoted",

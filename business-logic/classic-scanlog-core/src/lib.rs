@@ -41,6 +41,7 @@ pub mod papyrus;
 pub mod parser;
 pub mod patterns;
 pub mod plugin_analyzer;
+pub mod plugin_evidence_analyzer;
 pub mod record_scanner;
 pub mod report;
 #[allow(dead_code)]
@@ -79,6 +80,10 @@ pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};
 pub use parser::{LogParser, StreamingIteratorParser, StreamingLogParser};
 pub use patterns::PatternMatcher;
 pub use plugin_analyzer::{PluginAnalyzer, contains_plugin, detect_plugins_batch};
+pub use plugin_evidence_analyzer::{
+    PluginEvidence, PluginEvidenceAnalysisInput, PluginEvidenceAnalysisResult,
+    PluginEvidenceAnalyzer,
+};
 pub use record_scanner::{
     RecordScanner, contains_record, scan_records_batch, try_scan_records_batch,
 };

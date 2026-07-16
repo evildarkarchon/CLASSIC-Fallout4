@@ -22,6 +22,9 @@ use crate::mod_guidance_analyzer::{
 };
 use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
+use crate::plugin_evidence_analyzer::{
+    PluginEvidenceAnalysisInput, PluginEvidenceAnalysisResult, PluginEvidenceAnalyzer,
+};
 use crate::record_scanner::RecordScanner;
 use crate::report::{
     AutoscanReportAssembler, AutoscanReportContribution, AutoscanReportFacts, ReportGenerator,
@@ -704,6 +707,7 @@ pub struct OrchestratorCore {
     file_io: FileIOCore,
     parser: LogParser,
     plugin_analyzer: Option<PluginAnalyzer>,
+    plugin_evidence_analyzer: PluginEvidenceAnalyzer,
     formid_analyzer: FormIDAnalyzerCore,
     suspect_analyzer: CrashSuspectAnalyzer,
     mod_guidance_analyzer: ModGuidanceAnalyzer,
@@ -885,6 +889,15 @@ impl OrchestratorCore {
             config.game_version.clone(),
             config.game_version_vr.clone(),
         )?);
+        let plugin_evidence_analyzer = PluginEvidenceAnalyzer::new(config.ignore_plugins.clone())
+            .map_err(|error| {
+            crate::error::ScanLogError::ConfigError(format!(
+                "{} [{}]: {}",
+                error.analyzer().as_str(),
+                error.code().as_str(),
+                error.message()
+            ))
+        })?;
 
         let suspect_analyzer = CrashSuspectAnalyzer::new(
             config.suspect_error_rules.clone(),
@@ -939,6 +952,7 @@ impl OrchestratorCore {
             file_io: FileIOCore::new("utf-8", "ignore", 100, 50),
             parser: LogParser::new(None)?,
             plugin_analyzer,
+            plugin_evidence_analyzer,
             formid_analyzer: FormIDAnalyzerCore::new(
                 None, // No database pool initially
                 show_formid_values,
@@ -1198,11 +1212,9 @@ impl OrchestratorCore {
             contributions.push(AutoscanReportContribution::ModGuidance {
                 result: self.collect_mod_guidance(&context, plugins)?,
             });
-            contributions.extend(self.collect_plugin_match_contributions(
-                &context,
-                plugins,
-                &crashgen.effective_crashgen_name,
-            ));
+            if let Some(result) = self.collect_plugin_evidence(&context, plugins)? {
+                contributions.push(AutoscanReportContribution::PluginEvidence { result });
+            }
         }
 
         let (formid_record_contributions, formid_count) = self
@@ -1647,35 +1659,30 @@ impl OrchestratorCore {
             })
     }
 
-    fn collect_plugin_match_contributions(
+    /// Runs semantic Plugin Evidence analysis when parsed plugin candidates are available.
+    fn collect_plugin_evidence(
         &self,
         context: &ScanAnalysisContext,
         plugins: &IndexMap<String, String>,
-        effective_crashgen_name: &str,
-    ) -> Vec<AutoscanReportContribution> {
-        let Some(ref analyzer) = self.plugin_analyzer else {
-            return Vec::new();
-        };
+    ) -> Result<Option<PluginEvidenceAnalysisResult>> {
         if plugins.is_empty() {
-            return Vec::new();
+            return Ok(None);
         }
 
-        let crashlog_plugins_lower: HashSet<String> =
-            plugins.keys().map(|key| key.to_lowercase()).collect();
-        analyzer
-            .plugin_match_with_crashgen_name_from_lowered(
-                &context.combined_crash_lower_lines,
-                &crashlog_plugins_lower,
-                effective_crashgen_name,
-            )
-            .map_or_else(
-                |_| Vec::new(),
-                |plugin_match_lines| {
-                    vec![AutoscanReportContribution::PluginEvidence {
-                        lines: plugin_match_lines,
-                    }]
-                },
-            )
+        self.plugin_evidence_analyzer
+            .analyze(PluginEvidenceAnalysisInput {
+                call_stack: context.combined_crash_lines.clone(),
+                plugins: plugins.keys().cloned().collect(),
+            })
+            .map(Some)
+            .map_err(|error| {
+                crate::error::ScanLogError::AnalysisError(format!(
+                    "{} [{}]: {}",
+                    error.analyzer().as_str(),
+                    error.code().as_str(),
+                    error.message()
+                ))
+            })
     }
 
     async fn collect_formid_and_record_contributions(

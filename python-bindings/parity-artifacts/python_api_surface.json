@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T09:21:31.575679+00:00",
+  "generated_at_utc": "2026-07-16T10:37:10.706110+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -6049,15 +6049,79 @@
     },
     {
       "module": "classic_scanlog",
-      "export": "plugin_match",
-      "export_path": "PluginAnalyzer.plugin_match",
-      "parent_class": "PluginAnalyzer",
+      "export": "PluginEvidence",
+      "export_path": "PluginEvidence",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class PluginEvidence:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "PluginEvidenceAnalysisInput",
+      "export_path": "PluginEvidenceAnalysisInput",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class PluginEvidenceAnalysisInput:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "PluginEvidenceAnalysisInput.__init__",
+      "parent_class": "PluginEvidenceAnalysisInput",
       "kind": "method",
       "arity": 2,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def plugin_match( self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str] ) -> list[str]:"
+      "signature": "def __init__(self, call_stack: list[str], plugins: list[str]) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "PluginEvidenceAnalysisResult",
+      "export_path": "PluginEvidenceAnalysisResult",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class PluginEvidenceAnalysisResult:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "PluginEvidenceAnalyzer",
+      "export_path": "PluginEvidenceAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class PluginEvidenceAnalyzer:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "__init__",
+      "export_path": "PluginEvidenceAnalyzer.__init__",
+      "parent_class": "PluginEvidenceAnalyzer",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def __init__(self, ignored_plugins: list[str]) -> None: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "analyze",
+      "export_path": "PluginEvidenceAnalyzer.analyze",
+      "parent_class": "PluginEvidenceAnalyzer",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def analyze(self, input: PluginEvidenceAnalysisInput) -> PluginEvidenceAnalysisResult:"
     },
     {
       "module": "classic_scanlog",

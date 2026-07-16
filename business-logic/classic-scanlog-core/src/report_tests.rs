@@ -1,6 +1,6 @@
 use super::*;
-use crate::CrashSuspectFinding;
 use crate::version::CrashgenVersionStatus;
+use crate::{CrashSuspectFinding, PluginEvidence, PluginEvidenceAnalysisResult};
 use classic_config_core::{AutoscanReportPlacement, OutcomeKind, RuleSeverity};
 
 fn base_facts() -> AutoscanReportFacts {
@@ -134,7 +134,12 @@ fn autoscan_report_assembler_applies_canonical_order_when_contributions_are_scra
             },
             expectation("Settings placement", AutoscanReportPlacement::Settings),
             AutoscanReportContribution::PluginEvidence {
-                lines: vec!["Plugin evidence\n".to_string()],
+                result: PluginEvidenceAnalysisResult {
+                    evidence: vec![PluginEvidence {
+                        plugin: "plugin.esp".to_string(),
+                        occurrences: 1,
+                    }],
+                },
             },
             AutoscanReportContribution::CrashSuspectFinding {
                 finding: CrashSuspectFinding::MainErrorRule {
@@ -165,6 +170,55 @@ fn autoscan_report_assembler_applies_canonical_order_when_contributions_are_scra
     assert!(settings < plugin);
     assert!(plugin < formid);
     assert!(formid < footer);
+}
+
+#[test]
+fn autoscan_report_assembler_owns_plugin_evidence_sorting_and_legacy_prose() {
+    let report_lines = AutoscanReportAssembler::new().assemble(
+        &base_facts(),
+        vec![AutoscanReportContribution::PluginEvidence {
+            result: PluginEvidenceAnalysisResult {
+                evidence: vec![
+                    PluginEvidence {
+                        plugin: "zeta.esp".to_string(),
+                        occurrences: 1,
+                    },
+                    PluginEvidence {
+                        plugin: "alpha.esp".to_string(),
+                        occurrences: 3,
+                    },
+                ],
+            },
+        }],
+    );
+    let text = report_lines.join("");
+
+    assert!(text.contains(
+        "The following PLUGINS were found in the CRASH STACK:\n\
+- alpha.esp | 3\n\
+- zeta.esp | 1\n\n\
+[Last number counts how many times each Plugin Suspect shows up in the crash log.]\n\
+These Plugins were caught by Buffout 4 and some of them might be responsible for this crash.\n\
+You can try disabling these plugins and check if the game still crashes, though this method can be unreliable.\n\n"
+    ));
+}
+
+#[test]
+fn autoscan_report_assembler_distinguishes_absent_from_completed_empty_plugin_evidence() {
+    let absent = AutoscanReportAssembler::new()
+        .assemble(&base_facts(), Vec::new())
+        .join("");
+    let completed_empty = AutoscanReportAssembler::new()
+        .assemble(
+            &base_facts(),
+            vec![AutoscanReportContribution::PluginEvidence {
+                result: PluginEvidenceAnalysisResult::default(),
+            }],
+        )
+        .join("");
+
+    assert!(!absent.contains("COULDN'T FIND ANY PLUGIN SUSPECTS"));
+    assert!(completed_empty.contains("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n"));
 }
 
 #[test]

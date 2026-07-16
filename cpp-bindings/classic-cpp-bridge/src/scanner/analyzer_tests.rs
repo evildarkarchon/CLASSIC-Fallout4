@@ -378,6 +378,115 @@ fn completed_mod_guidance_no_match_is_an_explicit_empty_result() {
 }
 
 #[test]
+fn plugin_evidence_projects_owned_typed_counts_and_explicit_empty_success() {
+    let analyzer = plugin_evidence_analyzer_new(ffi::PluginEvidenceAnalyzerConfigurationDto {
+        ignored_plugins: vec!["Fallout4.esm".to_string()],
+    });
+    let construction = plugin_evidence_analyzer_construction_result(&analyzer);
+    let populated = plugin_evidence_analyze(
+        &analyzer,
+        ffi::PluginEvidenceAnalysisInputDto {
+            call_stack: vec![
+                "Example.ESP and Fallout4.esm".to_string(),
+                "example.esp".to_string(),
+            ],
+            plugins: vec![
+                "Example.ESP".to_string(),
+                "Fallout4.esm".to_string(),
+                " ".to_string(),
+            ],
+        },
+    );
+    let empty = plugin_evidence_analyze(
+        &analyzer,
+        ffi::PluginEvidenceAnalysisInputDto {
+            call_stack: Vec::new(),
+            plugins: vec!["Example.ESP".to_string()],
+        },
+    );
+
+    assert!(construction.has_analyzer);
+    assert!(!construction.has_error);
+    assert!(populated.has_result, "{}", populated.error.message);
+    assert!(!populated.has_error);
+    assert_eq!(populated.result.evidence.len(), 1);
+    assert_eq!(populated.result.evidence[0].plugin, "example.esp");
+    assert_eq!(populated.result.evidence[0].occurrences, 2);
+    assert!(empty.has_result, "{}", empty.error.message);
+    assert!(!empty.has_error);
+    assert!(empty.result.evidence.is_empty());
+}
+
+#[test]
+fn plugin_evidence_invalid_configuration_uses_the_shared_typed_error_envelope() {
+    let analyzer = plugin_evidence_analyzer_new(ffi::PluginEvidenceAnalyzerConfigurationDto {
+        ignored_plugins: vec!["   ".to_string()],
+    });
+    let construction = plugin_evidence_analyzer_construction_result(&analyzer);
+    let execution = plugin_evidence_analyze(
+        &analyzer,
+        ffi::PluginEvidenceAnalysisInputDto {
+            call_stack: Vec::new(),
+            plugins: Vec::new(),
+        },
+    );
+
+    assert!(!construction.has_analyzer);
+    assert!(construction.has_error);
+    assert_eq!(
+        construction.error.analyzer_kind,
+        ffi::AnalyzerKind::PluginEvidence
+    );
+    assert_eq!(
+        construction.error.code,
+        ffi::AnalyzerErrorCode::InvalidConfiguration
+    );
+    assert!(!execution.has_result);
+    assert!(execution.has_error);
+    assert_eq!(
+        execution.error.analyzer_kind,
+        ffi::AnalyzerKind::PluginEvidence
+    );
+    assert_eq!(
+        execution.error.code,
+        ffi::AnalyzerErrorCode::InvalidConfiguration
+    );
+    assert_eq!(execution.error.message, construction.error.message);
+}
+
+#[test]
+fn plugin_evidence_handle_is_safe_for_concurrent_owned_calls() {
+    let analyzer = Arc::from(plugin_evidence_analyzer_new(
+        ffi::PluginEvidenceAnalyzerConfigurationDto {
+            ignored_plugins: Vec::new(),
+        },
+    ));
+    let tasks = (0..8)
+        .map(|_| {
+            let analyzer = Arc::clone(&analyzer);
+            std::thread::spawn(move || {
+                plugin_evidence_analyze(
+                    &analyzer,
+                    ffi::PluginEvidenceAnalysisInputDto {
+                        call_stack: vec!["Example.esp".to_string()],
+                        plugins: vec!["Example.esp".to_string()],
+                    },
+                )
+            })
+        })
+        .collect::<Vec<_>>();
+
+    for task in tasks {
+        let execution = task.join().expect("analysis thread should not panic");
+        assert!(execution.has_result, "{}", execution.error.message);
+        assert!(!execution.has_error);
+        assert_eq!(execution.result.evidence.len(), 1);
+        assert_eq!(execution.result.evidence[0].plugin, "example.esp");
+        assert_eq!(execution.result.evidence[0].occurrences, 1);
+    }
+}
+
+#[test]
 fn construction_status_exposes_a_valid_immutable_handle() {
     let analyzer = crashgen_settings_analyzer_new(valid_configuration());
 
