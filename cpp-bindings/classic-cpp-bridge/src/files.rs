@@ -223,26 +223,6 @@ fn write_file_string(path: &str, content: &str) -> Result<(), String> {
 
 // ── Report file helpers ───────────────────────────────────────────
 
-/// Write an AUTOSCAN report adjacent to the source crash log.
-///
-/// Derives output path as:
-/// `.../crash-*.log` -> `.../crash-*-AUTOSCAN.md`
-/// and writes the provided markdown content using encoding-aware FileIOCore.
-fn write_autoscan_report(log_path: &str, content: &str) -> Result<String, String> {
-    let log_path = Path::new(log_path);
-    let stem = log_path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("unknown");
-    let autoscan_name = format!("{}-AUTOSCAN.md", stem);
-    let autoscan_path = log_path.with_file_name(autoscan_name);
-
-    let io = FileIOCore::new("utf-8", "replace", 4, 8);
-    block_on_result(io.write_file(&autoscan_path, content))?;
-
-    Ok(autoscan_path.to_string_lossy().to_string())
-}
-
 /// Discover AUTOSCAN report files in a directory.
 ///
 /// Scans the given directory (non-recursively) for files matching
@@ -384,7 +364,6 @@ mod ffi {
         fn write_file_string(path: &str, content: &str) -> Result<()>;
 
         // Report file helpers
-        fn write_autoscan_report(log_path: &str, content: &str) -> Result<String>;
         fn discover_report_files(directory: &str) -> Vec<String>;
         fn read_report_file(path: &str) -> Result<String>;
     }

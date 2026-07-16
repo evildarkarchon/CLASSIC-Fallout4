@@ -48,17 +48,8 @@
 //!     if gpu_info:
 //!         print(f"GPU: {gpu_info.name()} ({gpu_info.vendor()})")
 //!
-//!     # Full orchestration (coordinates all analysis steps)
-//!     config = scanlog.PyAnalysisConfig("Fallout4", False)
-//!     config.set_crashgen_name("Buffout 4")
-//!
-//!     orchestrator = scanlog.PyRustOrchestrator(config)
-//!     result = await orchestrator.process_log("crash-2024-01-01.log")
-//!
-//!     if result.success():
-//!         print(f"Analysis completed in {result.processing_time_ms()}ms")
-//!         for line in result.report_lines():
-//!             print(line, end="")
+//!     # Complete scan execution uses ScanRunRequest plus scan_run_execute;
+//!     # lower-level utilities remain available only for independent analysis.
 //!
 //! asyncio.run(main())
 //! ```
@@ -76,7 +67,7 @@
 //! ## Thread Safety
 //!
 //! All scanlog components are thread-safe and can be used from multiple Python threads
-//! or async tasks. The orchestrator uses Arc internally for safe sharing.
+//! or async tasks. Complete runs execute through the shared Rust runtime.
 
 use classic_shared::{define_exceptions, register_exceptions};
 use pyo3::prelude::*;
@@ -91,18 +82,6 @@ define_exceptions!(
     parse: RustConfigError    // Actually used for configuration errors
 );
 
-// Phase 3 Plan 03: Typed Python exception mirroring
-// classic_scanlog_core::fcx_handler::FcxResetError. Raised by
-// FcxModeHandler.reset_fcx_checks() when the global reset cannot proceed
-// (e.g. a Failed variant). The Unnecessary variant is still treated as
-// success and does not surface as this exception.
-#[allow(missing_docs)]
-mod fcx_reset_exception {
-    use pyo3::exceptions::PyException;
-    pyo3::create_exception!(classic_scanlog, FcxResetError, PyException);
-}
-pub use fcx_reset_exception::FcxResetError;
-
 // Import all wrapper modules
 /// Conversion helpers for `CoreModExclude` ↔ Python dict round-tripping.
 pub mod core_mod_convert;
@@ -113,7 +92,6 @@ pub mod formid;
 pub mod formid_analyzer;
 pub mod gpu_detector;
 pub mod mod_detector;
-pub mod orchestrator;
 pub mod papyrus;
 pub mod parser;
 pub mod patterns;
@@ -127,7 +105,7 @@ pub mod suspect_scanner;
 pub mod version;
 
 // Re-export all public types
-pub use fcx_handler::{PyConfigIssue, PyFcxModeHandler};
+pub use fcx_handler::PyConfigIssue;
 pub use formid::PyRustFormIDAnalyzer;
 pub use formid_analyzer::{
     PyFormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
@@ -135,9 +113,6 @@ pub use formid_analyzer::{
 pub use gpu_detector::{PyGpuDetector, PyGpuInfo, PyGpuVendor};
 pub use mod_detector::{
     detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
-};
-pub use orchestrator::{
-    PyAnalysisConfig, PyAnalysisResult, PyCancellationToken, PyRustOrchestrator,
 };
 pub use papyrus::{PyPapyrusAnalyzer, PyPapyrusStats, papyrus_logging};
 pub use parser::PyLogParser;
@@ -258,16 +233,9 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(detect_mods_important, m)?)?;
     m.add_function(wrap_pyfunction!(detect_mods_batch, m)?)?;
 
-    // Validators and handlers
+    // Validators and run-result data
     m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
-    m.add_class::<PyFcxModeHandler>()?;
-
-    // Orchestrator
-    m.add_class::<PyRustOrchestrator>()?;
-    m.add_class::<PyAnalysisConfig>()?;
-    m.add_class::<PyAnalysisResult>()?;
-    m.add_class::<PyCancellationToken>()?;
     register_scan_run_exports(m)?;
 
     // Report generation
@@ -284,11 +252,6 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Register custom exception types using the shared macro
     register_exceptions!(m, RustScanLogError, RustParseError, RustConfigError);
-
-    // Phase 3 Plan 03: Register the typed FcxResetError exception so
-    // FcxModeHandler.reset_fcx_checks() can raise a specific class that
-    // consumers can catch with `except classic_scanlog.FcxResetError:`.
-    m.add("FcxResetError", m.py().get_type::<FcxResetError>())?;
 
     Ok(())
 }
@@ -333,16 +296,9 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(detect_mods_important, m)?)?;
     m.add_function(wrap_pyfunction!(detect_mods_batch, m)?)?;
 
-    // Validators and handlers
+    // Validators and run-result data
     m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
-    m.add_class::<PyFcxModeHandler>()?;
-
-    // Orchestrator
-    m.add_class::<PyRustOrchestrator>()?;
-    m.add_class::<PyAnalysisConfig>()?;
-    m.add_class::<PyAnalysisResult>()?;
-    m.add_class::<PyCancellationToken>()?;
     register_scan_run_exports(m)?;
 
     // Report generation
@@ -354,10 +310,6 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Papyrus log analysis
     papyrus::register(m)?;
-
-    // Phase 3 Plan 03: Expose FcxResetError through the facade module as
-    // well so classic_core.scanlog.FcxResetError resolves.
-    m.add("FcxResetError", m.py().get_type::<FcxResetError>())?;
 
     Ok(())
 }

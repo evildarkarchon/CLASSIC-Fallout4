@@ -20,8 +20,8 @@ Each binding surface adapts Rust `Result<T, E>` errors into the idiom expected b
 
 ## C++ (CXX Bridge)
 
-The final Crash Log Scan Run entry point is intentionally more strongly typed
-than the older general bridge convention. `scan_run_contract_execute(...)`
+The only complete Crash Log Scan Run entry point is intentionally more strongly
+typed than the general bridge convention. `scan_run_contract_execute(...)`
 returns `ScanRunContractExecutionResult`, where exactly one of `has_result` and
 `has_error` is true. Its `ScanRunContractInfrastructureError` preserves the
 stable stage (`RequestValidation`, `Discovery`, `Intake`,
@@ -37,7 +37,7 @@ the terminal result and do not throw. This envelope is required because a CXX
 
 **Example 2 -- DTO with `found: false`:** `db_pool_get_entry_typed()` in the same file returns a `FormIdEntryDto` with `found: false` for lookup misses. The DTO has fields `{formid, plugin, value, found}` where `found` is a `bool`. C++ callers check `dto.found` before using `dto.value`.
 
-**Example 3 -- propagated `rust::Error`:** Functions like `orchestrator_process_log()` in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) propagate `rust::Error` for infrastructure failures (runtime not initialized, config not loaded). The scan entry points are `orchestrator_process_log`, `orchestrator_process_logs_batch`, and `orchestrator_process_logs_batch_with_progress`.
+**Example 3 -- request-construction `rust::Error`:** The invariant-preserving `scan_run_request_*` factories in [`cpp-bindings/classic-cpp-bridge/src/scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) return CXX `Result` errors when required request facts cannot be represented. Once construction succeeds, complete-run infrastructure failures use the typed execution envelope above.
 
 ---
 
@@ -45,7 +45,7 @@ the terminal result and do not throw. This envelope is required because a CXX
 
 **Pattern:** `napi::Error` with a `code` field matching the Rust error variant name (e.g., `"InvalidArg"`, `"ParseError"`).
 
-The final Crash Log Scan Run follows the same typed-envelope rationale as CXX. `scanRunExecute(...)` resolves the generated `JsScanRunSuccess | JsScanRunFailure` union, so `result` and `error` are mutually exclusive by construction; `JsScanRunInfrastructureError` retains the stable lowercase stage, message, and optional path. Expected lifecycle states and per-log failures remain result data. JavaScript observer throws or delivery failures are not core failures; they appear separately as `observerError`, with optional safe cancellation controlled by the caller.
+The only Node Crash Log Scan Run operation follows the same typed-envelope rationale as CXX. `scanRunExecute(...)` resolves the generated `JsScanRunSuccess | JsScanRunFailure` union, so `result` and `error` are mutually exclusive by construction; `JsScanRunInfrastructureError` retains the stable lowercase stage, message, and optional path. Expected lifecycle states and per-log failures remain result data. JavaScript observer throws or delivery failures are not core failures; they appear separately as `observerError`, with optional safe cancellation controlled by the caller. No analysis-only, batch, report-writer, or global-FCX export is an alternative error channel.
 
 **Example 1:** `config_error_to_napi_err()` in [`node-bindings/classic-node/src/config.rs`](../../node-bindings/classic-node/src/config.rs) converts `ConfigError` variants to NAPI errors with structured codes. JavaScript consumers use `catch (e) { if (e.code === "ParseError") ... }`.
 
@@ -61,7 +61,7 @@ Tests verify both `error.message` and `error.code` to ensure the structured erro
 
 **Pattern:** Typed Python exception classes (e.g., `RustConfigParseError`, `RustConfigIOError`) with message inspection.
 
-The final Crash Log Scan Run is the deliberate structured-operation exception to that general rule. `classic_scanlog.scan_run_execute(...)` returns `ScanRunExecution`, where exactly one of `result` and `error` is populated. `ScanRunInfrastructureError` preserves the six stable lifecycle stages, message, and optional relevant path; expected lifecycle outcomes and per-log failures remain result data. A Python observer exception is reported independently through `observer_error` and requests safe cancellation only when the caller opts into `cancel_on_observer_error`.
+The only Python Crash Log Scan Run operation is the deliberate structured-operation exception to that general rule. `classic_scanlog.scan_run_execute(...)` returns `ScanRunExecution`, where exactly one of `result` and `error` is populated. `ScanRunInfrastructureError` preserves the six stable lifecycle stages, message, and optional relevant path; expected lifecycle outcomes and per-log failures remain result data. A Python observer exception is reported independently through `observer_error` and requests safe cancellation only when the caller opts into `cancel_on_observer_error`. Python exposes no orchestration, resettable batch cancellation, report-writer, or global-FCX compatibility error path.
 
 **Example 1:** `config_error_to_pyerr()` in [`python-bindings/classic-config-py/src/lib.rs`](../../python-bindings/classic-config-py/src/lib.rs) maps each `ConfigError` variant to a specific Python exception class.
 

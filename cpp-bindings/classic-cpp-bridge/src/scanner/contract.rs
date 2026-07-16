@@ -1,9 +1,10 @@
 use crate::runtime_support::block_on;
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
-    CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
-    CrashLogScanRunStatus, CrashLogScanSetupContext, CrashLogScanSetupResult, ScanProgressPhase,
-    StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
+    ConfigIssue as CoreFcxConfigIssue, CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource,
+    CrashLogScanFacts, CrashLogScanRunStatus, CrashLogScanSetupContext, CrashLogScanSetupResult,
+    ScanProgressPhase, StandardCrashLogScanSource, StandardUnsolvedLogsIntent,
+    TargetedCrashLogScanSource,
 };
 use classic_shared_core::GameId;
 use std::path::PathBuf;
@@ -265,12 +266,12 @@ fn map_infrastructure_error_stage(
     }
 }
 
-fn map_phase(value: ScanProgressPhase) -> ffi::BatchProgressPhase {
+fn map_phase(value: ScanProgressPhase) -> ffi::ScanRunContractProgressPhase {
     match value {
-        ScanProgressPhase::Setup => ffi::BatchProgressPhase::Setup,
-        ScanProgressPhase::Parse => ffi::BatchProgressPhase::Parse,
-        ScanProgressPhase::Analyze => ffi::BatchProgressPhase::Analyze,
-        ScanProgressPhase::Finalize => ffi::BatchProgressPhase::Finalize,
+        ScanProgressPhase::Setup => ffi::ScanRunContractProgressPhase::Setup,
+        ScanProgressPhase::Parse => ffi::ScanRunContractProgressPhase::Parse,
+        ScanProgressPhase::Analyze => ffi::ScanRunContractProgressPhase::Analyze,
+        ScanProgressPhase::Finalize => ffi::ScanRunContractProgressPhase::Finalize,
     }
 }
 
@@ -413,7 +414,7 @@ fn setup_to_dto(value: CrashLogScanSetupResult) -> ffi::ScanRunContractSetupResu
         configuration_issues: value
             .configuration_issues
             .iter()
-            .map(super::dto::fcx_issue_to_dto)
+            .map(fcx_issue_to_dto)
             .collect(),
         actions: value.actions,
         fatal_errors: value.fatal_errors,
@@ -520,8 +521,22 @@ fn empty_event_dto(kind: ffi::ScanRunContractEventKind) -> ffi::ScanRunContractE
         crash_log: String::new(),
         completed: 0,
         total: 0,
-        phase: ffi::BatchProgressPhase::Setup,
+        phase: ffi::ScanRunContractProgressPhase::Setup,
         disposition: ffi::ScanRunContractLogDisposition::Succeeded,
+    }
+}
+
+/// Maps one run-scoped FCX setup issue into the final CXX contract shape.
+fn fcx_issue_to_dto(issue: &CoreFcxConfigIssue) -> ffi::FcxIssueDto {
+    ffi::FcxIssueDto {
+        file_path: issue.file_path.clone(),
+        section_or_empty: issue.section.clone().unwrap_or_default(),
+        has_section: issue.section.is_some(),
+        setting: issue.setting.clone(),
+        current_value: issue.current_value.clone(),
+        recommended_value: issue.recommended_value.clone(),
+        description: issue.description.clone(),
+        severity: issue.severity.clone(),
     }
 }
 

@@ -801,29 +801,6 @@ pub async fn generate_local_yaml(content: String, game_name: String) -> Result<b
         .map_err(to_napi_err)?
 }
 
-/// Write an AUTOSCAN report adjacent to the source crash log.
-#[napi]
-pub async fn write_autoscan_report(log_path: String, content: String) -> Result<String> {
-    let handle = classic_shared_core::get_runtime().handle().clone();
-    handle
-        .spawn(async move {
-            let log_path = PathBuf::from(&log_path);
-            let stem = log_path
-                .file_stem()
-                .and_then(|value| value.to_str())
-                .unwrap_or("unknown");
-            let autoscan_path = log_path.with_file_name(format!("{stem}-AUTOSCAN.md"));
-            let file_io = FileIOCore::new("utf-8", "ignore", 4, 8);
-            file_io
-                .write_file(&autoscan_path, &content)
-                .await
-                .map_err(to_napi_err)?;
-            Ok(autoscan_path.to_string_lossy().to_string())
-        })
-        .await
-        .map_err(to_napi_err)?
-}
-
 // ============================================================================
 // 8. Game Files Manager
 // ============================================================================

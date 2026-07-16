@@ -1584,17 +1584,6 @@ export const CRASH_AUTOSCAN_PATTERN: string
 export const CRASH_LOG_PATTERN: string
 
 /**
- * Create a new analysis configuration with defaults.
- *
- * Returns a JavaScript object with the configuration fields.
- * Modify the returned object's properties before passing to analysis functions.
- */
-export declare function createAnalysisConfig(game: string, gameVersion: string): JsAnalysisConfig
-
-/** Build an analysis config from raw YAML content (high-level config path). */
-export declare function createAnalysisConfigFromYamlContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): JsAnalysisConfig
-
-/**
  * Create a new logger instance.
  *
  * @param name - A name for this logger (used for identification).
@@ -2006,8 +1995,6 @@ export declare function getDefaultQueryCacheCapacity(): number
  */
 export declare function getFallout4VersionInfo(version: JsFallout4Version): Fallout4VersionInfo
 
-export declare function getFcxConfigIssues(): Array<JsFcxConfigIssue>
-
 /**
  * Get a human-readable name for a game identifier.
  *
@@ -2414,74 +2401,6 @@ export interface JsAddressLibraryConfig {
   format: string
   /** Nexus Mods download URL */
   nexusUrl: string
-}
-
-/** Optional settings used when building analysis config from YAML content. */
-export interface JsAnalysisBuildOptions {
-  /** Whether to include FormID value lookups in reports. */
-  showFormidValues?: boolean
-  /** Whether FCX mode is enabled. */
-  fcxMode?: boolean
-  /** Whether to simplify logs by removing configured strings. */
-  simplifyLogs?: boolean
-  /** Strings to remove when simplify logs is enabled. */
-  removeList?: Array<string>
-  /** Explicit CLASSIC root used to open typed User Settings for FCX preparation. */
-  classicRoot?: string
-}
-
-/**
- * JavaScript-compatible analysis configuration.
- *
- * This is a simplified view of `classic_scanlog_core::AnalysisConfig` exposing
- * the most commonly needed fields. Additional fields can be set via setter methods.
- */
-export interface JsAnalysisConfig {
-  /** Game name (e.g., "Fallout4") */
-  game: string
-  /**
-   * Selected game-version mode
-   * ("auto", "Original", "NextGen", "AnniversaryEdition"/"AE", "VR")
-   */
-  gameVersion: string
-  /** Crashgen name (e.g., "Buffout 4") */
-  crashgenName: string
-  /** XSE acronym (e.g., "F4SE") */
-  xseAcronym: string
-  /** CLASSIC version string */
-  classicVersion: string
-  /** Whether FCX mode is enabled */
-  fcxMode: boolean
-  /** Whether to simplify logs */
-  simplifyLogs: boolean
-  /** Explicit CLASSIC root used to open typed User Settings for FCX preparation. */
-  classicRoot?: string
-  /** Per-crashgen registry entries with optional settings rules. */
-  crashgenRegistry?: Record<string, JsCrashgenRegistryEntry>
-}
-
-/**
- * JavaScript-compatible analysis result.
- *
- * Contains the report and statistics from analyzing a single crash log.
- */
-export interface JsAnalysisResult {
-  /** Path to the log file that was analyzed */
-  logPath: string
-  /** Generated report lines */
-  reportLines: Array<string>
-  /** Whether analysis succeeded */
-  success: boolean
-  /** Error message if analysis failed */
-  error?: string
-  /** Processing time in milliseconds */
-  processingTimeMs: number
-  /** Number of FormIDs found */
-  formidCount: number
-  /** Number of plugins detected */
-  pluginCount: number
-  /** Number of suspect patterns matched */
-  suspectCount: number
 }
 
 /**
@@ -4602,33 +4521,6 @@ export declare function previewUserSettingsUpdate(classicRoot: string, update: J
  */
 export declare function processGameLogs(logDir: string, catchErrors: Array<string>, excludeFiles: Array<string>, excludeErrors: Array<string>): string
 
-/**
- * Process a single crash log file and return the analysis result.
- *
- * Reads the crash log at `logPath`, runs the full analysis pipeline, and
- * returns a Promise that resolves to a `JsAnalysisResult`.
- *
- * Respects the ONE RUNTIME RULE: spawns work on the shared Tokio runtime.
- */
-export declare function processLog(logPath: string, config: JsAnalysisConfig): Promise<JsAnalysisResult>
-
-/**
- * Process multiple crash log files concurrently and return all results.
- *
- * Each log is analyzed independently; failures do not stop processing of
- * remaining logs. Failed analyses appear in the result array with
- * `success: false` and an error message.
- *
- * Respects the ONE RUNTIME RULE: spawns work on the shared Tokio runtime.
- */
-export declare function processLogsBatch(logPaths: Array<string>, config: JsAnalysisConfig, maxConcurrent?: number | undefined | null): Promise<Array<JsAnalysisResult>>
-
-/** Process multiple crash logs using configuration built directly from YAML content. */
-export declare function processLogsBatchWithYamlContent(logPaths: Array<string>, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null, maxConcurrent?: number | undefined | null): Promise<Array<JsAnalysisResult>>
-
-/** Process a single crash log using configuration built directly from YAML content. */
-export declare function processLogWithYamlContent(logPath: string, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): Promise<JsAnalysisResult>
-
 /** Process a batch of strings with normalization (trim, lowercase, collapse whitespace). */
 export declare function processStringBatch(values: Array<string>): Array<string>
 
@@ -4725,8 +4617,6 @@ export declare function registrySetGame(game: string): void
  * @throws if permissions cannot be modified.
  */
 export declare function removeReadonly(filePath: string): void
-
-export declare function resetFcxGlobalState(): void
 
 /** Reset hash cache hit/miss counters without clearing cached entries. */
 export declare function resetHashCacheStats(): void
@@ -4970,9 +4860,6 @@ export declare function validateSettingsPaths(gamePath: string, docsPath: string
  * @throws If the URL is invalid or uses a non-http(s) scheme.
  */
 export declare function validateUrl(urlStr: string): string
-
-/** Write an AUTOSCAN report adjacent to the source crash log. */
-export declare function writeAutoscanReport(logPath: string, content: string): Promise<string>
 
 /**
  * Get the DLL prefix for an XSE type.

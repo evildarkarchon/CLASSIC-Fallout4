@@ -35,7 +35,7 @@ Use this directory in this order:
 22. [`classic-scangame-core.md`](classic-scangame-core.md) - game-installation, archive, loose-file, and setup validation workflows
 23. [`classic-cpp-bridge-game-entrypoints.md`](classic-cpp-bridge-game-entrypoints.md) - active C++ bridge entry points for path, game, and scangame workflows
 24. [`classic-cpp-bridge-data-entrypoints.md`](classic-cpp-bridge-data-entrypoints.md) - active C++ bridge entry points for config, file I/O, database, and scanlog workflows
-25. [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md) - legacy batch callback and final Crash Log Scan Run observer contracts for `classic::scanner`
+25. [`classic-cpp-bridge-scan-progress-callback.md`](classic-cpp-bridge-scan-progress-callback.md) - final serialized Crash Log Scan Run observer contract for `classic::scanner`
 26. [`classic-gui-scan-progress-consumer.md`](classic-gui-scan-progress-consumer.md) - how `classic-gui` consumes final `ScanRunObserver` events through `ScanWorker`, `BatchProgressModel`, `ScanController`, and `MainWindow`
 27. [`classic-gui-scan-result-ordering.md`](classic-gui-scan-result-ordering.md) - current Qt-side behavior for discovery-ordered terminal outcomes, `discovery_index` event correlation, and Results-tab ordering boundaries
 28. [`binding-parity-overview.md`](binding-parity-overview.md) - complete C++ bridge, Node, and Python binding surface reference for all shared Rust crates
@@ -79,7 +79,7 @@ That order matches the current repo-root layering across `foundation/`, `busines
 - `classic-scangame-core` handles game setup validation, archive/loose-file checks, and related install-scanning workflows
 - `classic-cpp-bridge-game-entrypoints.md` documents how the active C++ bridge narrows and forwards path/game/scangame Rust APIs
 - `classic-cpp-bridge-data-entrypoints.md` documents how the active C++ bridge narrows and forwards config/file/database/scanner Rust APIs plus bridge-local helper behavior
-- `classic-cpp-bridge-scan-progress-callback.md` distinguishes the temporary legacy batch callback contract from the final serialized `ScanRunObserver` contract
+- `classic-cpp-bridge-scan-progress-callback.md` documents the final serialized `ScanRunObserver` contract
 - `classic-gui-scan-progress-consumer.md` documents how the active Qt frontend consumes final discovery, concurrency, and per-log observer events and turns them into visible progress and status-bar state
 - `classic-gui-scan-result-ordering.md` documents how the active Qt frontend preserves discovery-ordered terminal outcomes, correlates events by `discovery_index`, and keeps Results-tab ordering separate from scan ordering
 - `binding-parity-overview.md` provides the complete per-crate binding surface reference for all shared Rust crates across C++, Node, and Python

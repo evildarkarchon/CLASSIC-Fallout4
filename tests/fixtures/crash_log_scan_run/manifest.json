@@ -228,6 +228,276 @@
     "node",
     "python"
   ],
+  "forbiddenExports": {
+    "rust": [
+      {
+        "path": "business-logic/classic-scanlog-core/src/lib.rs",
+        "symbols": [
+          "pub mod fcx_handler",
+          "pub mod orchestrator",
+          "pub use orchestrator::{",
+          "pub use fcx_handler::FcxModeHandler",
+          "pub use fcx_handler::FcxResetError",
+          "pub use orchestrator::OrchestratorCore",
+          "pub use orchestrator::resolve_batch_concurrency",
+          "FcxModeHandler",
+          "FcxResetError",
+          "GLOBAL_FCX_HANDLER"
+        ]
+      }
+    ],
+    "cxx": [
+      {
+        "path": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+        "symbols": [
+          "BatchProgressEventKind",
+          "BatchProgressPhase",
+          "BatchProgressEvent",
+          "BatchScanResult",
+          "ScanRunLogResult",
+          "ScanRunDiscoveryResult",
+          "ScanRunResult",
+          "ScanRunRequestDto",
+          "ScanBatchProgressCallback",
+          "ScanCancellationToken",
+          "FullScanConfig",
+          "Orchestrator",
+          "build_full_scan_config",
+          "fcx_reset_global_state",
+          "get_fcx_config_issues",
+          "orchestrator_new",
+          "orchestrator_new_minimal",
+          "orchestrator_process_log",
+          "orchestrator_process_logs_batch",
+          "orchestrator_process_logs_batch_with_progress",
+          "scan_cancellation_token_new",
+          "scan_cancellation_token_cancel",
+          "scan_cancellation_token_reset",
+          "scan_run_execute"
+        ]
+      },
+      {
+        "path": "cpp-bindings/classic-cpp-bridge/src/files.rs",
+        "symbols": [
+          "write_autoscan_report"
+        ]
+      },
+      {
+        "path": "cpp-bindings/classic-cpp-bridge/include/classic_cxx_bridge/scan_progress_callback.h",
+        "symbols": [
+          "ScanBatchProgressCallback",
+          "BatchProgressEvent"
+        ],
+        "optional": true
+      },
+      {
+        "path": "docs/implementation/cxx_api_parity/baseline/parity_contract.json",
+        "symbols": [
+          "BatchProgressEventKind",
+          "BatchProgressPhase",
+          "BatchProgressEvent",
+          "BatchScanResult",
+          "ScanRunLogResult",
+          "ScanRunDiscoveryResult",
+          "ScanRunResult",
+          "ScanRunRequestDto",
+          "ScanBatchProgressCallback",
+          "ScanCancellationToken",
+          "FullScanConfig",
+          "Orchestrator",
+          "build_full_scan_config",
+          "write_autoscan_report",
+          "fcx_reset_global_state",
+          "get_fcx_config_issues",
+          "orchestrator_new",
+          "orchestrator_new_minimal",
+          "orchestrator_process_log",
+          "orchestrator_process_logs_batch",
+          "orchestrator_process_logs_batch_with_progress",
+          "scan_cancellation_token_new",
+          "scan_cancellation_token_cancel",
+          "scan_cancellation_token_reset",
+          "scan_run_execute"
+        ]
+      }
+    ],
+    "node": [
+      {
+        "path": "node-bindings/classic-node/src/scanlog.rs",
+        "symbols": [
+          "create_analysis_config",
+          "create_analysis_config_from_yaml_content",
+          "process_log",
+          "process_log_with_yaml_content",
+          "process_logs_batch",
+          "process_logs_batch_with_yaml_content",
+          "reset_fcx_global_state",
+          "get_fcx_config_issues"
+        ]
+      },
+      {
+        "path": "node-bindings/classic-node/src/fileio.rs",
+        "symbols": [
+          "write_autoscan_report"
+        ]
+      },
+      {
+        "path": "node-bindings/classic-node/index.d.ts",
+        "symbols": [
+          "createAnalysisConfig",
+          "createAnalysisConfigFromYamlContent",
+          "processLog",
+          "processLogWithYamlContent",
+          "processLogsBatch",
+          "processLogsBatchWithYamlContent",
+          "resetFcxGlobalState",
+          "getFcxConfigIssues",
+          "writeAutoscanReport",
+          "JsAnalysisConfig",
+          "JsAnalysisResult"
+        ]
+      },
+      {
+        "path": "docs/implementation/node_api_parity/baseline/parity_contract.json",
+        "symbols": [
+          "createAnalysisConfig",
+          "createAnalysisConfigFromYamlContent",
+          "processLog",
+          "processLogWithYamlContent",
+          "processLogsBatch",
+          "processLogsBatchWithYamlContent",
+          "resetFcxGlobalState",
+          "getFcxConfigIssues",
+          "writeAutoscanReport",
+          "OrchestratorCore",
+          "FcxModeHandler",
+          "FcxResetError",
+          "resolve_batch_concurrency"
+        ]
+      },
+      {
+        "path": "node-bindings/classic-node/__test__/fixtures/runtime_coverage_registry.json",
+        "symbols": [
+          "createAnalysisConfig",
+          "createAnalysisConfigFromYamlContent",
+          "processLog",
+          "processLogWithYamlContent",
+          "processLogsBatch",
+          "processLogsBatchWithYamlContent",
+          "resetFcxGlobalState",
+          "getFcxConfigIssues",
+          "writeAutoscanReport",
+          "JsAnalysisConfig",
+          "JsAnalysisResult"
+        ]
+      }
+    ],
+    "python": [
+      {
+        "path": "python-bindings/classic-scanlog-py/src/lib.rs",
+        "symbols": [
+          "PyRustOrchestrator",
+          "PyCancellationToken",
+          "PyFcxModeHandler",
+          "FcxResetError"
+        ]
+      },
+      {
+        "path": "python-bindings/classic-scanlog-py/src/orchestrator.rs",
+        "symbols": [
+          "pub struct PyRustOrchestrator",
+          "pub struct PyCancellationToken",
+          "process_logs_parallel",
+          "process_logs_batch",
+          "write_reports_batch"
+        ],
+        "optional": true
+      },
+      {
+        "path": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+        "symbols": [
+          "AnalysisConfig",
+          "AnalysisResult",
+          "CancellationToken",
+          "Orchestrator",
+          "FcxModeHandler",
+          "FcxResetError",
+          "process_log",
+          "process_logs_parallel",
+          "process_logs_batch",
+          "write_reports_batch"
+        ]
+      },
+      {
+        "path": "docs/implementation/python_api_parity/baseline/parity_contract.json",
+        "symbols": [
+          "AnalysisConfig",
+          "AnalysisResult",
+          "CancellationToken",
+          "Orchestrator",
+          "OrchestratorCore",
+          "FcxModeHandler",
+          "FcxResetError",
+          "process_log",
+          "process_logs_parallel",
+          "process_logs_batch",
+          "write_reports_batch",
+          "resolve_batch_concurrency"
+        ]
+      },
+      {
+        "path": "docs/implementation/python_api_parity/governance/tier2_wave_manifest.json",
+        "symbols": [
+          "AnalysisConfig",
+          "AnalysisResult",
+          "CancellationToken",
+          "Orchestrator",
+          "OrchestratorCore",
+          "FcxModeHandler",
+          "FcxResetError",
+          "process_log",
+          "process_logs_parallel",
+          "process_logs_batch",
+          "write_reports_batch",
+          "resolve_batch_concurrency",
+          "GLOBAL_FCX_HANDLER",
+          "fcx_handler",
+          "orchestrator"
+        ]
+      },
+      {
+        "path": "docs/implementation/python_api_parity/governance/deferred_runtime_backlog.json",
+        "symbols": [
+          "AnalysisConfig",
+          "AnalysisResult",
+          "CancellationToken",
+          "Orchestrator",
+          "OrchestratorCore",
+          "FcxModeHandler",
+          "FcxResetError",
+          "process_log",
+          "process_logs_parallel",
+          "process_logs_batch",
+          "write_reports_batch",
+          "resolve_batch_concurrency",
+          "GLOBAL_FCX_HANDLER",
+          "fcx_handler",
+          "orchestrator"
+        ]
+      },
+      {
+        "path": "python-bindings/tests/fixtures/runtime_coverage_registry.json",
+        "symbols": [
+          "classic_scanlog.AnalysisConfig",
+          "classic_scanlog.AnalysisResult",
+          "classic_scanlog.CancellationToken",
+          "classic_scanlog.Orchestrator",
+          "classic_scanlog.FcxModeHandler",
+          "classic_scanlog.FcxResetError"
+        ]
+      }
+    ]
+  },
   "adapters": {
     "rust": {
       "acknowledgedVariants": [

@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-15T10:42:25.985677+00:00`
-- Tier-1 contract rows: **876**
-- Tier-1 matched: **876**
+- Generated: `2026-07-16T01:57:09.446254+00:00`
+- Tier-1 contract rows: **858**
+- Tier-1 matched: **858**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -185,9 +185,6 @@
 | `user-settings-accepted-update-base-revision-accessor` | `user_settings` | `base_revision` | `JsUserSettingsUpdatePreview` | `matched` |
 | `user-settings-accepted-update-fields-accessor` | `user_settings` | `fields` | `JsUserSettingsUpdatePreview` | `matched` |
 | `user-settings-preview-update` | `user_settings` | `preview_update` | `previewUserSettingsUpdate` | `matched` |
-| `scanlog-analysis-config` | `scanlog` | `AnalysisConfig` | `createAnalysisConfig` | `matched` |
-| `scanlog-process-log` | `scanlog` | `OrchestratorCore` | `processLog` | `matched` |
-| `scanlog-process-batch` | `scanlog` | `OrchestratorCore` | `processLogsBatch` | `matched` |
 | `scanlog-parse-segments` | `scanlog` | `LogParser` | `parseLogSegments` | `matched` |
 | `scanlog-extract-formids` | `scanlog` | `LogParser` | `extractFormIds` | `matched` |
 | `scanlog-extract-plugins` | `scanlog` | `LogParser` | `extractPluginList` | `matched` |
@@ -196,9 +193,6 @@
 | `scanlog-parse-crashgen-version` | `scanlog` | `CrashgenVersion` | `parseCrashgenVersion` | `matched` |
 | `scanlog-crashgen-version-status` | `scanlog` | `check_crashgen_version_status` | `checkCrashgenVersionStatus` | `matched` |
 | `scanlog-papyrus-analysis` | `scanlog` | `PapyrusStats` | `analyzePapyrusLog` | `matched` |
-| `scanlog-analysis-config-from-yaml-content` | `scanlog` | `build_analysis_config_from_yaml` | `createAnalysisConfigFromYamlContent` | `matched` |
-| `scanlog-process-log-with-yaml-content` | `scanlog` | `OrchestratorCore` | `processLogWithYamlContent` | `matched` |
-| `scanlog-process-batch-with-yaml-content` | `scanlog` | `OrchestratorCore` | `processLogsBatchWithYamlContent` | `matched` |
 | `scanlog-detect-crash-pattern` | `scanlog` | `PatternMatcher` | `detectCrashPattern` | `matched` |
 | `scanlog-crashgen-version-status-enum` | `scanlog` | `CrashgenVersionStatus` | `JsCrashgenVersionStatus` | `matched` |
 | `config-yamldata-class` | `config` | `YamlDataCore` | `YamlData` | `matched` |
@@ -443,12 +437,9 @@
 | `aux-phase4c-get-all-game-ids` | `aux` | `path_core` | `getAllGameIds` | `matched` |
 | `version-registry-phase4c-get-all-script-hashes` | `version_registry` | `get_version_registry` | `getAllScriptHashes` | `matched` |
 | `aux-phase4c-get-game-name` | `aux` | `path_core` | `getGameName` | `matched` |
-| `scanlog.orchestrator.AnalysisResult@rust` | `scanlog` | `AnalysisResult@rust` | `None` | `matched` |
 | `scanlog.settings_validator.ConfigIssue@rust` | `scanlog` | `ConfigIssue@rust` | `None` | `matched` |
 | `scanlog.crashgen_registry.CrashgenEntry@rust` | `scanlog` | `CrashgenEntry@rust` | `None` | `matched` |
 | `scanlog.crashgen_registry.CrashgenRegistry@rust` | `scanlog` | `CrashgenRegistry@rust` | `None` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler@rust` | `scanlog` | `FcxModeHandler@rust` | `None` | `matched` |
-| `scanlog.fcx_handler.FcxResetError@rust` | `scanlog` | `FcxResetError@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.FormIDAnalyzer@rust` | `scanlog` | `FormIDAnalyzer@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.FormIDAnalyzerCore@rust` | `scanlog` | `FormIDAnalyzerCore@rust` | `None` | `matched` |
 | `scanlog.gpu_detector.GpuDetector@rust` | `scanlog` | `GpuDetector@rust` | `None` | `matched` |
@@ -479,20 +470,17 @@
 | `scanlog.plugin_analyzer.detect_plugins_batch@rust` | `scanlog` | `detect_plugins_batch@rust` | `None` | `matched` |
 | `scanlog.error.error@rust` | `scanlog` | `error@rust` | `None` | `matched` |
 | `scanlog.formid.extract_formids_batch@rust` | `scanlog` | `extract_formids_batch@rust` | `None` | `matched` |
-| `scanlog.fcx_handler.fcx_handler@rust` | `scanlog` | `fcx_handler@rust` | `None` | `matched` |
 | `scanlog.formid.formid@rust` | `scanlog` | `formid@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.formid_analyzer@rust` | `scanlog` | `formid_analyzer@rust` | `None` | `matched` |
 | `scanlog.gpu_detector.gpu_detector@rust` | `scanlog` | `gpu_detector@rust` | `None` | `matched` |
 | `scanlog.formid.is_valid_formid@rust` | `scanlog` | `is_valid_formid@rust` | `None` | `matched` |
 | `scanlog.mod_detector.mod_detector@rust` | `scanlog` | `mod_detector@rust` | `None` | `matched` |
-| `scanlog.orchestrator.orchestrator@rust` | `scanlog` | `orchestrator@rust` | `None` | `matched` |
 | `scanlog.papyrus.papyrus@rust` | `scanlog` | `papyrus@rust` | `None` | `matched` |
 | `scanlog.parser.parser@rust` | `scanlog` | `parser@rust` | `None` | `matched` |
 | `scanlog.patterns.patterns@rust` | `scanlog` | `patterns@rust` | `None` | `matched` |
 | `scanlog.plugin_analyzer.plugin_analyzer@rust` | `scanlog` | `plugin_analyzer@rust` | `None` | `matched` |
 | `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `record_scanner@rust` | `None` | `matched` |
 | `scanlog.report.report@rust` | `scanlog` | `report@rust` | `None` | `matched` |
-| `scanlog.orchestrator.resolve_batch_concurrency@rust` | `scanlog` | `resolve_batch_concurrency@rust` | `None` | `matched` |
 | `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `scan_records_batch@rust` | `None` | `matched` |
 | `scanlog.segment_key.segment_key@rust` | `scanlog` | `segment_key@rust` | `None` | `matched` |
 | `scanlog.settings_validator.settings_validator@rust` | `scanlog` | `settings_validator@rust` | `None` | `matched` |
@@ -500,8 +488,6 @@
 | `scanlog.formid_analyzer.validate_formids_batch@rust` | `scanlog` | `validate_formids_batch@rust` | `None` | `matched` |
 | `scanlog.version.version@rust` | `scanlog` | `version@rust` | `None` | `matched` |
 | `scanlog.patterns.CRASH_LOG_PATTERN` | `scanlog` | `CRASH_LOG_PATTERN` | `CRASH_LOG_PATTERN` | `matched` |
-| `scanlog.orchestrator.JsAnalysisBuildOptions` | `scanlog` | `build_analysis_config_from_yaml` | `JsAnalysisBuildOptions` | `matched` |
-| `scanlog.orchestrator.JsAnalysisResult` | `scanlog` | `AnalysisResult` | `JsAnalysisResult` | `matched` |
 | `scanlog.gpu_detector.JsGpuInfo` | `scanlog` | `GpuInfo` | `JsGpuInfo` | `matched` |
 | `scanlog.parser.JsLogErrorEntry` | `scanlog` | `LogErrorEntry` | `JsLogErrorEntry` | `matched` |
 | `scanlog.parser.JsLogSegments` | `scanlog` | `LogParser` | `JsLogSegments` | `matched` |
@@ -523,7 +509,6 @@
 | `config.caches.DEFAULT_CACHE_CLEANUP_THRESHOLD` | `config` | `DEFAULT_CACHE_CLEANUP_OP_THRESHOLD` | `DEFAULT_CACHE_CLEANUP_THRESHOLD` | `matched` |
 | `config.caches.DEFAULT_QUERY_CACHE_CAPACITY` | `config` | `DEFAULT_QUERY_CACHE_CAPACITY` | `DEFAULT_QUERY_CACHE_CAPACITY` | `matched` |
 | `config.hash_cache.HashCacheStats` | `config` | `CacheStats` | `HashCacheStats` | `matched` |
-| `config.analysis.JsAnalysisConfig` | `config` | `AnalysisConfig` | `JsAnalysisConfig` | `matched` |
 | `config.scangame.JsConfigIssue` | `config` | `ConfigIssue` | `JsConfigIssue` | `matched` |
 | `config.fcx.JsFcxConfigIssue` | `config` | `ConfigIssue` | `JsFcxConfigIssue` | `matched` |
 | `config.scangame.JsGameScanConfig` | `config` | `GameScanConfig` | `JsGameScanConfig` | `matched` |
@@ -537,7 +522,6 @@
 | `config.caches.getDefaultCacheCleanupInterval` | `config` | `DEFAULT_CACHE_CLEANUP_INTERVAL_SECS` | `getDefaultCacheCleanupInterval` | `matched` |
 | `config.caches.getDefaultCacheCleanupThreshold` | `config` | `DEFAULT_CACHE_CLEANUP_OP_THRESHOLD` | `getDefaultCacheCleanupThreshold` | `matched` |
 | `config.caches.getDefaultQueryCacheCapacity` | `config` | `DEFAULT_QUERY_CACHE_CAPACITY` | `getDefaultQueryCacheCapacity` | `matched` |
-| `config.fcx.getFcxConfigIssues` | `config` | `ConfigIssue` | `getFcxConfigIssues` | `matched` |
 | `config.hash_cache.getHashCacheStats` | `config` | `FileHasher` | `getHashCacheStats` | `matched` |
 | `config.hash_cache.resetHashCacheStats` | `config` | `FileHasher` | `resetHashCacheStats` | `matched` |
 | `version-pe-extract` | `version_registry` | `extract_pe_version` | `extractPeVersion` | `matched` |
@@ -870,9 +854,7 @@
 | `scanlog.createLogger` | `scanlog` | `Logger` | `createLogger` | `matched` |
 | `aux.getApplicationDir` | `aux` | `get_application_dir` | `getApplicationDir` | `matched` |
 | `scanlog.processGameLogs` | `scanlog` | `LogProcessor` | `processGameLogs` | `matched` |
-| `aux.resetFcxGlobalState` | `aux` | `FcxModeHandler` | `resetFcxGlobalState` | `matched` |
 | `aux.setApplicationDir` | `aux` | `set_application_dir` | `setApplicationDir` | `matched` |
-| `aux.writeAutoscanReport` | `aux` | `FileIOCore` | `writeAutoscanReport` | `matched` |
 | `scangame.JsGameSetupCheck` | `scangame` | `GameSetupCheck` | `JsGameSetupCheck` | `matched` |
 | `scangame.JsGameSetupIntakeOptions` | `scangame` | `GameSetupIntake` | `JsGameSetupIntakeOptions` | `matched` |
 | `scangame.JsGameSetupIntakeResult` | `scangame` | `GameSetupIntakeResult` | `JsGameSetupIntakeResult` | `matched` |

@@ -169,23 +169,3 @@ fn test_read_report_file_nonexistent() {
     let result = read_report_file("nonexistent_report_xyz.md");
     assert!(result.is_err());
 }
-
-#[test]
-fn test_write_autoscan_report_writes_next_to_source_log() {
-    let dir = tempfile::tempdir().unwrap();
-    let custom_dir = dir.path().join("CustomScan");
-    std::fs::create_dir_all(&custom_dir).unwrap();
-
-    let log_path = custom_dir.join("crash-2026-02-19-00-00-00.log");
-    std::fs::write(&log_path, "raw log").unwrap();
-
-    let out_path = write_autoscan_report(log_path.to_str().unwrap(), "# report body").unwrap();
-    let out_path = std::path::PathBuf::from(out_path);
-
-    assert_eq!(out_path.parent(), log_path.parent());
-    assert_eq!(
-        out_path.file_name().and_then(|n| n.to_str()),
-        Some("crash-2026-02-19-00-00-00-AUTOSCAN.md")
-    );
-    assert!(out_path.exists());
-}

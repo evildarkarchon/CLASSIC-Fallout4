@@ -5,7 +5,6 @@ import {
   CRASH_AUTOSCAN_PATTERN,
   calculateTextSimilarity,
   checkDriveExists,
-  createAnalysisConfigFromYamlContent,
   getAllVersionsForGame,
   getAllExeHashes,
   getAllGameIds,
@@ -16,11 +15,6 @@ import {
   checkCrashgenVersionStatus,
   getYamlSourceDisplayName,
 } from "../index.js";
-import {
-  PARITY_MAIN_YAML,
-  PARITY_GAME_YAML,
-  PARITY_IGNORE_YAML,
-} from "./fixtures/tier1_parity.fixtures";
 import {
   dtsSignatureFragments,
   confidenceValues,
@@ -38,35 +32,6 @@ describe("Tier-1 drift regression pack", () => {
     for (const signature of dtsSignatureFragments) {
       expect(dts.includes(signature)).toBe(true);
     }
-  });
-
-  test("optional scanlog options stay backward-compatible", () => {
-    const omittedOptions = createAnalysisConfigFromYamlContent(
-      PARITY_MAIN_YAML,
-      PARITY_GAME_YAML,
-      PARITY_IGNORE_YAML,
-      "Fallout4",
-      "auto",
-    );
-    const nullOptions = createAnalysisConfigFromYamlContent(
-      PARITY_MAIN_YAML,
-      PARITY_GAME_YAML,
-      PARITY_IGNORE_YAML,
-      "Fallout4",
-      "auto",
-      null,
-    );
-    const emptyOptions = createAnalysisConfigFromYamlContent(
-      PARITY_MAIN_YAML,
-      PARITY_GAME_YAML,
-      PARITY_IGNORE_YAML,
-      "Fallout4",
-      "auto",
-      {},
-    );
-
-    expect(omittedOptions).toEqual(nullOptions);
-    expect(omittedOptions).toEqual(emptyOptions);
   });
 
   test("optional version-registry parameters keep stable defaults", () => {

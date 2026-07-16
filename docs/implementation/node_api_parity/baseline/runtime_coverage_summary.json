@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-15T10:42:25.990359+00:00",
+  "generated_at_utc": "2026-07-16T01:57:09.451121+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,23 +7,23 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 963,
-    "runtime_verified_total": 963,
+    "tracked_surface_total": 942,
+    "runtime_verified_total": 942,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 876,
+    "tier1_contract_total": 858,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
   "registryMismatches": [],
   "perOwnerModule": {
     "aux": {
-      "runtime_verified": 168,
-      "total": 168
+      "runtime_verified": 166,
+      "total": 166
     },
     "config": {
-      "runtime_verified": 106,
-      "total": 106
+      "runtime_verified": 104,
+      "total": 104
     },
     "database": {
       "runtime_verified": 14,
@@ -54,8 +54,8 @@
       "total": 77
     },
     "scanlog": {
-      "runtime_verified": 113,
-      "total": 113
+      "runtime_verified": 96,
+      "total": 96
     },
     "settings": {
       "runtime_verified": 45,
@@ -3379,69 +3379,6 @@
       "notes": "Frontend State coverage is exercised by user-settings-frontend-state-snapshot, user-settings-frontend-state-invalid-fallbacks, and user-settings-frontend-state-tui-namespace; together they verify typed preferences, GUI tab geometry, the TUI namespace, value provenance, invalid-value fallbacks, source-byte preservation, and the non-writing open path. The user-settings-published-defaults case verifies the filesystem-free Rust defaults projection through the public Node snapshot shape. Migration planning coverage verifies current, legacy-flat, and unsupported outcomes, reviewable transition DTOs, exact byte payloads, and the non-writing planning path. Migration reversal coverage verifies the proposed-content revision, swapped endpoints and byte payloads, reversed/inverted change rows, operation after source removal, and an exact involutive round trip. User Settings commit coverage verifies accepted geometry publication, field-specific invalid-dimension rejection, preservation of unknown frontend content, structured stale-revision conflicts, and stable NAPI error codes for operational failures. Explicit bootstrap coverage verifies that ordinary update preview rejects a missing document, bootstrap preview remains read-only, and only bootstrap commit publishes the complete Rust-owned defaults document."
     },
     {
-      "trackedId": "contract:scanlog-analysis-config",
-      "trackedType": "contract_row",
-      "contractId": "scanlog-analysis-config",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "AnalysisConfig",
-      "bindingIdentifier": "createAnalysisConfig",
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog-process-log",
-      "trackedType": "contract_row",
-      "contractId": "scanlog-process-log",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "OrchestratorCore",
-      "bindingIdentifier": "processLog",
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog-process-batch",
-      "trackedType": "contract_row",
-      "contractId": "scanlog-process-batch",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "OrchestratorCore",
-      "bindingIdentifier": "processLogsBatch",
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
-    },
-    {
       "trackedId": "contract:scanlog-parse-segments",
       "trackedType": "contract_row",
       "contractId": "scanlog-parse-segments",
@@ -3453,14 +3390,12 @@
       "bindingIdentifier": "parseLogSegments",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog-extract-formids",
@@ -3474,14 +3409,12 @@
       "bindingIdentifier": "extractFormIds",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog-extract-plugins",
@@ -3495,14 +3428,12 @@
       "bindingIdentifier": "extractPluginList",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog-detect-vr",
@@ -3516,14 +3447,12 @@
       "bindingIdentifier": "detectVrLog",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog-detect-gpu",
@@ -3537,14 +3466,12 @@
       "bindingIdentifier": "detectGpuInfo",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog-parse-crashgen-version",
@@ -3558,14 +3485,12 @@
       "bindingIdentifier": "parseCrashgenVersion",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog-crashgen-version-status",
@@ -3579,14 +3504,12 @@
       "bindingIdentifier": "checkCrashgenVersionStatus",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog-papyrus-analysis",
@@ -3600,77 +3523,12 @@
       "bindingIdentifier": "analyzePapyrusLog",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog-analysis-config-from-yaml-content",
-      "trackedType": "contract_row",
-      "contractId": "scanlog-analysis-config-from-yaml-content",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "build_analysis_config_from_yaml",
-      "bindingIdentifier": "createAnalysisConfigFromYamlContent",
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog-process-log-with-yaml-content",
-      "trackedType": "contract_row",
-      "contractId": "scanlog-process-log-with-yaml-content",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "OrchestratorCore",
-      "bindingIdentifier": "processLogWithYamlContent",
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog-process-batch-with-yaml-content",
-      "trackedType": "contract_row",
-      "contractId": "scanlog-process-batch-with-yaml-content",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "OrchestratorCore",
-      "bindingIdentifier": "processLogsBatchWithYamlContent",
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog-detect-crash-pattern",
@@ -3684,14 +3542,12 @@
       "bindingIdentifier": "detectCrashPattern",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog-crashgen-version-status-enum",
@@ -3705,14 +3561,12 @@
       "bindingIdentifier": "JsCrashgenVersionStatus",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:config-yamldata-class",
@@ -8031,27 +7885,6 @@
       "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
     },
     {
-      "trackedId": "contract:scanlog.orchestrator.AnalysisResult@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.orchestrator.AnalysisResult@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "AnalysisResult@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
-    },
-    {
       "trackedId": "contract:scanlog.settings_validator.ConfigIssue@rust",
       "trackedType": "contract_row",
       "contractId": "scanlog.settings_validator.ConfigIssue@rust",
@@ -8063,14 +7896,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_registry.CrashgenEntry@rust",
@@ -8084,14 +7915,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_registry.CrashgenRegistry@rust",
@@ -8105,56 +7934,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog.fcx_handler.FcxModeHandler@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.fcx_handler.FcxModeHandler@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "FcxModeHandler@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog.fcx_handler.FcxResetError@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.fcx_handler.FcxResetError@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "FcxResetError@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.FormIDAnalyzer@rust",
@@ -8168,14 +7953,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.FormIDAnalyzerCore@rust",
@@ -8189,14 +7972,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.gpu_detector.GpuDetector@rust",
@@ -8210,14 +7991,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.gpu_detector.GpuVendor@rust",
@@ -8231,14 +8010,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.papyrus.PapyrusAnalyzer@rust",
@@ -8252,14 +8029,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.papyrus.PapyrusError@rust",
@@ -8273,14 +8048,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_analyzer.PluginAnalyzer@rust",
@@ -8294,14 +8067,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.record_scanner.RecordScanner@rust",
@@ -8315,14 +8086,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.report.ReportComposer@rust",
@@ -8336,14 +8105,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.report.ReportFragment@rust",
@@ -8357,14 +8124,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.report.ReportGenerator@rust",
@@ -8378,14 +8143,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.RustFormIDAnalyzer@rust",
@@ -8399,14 +8162,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.error.ScanLogError@rust",
@@ -8420,14 +8181,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.orchestrator.ScanProgressPhase@rust",
@@ -8441,14 +8200,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.settings_validator.SettingsValidator@rust",
@@ -8462,14 +8219,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.parser.StreamingIteratorParser@rust",
@@ -8483,14 +8238,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.parser.StreamingLogParser@rust",
@@ -8504,14 +8257,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.parser.StringPool@rust",
@@ -8525,14 +8276,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.suspect_scanner.SuspectScanner@rust",
@@ -8546,14 +8295,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_analyzer.contains_plugin@rust",
@@ -8567,14 +8314,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.record_scanner.contains_record@rust",
@@ -8588,14 +8333,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_registry.crashgen_registry@rust",
@@ -8609,14 +8352,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.version.crashgen_version_gen@rust",
@@ -8630,14 +8371,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.mod_detector.detect_mods_batch@rust",
@@ -8651,14 +8390,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.mod_detector.detect_mods_double@rust",
@@ -8672,14 +8409,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.mod_detector.detect_mods_important@rust",
@@ -8693,14 +8428,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.mod_detector.detect_mods_single@rust",
@@ -8714,14 +8447,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_analyzer.detect_plugins_batch@rust",
@@ -8735,14 +8466,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.error.error@rust",
@@ -8756,14 +8485,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.formid.extract_formids_batch@rust",
@@ -8777,35 +8504,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog.fcx_handler.fcx_handler@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.fcx_handler.fcx_handler@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "fcx_handler@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.formid.formid@rust",
@@ -8819,14 +8523,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.formid_analyzer@rust",
@@ -8840,14 +8542,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.gpu_detector.gpu_detector@rust",
@@ -8861,14 +8561,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.formid.is_valid_formid@rust",
@@ -8882,14 +8580,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.mod_detector.mod_detector@rust",
@@ -8903,35 +8599,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog.orchestrator.orchestrator@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.orchestrator.orchestrator@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "orchestrator@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.papyrus.papyrus@rust",
@@ -8945,14 +8618,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.parser.parser@rust",
@@ -8966,14 +8637,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.patterns.patterns@rust",
@@ -8987,14 +8656,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_analyzer.plugin_analyzer@rust",
@@ -9008,14 +8675,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.record_scanner.record_scanner@rust",
@@ -9029,14 +8694,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.report.report@rust",
@@ -9050,35 +8713,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog.orchestrator.resolve_batch_concurrency@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.orchestrator.resolve_batch_concurrency@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "resolve_batch_concurrency@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.record_scanner.scan_records_batch@rust",
@@ -9092,14 +8732,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.segment_key.segment_key@rust",
@@ -9113,14 +8751,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.settings_validator.settings_validator@rust",
@@ -9134,14 +8770,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.suspect_scanner.suspect_scanner@rust",
@@ -9155,14 +8789,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.validate_formids_batch@rust",
@@ -9176,14 +8808,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.version.version@rust",
@@ -9197,14 +8827,12 @@
       "bindingIdentifier": null,
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.patterns.CRASH_LOG_PATTERN",
@@ -9218,56 +8846,12 @@
       "bindingIdentifier": "CRASH_LOG_PATTERN",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog.orchestrator.JsAnalysisBuildOptions",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.orchestrator.JsAnalysisBuildOptions",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "build_analysis_config_from_yaml",
-      "bindingIdentifier": "JsAnalysisBuildOptions",
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:scanlog.orchestrator.JsAnalysisResult",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.orchestrator.JsAnalysisResult",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "AnalysisResult",
-      "bindingIdentifier": "JsAnalysisResult",
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
-      "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.gpu_detector.JsGpuInfo",
@@ -9281,14 +8865,12 @@
       "bindingIdentifier": "JsGpuInfo",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.parser.JsLogErrorEntry",
@@ -9302,14 +8884,12 @@
       "bindingIdentifier": "JsLogErrorEntry",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.parser.JsLogSegments",
@@ -9323,14 +8903,12 @@
       "bindingIdentifier": "JsLogSegments",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.papyrus.JsPapyrusStats",
@@ -9344,14 +8922,12 @@
       "bindingIdentifier": "JsPapyrusStats",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.settings_validator.checkXsePlugins",
@@ -9365,14 +8941,12 @@
       "bindingIdentifier": "checkXsePlugins",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.parser.parseXseLog",
@@ -9386,14 +8960,12 @@
       "bindingIdentifier": "parseXseLog",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:config.ConfigError@rust",
@@ -9681,25 +9253,6 @@
       "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
-      "trackedId": "contract:config.analysis.JsAnalysisConfig",
-      "trackedType": "contract_row",
-      "contractId": "config.analysis.JsAnalysisConfig",
-      "ownerModule": "config",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "AnalysisConfig",
-      "bindingIdentifier": "JsAnalysisConfig",
-      "coverageId": "node-tier1-config",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "config-tier1-parity",
-      "fixtureRefs": [
-        "configSourceCases"
-      ],
-      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
-    },
-    {
       "trackedId": "contract:config.scangame.JsConfigIssue",
       "trackedType": "contract_row",
       "contractId": "config.scangame.JsConfigIssue",
@@ -9937,25 +9490,6 @@
       "classification": "runtime_verified",
       "rustSymbol": "DEFAULT_QUERY_CACHE_CAPACITY",
       "bindingIdentifier": "getDefaultQueryCacheCapacity",
-      "coverageId": "node-tier1-config",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "config-tier1-parity",
-      "fixtureRefs": [
-        "configSourceCases"
-      ],
-      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
-    },
-    {
-      "trackedId": "contract:config.fcx.getFcxConfigIssues",
-      "trackedType": "contract_row",
-      "contractId": "config.fcx.getFcxConfigIssues",
-      "ownerModule": "config",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "ConfigIssue",
-      "bindingIdentifier": "getFcxConfigIssues",
       "coverageId": "node-tier1-config",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
@@ -15663,14 +15197,12 @@
       "bindingIdentifier": "JsLogCollector",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.JsLogProcessor",
@@ -15684,14 +15216,12 @@
       "bindingIdentifier": "JsLogProcessor",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.JsLogger",
@@ -15705,14 +15235,12 @@
       "bindingIdentifier": "JsLogger",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:scanlog.createLogger",
@@ -15726,14 +15254,12 @@
       "bindingIdentifier": "createLogger",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:aux.getApplicationDir",
@@ -15764,31 +15290,12 @@
       "bindingIdentifier": "processGameLogs",
       "coverageId": "node-tier1-scanlog",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
+        "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": null
-    },
-    {
-      "trackedId": "contract:aux.resetFcxGlobalState",
-      "trackedType": "contract_row",
-      "contractId": "aux.resetFcxGlobalState",
-      "ownerModule": "aux",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "FcxModeHandler",
-      "bindingIdentifier": "resetFcxGlobalState",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "trackedId": "contract:aux.setApplicationDir",
@@ -15800,23 +15307,6 @@
       "classification": "runtime_verified",
       "rustSymbol": "set_application_dir",
       "bindingIdentifier": "setApplicationDir",
-      "coverageId": "node-tier1-aux",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "aux-tier1-parity",
-      "fixtureRefs": [],
-      "notes": "Primary runtime evidence lives in parity_tier1.spec.ts and complementary aux suites."
-    },
-    {
-      "trackedId": "contract:aux.writeAutoscanReport",
-      "trackedType": "contract_row",
-      "contractId": "aux.writeAutoscanReport",
-      "ownerModule": "aux",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "FileIOCore",
-      "bindingIdentifier": "writeAutoscanReport",
       "coverageId": "node-tier1-aux",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
@@ -17861,63 +17351,6 @@
       "owner": null,
       "deferReason": null,
       "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
-    },
-    {
-      "trackedId": "binding:JsFcxConfigIssue",
-      "trackedType": "registry_only",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "gapType": "registry_only",
-      "classification": "runtime_verified",
-      "rustSymbol": null,
-      "bindingIdentifier": "JsFcxConfigIssue",
-      "coverageId": "node-tier2-scanlog-fcx-runtime",
-      "verificationMode": "direct_call",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "scanlog-fcx-state-isolation",
-      "fixtureRefs": [],
-      "wave": null,
-      "owner": null,
-      "deferReason": null,
-      "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
-    },
-    {
-      "trackedId": "binding:getFcxConfigIssues",
-      "trackedType": "registry_only",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "gapType": "registry_only",
-      "classification": "runtime_verified",
-      "rustSymbol": null,
-      "bindingIdentifier": "getFcxConfigIssues",
-      "coverageId": "node-tier2-scanlog-fcx-runtime",
-      "verificationMode": "direct_call",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "scanlog-fcx-state-isolation",
-      "fixtureRefs": [],
-      "wave": null,
-      "owner": null,
-      "deferReason": null,
-      "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
-    },
-    {
-      "trackedId": "binding:resetFcxGlobalState",
-      "trackedType": "registry_only",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "gapType": "registry_only",
-      "classification": "runtime_verified",
-      "rustSymbol": null,
-      "bindingIdentifier": "resetFcxGlobalState",
-      "coverageId": "node-tier2-scanlog-fcx-runtime",
-      "verificationMode": "direct_call",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "scanlog-fcx-state-isolation",
-      "fixtureRefs": [],
-      "wave": null,
-      "owner": null,
-      "deferReason": null,
-      "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
     }
   ]
 }

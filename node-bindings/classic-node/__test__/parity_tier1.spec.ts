@@ -6,9 +6,6 @@ import {
   BATCH_CACHE_TTL,
   DEFAULT_CACHE_TTL,
   MAX_CACHE_TTL,
-  createAnalysisConfig,
-  createAnalysisConfigFromYamlContent,
-  processLogWithYamlContent,
   createYamlDataFromContent,
   getAllYamlFiles,
   getBatchCacheTtl,
@@ -91,9 +88,6 @@ import {
   PARITY_GAME_YAML,
   PARITY_IGNORE_YAML,
   INVALID_PARITY_MAIN_YAML,
-  scanlogConfigCases,
-  scanlogYamlOptionsCases,
-  scanlogErrorCase,
   configSourceCases,
   versionRegistryCases,
 } from "./fixtures/tier1_parity.fixtures";
@@ -114,59 +108,6 @@ function expectErrorWithMessage(err: unknown): void {
 }
 
 describe("Tier-1 parity fixture suites", () => {
-  if (activeCoverageCases.has("scanlog-tier1-parity")) {
-    describe("scanlog parity", () => {
-      for (const fixture of scanlogConfigCases) {
-        test(`createAnalysisConfig parity: ${fixture.id}`, () => {
-          const config = createAnalysisConfig(fixture.game, fixture.gameVersion);
-          expect(config.game).toBe(fixture.game);
-          expect(config.gameVersion).toBe(fixture.gameVersion);
-          expect(config.crashgenName).toBe(fixture.expected.crashgenName);
-          expect(config.xseAcronym).toBe(fixture.expected.xseAcronym);
-          expect(config.classicVersion).toBe(fixture.expected.classicVersion);
-          expect(config.fcxMode).toBe(fixture.expected.fcxMode);
-          expect(config.simplifyLogs).toBe(fixture.expected.simplifyLogs);
-        });
-      }
-
-      for (const fixture of scanlogYamlOptionsCases) {
-        test(`createAnalysisConfigFromYamlContent parity: ${fixture.id}`, () => {
-          const config = createAnalysisConfigFromYamlContent(
-            PARITY_MAIN_YAML,
-            PARITY_GAME_YAML,
-            PARITY_IGNORE_YAML,
-            "Fallout4",
-            "auto",
-            fixture.options,
-          );
-          expect(config.game).toBe("Fallout4");
-          expect(config.gameVersion).toBe("auto");
-          expect(config.crashgenName).toBe(fixture.expected.crashgenName);
-          expect(config.xseAcronym).toBe(fixture.expected.xseAcronym);
-          expect(config.classicVersion).toBe(fixture.expected.classicVersion);
-          expect(config.fcxMode).toBe(fixture.expected.fcxMode);
-          expect(config.simplifyLogs).toBe(fixture.expected.simplifyLogs);
-        });
-      }
-
-      test("processLogWithYamlContent keeps stable reject semantics for missing file", async () => {
-        try {
-          await processLogWithYamlContent(
-            scanlogErrorCase.missingLogPath,
-            PARITY_MAIN_YAML,
-            PARITY_GAME_YAML,
-            PARITY_IGNORE_YAML,
-            "Fallout4",
-            "auto",
-          );
-          expect(true).toBe(false);
-        } catch (err: unknown) {
-          expectErrorWithMessage(err);
-        }
-      });
-    });
-  }
-
   if (activeCoverageCases.has("config-tier1-parity")) {
     describe("config parity", () => {
     test("createYamlDataFromContent returns stable Tier-1 fields", () => {

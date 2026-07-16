@@ -73,16 +73,15 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 86,
-      "contractIdsHash": "5c1b39eafd4ce02b0972c9ddcfd68a0ed9f68fe346acdea9fe7310833dd5bd77",
+      "contractCount": 72,
+      "contractIdsHash": "3dfff13f27e1ffeaf0ec59d553653af4f10a9245c2626a9871a6bf85cb0d6a3e",
       "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
-      "testCaseId": "scanlog-tier1-parity",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
-        "scanlogConfigCases",
-        "scanlogYamlOptionsCases",
-        "scanlogErrorCase"
-      ]
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; legacy orchestration and process-global FCX controls are intentionally absent."
     },
     {
       "coverageId": "node-tier1-config",
@@ -93,8 +92,8 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 101,
-      "contractIdsHash": "8385d32a9c5999ccaa484931dfd230bb7adaa67fcdb3a0bdb47b0fd6f0574a7e",
+      "contractCount": 99,
+      "contractIdsHash": "a89fcf61c0cdaa5685f22a4472f76f014b0b80928a0ecd326023d684c6d370e8",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "config-tier1-parity",
@@ -130,8 +129,8 @@
         "ownerModule": "aux",
         "tier": "tier1"
       },
-      "contractCount": 154,
-      "contractIdsHash": "562a3cc2e2839420af8d0ef3c3948333f60defae6a64e227293de32d9643a1c1",
+      "contractCount": 152,
+      "contractIdsHash": "7096e6a0c60ab6bf213c8bef9f292be22def82548ab359e68d76f0134badd6c2",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "aux-tier1-parity",
@@ -266,21 +265,6 @@
         "IGNORE_YAML"
       ],
       "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
-    },
-    {
-      "coverageId": "node-tier2-scanlog-fcx-runtime",
-      "classification": "runtime_verified",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "bindingIdentifiers": [
-        "JsFcxConfigIssue",
-        "getFcxConfigIssues",
-        "resetFcxGlobalState"
-      ],
-      "verificationMode": "direct_call",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "scanlog-fcx-state-isolation",
-      "notes": "Covers flat FCX reset/getter exports plus structured issue DTOs through same-process scan isolation tests."
     },
     {
       "coverageId": "node-tier1-database",

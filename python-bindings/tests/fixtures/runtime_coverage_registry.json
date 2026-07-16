@@ -119,7 +119,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_promoted_config_smoke.py",
       "testCaseId": "config-plan06-promoted-smoke",
-      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows \u2014 the Python surface parser skips @property (per Wave 3a precedent)."
+      "notes": "Per-class smoke tests for the 28 promoted config rows added in Phase 3 Plan 06 (26 deferred backlog + 2 Tier-2 runtime-verified migrations). Fixture-backed construction via PARITY_MAIN_YAML / PARITY_GAME_YAML / PARITY_IGNORE_YAML. See 03-06-CONSTRUCTOR-INVENTORY.md. python-tier2-config-runtime preserved because its 2 property bindings (YamlData.classic_version / warn_outdated) cannot be tier1 contract rows — the Python surface parser skips @property (per Wave 3a precedent)."
     },
     {
       "coverageId": "python-tier1-scanlog",
@@ -130,8 +130,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 279,
-      "contractIdsHash": "bda328b0f180e0ae1e358b2db665506074eccec33d6cc766474a66326495332f",
+      "contractCount": 235,
+      "contractIdsHash": "2bff3c4cb00f7e080b69d81e9dbb968df4904ffdccf978cc70b4ed39839dd237",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
@@ -190,20 +190,8 @@
         "classic_scanlog.SettingsValidator",
         "classic_scanlog.SettingsValidator.scan_all_settings",
         "classic_scanlog.SettingsValidator.check_disabled_settings",
-        "classic_scanlog.FcxModeHandler",
-        "classic_scanlog.FcxModeHandler.get_fcx_messages",
-        "classic_scanlog.FcxModeHandler.get_fcx_status_message",
-        "classic_scanlog.FcxModeHandler.has_results",
-        "classic_scanlog.FcxModeHandler.set_main_files_result",
-        "classic_scanlog.FcxModeHandler.set_game_files_result",
-        "classic_scanlog.FcxModeHandler.reset",
-        "classic_scanlog.FcxModeHandler.add_issue",
-        "classic_scanlog.FcxModeHandler.set_detected_issues",
-        "classic_scanlog.FcxModeHandler.get_detected_issues",
-        "classic_scanlog.FcxModeHandler.reset_fcx_checks",
         "classic_scanlog.ConfigIssue",
         "classic_scanlog.ConfigIssue.format_report",
-        "classic_scanlog.FcxResetError",
         "classic_scanlog.GpuDetector",
         "classic_scanlog.GpuDetector.extract_gpu_info",
         "classic_scanlog.GpuDetector.extract_gpu_info_batch",
@@ -214,7 +202,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_promoted_scanlog_wave2_smoke.py",
       "testCaseId": "scanlog-wave2-promoted-smoke",
-      "notes": "Per-class smoke tests for the 7 Wave 2 #[pyclass] wrappers + grouped mod_detector free functions + typed FcxResetError exception class added in Phase 3 Plan 03. Constructor signatures from 03-03-CONSTRUCTOR-INVENTORY.md. GLOBAL_FCX_HANDLER excluded per R9. FCX global state reset between tests via the autouse conftest.py fixture."
+      "notes": "Covers retained mod detection, suspect scanning, settings validation, run-scoped ConfigIssue result data, and GPU analysis. Process-global FCX controls are intentionally absent."
     },
     {
       "coverageId": "python-tier1-scanlog-wave3a-promoted",
@@ -222,19 +210,6 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "bindingIdentifiers": [
-        "classic_scanlog.AnalysisConfig",
-        "classic_scanlog.AnalysisConfig.__init__",
-        "classic_scanlog.AnalysisResult",
-        "classic_scanlog.CancellationToken",
-        "classic_scanlog.CancellationToken.__init__",
-        "classic_scanlog.CancellationToken.cancel",
-        "classic_scanlog.CancellationToken.is_cancelled",
-        "classic_scanlog.CancellationToken.reset",
-        "classic_scanlog.Orchestrator",
-        "classic_scanlog.Orchestrator.__init__",
-        "classic_scanlog.Orchestrator.check_loadorder_exists",
-        "classic_scanlog.Orchestrator.has_database_pool",
-        "classic_scanlog.Orchestrator.is_feature_complete",
         "classic_scanlog.PapyrusStats",
         "classic_scanlog.PapyrusStats.__init__",
         "classic_scanlog.PapyrusStats.dumps_to_stacks_ratio",
@@ -257,7 +232,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_promoted_scanlog_wave3a_smoke.py",
       "testCaseId": "scanlog-wave3a-promoted-smoke",
-      "notes": "Per-class smoke tests for Wave 3a orchestration core added in Phase 3 Plan 04. Covers the retained legacy orchestrator plus papyrus/version sub-modules; crashgen_registry/segment_key/error are pure Rust and tracked as @rust proxy contract rows that resolve against the classic-scanlog-core surface. Constructor signatures from 03-04-CONSTRUCTOR-INVENTORY.md. Rust-only symbol guard via test_rust_only_symbols_in_core_surface. The final Crash Log Scan Run contract has a dedicated public-seam runtime entry."
+      "notes": "Covers retained Papyrus and crashgen-version utilities; complete scan execution is covered only by the dedicated final Crash Log Scan Run contract entry."
     },
     {
       "coverageId": "python-tier1-scanlog-final-run-contract",
@@ -367,8 +342,8 @@
         "ownerModule": "version_registry",
         "tier": "tier1"
       },
-        "contractCount": 88,
-        "contractIdsHash": "dc1837a236e03a1db4a8fa610f3c91cf527f037f8b2f9e6ae162a93f49d69e51",
+      "contractCount": 88,
+      "contractIdsHash": "dc1837a236e03a1db4a8fa610f3c91cf527f037f8b2f9e6ae162a93f49d69e51",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "version-registry-tier1-smoke",
@@ -401,7 +376,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_classic_shared_smoke.py",
       "testCaseId": "classic-shared-smoke-suite",
-      "notes": "HARM-03/HARM-04 gate enrollment. Phase 3 Plan 08 promoted 61 classic_shared rows (42 python-only PathHandler/StringProcessor/RustPerformanceMonitor/RuntimeStats + 19 rust-only @rust-suffixed proxies pointing at classic-shared-py re-exports/modules/helpers). RuntimeStats has no #[new] per A8 \u2014 tests use get_runtime_stats() factory. get_runtime_stats and is_runtime_healthy required `pub fn` visibility (was private) before the parser could see them (Rule 3 fix)."
+      "notes": "HARM-03/HARM-04 gate enrollment. Phase 3 Plan 08 promoted 61 classic_shared rows (42 python-only PathHandler/StringProcessor/RustPerformanceMonitor/RuntimeStats + 19 rust-only @rust-suffixed proxies pointing at classic-shared-py re-exports/modules/helpers). RuntimeStats has no #[new] per A8 — tests use get_runtime_stats() factory. get_runtime_stats and is_runtime_healthy required `pub fn` visibility (was private) before the parser could see them (Rule 3 fix)."
     },
     {
       "coverageId": "python-tier1-file_io",
@@ -417,7 +392,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_promoted_file_io_aux_smoke.py",
       "testCaseId": "classic-file-io-promoted-smoke",
-      "notes": "Phase 3 Plan 08 owns ALL classic_file_io rows per R3 (95 total = 70 python-only + 25 rust-only @rust-suffixed proxies). Plan 09a residual promotion explicitly excludes file_io. PyFileHasher is an empty unit struct with no #[new] \u2014 all methods are #[staticmethod] (R13). cache_size() returns HASH_CACHE.len() entry count, not bytes. The legacy python-tier2-aux-cache-runtime entry was DELETED in this plan because its 3 FileHasher cache-helper bindings (cache_stats, reset_cache_stats, clear_cache) are now enrolled as tier1 contract rows under this selector."
+      "notes": "Phase 3 Plan 08 owns ALL classic_file_io rows per R3 (95 total = 70 python-only + 25 rust-only @rust-suffixed proxies). Plan 09a residual promotion explicitly excludes file_io. PyFileHasher is an empty unit struct with no #[new] — all methods are #[staticmethod] (R13). cache_size() returns HASH_CACHE.len() entry count, not bytes. The legacy python-tier2-aux-cache-runtime entry was DELETED in this plan because its 3 FileHasher cache-helper bindings (cache_stats, reset_cache_stats, clear_cache) are now enrolled as tier1 contract rows under this selector."
     },
     {
       "coverageId": "python-tier1-version-registry-plan07-promoted",
@@ -562,8 +537,8 @@
         "ownerModule": "settings",
         "tier": "tier1"
       },
-        "contractCount": 65,
-        "contractIdsHash": "b5a94140f0b729cfc4dae8a8f353d31ec453f112952b85e200707e1f40e327bc",
+      "contractCount": 65,
+      "contractIdsHash": "b5a94140f0b729cfc4dae8a8f353d31ec453f112952b85e200707e1f40e327bc",
       "testSuite": "python-bindings/tests/test_promoted_residuals_smoke.py",
       "testCaseId": "settings-residuals-smoke"
     },

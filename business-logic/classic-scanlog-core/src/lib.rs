@@ -5,7 +5,7 @@
 //! - FormID extraction and validation
 //! - Plugin and record detection
 //! - Mod detection algorithms
-//! - Parallel batch processing
+//! - Rust-owned Crash Log Scan Run execution
 //! - Report generation
 //!
 //! **NO PyO3 DEPENDENCIES** - Pure Rust business logic only.
@@ -22,22 +22,26 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-// Re-export all public modules
+// Public utility modules and the final Crash Log Scan Run contract.
 pub mod crashgen_registry;
 pub mod error;
-pub mod fcx_handler;
+pub(crate) mod fcx_handler;
 pub mod formid;
 pub mod formid_analyzer;
 pub mod gpu_detector;
 pub mod mod_detector;
-pub mod orchestrator;
+// These implementation modules retain focused characterization helpers that are
+// exercised only in their sibling unit tests.
+#[allow(dead_code)]
+pub(crate) mod orchestrator;
 pub mod papyrus;
 pub mod parser;
 pub mod patterns;
 pub mod plugin_analyzer;
 pub mod record_scanner;
 pub mod report;
-pub mod scan_intake;
+#[allow(dead_code)]
+pub(crate) mod scan_intake;
 pub mod scan_run;
 mod scan_sidecar_settings;
 pub mod segment_key;
@@ -48,7 +52,7 @@ pub mod version;
 // Re-export key types for convenience
 pub use crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 pub use error::ScanLogError;
-pub use fcx_handler::{ConfigIssue, FcxModeHandler, FcxResetError, GLOBAL_FCX_HANDLER};
+pub use fcx_handler::ConfigIssue;
 pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};
 pub use formid_analyzer::{
     FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
@@ -57,11 +61,8 @@ pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};
 pub use mod_detector::{
     detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
 };
-pub use orchestrator::{
-    AnalysisConfig, AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions,
-    IndexedAnalysisResult, OrchestratorCore, ScanProgressPhase, build_analysis_config_from_yaml,
-    resolve_batch_concurrency,
-};
+pub use orchestrator::ScanProgressPhase;
+pub(crate) use orchestrator::{AnalysisConfig, AnalysisResult, OrchestratorCore};
 pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};
 pub use parser::{LogParser, StreamingIteratorParser, StreamingLogParser};
 pub use patterns::PatternMatcher;
@@ -70,20 +71,13 @@ pub use record_scanner::{
     RecordScanner, contains_record, scan_records_batch, try_scan_records_batch,
 };
 pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
-pub use scan_intake::{
-    CrashLogScanFacts, CrashLogScanIntake, CrashLogScanIntakePaths, CrashLogScanOptions,
-    FormIdReadiness, SHORT_SCAN_CACHE_PROFILE, ScanReadyAnalysis, ShortScanCacheProfile,
-    load_simplify_remove_list, resolve_formid_database_paths,
-};
+pub use scan_intake::{CrashLogScanFacts, CrashLogScanOptions};
+pub(crate) use scan_intake::{CrashLogScanIntake, ScanReadyAnalysis};
 pub use scan_run::{
-    CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanOutcome,
-    CrashLogScanRejectedInput, CrashLogScanRun, CrashLogScanRunEvent, CrashLogScanRunEventKind,
-    CrashLogScanRunIntent, CrashLogScanRunLogOutcome, CrashLogScanRunRequest,
-    CrashLogScanRunResult, CrashLogScanRunService, CrashLogScanRunServiceRequest,
+    CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanRejectedInput,
     CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupContext,
-    CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, CrashLogScanSource,
-    StandardCrashLogScanRunIntent, StandardCrashLogScanSource, StandardUnsolvedLogsIntent,
-    TargetedCrashLogScanSource,
+    CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, StandardCrashLogScanSource,
+    StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
 pub use settings_validator::SettingsValidator;
 pub use suspect_scanner::SuspectScanner;

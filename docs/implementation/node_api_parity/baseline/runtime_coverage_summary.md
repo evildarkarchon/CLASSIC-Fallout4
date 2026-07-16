@@ -1,8 +1,8 @@
 # Node Runtime Coverage Summary
 
-- Generated: `2026-07-15T10:42:25.990359+00:00`
-- Tracked surfaces: **963**
-- Runtime verified: **963**
+- Generated: `2026-07-16T01:57:09.451121+00:00`
+- Tracked surfaces: **942**
+- Runtime verified: **942**
 - Contract mapped only: **0**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
@@ -11,8 +11,8 @@
 
 | Owner Module | Runtime Verified | Contract Mapped | Newly Uncovered | Total |
 |---|---:|---:|---:|---:|
-| `aux` | 168 | 0 | 0 | 168 |
-| `config` | 106 | 0 | 0 | 106 |
+| `aux` | 166 | 0 | 0 | 166 |
+| `config` | 104 | 0 | 0 | 104 |
 | `database` | 14 | 0 | 0 | 14 |
 | `file_io` | 24 | 0 | 0 | 24 |
 | `message` | 9 | 0 | 0 | 9 |
@@ -20,7 +20,7 @@
 | `perf` | 2 | 0 | 0 | 2 |
 | `registry` | 14 | 0 | 0 | 14 |
 | `scangame` | 77 | 0 | 0 | 77 |
-| `scanlog` | 113 | 0 | 0 | 113 |
+| `scanlog` | 96 | 0 | 0 | 96 |
 | `settings` | 45 | 0 | 0 | 45 |
 | `shared` | 10 | 0 | 0 | 10 |
 | `update` | 6 | 0 | 0 | 6 |

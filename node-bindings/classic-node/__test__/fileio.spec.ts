@@ -19,7 +19,6 @@ import {
   CRASH_LOG_PATTERN,
   CRASH_AUTOSCAN_PATTERN,
   resetHashCacheStats,
-  writeAutoscanReport,
 } from "../index.js";
 
 // ============================================================================
@@ -738,15 +737,6 @@ describe("Log collection constants", () => {
     expect(CRASH_AUTOSCAN_PATTERN).toBe("crash-*-AUTOSCAN.md");
   });
 
-  test("writeAutoscanReport writes next to the source log", async () => {
-    const logPath = join(tempDir, "crash-2026-03-06-12-00-00.log");
-    writeFileSync(logPath, "log content", "utf8");
-
-    const reportPath = await writeAutoscanReport(logPath, "# report body\n");
-
-    expect(reportPath).toContain("AUTOSCAN.md");
-    expect(readFileSync(reportPath, "utf8")).toBe("# report body\n");
-  });
 });
 
 // ============================================================================

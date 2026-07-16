@@ -99,7 +99,8 @@ Intake and bridge adapter tests cover contributor-relevant cases:
 - a configured entry that duplicates the hardcoded FOLON path is removed by de-duplication
 - a sentinel User Settings document with values that would fail the old raw reader is not opened by intake
 - the GUI request-builder behavior test forwards both relative and absolute configured FormID rows from one typed launch object without opening User Settings
-- the preserved lower-level `build_full_scan_config()` shape can still prepare config and create an orchestrator with built-in paths only
+- a final-contract request with no configured FormID rows still executes with
+  the built-in database paths selected by Rust-owned intake
 
 ---
 

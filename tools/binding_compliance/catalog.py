@@ -80,8 +80,9 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         blocking=True,
         summary=(
             "Validates the shared Standard and Targeted fixture corpus, compares the "
-            "manifest with Rust enum inventory, and requires Rust, CXX, Node, Python, "
-            "CLI, GUI, and TUI acknowledgements for their owned facts."
+            "manifest with Rust enum inventory, rejects contracted legacy exports in "
+            "source and tracked contract artifacts, and requires Rust, CXX, Node, "
+            "Python, CLI, GUI, and TUI acknowledgements for their owned facts."
         ),
         command=CommandSpec(
             argv=(
@@ -99,6 +100,7 @@ REQUIREMENTS: tuple[ComplianceRequirement, ...] = (
         proves=(
             "A new Rust contract enum variant cannot land without manifest registration.",
             "Every registered variant is acknowledged by Rust, CXX, Node, and Python.",
+            "Removed execution seams cannot remain in public source, declarations, stubs, runtime registries, or parity baselines.",
             "Shared Standard, Targeted, cancellation, and failure scenarios retain executable evidence.",
             "CLI, GUI, and TUI tests consume Rust-owned discovery, scheduling, and terminal facts.",
         ),

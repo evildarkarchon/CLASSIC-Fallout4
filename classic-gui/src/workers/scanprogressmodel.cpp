@@ -79,13 +79,13 @@ int BatchProgressModel::rankFor(const classic::scanner::ScanRunContractEvent& ev
         return 1;
     case EventKind::LogPhase:
         switch (event.phase) {
-        case classic::scanner::BatchProgressPhase::Setup:
+        case classic::scanner::ScanRunContractProgressPhase::Setup:
             return 2;
-        case classic::scanner::BatchProgressPhase::Parse:
+        case classic::scanner::ScanRunContractProgressPhase::Parse:
             return 3;
-        case classic::scanner::BatchProgressPhase::Analyze:
+        case classic::scanner::ScanRunContractProgressPhase::Analyze:
             return 4;
-        case classic::scanner::BatchProgressPhase::Finalize:
+        case classic::scanner::ScanRunContractProgressPhase::Finalize:
             return 5;
         }
         break;
@@ -109,13 +109,13 @@ float BatchProgressModel::contributionFor(const classic::scanner::ScanRunContrac
         return kStartedContribution;
     case EventKind::LogPhase:
         switch (event.phase) {
-        case classic::scanner::BatchProgressPhase::Setup:
+        case classic::scanner::ScanRunContractProgressPhase::Setup:
             return kSetupContribution;
-        case classic::scanner::BatchProgressPhase::Parse:
+        case classic::scanner::ScanRunContractProgressPhase::Parse:
             return kParseContribution;
-        case classic::scanner::BatchProgressPhase::Analyze:
+        case classic::scanner::ScanRunContractProgressPhase::Analyze:
             return kAnalyzeContribution;
-        case classic::scanner::BatchProgressPhase::Finalize:
+        case classic::scanner::ScanRunContractProgressPhase::Finalize:
             return kFinalizeContribution;
         }
         break;

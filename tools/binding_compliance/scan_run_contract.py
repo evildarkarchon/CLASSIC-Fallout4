@@ -112,6 +112,106 @@ def _require_string_list(value: object, label: str) -> list[str]:
     return value
 
 
+def _contains_forbidden_symbol(source: str, symbol: str) -> bool:
+    """Return whether ``source`` contains one forbidden export marker.
+
+    Identifier-shaped markers use Rust/Python/TypeScript identifier boundaries so
+    a removed name such as ``scan_run_execute`` does not reject the surviving
+    ``scan_run_contract_execute`` operation. Markers containing punctuation or
+    whitespace are treated as exact source fragments for visibility declarations.
+    """
+
+    if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", symbol):
+        return (
+            re.search(rf"(?<![A-Za-z0-9_]){re.escape(symbol)}(?![A-Za-z0-9_])", source)
+            is not None
+        )
+    return symbol in source
+
+
+def _validate_forbidden_exports(
+    repo_root: Path,
+    forbidden_exports: object,
+) -> None:
+    """Fail when a contracted scan-execution export remains in a tracked surface.
+
+    Each owner lists public source or generated-contract files and the exact names
+    that must be absent. Required paths fail closed when missing; an entry may set
+    ``optional`` only for a legacy file whose deletion is itself a valid outcome.
+    """
+
+    if not isinstance(forbidden_exports, dict) or not forbidden_exports:
+        raise ManifestValidationError("forbiddenExports must be a non-empty object")
+
+    root = repo_root.resolve()
+    violations: list[str] = []
+    for owner, entries in forbidden_exports.items():
+        if not isinstance(owner, str) or not owner:
+            raise ManifestValidationError(
+                "forbiddenExports owner names must be strings"
+            )
+        if not isinstance(entries, list) or not entries:
+            raise ManifestValidationError(
+                f"forbiddenExports.{owner} must be a non-empty list"
+            )
+        for entry in entries:
+            if not isinstance(entry, dict):
+                raise ManifestValidationError(
+                    f"forbiddenExports.{owner} entries must be objects"
+                )
+            relative_path = entry.get("path")
+            if not isinstance(relative_path, str) or not relative_path:
+                raise ManifestValidationError(
+                    f"forbiddenExports.{owner} path must be a string"
+                )
+            symbols = _require_string_list(
+                entry.get("symbols"),
+                f"forbiddenExports.{owner}.{relative_path}.symbols",
+            )
+            if not symbols:
+                raise ManifestValidationError(
+                    f"forbiddenExports.{owner}.{relative_path}.symbols must not be empty"
+                )
+            optional = entry.get("optional", False)
+            if not isinstance(optional, bool):
+                raise ManifestValidationError(
+                    f"forbiddenExports.{owner}.{relative_path}.optional must be boolean"
+                )
+
+            path = (root / relative_path).resolve()
+            if not path.is_relative_to(root):
+                raise ManifestValidationError(
+                    f"forbiddenExports.{owner} path escapes the repository: {relative_path}"
+                )
+            if not path.is_file():
+                if optional:
+                    continue
+                raise ManifestValidationError(
+                    f"Cannot read {owner} forbidden-export surface {relative_path}"
+                )
+            try:
+                source = path.read_text(encoding="utf-8")
+            except OSError as error:
+                raise ManifestValidationError(
+                    f"Cannot read {owner} forbidden-export surface {path}: {error}"
+                ) from error
+
+            present = [
+                symbol
+                for symbol in symbols
+                if _contains_forbidden_symbol(source, symbol)
+            ]
+            if present:
+                violations.append(
+                    f"{owner} {relative_path}: {', '.join(sorted(present))}"
+                )
+
+    if violations:
+        raise ManifestValidationError(
+            "forbidden legacy exports remain (" + "; ".join(violations) + ")"
+        )
+
+
 def _validate_rust_inventory(
     repo_root: Path,
     manifest: dict[str, Any],
@@ -363,6 +463,16 @@ def validate_manifest(repo_root: Path, manifest: dict[str, Any]) -> None:
         )
     _validate_failure_fixtures(manifest, variants)
     _validate_scenarios(repo_root, manifest)
+    forbidden_exports = manifest.get("forbiddenExports")
+    if not isinstance(forbidden_exports, dict) or set(forbidden_exports) != set(
+        supported
+    ):
+        raise ManifestValidationError(
+            "forbiddenExports must exactly match supportedAdapters"
+        )
+    # Run the contraction audit after positive contract checks so malformed
+    # variant or fixture changes retain their more specific diagnostics.
+    _validate_forbidden_exports(repo_root, forbidden_exports)
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -163,9 +163,10 @@ Source-backed caveats:
 
 The active Rust path is:
 
-1. Crash Log Scan Intake in `classic-scanlog-core` builds an `AnalysisConfig` and resolves DB file paths; the C++ bridge delegates to that seam while preserving its public call shape.
+1. A final-contract request supplies typed scan facts; Rust-owned Crash Log Scan
+   Intake builds the private analysis configuration and resolves DB file paths.
 2. If `show_formid_values` is `true`, it creates a `DatabasePool` and calls `initialize(resolved_paths)`.
-3. `OrchestratorCore` receives that pool through `attach_database_pool()`.
+3. The private scan-run engine attaches that pool before analyzing admitted logs.
 4. `FormIDAnalyzerCore::formid_match()` batches `(formid_suffix, plugin)` pairs and calls `get_entries_batch()`.
 5. Report lines include the description only when a lookup succeeds.
 

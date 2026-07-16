@@ -38,16 +38,16 @@ QString eventStatus(const scanner::ScanRunContractEvent& event)
     case EventKind::LogPhase: {
         QString phase;
         switch (event.phase) {
-        case scanner::BatchProgressPhase::Setup:
+        case scanner::ScanRunContractProgressPhase::Setup:
             phase = QStringLiteral("setup");
             break;
-        case scanner::BatchProgressPhase::Parse:
+        case scanner::ScanRunContractProgressPhase::Parse:
             phase = QStringLiteral("parse");
             break;
-        case scanner::BatchProgressPhase::Analyze:
+        case scanner::ScanRunContractProgressPhase::Analyze:
             phase = QStringLiteral("analysis");
             break;
-        case scanner::BatchProgressPhase::Finalize:
+        case scanner::ScanRunContractProgressPhase::Finalize:
             phase = QStringLiteral("finalization");
             break;
         }

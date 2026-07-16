@@ -12,7 +12,6 @@
 
 use crate::crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 use crate::error::Result;
-use crate::fcx_handler::FcxModeHandler;
 use crate::formid_analyzer::FormIDAnalyzerCore;
 use crate::gpu_detector::GpuDetector;
 use crate::mod_detector::{
@@ -47,7 +46,6 @@ use indexmap::IndexMap;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, LazyLock};
 
 /// Coarse-grained scan progress phases emitted at orchestration boundaries.
@@ -61,90 +59,6 @@ pub enum ScanProgressPhase {
     Analyze,
     /// Report composition and result finalization.
     Finalize,
-}
-
-/// Batch lifecycle events emitted by the core batch scan driver.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum BatchScanEventKind {
-    /// The log has been accepted into the batch.
-    Queued,
-    /// The log's worker has started.
-    Started,
-    /// The log reported a single-log scan phase transition.
-    Phase,
-    /// The log finished successfully.
-    Completed,
-    /// The log finished with a per-log failure result.
-    Failed,
-}
-
-/// Core batch progress event independent of any binding-specific DTOs.
-#[derive(Clone, Debug)]
-pub struct BatchScanEvent {
-    /// Original index in the input path list.
-    pub input_index: usize,
-    /// Log path associated with this event.
-    pub log_path: String,
-    /// Event kind.
-    pub kind: BatchScanEventKind,
-    /// Current coarse scan phase.
-    pub phase: ScanProgressPhase,
-    /// Number of completed logs at event emit time.
-    pub completed: usize,
-    /// Total number of logs in the batch.
-    pub total: usize,
-    /// Whether the terminal event represents a successful scan.
-    pub success: bool,
-}
-
-/// Options for eventful batch scanning.
-#[derive(Clone, Default)]
-pub struct BatchScanOptions {
-    /// Optional maximum number of concurrent log processing tasks.
-    pub max_concurrent: Option<usize>,
-    /// Return indexed results in input order instead of completion order.
-    pub preserve_order: bool,
-    /// Optional cooperative cancellation flag checked before each log starts.
-    pub cancellation: Option<Arc<AtomicBool>>,
-}
-
-/// A batch result with stable input index metadata.
-#[derive(Clone)]
-pub struct IndexedAnalysisResult {
-    /// Original index in the input path list.
-    pub input_index: usize,
-    /// Completion ordinal for this result.
-    pub completed: usize,
-    /// Total number of logs in the batch.
-    pub total: usize,
-    /// Per-log analysis result.
-    pub result: AnalysisResult,
-}
-
-const READY_BATCH_PROGRESS_DRAIN_MAX_EMPTY_YIELDS: usize = 2;
-
-async fn drain_ready_batch_progress_events(
-    progress_rx: &mut tokio::sync::mpsc::UnboundedReceiver<BatchScanEvent>,
-) -> Vec<BatchScanEvent> {
-    let mut events = Vec::new();
-    let mut empty_yields_remaining = READY_BATCH_PROGRESS_DRAIN_MAX_EMPTY_YIELDS;
-
-    loop {
-        match progress_rx.try_recv() {
-            Ok(event) => {
-                events.push(event);
-                empty_yields_remaining = READY_BATCH_PROGRESS_DRAIN_MAX_EMPTY_YIELDS;
-            }
-            Err(tokio::sync::mpsc::error::TryRecvError::Empty) if empty_yields_remaining > 0 => {
-                empty_yields_remaining -= 1;
-                tokio::task::yield_now().await;
-            }
-            Err(tokio::sync::mpsc::error::TryRecvError::Empty) => break,
-            Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => break,
-        }
-    }
-
-    events
 }
 
 struct ScanAnalysisContext {
@@ -176,7 +90,7 @@ struct SuspectScanFragments {
 
 /// Resolve the effective concurrency for batch log processing.
 #[must_use]
-pub fn resolve_batch_concurrency(total_logs: usize, max_concurrent: Option<usize>) -> usize {
+pub(crate) fn resolve_batch_concurrency(total_logs: usize, max_concurrent: Option<usize>) -> usize {
     if total_logs == 0 {
         return 1;
     }
@@ -390,7 +304,7 @@ impl AnalysisConfig {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignore
     /// use classic_scanlog_core::AnalysisConfig;
     ///
     /// // Create configuration for Fallout 4 (non-VR)
@@ -624,7 +538,7 @@ impl AnalysisResult {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignore
     /// use classic_scanlog_core::AnalysisResult;
     ///
     /// let report = vec![
@@ -683,7 +597,7 @@ impl AnalysisResult {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignore
     /// use classic_scanlog_core::AnalysisResult;
     ///
     /// let result = AnalysisResult::failure(
@@ -947,7 +861,7 @@ impl OrchestratorCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignore
     /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -1053,7 +967,7 @@ impl OrchestratorCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignore
     /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
     /// use classic_database_core::DatabasePool;
     /// use std::sync::Arc;
@@ -1204,7 +1118,7 @@ impl OrchestratorCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignore
     /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -1342,232 +1256,6 @@ impl OrchestratorCore {
         Ok(result)
     }
 
-    /// Asynchronously processes multiple crash log files in parallel.
-    ///
-    /// This function processes a batch of crash logs concurrently using bounded parallelism,
-    /// collecting all results into a vector. Each log is analyzed independently, and failures
-    /// don't stop processing of remaining logs. Failed analyses are returned as `AnalysisResult`
-    /// instances with `success = false` and error messages.
-    ///
-    /// # Arguments
-    ///
-    /// * `log_paths` - Vector of paths to crash log files to analyze
-    /// * `max_concurrent` - Optional maximum number of concurrent log processing tasks.
-    ///   If `None`, uses adaptive concurrency based on CPU count and batch size.
-    ///   If `Some(n)`, uses exactly `n` concurrent tasks (minimum 1).
-    ///
-    /// # Returns
-    ///
-    /// Returns a `Vec<AnalysisResult>` with one result per input log path.
-    /// Note: Results may not be in the same order as input due to parallel processing.
-    /// Failed analyses are included as failure results rather than being filtered out.
-    ///
-    /// # Performance
-    ///
-    /// - Parallel processing with bounded concurrency
-    /// - Each log: ~50-200ms (SIMD-optimized parsing)
-    /// - Near-linear speedup with multiple CPU cores when `max_concurrent` allows
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
-    ///
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
-    /// let orchestrator = OrchestratorCore::new(config)?;
-    ///
-    /// let logs = vec![
-    ///     "crash-2024-01-01.log".to_string(),
-    ///     "crash-2024-01-02.log".to_string(),
-    ///     "crash-2024-01-03.log".to_string(),
-    /// ];
-    ///
-    /// // Auto-detect optimal concurrency
-    /// let results = orchestrator.process_logs_batch(logs.clone(), None).await;
-    ///
-    /// // Or specify exact concurrency level
-    /// let results = orchestrator.process_logs_batch(logs, Some(4)).await;
-    ///
-    /// let successful = results.iter().filter(|r| r.success).count();
-    /// let failed = results.iter().filter(|r| !r.success).count();
-    ///
-    /// println!("Processed {} logs: {} succeeded, {} failed", results.len(), successful, failed);
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub async fn process_logs_batch(
-        &self,
-        log_paths: Vec<String>,
-        max_concurrent: Option<usize>,
-    ) -> Vec<AnalysisResult> {
-        self.process_logs_batch_with_events(
-            log_paths,
-            BatchScanOptions {
-                max_concurrent,
-                preserve_order: false,
-                cancellation: None,
-            },
-            |_| {},
-        )
-        .await
-        .into_iter()
-        .map(|indexed| indexed.result)
-        .collect()
-    }
-
-    /// Process multiple logs with indexed results and core lifecycle events.
-    pub async fn process_logs_batch_with_events<F>(
-        &self,
-        log_paths: Vec<String>,
-        options: BatchScanOptions,
-        mut on_event: F,
-    ) -> Vec<IndexedAnalysisResult>
-    where
-        F: FnMut(BatchScanEvent),
-    {
-        use futures::stream::{self, StreamExt};
-        use tokio::sync::mpsc;
-
-        let total = log_paths.len();
-        if total == 0 {
-            return Vec::new();
-        }
-
-        let concurrency = resolve_batch_concurrency(total, options.max_concurrent);
-        let indexed_paths: Vec<(usize, String)> = log_paths.into_iter().enumerate().collect();
-
-        for (input_index, log_path) in &indexed_paths {
-            on_event(BatchScanEvent {
-                input_index: *input_index,
-                log_path: log_path.clone(),
-                kind: BatchScanEventKind::Queued,
-                phase: ScanProgressPhase::Setup,
-                completed: 0,
-                total,
-                success: false,
-            });
-        }
-
-        let (progress_tx, mut progress_rx) = mpsc::unbounded_channel::<BatchScanEvent>();
-        let completed_counter = Arc::new(AtomicUsize::new(0));
-        let cancellation = options.cancellation.clone();
-
-        let mut tasks = stream::iter(indexed_paths)
-            .map(|(input_index, log_path)| {
-                let progress_tx = progress_tx.clone();
-                let completed_counter = Arc::clone(&completed_counter);
-                let cancellation = cancellation.clone();
-                async move {
-                    // Cancellation before admission keeps the log queued; a
-                    // Started event would contradict its terminal non-start disposition.
-                    if cancellation
-                        .as_ref()
-                        .is_some_and(|cancel| cancel.load(Ordering::Relaxed))
-                    {
-                        return (
-                            input_index,
-                            log_path.clone(),
-                            ScanProgressPhase::Setup,
-                            AnalysisResult::failure(log_path, "Cancelled by user".to_string()),
-                        );
-                    }
-
-                    let _ = progress_tx.send(BatchScanEvent {
-                        input_index,
-                        log_path: log_path.clone(),
-                        kind: BatchScanEventKind::Started,
-                        phase: ScanProgressPhase::Setup,
-                        completed: completed_counter.load(Ordering::Relaxed),
-                        total,
-                        success: false,
-                    });
-
-                    let mut last_phase = ScanProgressPhase::Setup;
-                    let result = match self
-                        .process_log_with_progress(log_path.clone(), |phase| {
-                            last_phase = phase;
-                            let _ = progress_tx.send(BatchScanEvent {
-                                input_index,
-                                log_path: log_path.clone(),
-                                kind: BatchScanEventKind::Phase,
-                                phase,
-                                completed: completed_counter.load(Ordering::Relaxed),
-                                total,
-                                success: false,
-                            });
-                        })
-                        .await
-                    {
-                        Ok(result) => result,
-                        Err(e) => AnalysisResult::failure(log_path.clone(), e.to_string()),
-                    };
-                    (input_index, log_path, last_phase, result)
-                }
-            })
-            .buffer_unordered(concurrency);
-
-        let mut completed = 0usize;
-        let mut indexed_results = Vec::with_capacity(total);
-        while completed < total {
-            tokio::select! {
-                biased;
-                maybe_event = progress_rx.recv() => {
-                    if let Some(event) = maybe_event {
-                        on_event(event);
-                    }
-                }
-                maybe_result = tasks.next() => {
-                    let Some((input_index, scanned_path, last_phase, result)) = maybe_result else {
-                        break;
-                    };
-                    for event in drain_ready_batch_progress_events(&mut progress_rx).await {
-                        on_event(event);
-                    }
-                    completed += 1;
-                    completed_counter.store(completed, Ordering::Relaxed);
-                    on_event(BatchScanEvent {
-                        input_index,
-                        log_path: result.log_path.clone(),
-                        kind: if result.success {
-                            BatchScanEventKind::Completed
-                        } else {
-                            BatchScanEventKind::Failed
-                        },
-                        phase: last_phase,
-                        completed,
-                        total,
-                        success: result.success,
-                    });
-                    indexed_results.push(IndexedAnalysisResult {
-                        input_index,
-                        completed,
-                        total,
-                        result: if result.log_path.is_empty() {
-                            AnalysisResult {
-                                log_path: scanned_path,
-                                ..result
-                            }
-                        } else {
-                            result
-                        },
-                    });
-                }
-            }
-        }
-
-        drop(tasks);
-        drop(progress_tx);
-        while let Ok(event) = progress_rx.try_recv() {
-            on_event(event);
-        }
-
-        if options.preserve_order {
-            indexed_results.sort_by_key(|result| result.input_index);
-        }
-        indexed_results
-    }
-
     /// Returns a reference to the orchestrator's analysis configuration.
     ///
     /// Provides read-only access to the configuration used by this orchestrator instance.
@@ -1580,7 +1268,7 @@ impl OrchestratorCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```ignore
     /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -2102,15 +1790,6 @@ impl OrchestratorCore {
         )
     }
 
-    /// Creates an FcxModeHandler configured for this orchestrator.
-    ///
-    /// # Returns
-    ///
-    /// An `FcxModeHandler` instance based on the fcx_mode setting.
-    pub fn create_fcx_handler(&self) -> FcxModeHandler {
-        FcxModeHandler::new(self.config.fcx_mode)
-    }
-
     /// Checks crashgen version against a list of supported version floors.
     ///
     /// This supports multiple configured version floors per game version.
@@ -2328,73 +2007,6 @@ impl OrchestratorCore {
     // ============================================================================
     // Batch report writing
     // ============================================================================
-
-    /// Writes batch reports to files asynchronously.
-    ///
-    /// This method processes a batch of reports, generating autoscan filenames
-    /// (replacing the extension with `-AUTOSCAN.md`) and writing concurrently.
-    ///
-    /// # Arguments
-    ///
-    /// * `reports` - Vector of tuples containing (log_path, report_lines, scan_failed)
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok(Vec<PathBuf>)` with paths of successfully written reports.
-    ///
-    /// # Errors
-    ///
-    /// Returns `Err(ScanLogError)` if any write operation fails.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
-    /// use std::path::PathBuf;
-    ///
-    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
-    /// let orchestrator = OrchestratorCore::new(config)?;
-    ///
-    /// let reports = vec![
-    ///     (PathBuf::from("crash.log"), vec!["Report content".to_string()], false),
-    /// ];
-    ///
-    /// let written_paths = orchestrator.write_reports_batch(reports).await?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub async fn write_reports_batch(
-        &self,
-        reports: Vec<(std::path::PathBuf, Vec<String>, bool)>,
-    ) -> Result<Vec<std::path::PathBuf>> {
-        use futures::future::join_all;
-
-        let write_futures: Vec<_> = reports
-            .into_iter()
-            .map(|(log_path, report_lines, _scan_failed)| {
-                let file_io = self.file_io.clone();
-                async move { write_autoscan_report(&file_io, &log_path, &report_lines).await }
-            })
-            .collect();
-
-        // Execute all writes concurrently
-        let results = join_all(write_futures).await;
-
-        // Collect successful writes
-        let mut written_paths = Vec::new();
-        for result in results {
-            match result {
-                Ok(path) => written_paths.push(path),
-                Err(e) => {
-                    // Log error but continue with other writes
-                    log::warn!("Report write failed: {}", e);
-                }
-            }
-        }
-
-        Ok(written_paths)
-    }
 
     pub(crate) async fn write_autoscan_report(
         &self,

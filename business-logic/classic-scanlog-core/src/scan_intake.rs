@@ -4,9 +4,10 @@
 //! game/version input, YAML Data, scan flags, simplify-log rules, and FormID
 //! database settings into a payload ready for `OrchestratorCore`.
 
+use crate::AnalysisConfig;
 use crate::error::{Result, ScanLogError};
+use crate::orchestrator::build_analysis_config_from_yaml;
 use crate::scan_sidecar_settings::{self, ScanSidecarSettings};
-use crate::{AnalysisConfig, build_analysis_config_from_yaml};
 use classic_config_core::YamlDataCore;
 use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
 use std::path::{Path, PathBuf};

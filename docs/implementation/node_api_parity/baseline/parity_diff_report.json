@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-07-15T10:42:25.985677+00:00",
+  "generated_at_utc": "2026-07-16T01:57:09.446254+00:00",
   "summary": {
-    "tier1_contract_total": 876,
-    "tier1_matched": 876,
+    "tier1_contract_total": 858,
+    "tier1_matched": 858,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -2260,45 +2260,6 @@
       "actual_node_arity": 2
     },
     {
-      "id": "scanlog-analysis-config",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "AnalysisConfig",
-      "node_export": "createAnalysisConfig",
-      "status": "matched",
-      "expected_node_kind": "function",
-      "actual_node_kind": "function",
-      "expected_node_arity": 2,
-      "actual_node_arity": 2
-    },
-    {
-      "id": "scanlog-process-log",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "OrchestratorCore",
-      "node_export": "processLog",
-      "status": "matched",
-      "expected_node_kind": "function",
-      "actual_node_kind": "function",
-      "expected_node_arity": 2,
-      "actual_node_arity": 2
-    },
-    {
-      "id": "scanlog-process-batch",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "OrchestratorCore",
-      "node_export": "processLogsBatch",
-      "status": "matched",
-      "expected_node_kind": "function",
-      "actual_node_kind": "function",
-      "expected_node_arity": 3,
-      "actual_node_arity": 3
-    },
-    {
       "id": "scanlog-parse-segments",
       "tier": "tier1",
       "owner_module": "scanlog",
@@ -2401,45 +2362,6 @@
       "actual_node_kind": "function",
       "expected_node_arity": 1,
       "actual_node_arity": 1
-    },
-    {
-      "id": "scanlog-analysis-config-from-yaml-content",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "build_analysis_config_from_yaml",
-      "node_export": "createAnalysisConfigFromYamlContent",
-      "status": "matched",
-      "expected_node_kind": "function",
-      "actual_node_kind": "function",
-      "expected_node_arity": 6,
-      "actual_node_arity": 6
-    },
-    {
-      "id": "scanlog-process-log-with-yaml-content",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "OrchestratorCore",
-      "node_export": "processLogWithYamlContent",
-      "status": "matched",
-      "expected_node_kind": "function",
-      "actual_node_kind": "function",
-      "expected_node_arity": 7,
-      "actual_node_arity": 7
-    },
-    {
-      "id": "scanlog-process-batch-with-yaml-content",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "OrchestratorCore",
-      "node_export": "processLogsBatchWithYamlContent",
-      "status": "matched",
-      "expected_node_kind": "function",
-      "actual_node_kind": "function",
-      "expected_node_arity": 8,
-      "actual_node_arity": 8
     },
     {
       "id": "scanlog-detect-crash-pattern",
@@ -5614,19 +5536,6 @@
       "actual_node_arity": 1
     },
     {
-      "id": "scanlog.orchestrator.AnalysisResult@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "AnalysisResult@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
       "id": "scanlog.settings_validator.ConfigIssue@rust",
       "tier": "tier1",
       "owner_module": "scanlog",
@@ -5658,32 +5567,6 @@
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "CrashgenRegistry@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "scanlog.fcx_handler.FcxModeHandler@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "FcxModeHandler@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "scanlog.fcx_handler.FcxResetError@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "FcxResetError@rust",
       "node_export": null,
       "status": "matched",
       "expected_node_kind": null,
@@ -6082,19 +5965,6 @@
       "actual_node_arity": null
     },
     {
-      "id": "scanlog.fcx_handler.fcx_handler@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "fcx_handler@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
       "id": "scanlog.formid.formid@rust",
       "tier": "tier1",
       "owner_module": "scanlog",
@@ -6152,19 +6022,6 @@
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "mod_detector@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "scanlog.orchestrator.orchestrator@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "orchestrator@rust",
       "node_export": null,
       "status": "matched",
       "expected_node_kind": null,
@@ -6243,19 +6100,6 @@
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "report@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "scanlog.orchestrator.resolve_batch_concurrency@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "resolve_batch_concurrency@rust",
       "node_export": null,
       "status": "matched",
       "expected_node_kind": null,
@@ -6351,32 +6195,6 @@
       "status": "matched",
       "expected_node_kind": "const",
       "actual_node_kind": "const",
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "scanlog.orchestrator.JsAnalysisBuildOptions",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "build_analysis_config_from_yaml",
-      "node_export": "JsAnalysisBuildOptions",
-      "status": "matched",
-      "expected_node_kind": "interface",
-      "actual_node_kind": "interface",
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "scanlog.orchestrator.JsAnalysisResult",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "AnalysisResult",
-      "node_export": "JsAnalysisResult",
-      "status": "matched",
-      "expected_node_kind": "interface",
-      "actual_node_kind": "interface",
       "expected_node_arity": null,
       "actual_node_arity": null
     },
@@ -6654,19 +6472,6 @@
       "actual_node_arity": null
     },
     {
-      "id": "config.analysis.JsAnalysisConfig",
-      "tier": "tier1",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "AnalysisConfig",
-      "node_export": "JsAnalysisConfig",
-      "status": "matched",
-      "expected_node_kind": "interface",
-      "actual_node_kind": "interface",
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
       "id": "config.scangame.JsConfigIssue",
       "tier": "tier1",
       "owner_module": "config",
@@ -6829,19 +6634,6 @@
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "DEFAULT_QUERY_CACHE_CAPACITY",
       "node_export": "getDefaultQueryCacheCapacity",
-      "status": "matched",
-      "expected_node_kind": "function",
-      "actual_node_kind": "function",
-      "expected_node_arity": null,
-      "actual_node_arity": 0
-    },
-    {
-      "id": "config.fcx.getFcxConfigIssues",
-      "tier": "tier1",
-      "owner_module": "config",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "ConfigIssue",
-      "node_export": "getFcxConfigIssues",
       "status": "matched",
       "expected_node_kind": "function",
       "actual_node_kind": "function",
@@ -11165,19 +10957,6 @@
       "actual_node_arity": 4
     },
     {
-      "id": "aux.resetFcxGlobalState",
-      "tier": "tier1",
-      "owner_module": "aux",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "FcxModeHandler",
-      "node_export": "resetFcxGlobalState",
-      "status": "matched",
-      "expected_node_kind": "function",
-      "actual_node_kind": "function",
-      "expected_node_arity": null,
-      "actual_node_arity": 0
-    },
-    {
       "id": "aux.setApplicationDir",
       "tier": "tier1",
       "owner_module": "aux",
@@ -11189,19 +10968,6 @@
       "actual_node_kind": "function",
       "expected_node_arity": null,
       "actual_node_arity": 1
-    },
-    {
-      "id": "aux.writeAutoscanReport",
-      "tier": "tier1",
-      "owner_module": "aux",
-      "squad": "Squad B (version-registry/aux)",
-      "rust_symbol": "FileIOCore",
-      "node_export": "writeAutoscanReport",
-      "status": "matched",
-      "expected_node_kind": "function",
-      "actual_node_kind": "function",
-      "expected_node_arity": null,
-      "actual_node_arity": 2
     },
     {
       "id": "scangame.JsGameSetupCheck",

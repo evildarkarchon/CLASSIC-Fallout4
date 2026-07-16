@@ -271,7 +271,7 @@ Contributor rule: if you extend this crate, keep new async work compatible with 
 
 ## Related Crates And Integration Points
 
-- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - downstream consumer; `OrchestratorCore` can attach a `DatabasePool` for richer FormID report text
+- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - downstream consumer; the final scan-run engine attaches a `DatabasePool` internally for richer FormID report text
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - configures scan-time DB cache profiles and logs `PoolStatistics`
 - [`classic-node`](../../node-bindings/classic-node) - JavaScript/TypeScript wrapper over this crate's pool API
 - [`classic-database-py`](../../python-bindings/classic-database-py) - PyO3 adapter that delegates business logic to this crate

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-15T07:22:36Z",
+  "generated_at_utc": "2026-07-16T01:51:09Z",
   "entries": [
     {
       "id": "b0d609f9ed78e468",
@@ -1691,27 +1691,6 @@
           }
         ],
         "returnType": "TargetedResolutionDto"
-      }
-    },
-    {
-      "id": "a92b442f00efcaea",
-      "rustSymbol": "write_autoscan_report",
-      "kind": "function",
-      "bridgeModule": "files",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/files.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "log_path",
-            "type": "&str"
-          },
-          {
-            "name": "content",
-            "type": "&str"
-          }
-        ],
-        "returnType": "Result<String>"
       }
     },
     {
@@ -3939,35 +3918,6 @@
       ]
     },
     {
-      "id": "870370848109bb3d",
-      "rustSymbol": "BatchProgressEventKind",
-      "kind": "enum",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "variants": [
-        "Queued",
-        "Started",
-        "Phase",
-        "Completed",
-        "Failed"
-      ]
-    },
-    {
-      "id": "b2fde85758b72528",
-      "rustSymbol": "BatchProgressPhase",
-      "kind": "enum",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "variants": [
-        "Setup",
-        "Parse",
-        "Analyze",
-        "Finalize"
-      ]
-    },
-    {
       "id": "d8f7976d67cc2ff2",
       "rustSymbol": "ScanRunContractDiscoverySource",
       "kind": "enum",
@@ -4038,6 +3988,20 @@
       ]
     },
     {
+      "id": "55062b4069b3a08c",
+      "rustSymbol": "ScanRunContractProgressPhase",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Setup",
+        "Parse",
+        "Analyze",
+        "Finalize"
+      ]
+    },
+    {
       "id": "6fac94d2ef62d67d",
       "rustSymbol": "ScanRunContractStatus",
       "kind": "enum",
@@ -4051,47 +4015,6 @@
         "CancelledBeforeDiscovery",
         "Cancelled"
       ]
-    },
-    {
-      "id": "888cc866ef8a9c65",
-      "rustSymbol": "build_full_scan_config",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "yaml_dir_root",
-            "type": "&str"
-          },
-          {
-            "name": "yaml_dir_data",
-            "type": "&str"
-          },
-          {
-            "name": "game",
-            "type": "&str"
-          },
-          {
-            "name": "game_version",
-            "type": "&str"
-          },
-          {
-            "name": "show_formid_values",
-            "type": "bool"
-          },
-          {
-            "name": "fcx_mode",
-            "type": "bool"
-          },
-          {
-            "name": "simplify_logs",
-            "type": "bool"
-          }
-        ],
-        "returnType": "Result<Box<FullScanConfig>>"
-      }
     },
     {
       "id": "997880f5a0bc006d",
@@ -4128,51 +4051,6 @@
       }
     },
     {
-      "id": "eedb43b80d8bd4a9",
-      "rustSymbol": "fcx_reset_global_state",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [],
-        "returnType": "Result<()>"
-      }
-    },
-    {
-      "id": "d7282dc5d5df26ac",
-      "rustSymbol": "get_fcx_config_issues",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [],
-        "returnType": "Vec<FcxIssueDto>"
-      }
-    },
-    {
-      "id": "f5c880d46c65220e",
-      "rustSymbol": "on_batch_progress",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "C++",
-      "signature": {
-        "args": [
-          {
-            "name": "self",
-            "type": "&ScanBatchProgressCallback"
-          },
-          {
-            "name": "event",
-            "type": "&BatchProgressEvent"
-          }
-        ],
-        "returnType": null
-      }
-    },
-    {
       "id": "21d3f385eae475d7",
       "rustSymbol": "on_scan_run_event",
       "kind": "function",
@@ -4191,127 +4069,6 @@
           }
         ],
         "returnType": null
-      }
-    },
-    {
-      "id": "060c10ce20688b6d",
-      "rustSymbol": "orchestrator_new",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "config",
-            "type": "&FullScanConfig"
-          }
-        ],
-        "returnType": "Result<Box<Orchestrator>>"
-      }
-    },
-    {
-      "id": "702cda850a4a7c67",
-      "rustSymbol": "orchestrator_new_minimal",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "game",
-            "type": "&str"
-          },
-          {
-            "name": "game_version",
-            "type": "&str"
-          },
-          {
-            "name": "crashgen_name",
-            "type": "&str"
-          },
-          {
-            "name": "xse_acronym",
-            "type": "&str"
-          }
-        ],
-        "returnType": "Result<Box<Orchestrator>>"
-      }
-    },
-    {
-      "id": "0bc429d2f65210a0",
-      "rustSymbol": "orchestrator_process_log",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "orch",
-            "type": "&Orchestrator"
-          },
-          {
-            "name": "log_path",
-            "type": "&str"
-          }
-        ],
-        "returnType": "Result<ScanResult>"
-      }
-    },
-    {
-      "id": "7aa16ef250ba3e0e",
-      "rustSymbol": "orchestrator_process_logs_batch",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "orch",
-            "type": "&Orchestrator"
-          },
-          {
-            "name": "log_paths",
-            "type": "&[String]"
-          },
-          {
-            "name": "max_concurrent",
-            "type": "u32"
-          }
-        ],
-        "returnType": "Vec<ScanResult>"
-      }
-    },
-    {
-      "id": "29b39d018e4270c0",
-      "rustSymbol": "orchestrator_process_logs_batch_with_progress",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "orch",
-            "type": "&Orchestrator"
-          },
-          {
-            "name": "log_paths",
-            "type": "&[String]"
-          },
-          {
-            "name": "max_concurrent",
-            "type": "u32"
-          },
-          {
-            "name": "callback",
-            "type": "&ScanBatchProgressCallback"
-          }
-        ],
-        "returnType": "Vec<BatchScanResult>"
       }
     },
     {
@@ -4417,52 +4174,6 @@
       }
     },
     {
-      "id": "7172ab4eb19073ab",
-      "rustSymbol": "scan_cancellation_token_cancel",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "token",
-            "type": "&ScanCancellationToken"
-          }
-        ],
-        "returnType": null
-      }
-    },
-    {
-      "id": "fa6ec5be88d0ba46",
-      "rustSymbol": "scan_cancellation_token_new",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [],
-        "returnType": "Box<ScanCancellationToken>"
-      }
-    },
-    {
-      "id": "12ba4e240dddca06",
-      "rustSymbol": "scan_cancellation_token_reset",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "token",
-            "type": "&ScanCancellationToken"
-          }
-        ],
-        "returnType": null
-      }
-    },
-    {
       "id": "923b1638b9731c37",
       "rustSymbol": "scan_run_cancellation_cancel",
       "kind": "function",
@@ -4531,31 +4242,6 @@
           }
         ],
         "returnType": "ScanRunContractExecutionResult"
-      }
-    },
-    {
-      "id": "f79d7790f9ba9d64",
-      "rustSymbol": "scan_run_execute",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "signature": {
-        "args": [
-          {
-            "name": "request",
-            "type": "&ScanRunRequestDto"
-          },
-          {
-            "name": "callback",
-            "type": "&ScanBatchProgressCallback"
-          },
-          {
-            "name": "cancellation_token",
-            "type": "&ScanCancellationToken"
-          }
-        ],
-        "returnType": "Result<ScanRunResult>"
       }
     },
     {
@@ -4708,38 +4394,6 @@
       "blockOrigin": "Rust"
     },
     {
-      "id": "e7c5178da7f47aa4",
-      "rustSymbol": "FullScanConfig",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
-    },
-    {
-      "id": "1ea47463ffeb721a",
-      "rustSymbol": "Orchestrator",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
-    },
-    {
-      "id": "3e9306eed73901be",
-      "rustSymbol": "ScanBatchProgressCallback",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "C++"
-    },
-    {
-      "id": "b4632cb1192f6ccd",
-      "rustSymbol": "ScanCancellationToken",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust"
-    },
-    {
       "id": "7e171291b252d3dd",
       "rustSymbol": "ScanRunCancellation",
       "kind": "opaque",
@@ -4770,98 +4424,6 @@
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust"
-    },
-    {
-      "id": "57828838fe57bed3",
-      "rustSymbol": "BatchProgressEvent",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "completed",
-          "type": "u32"
-        },
-        {
-          "name": "total",
-          "type": "u32"
-        },
-        {
-          "name": "input_index",
-          "type": "u32"
-        },
-        {
-          "name": "log_path",
-          "type": "String"
-        },
-        {
-          "name": "event_kind",
-          "type": "BatchProgressEventKind"
-        },
-        {
-          "name": "phase",
-          "type": "BatchProgressPhase"
-        },
-        {
-          "name": "success",
-          "type": "bool"
-        }
-      ]
-    },
-    {
-      "id": "34b978100efd3fba",
-      "rustSymbol": "BatchScanResult",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "input_index",
-          "type": "u32"
-        },
-        {
-          "name": "completed",
-          "type": "u32"
-        },
-        {
-          "name": "total",
-          "type": "u32"
-        },
-        {
-          "name": "log_path",
-          "type": "String"
-        },
-        {
-          "name": "success",
-          "type": "bool"
-        },
-        {
-          "name": "report_lines",
-          "type": "Vec<String>"
-        },
-        {
-          "name": "error_message",
-          "type": "String"
-        },
-        {
-          "name": "processing_time_ms",
-          "type": "u64"
-        },
-        {
-          "name": "formid_count",
-          "type": "u32"
-        },
-        {
-          "name": "plugin_count",
-          "type": "u32"
-        },
-        {
-          "name": "suspect_count",
-          "type": "u32"
-        }
-      ]
     },
     {
       "id": "0ea85cd7a4b6a5fb",
@@ -4936,48 +4498,6 @@
         {
           "name": "dumps_stacks_ratio",
           "type": "f64"
-        }
-      ]
-    },
-    {
-      "id": "1100118d4f482241",
-      "rustSymbol": "ScanResult",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "log_path",
-          "type": "String"
-        },
-        {
-          "name": "success",
-          "type": "bool"
-        },
-        {
-          "name": "report_lines",
-          "type": "Vec<String>"
-        },
-        {
-          "name": "error_message",
-          "type": "String"
-        },
-        {
-          "name": "processing_time_ms",
-          "type": "u64"
-        },
-        {
-          "name": "formid_count",
-          "type": "u32"
-        },
-        {
-          "name": "plugin_count",
-          "type": "u32"
-        },
-        {
-          "name": "suspect_count",
-          "type": "u32"
         }
       ]
     },
@@ -5099,7 +4619,7 @@
         },
         {
           "name": "phase",
-          "type": "BatchProgressPhase"
+          "type": "ScanRunContractProgressPhase"
         },
         {
           "name": "disposition",
@@ -5374,238 +4894,6 @@
       ]
     },
     {
-      "id": "15b6b387978da336",
-      "rustSymbol": "ScanRunDiscoveryResult",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "source",
-          "type": "String"
-        },
-        {
-          "name": "accepted_logs",
-          "type": "Vec<String>"
-        },
-        {
-          "name": "rejected_paths",
-          "type": "Vec<String>"
-        },
-        {
-          "name": "rejected_reasons",
-          "type": "Vec<String>"
-        },
-        {
-          "name": "searched_locations",
-          "type": "Vec<String>"
-        }
-      ]
-    },
-    {
-      "id": "b88124b36f1347e2",
-      "rustSymbol": "ScanRunLogResult",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "input_index",
-          "type": "u32"
-        },
-        {
-          "name": "log_path",
-          "type": "String"
-        },
-        {
-          "name": "autoscan_report_path",
-          "type": "String"
-        },
-        {
-          "name": "success",
-          "type": "bool"
-        },
-        {
-          "name": "report_write_failed",
-          "type": "bool"
-        },
-        {
-          "name": "cancelled",
-          "type": "bool"
-        },
-        {
-          "name": "moved_to_unsolved_logs",
-          "type": "bool"
-        },
-        {
-          "name": "error_message",
-          "type": "String"
-        },
-        {
-          "name": "processing_time_ms",
-          "type": "u64"
-        },
-        {
-          "name": "formid_count",
-          "type": "u32"
-        },
-        {
-          "name": "plugin_count",
-          "type": "u32"
-        },
-        {
-          "name": "suspect_count",
-          "type": "u32"
-        }
-      ]
-    },
-    {
-      "id": "87e07059e225ead6",
-      "rustSymbol": "ScanRunRequestDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "yaml_dir_root",
-          "type": "String"
-        },
-        {
-          "name": "yaml_dir_data",
-          "type": "String"
-        },
-        {
-          "name": "game",
-          "type": "String"
-        },
-        {
-          "name": "game_version",
-          "type": "String"
-        },
-        {
-          "name": "base_directory",
-          "type": "String"
-        },
-        {
-          "name": "custom_scan_directory",
-          "type": "String"
-        },
-        {
-          "name": "configured_documents_root",
-          "type": "String"
-        },
-        {
-          "name": "show_formid_values",
-          "type": "bool"
-        },
-        {
-          "name": "formid_database_paths",
-          "type": "Vec<String>"
-        },
-        {
-          "name": "fcx_mode",
-          "type": "bool"
-        },
-        {
-          "name": "simplify_logs",
-          "type": "bool"
-        },
-        {
-          "name": "move_unsolved_logs",
-          "type": "bool"
-        },
-        {
-          "name": "unsolved_logs_destination",
-          "type": "String"
-        },
-        {
-          "name": "targeted_mode",
-          "type": "bool"
-        },
-        {
-          "name": "setup_game_root",
-          "type": "String"
-        },
-        {
-          "name": "setup_docs_root",
-          "type": "String"
-        },
-        {
-          "name": "setup_game_exe_path",
-          "type": "String"
-        },
-        {
-          "name": "setup_xse_log_path",
-          "type": "String"
-        },
-        {
-          "name": "max_concurrent",
-          "type": "u32"
-        },
-        {
-          "name": "targeted_inputs",
-          "type": "Vec<String>"
-        },
-        {
-          "name": "log_paths",
-          "type": "Vec<String>"
-        }
-      ]
-    },
-    {
-      "id": "b062184064994c9e",
-      "rustSymbol": "ScanRunResult",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "status",
-          "type": "String"
-        },
-        {
-          "name": "message",
-          "type": "String"
-        },
-        {
-          "name": "total",
-          "type": "u32"
-        },
-        {
-          "name": "succeeded",
-          "type": "u32"
-        },
-        {
-          "name": "failed",
-          "type": "u32"
-        },
-        {
-          "name": "cancelled",
-          "type": "u32"
-        },
-        {
-          "name": "discovery",
-          "type": "ScanRunDiscoveryResult"
-        },
-        {
-          "name": "has_setup",
-          "type": "bool"
-        },
-        {
-          "name": "setup",
-          "type": "ScanRunSetupResultDto"
-        },
-        {
-          "name": "logs",
-          "type": "Vec<ScanRunLogResult>"
-        }
-      ]
-    },
-    {
       "id": "9b28bab3cd0970b5",
       "rustSymbol": "ScanRunSetupCheckDto",
       "kind": "struct",
@@ -5688,48 +4976,6 @@
         {
           "name": "path",
           "type": "String"
-        }
-      ]
-    },
-    {
-      "id": "153273fead0cfe26",
-      "rustSymbol": "ScanRunSetupResultDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
-      "blockOrigin": "Rust",
-      "fields": [
-        {
-          "name": "status",
-          "type": "String"
-        },
-        {
-          "name": "message",
-          "type": "String"
-        },
-        {
-          "name": "rendered_report",
-          "type": "String"
-        },
-        {
-          "name": "checks",
-          "type": "Vec<ScanRunSetupCheckDto>"
-        },
-        {
-          "name": "path_updates",
-          "type": "Vec<ScanRunSetupPathUpdateDto>"
-        },
-        {
-          "name": "configuration_issues",
-          "type": "Vec<FcxIssueDto>"
-        },
-        {
-          "name": "actions",
-          "type": "Vec<String>"
-        },
-        {
-          "name": "fatal_errors",
-          "type": "Vec<String>"
         }
       ]
     },

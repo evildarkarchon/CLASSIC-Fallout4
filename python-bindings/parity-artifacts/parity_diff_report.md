@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-15T11:51:27.707977+00:00`
-- Tier-1 contract rows: **1265**
-- Tier-1 matched: **1265**
+- Generated: `2026-07-16T01:55:07.508378+00:00`
+- Tier-1 contract rows: **1221**
+- Tier-1 matched: **1221**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -759,8 +759,6 @@
 | `scangame.xse.unpacked@rust` | `scangame` | `unpacked` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.wrye@rust` | `scangame` | `wrye` | `classic_scangame.AddressLibInfo` | `matched` |
 | `scangame.xse.xse@rust` | `scangame` | `xse` | `classic_scangame.AddressLibInfo` | `matched` |
-| `scanlog-analysis-config-class` | `scanlog` | `AnalysisConfig` | `classic_scanlog.AnalysisConfig` | `matched` |
-| `scanlog-analysis-config-from-yamldata` | `scanlog` | `build_analysis_config_from_yaml` | `classic_scanlog.AnalysisConfig.from_yamldata` | `matched` |
 | `scanlog-crashgen-version-class` | `scanlog` | `CrashgenVersion` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog-crashgen-version-status` | `scanlog` | `check_crashgen_version_status` | `classic_scanlog.check_crashgen_version_status` | `matched` |
 | `scanlog-crashgen-version-status-class` | `scanlog` | `CrashgenVersionStatus` | `classic_scanlog.CrashgenVersionStatus` | `matched` |
@@ -771,9 +769,6 @@
 | `scanlog-logparser-detect-vr` | `scanlog` | `detect_vr_log` | `classic_scanlog.LogParser.detect_vr_log` | `matched` |
 | `scanlog-logparser-extract-formids` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.extract_formids` | `matched` |
 | `scanlog-logparser-extract-plugins` | `scanlog` | `LogParser` | `classic_scanlog.LogParser.extract_plugins` | `matched` |
-| `scanlog-orchestrator-class` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator` | `matched` |
-| `scanlog-orchestrator-process-batch` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.process_logs_batch` | `matched` |
-| `scanlog-orchestrator-process-log` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.process_log` | `matched` |
 | `scanlog-papyrus-analyze-full` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.analyze_full` | `matched` |
 | `scanlog-papyrus-analyzer-class` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer` | `matched` |
 | `scanlog-parse-crashgen-version` | `scanlog` | `CrashgenVersion` | `classic_scanlog.parse_crashgen_version` | `matched` |
@@ -788,22 +783,6 @@
 | `scanlog.fcx_handler.ConfigIssue.__init__` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue.__init__` | `matched` |
 | `scanlog.fcx_handler.ConfigIssue.format_report` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue.format_report` | `matched` |
 | `scanlog.fcx_handler.ConfigIssue@rust` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler.__init__` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.__init__` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler.add_issue` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.add_issue` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler.check_fcx_mode` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.check_fcx_mode` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler.get_detected_issues` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.get_detected_issues` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler.get_fcx_messages` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.get_fcx_messages` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler.get_fcx_status_message` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.get_fcx_status_message` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler.has_results` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.has_results` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler.reset` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.reset` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler.reset_fcx_checks` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.reset_fcx_checks` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler.set_detected_issues` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.set_detected_issues` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler.set_game_files_result` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.set_game_files_result` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler.set_main_files_result` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler.set_main_files_result` | `matched` |
-| `scanlog.fcx_handler.FcxModeHandler@rust` | `scanlog` | `FcxModeHandler` | `classic_scanlog.FcxModeHandler` | `matched` |
-| `scanlog.fcx_handler.FcxResetError@rust` | `scanlog` | `FcxResetError` | `classic_scanlog.FcxResetError` | `matched` |
-| `scanlog.fcx_handler.fcx_handler@rust` | `scanlog` | `fcx_handler` | `classic_scanlog.FcxModeHandler` | `matched` |
 | `scanlog.formid.RustFormIDAnalyzer@rust` | `scanlog` | `RustFormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer` | `matched` |
 | `scanlog.formid.formid@rust` | `scanlog` | `formid` | `classic_scanlog.FormIDAnalyzer` | `matched` |
 | `scanlog.formid_analyzer.FormIDAnalyzer` | `scanlog` | `RustFormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer` | `matched` |
@@ -849,29 +828,6 @@
 | `scanlog.mod_detector.detect_mods_single` | `scanlog` | `detect_mods_single` | `classic_scanlog.detect_mods_single` | `matched` |
 | `scanlog.mod_detector.detect_mods_single@rust` | `scanlog` | `detect_mods_single` | `classic_scanlog.detect_mods_single` | `matched` |
 | `scanlog.mod_detector.mod_detector@rust` | `scanlog` | `mod_detector` | `classic_scanlog.detect_mods_single` | `matched` |
-| `scanlog.orchestrator.AnalysisConfig.__init__` | `scanlog` | `AnalysisConfig` | `classic_scanlog.AnalysisConfig.__init__` | `matched` |
-| `scanlog.orchestrator.AnalysisResult` | `scanlog` | `AnalysisResult` | `classic_scanlog.AnalysisResult` | `matched` |
-| `scanlog.orchestrator.AnalysisResult.__init__` | `scanlog` | `AnalysisResult` | `classic_scanlog.AnalysisResult.__init__` | `matched` |
-| `scanlog.orchestrator.AnalysisResult.get_report_text` | `scanlog` | `AnalysisResult` | `classic_scanlog.AnalysisResult.get_report_text` | `matched` |
-| `scanlog.orchestrator.AnalysisResult.to_dict` | `scanlog` | `AnalysisResult` | `classic_scanlog.AnalysisResult.to_dict` | `matched` |
-| `scanlog.orchestrator.AnalysisResult@rust` | `scanlog` | `AnalysisResult` | `classic_scanlog.AnalysisResult` | `matched` |
-| `scanlog.orchestrator.CancellationToken` | `scanlog` | `OrchestratorCore` | `classic_scanlog.CancellationToken` | `matched` |
-| `scanlog.orchestrator.CancellationToken.__init__` | `scanlog` | `OrchestratorCore` | `classic_scanlog.CancellationToken.__init__` | `matched` |
-| `scanlog.orchestrator.CancellationToken.cancel` | `scanlog` | `OrchestratorCore` | `classic_scanlog.CancellationToken.cancel` | `matched` |
-| `scanlog.orchestrator.CancellationToken.is_cancelled` | `scanlog` | `OrchestratorCore` | `classic_scanlog.CancellationToken.is_cancelled` | `matched` |
-| `scanlog.orchestrator.CancellationToken.reset` | `scanlog` | `OrchestratorCore` | `classic_scanlog.CancellationToken.reset` | `matched` |
-| `scanlog.orchestrator.Orchestrator.__init__` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.__init__` | `matched` |
-| `scanlog.orchestrator.Orchestrator.attach_database` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.attach_database` | `matched` |
-| `scanlog.orchestrator.Orchestrator.check_loadorder_exists` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.check_loadorder_exists` | `matched` |
-| `scanlog.orchestrator.Orchestrator.has_database_pool` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.has_database_pool` | `matched` |
-| `scanlog.orchestrator.Orchestrator.is_feature_complete` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.is_feature_complete` | `matched` |
-| `scanlog.orchestrator.Orchestrator.is_initialized` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.is_initialized` | `matched` |
-| `scanlog.orchestrator.Orchestrator.load_loadorder` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.load_loadorder` | `matched` |
-| `scanlog.orchestrator.Orchestrator.process_logs_parallel` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.process_logs_parallel` | `matched` |
-| `scanlog.orchestrator.Orchestrator.write_reports_batch` | `scanlog` | `OrchestratorCore` | `classic_scanlog.Orchestrator.write_reports_batch` | `matched` |
-| `scanlog.orchestrator.ScanProgressPhase@rust` | `scanlog` | `ScanProgressPhase` | `classic_scanlog.AnalysisResult` | `matched` |
-| `scanlog.orchestrator.orchestrator@rust` | `scanlog` | `orchestrator` | `classic_scanlog.Orchestrator` | `matched` |
-| `scanlog.orchestrator.resolve_batch_concurrency@rust` | `scanlog` | `resolve_batch_concurrency` | `classic_scanlog.Orchestrator` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.__init__` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.__init__` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.analyze_to_string` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.analyze_to_string` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.check_for_updates` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.check_for_updates` | `matched` |

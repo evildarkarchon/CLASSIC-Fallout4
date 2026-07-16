@@ -9,7 +9,7 @@ Contributor-facing documentation for how the active Qt frontend consumes final C
 - [`classic-gui/src/controllers/resultscontroller.cpp`](../../classic-gui/src/controllers/resultscontroller.cpp)
 - [`classic-gui/src/app/mainwindow.cpp`](../../classic-gui/src/app/mainwindow.cpp)
 
-The active GUI does not consume legacy completion-order `ScanRunLogResult` values or correlate them back to a GUI-owned input list with `input_index`. It consumes final-contract terminal outcomes that Rust has already sorted into discovery order.
+The active GUI consumes terminal outcomes that Rust has already sorted into discovery order. It does not correlate results back to a GUI-owned input list.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
@@ -57,7 +57,7 @@ The Rust contract preserves terminal results in discovery order independently of
 
 Consequently, `discovery_index` is not a promise about the user's original Targeted list position. It identifies `discovery.accepted_logs`, which is the same committed discovery payload delivered by `DiscoveryCompleted` and retained on the terminal result.
 
-This replaces the legacy rule where `input_index` correlated completion-order results with a caller-supplied `log_paths` array.
+No caller-supplied input index or completion-order reconstruction participates in the shipped contract.
 
 ---
 
@@ -212,4 +212,4 @@ Qt owns none of the discovery, completion-order reconciliation, durable finaliza
 - Use `discovery_index` to correlate final-contract events and accepted discovery data.
 - Trust the terminal `logs` vector's discovery order; do not add GUI sorting or original-input fallback logic.
 - Treat event order, terminal order, and Results-tab order as three separate contracts.
-- Do not reintroduce legacy `input_index` or completion-order result handling into the Qt worker.
+- Do not introduce caller-input correlation or completion-order result handling into the Qt worker.

@@ -138,7 +138,7 @@ Mods_SOLU: []
 
 test("loads native binding in Node runtime", () => {
   assert.equal(typeof classic.getVersion, "function");
-  assert.equal(typeof classic.createAnalysisConfig, "function");
+  assert.equal(typeof classic.scanRunExecute, "function");
   assert.equal(typeof classic.getVersionById, "function");
 });
 
@@ -167,24 +167,6 @@ test("exposes only the User Settings replacement contract in Node", () => {
     rmSync(root, { recursive: true, force: true });
   }
 });
-
-if (activeTier1Owners.has("scanlog")) {
-  test("runs Tier-1 sync APIs in Node runtime", () => {
-    const config = classic.createAnalysisConfig("Fallout4", "auto");
-    assert.equal(config.game, "Fallout4");
-    assert.equal(config.gameVersion, "auto");
-
-    const fromYaml = classic.createAnalysisConfigFromYamlContent(
-      MAIN_YAML,
-      GAME_YAML,
-      IGNORE_YAML,
-      "Fallout4",
-      "auto",
-    );
-    assert.equal(fromYaml.crashgenName, "Buffout 4");
-    assert.equal(fromYaml.xseAcronym, "F4SE");
-  });
-}
 
 if (activeTier1Owners.has("config")) {
   test("runs Tier-1 config/cache APIs in Node runtime", () => {
@@ -390,20 +372,6 @@ if (activeTier1Owners.has("aux")) {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
-  });
-}
-
-if (activeTier1Owners.has("scanlog")) {
-  test("runs Tier-1 async API in Node runtime", async () => {
-    const results = await classic.processLogsBatchWithYamlContent(
-      [],
-      MAIN_YAML,
-      GAME_YAML,
-      IGNORE_YAML,
-      "Fallout4",
-      "auto",
-    );
-    assert.deepEqual(results, []);
   });
 }
 
@@ -653,11 +621,6 @@ test("Plan-5: getApplicationDir returns string or null (cross-runtime, read-only
     // Once not initialized -- acceptable
     assert.ok(e instanceof Error, "expected an Error if Once is not initialized");
   }
-});
-
-test("Plan-5: resetFcxGlobalState callable without throwing (cross-runtime)", () => {
-  // Should not throw even if FCX state is already clean
-  classic.resetFcxGlobalState();
 });
 
 test("Plan-5: normalizeGameSetupVersionSelection returns string (cross-runtime)", () => {

@@ -271,19 +271,19 @@ fn maps_every_core_enum_variant_to_a_typed_cxx_variant() {
 
     assert_eq!(
         map_phase(ScanProgressPhase::Setup),
-        ffi::BatchProgressPhase::Setup
+        ffi::ScanRunContractProgressPhase::Setup
     );
     assert_eq!(
         map_phase(ScanProgressPhase::Parse),
-        ffi::BatchProgressPhase::Parse
+        ffi::ScanRunContractProgressPhase::Parse
     );
     assert_eq!(
         map_phase(ScanProgressPhase::Analyze),
-        ffi::BatchProgressPhase::Analyze
+        ffi::ScanRunContractProgressPhase::Analyze
     );
     assert_eq!(
         map_phase(ScanProgressPhase::Finalize),
-        ffi::BatchProgressPhase::Finalize
+        ffi::ScanRunContractProgressPhase::Finalize
     );
 }
 
@@ -536,7 +536,7 @@ fn event_mapping_covers_discovery_concurrency_and_every_log_variant() {
         phase: ScanProgressPhase::Analyze,
     });
     assert_eq!(phase.kind, ffi::ScanRunContractEventKind::LogPhase);
-    assert_eq!(phase.phase, ffi::BatchProgressPhase::Analyze);
+    assert_eq!(phase.phase, ffi::ScanRunContractProgressPhase::Analyze);
 
     for (disposition, expected) in [
         (
@@ -714,15 +714,26 @@ fn setup_mapping_preserves_optional_message_checks_updates_and_configuration_iss
             kind: "game_root".to_string(),
             path: PathBuf::from("detected-game"),
         }],
-        configuration_issues: vec![classic_scanlog_core::ConfigIssue::new(
-            "Fallout4.ini".to_string(),
-            None,
-            "setting".to_string(),
-            "0".to_string(),
-            "1".to_string(),
-            "description".to_string(),
-            "warning".to_string(),
-        )],
+        configuration_issues: vec![
+            classic_scanlog_core::ConfigIssue::new(
+                "Fallout4.ini".to_string(),
+                None,
+                "setting".to_string(),
+                "0".to_string(),
+                "1".to_string(),
+                "description".to_string(),
+                "warning".to_string(),
+            ),
+            classic_scanlog_core::ConfigIssue::new(
+                "Fallout4Custom.ini".to_string(),
+                Some("Display".to_string()),
+                "iPresentInterval".to_string(),
+                "1".to_string(),
+                "0".to_string(),
+                "Disable VSync".to_string(),
+                "error".to_string(),
+            ),
+        ],
         actions: vec!["Fix the executable".to_string()],
         fatal_errors: Vec::new(),
         message: Some("Setup needs attention".to_string()),
@@ -737,6 +748,15 @@ fn setup_mapping_preserves_optional_message_checks_updates_and_configuration_iss
     assert_eq!(dto.checks[0].kind, "game_executable");
     assert_eq!(dto.path_updates[0].path, "detected-game");
     assert!(!dto.configuration_issues[0].has_section);
+    assert_eq!(dto.configuration_issues[0].section_or_empty, "");
+    assert!(dto.configuration_issues[1].has_section);
+    assert_eq!(dto.configuration_issues[1].section_or_empty, "Display");
+    assert_eq!(dto.configuration_issues[1].file_path, "Fallout4Custom.ini");
+    assert_eq!(dto.configuration_issues[1].setting, "iPresentInterval");
+    assert_eq!(dto.configuration_issues[1].current_value, "1");
+    assert_eq!(dto.configuration_issues[1].recommended_value, "0");
+    assert_eq!(dto.configuration_issues[1].description, "Disable VSync");
+    assert_eq!(dto.configuration_issues[1].severity, "error");
     assert_eq!(dto.actions, vec!["Fix the executable"]);
 }
 

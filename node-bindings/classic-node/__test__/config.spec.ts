@@ -729,7 +729,6 @@ import {
   resetHashCacheStats,
   clearHashCache,
   detectConfigDuplicates,
-  getFcxConfigIssues,
   gameSetupNeedsPathDetection,
   JsConfigDuplicateDetector,
 } from "../index.js";
@@ -815,16 +814,7 @@ describe("config: duplicate detector class (Plan 3 promotion)", () => {
   });
 });
 
-describe("config: fcx + game setup path detection helpers (Plan 3 promotion)", () => {
-  test("getFcxConfigIssues returns array or throws typed error", () => {
-    try {
-      const issues = getFcxConfigIssues();
-      expect(Array.isArray(issues)).toBe(true);
-    } catch (e) {
-      expect(e).toBeInstanceOf(Error);
-    }
-  });
-
+describe("config: game setup path detection helpers (Plan 3 promotion)", () => {
   test("gameSetupNeedsPathDetection returns object with boolean fields", () => {
     const result = gameSetupNeedsPathDetection();
     expect(typeof result.needsGamePath).toBe("boolean");

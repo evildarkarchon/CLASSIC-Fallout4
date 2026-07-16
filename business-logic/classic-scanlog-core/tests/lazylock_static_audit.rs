@@ -1,6 +1,5 @@
 //! Contract audit for the Phase 7 LazyLock migration sweep.
 
-const FCX_HANDLER_RS: &str = include_str!("../src/fcx_handler.rs");
 const PARSER_RS: &str = include_str!("../src/parser.rs");
 const VERSION_RS: &str = include_str!("../src/version.rs");
 const PLUGIN_ANALYZER_RS: &str = include_str!("../src/plugin_analyzer.rs");
@@ -23,7 +22,6 @@ fn assert_uses_std_lazylock(file_name: &str, source: &str) {
 #[test]
 fn scanlog_lazy_statics_use_std_lazylock() {
     for (file_name, source) in [
-        ("fcx_handler.rs", FCX_HANDLER_RS),
         ("parser.rs", PARSER_RS),
         ("version.rs", VERSION_RS),
         ("plugin_analyzer.rs", PLUGIN_ANALYZER_RS),

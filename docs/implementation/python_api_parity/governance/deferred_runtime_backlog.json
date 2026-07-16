@@ -133,19 +133,6 @@
       ]
     },
     {
-      "coverageId": "python-deferred-scanlog-011",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "AnalysisResult"
-      ]
-    },
-    {
       "coverageId": "python-deferred-scanlog-013",
       "classification": "deferred",
       "ownerModule": "scanlog",
@@ -185,19 +172,6 @@
       ]
     },
     {
-      "coverageId": "python-deferred-scanlog-016",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "FcxModeHandler"
-      ]
-    },
-    {
       "coverageId": "python-deferred-scanlog-017",
       "classification": "deferred",
       "ownerModule": "scanlog",
@@ -221,19 +195,6 @@
       "bindingIdentifiers": [],
       "rustSymbols": [
         "FormIDAnalyzerCore"
-      ]
-    },
-    {
-      "coverageId": "python-deferred-scanlog-019",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "GLOBAL_FCX_HANDLER"
       ]
     },
     {
@@ -588,19 +549,6 @@
       ]
     },
     {
-      "coverageId": "python-deferred-scanlog-047",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "fcx_handler"
-      ]
-    },
-    {
       "coverageId": "python-deferred-scanlog-048",
       "classification": "deferred",
       "ownerModule": "scanlog",
@@ -663,19 +611,6 @@
       "bindingIdentifiers": [],
       "rustSymbols": [
         "mod_detector"
-      ]
-    },
-    {
-      "coverageId": "python-deferred-scanlog-053",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "orchestrator"
       ]
     },
     {
@@ -832,19 +767,6 @@
       "bindingIdentifiers": [],
       "rustSymbols": [
         "version"
-      ]
-    },
-    {
-      "coverageId": "python-deferred-scanlog-066",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "FcxResetError"
       ]
     },
     {
@@ -1069,136 +991,6 @@
       "rustSymbols": []
     },
     {
-      "coverageId": "python-deferred-scanlog-095",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.AnalysisConfig.__init__"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-096",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.AnalysisResult"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-097",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.AnalysisResult.__init__"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-098",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.AnalysisResult.get_report_text"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-099",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.AnalysisResult.to_dict"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-100",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.CancellationToken"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-101",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.CancellationToken.__init__"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-102",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.CancellationToken.cancel"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-103",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.CancellationToken.is_cancelled"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-104",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.CancellationToken.reset"
-      ],
-      "rustSymbols": []
-    },
-    {
       "coverageId": "python-deferred-scanlog-105",
       "classification": "deferred",
       "ownerModule": "scanlog",
@@ -1273,175 +1065,6 @@
       "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [
         "classic_scanlog.CrashgenVersion.__init__"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-112",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-113",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler.__init__"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-114",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler.add_issue"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-115",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler.check_fcx_mode"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-116",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler.get_detected_issues"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-117",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler.get_fcx_messages"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-118",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler.get_fcx_status_message"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-119",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler.has_results"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-120",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler.reset"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-121",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler.reset_fcx_checks"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-122",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler.set_detected_issues"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-123",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler.set_game_files_result"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-124",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.FcxModeHandler.set_main_files_result"
       ],
       "rustSymbols": []
     },
@@ -1962,123 +1585,6 @@
       "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
       "bindingIdentifiers": [
         "classic_scanlog.LogParser.parse_segments_parallel"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-166",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.Orchestrator.__init__"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-167",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.Orchestrator.attach_database"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-168",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.Orchestrator.check_loadorder_exists"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-169",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.Orchestrator.has_database_pool"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-170",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.Orchestrator.is_feature_complete"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-171",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.Orchestrator.is_initialized"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-172",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.Orchestrator.load_loadorder"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-173",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.Orchestrator.process_logs_parallel"
-      ],
-      "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-174",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Python export is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [
-        "classic_scanlog.Orchestrator.write_reports_batch"
       ],
       "rustSymbols": []
     },
@@ -3238,19 +2744,6 @@
         "classic_scanlog.validate_formids_batch"
       ],
       "rustSymbols": []
-    },
-    {
-      "coverageId": "python-deferred-scanlog-271",
-      "classification": "deferred",
-      "ownerModule": "scanlog",
-      "tier": "tier2",
-      "wave": "wave1",
-      "owner": "Squad A",
-      "deferReason": "Rust public symbol is outside Tier-1 mapping scope (deferred).",
-      "bindingIdentifiers": [],
-      "rustSymbols": [
-        "resolve_batch_concurrency"
-      ]
     },
     {
       "coverageId": "python-deferred-version_registry-271",

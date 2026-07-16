@@ -1,27 +1,8 @@
-"""Per-class smoke tests for Phase 3 Plan 04 - scanlog Wave 3a
-(orchestration core).
+"""Smoke tests for independently useful scanlog utilities.
 
-Covers 50 promoted contract rows across 6 scanlog sub-modules:
-orchestrator, papyrus, version, crashgen_registry, segment_key, error.
-The ``report`` sub-module is intentionally excluded — it lives in
-Plan 05 (Wave 3b) because of its heavier 5-class test surface.
-
-Each ``#[pyclass]`` with a Python wrapper gets at least one test that
-constructs it and calls one real method (per Phase 3 D-07). Related
-free functions are grouped into one test each. Constructor signatures
-were verified in
-``.planning/phases/03-python-tier-collapse/03-04-CONSTRUCTOR-INVENTORY.md``.
-
-Rust-only symbols promoted as ``@rust`` proxy rows (``ScanProgressPhase``,
-``CrashgenRegistry``, ``ScanLogError``, ``PapyrusError``,
-``segment_key``, etc.) do NOT have Python wrappers at runtime. Tests
-cannot construct them directly. The parity contract rows enforce that
-the rust symbols exist in the parsed ``-core`` surface, and a single
-``test_rust_only_symbols_in_core_surface`` sanity check asserts that
-the ``-core`` crate still exports them.
-
-The autouse FCX reset fixture from Plan 03's ``conftest.py`` is still
-active, but Wave 3a does not touch FCX state.
+Crash Log Scan Run orchestration is covered through the final contract tests;
+this module retains the Papyrus, version, registry, segment-key, and error
+coverage that remains outside complete scan execution.
 """
 
 from __future__ import annotations
@@ -29,133 +10,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import classic_scanlog
-
-
-
-# =============================================================================
-# orchestrator sub-module: AnalysisConfig
-# =============================================================================
-
-
-def test_analysis_config_construct_and_getter_roundtrip() -> None:
-    """``AnalysisConfig(game, game_version)`` stores game and exposes setters for runtime metadata.
-
-    Verified from -core orchestrator.rs:288-319: ``new`` accepts the second arg as
-    ``selected_game_version`` and resolves it through the Version Registry, storing
-    the result internally as ``selected_version``. The public ``game_version`` getter
-    starts empty and is populated later via the setter or by ``from_yamldata``.
-    """
-    config = classic_scanlog.AnalysisConfig("Fallout4", "Original")
-    # Getters verified from orchestrator.rs:557-614
-    assert config.game == "Fallout4"
-    # game_version starts empty; set via setter to exercise the writer path
-    config.game_version = "1.10.163"
-    assert config.game_version == "1.10.163"
-    # Default crashgen_name is empty; setter roundtrip exercises another writer path
-    config.crashgen_name = "Buffout 4"
-    assert config.crashgen_name == "Buffout 4"
-
-
-def test_analysis_config_ignore_lists_default_empty() -> None:
-    """Default ``AnalysisConfig`` starts with empty ignore lists (verified from -core defaults)."""
-    config = classic_scanlog.AnalysisConfig("Fallout4", "Original")
-    assert config.ignore_plugins == []
-    assert config.ignore_records == []
-    assert config.ignore_list == []
-
-
-# =============================================================================
-# orchestrator sub-module: CancellationToken
-# =============================================================================
-
-
-def test_cancellation_token_default_is_not_cancelled() -> None:
-    """``CancellationToken()`` starts in the not-cancelled state."""
-    token = classic_scanlog.CancellationToken()
-    assert token.is_cancelled() is False
-
-
-def test_cancellation_token_cancel_flips_state() -> None:
-    """``token.cancel()`` sets ``is_cancelled()`` to True (Arc<AtomicBool> backing)."""
-    token = classic_scanlog.CancellationToken()
-    token.cancel()
-    assert token.is_cancelled() is True
-
-
-def test_cancellation_token_reset_clears_cancelled_state() -> None:
-    """``token.reset()`` clears the cancelled flag so the token can be reused."""
-    token = classic_scanlog.CancellationToken()
-    token.cancel()
-    assert token.is_cancelled() is True
-    token.reset()
-    assert token.is_cancelled() is False
-
-
-# =============================================================================
-# orchestrator sub-module: Orchestrator (aka PyRustOrchestrator)
-# =============================================================================
-
-
-def test_orchestrator_construct_from_config() -> None:
-    """``Orchestrator(config)`` constructs successfully from an ``AnalysisConfig``."""
-    config = classic_scanlog.AnalysisConfig("Fallout4", "Original")
-    orch = classic_scanlog.Orchestrator(config)
-    assert orch is not None
-
-
-def test_orchestrator_config_returns_analysis_config() -> None:
-    """``orchestrator.config()`` returns an ``AnalysisConfig`` clone of the stored config.
-
-    Only ``game`` and ``crashgen_name`` are verified here because ``game_version``
-    starts empty after construction (see test_analysis_config_construct_and_getter_roundtrip
-    for the rationale).
-    """
-    config = classic_scanlog.AnalysisConfig("Fallout4", "Original")
-    config.crashgen_name = "Buffout 4"
-    orch = classic_scanlog.Orchestrator(config)
-    returned = orch.config()
-    assert returned.game == "Fallout4"
-    assert returned.crashgen_name == "Buffout 4"
-
-
-def test_orchestrator_feature_complete_is_bool() -> None:
-    """``is_feature_complete()`` returns a bool (exact value is implementation-dependent)."""
-    config = classic_scanlog.AnalysisConfig("Fallout4", "Original")
-    orch = classic_scanlog.Orchestrator(config)
-    assert isinstance(orch.is_feature_complete(), bool)
-
-
-def test_orchestrator_has_database_pool_default_false() -> None:
-    """A fresh orchestrator has no database pool attached until ``attach_database`` is called."""
-    config = classic_scanlog.AnalysisConfig("Fallout4", "Original")
-    orch = classic_scanlog.Orchestrator(config)
-    assert orch.has_database_pool() is False
-
-
-def test_orchestrator_check_loadorder_exists_missing_path() -> None:
-    """``check_loadorder_exists`` is a static method that returns False for a missing directory."""
-    # Static method - no self needed
-    result = classic_scanlog.Orchestrator.check_loadorder_exists("/nonexistent/path/loadorder")
-    assert result is False
-
-
-def test_orchestrator_process_logs_parallel_is_declared_if_present() -> None:
-    """Defensive: the .pyi declares ``process_logs_parallel`` but the PyO3 wrapper does not.
-
-    This test guards against import-time errors if the wrapper ever gets added, and
-    verifies that if it is available it is callable. The contract row exists because
-    ``classic_scanlog.pyi`` declares this method; runtime absence is tracked as a
-    known stub-vs-runtime divergence documented in 03-04-CONSTRUCTOR-INVENTORY.md.
-    """
-    config = classic_scanlog.AnalysisConfig("Fallout4", "Original")
-    orch = classic_scanlog.Orchestrator(config)
-    if hasattr(orch, "process_logs_parallel"):
-        # If the method exists, an empty batch should return an empty list (cheap smoke call)
-        result = orch.process_logs_parallel([])
-        assert isinstance(result, list)
-    # Else: known stub-vs-runtime divergence, documented in Plan 04 inventory
-
-
 
 
 # =============================================================================
@@ -358,11 +212,6 @@ def test_rust_only_symbols_in_core_surface() -> None:
     # These are the rust-only symbols promoted by Wave 3a (from
     # 03-04-CONSTRUCTOR-INVENTORY.md "Rust-only Symbols (Proxy Rows)" table).
     wave3a_rust_only = {
-        # orchestrator sub-module (rust-only enum/module marker/free fn)
-        "AnalysisResult",           # also has a Python wrapper; rust-only row is a duplicate marker
-        "ScanProgressPhase",        # pure Rust enum, no pyclass
-        "resolve_batch_concurrency",  # -core only free fn
-        "orchestrator",             # module marker
         # papyrus sub-module
         "papyrus",                  # module marker
         "PapyrusError",             # thiserror enum, no pyclass

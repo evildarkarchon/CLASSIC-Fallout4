@@ -122,17 +122,6 @@
       "wave": "wave2"
     },
     {
-      "gap_id": "scanlog-001",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 1,
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "rust_symbol": "AnalysisResult",
-      "python_module": null,
-      "python_export_path": null,
-      "wave": "wave1"
-    },
-    {
       "gap_id": "scanlog-003",
       "owner_module": "scanlog",
       "ordinal_in_module": 3,
@@ -166,17 +155,6 @@
       "wave": "wave1"
     },
     {
-      "gap_id": "scanlog-006",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 6,
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "rust_symbol": "FcxModeHandler",
-      "python_module": null,
-      "python_export_path": null,
-      "wave": "wave1"
-    },
-    {
       "gap_id": "scanlog-007",
       "owner_module": "scanlog",
       "ordinal_in_module": 7,
@@ -194,17 +172,6 @@
       "gap_type": "rust_unmapped",
       "tier": "tier2",
       "rust_symbol": "FormIDAnalyzerCore",
-      "python_module": null,
-      "python_export_path": null,
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-009",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 9,
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "rust_symbol": "GLOBAL_FCX_HANDLER",
       "python_module": null,
       "python_export_path": null,
       "wave": "wave1"
@@ -507,17 +474,6 @@
       "wave": "wave1"
     },
     {
-      "gap_id": "scanlog-037",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 37,
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "rust_symbol": "fcx_handler",
-      "python_module": null,
-      "python_export_path": null,
-      "wave": "wave1"
-    },
-    {
       "gap_id": "scanlog-038",
       "owner_module": "scanlog",
       "ordinal_in_module": 38,
@@ -568,17 +524,6 @@
       "gap_type": "rust_unmapped",
       "tier": "tier2",
       "rust_symbol": "mod_detector",
-      "python_module": null,
-      "python_export_path": null,
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-043",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 43,
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "rust_symbol": "orchestrator",
       "python_module": null,
       "python_export_path": null,
       "wave": "wave1"
@@ -711,17 +656,6 @@
       "gap_type": "rust_unmapped",
       "tier": "tier2",
       "rust_symbol": "version",
-      "python_module": null,
-      "python_export_path": null,
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-055-rust-fcx-reset-error",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 56,
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "rust_symbol": "FcxResetError",
       "python_module": null,
       "python_export_path": null,
       "wave": "wave1"
@@ -914,116 +848,6 @@
       "wave": "wave2"
     },
     {
-      "gap_id": "scanlog-056",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 56,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "AnalysisConfig.__init__",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-057",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 57,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "AnalysisResult",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-058",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 58,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "AnalysisResult.__init__",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-059",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 59,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "AnalysisResult.get_report_text",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-060",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 60,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "AnalysisResult.to_dict",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-061",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 61,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "CancellationToken",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-062",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 62,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "CancellationToken.__init__",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-063",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 63,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "CancellationToken.cancel",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-064",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 64,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "CancellationToken.is_cancelled",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-065",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 65,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "CancellationToken.reset",
-      "wave": "wave1"
-    },
-    {
       "gap_id": "scanlog-066",
       "owner_module": "scanlog",
       "ordinal_in_module": 66,
@@ -1087,149 +911,6 @@
       "rust_symbol": null,
       "python_module": "classic_scanlog",
       "python_export_path": "CrashgenVersion.__init__",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-072",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 72,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-073",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 73,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler.__init__",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-074",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 74,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler.add_issue",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-075",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 75,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler.check_fcx_mode",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-076",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 76,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler.get_detected_issues",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-077",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 77,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler.get_fcx_messages",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-078",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 78,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler.get_fcx_status_message",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-079",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 79,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler.has_results",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-080",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 80,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler.reset",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-081",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 81,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler.reset_fcx_checks",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-082",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 82,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler.set_detected_issues",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-083",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 83,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler.set_game_files_result",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-084",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 84,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "FcxModeHandler.set_main_files_result",
       "wave": "wave1"
     },
     {
@@ -1670,105 +1351,6 @@
       "rust_symbol": null,
       "python_module": "classic_scanlog",
       "python_export_path": "LogParser.parse_segments_parallel",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-125",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 125,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.__init__",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-126",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 126,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.attach_database",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-127",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 127,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.check_loadorder_exists",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-128",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 128,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.has_database_pool",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-129",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 129,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.is_feature_complete",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-130",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 130,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.is_initialized",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-131",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 131,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.load_loadorder",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-132",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 132,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.process_logs_parallel",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-133",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 133,
-      "gap_type": "python_unmapped",
-      "tier": "tier2",
-      "rust_symbol": null,
-      "python_module": "classic_scanlog",
-      "python_export_path": "Orchestrator.write_reports_batch",
       "wave": "wave1"
     },
     {
@@ -2748,17 +2330,6 @@
       "rust_symbol": null,
       "python_module": "classic_scanlog",
       "python_export_path": "validate_formids_batch",
-      "wave": "wave1"
-    },
-    {
-      "gap_id": "scanlog-228",
-      "owner_module": "scanlog",
-      "ordinal_in_module": 228,
-      "gap_type": "rust_unmapped",
-      "tier": "tier2",
-      "rust_symbol": "resolve_batch_concurrency",
-      "python_module": null,
-      "python_export_path": null,
       "wave": "wave1"
     },
     {

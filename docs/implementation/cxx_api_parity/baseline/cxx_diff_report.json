@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 436,
-    "current_total": 436,
-    "matched": 436,
+    "contract_total": 409,
+    "current_total": 409,
+    "matched": 409,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -723,14 +723,6 @@
     {
       "id": "f6e214ca909e6484",
       "rustSymbol": "resolve_targeted_inputs",
-      "kind": "function",
-      "bridgeModule": "files",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "a92b442f00efcaea",
-      "rustSymbol": "write_autoscan_report",
       "kind": "function",
       "bridgeModule": "files",
       "status": "matched",
@@ -1617,22 +1609,6 @@
       "reason": "-"
     },
     {
-      "id": "870370848109bb3d",
-      "rustSymbol": "BatchProgressEventKind",
-      "kind": "enum",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "b2fde85758b72528",
-      "rustSymbol": "BatchProgressPhase",
-      "kind": "enum",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "d8f7976d67cc2ff2",
       "rustSymbol": "ScanRunContractDiscoverySource",
       "kind": "enum",
@@ -1673,17 +1649,17 @@
       "reason": "-"
     },
     {
-      "id": "6fac94d2ef62d67d",
-      "rustSymbol": "ScanRunContractStatus",
+      "id": "55062b4069b3a08c",
+      "rustSymbol": "ScanRunContractProgressPhase",
       "kind": "enum",
       "bridgeModule": "scanner",
       "status": "matched",
       "reason": "-"
     },
     {
-      "id": "888cc866ef8a9c65",
-      "rustSymbol": "build_full_scan_config",
-      "kind": "function",
+      "id": "6fac94d2ef62d67d",
+      "rustSymbol": "ScanRunContractStatus",
+      "kind": "enum",
       "bridgeModule": "scanner",
       "status": "matched",
       "reason": "-"
@@ -1705,72 +1681,8 @@
       "reason": "-"
     },
     {
-      "id": "eedb43b80d8bd4a9",
-      "rustSymbol": "fcx_reset_global_state",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "d7282dc5d5df26ac",
-      "rustSymbol": "get_fcx_config_issues",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "f5c880d46c65220e",
-      "rustSymbol": "on_batch_progress",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "21d3f385eae475d7",
       "rustSymbol": "on_scan_run_event",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "060c10ce20688b6d",
-      "rustSymbol": "orchestrator_new",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "702cda850a4a7c67",
-      "rustSymbol": "orchestrator_new_minimal",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "0bc429d2f65210a0",
-      "rustSymbol": "orchestrator_process_log",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "7aa16ef250ba3e0e",
-      "rustSymbol": "orchestrator_process_logs_batch",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "29b39d018e4270c0",
-      "rustSymbol": "orchestrator_process_logs_batch_with_progress",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -1825,30 +1737,6 @@
       "reason": "-"
     },
     {
-      "id": "7172ab4eb19073ab",
-      "rustSymbol": "scan_cancellation_token_cancel",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "fa6ec5be88d0ba46",
-      "rustSymbol": "scan_cancellation_token_new",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "12ba4e240dddca06",
-      "rustSymbol": "scan_cancellation_token_reset",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "923b1638b9731c37",
       "rustSymbol": "scan_run_cancellation_cancel",
       "kind": "function",
@@ -1875,14 +1763,6 @@
     {
       "id": "f1a23f880846dde0",
       "rustSymbol": "scan_run_contract_execute",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "f79d7790f9ba9d64",
-      "rustSymbol": "scan_run_execute",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -1953,38 +1833,6 @@
       "reason": "-"
     },
     {
-      "id": "e7c5178da7f47aa4",
-      "rustSymbol": "FullScanConfig",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "1ea47463ffeb721a",
-      "rustSymbol": "Orchestrator",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "3e9306eed73901be",
-      "rustSymbol": "ScanBatchProgressCallback",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "b4632cb1192f6ccd",
-      "rustSymbol": "ScanCancellationToken",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "7e171291b252d3dd",
       "rustSymbol": "ScanRunCancellation",
       "kind": "opaque",
@@ -2017,22 +1865,6 @@
       "reason": "-"
     },
     {
-      "id": "57828838fe57bed3",
-      "rustSymbol": "BatchProgressEvent",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "34b978100efd3fba",
-      "rustSymbol": "BatchScanResult",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "0ea85cd7a4b6a5fb",
       "rustSymbol": "FcxIssueDto",
       "kind": "struct",
@@ -2043,14 +1875,6 @@
     {
       "id": "668e1b029522e8b3",
       "rustSymbol": "PapyrusStatsDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "1100118d4f482241",
-      "rustSymbol": "ScanResult",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -2137,38 +1961,6 @@
       "reason": "-"
     },
     {
-      "id": "15b6b387978da336",
-      "rustSymbol": "ScanRunDiscoveryResult",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "b88124b36f1347e2",
-      "rustSymbol": "ScanRunLogResult",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "87e07059e225ead6",
-      "rustSymbol": "ScanRunRequestDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "b062184064994c9e",
-      "rustSymbol": "ScanRunResult",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "9b28bab3cd0970b5",
       "rustSymbol": "ScanRunSetupCheckDto",
       "kind": "struct",
@@ -2187,14 +1979,6 @@
     {
       "id": "8ce956fd6e9c6003",
       "rustSymbol": "ScanRunSetupPathUpdateDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "153273fead0cfe26",
-      "rustSymbol": "ScanRunSetupResultDto",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

@@ -1,18 +1,17 @@
 //! Final language-neutral Crash Log Scan Run contract.
 //!
-//! The types in this module are the expand side of the coordinated scan-run
-//! cutover. [`execute`] is the only execution operation in this contract; the
-//! older service and prepared-run entry points remain temporarily available to
-//! consumers that have dedicated migration tickets.
+//! [`execute`] is the only public execution operation for a complete Crash Log
+//! Scan Run. Discovery, setup, scheduling, durable finalization, cancellation,
+//! events, results, and typed infrastructure failures cross this boundary.
 
 #[cfg(test)]
 #[path = "contract_tests.rs"]
 mod tests;
 
 use super::{
-    CrashLogScanDiscoveryResult, CrashLogScanOutcome, CrashLogScanRunEvent as LegacyEvent,
-    CrashLogScanRunEventKind as LegacyEventKind, CrashLogScanRunLogOutcome as LegacyLogOutcome,
-    CrashLogScanRunResult as LegacyRunResult, CrashLogScanRunServiceError,
+    CrashLogScanDiscoveryResult, CrashLogScanOutcome, CrashLogScanRunEvent as EngineEvent,
+    CrashLogScanRunEventKind as EngineEventKind, CrashLogScanRunLogOutcome as EngineLogOutcome,
+    CrashLogScanRunResult as EngineRunResult, CrashLogScanRunServiceError,
     CrashLogScanRunServiceEvent, CrashLogScanRunServiceRequest, CrashLogScanSetupContext,
     CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanSource,
     StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, execute_service,
@@ -290,8 +289,8 @@ impl Request {
         }
     }
 
-    /// Projects the invariant-preserving final request into the provisional service shape.
-    fn into_legacy(self, cancellation: &Cancellation) -> CrashLogScanRunServiceRequest {
+    /// Projects the invariant-preserving request into the crate-private engine shape.
+    fn into_engine_request(self, cancellation: &Cancellation) -> CrashLogScanRunServiceRequest {
         let (configuration, source, setup, move_unsolved_logs, custom_destination) = match self {
             Self::Standard(request) => {
                 let (move_unsolved_logs, custom_destination) = match request.unsolved_logs {
@@ -341,7 +340,7 @@ impl Request {
             move_unsolved_logs,
             scan_facts,
             max_concurrent: configuration.max_concurrent,
-            cancellation: Some(cancellation.legacy_flag()),
+            cancellation: Some(cancellation.engine_flag()),
             // Discovery order is mandatory in the final result contract.
             preserve_order: true,
             #[cfg(test)]
@@ -383,7 +382,7 @@ impl Cancellation {
         self.requested.load(Ordering::Acquire)
     }
 
-    fn legacy_flag(&self) -> Arc<AtomicBool> {
+    fn engine_flag(&self) -> Arc<AtomicBool> {
         Arc::clone(&self.requested)
     }
 }
@@ -531,16 +530,14 @@ pub struct LogResult {
     pub suspect_count: usize,
 }
 
-impl From<LegacyLogOutcome> for LogResult {
-    fn from(value: LegacyLogOutcome) -> Self {
-        let LegacyLogOutcome {
+impl From<EngineLogOutcome> for LogResult {
+    fn from(value: EngineLogOutcome) -> Self {
+        let EngineLogOutcome {
             input_index,
             crash_log,
             autoscan_report,
             outcome,
-            report_write_failed: _,
             moved_to_unsolved_logs,
-            unsolved_logs_finalization_failed: _,
             analysis_error,
             report_write_error,
             unsolved_logs_finalization_error,
@@ -755,15 +752,15 @@ async fn execute_inner(
         ));
     }
 
-    let legacy_request = request.into_legacy(cancellation);
+    let engine_request = request.into_engine_request(cancellation);
     #[cfg(test)]
-    let legacy_request = {
-        let mut legacy_request = legacy_request;
-        legacy_request.test_hooks = test_hooks;
-        legacy_request
+    let engine_request = {
+        let mut engine_request = engine_request;
+        engine_request.test_hooks = test_hooks;
+        engine_request
     };
     let mut effective_concurrency = None;
-    let legacy_result = execute_service(legacy_request, |event| match event {
+    let engine_result = execute_service(engine_request, |event| match event {
         CrashLogScanRunServiceEvent::DiscoveryCompleted(discovery) => {
             emit(&mut observer, Event::DiscoveryCompleted(discovery));
         }
@@ -777,7 +774,7 @@ async fn execute_inner(
             );
         }
         CrashLogScanRunServiceEvent::Log(event) => {
-            if let Some(event) = translate_legacy_event(event) {
+            if let Some(event) = translate_engine_event(event) {
                 emit(&mut observer, event);
             }
         }
@@ -785,7 +782,7 @@ async fn execute_inner(
     .await
     .map_err(InfrastructureError::from_service)?;
 
-    let LegacyRunResult {
+    let EngineRunResult {
         status,
         discovery,
         setup,
@@ -795,7 +792,7 @@ async fn execute_inner(
         failed,
         cancelled,
         logs,
-    } = legacy_result;
+    } = engine_result;
     let logs: Vec<LogResult> = logs.into_iter().map(LogResult::from).collect();
 
     Ok(RunResult {
@@ -818,7 +815,7 @@ fn emit(observer: &mut Option<&mut dyn Observer>, event: Event) {
     }
 }
 
-fn translate_legacy_event(event: LegacyEvent) -> Option<Event> {
+fn translate_engine_event(event: EngineEvent) -> Option<Event> {
     let disposition = event.disposition;
     let log = LogEvent {
         discovery_index: event.input_index,
@@ -827,13 +824,13 @@ fn translate_legacy_event(event: LegacyEvent) -> Option<Event> {
         total: event.total,
     };
     match event.kind {
-        LegacyEventKind::Queued => Some(Event::LogQueued(log)),
-        LegacyEventKind::Started => Some(Event::LogStarted(log)),
-        LegacyEventKind::Phase => Some(Event::LogPhase {
+        EngineEventKind::Queued => Some(Event::LogQueued(log)),
+        EngineEventKind::Started => Some(Event::LogStarted(log)),
+        EngineEventKind::Phase => Some(Event::LogPhase {
             log,
             phase: event.phase,
         }),
-        LegacyEventKind::Completed | LegacyEventKind::Failed => {
+        EngineEventKind::Completed | EngineEventKind::Failed => {
             disposition.map(|disposition| Event::LogFinished { log, disposition })
         }
     }

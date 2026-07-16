@@ -1,20 +1,16 @@
 """Per-class smoke tests for Phase 3 Plan 03 - scanlog Wave 2
 (detection and analysis).
 
-Covers 57 promoted contract rows across 5 scanlog sub-modules:
-mod_detector, suspect_scanner, settings_validator, fcx_handler,
-gpu_detector. Per R9, ``GLOBAL_FCX_HANDLER`` is excluded from tier1
-promotion because ``LazyLock`` statics are not first-class Python
-module attributes.
+Covers the independently useful mod detection, suspect scanning, settings
+validation, run-result configuration issue, and GPU detection surfaces.
 
 Each ``#[pyclass]`` gets at least one test that constructs it and
 calls one real method (per Phase 3 D-07). Related free functions are
 grouped into one test each. Constructor signatures were verified in
 ``.planning/phases/03-python-tier-collapse/03-03-CONSTRUCTOR-INVENTORY.md``.
 
-The autouse FCX reset fixture lives in ``conftest.py`` and keeps
-the ``GLOBAL_FCX_HANDLER`` singleton clean between tests so stateful
-``FcxModeHandler`` tests do not pollute each other.
+Process-global FCX controls are intentionally absent; FCX setup data is
+observed only through the final Crash Log Scan Run result.
 """
 
 from __future__ import annotations
@@ -194,112 +190,8 @@ def test_settings_validator_check_disabled_settings_rejects_flat_settings() -> N
 
 
 # =============================================================================
-# fcx_handler sub-module: FcxModeHandler + ConfigIssue + FcxResetError
+# Run-scoped FCX result data: ConfigIssue
 # =============================================================================
-
-
-def test_fcx_mode_handler_construct_disabled() -> None:
-    """``FcxModeHandler(False)`` constructs in disabled mode."""
-    handler = classic_scanlog.FcxModeHandler(False)
-    assert handler is not None
-    assert handler.fcx_mode is False
-
-
-def test_fcx_mode_handler_get_fcx_messages_empty() -> None:
-    """``get_fcx_messages()`` returns a list for a disabled handler."""
-    handler = classic_scanlog.FcxModeHandler(False)
-    msgs = handler.get_fcx_messages()
-    assert isinstance(msgs, list)
-
-
-def test_fcx_mode_handler_get_status_message() -> None:
-    """``get_fcx_status_message()`` returns a string."""
-    handler = classic_scanlog.FcxModeHandler(False)
-    status = handler.get_fcx_status_message()
-    assert isinstance(status, str)
-
-
-def test_fcx_mode_handler_has_results_initial_false() -> None:
-    """A freshly-constructed disabled handler has no results."""
-    handler = classic_scanlog.FcxModeHandler(False)
-    assert handler.has_results() is False
-
-
-def test_fcx_mode_handler_set_main_files_result_marks_results() -> None:
-    """``set_main_files_result("foo")`` flips ``has_results()`` to ``True``.
-
-    ``has_results()`` is gated on ``fcx_mode`` being enabled in
-    ``classic-scanlog-core/src/fcx_handler.rs:267-279``; construct with
-    ``FcxModeHandler(True)`` so the positive path is observable.
-    """
-    handler = classic_scanlog.FcxModeHandler(True)
-    handler.set_main_files_result("foo")
-    assert handler.has_results() is True
-
-
-def test_fcx_mode_handler_set_game_files_result_roundtrip() -> None:
-    """``set_game_files_result("bar")`` is accepted without raising."""
-    handler = classic_scanlog.FcxModeHandler(True)
-    handler.set_game_files_result("bar")
-    assert handler.has_results() is True
-
-
-def test_fcx_mode_handler_reset_clears_results() -> None:
-    """``reset()`` clears previously-set results."""
-    handler = classic_scanlog.FcxModeHandler(True)
-    handler.set_main_files_result("foo")
-    assert handler.has_results() is True
-    handler.reset()
-    assert handler.has_results() is False
-
-
-def test_fcx_mode_handler_get_detected_issues_initial_empty() -> None:
-    """A fresh handler has no detected issues."""
-    handler = classic_scanlog.FcxModeHandler(False)
-    issues = handler.get_detected_issues()
-    assert isinstance(issues, list)
-    assert issues == []
-
-
-def test_fcx_mode_handler_add_issue_and_roundtrip() -> None:
-    """``add_issue(ConfigIssue(...))`` and ``get_detected_issues()`` round-trip."""
-    handler = classic_scanlog.FcxModeHandler(False)
-    issue = classic_scanlog.ConfigIssue(
-        "/tmp/fake.ini",
-        "General",
-        "iFOO",
-        "0",
-        "1",
-        "test desc",
-    )
-    handler.add_issue(issue)
-    issues = handler.get_detected_issues()
-    assert len(issues) == 1
-    assert issues[0].setting == "iFOO"
-
-
-def test_fcx_mode_handler_set_detected_issues_replaces() -> None:
-    """``set_detected_issues([])`` replaces the existing list with an empty one."""
-    handler = classic_scanlog.FcxModeHandler(False)
-    issue = classic_scanlog.ConfigIssue(
-        "/tmp/x.ini", None, "s", "c", "r", "d",
-    )
-    handler.set_detected_issues([issue])
-    assert len(handler.get_detected_issues()) == 1
-    handler.set_detected_issues([])
-    assert handler.get_detected_issues() == []
-
-
-def test_fcx_mode_handler_reset_fcx_checks_classmethod_noop() -> None:
-    """``FcxModeHandler.reset_fcx_checks()`` is a benign no-op when clean.
-
-    Plan 03 Task 1 rewired this classmethod to raise :class:`FcxResetError`
-    for non-``Unnecessary`` failures. When the global handler is already
-    clean it still treats the call as success (``Unnecessary`` is suppressed).
-    """
-    # Should not raise on a freshly-reset singleton (the autouse fixture
-    # resets it before each test).
-    classic_scanlog.FcxModeHandler.reset_fcx_checks()
 
 
 def test_config_issue_construct_and_field_access() -> None:
@@ -337,16 +229,6 @@ def test_config_issue_section_none_allowed() -> None:
         "/tmp/fake.toml", None, "key", "0", "1", "desc",
     )
     assert issue.section is None
-
-
-def test_fcx_reset_error_is_exception_subclass() -> None:
-    """``classic_scanlog.FcxResetError`` is an ``Exception`` subclass."""
-    assert issubclass(classic_scanlog.FcxResetError, Exception)
-    # Can be raised and caught like any exception
-    try:
-        raise classic_scanlog.FcxResetError("test message")
-    except classic_scanlog.FcxResetError as err:
-        assert "test message" in str(err)
 
 
 # =============================================================================

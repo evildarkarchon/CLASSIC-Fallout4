@@ -176,55 +176,8 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     )
     assert status == classic_scanlog.CrashgenVersionStatus.OUTDATED
 
-    yamldata = classic_config.YamlData.from_yaml_content(
-        PARITY_MAIN_YAML,
-        PARITY_GAME_YAML,
-        PARITY_IGNORE_YAML,
-        "Fallout4",
-        "auto",
-    )
-    config = classic_scanlog.AnalysisConfig.from_yamldata(
-        yamldata,
-        "Fallout4",
-        "auto",
-        simplify_logs=True,
-        remove_list=["skip-me"],
-    )
-    assert config.remove_list == ["skip-me"]
-
-    structured_game_yaml = PARITY_GAME_YAML.replace(
-        "Mods_SOLU: []",
-        "\n".join(
-            (
-                "Mods_SOLU:",
-                "  - id: solu-mod",
-                "    criteria:",
-                "      any:",
-                '        - "SoluMod"',
-                '    name: "Solution Mod"',
-                '    description: "Solution mod"',
-            )
-        ),
-    )
-    structured_yamldata = classic_config.YamlData.from_yaml_content(
-        PARITY_MAIN_YAML,
-        structured_game_yaml,
-        PARITY_IGNORE_YAML,
-        "Fallout4",
-        "auto",
-    )
-    structured_config = classic_scanlog.AnalysisConfig.from_yamldata(
-        structured_yamldata,
-        "Fallout4",
-        "auto",
-    )
-    solu_entries = cast(list[dict[str, Any]], structured_config.mods_solu)
-    assert solu_entries[0]["id"] == "solu-mod"
-    assert cast(dict[str, Any], solu_entries[0]["criteria"])["any"] == ["SoluMod"]
-
     assert hasattr(parser, "parse_segments") is False
     assert hasattr(classic_scanlog.ParallelReportProcessor, "process_batch") is False
-    assert hasattr(config, "crashgen_ignore") is False
 
     sections = parser.parse_all_sections(log_lines)
     assert isinstance(sections, dict)
@@ -255,69 +208,6 @@ def _run_scanlog_tier1_smoke(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
     papyrus_stats = papyrus.analyze_full()
     assert papyrus_stats.dumps >= 1
 
-    orchestrator = classic_scanlog.Orchestrator(config)
-    result = orchestrator.process_log(str(log_path))
-    assert isinstance(result.report_lines, list)
-
-    batch_results = orchestrator.process_logs_batch([str(log_path)], max_concurrent=1)
-    assert len(batch_results) == 1
-
-    game_root = tmp_path / "GameRoot"
-    docs_root = tmp_path / "DocsRoot"
-    game_root.mkdir()
-    docs_root.mkdir()
-    (game_root / "Fallout4.exe").write_text("stub", encoding="utf-8")
-
-    settings_path = tmp_path / "CLASSIC Settings.yaml"
-    settings_path.write_text(
-        "schema_version: \"1.0\"\n"
-        "CLASSIC_Settings:\n"
-        "  Managed Game: Fallout 4\n"
-        "  Game Version: Original\n"
-        "  FCX Mode: true\n"
-        f"  Game Folder Path: '{game_root.as_posix()}'\n"
-        f"  Documents Folder Path: '{docs_root.as_posix()}'\n",
-        encoding="utf-8",
-    )
-
-    classic_scanlog.FcxModeHandler.reset_fcx_checks()
-    first_handler = classic_scanlog.FcxModeHandler(True)
-    first_handler.check_fcx_mode(str(tmp_path))
-    first_messages = first_handler.get_fcx_messages()
-    assert first_handler.has_results() is True
-
-    second_handler = classic_scanlog.FcxModeHandler(True)
-    second_handler.check_fcx_mode(str(tmp_path))
-    assert second_handler.get_fcx_messages() == first_messages
-
-    disabled_handler = classic_scanlog.FcxModeHandler(False)
-    disabled_handler.check_fcx_mode(str(tmp_path))
-    assert disabled_handler.fcx_mode is False
-    assert disabled_handler.get_fcx_messages() == []
-
-    reenabled_handler = classic_scanlog.FcxModeHandler(True)
-    reenabled_handler.check_fcx_mode(str(tmp_path))
-    assert reenabled_handler.get_fcx_messages() == first_messages
-
-    second_root = tmp_path / "SecondRoot"
-    second_game_root = second_root / "GameRoot"
-    second_docs_root = second_root / "DocsRoot"
-    second_game_root.mkdir(parents=True)
-    second_docs_root.mkdir()
-    (second_game_root / "Fallout4VR.exe").write_text("stub", encoding="utf-8")
-    (second_root / "CLASSIC Settings.yaml").write_text(
-        "schema_version: \"1.0\"\n"
-        "CLASSIC_Settings:\n"
-        "  Managed Game: Fallout 4 VR\n"
-        "  Game Version: Original\n"
-        "  FCX Mode: true\n"
-        f"  Game Folder Path: '{second_game_root.as_posix()}'\n"
-        f"  Documents Folder Path: '{second_docs_root.as_posix()}'\n",
-        encoding="utf-8",
-    )
-    different_root_handler = classic_scanlog.FcxModeHandler(True)
-    different_root_handler.check_fcx_mode(str(second_root))
-    assert different_root_handler.get_fcx_messages() != first_messages
 
 
 def _run_version_registry_tier1_smoke(

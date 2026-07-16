@@ -1,16 +1,13 @@
 //! Crash log scanning bridge for CXX FFI.
 //!
-//! Bridges `classic_scanlog_core::OrchestratorCore` for crash log analysis.
-//! This is the PRIMARY FEATURE of the CLASSIC application.
+//! Exposes the final Rust-owned Crash Log Scan Run contract plus independent
+//! crash-log parsing and Papyrus utilities.
 //!
 //! The CXX bridge declarations stay in this façade module while implementation
 //! concerns live in private scanner submodules.
 
 mod contract;
-mod dto;
-mod orchestrator;
 mod papyrus;
-mod progress;
 mod util;
 
 pub(crate) use contract::{
@@ -19,13 +16,6 @@ pub(crate) use contract::{
     scan_run_request_standard, scan_run_request_standard_with_fcx, scan_run_request_targeted,
     scan_run_request_targeted_with_fcx, scan_run_unsolved_logs_leave_in_place,
     scan_run_unsolved_logs_move_to_configured_or_default, scan_run_unsolved_logs_move_to_custom,
-};
-pub(crate) use orchestrator::{
-    FullScanConfig, Orchestrator, ScanCancellationToken, build_full_scan_config,
-    fcx_reset_global_state, get_fcx_config_issues, orchestrator_new, orchestrator_new_minimal,
-    orchestrator_process_log, orchestrator_process_logs_batch,
-    orchestrator_process_logs_batch_with_progress, scan_cancellation_token_cancel,
-    scan_cancellation_token_new, scan_cancellation_token_reset, scan_run_execute,
 };
 pub(crate) use papyrus::{
     CxxPapyrusAnalyzer, papyrus_analyze_full, papyrus_analyzer_new, papyrus_check_updates,
@@ -36,82 +26,11 @@ pub(crate) use util::{detect_crash_pattern, detect_vr_log};
 #[cxx::bridge(namespace = "classic::scanner")]
 mod ffi {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    enum BatchProgressEventKind {
-        Queued = 0,
-        Started = 1,
-        Phase = 2,
-        Completed = 3,
-        Failed = 4,
-    }
-
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    enum BatchProgressPhase {
+    enum ScanRunContractProgressPhase {
         Setup = 0,
         Parse = 1,
         Analyze = 2,
         Finalize = 3,
-    }
-
-    struct BatchProgressEvent {
-        completed: u32,
-        total: u32,
-        input_index: u32,
-        log_path: String,
-        event_kind: BatchProgressEventKind,
-        phase: BatchProgressPhase,
-        success: bool,
-    }
-
-    /// Result of scanning a single crash log.
-    struct ScanResult {
-        log_path: String,
-        success: bool,
-        report_lines: Vec<String>,
-        error_message: String,
-        processing_time_ms: u64,
-        formid_count: u32,
-        plugin_count: u32,
-        suspect_count: u32,
-    }
-
-    /// Batch scan result plus progress metadata for each completed log.
-    struct BatchScanResult {
-        input_index: u32,
-        completed: u32,
-        total: u32,
-        log_path: String,
-        success: bool,
-        report_lines: Vec<String>,
-        error_message: String,
-        processing_time_ms: u64,
-        formid_count: u32,
-        plugin_count: u32,
-        suspect_count: u32,
-    }
-
-    /// Per-log result from a full Crash Log Scan Run.
-    struct ScanRunLogResult {
-        input_index: u32,
-        log_path: String,
-        autoscan_report_path: String,
-        success: bool,
-        report_write_failed: bool,
-        cancelled: bool,
-        moved_to_unsolved_logs: bool,
-        error_message: String,
-        processing_time_ms: u64,
-        formid_count: u32,
-        plugin_count: u32,
-        suspect_count: u32,
-    }
-
-    /// Discovery details from a full Crash Log Scan Run.
-    struct ScanRunDiscoveryResult {
-        source: String,
-        accepted_logs: Vec<String>,
-        rejected_paths: Vec<String>,
-        rejected_reasons: Vec<String>,
-        searched_locations: Vec<String>,
     }
 
     /// One setup check in a Crash Log Scan Setup Result.
@@ -126,57 +45,6 @@ mod ffi {
     struct ScanRunSetupPathUpdateDto {
         kind: String,
         path: String,
-    }
-
-    /// Setup details from a full Crash Log Scan Run.
-    struct ScanRunSetupResultDto {
-        status: String,
-        message: String,
-        rendered_report: String,
-        checks: Vec<ScanRunSetupCheckDto>,
-        path_updates: Vec<ScanRunSetupPathUpdateDto>,
-        configuration_issues: Vec<FcxIssueDto>,
-        actions: Vec<String>,
-        fatal_errors: Vec<String>,
-    }
-
-    /// Top-level result from a full Crash Log Scan Run.
-    struct ScanRunResult {
-        status: String,
-        message: String,
-        total: u32,
-        succeeded: u32,
-        failed: u32,
-        cancelled: u32,
-        discovery: ScanRunDiscoveryResult,
-        has_setup: bool,
-        setup: ScanRunSetupResultDto,
-        logs: Vec<ScanRunLogResult>,
-    }
-
-    /// Structured input to `scan_run_execute`.
-    struct ScanRunRequestDto {
-        yaml_dir_root: String,
-        yaml_dir_data: String,
-        game: String,
-        game_version: String,
-        base_directory: String,
-        custom_scan_directory: String,
-        configured_documents_root: String,
-        show_formid_values: bool,
-        formid_database_paths: Vec<String>,
-        fcx_mode: bool,
-        simplify_logs: bool,
-        move_unsolved_logs: bool,
-        unsolved_logs_destination: String,
-        targeted_mode: bool,
-        setup_game_root: String,
-        setup_docs_root: String,
-        setup_game_exe_path: String,
-        setup_xse_log_path: String,
-        max_concurrent: u32,
-        targeted_inputs: Vec<String>,
-        log_paths: Vec<String>,
     }
 
     /// Shared configuration for the final Crash Log Scan Run contract.
@@ -371,7 +239,7 @@ mod ffi {
         crash_log: String,
         completed: usize,
         total: usize,
-        phase: BatchProgressPhase,
+        phase: ScanRunContractProgressPhase,
         disposition: ScanRunContractLogDisposition,
     }
 
@@ -385,7 +253,7 @@ mod ffi {
         dumps_stacks_ratio: f64,
     }
 
-    /// Mirrors `classic_scanlog_core::fcx_handler::ConfigIssue` field-for-field (CXXS-03).
+    /// Run-scoped FCX configuration issue returned by the final scan-run contract.
     ///
     /// The single `Option<String>` field (`section`) is flattened following the
     /// Bridge String/Path Contract from plan 02-01:
@@ -413,18 +281,12 @@ mod ffi {
     }
 
     unsafe extern "C++" {
-        include!("classic_cxx_bridge/scan_progress_callback.h");
         include!("classic_cxx_bridge/scan_run_observer.h");
-        type ScanBatchProgressCallback;
         type ScanRunObserver;
-        fn on_batch_progress(self: &ScanBatchProgressCallback, event: &BatchProgressEvent);
         fn on_scan_run_event(self: &ScanRunObserver, event: &ScanRunContractEvent);
     }
 
     extern "Rust" {
-        type FullScanConfig;
-        type Orchestrator;
-        type ScanCancellationToken;
         type ScanRunRequest;
         type ScanRunUnsolvedLogs;
         type ScanRunCancellation;
@@ -485,50 +347,6 @@ mod ffi {
             cancellation: &ScanRunCancellation,
             observer: *const ScanRunObserver,
         ) -> ScanRunContractExecutionResult;
-
-        // Config construction
-        fn build_full_scan_config(
-            yaml_dir_root: &str,
-            yaml_dir_data: &str,
-            game: &str,
-            game_version: &str,
-            show_formid_values: bool,
-            fcx_mode: bool,
-            simplify_logs: bool,
-        ) -> Result<Box<FullScanConfig>>;
-
-        // Orchestrator
-        fn orchestrator_new(config: &FullScanConfig) -> Result<Box<Orchestrator>>;
-        fn orchestrator_new_minimal(
-            game: &str,
-            game_version: &str,
-            crashgen_name: &str,
-            xse_acronym: &str,
-        ) -> Result<Box<Orchestrator>>;
-        fn fcx_reset_global_state() -> Result<()>;
-        /// Return a snapshot of all FCX configuration issues from the global handler (CXXS-03).
-        /// Empty Vec when no scan has run, after a reset, or when no issues were detected.
-        fn get_fcx_config_issues() -> Vec<FcxIssueDto>;
-        fn scan_cancellation_token_new() -> Box<ScanCancellationToken>;
-        fn scan_cancellation_token_cancel(token: &ScanCancellationToken);
-        fn scan_cancellation_token_reset(token: &ScanCancellationToken);
-        fn orchestrator_process_log(orch: &Orchestrator, log_path: &str) -> Result<ScanResult>;
-        fn orchestrator_process_logs_batch(
-            orch: &Orchestrator,
-            log_paths: &[String],
-            max_concurrent: u32,
-        ) -> Vec<ScanResult>;
-        fn orchestrator_process_logs_batch_with_progress(
-            orch: &Orchestrator,
-            log_paths: &[String],
-            max_concurrent: u32,
-            callback: &ScanBatchProgressCallback,
-        ) -> Vec<BatchScanResult>;
-        fn scan_run_execute(
-            request: &ScanRunRequestDto,
-            callback: &ScanBatchProgressCallback,
-            cancellation_token: &ScanCancellationToken,
-        ) -> Result<ScanRunResult>;
 
         // Utilities
         fn detect_vr_log(content: &str) -> bool;

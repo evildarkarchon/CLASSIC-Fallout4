@@ -9,7 +9,7 @@ Contributor-facing documentation for how the active Qt frontend consumes the fin
 - [`classic-gui/src/controllers/scancontroller.cpp`](../../classic-gui/src/controllers/scancontroller.cpp)
 - [`classic-gui/src/app/mainwindow.cpp`](../../classic-gui/src/app/mainwindow.cpp)
 
-This page documents the active `ScanRunObserver` path. The GUI no longer consumes the legacy `ScanRunRequestDto`, `ScanBatchProgressCallback`, `BatchProgressEvent`, or completion-order `ScanRunLogResult` contract.
+This page documents the active `ScanRunObserver` path, which is the GUI's only Crash Log Scan Run execution contract.
 
 Reference: [`AGENTS.md`](../../AGENTS.md).
 
@@ -102,7 +102,7 @@ The value is informational: Qt reports the exact Rust-selected admission limit a
 - `LogPhase` -> `setup`, `parse`, `analysis`, or `finalization` plus the path
 - `LogFinished` -> `Finished: <path>`
 
-The final-contract correlation key is `event.discovery_index`, not the legacy `input_index`. `event.completed` and `event.total` remain Rust-owned lifecycle snapshots forwarded through `progressDetailed(...)`.
+The correlation key is `event.discovery_index`. `event.completed` and `event.total` remain Rust-owned lifecycle snapshots forwarded through `progressDetailed(...)`.
 
 The observer does not turn `LogFinished.disposition` into success/error UI state. Structured disposition and failure-stage presentation happens from the terminal execution result after the call returns.
 
@@ -189,7 +189,7 @@ For completed or cancelled work, report directories are also derived from termin
 
 [`test_scanworker_cancellation.cpp`](../../classic-gui/tests/test_scanworker_cancellation.cpp) verifies monotonic/idempotent cancellation and that cancellation requested before execution reaches Rust's `CancelledBeforeDiscovery` lifecycle rather than a generic error.
 
-Narrow source-wiring checks remain for MainWindow/controller presentation handoffs, but legacy worker lifecycle assertions have been replaced by the behavior tests above.
+Narrow source-wiring checks remain for MainWindow/controller presentation handoffs; the behavior tests above own lifecycle assertions.
 
 ---
 
@@ -201,7 +201,7 @@ Narrow source-wiring checks remain for MainWindow/controller presentation handof
 - `LogFinished` reaches the observer only after per-log report writing and applicable movement are final, but Qt waits for the terminal result to present success/failure details.
 - `MainWindow::onCrashLogScanned(...)` currently uses notifications as a count increment and ignores their index, success, and path arguments.
 - The worker emits an explicit final `100%` update only for `Completed`; cancellation and error terminals restore UI state through their distinct signals.
-- No GUI layer resets the final-contract cancellation object or the legacy process-global FCX handler.
+- No GUI layer resets cancellation or reads process-global FCX state; both capabilities are absent from the shipped scan contract.
 
 ---
 
@@ -210,4 +210,4 @@ Narrow source-wiring checks remain for MainWindow/controller presentation handof
 - Change request policy in Rust and its tagged constructors, not by adding GUI flag combinations.
 - When final observer tags or fields change, update the bridge observer documentation, `BatchProgressModel`, presentation tests, and this page together.
 - Debug totals and accepted paths from `DiscoveryCompleted`; debug concurrency from `EffectiveConcurrencySelected`; debug success/failure details from the terminal execution result.
-- Do not reintroduce `BatchProgressEvent`, `input_index`, completion-order result correlation, GUI discovery, or GUI-owned durable finalization into this flow.
+- Do not add a second progress DTO, caller-input correlation, completion-order result reconstruction, GUI discovery, or GUI-owned durable finalization to this flow.

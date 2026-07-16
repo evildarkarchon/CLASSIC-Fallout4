@@ -30,7 +30,7 @@ classic::scanner::ScanRunContractEvent makeConcurrencyEvent(std::size_t effectiv
 
 /// Creates one per-log lifecycle event with its discovery correlation and aggregate counts.
 classic::scanner::ScanRunContractEvent makeLogEvent(classic::scanner::ScanRunContractEventKind kind,
-                                                    classic::scanner::BatchProgressPhase phase,
+                                                    classic::scanner::ScanRunContractProgressPhase phase,
                                                     std::size_t discoveryIndex, std::size_t completed,
                                                     std::size_t total,
                                                     classic::scanner::ScanRunContractLogDisposition disposition =
@@ -79,20 +79,20 @@ void ScanProgressModelTests::percent_stays_monotonic_for_one_serialized_log_life
     model.update(makeDiscoveryEvent({"C:/logs/one.log"}));
 
     const QList<classic::scanner::ScanRunContractEvent> events = {
-        makeLogEvent(classic::scanner::ScanRunContractEventKind::LogQueued, classic::scanner::BatchProgressPhase::Setup,
+        makeLogEvent(classic::scanner::ScanRunContractEventKind::LogQueued, classic::scanner::ScanRunContractProgressPhase::Setup,
                      0, 0, 1),
         makeLogEvent(classic::scanner::ScanRunContractEventKind::LogStarted,
-                     classic::scanner::BatchProgressPhase::Setup, 0, 0, 1),
-        makeLogEvent(classic::scanner::ScanRunContractEventKind::LogPhase, classic::scanner::BatchProgressPhase::Setup,
+                     classic::scanner::ScanRunContractProgressPhase::Setup, 0, 0, 1),
+        makeLogEvent(classic::scanner::ScanRunContractEventKind::LogPhase, classic::scanner::ScanRunContractProgressPhase::Setup,
                      0, 0, 1),
-        makeLogEvent(classic::scanner::ScanRunContractEventKind::LogPhase, classic::scanner::BatchProgressPhase::Parse,
+        makeLogEvent(classic::scanner::ScanRunContractEventKind::LogPhase, classic::scanner::ScanRunContractProgressPhase::Parse,
                      0, 0, 1),
         makeLogEvent(classic::scanner::ScanRunContractEventKind::LogPhase,
-                     classic::scanner::BatchProgressPhase::Analyze, 0, 0, 1),
+                     classic::scanner::ScanRunContractProgressPhase::Analyze, 0, 0, 1),
         makeLogEvent(classic::scanner::ScanRunContractEventKind::LogPhase,
-                     classic::scanner::BatchProgressPhase::Finalize, 0, 0, 1),
+                     classic::scanner::ScanRunContractProgressPhase::Finalize, 0, 0, 1),
         makeLogEvent(classic::scanner::ScanRunContractEventKind::LogFinished,
-                     classic::scanner::BatchProgressPhase::Finalize, 0, 1, 1),
+                     classic::scanner::ScanRunContractProgressPhase::Finalize, 0, 1, 1),
     };
 
     float previous = -1.0f;
@@ -111,15 +111,15 @@ void ScanProgressModelTests::interleaved_log_events_advance_before_terminal_comp
     model.update(makeDiscoveryEvent({"C:/logs/one.log", "C:/logs/two.log", "C:/logs/three.log"}));
 
     const float queued = model.update(makeLogEvent(classic::scanner::ScanRunContractEventKind::LogQueued,
-                                                   classic::scanner::BatchProgressPhase::Setup, 0, 0, 3));
+                                                   classic::scanner::ScanRunContractProgressPhase::Setup, 0, 0, 3));
     QCOMPARE(queued, 0.0f);
 
     const float parseProgress = model.update(makeLogEvent(classic::scanner::ScanRunContractEventKind::LogPhase,
-                                                          classic::scanner::BatchProgressPhase::Parse, 1, 0, 3));
+                                                          classic::scanner::ScanRunContractProgressPhase::Parse, 1, 0, 3));
     QVERIFY2(parseProgress > 0.0f, "An in-flight phase must advance visible run progress");
 
     const float analyzeProgress = model.update(makeLogEvent(classic::scanner::ScanRunContractEventKind::LogPhase,
-                                                            classic::scanner::BatchProgressPhase::Analyze, 1, 0, 3));
+                                                            classic::scanner::ScanRunContractProgressPhase::Analyze, 1, 0, 3));
     QVERIFY2(analyzeProgress > parseProgress, "A later phase must contribute more progress for the same Crash Log");
 }
 
@@ -129,9 +129,9 @@ void ScanProgressModelTests::late_phase_regressions_are_ignored_after_terminal_s
     model.update(makeDiscoveryEvent({"C:/logs/one.log"}));
 
     const float completed = model.update(makeLogEvent(classic::scanner::ScanRunContractEventKind::LogFinished,
-                                                      classic::scanner::BatchProgressPhase::Finalize, 0, 1, 1));
+                                                      classic::scanner::ScanRunContractProgressPhase::Finalize, 0, 1, 1));
     const float regressed = model.update(makeLogEvent(classic::scanner::ScanRunContractEventKind::LogPhase,
-                                                      classic::scanner::BatchProgressPhase::Parse, 0, 0, 1));
+                                                      classic::scanner::ScanRunContractProgressPhase::Parse, 0, 0, 1));
 
     QCOMPARE(completed, 100.0f);
     QCOMPARE(regressed, completed);
@@ -143,7 +143,7 @@ void ScanProgressModelTests::failed_log_finished_event_contributes_complete_work
     model.update(makeDiscoveryEvent({"C:/logs/one.log"}));
 
     const float completed = model.update(makeLogEvent(classic::scanner::ScanRunContractEventKind::LogFinished,
-                                                      classic::scanner::BatchProgressPhase::Finalize, 0, 1, 1,
+                                                      classic::scanner::ScanRunContractProgressPhase::Finalize, 0, 1, 1,
                                                       classic::scanner::ScanRunContractLogDisposition::Failed));
 
     QCOMPARE(completed, 100.0f);

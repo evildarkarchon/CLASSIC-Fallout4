@@ -1,8 +1,4 @@
 export const dtsSignatureFragments = [
-  "export declare function createAnalysisConfigFromYamlContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): JsAnalysisConfig",
-  "export declare function processLogWithYamlContent(logPath: string, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): Promise<JsAnalysisResult>",
-  "export declare function processLogsBatchWithYamlContent(logPaths: Array<string>, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null, maxConcurrent?: number | undefined | null): Promise<Array<JsAnalysisResult>>",
-  "export declare function processLogsBatch(logPaths: Array<string>, config: JsAnalysisConfig, maxConcurrent?: number | undefined | null): Promise<Array<JsAnalysisResult>>",
   "export declare function getAllVersionsForGame(game: string, isVr?: boolean | undefined | null): Array<JsVersionInfo>",
   "export declare function getAllExeHashes(game?: string | undefined | null, isVr?: boolean | undefined | null): Array<string>",
   "export declare function getAllScriptHashes(game?: string | undefined | null, isVr?: boolean | undefined | null): Record<string, Array<string>>",
@@ -12,7 +8,6 @@ export const dtsSignatureFragments = [
   "export declare function calculateTextSimilarity(text1: string, text2: string): number",
   "export interface FileIoConfig {",
   "export const CRASH_AUTOSCAN_PATTERN: string",
-  "export declare function writeAutoscanReport(logPath: string, content: string): Promise<string>",
   "export const DEFAULT_CACHE_TTL: number",
   "export declare class YamlDocument {",
   "export declare function loadSettingsSync(key: string, path: string): any",

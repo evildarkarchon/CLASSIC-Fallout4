@@ -7,11 +7,11 @@
 pub mod contract;
 
 use crate::error::{Result, ScanLogError};
+use crate::orchestrator::resolve_batch_concurrency;
 use crate::report::autoscan_report_path;
 use crate::{
-    AnalysisResult, BatchScanEvent, BatchScanEventKind, BatchScanOptions, ConfigIssue,
-    CrashLogScanFacts, CrashLogScanIntake, CrashLogScanOptions, OrchestratorCore,
-    ScanProgressPhase, ScanReadyAnalysis, resolve_batch_concurrency,
+    AnalysisResult, ConfigIssue, CrashLogScanFacts, CrashLogScanIntake, CrashLogScanOptions,
+    OrchestratorCore, ScanProgressPhase, ScanReadyAnalysis,
 };
 use classic_database_core::DatabasePool;
 use classic_file_io_core::{LogCollector, RejectedInput, resolve_targeted_inputs};
@@ -35,44 +35,7 @@ use self::test_support::{InfrastructureFault, ScanRunTestHooks};
 
 const CANCELLED_BY_USER_MESSAGE: &str = "Cancelled by user";
 
-/// High-level facade for complete Crash Log Scan Runs.
-///
-/// This boundary owns source discovery, optional FCX setup validation, intake
-/// preparation, execution, and result assembly. Lower-level tests and internal
-/// callers can still use [`CrashLogScanRun`] when they already have prepared
-/// intake and accepted Crash Logs.
-pub struct CrashLogScanRunService;
-
-impl CrashLogScanRunService {
-    /// Executes a complete Crash Log Scan Run from typed request data.
-    ///
-    /// Expected lifecycle outcomes such as no logs, setup failure, and
-    /// cancellation before discovery are returned as structured result data.
-    ///
-    /// # Errors
-    ///
-    /// Returns errors for infrastructure failures such as YAML loading, log
-    /// discovery I/O failures, orchestrator setup, or unexpected analysis setup.
-    pub async fn execute<F>(
-        request: CrashLogScanRunServiceRequest,
-        on_event: F,
-    ) -> Result<CrashLogScanRunResult>
-    where
-        F: FnMut(CrashLogScanRunEvent),
-    {
-        let mut on_event = on_event;
-        execute_service(request, |event| {
-            if let CrashLogScanRunServiceEvent::Log(event) = event {
-                on_event(event);
-            }
-        })
-        .await
-        .map_err(CrashLogScanRunServiceError::into_source)
-    }
-}
-
-/// Transitional lifecycle events used to route the final contract through the
-/// provisional service without delaying observation until the run has ended.
+/// Internal lifecycle events used to stream engine state into the final contract.
 pub(super) enum CrashLogScanRunServiceEvent {
     /// Discovery completed with a retainable result.
     DiscoveryCompleted(CrashLogScanDiscoveryResult),
@@ -82,13 +45,11 @@ pub(super) enum CrashLogScanRunServiceEvent {
     Log(CrashLogScanRunEvent),
 }
 
-/// Stage-aware internal error used by the final contract without changing the
-/// temporary public service facade's legacy `ScanLogError` surface.
+/// Stage-aware internal error used by the final contract.
 pub(super) struct CrashLogScanRunServiceError {
     pub(super) stage: contract::InfrastructureErrorStage,
     pub(super) message: String,
     pub(super) path: Option<PathBuf>,
-    source: ScanLogError,
 }
 
 impl CrashLogScanRunServiceError {
@@ -102,18 +63,11 @@ impl CrashLogScanRunServiceError {
             stage,
             message: source.to_string(),
             path,
-            source,
         }
-    }
-
-    /// Restores the compatibility error expected by the transitional public facade.
-    fn into_source(self) -> ScanLogError {
-        self.source
     }
 }
 
-/// Executes the provisional service while exposing complete lifecycle hooks to
-/// the final expand-step contract.
+/// Executes the internal engine while exposing complete lifecycle hooks to the final contract.
 pub(super) async fn execute_service<F>(
     request: CrashLogScanRunServiceRequest,
     mut on_event: F,
@@ -320,8 +274,8 @@ fn service_execution_error(
     CrashLogScanRunServiceError::new(stage, path, error)
 }
 
-/// Request for a complete Crash Log Scan Run.
-pub struct CrashLogScanRunServiceRequest {
+/// Internal request consumed by the final contract's execution engine.
+pub(crate) struct CrashLogScanRunServiceRequest {
     /// Root directory containing settings and ignore YAML.
     pub yaml_dir_root: PathBuf,
     /// `CLASSIC Data` directory containing shippable YAML databases.
@@ -351,9 +305,9 @@ pub struct CrashLogScanRunServiceRequest {
     pub(crate) test_hooks: ScanRunTestHooks,
 }
 
-/// Source to discover Crash Logs for a complete scan run.
+/// Internal source projection used by the final tagged request.
 #[derive(Clone, Debug)]
-pub enum CrashLogScanSource {
+pub(crate) enum CrashLogScanSource {
     /// Standard discovery from CLASSIC's normal scan locations.
     Standard(StandardCrashLogScanSource),
     /// Targeted discovery from explicit user-selected paths.
@@ -514,9 +468,9 @@ pub struct CrashLogScanSetupPathUpdate {
     pub path: PathBuf,
 }
 
-/// Executes a Crash Log Scan Run after Crash Log Scan Intake.
+/// Crate-private execution engine after Crash Log Scan Intake.
 #[derive(Clone)]
-pub struct CrashLogScanRun {
+pub(crate) struct CrashLogScanRun {
     ready: ScanReadyAnalysis,
     setup: Option<Arc<CrashLogScanSetupResult>>,
     #[cfg(test)]
@@ -590,17 +544,6 @@ impl SingleLogAnalysisEngine<'_> {
 }
 
 impl CrashLogScanRun {
-    /// Creates a Crash Log Scan Run module from prepared Crash Log Scan Intake output.
-    #[must_use]
-    pub fn new(ready: ScanReadyAnalysis) -> Self {
-        Self {
-            ready,
-            setup: None,
-            #[cfg(test)]
-            test_hooks: ScanRunTestHooks::default(),
-        }
-    }
-
     /// Creates a run whose immutable FCX setup result is shared with every log analysis.
     fn with_setup(ready: ScanReadyAnalysis, setup: Option<Arc<CrashLogScanSetupResult>>) -> Self {
         Self {
@@ -616,99 +559,6 @@ impl CrashLogScanRun {
     fn with_test_hooks(mut self, test_hooks: ScanRunTestHooks) -> Self {
         self.test_hooks = test_hooks;
         self
-    }
-
-    /// Runs analysis for the selected Crash Logs and owns all run-level side effects.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error for setup failures that prevent the run from starting, such as
-    /// orchestrator initialization or FormID database setup failure. Per-log analysis,
-    /// Autoscan Report write, and Unsolved Logs relocation failures are returned as log
-    /// outcomes instead.
-    pub async fn run<F>(
-        &self,
-        request: CrashLogScanRunRequest,
-        mut on_event: F,
-    ) -> Result<CrashLogScanRunResult>
-    where
-        F: FnMut(CrashLogScanRunEvent),
-    {
-        self.run_inner(request, &mut on_event).await
-    }
-
-    async fn run_inner<F>(
-        &self,
-        request: CrashLogScanRunRequest,
-        mut on_event: F,
-    ) -> Result<CrashLogScanRunResult>
-    where
-        F: FnMut(CrashLogScanRunEvent),
-    {
-        self.validate_run_scoped_setup()?;
-
-        let total = request.logs.len();
-        if total == 0 {
-            return Ok(CrashLogScanRunResult::empty());
-        }
-
-        let CrashLogScanRunRequest {
-            logs,
-            intent,
-            max_concurrent,
-            cancellation,
-            preserve_order,
-        } = request;
-
-        // Scan-run sentinel: `Some(0)` means "adaptive default" here, identical to
-        // `None`. This fold lives at the scan-run seam only; `resolve_batch_concurrency`
-        // keeps `Some(0) -> 1` (serial) for the other batch callers and their tests.
-        let max_concurrent = normalize_scan_run_concurrency(max_concurrent);
-
-        let unsolved_logs_destination = resolve_unsolved_logs_destination(&self.ready, &intent)?;
-
-        let mut orchestrator = self.build_orchestrator().await?;
-        let log_paths: Vec<String> = logs
-            .iter()
-            .map(|path| path.to_string_lossy().to_string())
-            .collect();
-
-        let indexed_results = orchestrator
-            .process_logs_batch_with_events(
-                log_paths,
-                BatchScanOptions {
-                    max_concurrent,
-                    preserve_order,
-                    cancellation,
-                },
-                |event| {
-                    if let Some(event) = CrashLogScanRunEvent::from_batch_event(event) {
-                        on_event(event);
-                    }
-                },
-            )
-            .await;
-
-        let mut outcomes = Vec::with_capacity(indexed_results.len());
-        let mut completed = 0usize;
-        for indexed in indexed_results {
-            completed += 1;
-            let outcome = finalize_log_outcome(
-                indexed.input_index,
-                indexed.result,
-                unsolved_logs_destination.as_deref(),
-                &orchestrator,
-                #[cfg(test)]
-                &self.test_hooks,
-            )
-            .await;
-            on_event(outcome.terminal_event(completed, total));
-            outcomes.push(outcome);
-        }
-
-        orchestrator.async_exit().await?;
-
-        Ok(CrashLogScanRunResult::from_outcomes(outcomes))
     }
 
     /// Runs the final contract's scan-run-owned scheduler over the single-log engine.
@@ -819,7 +669,6 @@ where
             phase: ScanProgressPhase::Setup,
             completed: 0,
             total,
-            success: false,
             disposition: None,
         });
     }
@@ -851,7 +700,6 @@ where
                 phase: ScanProgressPhase::Setup,
                 completed,
                 total,
-                success: false,
                 disposition: None,
             });
             admitted.push(Box::pin(engine.analyze_and_finalize(
@@ -899,22 +747,8 @@ where
     outcomes
 }
 
-/// Request to execute a Crash Log Scan Run for selected Crash Logs.
-pub struct CrashLogScanRunRequest {
-    /// Selected Crash Logs. Adapters own selection; this module owns execution.
-    pub logs: Vec<PathBuf>,
-    /// Caller intent for Standard or Targeted Crash Log Scan Run behavior.
-    pub intent: CrashLogScanRunIntent,
-    /// Optional maximum number of concurrently processed Crash Logs.
-    pub max_concurrent: Option<usize>,
-    /// Optional cooperative cancellation flag checked before each Crash Log starts.
-    pub cancellation: Option<Arc<AtomicBool>>,
-    /// Return log outcomes in input order instead of completion order.
-    pub preserve_order: bool,
-}
-
-/// Crash Log Scan Run intent.
-pub enum CrashLogScanRunIntent {
+/// Internal normalized Crash Log Scan Run intent.
+pub(crate) enum CrashLogScanRunIntent {
     /// A Standard Crash Log Scan Run may move failed logs to Unsolved Logs.
     Standard(StandardCrashLogScanRunIntent),
     /// A Targeted Crash Log Scan Run never moves failed logs to Unsolved Logs.
@@ -922,12 +756,10 @@ pub enum CrashLogScanRunIntent {
 }
 
 impl CrashLogScanRunIntent {
-    /// Builds a Crash Log Scan Run intent from already-parsed caller flags.
+    /// Normalizes final-contract request facts for the internal scheduler.
     ///
-    /// This is the request-normalization seam adapters build against: they pass
-    /// the user's intent facts (Targeted mode, whether to move Unsolved Logs, and
-    /// an optional already-parsed destination path) and the core derives the
-    /// Standard/Targeted intent. Behavioral rules stay in the run itself:
+    /// The public tagged request has already ruled out invalid combinations. This
+    /// projection derives the scheduler's Standard/Targeted movement behavior:
     ///
     /// - Targeted mode always wins over any movement flags.
     /// - `move_unsolved_logs == false` means [`StandardUnsolvedLogsIntent::LeaveInPlace`]
@@ -935,13 +767,9 @@ impl CrashLogScanRunIntent {
     /// - Move with an explicit destination means [`StandardUnsolvedLogsIntent::MoveToCustom`].
     /// - Move without a destination means [`StandardUnsolvedLogsIntent::MoveToConfiguredOrDefault`].
     ///
-    /// Absolute-path validation of a custom destination stays in
-    /// [`CrashLogScanRun::run`]; this constructor is infallible. TUI-style callers
-    /// that already hold an `Option<PathBuf>` should use this to avoid a lossy
-    /// path -> string -> path round trip; string-based adapters should use
-    /// [`CrashLogScanRunIntent::from_adapter_flags`].
+    /// Absolute-path validation remains at the run boundary; this projection is infallible.
     #[must_use]
-    pub fn from_configured_flags(
+    pub(crate) fn from_configured_flags(
         targeted_mode: bool,
         move_unsolved_logs: bool,
         unsolved_logs_destination: Option<PathBuf>,
@@ -960,31 +788,10 @@ impl CrashLogScanRunIntent {
 
         CrashLogScanRunIntent::Standard(StandardCrashLogScanRunIntent { unsolved_logs })
     }
-
-    /// Builds a Crash Log Scan Run intent from raw adapter flags.
-    ///
-    /// The string-based binding surfaces (CXX, Node, Python) share the destination
-    /// sentinel convention where an absent, empty, or whitespace-only destination
-    /// means "not supplied". This constructor owns that normalization — trimming
-    /// the destination and treating an empty result as absent — then delegates to
-    /// [`CrashLogScanRunIntent::from_configured_flags`] so both variants share a
-    /// single derivation path.
-    #[must_use]
-    pub fn from_adapter_flags(
-        targeted_mode: bool,
-        move_unsolved_logs: bool,
-        unsolved_logs_destination: Option<&str>,
-    ) -> Self {
-        let destination = unsolved_logs_destination
-            .map(str::trim)
-            .filter(|destination| !destination.is_empty())
-            .map(PathBuf::from);
-        Self::from_configured_flags(targeted_mode, move_unsolved_logs, destination)
-    }
 }
 
-/// Intent for a Standard Crash Log Scan Run.
-pub struct StandardCrashLogScanRunIntent {
+/// Internal Standard-run movement intent.
+pub(crate) struct StandardCrashLogScanRunIntent {
     /// Unsolved Logs intent for failed Crash Logs and related Autoscan Reports.
     pub unsolved_logs: StandardUnsolvedLogsIntent,
 }
@@ -1000,8 +807,8 @@ pub enum StandardUnsolvedLogsIntent {
     MoveToCustom(PathBuf),
 }
 
-/// Result of a completed Crash Log Scan Run.
-pub struct CrashLogScanRunResult {
+/// Internal result assembled before final-contract projection.
+pub(crate) struct CrashLogScanRunResult {
     /// Lifecycle status for the run as a whole.
     pub status: CrashLogScanRunStatus,
     /// Discovery details when the high-level facade owns discovery.
@@ -1092,9 +899,7 @@ impl CrashLogScanRunResult {
                 crash_log: crash_log.clone(),
                 autoscan_report: None,
                 outcome: CrashLogScanOutcome::CancelledBeforeStart,
-                report_write_failed: false,
                 moved_to_unsolved_logs: false,
-                unsolved_logs_finalization_failed: false,
                 analysis_error: None,
                 report_write_error: None,
                 unsolved_logs_finalization_error: None,
@@ -1155,8 +960,8 @@ impl CrashLogScanRunResult {
     }
 }
 
-/// Per-Crash Log outcome from a Crash Log Scan Run.
-pub struct CrashLogScanRunLogOutcome {
+/// Internal per-log outcome assembled before final-contract projection.
+pub(crate) struct CrashLogScanRunLogOutcome {
     /// Stable index in the adapter-selected Crash Log list.
     pub input_index: usize,
     /// Crash Log path selected for this entry.
@@ -1165,12 +970,8 @@ pub struct CrashLogScanRunLogOutcome {
     pub autoscan_report: Option<PathBuf>,
     /// Outcome kind.
     pub outcome: CrashLogScanOutcome,
-    /// Whether analysis succeeded but Autoscan Report writing failed.
-    pub report_write_failed: bool,
     /// Whether the Crash Log or Autoscan Report was moved to Unsolved Logs.
     pub moved_to_unsolved_logs: bool,
-    /// Whether the requested Unsolved Logs finalization failed.
-    pub unsolved_logs_finalization_failed: bool,
     /// Structured analysis failure message, excluding cancellation.
     pub analysis_error: Option<String>,
     /// Structured Autoscan Report persistence failure message.
@@ -1204,7 +1005,6 @@ impl CrashLogScanRunLogOutcome {
             phase: ScanProgressPhase::Finalize,
             completed,
             total,
-            success: self.outcome == CrashLogScanOutcome::Succeeded,
             disposition: Some(match self.outcome {
                 CrashLogScanOutcome::Succeeded => contract::LogDisposition::Succeeded,
                 CrashLogScanOutcome::Failed => contract::LogDisposition::Failed,
@@ -1216,9 +1016,9 @@ impl CrashLogScanRunLogOutcome {
     }
 }
 
-/// Per-log outcome kind.
+/// Internal per-log outcome kind.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum CrashLogScanOutcome {
+pub(crate) enum CrashLogScanOutcome {
     /// Analysis completed and required Autoscan Report work succeeded.
     Succeeded,
     /// Analysis, Autoscan Report writing, or Unsolved Logs movement failed.
@@ -1227,8 +1027,8 @@ pub enum CrashLogScanOutcome {
     CancelledBeforeStart,
 }
 
-/// Progress event emitted by a Crash Log Scan Run.
-pub struct CrashLogScanRunEvent {
+/// Internal progress event projected into the final contract's event variants.
+pub(crate) struct CrashLogScanRunEvent {
     /// Stable index in the adapter-selected Crash Log list.
     pub input_index: usize,
     /// Crash Log path associated with the event.
@@ -1241,37 +1041,13 @@ pub struct CrashLogScanRunEvent {
     pub completed: usize,
     /// Total selected Crash Logs.
     pub total: usize,
-    /// Whether a terminal event represents success.
-    pub success: bool,
     /// Final contract disposition for terminal events.
     pub disposition: Option<contract::LogDisposition>,
 }
 
-impl CrashLogScanRunEvent {
-    fn from_batch_event(event: BatchScanEvent) -> Option<Self> {
-        let kind = match event.kind {
-            BatchScanEventKind::Queued => CrashLogScanRunEventKind::Queued,
-            BatchScanEventKind::Started => CrashLogScanRunEventKind::Started,
-            BatchScanEventKind::Phase => CrashLogScanRunEventKind::Phase,
-            BatchScanEventKind::Completed | BatchScanEventKind::Failed => return None,
-        };
-
-        Some(Self {
-            input_index: event.input_index,
-            crash_log: PathBuf::from(event.log_path),
-            kind,
-            phase: event.phase,
-            completed: event.completed,
-            total: event.total,
-            success: event.success,
-            disposition: None,
-        })
-    }
-}
-
-/// Crash Log Scan Run progress event kind.
+/// Internal Crash Log Scan Run progress event kind.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum CrashLogScanRunEventKind {
+pub(crate) enum CrashLogScanRunEventKind {
     /// The Crash Log has been accepted into the run.
     Queued,
     /// The Crash Log has started processing.
@@ -1305,7 +1081,6 @@ async fn finalize_log_outcome(
         None
     };
     let mut autoscan_report = None;
-    let mut report_write_failed = false;
     let mut report_write_error = None;
 
     if result.success && !result.report_lines.is_empty() {
@@ -1316,7 +1091,6 @@ async fn finalize_log_outcome(
             Ok(path) => autoscan_report = Some(path),
             Err(write_error) => {
                 outcome = CrashLogScanOutcome::Failed;
-                report_write_failed = true;
                 let message = write_error.to_string();
                 report_write_error = Some(message.clone());
                 error = Some(message);
@@ -1325,7 +1099,6 @@ async fn finalize_log_outcome(
     }
 
     let mut moved_to_unsolved_logs = false;
-    let mut unsolved_logs_finalization_failed = false;
     let mut unsolved_logs_finalization_error = None;
     if outcome == CrashLogScanOutcome::Failed
         && let Some(directory) = unsolved_logs_destination
@@ -1339,7 +1112,6 @@ async fn finalize_log_outcome(
         .await;
         moved_to_unsolved_logs = finalization.moved_any;
         if let Some(move_error) = finalization.error {
-            unsolved_logs_finalization_failed = true;
             unsolved_logs_finalization_error = Some(move_error.clone());
             error = Some(match error {
                 Some(existing) => format!("{existing}; {move_error}"),
@@ -1353,9 +1125,7 @@ async fn finalize_log_outcome(
         crash_log,
         autoscan_report,
         outcome,
-        report_write_failed,
         moved_to_unsolved_logs,
-        unsolved_logs_finalization_failed,
         analysis_error,
         report_write_error,
         unsolved_logs_finalization_error,
@@ -1384,7 +1154,6 @@ fn emit_scheduled_phase<F>(
         phase: phase.phase,
         completed,
         total,
-        success: false,
         disposition: None,
     });
 }
@@ -1396,9 +1165,7 @@ fn cancelled_log_outcome(input_index: usize, crash_log: PathBuf) -> CrashLogScan
         crash_log,
         autoscan_report: None,
         outcome: CrashLogScanOutcome::CancelledBeforeStart,
-        report_write_failed: false,
         moved_to_unsolved_logs: false,
-        unsolved_logs_finalization_failed: false,
         analysis_error: None,
         report_write_error: None,
         unsolved_logs_finalization_error: None,
@@ -1836,7 +1603,3 @@ async fn cleanup_incomplete_destination(destination: &Path) {
 #[cfg(test)]
 #[path = "scan_run_test_support.rs"]
 mod test_support;
-
-#[cfg(test)]
-#[path = "scan_run_tests.rs"]
-mod tests;

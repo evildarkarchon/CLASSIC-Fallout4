@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-15T10:42:25.983928+00:00",
+  "generated_at_utc": "2026-07-16T01:57:09.444448+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -139,30 +139,6 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsAddressLibraryConfig {"
-    },
-    {
-      "export": "JsAnalysisBuildOptions",
-      "kind": "interface",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export interface JsAnalysisBuildOptions {"
-    },
-    {
-      "export": "JsAnalysisConfig",
-      "kind": "interface",
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export interface JsAnalysisConfig {"
-    },
-    {
-      "export": "JsAnalysisResult",
-      "kind": "interface",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export interface JsAnalysisResult {"
     },
     {
       "export": "JsApprovedUpdate",
@@ -1801,24 +1777,6 @@
       "arity": 1
     },
     {
-      "export": "createAnalysisConfig",
-      "kind": "function",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function createAnalysisConfig(game: string, gameVersion: string): JsAnalysisConfig",
-      "arity": 2
-    },
-    {
-      "export": "createAnalysisConfigFromYamlContent",
-      "kind": "function",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function createAnalysisConfigFromYamlContent(mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): JsAnalysisConfig",
-      "arity": 6
-    },
-    {
       "export": "createLogger",
       "kind": "function",
       "owner_module": "scanlog",
@@ -2249,15 +2207,6 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function getFallout4VersionInfo(version: JsFallout4Version): Fallout4VersionInfo",
       "arity": 1
-    },
-    {
-      "export": "getFcxConfigIssues",
-      "kind": "function",
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function getFcxConfigIssues(): Array<JsFcxConfigIssue>",
-      "arity": 0
     },
     {
       "export": "getGameName",
@@ -2899,42 +2848,6 @@
       "arity": 4
     },
     {
-      "export": "processLog",
-      "kind": "function",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function processLog(logPath: string, config: JsAnalysisConfig): Promise<JsAnalysisResult>",
-      "arity": 2
-    },
-    {
-      "export": "processLogWithYamlContent",
-      "kind": "function",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function processLogWithYamlContent(logPath: string, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null): Promise<JsAnalysisResult>",
-      "arity": 7
-    },
-    {
-      "export": "processLogsBatch",
-      "kind": "function",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function processLogsBatch(logPaths: Array<string>, config: JsAnalysisConfig, maxConcurrent?: number | undefined | null): Promise<Array<JsAnalysisResult>>",
-      "arity": 3
-    },
-    {
-      "export": "processLogsBatchWithYamlContent",
-      "kind": "function",
-      "owner_module": "scanlog",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function processLogsBatchWithYamlContent(logPaths: Array<string>, mainContent: string, gameContent: string, ignoreContent: string, game: string, gameVersion: string, options?: JsAnalysisBuildOptions | undefined | null, maxConcurrent?: number | undefined | null): Promise<Array<JsAnalysisResult>>",
-      "arity": 8
-    },
-    {
       "export": "processStringBatch",
       "kind": "function",
       "owner_module": "aux",
@@ -3041,15 +2954,6 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function removeReadonly(filePath: string): void",
       "arity": 1
-    },
-    {
-      "export": "resetFcxGlobalState",
-      "kind": "function",
-      "owner_module": "aux",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function resetFcxGlobalState(): void",
-      "arity": 0
     },
     {
       "export": "resetHashCacheStats",
@@ -3266,15 +3170,6 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function validateUrl(urlStr: string): string",
       "arity": 1
-    },
-    {
-      "export": "writeAutoscanReport",
-      "kind": "function",
-      "owner_module": "aux",
-      "tier": "tier1",
-      "source_file": "node-bindings/classic-node/index.d.ts",
-      "signature": "export declare function writeAutoscanReport(logPath: string, content: string): Promise<string>",
-      "arity": 2
     },
     {
       "export": "xseDllPrefix",

@@ -1,7 +1,7 @@
 {
   "contractVersion": "1.0.0",
   "phase": "phase1",
-  "description": "Live one-tier 870-row Node vs Rust parity contract for high-level APIs, preserving the 706-row enforcement floor.",
+  "description": "Live one-tier 858-row Node vs Rust parity contract for high-level APIs, preserving the 706-row enforcement floor.",
   "tierDefinitions": {
     "tier1": "Must-have high-level APIs required by app workflows and cross-language integration."
   },
@@ -1781,33 +1781,6 @@
       "nodeArity": 2
     },
     {
-      "id": "scanlog-analysis-config",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustSymbol": "AnalysisConfig",
-      "nodeExport": "createAnalysisConfig",
-      "nodeKind": "function",
-      "nodeArity": 2
-    },
-    {
-      "id": "scanlog-process-log",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustSymbol": "OrchestratorCore",
-      "nodeExport": "processLog",
-      "nodeKind": "function",
-      "nodeArity": 2
-    },
-    {
-      "id": "scanlog-process-batch",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustSymbol": "OrchestratorCore",
-      "nodeExport": "processLogsBatch",
-      "nodeKind": "function",
-      "nodeArity": 3
-    },
-    {
       "id": "scanlog-parse-segments",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -1878,33 +1851,6 @@
       "nodeExport": "analyzePapyrusLog",
       "nodeKind": "function",
       "nodeArity": 1
-    },
-    {
-      "id": "scanlog-analysis-config-from-yaml-content",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustSymbol": "build_analysis_config_from_yaml",
-      "nodeExport": "createAnalysisConfigFromYamlContent",
-      "nodeKind": "function",
-      "nodeArity": 6
-    },
-    {
-      "id": "scanlog-process-log-with-yaml-content",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustSymbol": "OrchestratorCore",
-      "nodeExport": "processLogWithYamlContent",
-      "nodeKind": "function",
-      "nodeArity": 7
-    },
-    {
-      "id": "scanlog-process-batch-with-yaml-content",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustSymbol": "OrchestratorCore",
-      "nodeExport": "processLogsBatchWithYamlContent",
-      "nodeKind": "function",
-      "nodeArity": 8
     },
     {
       "id": "scanlog-detect-crash-pattern",
@@ -3948,14 +3894,6 @@
       "nodeArity": 1
     },
     {
-      "id": "scanlog.orchestrator.AnalysisResult@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "AnalysisResult@rust",
-      "rustKind": "class"
-    },
-    {
       "id": "scanlog.settings_validator.ConfigIssue@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -3978,22 +3916,6 @@
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "CrashgenRegistry@rust",
       "rustKind": "class"
-    },
-    {
-      "id": "scanlog.fcx_handler.FcxModeHandler@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FcxModeHandler@rust",
-      "rustKind": "class"
-    },
-    {
-      "id": "scanlog.fcx_handler.FcxResetError@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FcxResetError@rust",
-      "rustKind": "enum"
     },
     {
       "id": "scanlog.formid_analyzer.FormIDAnalyzer@rust",
@@ -4236,14 +4158,6 @@
       "rustKind": "function"
     },
     {
-      "id": "scanlog.fcx_handler.fcx_handler@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "fcx_handler@rust",
-      "rustKind": "module"
-    },
-    {
       "id": "scanlog.formid.formid@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -4281,14 +4195,6 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "mod_detector@rust",
-      "rustKind": "module"
-    },
-    {
-      "id": "scanlog.orchestrator.orchestrator@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "orchestrator@rust",
       "rustKind": "module"
     },
     {
@@ -4338,14 +4244,6 @@
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "report@rust",
       "rustKind": "module"
-    },
-    {
-      "id": "scanlog.orchestrator.resolve_batch_concurrency@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "resolve_batch_concurrency@rust",
-      "rustKind": "function"
     },
     {
       "id": "scanlog.record_scanner.scan_records_batch@rust",
@@ -4404,26 +4302,6 @@
       "rustKind": "const",
       "nodeExport": "CRASH_LOG_PATTERN",
       "nodeKind": "const"
-    },
-    {
-      "id": "scanlog.orchestrator.JsAnalysisBuildOptions",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "build_analysis_config_from_yaml",
-      "rustKind": "function",
-      "nodeExport": "JsAnalysisBuildOptions",
-      "nodeKind": "interface"
-    },
-    {
-      "id": "scanlog.orchestrator.JsAnalysisResult",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "AnalysisResult",
-      "rustKind": "class",
-      "nodeExport": "JsAnalysisResult",
-      "nodeKind": "interface"
     },
     {
       "id": "scanlog.gpu_detector.JsGpuInfo",
@@ -4614,16 +4492,6 @@
       "nodeKind": "interface"
     },
     {
-      "id": "config.analysis.JsAnalysisConfig",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "AnalysisConfig",
-      "rustKind": "class",
-      "nodeExport": "JsAnalysisConfig",
-      "nodeKind": "interface"
-    },
-    {
       "id": "config.scangame.JsConfigIssue",
       "tier": "tier1",
       "ownerModule": "config",
@@ -4751,16 +4619,6 @@
       "rustSymbol": "DEFAULT_QUERY_CACHE_CAPACITY",
       "rustKind": "function",
       "nodeExport": "getDefaultQueryCacheCapacity",
-      "nodeKind": "function"
-    },
-    {
-      "id": "config.fcx.getFcxConfigIssues",
-      "tier": "tier1",
-      "ownerModule": "config",
-      "rustCrate": "classic-config-core",
-      "rustSymbol": "ConfigIssue",
-      "rustKind": "function",
-      "nodeExport": "getFcxConfigIssues",
       "nodeKind": "function"
     },
     {
@@ -7449,30 +7307,12 @@
       "nodeKind": "function"
     },
     {
-      "id": "aux.resetFcxGlobalState",
-      "tier": "tier1",
-      "ownerModule": "aux",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FcxModeHandler",
-      "nodeExport": "resetFcxGlobalState",
-      "nodeKind": "function"
-    },
-    {
       "id": "aux.setApplicationDir",
       "tier": "tier1",
       "ownerModule": "aux",
       "rustCrate": "classic-registry-core",
       "rustSymbol": "set_application_dir",
       "nodeExport": "setApplicationDir",
-      "nodeKind": "function"
-    },
-    {
-      "id": "aux.writeAutoscanReport",
-      "tier": "tier1",
-      "ownerModule": "aux",
-      "rustCrate": "classic-file-io-core",
-      "rustSymbol": "FileIOCore",
-      "nodeExport": "writeAutoscanReport",
       "nodeKind": "function"
     },
     {

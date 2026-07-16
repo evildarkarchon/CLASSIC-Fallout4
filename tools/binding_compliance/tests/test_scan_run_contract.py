@@ -16,6 +16,7 @@ sys.path.insert(0, str(TOOLS_ROOT))
 
 from scan_run_contract import (  # type: ignore  # noqa: E402
     ManifestValidationError,
+    _validate_forbidden_exports,
     load_manifest,
     validate_manifest,
 )
@@ -40,6 +41,72 @@ def test_missing_adapter_variant_acknowledgement_fails_closed() -> None:
         match=r"node.*event\.log_finished",
     ):
         validate_manifest(REPO_ROOT, manifest)
+
+
+def test_forbidden_legacy_export_fails_closed(tmp_path: Path) -> None:
+    """A removed execution seam cannot reappear in a supported adapter."""
+
+    source = tmp_path / "adapter.rs"
+    source.write_text("pub fn process_logs_batch() {}\n", encoding="utf-8")
+
+    with pytest.raises(
+        ManifestValidationError,
+        match=r"node.*process_logs_batch",
+    ):
+        _validate_forbidden_exports(
+            tmp_path,
+            {
+                "node": [
+                    {
+                        "path": "adapter.rs",
+                        "symbols": ["process_logs_batch"],
+                    }
+                ]
+            },
+        )
+
+
+def test_forbidden_export_identifier_does_not_match_final_contract_name(
+    tmp_path: Path,
+) -> None:
+    """A contracted prefix does not reject the surviving final entry point."""
+
+    source = tmp_path / "adapter.rs"
+    source.write_text("pub fn scan_run_contract_execute() {}\n", encoding="utf-8")
+
+    _validate_forbidden_exports(
+        tmp_path,
+        {
+            "cxx": [
+                {
+                    "path": "adapter.rs",
+                    "symbols": ["scan_run_execute"],
+                }
+            ]
+        },
+    )
+
+
+def test_missing_required_forbidden_export_surface_fails_closed(
+    tmp_path: Path,
+) -> None:
+    """A misspelled or unexpectedly absent tracked contract file is not ignored."""
+
+    with pytest.raises(
+        ManifestValidationError,
+        match=r"python.*missing\.pyi",
+    ):
+        _validate_forbidden_exports(
+            tmp_path,
+            {
+                "python": [
+                    {
+                        "path": "missing.pyi",
+                        "symbols": ["Orchestrator"],
+                    }
+                ]
+            },
+        )
 
 
 def test_unregistered_rust_enum_variant_fails_closed(tmp_path: Path) -> None:
