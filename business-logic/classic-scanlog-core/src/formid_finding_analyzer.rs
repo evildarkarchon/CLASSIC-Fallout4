@@ -165,6 +165,11 @@ fn normalize_plugins(plugins: Vec<FormIDPlugin>) -> AnalyzerResult<HashMap<Strin
                 plugin.prefix
             )));
         }
+        if prefix == "FE" {
+            // Legacy Buffout logs assign the generic FE marker to every light plugin. It lacks
+            // the three-digit light-plugin index needed to resolve an FExxx FormID safely.
+            continue;
+        }
         if let Some(existing) = normalized.insert(prefix.clone(), name.to_string())
             && existing != name
         {

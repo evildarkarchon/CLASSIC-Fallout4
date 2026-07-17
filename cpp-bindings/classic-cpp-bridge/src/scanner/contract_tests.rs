@@ -761,7 +761,7 @@ fn setup_mapping_preserves_optional_message_checks_updates_and_configuration_iss
 }
 
 #[test]
-/// Verifies FCX execution preserves structured setup data with an explicit documents fixture.
+/// Verifies FCX execution preserves structured setup data with host-independent path fixtures.
 fn execute_retains_structured_setup_result_data() {
     let temp = tempdir().unwrap();
     let data = temp.path().join("CLASSIC Data");
@@ -770,6 +770,10 @@ fn execute_retains_structured_setup_result_data() {
     std::fs::write(&log, FIXTURE_LOG_SMALL).unwrap();
     let documents = temp.path().join("Documents");
     std::fs::create_dir_all(&documents).unwrap();
+    let game_root = temp.path().join("Fallout4");
+    std::fs::create_dir_all(&game_root).unwrap();
+    let game_exe = game_root.join("Fallout4.exe");
+    std::fs::write(&game_exe, b"not a real PE").unwrap();
 
     let mut configuration = sample_configuration();
     configuration.yaml_dir_root = temp.path().to_string_lossy().into_owned();
@@ -779,12 +783,12 @@ fn execute_retains_structured_setup_result_data() {
         inputs: vec![log.to_string_lossy().into_owned()],
     };
     let setup = ffi::ScanRunSetupContextDto {
-        has_game_root: false,
-        game_root: String::new(),
+        has_game_root: true,
+        game_root: game_root.to_string_lossy().into_owned(),
         has_docs_root: true,
         docs_root: documents.to_string_lossy().into_owned(),
-        has_game_exe_path: false,
-        game_exe_path: String::new(),
+        has_game_exe_path: true,
+        game_exe_path: game_exe.to_string_lossy().into_owned(),
         has_xse_log_path: false,
         xse_log_path: String::new(),
     };

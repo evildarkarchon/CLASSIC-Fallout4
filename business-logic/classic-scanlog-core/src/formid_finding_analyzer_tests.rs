@@ -68,6 +68,39 @@ fn analyze_returns_explicit_empty_success_when_no_identifiers_are_present() {
 }
 
 #[test]
+fn analyze_ignores_ambiguous_generic_fe_plugins_but_resolves_indexed_light_plugins() {
+    let analyzer = FormIDFindingAnalyzer::new(FormIdValueLookup::disabled());
+    let result = classic_shared_core::get_runtime()
+        .block_on(analyzer.analyze(FormIDFindingAnalysisInput {
+            crash_lines: vec![
+                "Form ID: 0xFE123ABC".to_string(),
+                "Form ID: 0xFE456DEF".to_string(),
+            ],
+            plugins: vec![
+                plugin("LegacyLightA.esl", "FE"),
+                plugin("LegacyLightB.esl", "FE"),
+                plugin("IndexedLight.esl", "FE123"),
+            ],
+        }))
+        .expect("generic FE plugin markers must not fail semantic analysis");
+
+    assert_eq!(result.findings.len(), 2);
+    assert_eq!(
+        result.findings[0].plugin.as_deref(),
+        Some("IndexedLight.esl")
+    );
+    assert_eq!(
+        result.findings[0].value_lookup_status,
+        FormIDValueLookupStatus::Disabled
+    );
+    assert_eq!(result.findings[1].plugin, None);
+    assert_eq!(
+        result.findings[1].value_lookup_status,
+        FormIDValueLookupStatus::NotApplicable
+    );
+}
+
+#[test]
 fn analyze_keeps_lookup_hits_and_misses_as_distinct_data() {
     let lookup = FormIdValueLookup::in_memory(vec![FormIdValueLookupEntry::new(
         "123456",
