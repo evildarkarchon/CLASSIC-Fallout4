@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-16T23:32:13.035085+00:00`
-- Tier-1 contract rows: **915**
-- Tier-1 matched: **915**
+- Generated: `2026-07-17T01:10:30.635562+00:00`
+- Tier-1 contract rows: **908**
+- Tier-1 matched: **908**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -447,16 +447,11 @@
 | `scanlog.papyrus.PapyrusError@rust` | `scanlog` | `PapyrusError@rust` | `None` | `matched` |
 | `scanlog.plugin_analyzer.PluginAnalyzer@rust` | `scanlog` | `PluginAnalyzer@rust` | `None` | `matched` |
 | `scanlog.record_scanner.RecordScanner@rust` | `scanlog` | `RecordScanner@rust` | `None` | `matched` |
-| `scanlog.report.ReportComposer@rust` | `scanlog` | `ReportComposer@rust` | `None` | `matched` |
-| `scanlog.report.ReportFragment@rust` | `scanlog` | `ReportFragment@rust` | `None` | `matched` |
-| `scanlog.report.ReportGenerator@rust` | `scanlog` | `ReportGenerator@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.RustFormIDAnalyzer@rust` | `scanlog` | `RustFormIDAnalyzer@rust` | `None` | `matched` |
 | `scanlog.error.ScanLogError@rust` | `scanlog` | `ScanLogError@rust` | `None` | `matched` |
 | `scanlog.orchestrator.ScanProgressPhase@rust` | `scanlog` | `ScanProgressPhase@rust` | `None` | `matched` |
-| `scanlog.settings_validator.SettingsValidator@rust` | `scanlog` | `SettingsValidator@rust` | `None` | `matched` |
 | `scanlog.parser.StreamingIteratorParser@rust` | `scanlog` | `StreamingIteratorParser@rust` | `None` | `matched` |
 | `scanlog.parser.StreamingLogParser@rust` | `scanlog` | `StreamingLogParser@rust` | `None` | `matched` |
-| `scanlog.parser.StringPool@rust` | `scanlog` | `StringPool@rust` | `None` | `matched` |
 | `scanlog.plugin_analyzer.contains_plugin@rust` | `scanlog` | `contains_plugin@rust` | `None` | `matched` |
 | `scanlog.record_scanner.contains_record@rust` | `scanlog` | `contains_record@rust` | `None` | `matched` |
 | `scanlog.crashgen_registry.crashgen_registry@rust` | `scanlog` | `crashgen_registry@rust` | `None` | `matched` |
@@ -503,7 +498,6 @@
 | `scanlog.patterns.patterns@rust` | `scanlog` | `patterns@rust` | `None` | `matched` |
 | `scanlog.plugin_analyzer.plugin_analyzer@rust` | `scanlog` | `plugin_analyzer@rust` | `None` | `matched` |
 | `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `record_scanner@rust` | `None` | `matched` |
-| `scanlog.report.report@rust` | `scanlog` | `report@rust` | `None` | `matched` |
 | `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `scan_records_batch@rust` | `None` | `matched` |
 | `scanlog.segment_key.segment_key@rust` | `scanlog` | `segment_key@rust` | `None` | `matched` |
 | `scanlog.analyzer.AnalyzerError` | `scanlog` | `AnalyzerError` | `CrashgenSettingsAnalyzer` | `matched` |
@@ -532,7 +526,6 @@
 | `scanlog.crash_suspect_analyzer.CrashSuspectStackCountRule` | `scanlog` | `SuspectStackCountRule` | `JsCrashSuspectStackCountRule` | `matched` |
 | `scanlog.crash_suspect_analyzer.CrashSuspectStackRule` | `scanlog` | `SuspectStackRule` | `JsCrashSuspectStackRule` | `matched` |
 | `scanlog.crash_suspect_analyzer.crash_suspect_analyzer@rust` | `scanlog` | `crash_suspect_analyzer@rust` | `None` | `matched` |
-| `scanlog.settings_validator.settings_validator@rust` | `scanlog` | `settings_validator@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.validate_formids_batch@rust` | `scanlog` | `validate_formids_batch@rust` | `None` | `matched` |
 | `scanlog.version.version@rust` | `scanlog` | `version@rust` | `None` | `matched` |
 | `scanlog.patterns.CRASH_LOG_PATTERN` | `scanlog` | `CRASH_LOG_PATTERN` | `CRASH_LOG_PATTERN` | `matched` |

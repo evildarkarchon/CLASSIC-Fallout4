@@ -253,7 +253,7 @@ That shared-runtime rule matters for contributors: if you extend this crate, kee
 - [`classic-shared-core`](../../foundation/classic-shared-core) - shared Tokio runtime via `get_runtime`
 - [`classic-settings-core`](../../business-logic/classic-settings-core) - YAML extraction helpers, mtime-aware file cache, and settings-cache management (historical note: this owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
 - [`classic-version-registry-core`](../../business-logic/classic-version-registry-core) - version metadata and fallback resolution
-- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration, and uses the crashgen rule model (below) inside `SettingsValidator`
+- [`classic-scanlog-core`](../../business-logic/classic-scanlog-core) - converts `YamlDataCore` and `CrashgenEntryRaw` into analysis configuration, and evaluates the crashgen rule model through `CrashgenSettingsAnalyzer`
 - [`classic-node`](../../node-bindings/classic-node) - wraps this crate for JavaScript/TypeScript
 - [`classic-cpp-bridge`](../../cpp-bindings/classic-cpp-bridge) - wraps `YamlDataCore` for C++ via the shared runtime
 

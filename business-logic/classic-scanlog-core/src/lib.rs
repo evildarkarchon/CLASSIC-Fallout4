@@ -24,6 +24,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 // Public utility modules and the final Crash Log Scan Run contract.
 pub mod analyzer;
+pub(crate) mod autoscan_report_contribution_collector;
 pub mod crash_suspect_analyzer;
 pub mod crashgen_registry;
 pub mod crashgen_settings_analyzer;
@@ -45,13 +46,12 @@ pub mod patterns;
 pub mod plugin_analyzer;
 pub mod plugin_evidence_analyzer;
 pub mod record_scanner;
-pub mod report;
+pub(crate) mod report;
 #[allow(dead_code)]
 pub(crate) mod scan_intake;
 pub mod scan_run;
 mod scan_sidecar_settings;
 pub mod segment_key;
-pub mod settings_validator;
 pub mod version;
 
 // Re-export key types for convenience
@@ -95,7 +95,6 @@ pub use plugin_evidence_analyzer::{
 pub use record_scanner::{
     RecordScanner, contains_record, scan_records_batch, try_scan_records_batch,
 };
-pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
 pub use scan_intake::{CrashLogScanFacts, CrashLogScanOptions};
 pub(crate) use scan_intake::{CrashLogScanIntake, ScanReadyAnalysis};
 pub use scan_run::{
@@ -104,7 +103,6 @@ pub use scan_run::{
     CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, StandardCrashLogScanSource,
     StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
-pub use settings_validator::SettingsValidator;
 pub use version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status,
     check_crashgen_version_status_with_exceptions, crashgen_version_gen,

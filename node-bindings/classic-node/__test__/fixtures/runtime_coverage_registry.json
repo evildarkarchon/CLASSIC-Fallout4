@@ -73,15 +73,15 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 120,
-      "contractIdsHash": "8662aa127d818bf1f414c6b85e4bddf6f7919ce3e670561600adf0d9b552d853",
+      "contractCount": 113,
+      "contractIdsHash": "38f7263df0fdfed5b61f5ba3c65419c05662286176e7942d582d534ef5fbdcdb",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
       "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, #131, and #132 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "coverageId": "node-tier1-config",

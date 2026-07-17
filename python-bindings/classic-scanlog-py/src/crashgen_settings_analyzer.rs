@@ -3,7 +3,8 @@
 use std::collections::HashSet;
 
 use classic_config_core::{
-    AutoscanReportPlacement as CorePlacement, ConfigLayout, OutcomeKind, RuleSeverity,
+    AutoscanReportPlacement as CorePlacement, ConfigLayout, CrashgenSettingsSnapshot, OutcomeKind,
+    RuleSeverity,
 };
 use classic_scanlog_core::{
     AnalyzerError as CoreAnalyzerError, AnalyzerKind as CoreAnalyzerKind,
@@ -13,12 +14,33 @@ use classic_scanlog_core::{
 };
 use classic_shared::without_gil;
 use pyo3::create_exception;
-use pyo3::exceptions::PyRuntimeError;
+use pyo3::exceptions::{PyRuntimeError, PyTypeError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
 
 use crate::py_adapters::crashgen_entry_from_py_strict;
-use crate::settings_validator::crashgen_snapshot_from_py_sections;
+
+/// Converts a Python section-to-settings mapping into the semantic analyzer snapshot.
+fn crashgen_snapshot_from_py_sections(
+    crashgen: &Bound<'_, PyDict>,
+) -> PyResult<CrashgenSettingsSnapshot> {
+    let mut snapshot = CrashgenSettingsSnapshot::new();
+    for (section, settings) in crashgen.iter() {
+        let section: String = section.extract()?;
+        let settings = settings.cast::<PyDict>().map_err(|_| {
+            PyTypeError::new_err(
+                "crashgen settings must be a dict[str, dict[str, str]] grouped by section",
+            )
+        })?;
+        for (key, value) in settings.iter() {
+            let key: String = key.extract()?;
+            let value: String = value.extract()?;
+            snapshot.insert(&section, &key, value);
+        }
+    }
+
+    Ok(snapshot)
+}
 
 create_exception!(
     classic_scanlog,

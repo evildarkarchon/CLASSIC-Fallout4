@@ -165,7 +165,7 @@ pub struct SuspectStackRule {
 pub struct CrashgenEntryRaw {
     /// Bracket header used by this crashgen (e.g., `"[Compatibility]"`), for display only.
     pub display_section: String,
-    /// Settings keys to skip in `check_disabled_settings()`.
+    /// Settings keys excluded from Disabled Setting Notice analysis.
     pub ignore_keys: Vec<String>,
     /// String names of named checks (e.g., `"achievements"`, `"memory_management"`).
     pub checks: Vec<String>,

@@ -157,23 +157,6 @@ fn build_analysis_config_does_not_double_prefix_classic_version() {
 }
 
 #[test]
-fn create_report_generator_from_default_config_avoids_double_classic_prefix() {
-    let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
-    let orchestrator = OrchestratorCore::new(config).unwrap();
-
-    let report_text = orchestrator
-        .create_report_generator()
-        .generate_header("crash.log")
-        .to_list()
-        .join("");
-
-    assert!(
-        !report_text.contains("CLASSIC CLASSIC"),
-        "default-config report header should not double-prefix CLASSIC"
-    );
-}
-
-#[test]
 fn build_analysis_config_uses_registry_metadata_when_yaml_game_info_is_missing() {
     let mut yaml = make_yaml_data("v9.0.0");
     yaml.crashgen_name.clear();
@@ -651,26 +634,6 @@ fn scan_analysis_context_builds_from_arc_sections() {
 }
 
 #[test]
-fn formid_analysis_contribution_retains_completed_empty_result() {
-    let orchestrator = make_fixture_orchestrator();
-    let segments = HashMap::from([(
-        segment_key::CALLSTACK.to_string(),
-        vec![Arc::<str>::from("stack frame without a FormID")],
-    )]);
-    let context = ScanAnalysisContext::from_arc_sections(Vec::new(), &segments);
-
-    let (contributions, formid_count) = classic_shared_core::get_runtime()
-        .block_on(orchestrator.collect_formid_and_record_contributions(&context, None))
-        .expect("completed empty FormID analysis should succeed");
-
-    assert_eq!(formid_count, 0);
-    assert!(matches!(
-        contributions.as_slice(),
-        [AutoscanReportContribution::FormIdFinding { result }] if result.findings.is_empty()
-    ));
-}
-
-#[test]
 fn resolve_effective_crashgen_name_falls_back_for_ambiguous_modules() {
     let mut config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
     config.crashgen_name = "Buffout 4".to_string();
@@ -696,25 +659,7 @@ fn fake_bot_mode_treats_buffout4ae_dll_as_real_buffout() {
 }
 
 #[test]
-fn create_report_generator_with_crashgen_name_updates_error_section_label() {
-    let config = AnalysisConfig::new("Fallout4".to_string(), "auto".to_string());
-    let orchestrator = OrchestratorCore::new(config).unwrap();
-
-    let report_gen = orchestrator.create_report_generator_with_crashgen_name("Addictol");
-    let fragment = report_gen.generate_error_section_with_status(
-        "Unhandled exception",
-        "Addictol v1.0.0",
-        Some(crate::version::CrashgenVersionStatus::Valid),
-    );
-    let text = fragment.to_list().join("");
-
-    assert!(text.contains("Detected Addictol Version"));
-    assert!(text.contains("valid version of Addictol"));
-    assert!(!text.contains("Detected Buffout 4 Version"));
-}
-
-#[test]
-fn settings_validator_routes_to_addictol_rules_and_avoids_scaffold() {
+fn semantic_settings_analyzer_routes_to_addictol_rules_and_avoids_scaffold() {
     use classic_config_core::{
         AutoscanReportPlacement, CrashgenSettingsRules, Predicate, PreflightAction,
         PreflightActionKind, PreflightRule, RuleSeverity,
@@ -777,30 +722,31 @@ fn settings_validator_routes_to_addictol_rules_and_avoids_scaffold() {
         .resolve_effective_crashgen_name("Addictol v1.0.0 Feb 16 2026 08:02:06", &xse_modules);
     assert_eq!(effective_name, "Addictol");
 
-    let validator =
-        OrchestratorCore::settings_validator_for_crashgen(&orchestrator.config, &effective_name);
-    let fragments = validator
-        .scan_all_settings(
-            &classic_config_core::CrashgenSettingsSnapshot::new(),
-            &xse_modules,
-            None,
-            classic_config_core::ConfigLayout::Unknown,
-        )
+    let analyzer = OrchestratorCore::crashgen_settings_analyzer_for_name(
+        &orchestrator.config,
+        &effective_name,
+    )
+    .unwrap();
+    let analysis = analyzer
+        .analyze(crate::CrashgenSettingsAnalysisInput {
+            settings: classic_config_core::CrashgenSettingsSnapshot::new(),
+            installed_plugins: xse_modules,
+            crashgen_version: None,
+            config_layout: classic_config_core::ConfigLayout::Unknown,
+        })
         .unwrap();
-    let all_lines: Vec<String> = fragments
-        .iter()
-        .flat_map(crate::report::ReportFragment::to_list)
-        .collect();
 
     assert!(
-        all_lines
+        analysis
+            .expectation_outcomes
             .iter()
-            .any(|line| line.contains("Addictol rules active"))
+            .any(|outcome| outcome.message.contains("Addictol rules active"))
     );
     assert!(
-        !all_lines
+        !analysis
+            .expectation_outcomes
             .iter()
-            .any(|line| line.contains("scaffold (rules pending)"))
+            .any(|outcome| outcome.message.contains("scaffold (rules pending)"))
     );
 }
 
@@ -1221,15 +1167,6 @@ fn process_log_renders_structured_mods_solu_any_matches() {
         plugins.get("DLCUltraHighResolution.esp"),
         Some(&"01".to_string())
     );
-    assert!(
-        !orchestrator
-            .collect_mod_guidance(&context, &plugins)
-            .expect("aggregate Mod Guidance analysis should succeed")
-            .solutions
-            .is_empty(),
-        "structured matcher should detect the configured entry"
-    );
-
     let fixture = write_fixture_log("mods-solu-any.log", &log_contents);
 
     let result = get_runtime()

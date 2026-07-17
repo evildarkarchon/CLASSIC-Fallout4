@@ -3,41 +3,30 @@
 //! This module provides the main orchestration layer that coordinates all analysis
 //! components into a unified pipeline for processing crash logs.
 //!
-//! The orchestrator achieves feature parity with Python's `OrchestratorCore`, providing:
-//! - Report generation with Python-identical output
+//! The orchestrator owns the Rust analysis pipeline, providing:
+//! - Private byte-stable Autoscan Report Assembly
 //! - Version checking and validation
 //! - Crash data reformatting (simplify logs)
 //! - Incomplete/failed log detection with statistics
-//! - Full analysis pipeline integration
+//! - Typed semantic analyzer integration
 
-use crate::crash_suspect_analyzer::{
-    CrashSuspectAnalysisInput, CrashSuspectAnalysisResult, CrashSuspectAnalyzer,
+use crate::autoscan_report_contribution_collector::{
+    AutoscanReportCollectionInput, AutoscanReportContributionCollector,
 };
+use crate::crash_suspect_analyzer::CrashSuspectAnalyzer;
 use crate::crashgen_registry::{CrashgenEntry, CrashgenRegistry};
+use crate::crashgen_settings_analyzer::CrashgenSettingsAnalyzer;
 use crate::error::Result;
-use crate::formid_finding_analyzer::{
-    FormIDFindingAnalysisInput, FormIDFindingAnalyzer, FormIDPlugin,
-};
-use crate::gpu_detector::GpuDetector;
-use crate::mod_guidance_analyzer::{
-    ModGuidanceAnalysisInput, ModGuidanceAnalysisResult, ModGuidanceAnalyzer,
-};
-use crate::named_record_finding_analyzer::{
-    NamedRecordFindingAnalysisInput, NamedRecordFindingAnalyzer,
-};
+use crate::formid_finding_analyzer::FormIDFindingAnalyzer;
+use crate::mod_guidance_analyzer::ModGuidanceAnalyzer;
+use crate::named_record_finding_analyzer::NamedRecordFindingAnalyzer;
 use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
-use crate::plugin_evidence_analyzer::{
-    PluginEvidenceAnalysisInput, PluginEvidenceAnalysisResult, PluginEvidenceAnalyzer,
-};
+use crate::plugin_evidence_analyzer::PluginEvidenceAnalyzer;
 use crate::record_scanner::RecordScanner;
-use crate::report::{
-    AutoscanReportAssembler, AutoscanReportContribution, AutoscanReportFacts, ReportGenerator,
-    write_autoscan_report,
-};
+use crate::report::{AutoscanReportAssembler, AutoscanReportFacts, write_autoscan_report};
 use crate::scan_run::CrashLogScanSetupResult;
 use crate::segment_key;
-use crate::settings_validator::SettingsValidator;
 use crate::version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status,
     check_crashgen_version_status_with_exceptions, crashgen_version_gen,
@@ -245,7 +234,7 @@ pub struct AnalysisConfig {
 
     /// Bare SemVer string sourced from `CLASSIC_Info.version` in `CLASSIC Main.yaml`
     /// (e.g., "v8.0.0"). Display-decorated forms like "CLASSIC v8.0.0" are constructed
-    /// at format time by consumers such as `ReportGenerator`.
+    /// by private Autoscan Report Assembly at format time.
     pub classic_version: String,
 
     /// Ignore lists (plugins, records, general)
@@ -285,7 +274,7 @@ pub struct AnalysisConfig {
 
     /// Per-crashgen settings registry loaded from YAML.
     ///
-    /// Used by the orchestrator to resolve the `CrashgenEntry` for `SettingsValidator`.
+    /// Used by the orchestrator to construct immutable `CrashgenSettingsAnalyzer` handles.
     pub crashgen_registry: CrashgenRegistry,
 }
 
@@ -716,10 +705,12 @@ pub struct OrchestratorCore {
     formid_finding_analyzer: FormIDFindingAnalyzer,
     suspect_analyzer: CrashSuspectAnalyzer,
     mod_guidance_analyzer: ModGuidanceAnalyzer,
+    /// Immutable semantic analyzer for the configured Crashgen Expectations.
+    crashgen_settings_analyzer: CrashgenSettingsAnalyzer,
+    /// Alternate immutable analyzer used when prepared evidence identifies Addictol.
+    addictol_settings_analyzer: Option<CrashgenSettingsAnalyzer>,
     /// Immutable semantic analyzer for named record evidence.
     named_record_finding_analyzer: Option<NamedRecordFindingAnalyzer>,
-    /// Settings validator for crash generator settings
-    settings_validator: SettingsValidator,
     /// Optional database pool for async FormID lookups
     db_pool: Option<Arc<DatabasePool>>,
     /// Whether the orchestrator has been initialized via async_enter
@@ -742,18 +733,35 @@ impl OrchestratorCore {
                 && !Self::has_real_buffout_module(xse_modules))
     }
 
-    /// Build a settings validator from `AnalysisConfig`.
-    fn settings_validator_from_config(config: &AnalysisConfig) -> SettingsValidator {
-        Self::settings_validator_for_crashgen(config, &config.crashgen_name)
-    }
-
-    /// Build a settings validator for a specific crashgen name.
-    fn settings_validator_for_crashgen(
+    /// Builds and validates one immutable Crashgen Settings analyzer before log work begins.
+    fn crashgen_settings_analyzer_for_name(
         config: &AnalysisConfig,
         crashgen_name: &str,
-    ) -> SettingsValidator {
-        let entry = config.crashgen_registry.lookup(crashgen_name).clone();
-        SettingsValidator::new(crashgen_name.to_string(), entry)
+    ) -> Result<CrashgenSettingsAnalyzer> {
+        let analyzer_name = if crashgen_name.trim().is_empty() {
+            "Unknown Crashgen"
+        } else {
+            crashgen_name
+        };
+        CrashgenSettingsAnalyzer::new(
+            analyzer_name.to_string(),
+            config.crashgen_registry.lookup(crashgen_name).clone(),
+        )
+        .map_err(|error| crate::error::ScanLogError::ConfigError(error.formatted_message()))
+    }
+
+    /// Selects the precompiled settings analyzer for one prepared Crash Log.
+    fn crashgen_settings_analyzer(
+        &self,
+        effective_crashgen_name: &str,
+    ) -> &CrashgenSettingsAnalyzer {
+        if effective_crashgen_name.eq_ignore_ascii_case("Addictol")
+            && let Some(analyzer) = self.addictol_settings_analyzer.as_ref()
+        {
+            analyzer
+        } else {
+            &self.crashgen_settings_analyzer
+        }
     }
 
     /// Resolve the effective crashgen name for settings validation for a single log.
@@ -952,9 +960,18 @@ impl OrchestratorCore {
             None
         };
 
-        // Resolve per-crashgen registry entry and build the settings validator.
-        // The entry is resolved once at construction time from the crashgen name.
-        let settings_validator = Self::settings_validator_from_config(&config);
+        // Validate and compile every settings analyzer that can be selected by prepared evidence.
+        // This keeps invalid configuration out of per-log work and lets concurrent logs safely
+        // reuse immutable matcher state.
+        let crashgen_settings_analyzer =
+            Self::crashgen_settings_analyzer_for_name(&config, &config.crashgen_name)?;
+        let addictol_settings_analyzer = if config.crashgen_name.eq_ignore_ascii_case("Addictol") {
+            None
+        } else {
+            Some(Self::crashgen_settings_analyzer_for_name(
+                &config, "Addictol",
+            )?)
+        };
 
         Ok(Self {
             config,
@@ -966,8 +983,9 @@ impl OrchestratorCore {
             formid_finding_analyzer: FormIDFindingAnalyzer::new(FormIdValueLookup::disabled()),
             suspect_analyzer,
             mod_guidance_analyzer,
+            crashgen_settings_analyzer,
+            addictol_settings_analyzer,
             named_record_finding_analyzer,
-            settings_validator,
             db_pool: None,
             initialized: false,
         })
@@ -1201,33 +1219,32 @@ impl OrchestratorCore {
         let crashgen = self.resolve_crashgen_context(&log_path, &context);
 
         enter_phase(ScanProgressPhase::Analyze);
-        let mut contributions = self.collect_settings_contributions(&context, &crashgen);
-
         // Preserve plugin load order for semantic guidance and downstream report sorting.
         let (plugins_map, plugin_count) = self.collect_plugins(&context);
-        let suspect_result = self.collect_suspect_findings(&context, &crashgen.main_error)?;
-        let suspect_count = suspect_result.findings.len();
-        contributions.extend(
-            suspect_result
-                .findings
-                .into_iter()
-                .map(|finding| AutoscanReportContribution::CrashSuspectFinding { finding }),
+        let collector = AutoscanReportContributionCollector::new(
+            self.crashgen_settings_analyzer(&crashgen.effective_crashgen_name),
+            &self.suspect_analyzer,
+            &self.mod_guidance_analyzer,
+            &self.plugin_evidence_analyzer,
+            &self.formid_finding_analyzer,
+            self.named_record_finding_analyzer.as_ref(),
         );
-
-        // Mod Guidance is meaningful only after the parser has produced plugin facts.
-        if let Some(ref plugins) = plugins_map {
-            contributions.push(AutoscanReportContribution::ModGuidance {
-                result: self.collect_mod_guidance(&context, plugins)?,
-            });
-            if let Some(result) = self.collect_plugin_evidence(&context, plugins)? {
-                contributions.push(AutoscanReportContribution::PluginEvidence { result });
-            }
-        }
-
-        let (formid_record_contributions, formid_count) = self
-            .collect_formid_and_record_contributions(&context, plugins_map.as_ref())
+        let contributions = collector
+            .collect(AutoscanReportCollectionInput {
+                crashgen_settings: &context.crashgen_settings,
+                xse_modules: &context.xse_modules_for_settings,
+                crashgen_version: crashgen.crashgen_version,
+                config_layout: crashgen.config_layout,
+                fake_bot_compatible_mode: crashgen.fake_bot_compatible_mode,
+                main_error: &crashgen.main_error,
+                combined_crash_text: &context.combined_crash_text,
+                combined_crash_lines: &context.combined_crash_lines,
+                system_segment_lines: &context.system_segment_lines,
+                plugins: plugins_map.as_ref(),
+            })
             .await?;
-        contributions.extend(formid_record_contributions);
+        let suspect_count = contributions.suspect_count();
+        let formid_count = contributions.formid_count();
 
         enter_phase(ScanProgressPhase::Finalize);
 
@@ -1441,30 +1458,6 @@ impl OrchestratorCore {
         crash_data.len() < 20
     }
 
-    /// Creates a ReportGenerator configured for this orchestrator.
-    ///
-    /// # Returns
-    ///
-    /// A `ReportGenerator` instance configured with the current CLASSIC version
-    /// and crashgen name from the analysis configuration.
-    pub fn create_report_generator(&self) -> ReportGenerator {
-        ReportGenerator::with_config(
-            self.config.classic_version.clone(),
-            self.config.crashgen_name.clone(),
-        )
-    }
-
-    /// Creates a ReportGenerator configured with an explicit crashgen name.
-    pub fn create_report_generator_with_crashgen_name(
-        &self,
-        crashgen_name: &str,
-    ) -> ReportGenerator {
-        ReportGenerator::with_config(
-            self.config.classic_version.clone(),
-            crashgen_name.to_string(),
-        )
-    }
-
     async fn prepare_scan_context(&self, log_path: &str) -> Result<ScanAnalysisContext> {
         let log_content = self.file_io.read_file(Path::new(log_path)).await?;
         let raw_lines: Vec<String> = log_content.lines().map(String::from).collect();
@@ -1550,42 +1543,6 @@ impl OrchestratorCore {
         }
     }
 
-    fn collect_settings_contributions(
-        &self,
-        context: &ScanAnalysisContext,
-        crashgen: &CrashgenScanContext,
-    ) -> Vec<AutoscanReportContribution> {
-        let settings_validator = if !context.crashgen_settings.is_empty() {
-            if crashgen
-                .effective_crashgen_name
-                .eq_ignore_ascii_case(&self.config.crashgen_name)
-            {
-                self.settings_validator.clone()
-            } else {
-                Self::settings_validator_for_crashgen(
-                    &self.config,
-                    &crashgen.effective_crashgen_name,
-                )
-            }
-        } else {
-            self.settings_validator.clone()
-        };
-
-        if !crashgen.fake_bot_compatible_mode
-            && !context.crashgen_settings.is_empty()
-            && let Ok(contributions) = settings_validator.scan_all_settings_contributions(
-                &context.crashgen_settings,
-                &context.xse_modules_for_settings,
-                crashgen.crashgen_version,
-                crashgen.config_layout,
-            )
-        {
-            return contributions;
-        }
-
-        Vec::new()
-    }
-
     fn collect_plugins(
         &self,
         context: &ScanAnalysisContext,
@@ -1606,156 +1563,6 @@ impl OrchestratorCore {
                 let plugin_count = plugins.len();
                 (Some(plugins), plugin_count)
             })
-    }
-
-    /// Runs aggregate Crash Suspect analysis and preserves typed failures as analysis errors.
-    fn collect_suspect_findings(
-        &self,
-        context: &ScanAnalysisContext,
-        main_error: &str,
-    ) -> Result<CrashSuspectAnalysisResult> {
-        self.suspect_analyzer
-            .analyze(CrashSuspectAnalysisInput {
-                main_error: main_error.to_string(),
-                call_stack: context.combined_crash_text.clone(),
-            })
-            .map_err(|error| {
-                crate::error::ScanLogError::AnalysisError(format!(
-                    "{} [{}]: {}",
-                    error.analyzer().as_str(),
-                    error.code().as_str(),
-                    error.message()
-                ))
-            })
-    }
-
-    /// Runs the aggregate Mod Guidance analyzer and preserves typed failures.
-    fn collect_mod_guidance(
-        &self,
-        context: &ScanAnalysisContext,
-        plugins: &IndexMap<String, String>,
-    ) -> Result<ModGuidanceAnalysisResult> {
-        let user_gpu_string: Option<String> = if context.system_segment_lines.is_empty() {
-            None
-        } else {
-            let gpu_info = GpuDetector::get_gpu_info(&context.system_segment_lines);
-            let mfr = gpu_info.manufacturer.as_str();
-            if mfr == "Unknown" {
-                None
-            } else {
-                Some(mfr.to_lowercase())
-            }
-        };
-        self.mod_guidance_analyzer
-            .analyze(ModGuidanceAnalysisInput {
-                plugins: plugins.clone(),
-                user_gpu: user_gpu_string,
-                xse_modules: context.xse_modules_for_settings.clone(),
-            })
-            .map_err(|error| {
-                crate::error::ScanLogError::AnalysisError(format!(
-                    "{} [{}]: {}",
-                    error.analyzer().as_str(),
-                    error.code().as_str(),
-                    error.message()
-                ))
-            })
-    }
-
-    /// Runs semantic Plugin Evidence analysis when parsed plugin candidates are available.
-    fn collect_plugin_evidence(
-        &self,
-        context: &ScanAnalysisContext,
-        plugins: &IndexMap<String, String>,
-    ) -> Result<Option<PluginEvidenceAnalysisResult>> {
-        if plugins.is_empty() {
-            return Ok(None);
-        }
-
-        self.plugin_evidence_analyzer
-            .analyze(PluginEvidenceAnalysisInput {
-                call_stack: context.combined_crash_lines.clone(),
-                plugins: plugins.keys().cloned().collect(),
-            })
-            .map(Some)
-            .map_err(|error| {
-                crate::error::ScanLogError::AnalysisError(format!(
-                    "{} [{}]: {}",
-                    error.analyzer().as_str(),
-                    error.code().as_str(),
-                    error.message()
-                ))
-            })
-    }
-
-    /// Runs aggregate FormID and Named Record analysis and retains completed-empty results.
-    async fn collect_formid_and_record_contributions(
-        &self,
-        context: &ScanAnalysisContext,
-        plugins_map: Option<&IndexMap<String, String>>,
-    ) -> Result<(Vec<AutoscanReportContribution>, usize)> {
-        let mut contributions = Vec::new();
-        let mut formid_count = 0;
-        if !context.combined_crash_lines.is_empty() {
-            let plugins = plugins_map
-                .into_iter()
-                .flat_map(|plugins| plugins.iter())
-                .map(|(name, prefix)| FormIDPlugin {
-                    name: name.clone(),
-                    prefix: prefix.clone(),
-                })
-                .collect();
-            let result = self
-                .formid_finding_analyzer
-                .analyze(FormIDFindingAnalysisInput {
-                    crash_lines: context.combined_crash_lines.clone(),
-                    plugins,
-                })
-                .await
-                .map_err(|error| {
-                    crate::error::ScanLogError::AnalysisError(format!(
-                        "{} [{}]: {}",
-                        error.analyzer().as_str(),
-                        error.code().as_str(),
-                        error.message()
-                    ))
-                })?;
-            formid_count = result
-                .findings
-                .iter()
-                .map(|finding| finding.occurrences as usize)
-                .sum();
-            contributions.push(AutoscanReportContribution::FormIdFinding { result });
-        }
-
-        if let Some(ref analyzer) = self.named_record_finding_analyzer
-            && !context.combined_crash_lines.is_empty()
-        {
-            let result = analyzer
-                .analyze(NamedRecordFindingAnalysisInput {
-                    crash_lines: context.combined_crash_lines.clone(),
-                })
-                .map_err(|error| {
-                    crate::error::ScanLogError::AnalysisError(format!(
-                        "{} [{}]: {}",
-                        error.analyzer().as_str(),
-                        error.code().as_str(),
-                        error.message()
-                    ))
-                })?;
-            contributions.push(AutoscanReportContribution::NamedRecordFinding { result });
-        }
-
-        Ok((contributions, formid_count))
-    }
-
-    /// Creates a SettingsValidator configured for this orchestrator.
-    ///
-    /// # Returns
-    ///
-    /// A `SettingsValidator` instance configured from the crashgen registry entry.
-    pub fn create_settings_validator(&self) -> SettingsValidator {
-        Self::settings_validator_from_config(&self.config)
     }
 
     /// Creates a RecordScanner configured for this orchestrator.
@@ -1925,64 +1732,6 @@ impl OrchestratorCore {
     /// `true` if loadorder.txt exists.
     pub fn check_loadorder_exists(dir_path: &Path) -> bool {
         dir_path.join("loadorder.txt").exists()
-    }
-
-    /// Asynchronously loads plugins from loadorder.txt file.
-    ///
-    /// This method reads the loadorder.txt file, skips the first line (header),
-    /// and returns a map of plugin names to their origin marker ("LO").
-    ///
-    /// # Arguments
-    ///
-    /// * `loadorder_path` - Path to the loadorder.txt file
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok((plugins, fragment))` where:
-    /// - `plugins` is a HashMap of plugin names to origin markers
-    /// - `fragment` is a ReportFragment with loading status
-    ///
-    /// # Errors
-    ///
-    /// Returns `Err(ScanLogError)` if file cannot be read.
-    pub async fn load_loadorder_async(
-        &self,
-        loadorder_path: &Path,
-    ) -> Result<(HashMap<String, String>, crate::report::ReportFragment)> {
-        use crate::report::ReportFragment;
-
-        let mut lines = vec![
-            "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n".to_string(),
-            "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n".to_string(),
-            "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n".to_string(),
-        ];
-
-        let mut loadorder_plugins: HashMap<String, String> = HashMap::new();
-        let loadorder_origin = "LO".to_string();
-
-        // Read the file using FileIOCore
-        match self.file_io.read_file(loadorder_path).await {
-            Ok(content) => {
-                let loadorder_data: Vec<&str> = content.lines().collect();
-
-                // Skip the header line (first line)
-                if loadorder_data.len() > 1 {
-                    for plugin_entry in &loadorder_data[1..] {
-                        let plugin_entry = plugin_entry.trim();
-                        if !plugin_entry.is_empty() && !loadorder_plugins.contains_key(plugin_entry)
-                        {
-                            loadorder_plugins
-                                .insert(plugin_entry.to_string(), loadorder_origin.clone());
-                        }
-                    }
-                }
-            }
-            Err(e) => {
-                lines.push(format!("Error reading loadorder.txt: {}\n", e));
-            }
-        }
-
-        Ok((loadorder_plugins, ReportFragment::from_lines(lines)))
     }
 
     // ============================================================================

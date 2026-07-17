@@ -95,6 +95,16 @@ impl AnalyzerError {
     pub fn message(&self) -> &str {
         &self.message
     }
+
+    /// Formats the stable analyzer identity, code, and diagnostic for internal error envelopes.
+    pub(crate) fn formatted_message(&self) -> String {
+        format!(
+            "{} [{}]: {}",
+            self.analyzer.as_str(),
+            self.code.as_str(),
+            self.message
+        )
+    }
 }
 
 /// Result type used by all focused semantic analyzers.

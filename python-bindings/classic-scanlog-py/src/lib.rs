@@ -97,9 +97,7 @@ pub mod plugin_analyzer;
 pub mod plugin_evidence_analyzer;
 mod py_adapters;
 pub mod record_scanner;
-pub mod report;
 pub mod scan_run;
-pub mod settings_validator;
 pub mod version;
 
 // Re-export all public types
@@ -141,9 +139,6 @@ pub use plugin_evidence_analyzer::{
     PyPluginEvidenceAnalyzer,
 };
 pub use record_scanner::{PyRecordScanner, contains_record, scan_records_batch};
-pub use report::{
-    PyParallelReportProcessor, PyReportComposer, PyReportFragment, PyReportGenerator, PyStringPool,
-};
 pub use scan_run::{
     PyScanRunCancellation, PyScanRunConfiguration, PyScanRunDiscoveryResult, PyScanRunEvent,
     PyScanRunExecution, PyScanRunInfrastructureError, PyScanRunLogEvent, PyScanRunLogFailure,
@@ -151,7 +146,6 @@ pub use scan_run::{
     PyScanRunSetupCheck, PyScanRunSetupContext, PyScanRunSetupPathUpdate, PyScanRunSetupResult,
     PyScanRunStandardSource, PyScanRunTargetedSource, PyScanRunUnsolvedLogs, scan_run_execute,
 };
-pub use settings_validator::PySettingsValidator;
 pub use version::{
     PyCrashgenVersion, PyCrashgenVersionStatus, check_crashgen_version_status,
     parse_crashgen_version,
@@ -253,16 +247,8 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     formid_finding_analyzer::register(m)?;
     named_record_finding_analyzer::register(m)?;
     plugin_evidence_analyzer::register(m)?;
-    m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;
-
-    // Report generation
-    m.add_class::<PyStringPool>()?;
-    m.add_class::<PyReportFragment>()?;
-    m.add_class::<PyReportComposer>()?;
-    m.add_class::<PyReportGenerator>()?;
-    m.add_class::<PyParallelReportProcessor>()?;
 
     // Papyrus log analysis
     papyrus::register(m)?;
@@ -314,16 +300,8 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     formid_finding_analyzer::register(m)?;
     named_record_finding_analyzer::register(m)?;
     plugin_evidence_analyzer::register(m)?;
-    m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;
-
-    // Report generation
-    m.add_class::<PyStringPool>()?;
-    m.add_class::<PyReportFragment>()?;
-    m.add_class::<PyReportComposer>()?;
-    m.add_class::<PyReportGenerator>()?;
-    m.add_class::<PyParallelReportProcessor>()?;
 
     // Papyrus log analysis
     papyrus::register(m)?;

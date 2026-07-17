@@ -12,7 +12,7 @@ Game_Info:
 # Per-crashgen configuration for settings validation.
 # Each entry declares:
 #   display_section: bracket header used by this crashgen (for display only)
-#   ignore_keys:     settings keys to skip in check_disabled_settings()
+#   ignore_keys:     settings keys excluded from Disabled Setting Notice analysis
 #   checks:          named checks to run for this crashgen
 # The "default" entry applies to any crashgen not explicitly listed.
 # Adding a new crashgen or assigning an existing named check requires only a YAML change.

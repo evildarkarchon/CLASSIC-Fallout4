@@ -56,7 +56,6 @@ rustc-hash = { workspace = true }  # Optimization 1.2: Fast hasher for FormID co
 xxhash-rust = { workspace = true } # Optimization 4.1: Fast hashing for cache keys
 
 # String optimization
-string_cache = { workspace = true }
 smartstring = { workspace = true }
 
 # Error handling

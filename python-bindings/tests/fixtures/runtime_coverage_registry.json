@@ -130,8 +130,8 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 291,
-      "contractIdsHash": "4584364701db54632bb688e60e8986ec2af596c9428b4599e45735638896b482",
+      "contractCount": 238,
+      "contractIdsHash": "ccf561cc51989f2ccf5c3cd19026ff4ca5337f2b830c071f3553cd37db2dee7e",
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_tier1_parity_smoke.py",
       "testCaseId": "scanlog-tier1-smoke",
@@ -140,7 +140,7 @@
         "PARITY_GAME_YAML",
         "PARITY_IGNORE_YAML"
       ],
-      "notes": "Phase 3 Plan 02 promoted 74 Wave 1 rows (parser/formid/formid_analyzer/record_scanner/plugin_analyzer/patterns); Plan 03 added Wave 2 settings/FCX/GPU rows, with report-producing mod detection retired by issue #130 and the fragment-producing SuspectScanner retired by issue #129; Plan 04 added 50 Wave 3a rows; Plan 05 added 46 Wave 3b report rows. Issue #123 adds the final Crash Log Scan Run contract. Issues #128 through #134 add shared semantic analyzer contracts with dedicated public-seam tests. Supplementary smoke tests live in the promoted wave suites plus the focused analyzer and final-run suites named by their dedicated registry entries."
+      "notes": "Covers the retained Tier-1 scanlog surface through public workflow smoke tests. Report-fragment and legacy SettingsValidator rows were retired by issue #136 after semantic analyzer and byte-exact Autoscan Report coverage replaced them. Issue #123 supplies the final Crash Log Scan Run contract, and issues #128 through #134 supply focused shared semantic analyzer contracts."
     },
     {
       "coverageId": "python-tier1-scanlog-crashgen-settings-analyzer",
@@ -412,11 +412,7 @@
       "ownerModule": "scanlog",
       "tier": "tier1",
       "bindingIdentifiers": [
-        "classic_scanlog.SettingsValidator",
-        "classic_scanlog.SettingsValidator.scan_all_settings",
-        "classic_scanlog.SettingsValidator.check_disabled_settings",
         "classic_scanlog.ConfigIssue",
-        "classic_scanlog.ConfigIssue.format_report",
         "classic_scanlog.GpuDetector",
         "classic_scanlog.GpuDetector.extract_gpu_info",
         "classic_scanlog.GpuDetector.extract_gpu_info_batch",
@@ -427,7 +423,7 @@
       "verificationMode": "workflow_smoke",
       "testSuite": "python-bindings/tests/test_promoted_scanlog_wave2_smoke.py",
       "testCaseId": "scanlog-wave2-promoted-smoke",
-      "notes": "Covers settings validation, run-scoped ConfigIssue result data, and GPU analysis. Mod Guidance and Crash Suspect analysis moved to dedicated semantic analyzer suites; process-global FCX controls are intentionally absent."
+      "notes": "Covers run-scoped ConfigIssue result data and GPU analysis. Mod Guidance, Crash Suspect, and Crashgen Settings analysis use dedicated semantic analyzer suites; process-global FCX controls and presentation formatters are absent."
     },
     {
       "coverageId": "python-tier1-scanlog-wave3a-promoted",
@@ -504,59 +500,6 @@
       "testSuite": "python-bindings/tests/test_scan_run_contract.py",
       "testCaseId": "scanlog-final-run-contract",
       "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
-    },
-    {
-      "coverageId": "python-tier1-scanlog-wave3b-promoted",
-      "classification": "runtime_verified",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "bindingIdentifiers": [
-        "classic_scanlog.StringPool",
-        "classic_scanlog.StringPool.__init__",
-        "classic_scanlog.StringPool.intern",
-        "classic_scanlog.StringPool.intern_batch",
-        "classic_scanlog.StringPool.get_stats",
-        "classic_scanlog.StringPool.clear",
-        "classic_scanlog.ReportFragment",
-        "classic_scanlog.ReportFragment.__init__",
-        "classic_scanlog.ReportFragment.empty",
-        "classic_scanlog.ReportFragment.from_lines",
-        "classic_scanlog.ReportFragment.with_header",
-        "classic_scanlog.ReportFragment.combine",
-        "classic_scanlog.ReportFragment.to_list",
-        "classic_scanlog.ReportFragment.len",
-        "classic_scanlog.ReportFragment.is_empty",
-        "classic_scanlog.ReportComposer",
-        "classic_scanlog.ReportComposer.__init__",
-        "classic_scanlog.ReportComposer.add",
-        "classic_scanlog.ReportComposer.add_many",
-        "classic_scanlog.ReportComposer.compose",
-        "classic_scanlog.ReportComposer.compose_optimized",
-        "classic_scanlog.ReportComposer.build_string",
-        "classic_scanlog.ReportComposer.fragment_count",
-        "classic_scanlog.ReportComposer.pool_stats",
-        "classic_scanlog.ReportGenerator",
-        "classic_scanlog.ReportGenerator.__init__",
-        "classic_scanlog.ReportGenerator.with_config",
-        "classic_scanlog.ReportGenerator.generate_header",
-        "classic_scanlog.ReportGenerator.generate_error_section",
-        "classic_scanlog.ReportGenerator.generate_suspect_section_header",
-        "classic_scanlog.ReportGenerator.generate_suspect_found_footer",
-        "classic_scanlog.ReportGenerator.generate_settings_section_header",
-        "classic_scanlog.ReportGenerator.generate_mod_check_header",
-        "classic_scanlog.ReportGenerator.generate_plugin_suspect_header",
-        "classic_scanlog.ReportGenerator.generate_formid_section_header",
-        "classic_scanlog.ReportGenerator.generate_record_section_header",
-        "classic_scanlog.ReportGenerator.generate_footer",
-        "classic_scanlog.ReportGenerator.generate_suspect_section",
-        "classic_scanlog.ParallelReportProcessor",
-        "classic_scanlog.ParallelReportProcessor.__init__",
-        "classic_scanlog.ParallelReportProcessor.combine_fragments"
-      ],
-      "verificationMode": "workflow_smoke",
-      "testSuite": "python-bindings/tests/test_promoted_scanlog_report_smoke.py",
-      "testCaseId": "scanlog-wave3b-promoted-smoke",
-      "notes": "Per-class smoke tests for Wave 3b report sub-module added in Phase 3 Plan 05. Covers all 5 PyO3 report wrappers (StringPool/ReportFragment/ReportComposer/ReportGenerator/ParallelReportProcessor). ParallelReportProcessor is a pure -py convenience class paired with ReportComposer -core proxy per Wave 3a precedent. Constructor signatures from 03-05-CONSTRUCTOR-INVENTORY.md. Rust-only symbol guard via test_rust_only_symbols_in_core_surface asserts StringPool/ReportFragment/ReportComposer/ReportGenerator/report module marker exist in -core surface."
     },
     {
       "coverageId": "python-tier1-version-registry",

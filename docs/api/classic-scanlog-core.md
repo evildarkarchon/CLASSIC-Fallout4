@@ -244,8 +244,9 @@ the canonical parser methods documented in source.
   its per-instance Aho-Corasick matchers with `std::sync::OnceLock`. Its former
   report-producing `scan_named_records` family is removed; `contains_record`
   and the record batch utilities remain public.
-- `SettingsValidator` is the temporary fragment-producing compatibility facade
-  over `CrashgenSettingsAnalyzer`; new semantic consumers use the analyzer.
+- `CrashgenSettingsAnalyzer` is the public settings-analysis boundary. It
+  returns typed expectation outcomes and disabled-setting notices without
+  exposing report fragments or rendering helpers.
 - `GpuDetector` extracts GPU information.
 - crashgen version/registry helpers operate on supplied data without owning a
   run lifecycle.
@@ -256,15 +257,17 @@ or batch-run interfaces.
 
 ### Report assembly
 
-`ReportFragment`, `ReportComposer`, `ReportGenerator`, and `StringPool` remain
-available for independent report-text assembly. They produce or combine text;
-they do not write an Autoscan Report to disk. Full scan persistence belongs
-exclusively to `scan_run::contract::execute`.
+Autoscan Report rendering mechanics are private implementation details.
+`ReportFragment`, `ReportComposer`, `ReportGenerator`, `StringPool`, and the
+fragment-producing `SettingsValidator` facade are not public Rust or binding
+contracts. Callers use semantic analyzers for focused work or the complete
+Crash Log Scan Run contract for persisted reports.
 
-`AutoscanReportAssembler` owns the canonical report-section order used by the
-internal run engine. Its output includes header/version facts, settings and
-preflight results, plugins, FormIDs, named records, suspects, run-scoped FCX
-facts, and final guidance in deterministic order.
+The private `AutoscanReportAssembler` owns canonical report-section order. Its
+output includes header/version facts, settings and preflight results, plugins,
+FormIDs, named records, suspects, run-scoped FCX facts, and final guidance in
+deterministic order. Full scan persistence belongs exclusively to
+`scan_run::contract::execute`.
 
 ### Papyrus and small detection helpers
 

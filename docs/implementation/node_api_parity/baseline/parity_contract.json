@@ -3974,30 +3974,6 @@
       "rustKind": "class"
     },
     {
-      "id": "scanlog.report.ReportComposer@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "ReportComposer@rust",
-      "rustKind": "class"
-    },
-    {
-      "id": "scanlog.report.ReportFragment@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "ReportFragment@rust",
-      "rustKind": "class"
-    },
-    {
-      "id": "scanlog.report.ReportGenerator@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "ReportGenerator@rust",
-      "rustKind": "class"
-    },
-    {
       "id": "scanlog.formid_analyzer.RustFormIDAnalyzer@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -4022,14 +3998,6 @@
       "rustKind": "enum"
     },
     {
-      "id": "scanlog.settings_validator.SettingsValidator@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "SettingsValidator@rust",
-      "rustKind": "class"
-    },
-    {
       "id": "scanlog.parser.StreamingIteratorParser@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -4043,14 +4011,6 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "StreamingLogParser@rust",
-      "rustKind": "class"
-    },
-    {
-      "id": "scanlog.parser.StringPool@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "StringPool@rust",
       "rustKind": "class"
     },
     {
@@ -4474,14 +4434,6 @@
       "rustKind": "module"
     },
     {
-      "id": "scanlog.report.report@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "report@rust",
-      "rustKind": "module"
-    },
-    {
       "id": "scanlog.record_scanner.scan_records_batch@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -4749,14 +4701,6 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "crash_suspect_analyzer@rust",
-      "rustKind": "module"
-    },
-    {
-      "id": "scanlog.settings_validator.settings_validator@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "settings_validator@rust",
       "rustKind": "module"
     },
     {

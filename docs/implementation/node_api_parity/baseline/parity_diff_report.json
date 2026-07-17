@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-07-16T23:32:13.035085+00:00",
+  "generated_at_utc": "2026-07-17T01:10:30.635562+00:00",
   "summary": {
-    "tier1_contract_total": 915,
-    "tier1_matched": 915,
+    "tier1_contract_total": 908,
+    "tier1_matched": 908,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -5666,45 +5666,6 @@
       "actual_node_arity": null
     },
     {
-      "id": "scanlog.report.ReportComposer@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "ReportComposer@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "scanlog.report.ReportFragment@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "ReportFragment@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "scanlog.report.ReportGenerator@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "ReportGenerator@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
       "id": "scanlog.formid_analyzer.RustFormIDAnalyzer@rust",
       "tier": "tier1",
       "owner_module": "scanlog",
@@ -5744,19 +5705,6 @@
       "actual_node_arity": null
     },
     {
-      "id": "scanlog.settings_validator.SettingsValidator@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "SettingsValidator@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
       "id": "scanlog.parser.StreamingIteratorParser@rust",
       "tier": "tier1",
       "owner_module": "scanlog",
@@ -5775,19 +5723,6 @@
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "StreamingLogParser@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "scanlog.parser.StringPool@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "StringPool@rust",
       "node_export": null,
       "status": "matched",
       "expected_node_kind": null,
@@ -6394,19 +6329,6 @@
       "actual_node_arity": null
     },
     {
-      "id": "scanlog.report.report@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "report@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
       "id": "scanlog.record_scanner.scan_records_batch@rust",
       "tier": "tier1",
       "owner_module": "scanlog",
@@ -6763,19 +6685,6 @@
       "owner_module": "scanlog",
       "squad": "Squad A (scanlog/config)",
       "rust_symbol": "crash_suspect_analyzer@rust",
-      "node_export": null,
-      "status": "matched",
-      "expected_node_kind": null,
-      "actual_node_kind": null,
-      "expected_node_arity": null,
-      "actual_node_arity": null
-    },
-    {
-      "id": "scanlog.settings_validator.settings_validator@rust",
-      "tier": "tier1",
-      "owner_module": "scanlog",
-      "squad": "Squad A (scanlog/config)",
-      "rust_symbol": "settings_validator@rust",
       "node_export": null,
       "status": "matched",
       "expected_node_kind": null,

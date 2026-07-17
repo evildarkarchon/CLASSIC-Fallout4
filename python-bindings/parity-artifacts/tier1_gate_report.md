@@ -1,7 +1,7 @@
 # Tier-1 Python Parity Gate Report
 
-- Tier-1 contract rows: **1289**
-- Tier-1 matched: **1289**
+- Tier-1 contract rows: **1236**
+- Tier-1 matched: **1236**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**

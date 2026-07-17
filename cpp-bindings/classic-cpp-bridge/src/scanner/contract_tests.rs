@@ -761,12 +761,15 @@ fn setup_mapping_preserves_optional_message_checks_updates_and_configuration_iss
 }
 
 #[test]
+/// Verifies FCX execution preserves structured setup data with an explicit documents fixture.
 fn execute_retains_structured_setup_result_data() {
     let temp = tempdir().unwrap();
     let data = temp.path().join("CLASSIC Data");
     write_minimal_scan_yaml_tree(temp.path(), &data);
     let log = temp.path().join("crash-bridge-fcx.log");
     std::fs::write(&log, FIXTURE_LOG_SMALL).unwrap();
+    let documents = temp.path().join("Documents");
+    std::fs::create_dir_all(&documents).unwrap();
 
     let mut configuration = sample_configuration();
     configuration.yaml_dir_root = temp.path().to_string_lossy().into_owned();
@@ -775,18 +778,18 @@ fn execute_retains_structured_setup_result_data() {
     let source = ffi::ScanRunTargetedSourceDto {
         inputs: vec![log.to_string_lossy().into_owned()],
     };
-    let empty_setup = ffi::ScanRunSetupContextDto {
+    let setup = ffi::ScanRunSetupContextDto {
         has_game_root: false,
         game_root: String::new(),
-        has_docs_root: false,
-        docs_root: String::new(),
+        has_docs_root: true,
+        docs_root: documents.to_string_lossy().into_owned(),
         has_game_exe_path: false,
         game_exe_path: String::new(),
         has_xse_log_path: false,
         xse_log_path: String::new(),
     };
     let request =
-        scan_run_request_targeted_with_fcx(&configuration, &source, &empty_setup).unwrap();
+        scan_run_request_targeted_with_fcx(&configuration, &source, &setup).unwrap();
 
     // SAFETY: null is the documented representation of an omitted observer.
     let execution = unsafe {

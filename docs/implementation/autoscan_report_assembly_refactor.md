@@ -8,6 +8,10 @@ Use this as an implementation brief for an agent. Canonical domain language is i
 > assembly slice. Crash Suspect, Mod Guidance, and Plugin Evidence have since
 > moved to typed semantic payloads; the current contract is documented in
 > [`docs/api/classic-scanlog-core.md`](../api/classic-scanlog-core.md).
+> The final contract cutover also removed the public `ReportFragment`,
+> `ReportComposer`, `ReportGenerator`, `StringPool`, `SettingsValidator`, and
+> Python-only `ParallelReportProcessor` compatibility surfaces. They remain
+> below only where they explain the historical implementation sequence.
 
 ## Target
 

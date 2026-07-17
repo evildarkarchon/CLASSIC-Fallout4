@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T23:32:45.843095+00:00",
+  "generated_at_utc": "2026-07-17T01:11:05.115986+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -10064,63 +10064,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "ReportComposer",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
-      "source_expr": "report::ReportComposer",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ReportComposer",
-      "kind": "struct",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub struct ReportComposer",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ReportFragment",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
-      "source_expr": "report::ReportFragment",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ReportFragment",
-      "kind": "struct",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub struct ReportFragment",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ReportGenerator",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
-      "source_expr": "report::ReportGenerator",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ReportGenerator",
-      "kind": "struct",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub struct ReportGenerator",
-      "tier": "tier1"
-    },
-    {
       "symbol": "Request",
       "kind": "enum",
       "crate": "classic-scanlog-core",
@@ -10233,25 +10176,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "SettingsValidator",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use settings_validator::SettingsValidator;",
-      "source_expr": "settings_validator::SettingsValidator",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SettingsValidator",
-      "kind": "struct",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/settings_validator.rs",
-      "source_decl": "pub struct SettingsValidator",
-      "tier": "tier1"
-    },
-    {
       "symbol": "StandardCrashLogScanSource",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -10337,25 +10261,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "StringPool",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
-      "source_expr": "report::StringPool",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "StringPool",
-      "kind": "struct",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub struct StringPool",
-      "tier": "tier1"
-    },
-    {
       "symbol": "TargetedCrashLogScanSource",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -10390,26 +10295,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/segment_key.rs",
       "source_decl": "pub const XSE_MODULES",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "add",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn add(&mut self, fragment: ReportFragment)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "add_many",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn add_many(&mut self, fragments: Vec<ReportFragment>)",
       "tier": "tier1"
     },
     {
@@ -10542,16 +10427,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "build_string",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn build_string(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "cache_stats",
       "kind": "function",
       "arity": 1,
@@ -10622,16 +10497,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "check_disabled_settings",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/settings_validator.rs",
-      "source_decl": "pub fn check_disabled_settings(\n        &self,\n        crashgen: &CrashgenSettingsSnapshot,\n    )",
-      "tier": "tier1"
-    },
-    {
       "symbol": "check_for_updates",
       "kind": "function",
       "arity": 1,
@@ -10669,16 +10534,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/version.rs",
       "source_decl": "pub fn check_version_status_with_exceptions(\n        &self,\n        floors: &[CrashgenVersion],\n        exceptions: &[CrashgenVersion],\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "clear",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn clear(&self)",
       "tier": "tier1"
     },
     {
@@ -10729,36 +10584,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn clear_caches(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "combine",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn combine(&self, other: &ReportFragment)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "compose",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn compose(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "compose_optimized",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn compose_optimized(&self)",
       "tier": "tier1"
     },
     {
@@ -10915,16 +10740,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/papyrus.rs",
       "source_decl": "pub fn dumps_to_stacks_ratio(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "empty",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn empty()",
       "tier": "tier1"
     },
     {
@@ -11343,36 +11158,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "fragment_count",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn fragment_count(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "from_lines",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn from_lines(lines: Vec<String>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "from_lines_pooled",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn from_lines_pooled(lines: Vec<String>, pool: &StringPool)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "from_parsed_configuration",
       "kind": "function",
       "arity": 3,
@@ -11380,136 +11165,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/crashgen_settings_analyzer.rs",
       "source_decl": "pub fn from_parsed_configuration(\n        crashgen_name: String,\n        entry: CrashgenEntry,\n        diagnostics: Vec<CrashgenExpectationParseDiagnostic>,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_error_section",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_error_section(\n        &self,\n        main_error: &str,\n        crashgen_version: &str,\n        is_outdated: bool,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_error_section_with_status",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_error_section_with_status(\n        &self,\n        main_error: &str,\n        crashgen_version: &str,\n        status: Option<CrashgenVersionStatus>,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_error_section_with_status_and_fake_mode",
-      "kind": "function",
-      "arity": 5,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_error_section_with_status_and_fake_mode(\n        &self,\n        main_error: &str,\n        crashgen_version: &str,\n        status: Option<CrashgenVersionStatus>,\n        fake_bot_compatible_mode: bool,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_footer",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_footer(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_formid_section_header",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_formid_section_header(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_header",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_header(&self, crashlog_filename: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_mod_check_header",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_mod_check_header(&self, check_type: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_plugin_suspect_header",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_plugin_suspect_header(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_record_section_header",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_record_section_header(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_settings_section_header",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_settings_section_header(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_suspect_found_footer",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_suspect_found_footer(&self, found_suspect: bool)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_suspect_section",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_suspect_section(&self, found_suspects: Vec<String>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_suspect_section_header",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_suspect_section_header(&self)",
       "tier": "tier1"
     },
     {
@@ -11540,16 +11195,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/gpu_detector.rs",
       "source_decl": "pub fn get_gpu_info_dict(segment_system: &[String])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_pool_stats",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn get_pool_stats(&self)",
       "tier": "tier1"
     },
     {
@@ -11593,16 +11238,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "get_stats",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn get_stats(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "gpu_detector",
       "kind": "module",
       "crate": "classic-scanlog-core",
@@ -11622,26 +11257,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "intern",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn intern(&self, s: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "intern_batch",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn intern_batch(&self, strings: &[String])",
-      "tier": "tier1"
-    },
-    {
       "symbol": "is_cancelled",
       "kind": "function",
       "arity": 1,
@@ -11649,16 +11264,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "source_decl": "pub fn is_cancelled(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_empty",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn is_empty(&self)",
       "tier": "tier1"
     },
     {
@@ -11679,26 +11284,6 @@
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub use formid_analyzer::{extract_formids_batch, is_valid_formid, validate_formids_batch};",
       "source_expr": "formid_analyzer::is_valid_formid",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "len",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn len(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "loadorder_scan_loadorder_txt",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
-      "source_decl": "pub fn loadorder_scan_loadorder_txt()",
       "tier": "tier1"
     },
     {
@@ -11965,48 +11550,8 @@
       "arity": 0,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn new()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn new()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn new()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "source_decl": "pub fn new()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/settings_validator.rs",
-      "source_decl": "pub fn new(crashgen_name: String, entry: CrashgenEntry)",
       "tier": "tier1"
     },
     {
@@ -12174,15 +11719,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "report",
-      "kind": "module",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub mod report;",
-      "tier": "tier1"
-    },
-    {
       "symbol": "reset",
       "kind": "function",
       "arity": 1,
@@ -12200,16 +11736,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn reset(&mut self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "scan_all_settings",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/settings_validator.rs",
-      "source_decl": "pub fn scan_all_settings(\n        &self,\n        crashgen: &CrashgenSettingsSnapshot,\n        xse_modules: &HashSet<String>,\n        crashgen_version: Option<(u32, u32, u32)",
       "tier": "tier1"
     },
     {
@@ -12258,15 +11784,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn set_section_boundaries(&mut self, start: &str, end: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "settings_validator",
-      "kind": "module",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub mod settings_validator;",
       "tier": "tier1"
     },
     {
@@ -12337,16 +11854,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/gpu_detector.rs",
       "source_decl": "pub fn to_dict(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "to_list",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn to_list(&self)",
       "tier": "tier1"
     },
     {
@@ -12426,26 +11933,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod version;",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "with_config",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn with_config(classic_version: String, crashgen_name: String)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "with_header",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn with_header(&self, header_lines: Vec<String>)",
       "tier": "tier1"
     },
     {

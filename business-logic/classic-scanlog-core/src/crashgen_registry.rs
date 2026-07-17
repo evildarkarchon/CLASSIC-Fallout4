@@ -21,7 +21,7 @@ use classic_config_core::CrashgenSettingsRules;
 pub struct CrashgenEntry {
     /// Bracket header used by this crashgen (e.g., `"[Compatibility]"`), for display only.
     pub display_section: String,
-    /// Settings keys to skip in `check_disabled_settings()`.
+    /// Settings keys excluded from Disabled Setting Notice analysis.
     pub ignore_keys: HashSet<String>,
     /// Optional YAML-backed Crashgen Expectations.
     pub settings_rules: Option<CrashgenSettingsRules>,

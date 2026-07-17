@@ -1407,6 +1407,71 @@ fn terminal_outcomes_remain_in_discovery_order_when_completion_is_out_of_order()
     );
 }
 
+/// Verifies one admitted analysis failure does not suppress another admitted log's report.
+#[test]
+fn admitted_analysis_failure_does_not_abort_other_admitted_log() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let failed = write_fixture_log(&temp, "crash-failed-analysis.log");
+    let succeeded = write_fixture_log(&temp, "crash-successful-analysis.log");
+    let mut configuration = final_run_configuration();
+    configuration.yaml_dir_root = root.to_path_buf();
+    configuration.yaml_dir_data = data;
+    configuration.max_concurrent = Some(2);
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: vec![failed.clone(), succeeded.clone()],
+        },
+    );
+    let hooks = ScanRunTestHooks::default().with_analysis_failure(0, "injected analysis failure");
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            hooks,
+        ))
+        .expect("a per-log analysis failure should not abort other admitted work");
+
+    assert_eq!(result.status, contract::RunStatus::Completed);
+    assert_eq!((result.total, result.succeeded, result.failed), (2, 1, 1));
+    assert_eq!(result.cancelled, 0);
+
+    let failed_result = &result.logs[0];
+    assert_eq!(failed_result.crash_log, failed);
+    assert_eq!(failed_result.disposition, contract::LogDisposition::Failed);
+    assert!(failed_result.autoscan_report.is_none());
+    assert!(!crate::report::autoscan_report_path(&failed_result.crash_log).exists());
+    assert_eq!(
+        failed_result
+            .failures
+            .iter()
+            .map(|failure| (failure.stage, failure.message.as_str()))
+            .collect::<Vec<_>>(),
+        vec![(
+            contract::LogFailureStage::Analysis,
+            "injected analysis failure"
+        )]
+    );
+
+    let succeeded_result = &result.logs[1];
+    assert_eq!(succeeded_result.crash_log, succeeded);
+    assert_eq!(
+        succeeded_result.disposition,
+        contract::LogDisposition::Succeeded
+    );
+    assert!(succeeded_result.failures.is_empty());
+    let report = succeeded_result
+        .autoscan_report
+        .as_ref()
+        .expect("the other admitted log should persist its Autoscan Report");
+    assert!(report.is_file());
+}
+
 /// Verifies cancellation cannot publish Finished before Standard durable finalization resolves.
 #[test]
 fn admitted_standard_log_finishes_report_failure_and_movement_after_cancellation() {
