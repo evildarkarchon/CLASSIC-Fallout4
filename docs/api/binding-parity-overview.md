@@ -59,6 +59,16 @@ explicit empty results and expose no report presentation mechanics. Stable analy
 originate in Rust; see
 [`error-contract.md`](error-contract.md#shared-focused-analyzer-errors).
 
+This semantic surface replaced the public report-fragment architecture in one
+coordinated breaking Rust, CXX, Node, and Python cutover. `ReportFragment`,
+`ReportComposer`, `ReportGenerator`, `SettingsValidator`, presentation-only
+`StringPool` operations, Python-only `ParallelReportProcessor`, and
+fragment-producing analyzer methods have no compatibility aliases. Parity
+therefore covers both the six positive Focused Semantic Analyzer contracts and negative
+absence checks for the retired presentation surface. Complete scan output is
+pinned separately as byte-identical persisted Autoscan Reports; see
+[ADR-0005](../adr/0005-semantic-autoscan-report-contributions.md).
+
 **Note on app-update notification surface (`classic-update-core`):** the `notification` module adds a single cross-binding entry point in addition to the legacy `GithubClient` surface. Contract map:
 
 | Binding | Entry point | DTO / return | Error shape |

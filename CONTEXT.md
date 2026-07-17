@@ -48,6 +48,14 @@ _Avoid_: report generation, markdown composition, fragment ordering
 The semantic result of one report-relevant analysis offered to Autoscan Report Assembly before markdown rendering. It contains zero or more scan findings or guidance items and may carry authored guidance, but does not determine final section order, presentation, or markdown shape. A present contribution with no findings means the analysis completed without a match; an absent contribution means that analysis was not performed.
 _Avoid_: report fragment, markdown snippet, rendered lines
 
+**Focused Semantic Analyzer**:
+A reusable analysis interface that accepts owned Crash Log or YAML Data facts and returns one typed Autoscan Report Contribution without report presentation mechanics. A completed analysis with no matches returns an explicit empty result; invalid configuration, malformed dependency data, and operational failure remain typed errors.
+_Avoid_: fragment producer, report scanner, formatting helper
+
+**Focused Semantic Analyzer Failure**:
+A typed failure from constructing or running a Focused Semantic Analyzer. It is distinct from a successful empty result and from an analysis that was not performed; in a complete Crash Log Scan Run it becomes either run-wide initialization failure before scheduling or a per-log analysis failure during collection.
+_Avoid_: empty contribution, no-match result, partial report
+
 **Autoscan Report Placement**:
 YAML Data-owned intent for where a Crashgen Expectation outcome appears in the canonical Autoscan Report structure. Autoscan Report Assembly interprets placement rather than freezing data choices into code.
 _Avoid_: report bucket, hardcoded section, Rust placement rule

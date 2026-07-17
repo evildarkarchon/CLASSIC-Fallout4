@@ -89,6 +89,40 @@ fn construction_compiles_matchers_and_analysis_filters_ignored_evidence() {
 }
 
 #[test]
+fn analysis_matches_mixed_case_ascii_and_unicode_patterns() {
+    let analyzer = NamedRecordFindingAnalyzer::new(
+        vec!["actorbase".to_string(), "möd".to_string()],
+        vec!["system".to_string(), "über".to_string()],
+    )
+    .unwrap();
+
+    let result = analyzer
+        .analyze(NamedRecordFindingAnalysisInput {
+            crash_lines: vec![
+                "AcToRbAsE_Player".to_string(),
+                "ACTORBASE_SYSTEM".to_string(),
+                "MÖD_Pläyer".to_string(),
+                "MÖD_ÜBER".to_string(),
+            ],
+        })
+        .unwrap();
+
+    assert_eq!(
+        result.findings,
+        vec![
+            NamedRecordFinding {
+                record: "AcToRbAsE_Player".to_string(),
+                occurrences: 1,
+            },
+            NamedRecordFinding {
+                record: "MÖD_Pläyer".to_string(),
+                occurrences: 1,
+            },
+        ]
+    );
+}
+
+#[test]
 fn analysis_preserves_legacy_rsp_record_extraction() {
     let analyzer = NamedRecordFindingAnalyzer::new(vec!["Weapon".to_string()], Vec::new()).unwrap();
     let line = "[RSP+50] 0x12345678 0xABCD Weapon_Pistol".to_string();

@@ -393,14 +393,28 @@ pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     Ok(())
 }
 
+/// Projects one core analyzer error into the shared Python exception envelope.
 pub(crate) fn analyzer_error_to_pyerr(error: CoreAnalyzerError) -> PyErr {
-    let py_error = AnalyzerError::new_err(error.message().to_string());
+    analyzer_error_parts_to_pyerr(
+        PyAnalyzerKind::from(error.analyzer()),
+        error.code().as_str(),
+        error.message(),
+    )
+}
+
+/// Projects already-classified analyzer error fields into the shared Python exception.
+pub(crate) fn analyzer_error_parts_to_pyerr(
+    analyzer_kind: PyAnalyzerKind,
+    code: &str,
+    message: &str,
+) -> PyErr {
+    let py_error = AnalyzerError::new_err(message.to_string());
     Python::attach(|py| {
         let value = py_error.value(py);
         // Exception attributes preserve the shared typed contract for Python callers.
-        let _ = value.setattr("analyzer_kind", PyAnalyzerKind::from(error.analyzer()));
-        let _ = value.setattr("code", error.code().as_str());
-        let _ = value.setattr("message", error.message());
+        let _ = value.setattr("analyzer_kind", analyzer_kind);
+        let _ = value.setattr("code", code);
+        let _ = value.setattr("message", message);
     });
     py_error
 }

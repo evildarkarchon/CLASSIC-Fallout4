@@ -43,6 +43,15 @@ Mod Guidance Analysis exposes `mod_guidance` with `invalid_configuration` for
 - Python raises `classic_scanlog.AnalyzerError` with `analyzer_kind`, `code`,
   and `message` attributes.
 
+An explicit empty semantic result is a successful focused analysis, not error
+recovery. Direct focused calls return or throw the typed analyzer envelope.
+Within `scan_run::contract::execute`, failure to construct the reusable analyzer
+set becomes the run-wide `Initialization` infrastructure stage before logs are
+scheduled. Failure while collecting one log becomes that log's `Analysis`
+failure, persists no partial Autoscan Report, and does not stop other admitted
+logs from reaching their own terminal outcomes. See
+[ADR-0005](../adr/0005-semantic-autoscan-report-contributions.md).
+
 ### Strict FormID Value Lookup errors
 
 `classic-database-core::FormIdValueLookupError` keeps a successful miss out of the error channel. Successful lookup data is `disabled`, `missing`, or `found`; failures use stable code `malformed_result` for blank adapter values and `operational_failure` for initialization, SQL execution, or row-decoding problems. Optional FormID/plugin context is absent for failures that occur before a lookup key is available.

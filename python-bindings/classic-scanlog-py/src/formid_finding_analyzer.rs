@@ -6,7 +6,7 @@ use classic_database_core::{
     FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupInMemoryReply,
 };
 use classic_scanlog_core::{
-    FormIDFindingAnalysisInput as CoreAnalysisInput,
+    AnalyzerErrorCode as CoreAnalyzerErrorCode, FormIDFindingAnalysisInput as CoreAnalysisInput,
     FormIDFindingAnalysisResult as CoreAnalysisResult, FormIDFindingAnalyzer as CoreAnalyzer,
     FormIDPlugin as CorePlugin, FormIDValueLookupStatus as CoreLookupStatus,
 };
@@ -14,7 +14,9 @@ use classic_shared::without_gil_block_on;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
-use crate::crashgen_settings_analyzer::{PyAnalyzerKind, analyzer_error_to_pyerr};
+use crate::crashgen_settings_analyzer::{
+    PyAnalyzerKind, analyzer_error_parts_to_pyerr, analyzer_error_to_pyerr,
+};
 
 /// Stable callback-free reply kind for deterministic analyzer lookup fixtures.
 #[pyclass(
@@ -223,7 +225,13 @@ impl PyFormIDFindingAnalyzer {
                 .map(|lookup| Self {
                     inner: CoreAnalyzer::new(lookup),
                 })
-                .map_err(|error| PyValueError::new_err(error.message().to_string()))
+                .map_err(|error| {
+                    analyzer_error_parts_to_pyerr(
+                        PyAnalyzerKind::FormIdFinding,
+                        CoreAnalyzerErrorCode::OperationalFailure.as_str(),
+                        error.message(),
+                    )
+                })
         })
     }
 

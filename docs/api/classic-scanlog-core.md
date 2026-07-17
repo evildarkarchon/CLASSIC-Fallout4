@@ -4,7 +4,7 @@ Contributor-facing API documentation for [`business-logic/classic-scanlog-core/`
 
 `classic-scanlog-core` owns two distinct kinds of behavior:
 
-- independently useful Crash Log parsing, inspection, analysis, and report-assembly utilities
+- independently useful Crash Log parsing, inspection, and semantic-analysis utilities
 - the single complete Crash Log Scan Run use-case boundary in `scan_run::contract`
 
 A complete run always enters through `scan_run::contract::execute`. Discovery,
@@ -164,6 +164,13 @@ stable analyzer tokens are `crashgen_settings`, `crash_suspect`,
 `malformed_result`, and `operational_failure`; adapters must project these
 tokens rather than inventing language-specific spellings.
 
+Direct focused-analyzer callers receive this typed error unchanged through the
+language-appropriate projection. During a complete run, failure to construct
+the reusable analyzer set becomes a run-wide `Initialization` infrastructure
+error before log scheduling. A failure while collecting one log becomes that
+log's `LogFailureStage::Analysis`, prevents a partial Autoscan Report from being
+persisted, and does not convert successful empty results into failures.
+
 ---
 
 ## Independently Useful Public Utilities
@@ -184,6 +191,14 @@ Deprecated parsing aliases are not an alternate run seam; new code should use
 the canonical parser methods documented in source.
 
 ### Focused analyzers
+
+The six supported Focused Semantic Analyzers share one ownership contract: an
+immutable reusable handle accepts one owned input and returns one aggregate
+typed semantic result. Results preserve findings, counts, states, and authored
+YAML Data guidance, but never expose report lines or presentation policy. A
+completed no-match call returns an explicit empty result. There is no public
+Autoscan Report Contribution enum; the aggregate collector is private because
+only a complete Crash Log Scan Run needs to coordinate all six results.
 
 - `CrashgenSettingsAnalyzer` is a complete semantic focused analyzer.
   Its fallible constructor validates typed Crashgen configuration and
@@ -263,11 +278,26 @@ fragment-producing `SettingsValidator` facade are not public Rust or binding
 contracts. Callers use semantic analyzers for focused work or the complete
 Crash Log Scan Run contract for persisted reports.
 
-The private `AutoscanReportAssembler` owns canonical report-section order. Its
-output includes header/version facts, settings and preflight results, plugins,
-FormIDs, named records, suspects, run-scoped FCX facts, and final guidance in
-deterministic order. Full scan persistence belongs exclusively to
-`scan_run::contract::execute`.
+The private contribution collector runs the applicable analyzers without
+rendering. A present empty aggregate records completed analysis with no match;
+absence records that prepared evidence did not admit the analysis. Any typed
+analyzer failure aborts collection for that log instead of offering a partial
+contribution set to assembly.
+
+The private `AutoscanReportAssembler` is the sole owner of canonical
+report-section order, grouping, sorting, headings, separators, padding, icons,
+markdown, and code-authored prose. Its output includes header/version facts,
+settings and preflight results, plugins, FormIDs, named records, suspects,
+run-scoped FCX facts, and final guidance. Full scan persistence belongs
+exclusively to `scan_run::contract::execute`.
+
+Successful runs over identical Crash Log, YAML Data, scan facts, and options
+must persist byte-identical Autoscan Reports. The public-seam regression test
+[`autoscan_report_goldens.rs`](../../business-logic/classic-scanlog-core/tests/autoscan_report_goldens.rs)
+compares persisted bytes against the immutable
+[`autoscan_report_goldens`](../../tests/fixtures/autoscan_report_goldens/README.md)
+corpus without calling private collector or formatting helpers. See
+[ADR-0005](../adr/0005-semantic-autoscan-report-contributions.md).
 
 ### Papyrus and small detection helpers
 
@@ -297,6 +327,11 @@ request, cancellation, observer, result, and error contract. The CLI, GUI, TUI,
 and binding-local CLIs construct requests and present Rust-owned facts; they do
 not perform discovery, select concurrency, reset FCX state, write reports, or
 move failed logs around the call.
+
+The Focused Semantic Analyzer cutover was deliberately breaking across Rust, CXX, Node,
+and Python. Retired report primitives and fragment-producing methods have no
+deprecated aliases or forwarding facades; parity includes the six positive
+semantic analyzer surfaces and negative absence checks for those retired names.
 
 Cross-interface behavior is pinned by
 [`tests/fixtures/crash_log_scan_run/manifest.json`](../../tests/fixtures/crash_log_scan_run/manifest.json).

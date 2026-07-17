@@ -1,8 +1,19 @@
 # Autoscan Report Assembly Refactor Brief
 
+> **Status: superseded.** Do not implement or restore the line-bearing
+> interfaces, compatibility facades, or sequencing described below. The final
+> supported architecture is recorded in
+> [`ADR-0005`](../adr/0005-semantic-autoscan-report-contributions.md), the
+> current public contract is in
+> [`classic-scanlog-core.md`](../api/classic-scanlog-core.md), and exact output
+> compatibility is enforced by the immutable
+> [`autoscan_report_goldens`](../../tests/fixtures/autoscan_report_goldens/README.md)
+> corpus. The remaining body is retained only as historical implementation
+> context.
+
 This brief captures the accepted design from the entry #2 grilling session for `architecture-review-20260630-205128.html`: move Autoscan Report ordering and rendering into a deep Rust module.
 
-Use this as an implementation brief for an agent. Canonical domain language is in [`CONTEXT.md`](../../CONTEXT.md). The data-owned placement decision is recorded in [`docs/adr/0003-autoscan-report-placement-yaml-data.md`](../adr/0003-autoscan-report-placement-yaml-data.md).
+Canonical domain language is in [`CONTEXT.md`](../../CONTEXT.md). The data-owned placement decision is recorded in [`docs/adr/0003-autoscan-report-placement-yaml-data.md`](../adr/0003-autoscan-report-placement-yaml-data.md).
 
 > Historical status: the `lines` payloads below describe the temporary first
 > assembly slice. Crash Suspect, Mod Guidance, and Plugin Evidence have since

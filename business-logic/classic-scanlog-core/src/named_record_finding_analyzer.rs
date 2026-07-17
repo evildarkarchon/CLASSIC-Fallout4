@@ -3,7 +3,7 @@
 use std::collections::HashSet;
 use std::sync::Arc;
 
-use aho_corasick::AhoCorasick;
+use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
 use indexmap::IndexMap;
 
 use crate::analyzer::{AnalyzerError, AnalyzerErrorCode, AnalyzerKind, AnalyzerResult};
@@ -67,13 +67,14 @@ impl NamedRecordFindingAnalyzer {
         };
         let mut findings = IndexMap::<String, u32>::new();
         for line in input.crash_lines {
-            let lower_line = line.to_lowercase();
-            if !target_matcher.is_match(&lower_line)
+            let lowercase_line = (!line.is_ascii()).then(|| line.to_lowercase());
+            let searchable_line = lowercase_line.as_deref().unwrap_or(line.as_str());
+            if !target_matcher.is_match(searchable_line)
                 || self
                     .configuration
                     .ignore_matcher
                     .as_ref()
-                    .is_some_and(|matcher| matcher.is_match(&lower_line))
+                    .is_some_and(|matcher| matcher.is_match(searchable_line))
             {
                 continue;
             }
@@ -127,11 +128,15 @@ fn compile_matcher(patterns: Vec<String>, label: &str) -> AnalyzerResult<Option<
     if patterns.is_empty() {
         return Ok(None);
     }
-    AhoCorasick::new(patterns).map(Some).map_err(|error| {
-        invalid_configuration(format!(
-            "Named Record Finding {label} matcher could not be compiled: {error}"
-        ))
-    })
+    AhoCorasickBuilder::new()
+        .ascii_case_insensitive(true)
+        .build(patterns)
+        .map(Some)
+        .map_err(|error| {
+            invalid_configuration(format!(
+                "Named Record Finding {label} matcher could not be compiled: {error}"
+            ))
+        })
 }
 
 /// Creates the shared typed error for invalid Named Record Finding configuration.

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 import classic_scanlog
@@ -86,3 +88,24 @@ def test_formid_finding_analyzer_raises_shared_typed_lookup_error() -> None:
     assert captured.value.analyzer_kind == classic_scanlog.AnalyzerKind.FormIdFinding
     assert captured.value.code == "operational_failure"
     assert "fixture offline" in captured.value.message
+
+
+def test_formid_finding_sqlite_construction_raises_shared_typed_error(
+    tmp_path: Path,
+) -> None:
+    """SQLite setup failure uses the same analyzer exception envelope as analysis."""
+
+    missing_database = tmp_path / "missing-formids.sqlite3"
+
+    with pytest.raises(classic_scanlog.AnalyzerError) as captured:
+        classic_scanlog.FormIDFindingAnalyzer.sqlite(
+            str(missing_database),
+            "Fallout4",
+        )
+
+    assert captured.value.analyzer_kind == classic_scanlog.AnalyzerKind.FormIdFinding
+    assert captured.value.code == "operational_failure"
+    assert captured.value.message == (
+        "FormID Value Lookup adapter initialization failed: "
+        f"database file not found: {missing_database}"
+    )

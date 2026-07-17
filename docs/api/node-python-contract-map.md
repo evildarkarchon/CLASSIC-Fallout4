@@ -30,6 +30,23 @@ Use this page when you need to find the binding-facing contract files first, bef
 
 Need to translate an older `ClassicLib-rs/...` path first? Use the shared [`workspace migration matrix`](../workspace-migration-matrix.md), then come back here for the active contract files.
 
+### Semantic contribution cutover
+
+Node and Python project the same six public Focused Semantic Analyzers: Crashgen
+Settings, Crash Suspect, Mod Guidance, Plugin Evidence, FormID Finding, and
+Named Record Finding. Each binding exposes an immutable reusable handle, owned
+input and result records, explicit empty success, and the shared stable analyzer
+error. Neither binding exposes the private aggregate contribution collector or
+Autoscan Report Assembly.
+
+The cutover intentionally removed report fragments, composers, generators,
+settings-formatting facades, Python's `ParallelReportProcessor`, and
+fragment-producing analyzer methods without compatibility aliases. Focused
+calls return semantic data only. Byte-identical full-report behavior belongs to
+`scanRunExecute` and `scan_run_execute` through the complete-run contract, not
+to a binding-side formatting API. See
+[ADR-0005](../adr/0005-semantic-autoscan-report-contributions.md).
+
 ## Node
 
 The active Node public contract is the single `classic-node` package under [`node-bindings/classic-node/`](../../node-bindings/classic-node/).
