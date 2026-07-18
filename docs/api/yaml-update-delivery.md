@@ -5,7 +5,7 @@ Contributor-facing reference for CLASSIC's YAML data update channel: how shippab
 This page describes the cross-crate flow introduced by the `yaml-update-delivery` OpenSpec change. For per-crate APIs, see the page for each owner crate:
 
 - [`classic-settings-core`](classic-settings-core.md) — `SchemaVersion`, `SchemaCompat`, `extract_schema_version`, `schema_compat_check`
-- [`classic-config-core`](classic-config-core.md) — `client_schemas::*`, `shippable::load_shippable_yaml`
+- [`classic-config-core`](classic-config-core.md) — config-owned `inspect_installed_yaml_data`, compatibility metadata, exact-byte identity, semantic validation, and installed candidate policy
 - [`classic-path-core`](classic-path-core.md) — `yaml_cache_dir`, `ensure_yaml_cache_dir`
 - [`classic-file-io-core`](classic-file-io-core.md) — `install_atomic`, `rollback`
 - [`classic-update-core`](classic-update-core.md) — `yaml_update` module, first-party `check_yaml_data_update`, `apply_yaml_data_update_with_decision`, `rollback_yaml_data_update`, plus lower-level generic `check_yaml_update`, `apply_yaml_update_with_decision`, `rollback_yaml_update`, and `ApprovedUpdate`
@@ -62,11 +62,11 @@ The embedded default mirror has an independent content-freshness gate because th
 │      - fallback: GET /repos/<owner>/<repo>/releases,             │
 │        filter tag prefix `yaml-data-v`, pick highest-sorted tag, │
 │        download that release's manifest.json asset.              │
-│      - enrich_installed reads on-disk bytes from                 │
-│        config.bundled_yaml_dir (or current_exe() fallback) and   │
-│        computes sha256 so classify uses content identity (not    │
-│        schema_version) as the freshness signal — see §2a         │
-│        "Freshness model" and §2c "Bundled-directory resolution". │
+│      - config core inspects Installed Main/game independently,   │
+│        applying exact-byte compatibility + semantic validation,  │
+│        updated/previous/bundled selection, and diagnostics.      │
+│      - projects selected schema + sha256 into the classifier so  │
+│        content identity (not schema_version) drives freshness.   │
 │      - returns UpdateAvailable | UpToDate | Disabled | Unknown.  │
 ├──────────────────────────────────────────────────────────────────┤
 │ 2. apply_yaml_data_update_with_decision(client, config, approved):│
@@ -92,17 +92,18 @@ The embedded default mirror has an independent content-freshness gate because th
 
 The lower-level generic interface remains available for tests, unusual hosts,
 and Node/Python compatibility consumers. Generic callers pass `pages_url`,
-`tag_prefix`, and a caller-built `ClientSchemaSet` to `check_yaml_update` /
-`apply_yaml_update_with_decision`, or a single `file_name` to
-`rollback_yaml_update`. Native first-party callers should use the
-`yaml_data_*` helpers instead so channel policy stays in Rust.
+`tag_prefix`, and a complete caller-built `ClientSchemaSet` to
+`check_yaml_update` / `apply_yaml_update_with_decision`, or a single
+`file_name` to `rollback_yaml_update`. Generic checks do not inspect disk.
+Native first-party callers should use the `yaml_data_*` helpers so installed
+selection and channel policy stay in Rust.
 
 ### 2a. Freshness model (content identity, not `schema_version`)
 
 `classify_manifest` answers two independent questions per file:
 
 1. **Is the file compatible?** — `schema_compat_check(manifest, client.accepted)` plus the manifest-published `min_client_schema` / `max_client_schema` bounds. Same rules as before.
-2. **Is the file fresh?** — if the installed sha256 is known (populated by `enrich_installed` from the on-disk bytes), a file is fresher iff `manifest.sha256 != installed_sha256`. When the installed sha is not known, we fall back to `manifest.schema_version > installed.schema_version` for backward compatibility with callers that bypass `enrich_installed`.
+2. **Is the file fresh?** — if the installed sha256 is known, a file is fresher iff `manifest.sha256 != installed_sha256`. First-party checks always receive that digest from config inspection of the same exact bytes used for schema and semantic validation. Generic callers may omit a digest; in that compatibility case classification falls back to `manifest.schema_version > installed.schema_version`.
 
 This is what prevents the "data-only release ships but `schema_version` is unchanged" failure mode. A release that adds new crash suspects, mod conflicts, or FormID fixes produces a different sha256, so it is always detected as fresh. Conversely, a release that bumps `schema_version` without actually changing bytes (publisher quirk) short-circuits to UpToDate, because the installed and manifest sha are identical.
 
@@ -131,31 +132,32 @@ Binding-layer contract:
 - Native C++ bridge callers use `yaml_data_check_update(enabled)`, `yaml_data_apply_update(enabled, approved)`, and `yaml_data_rollback_update()`. The bridge returns the same status/apply DTO shapes as the generic functions; rollback returns an aggregate `YamlRollbackReportDto`. Typed apply errors map to stable `error_message` prefixes: `"update check disabled: ..."` and `"decision stale: ..."`. GUI / CLI consumers parse the prefix.
 - The native CLI exposes those first-party operations as `--check-yaml-updates`, `--apply-yaml-updates`, and `--rollback-yaml-updates`. Check/apply open the typed `UpdatePreferencesDto`, surface User Settings validation or migration diagnostics, and pass its safety-adjusted policy bit to the update bridge; they do not interpret a raw User Settings key path. Rollback is local-only and does not perform a network check.
 - The native GUI opens Update Check and the canonical `GitHub` / `Both` Update Source token as part of one revision-cohesive `GuiSettingsSnapshotDto`. The Settings dialog writes either preference only through the all-or-nothing User Settings Update preview/commit seam; cancel, validation rejection, and revision conflicts cannot partially change update policy. The YAML Data network gate continues to use the accepted `Update Check` value.
-- Lower-level C++ bridge compatibility callers may still use `yaml_check_update(pages_url, tag_prefix, entries, enabled, bundled_yaml_dir)`, `yaml_apply_update(request)`, and `yaml_rollback_update(file_name)`.
-- Node `applyYamlUpdate(request)` takes `JsYamlApplyRequest { pagesUrl, tagPrefix, entries, enabled, approved, bundledYamlDir? }`, where `approved` is `JsApprovedUpdate { releaseTag, fileNames, fileSha256 }`. It throws on disabled / stale (propagated as NAPI `Error` with the message body). Node callers should pass the package-local install path because `current_exe()` resolves to `node.exe`.
-- Python `apply_yaml_update(request)` takes `YamlApplyRequest(pages_url, tag_prefix, entries, enabled, approved, bundled_yaml_dir=None)`, where `approved` is `ApprovedUpdate(release_tag, file_names, file_sha256)`. It raises `RuntimeError` on disabled / stale. Python callers should pass a package-local install path because `current_exe()` resolves to `python.exe`.
+- Lower-level C++ bridge compatibility callers may still use `yaml_check_update(pages_url, tag_prefix, entries, enabled, bundled_yaml_dir)`, `yaml_apply_update(request)`, and `yaml_rollback_update(file_name)`. The retained bundled-directory argument no longer enriches generic entries; callers supply installed schema/digest facts explicitly.
+- Node `applyYamlUpdate(request)` takes `JsYamlApplyRequest { pagesUrl, tagPrefix, entries, enabled, approved, bundledYamlDir? }`, where `approved` is `JsApprovedUpdate { releaseTag, fileNames, fileSha256 }`. It throws on disabled / stale. The legacy layout field does not replace installed metadata on generic entries.
+- Python `apply_yaml_update(request)` takes `YamlApplyRequest(pages_url, tag_prefix, entries, enabled, approved, bundled_yaml_dir=None)`, where `approved` is `ApprovedUpdate(release_tag, file_names, file_sha256)`. It raises `RuntimeError` on disabled / stale. The legacy layout argument does not cause generic checks to inspect disk.
 
-### Bundled-directory resolution (non-native hosts)
+All generic compatibility seams still reserve `CLASSIC Ignore.yaml` case-insensitively. Registering it in a caller-supplied schema set cannot make it classifiable or installable, and direct rollback refuses it before cache resolution.
 
-`check_yaml_update` needs to read the currently-installed bytes of each shippable file so it can compare `sha256` against the manifest and decide whether a given entry is fresh. For native CLASSIC frontends (CLI / GUI) the directory is inferred from `current_exe()`: the CLI / GUI binaries live next to `CLASSIC Data/`, so `current_exe().parent() / "CLASSIC Data/databases"` is the right path.
+### Installation-root resolution
 
-For bindings hosted in an unrelated executable — the Python binding inside `python.exe`, the Node binding inside `node.exe` / `bun` — `current_exe()` points at the interpreter, not the CLASSIC install. Without an explicit override, the orchestrator cannot find the bundled file, `enrich_installed` cannot populate the installed sha, and every compatible manifest entry is misclassified as `UpdateAvailable` on a clean install. This was flagged as a `high`-severity Codex adversarial-review finding.
+First-party checks identify one CLASSIC installation root. The binding-compatible `UpdateCheckConfig::bundled_yaml_dir` layout hint accepts either that root or its canonical `CLASSIC Data/databases` directory; native frontends may omit it because the first-party helper falls back to `current_exe().parent()`. Config inspection resolves bundled candidates only beneath `<installation_root>/CLASSIC Data/databases` and resolves the per-user update cache through `classic-path-core`.
 
-`UpdateCheckConfig::bundled_yaml_dir: Option<PathBuf>` is the explicit override. When `Some(path)`, `check_yaml_update` uses that directory; when `None`, it falls back to the `current_exe()`-based resolver. Native frontends keep passing an empty string (CXX) or `None` / `null` (Python / Node) and behave exactly as before. Non-native hosts must compute their package-local directory (e.g. from `__file__` in Python, `__dirname` in Node) and pass it through.
+First-party helpers translate a canonical `.../CLASSIC Data/databases` hint back to its installation root. Generic `check_yaml_update` does not inspect the layout hint: callers of that compatibility API must populate installed schema/digest metadata themselves.
 
-### Load precedence
+### Inspection precedence
 
-At load time, `classic_config_core::shippable::load_shippable_yaml(file, compat)` chooses a source using this precedence:
+`classic_config_core::inspect_installed_yaml_data` independently selects Main and the typed game's registered data file:
 
-1. `<cache_dir>/<file>` if it exists and its `schema_version` is compatible with `compat`.
-2. Otherwise `<install>/CLASSIC Data/databases/<file>` (bundled) if its `schema_version` is compatible.
-3. Otherwise a typed `NoCompatibleSource { file_name, candidates }` error.
+1. canonical `<cache_dir>/<file>` when compatible and semantically usable;
+2. `<cache_dir>/<file>.prev` only when canonical is absent, selected read-only;
+3. `<installation_root>/CLASSIC Data/databases/<file>` as bundled fallback;
+4. otherwise typed `NoUsableSource` with structured candidate diagnostics.
 
-An incompatible cached file is logged (`warn!`) and ignored, never deleted — the user can downgrade the client to recover.
+A present invalid canonical candidate never promotes or selects `.prev`. Rejected candidates are logged/returned but never deleted or rewritten. Inspection does not read Local Ignore YAML Data.
 
-### Self-heal
+### Interrupted-install recovery inspection
 
-If `<cache_dir>/<file>` is missing but `<cache_dir>/<file>.prev` exists, the loader promotes `.prev` → canonical on next startup. This recovers interrupted installs that failed between the two renames in `install_atomic`.
+If `<cache_dir>/<file>` is missing but `<cache_dir>/<file>.prev` exists, inspection may select the compatible, semantically valid previous bytes as recovery provenance. This check is side-effect-limited: it does not rename or promote the sibling. Explicit rollback remains updater-owned.
 
 ### Crash durability of the install
 
@@ -244,7 +246,7 @@ No repository-level secret (`COSIGN_KEY`, `MINISIGN_KEY`, or similar) is referen
 
 - **User-initiated first-party rollback** — `rollback_yaml_data_update()` expands the current first-party shippable YAML Data target list in Rust, swaps `<cache>/<file>` ↔ `<cache>/<file>.prev` per target, and groups `rolled_back`, `no_previous_version`, and `failed` outcomes. There is exactly one `.prev` generation per file; successive rollbacks return `NoPreviousVersion` after the first.
 - **Lower-level rollback** — `rollback_yaml_update(file_name)` remains available for compatibility callers that intentionally name one cache file.
-- **Interrupted install** — if power is lost between the two renames in `install_atomic`, startup self-heal promotes `.prev` → canonical so the client never observes a missing shippable file.
+- **Interrupted install** — if power is lost between the two renames in `install_atomic`, config inspection can select the valid `.prev` bytes when canonical is absent. Update checks leave the sibling untouched; rollback/promotion remains an explicit updater action.
 - **Checksum failure** — on sha256 mismatch during `install_atomic`, the temp file is deleted; the target and any existing `.prev` are untouched.
 - **Rollback to bundled** — removing `<cache>/<file>` AND `<cache>/<file>.prev` forces the loader to fall back to the bundled copy on next load. Contributors generally should not recommend this to users since manual cache mutation is outside the atomic-install contract.
 - **Publish smoke failure** — if the Pages smoke test fails after the release becomes fallback-discoverable, maintainers should inspect Pages propagation and the `gh-pages` commit. Because the prerelease flag was cleared before the Pages push, a later-propagating `manifest-latest.json` cannot point at a release hidden from API-fallback clients.
@@ -257,7 +259,7 @@ No repository-level secret (`COSIGN_KEY`, `MINISIGN_KEY`, or similar) is referen
 | --- | --- |
 | `SchemaVersion` / `SchemaCompat` / `extract_schema_version` | [`business-logic/classic-settings-core/src/schema_version.rs`](../../business-logic/classic-settings-core/src/schema_version.rs) |
 | `client_schemas::MAIN_YAML`, `client_schemas::GAME_FALLOUT4_YAML` | [`business-logic/classic-config-core/src/client_schemas.rs`](../../business-logic/classic-config-core/src/client_schemas.rs) |
-| `shippable::load_shippable_yaml` | [`business-logic/classic-config-core/src/shippable.rs`](../../business-logic/classic-config-core/src/shippable.rs) |
+| Installed YAML Data inspection, exact-byte identity, candidate diagnostics | [`business-logic/classic-config-core/src/installed_yaml_data.rs`](../../business-logic/classic-config-core/src/installed_yaml_data.rs) |
 | `yaml_cache_dir`, `ensure_yaml_cache_dir` | [`business-logic/classic-path-core/src/lib.rs`](../../business-logic/classic-path-core/src/lib.rs) |
 | `install_atomic`, `rollback` | [`business-logic/classic-file-io-core/src/lib.rs`](../../business-logic/classic-file-io-core/src/lib.rs) |
 | First-party YAML Data Update Channel (`check_yaml_data_update`, `apply_yaml_data_update_with_decision`, `rollback_yaml_data_update`) plus generic `YamlManifest`, `fetch_yaml_manifest`, `check_yaml_update`, `apply_yaml_update`, `rollback_yaml_update` | [`business-logic/classic-update-core/src/yaml_update.rs`](../../business-logic/classic-update-core/src/yaml_update.rs) |

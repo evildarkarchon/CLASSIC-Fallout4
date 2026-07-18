@@ -94,8 +94,9 @@ YAML Data Update Channel: fetches the first-party YAML Data manifest from GitHub
 
 First-party helpers for native/product callers:
 
-- `check_yaml_data_update(client, config)` - first-party check; owns Pages URL, tag prefix, schema set, and installed-file enrichment
-- `check_yaml_data_update_with(client, pages_url, config)` - testable first-party check with an explicit Pages endpoint, while Rust still owns the tag prefix and schema set
+- `check_yaml_data_update(client, config)` - first-party check; owns Pages URL and tag prefix, then obtains installed schema/content identity from config-owned Installed YAML Data inspection
+- `check_yaml_data_update_with(client, pages_url, config)` - testable first-party check with an explicit Pages endpoint, while Rust still owns the tag prefix and config-inspected schema set
+- `check_yaml_data_update_with_env(client, pages_url, config, env)` - deterministic first-party test/tooling form that shares one injected cache environment between manifest caching and config inspection
 - `apply_yaml_data_update_with_decision(client, config, approved)` - first-party apply; keeps the approved-release and digest-staleness checks
 - `apply_yaml_data_update_with_decision_with(client, pages_url, config, approved)` - testable first-party apply with an explicit Pages endpoint
 - `rollback_yaml_data_update()` - first-party bulk rollback; returns one result per first-party shippable target so bridges can group rolled-back/no-previous/failure lists without duplicating the target list
@@ -109,7 +110,9 @@ Lower-level compatibility helpers remain public for tests, unusual hosts, and No
 
 Contributor note:
 
-- the first-party helpers derive the Pages URL from `GithubClient`, and derive shippable file names plus accepted schema ranges from `classic-config-core` metadata
+- the first-party helpers derive the Pages URL from `GithubClient`; `classic-config-core` inspection supplies the selected Main/game schema versions and exact-byte SHA-256 identities under config-owned compatibility, semantic-validation, fallback, and `.prev` policy
+- generic `check_yaml_update` does not inspect cache or bundled paths; its caller-provided `ClientSchemaSet` is the complete installed-state input
+- Local Ignore remains reserved user-owned state even on generic seams: classification, installation, and direct rollback refuse `CLASSIC Ignore.yaml` case-insensitively
 - native C++ callers should use the first-party CXX helpers backed by these Rust functions; do not duplicate the Pages URL, `yaml-data-v*` tag prefix, shippable file list, or schema ranges in CLI/GUI code
 
 ---

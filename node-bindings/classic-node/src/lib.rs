@@ -24,6 +24,7 @@ mod crash_suspect_analyzer;
 mod crashgen_rules;
 mod crashgen_settings_analyzer;
 mod formid_finding_analyzer;
+mod installed_yaml_data;
 mod logging_contract;
 mod message;
 mod mod_guidance_analyzer;

@@ -82,6 +82,7 @@
 /// Shared PyO3 parsers for crashgen settings rule dictionaries.
 pub mod crashgen_rules;
 mod explicit_yaml_data;
+mod installed_yaml_data;
 mod main_yaml_version;
 
 use classic_config_core::{
@@ -857,6 +858,7 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // failures.
     main_yaml_version::register(m)?;
     explicit_yaml_data::register(m)?;
+    installed_yaml_data::register(m)?;
 
     Ok(())
 }
@@ -880,6 +882,7 @@ pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // See the matching comment in the `classic_config` pymodule above.
     main_yaml_version::register(m)?;
     explicit_yaml_data::register(m)?;
+    installed_yaml_data::register(m)?;
 
     Ok(())
 }

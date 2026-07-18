@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-18T04:37:40.395026+00:00",
+  "generated_at_utc": "2026-07-18T07:19:37.164601+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -899,6 +899,70 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class JsIniValidator {"
+    },
+    {
+      "export": "JsInspectedYamlDataFile",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInspectedYamlDataFile {"
+    },
+    {
+      "export": "JsInstalledYamlDataDiagnostic",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInstalledYamlDataDiagnostic {"
+    },
+    {
+      "export": "JsInstalledYamlDataDiagnosticKind",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsInstalledYamlDataDiagnosticKind {"
+    },
+    {
+      "export": "JsInstalledYamlDataGameRole",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsInstalledYamlDataGameRole {"
+    },
+    {
+      "export": "JsInstalledYamlDataInspection",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInstalledYamlDataInspection {"
+    },
+    {
+      "export": "JsInstalledYamlDataInspectionRequest",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInstalledYamlDataInspectionRequest {"
+    },
+    {
+      "export": "JsInstalledYamlDataProvenance",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsInstalledYamlDataProvenance {"
+    },
+    {
+      "export": "JsInstalledYamlDataRole",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsInstalledYamlDataRole {"
     },
     {
       "export": "JsIntegrityCheckResult",
@@ -2936,6 +3000,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function importLegacyTuiStateIntoUserSettings(classicRoot: string, legacyStatePath: string): JsLegacyTuiStateImportOutcome",
       "arity": 2
+    },
+    {
+      "export": "inspectInstalledYamlData",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function inspectInstalledYamlData(request: JsInstalledYamlDataInspectionRequest): Promise<JsInstalledYamlDataInspection>",
+      "arity": 1
     },
     {
       "export": "internString",

@@ -8,9 +8,16 @@
 //! are isolated and can't share opaque types across modules.
 
 use classic_config_core::{
-    MainYamlVersionError, ModSolutionCriteria, SuspectErrorRule as CoreSuspectErrorRule,
-    SuspectStackCountRule as CoreSuspectStackCountRule, SuspectStackRule as CoreSuspectStackRule,
-    YamlDataCore,
+    InspectedYamlDataFile as CoreInspectedYamlDataFile,
+    InstalledYamlDataDiagnostic as CoreInstalledYamlDataDiagnostic,
+    InstalledYamlDataDiagnosticKind as CoreInstalledYamlDataDiagnosticKind,
+    InstalledYamlDataInspection as CoreInstalledYamlDataInspection,
+    InstalledYamlDataInspectionError as CoreInstalledYamlDataInspectionError,
+    InstalledYamlDataInspectionRequest as CoreInstalledYamlDataInspectionRequest,
+    InstalledYamlDataProvenance as CoreInstalledYamlDataProvenance,
+    InstalledYamlDataRole as CoreInstalledYamlDataRole, MainYamlVersionError, ModSolutionCriteria,
+    SuspectErrorRule as CoreSuspectErrorRule, SuspectStackCountRule as CoreSuspectStackCountRule,
+    SuspectStackRule as CoreSuspectStackRule, YamlDataCore,
     explicit_yaml_data::{
         ExplicitYamlDataLoadError as CoreExplicitYamlDataLoadError,
         ExplicitYamlDataRequest as CoreExplicitYamlDataRequest,
@@ -18,6 +25,7 @@ use classic_config_core::{
         ExplicitYamlDataSnapshot as CoreExplicitYamlDataSnapshot, GameDataRole as CoreGameDataRole,
         YamlDataContentIdentity, load_explicit_yaml_data as core_load_explicit_yaml_data,
     },
+    inspect_installed_yaml_data as core_inspect_installed_yaml_data,
     load_main_yaml_version_with_bundled_dir as core_load_main_yaml_version_with_bundled_dir,
     persist_game_local_paths,
 };
@@ -42,6 +50,16 @@ pub struct ExplicitYamlDataLoad {
 /// Opaque immutable snapshot returned by deterministic explicit YAML Data loading.
 pub struct ExplicitYamlDataSnapshot {
     inner: CoreExplicitYamlDataSnapshot,
+}
+
+/// Opaque result holder for one Installed YAML Data inspection operation.
+pub struct InstalledYamlDataInspectionOperation {
+    result: Result<CoreInstalledYamlDataInspection, CoreInstalledYamlDataInspectionError>,
+}
+
+/// Opaque immutable result returned by Installed YAML Data inspection.
+pub struct InstalledYamlDataInspection {
+    inner: CoreInstalledYamlDataInspection,
 }
 
 // ── Construction ────────────────────────────────────────────────────
@@ -82,6 +100,104 @@ fn explicit_yaml_data_load(
     Box::new(ExplicitYamlDataLoad {
         result: get_runtime().block_on(core_load_explicit_yaml_data(request)),
     })
+}
+
+/// Inspect update-eligible Installed YAML Data without reading Local Ignore.
+///
+/// The returned operation always exists so C++ callers can inspect typed
+/// unsupported-game and no-usable-source failures before consuming success.
+fn installed_yaml_data_inspect(
+    installation_root: &str,
+    game: ffi::ExplicitYamlDataGameId,
+) -> Box<InstalledYamlDataInspectionOperation> {
+    installed_yaml_data_inspection_operation_from_result(core_inspect_installed_yaml_data(
+        CoreInstalledYamlDataInspectionRequest {
+            installation_root: PathBuf::from(installation_root),
+            game: explicit_game_id_to_core(game),
+        },
+    ))
+}
+
+/// Build an opaque inspection operation from the Rust-owned core result.
+fn installed_yaml_data_inspection_operation_from_result(
+    result: Result<CoreInstalledYamlDataInspection, CoreInstalledYamlDataInspectionError>,
+) -> Box<InstalledYamlDataInspectionOperation> {
+    Box::new(InstalledYamlDataInspectionOperation { result })
+}
+
+/// Return the success/error status captured by an Installed YAML Data inspection.
+fn installed_yaml_data_inspection_status(
+    operation: &InstalledYamlDataInspectionOperation,
+) -> ffi::InstalledYamlDataInspectionStatusDto {
+    match &operation.result {
+        Ok(_) => ffi::InstalledYamlDataInspectionStatusDto {
+            has_inspection: true,
+            has_error: false,
+            error: empty_installed_yaml_data_inspection_error(),
+        },
+        Err(error) => ffi::InstalledYamlDataInspectionStatusDto {
+            has_inspection: false,
+            has_error: true,
+            error: installed_yaml_data_inspection_error_to_dto(error),
+        },
+    }
+}
+
+/// Consume a successful operation and return its immutable inspection result.
+///
+/// Callers inspect [`installed_yaml_data_inspection_status`] first. This
+/// `Result` prevents a failed operation from being consumed as success.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn installed_yaml_data_inspection_take(
+    operation: Box<InstalledYamlDataInspectionOperation>,
+) -> Result<Box<InstalledYamlDataInspection>, String> {
+    match operation.result {
+        Ok(inner) => Ok(Box::new(InstalledYamlDataInspection { inner })),
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Return the typed game identity retained by a successful inspection.
+fn installed_yaml_data_inspection_game(
+    inspection: &InstalledYamlDataInspection,
+) -> ffi::ExplicitYamlDataGameId {
+    explicit_game_id_to_ffi(inspection.inner.game())
+}
+
+/// Return the registered game-data role selected by a successful inspection.
+fn installed_yaml_data_inspection_game_role(
+    inspection: &InstalledYamlDataInspection,
+) -> ffi::InstalledYamlDataGameRole {
+    match inspection.inner.game_data_role() {
+        CoreGameDataRole::Fallout4 => ffi::InstalledYamlDataGameRole::Fallout4,
+    }
+}
+
+/// Return selected Main provenance, schema, and exact-byte content identity.
+fn installed_yaml_data_inspection_main(
+    inspection: &InstalledYamlDataInspection,
+) -> ffi::InspectedYamlDataFileDto {
+    inspected_yaml_data_file_to_dto(inspection.inner.main())
+}
+
+/// Return selected game provenance, schema, and exact-byte content identity.
+fn installed_yaml_data_inspection_game_file(
+    inspection: &InstalledYamlDataInspection,
+) -> ffi::InspectedYamlDataFileDto {
+    inspected_yaml_data_file_to_dto(inspection.inner.game_file())
+}
+
+/// Return every structured fallback or cache-resolution diagnostic.
+fn installed_yaml_data_inspection_diagnostics(
+    inspection: &InstalledYamlDataInspection,
+) -> Vec<ffi::InstalledYamlDataDiagnosticDto> {
+    inspection
+        .inner
+        .diagnostics()
+        .iter()
+        .map(installed_yaml_data_diagnostic_to_dto)
+        .collect()
 }
 
 /// Return the success/error status captured by an explicit YAML Data load.
@@ -248,6 +364,131 @@ fn content_identity_to_dto(identity: &YamlDataContentIdentity) -> ffi::YamlDataC
     ffi::YamlDataContentIdentityDto {
         sha256: identity.sha256_hex(),
         byte_len: identity.byte_len(),
+    }
+}
+
+/// Convert a core Installed YAML Data role to its CXX projection.
+fn installed_yaml_data_role_to_ffi(role: CoreInstalledYamlDataRole) -> ffi::InstalledYamlDataRole {
+    match role {
+        CoreInstalledYamlDataRole::Main => ffi::InstalledYamlDataRole::Main,
+        CoreInstalledYamlDataRole::Game => ffi::InstalledYamlDataRole::Game,
+    }
+}
+
+/// Convert core candidate provenance to its stable CXX projection.
+fn installed_yaml_data_provenance_to_ffi(
+    provenance: CoreInstalledYamlDataProvenance,
+) -> ffi::InstalledYamlDataProvenance {
+    match provenance {
+        CoreInstalledYamlDataProvenance::Updated => ffi::InstalledYamlDataProvenance::Updated,
+        CoreInstalledYamlDataProvenance::Previous => ffi::InstalledYamlDataProvenance::Previous,
+        CoreInstalledYamlDataProvenance::Bundled => ffi::InstalledYamlDataProvenance::Bundled,
+    }
+}
+
+/// Convert a core diagnostic kind to the stable CXX inventory.
+fn installed_yaml_data_diagnostic_kind_to_ffi(
+    kind: CoreInstalledYamlDataDiagnosticKind,
+) -> ffi::InstalledYamlDataDiagnosticKind {
+    match kind {
+        CoreInstalledYamlDataDiagnosticKind::CacheUnavailable => {
+            ffi::InstalledYamlDataDiagnosticKind::CacheUnavailable
+        }
+        CoreInstalledYamlDataDiagnosticKind::Missing => {
+            ffi::InstalledYamlDataDiagnosticKind::Missing
+        }
+        CoreInstalledYamlDataDiagnosticKind::Read => ffi::InstalledYamlDataDiagnosticKind::Read,
+        CoreInstalledYamlDataDiagnosticKind::InvalidUtf8 => {
+            ffi::InstalledYamlDataDiagnosticKind::InvalidUtf8
+        }
+        CoreInstalledYamlDataDiagnosticKind::Parse => ffi::InstalledYamlDataDiagnosticKind::Parse,
+        CoreInstalledYamlDataDiagnosticKind::InvalidSchema => {
+            ffi::InstalledYamlDataDiagnosticKind::InvalidSchema
+        }
+        CoreInstalledYamlDataDiagnosticKind::IncompatibleSchema => {
+            ffi::InstalledYamlDataDiagnosticKind::IncompatibleSchema
+        }
+        CoreInstalledYamlDataDiagnosticKind::InvalidRoleData => {
+            ffi::InstalledYamlDataDiagnosticKind::InvalidRoleData
+        }
+    }
+}
+
+/// Flatten one selected core file into its CXX metadata DTO.
+fn inspected_yaml_data_file_to_dto(
+    file: &CoreInspectedYamlDataFile,
+) -> ffi::InspectedYamlDataFileDto {
+    ffi::InspectedYamlDataFileDto {
+        role: installed_yaml_data_role_to_ffi(file.role()),
+        provenance: installed_yaml_data_provenance_to_ffi(file.provenance()),
+        schema_version: file.schema_version().to_string(),
+        sha256: file.identity().sha256_hex(),
+        byte_len: file.identity().byte_len(),
+    }
+}
+
+/// Flatten one structured core diagnostic into its CXX DTO.
+fn installed_yaml_data_diagnostic_to_dto(
+    diagnostic: &CoreInstalledYamlDataDiagnostic,
+) -> ffi::InstalledYamlDataDiagnosticDto {
+    let role = diagnostic.role();
+    let candidate = diagnostic.candidate();
+    let path = diagnostic.path();
+    ffi::InstalledYamlDataDiagnosticDto {
+        has_role: role.is_some(),
+        role: role
+            .map(installed_yaml_data_role_to_ffi)
+            .unwrap_or(ffi::InstalledYamlDataRole::Main),
+        has_candidate: candidate.is_some(),
+        candidate: candidate
+            .map(installed_yaml_data_provenance_to_ffi)
+            .unwrap_or(ffi::InstalledYamlDataProvenance::Bundled),
+        has_path: path.is_some(),
+        path: path
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        kind: installed_yaml_data_diagnostic_kind_to_ffi(diagnostic.kind()),
+        message: diagnostic.message().to_string(),
+    }
+}
+
+/// Convert one core inspection failure into its typed CXX error DTO.
+fn installed_yaml_data_inspection_error_to_dto(
+    error: &CoreInstalledYamlDataInspectionError,
+) -> ffi::InstalledYamlDataInspectionErrorDto {
+    match error {
+        CoreInstalledYamlDataInspectionError::UnsupportedGame { .. } => {
+            ffi::InstalledYamlDataInspectionErrorDto {
+                kind: ffi::InstalledYamlDataInspectionErrorKind::UnsupportedGame,
+                has_role: false,
+                role: ffi::InstalledYamlDataRole::Main,
+                diagnostics: Vec::new(),
+                message: error.to_string(),
+            }
+        }
+        CoreInstalledYamlDataInspectionError::NoUsableSource { role, diagnostics } => {
+            ffi::InstalledYamlDataInspectionErrorDto {
+                kind: ffi::InstalledYamlDataInspectionErrorKind::NoUsableSource,
+                has_role: true,
+                role: installed_yaml_data_role_to_ffi(*role),
+                diagnostics: diagnostics
+                    .iter()
+                    .map(installed_yaml_data_diagnostic_to_dto)
+                    .collect(),
+                message: error.to_string(),
+            }
+        }
+    }
+}
+
+/// Return the placeholder nested error used when `has_error` is false.
+fn empty_installed_yaml_data_inspection_error() -> ffi::InstalledYamlDataInspectionErrorDto {
+    ffi::InstalledYamlDataInspectionErrorDto {
+        kind: ffi::InstalledYamlDataInspectionErrorKind::UnsupportedGame,
+        has_role: false,
+        role: ffi::InstalledYamlDataRole::Main,
+        diagnostics: Vec::new(),
+        message: String::new(),
     }
 }
 
@@ -739,6 +980,52 @@ mod ffi {
         InvalidRoleData = 4,
     }
 
+    /// Registered game-data role selected by Installed YAML Data inspection.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InstalledYamlDataGameRole {
+        Fallout4 = 0,
+    }
+
+    /// Update-eligible YAML Data role attributed by inspection.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InstalledYamlDataRole {
+        Main = 0,
+        Game = 1,
+    }
+
+    /// Candidate provenance for one selected or rejected installed file.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InstalledYamlDataProvenance {
+        Updated = 0,
+        Previous = 1,
+        Bundled = 2,
+    }
+
+    /// Stable category for an Installed YAML Data inspection diagnostic.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InstalledYamlDataDiagnosticKind {
+        CacheUnavailable = 0,
+        Missing = 1,
+        Read = 2,
+        InvalidUtf8 = 3,
+        Parse = 4,
+        InvalidSchema = 5,
+        IncompatibleSchema = 6,
+        InvalidRoleData = 7,
+    }
+
+    /// Stable typed category of an Installed YAML Data inspection failure.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InstalledYamlDataInspectionErrorKind {
+        UnsupportedGame = 0,
+        NoUsableSource = 1,
+    }
+
     /// Exact caller-selected paths for deterministic YAML Data loading.
     struct ExplicitYamlDataPathsDto {
         main_path: String,
@@ -767,6 +1054,43 @@ mod ffi {
         has_snapshot: bool,
         has_error: bool,
         error: ExplicitYamlDataLoadErrorDto,
+    }
+
+    /// Selected-file metadata derived from the exact inspected bytes.
+    struct InspectedYamlDataFileDto {
+        role: InstalledYamlDataRole,
+        provenance: InstalledYamlDataProvenance,
+        schema_version: String,
+        sha256: String,
+        byte_len: u64,
+    }
+
+    /// Structured attribution for one fallback or cache-resolution event.
+    struct InstalledYamlDataDiagnosticDto {
+        has_role: bool,
+        role: InstalledYamlDataRole,
+        has_candidate: bool,
+        candidate: InstalledYamlDataProvenance,
+        has_path: bool,
+        path: String,
+        kind: InstalledYamlDataDiagnosticKind,
+        message: String,
+    }
+
+    /// Typed inspection failure with optional role and structured diagnostics.
+    struct InstalledYamlDataInspectionErrorDto {
+        kind: InstalledYamlDataInspectionErrorKind,
+        has_role: bool,
+        role: InstalledYamlDataRole,
+        diagnostics: Vec<InstalledYamlDataDiagnosticDto>,
+        message: String,
+    }
+
+    /// Exactly one of `has_inspection` and `has_error` is true.
+    struct InstalledYamlDataInspectionStatusDto {
+        has_inspection: bool,
+        has_error: bool,
+        error: InstalledYamlDataInspectionErrorDto,
     }
 
     struct CacheStats {
@@ -849,6 +1173,8 @@ mod ffi {
         type YamlData;
         type ExplicitYamlDataLoad;
         type ExplicitYamlDataSnapshot;
+        type InstalledYamlDataInspectionOperation;
+        type InstalledYamlDataInspection;
 
         // Construction (async, block_on)
         fn yaml_data_load(
@@ -892,6 +1218,36 @@ mod ffi {
         fn explicit_yaml_data_snapshot_ignore_identity(
             snapshot: &ExplicitYamlDataSnapshot,
         ) -> YamlDataContentIdentityDto;
+
+        /// Inspect selected Main and game YAML Data under one installation root.
+        /// Local Ignore is neither read nor modified by this operation.
+        fn installed_yaml_data_inspect(
+            installation_root: &str,
+            game: ExplicitYamlDataGameId,
+        ) -> Box<InstalledYamlDataInspectionOperation>;
+        /// Inspect typed success or failure before consuming the operation.
+        fn installed_yaml_data_inspection_status(
+            operation: &InstalledYamlDataInspectionOperation,
+        ) -> InstalledYamlDataInspectionStatusDto;
+        /// Consume a successful operation and return its immutable inspection.
+        fn installed_yaml_data_inspection_take(
+            operation: Box<InstalledYamlDataInspectionOperation>,
+        ) -> Result<Box<InstalledYamlDataInspection>>;
+        fn installed_yaml_data_inspection_game(
+            inspection: &InstalledYamlDataInspection,
+        ) -> ExplicitYamlDataGameId;
+        fn installed_yaml_data_inspection_game_role(
+            inspection: &InstalledYamlDataInspection,
+        ) -> InstalledYamlDataGameRole;
+        fn installed_yaml_data_inspection_main(
+            inspection: &InstalledYamlDataInspection,
+        ) -> InspectedYamlDataFileDto;
+        fn installed_yaml_data_inspection_game_file(
+            inspection: &InstalledYamlDataInspection,
+        ) -> InspectedYamlDataFileDto;
+        fn installed_yaml_data_inspection_diagnostics(
+            inspection: &InstalledYamlDataInspection,
+        ) -> Vec<InstalledYamlDataDiagnosticDto>;
 
         fn save_local_yaml_paths(
             local_yaml_path: &str,

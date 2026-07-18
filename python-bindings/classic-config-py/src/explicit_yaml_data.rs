@@ -102,6 +102,16 @@ impl PyExplicitYamlDataGame {
 }
 
 impl PyExplicitYamlDataGame {
+    /// Returns the shared core identity represented by this Python value.
+    pub(crate) const fn into_core(self) -> GameId {
+        self.inner
+    }
+
+    /// Wraps a shared core identity without accepting an untyped string.
+    pub(crate) const fn from_core(inner: GameId) -> Self {
+        Self { inner }
+    }
+
     fn constant_name(&self) -> &'static str {
         match self.inner {
             GameId::Fallout4 => "FALLOUT4",
@@ -179,9 +189,7 @@ pub struct PyExplicitYamlDataSnapshot {
 impl PyExplicitYamlDataSnapshot {
     #[getter]
     fn game(&self) -> PyExplicitYamlDataGame {
-        PyExplicitYamlDataGame {
-            inner: self.inner.game(),
-        }
+        PyExplicitYamlDataGame::from_core(self.inner.game())
     }
 
     #[getter]

@@ -71,6 +71,8 @@ pinned separately as byte-identical persisted Autoscan Reports; see
 
 **Explicit YAML Data contract (`classic-config-core`):** Rust, C++, Node, and Python expose the same deterministic tooling operation over one explicitly identified Main file, game file, and Local Ignore file plus a typed game identity. Every surface returns an immutable snapshot with the parsed `YamlDataCore` view and SHA-256/byte-length identities derived from the exact retained bytes. Fallout 4 VR maps to the shared Fallout 4 data role; unsupported typed games and role-attributed read, UTF-8, parse, and validation failures remain typed per binding. No adapter performs installed selection, cache recovery, generation, backup, or fallback. Entry points are CXX `explicit_yaml_data_load(...)` plus its typed status/snapshot functions, Node `loadExplicitYamlData(...)`, and Python `classic_config.load_explicit_yaml_data(...)`.
 
+**Installed YAML Data inspection contract (`classic-config-core`):** Rust, C++, Node, and Python also expose the config-owned, side-effect-limited selector used by first-party update freshness. Main and the typed game's registered data file are selected independently from compatible, semantically valid updated, previous-when-canonical-is-absent, or bundled candidates. Results expose provenance, schema, exact-byte SHA-256/length identity, and structured rejection diagnostics; Fallout 4 VR maps to Fallout 4 data, unsupported games remain typed, and Local Ignore is never inspected or modified. Entry points are CXX `installed_yaml_data_inspect(...)` plus its status/inspection functions, Node `inspectInstalledYamlData(...)`, and Python `classic_config.inspect_installed_yaml_data(...)`.
+
 **Note on app-update notification surface (`classic-update-core`):** the `notification` module adds a single cross-binding entry point in addition to the legacy `GithubClient` surface. Contract map:
 
 | Binding | Entry point | DTO / return | Error shape |
@@ -89,7 +91,7 @@ Full cross-crate flow: [`app-update-notification-delivery.md`](app-update-notifi
 | Node (NAPI-RS) | Not exposed in this scope | `checkYamlUpdate(...)`, `applyYamlUpdate(request)`, `rollbackYamlUpdate(fileName)` |
 | Python (PyO3) | Not exposed in this scope | `check_yaml_update(...)`, `apply_yaml_update(request)`, `rollback_yaml_update(file_name)` |
 
-The first-party C++ helpers centralize the Pages URL, `yaml-data-v*` tag namespace, first-party shippable file set, accepted schema ranges, installed-file enrichment, and rollback target list in Rust. Full cross-crate flow: [`yaml-update-delivery.md`](yaml-update-delivery.md).
+The first-party C++ helpers centralize the Pages URL, `yaml-data-v*` tag namespace, config-inspected installed schema/content identity, first-party file set, and rollback target list in Rust. Generic compatibility APIs classify only the installed metadata supplied by their caller. Full cross-crate flow: [`yaml-update-delivery.md`](yaml-update-delivery.md).
 
 **Note on `classic-resource-core`**: This crate provides lightweight resource classification helpers used by `classic-file-io-core`. It has no dedicated C++ bridge module. C++ frontends access resource classification functionality transitively through the `classic-file-io-core` bridge surface (`files.rs`) where needed.
 

@@ -14,15 +14,15 @@
 //!   with If-None-Match, API fallback, total failure).
 //! - `download_*` tests prove the URL allowlist at the download layer
 //!   (HTTPS + `github.com` host).
-//! - The `install_atomic` primitive is *not* re-tested here; Phase A covers
-//!   clean install, `.prev` promotion, mismatch, self-heal, and rollback
+//! - The `install_atomic` primitive is *not* re-tested here; file-io tests cover
+//!   clean install, `.prev` recovery, mismatch, and rollback
 //!   with tempfiles. The orchestrator's job here is to compose these two
 //!   already-tested primitives (download + install_atomic), and the
 //!   composition failure modes (download failure, checksum mismatch) are
 //!   covered at unit level in this module via small direct calls.
 
 use classic_settings_core::{SchemaCompat, SchemaVersion};
-use classic_update_core::yaml_update::check_yaml_data_update_with;
+use classic_update_core::yaml_update::check_yaml_data_update_with_env;
 use classic_update_core::{
     ApprovedUpdate, ClientSchemaSet, FileInstallOutcome, GithubClient, MAX_MANIFEST_VERSION,
     UpdateCheckConfig, UpdateError, YamlManifest, YamlManifestFile, YamlUpdateStatus,
@@ -31,6 +31,26 @@ use classic_update_core::{
 };
 use std::path::Path;
 use tempfile::TempDir;
+
+const FIRST_PARTY_MAIN: &str = r#"schema_version: "2.0"
+CLASSIC_Info:
+  version: "9.1.0"
+  version_date: "2026-07-17"
+CLASSIC_Interface:
+  autoscan_text_Fallout4: "Bundled autoscan"
+catch_log_records: []
+"#;
+
+const FIRST_PARTY_GAME: &str = r#"schema_version: "1.0"
+Game_Info:
+  Main_Root_Name: "Fallout 4"
+  XSE_Acronym: "F4SE"
+  GameVersion: "1.10.163"
+Crashlog_Error_Check: []
+Crashlog_Stack_Check: []
+Mods_FREQ: []
+Mods_SOLU: []
+"#;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -41,6 +61,37 @@ fn write(path: &Path, bytes: &[u8]) {
         std::fs::create_dir_all(parent).unwrap();
     }
     std::fs::write(path, bytes).unwrap();
+}
+
+fn first_party_bundled_dir(installation_root: &Path) -> std::path::PathBuf {
+    installation_root.join("CLASSIC Data").join("databases")
+}
+
+fn first_party_cache_dir(cache_root: &Path) -> std::path::PathBuf {
+    cache_root.join("CLASSIC").join("yaml-cache")
+}
+
+fn first_party_cache_env(cache_root: &Path) -> impl Fn(&str) -> Option<String> + use<> {
+    let cache_root = cache_root.to_string_lossy().into_owned();
+    move |name| match name {
+        #[cfg(target_os = "windows")]
+        "LOCALAPPDATA" => Some(cache_root.clone()),
+        #[cfg(not(target_os = "windows"))]
+        "XDG_CACHE_HOME" => Some(cache_root.clone()),
+        _ => None,
+    }
+}
+
+fn write_first_party_bundled_install(installation_root: &Path) {
+    let bundled = first_party_bundled_dir(installation_root);
+    write(
+        &bundled.join("CLASSIC Main.yaml"),
+        FIRST_PARTY_MAIN.as_bytes(),
+    );
+    write(
+        &bundled.join("CLASSIC Fallout4.yaml"),
+        FIRST_PARTY_GAME.as_bytes(),
+    );
 }
 
 /// A valid single-file manifest pointing at a real-looking github.com asset
@@ -68,6 +119,60 @@ fn valid_manifest_json(tag: &str, sha: &str, download_url: &str, size: u64) -> S
 // running with `$GITHUB_TOKEN` unset — the default-flow spec.
 fn tokenless_client(base_url: &str) -> GithubClient {
     GithubClient::with_base_url("owner", "repo", base_url, None).unwrap()
+}
+
+/// Run one first-party Main classification against isolated install/cache fixtures.
+async fn check_first_party_main_fixture(
+    installation_root: &Path,
+    cache_root: &Path,
+    cache_available: bool,
+    manifest_sha: &str,
+) -> YamlUpdateStatus {
+    let mut server = mockito::Server::new_async().await;
+    let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());
+    let manifest_body = format!(
+        r#"{{
+  "manifest_version": 1,
+  "release_tag": "yaml-data-v2026.07.18",
+  "published_at": "2026-07-18T12:00:00Z",
+  "files": [{{
+    "name": "CLASSIC Main.yaml",
+    "schema_version": "2.0",
+    "sha256": "{manifest_sha}",
+    "size_bytes": 1,
+    "download_url": "https://github.com/owner/repo/releases/download/yaml-data-v2026.07.18/CLASSIC%20Main.yaml"
+  }}]
+}}"#,
+    );
+    let _pages_mock = server
+        .mock("GET", "/yaml-data/manifest-latest.json")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(manifest_body)
+        .create_async()
+        .await;
+    let cache_root_value = cache_root.to_string_lossy().into_owned();
+    let env = move |name: &str| {
+        if !cache_available {
+            return None;
+        }
+        match name {
+            #[cfg(target_os = "windows")]
+            "LOCALAPPDATA" => Some(cache_root_value.clone()),
+            #[cfg(not(target_os = "windows"))]
+            "XDG_CACHE_HOME" => Some(cache_root_value.clone()),
+            _ => None,
+        }
+    };
+
+    check_yaml_data_update_with_env(
+        &tokenless_client(&server.url()),
+        &pages_url,
+        UpdateCheckConfig::enabled().with_bundled_yaml_dir(installation_root.to_path_buf()),
+        env,
+    )
+    .await
+    .expect("first-party fixture check should classify")
 }
 
 fn valid_manifest() -> YamlManifest {
@@ -449,6 +554,9 @@ async fn check_disabled_short_circuits_without_http() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn check_yaml_data_update_with_uses_first_party_schema_entries() {
+    let installation = TempDir::new().expect("installation root should be created");
+    let cache_root = TempDir::new().expect("cache root should be created");
+    write_first_party_bundled_install(installation.path());
     let mut server = mockito::Server::new_async().await;
     let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());
     let manifest_body = format!(
@@ -477,9 +585,14 @@ async fn check_yaml_data_update_with_uses_first_party_schema_entries() {
         .await;
 
     let client = tokenless_client(&server.url());
-    let status = check_yaml_data_update_with(&client, &pages_url, UpdateCheckConfig::enabled())
-        .await
-        .expect("first-party YAML Data check should classify mocked manifest");
+    let status = check_yaml_data_update_with_env(
+        &client,
+        &pages_url,
+        UpdateCheckConfig::enabled().with_bundled_yaml_dir(installation.path().to_path_buf()),
+        first_party_cache_env(cache_root.path()),
+    )
+    .await
+    .expect("first-party YAML Data check should classify mocked manifest");
 
     match status {
         YamlUpdateStatus::UpdateAvailable {
@@ -490,6 +603,282 @@ async fn check_yaml_data_update_with_uses_first_party_schema_entries() {
             assert_eq!(compatible_files[0].schema_version, "2.1");
         }
         other => panic!("expected first-party check to use Main schema 2.x, got {other:?}"),
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn first_party_check_uses_config_inspection_selected_cache_digest() {
+    let installation = TempDir::new().expect("installation root should be created");
+    let cache_root = TempDir::new().expect("cache root should be created");
+    write_first_party_bundled_install(installation.path());
+    let cache = first_party_cache_dir(cache_root.path());
+    let updated_main = FIRST_PARTY_MAIN.replace("Bundled autoscan", "Updated autoscan");
+    let updated_path = cache.join("CLASSIC Main.yaml");
+    write(&updated_path, updated_main.as_bytes());
+    let updated_sha = classic_file_io_core::FileHasher::hash_file(&updated_path)
+        .expect("updated fixture should be hashable");
+
+    let mut server = mockito::Server::new_async().await;
+    let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());
+    let manifest_body = format!(
+        r#"{{
+  "manifest_version": 1,
+  "release_tag": "yaml-data-v2026.07.18",
+  "published_at": "2026-07-18T12:00:00Z",
+  "files": [{{
+    "name": "CLASSIC Main.yaml",
+    "schema_version": "2.0",
+    "sha256": "{updated_sha}",
+    "size_bytes": {},
+    "download_url": "https://github.com/owner/repo/releases/download/yaml-data-v2026.07.18/CLASSIC%20Main.yaml"
+  }}]
+}}"#,
+        updated_main.len(),
+    );
+    let _pages_mock = server
+        .mock("GET", "/yaml-data/manifest-latest.json")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(manifest_body)
+        .create_async()
+        .await;
+
+    let client = tokenless_client(&server.url());
+    let config =
+        UpdateCheckConfig::enabled().with_bundled_yaml_dir(installation.path().to_path_buf());
+    let status = check_yaml_data_update_with_env(
+        &client,
+        &pages_url,
+        config,
+        first_party_cache_env(cache_root.path()),
+    )
+    .await
+    .expect("first-party check should inspect installed YAML Data");
+
+    assert!(matches!(status, YamlUpdateStatus::UpToDate { .. }));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn first_party_check_uses_bundled_fallback_digest() {
+    let installation = TempDir::new().expect("installation root should be created");
+    let cache_root = TempDir::new().expect("cache root should be created");
+    write_first_party_bundled_install(installation.path());
+    let bundled_main = first_party_bundled_dir(installation.path()).join("CLASSIC Main.yaml");
+    let bundled_sha = classic_file_io_core::FileHasher::hash_file(&bundled_main)
+        .expect("bundled Main should be hashable");
+
+    let status =
+        check_first_party_main_fixture(installation.path(), cache_root.path(), true, &bundled_sha)
+            .await;
+
+    assert!(matches!(status, YamlUpdateStatus::UpToDate { .. }));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn first_party_check_rejects_incompatible_cache_before_freshness() {
+    let installation = TempDir::new().expect("installation root should be created");
+    let cache_root = TempDir::new().expect("cache root should be created");
+    write_first_party_bundled_install(installation.path());
+    write(
+        &first_party_cache_dir(cache_root.path()).join("CLASSIC Main.yaml"),
+        FIRST_PARTY_MAIN
+            .replace("schema_version: \"2.0\"", "schema_version: \"3.0\"")
+            .as_bytes(),
+    );
+    let bundled_main = first_party_bundled_dir(installation.path()).join("CLASSIC Main.yaml");
+    let bundled_sha = classic_file_io_core::FileHasher::hash_file(&bundled_main)
+        .expect("bundled Main should be hashable");
+
+    let status =
+        check_first_party_main_fixture(installation.path(), cache_root.path(), true, &bundled_sha)
+            .await;
+
+    assert!(matches!(status, YamlUpdateStatus::UpToDate { .. }));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn first_party_check_rejects_semantically_invalid_cache_before_freshness() {
+    let installation = TempDir::new().expect("installation root should be created");
+    let cache_root = TempDir::new().expect("cache root should be created");
+    write_first_party_bundled_install(installation.path());
+    write(
+        &first_party_cache_dir(cache_root.path()).join("CLASSIC Main.yaml"),
+        FIRST_PARTY_MAIN
+            .replace("version_date: \"2026-07-17\"", "version_date: [2026-07-17]")
+            .as_bytes(),
+    );
+    let bundled_main = first_party_bundled_dir(installation.path()).join("CLASSIC Main.yaml");
+    let bundled_sha = classic_file_io_core::FileHasher::hash_file(&bundled_main)
+        .expect("bundled Main should be hashable");
+
+    let status =
+        check_first_party_main_fixture(installation.path(), cache_root.path(), true, &bundled_sha)
+            .await;
+
+    assert!(matches!(status, YamlUpdateStatus::UpToDate { .. }));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn first_party_check_selects_previous_only_when_canonical_is_missing() {
+    let installation = TempDir::new().expect("installation root should be created");
+    let cache_root = TempDir::new().expect("cache root should be created");
+    write_first_party_bundled_install(installation.path());
+    let previous = first_party_cache_dir(cache_root.path()).join("CLASSIC Main.yaml.prev");
+    let previous_main = FIRST_PARTY_MAIN.replace("Bundled autoscan", "Previous autoscan");
+    write(&previous, previous_main.as_bytes());
+    let previous_sha = classic_file_io_core::FileHasher::hash_file(&previous)
+        .expect("previous Main should be hashable");
+
+    let status =
+        check_first_party_main_fixture(installation.path(), cache_root.path(), true, &previous_sha)
+            .await;
+
+    assert!(matches!(status, YamlUpdateStatus::UpToDate { .. }));
+    assert!(
+        previous.exists(),
+        "inspection must leave the previous sibling untouched"
+    );
+    assert!(
+        !first_party_cache_dir(cache_root.path())
+            .join("CLASSIC Main.yaml")
+            .exists(),
+        "update freshness inspection must not promote the previous sibling"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn first_party_check_ignores_previous_when_present_canonical_is_invalid() {
+    let installation = TempDir::new().expect("installation root should be created");
+    let cache_root = TempDir::new().expect("cache root should be created");
+    write_first_party_bundled_install(installation.path());
+    let cache = first_party_cache_dir(cache_root.path());
+    let canonical = cache.join("CLASSIC Main.yaml");
+    let previous = cache.join("CLASSIC Main.yaml.prev");
+    write(&canonical, b"schema_version: [invalid");
+    write(&previous, FIRST_PARTY_MAIN.as_bytes());
+    let bundled_main = first_party_bundled_dir(installation.path()).join("CLASSIC Main.yaml");
+    let bundled_sha = classic_file_io_core::FileHasher::hash_file(&bundled_main)
+        .expect("bundled Main should be hashable");
+
+    let status =
+        check_first_party_main_fixture(installation.path(), cache_root.path(), true, &bundled_sha)
+            .await;
+
+    assert!(matches!(status, YamlUpdateStatus::UpToDate { .. }));
+    assert_eq!(
+        std::fs::read(previous).expect("previous sibling should remain readable"),
+        FIRST_PARTY_MAIN.as_bytes()
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn first_party_check_uses_bundled_data_when_cache_is_unavailable() {
+    let installation = TempDir::new().expect("installation root should be created");
+    let cache_root = TempDir::new().expect("cache root should be created");
+    write_first_party_bundled_install(installation.path());
+    write(
+        &first_party_cache_dir(cache_root.path()).join("CLASSIC Main.yaml"),
+        FIRST_PARTY_MAIN
+            .replace("Bundled autoscan", "Must not be observed")
+            .as_bytes(),
+    );
+    let bundled_main = first_party_bundled_dir(installation.path()).join("CLASSIC Main.yaml");
+    let bundled_sha = classic_file_io_core::FileHasher::hash_file(&bundled_main)
+        .expect("bundled Main should be hashable");
+
+    let status =
+        check_first_party_main_fixture(installation.path(), cache_root.path(), false, &bundled_sha)
+            .await;
+
+    assert!(matches!(status, YamlUpdateStatus::UpToDate { .. }));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn first_party_check_detects_same_schema_content_churn() {
+    let installation = TempDir::new().expect("installation root should be created");
+    let cache_root = TempDir::new().expect("cache root should be created");
+    write_first_party_bundled_install(installation.path());
+    write(
+        &first_party_cache_dir(cache_root.path()).join("CLASSIC Main.yaml"),
+        FIRST_PARTY_MAIN.as_bytes(),
+    );
+    let different_sha = "a".repeat(64);
+
+    let status = check_first_party_main_fixture(
+        installation.path(),
+        cache_root.path(),
+        true,
+        &different_sha,
+    )
+    .await;
+
+    match status {
+        YamlUpdateStatus::UpdateAvailable {
+            compatible_files, ..
+        } => assert_eq!(compatible_files[0].name, "CLASSIC Main.yaml"),
+        other => panic!("same-schema content churn should be actionable, got {other:?}"),
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn first_party_check_never_classifies_local_ignore_as_installable() {
+    let installation = TempDir::new().expect("installation root should be created");
+    let cache_root = TempDir::new().expect("cache root should be created");
+    write_first_party_bundled_install(installation.path());
+    let bundled_main = first_party_bundled_dir(installation.path()).join("CLASSIC Main.yaml");
+    let bundled_sha = classic_file_io_core::FileHasher::hash_file(&bundled_main)
+        .expect("bundled Main should be hashable");
+    let mut server = mockito::Server::new_async().await;
+    let pages_url = format!("{}/yaml-data/manifest-latest.json", server.url());
+    let manifest_body = format!(
+        r#"{{
+  "manifest_version": 1,
+  "release_tag": "yaml-data-v2026.07.18",
+  "published_at": "2026-07-18T12:00:00Z",
+  "files": [
+    {{
+      "name": "CLASSIC Main.yaml",
+      "schema_version": "2.0",
+      "sha256": "{bundled_sha}",
+      "size_bytes": 1,
+      "download_url": "https://github.com/owner/repo/releases/download/yaml-data-v2026.07.18/CLASSIC%20Main.yaml"
+    }},
+    {{
+      "name": "CLASSIC Ignore.yaml",
+      "schema_version": "1.0",
+      "sha256": "{}",
+      "size_bytes": 1,
+      "download_url": "https://github.com/owner/repo/releases/download/yaml-data-v2026.07.18/CLASSIC%20Ignore.yaml"
+    }}
+  ]
+}}"#,
+        "b".repeat(64),
+    );
+    let _pages_mock = server
+        .mock("GET", "/yaml-data/manifest-latest.json")
+        .with_status(200)
+        .with_header("content-type", "application/json")
+        .with_body(manifest_body)
+        .create_async()
+        .await;
+
+    let status = check_yaml_data_update_with_env(
+        &tokenless_client(&server.url()),
+        &pages_url,
+        UpdateCheckConfig::enabled().with_bundled_yaml_dir(installation.path().to_path_buf()),
+        first_party_cache_env(cache_root.path()),
+    )
+    .await
+    .expect("first-party check should reject Local Ignore as unknown");
+
+    match status {
+        YamlUpdateStatus::UpToDate {
+            incompatible_files, ..
+        } => {
+            assert_eq!(incompatible_files.len(), 1);
+            assert_eq!(incompatible_files[0].file.name, "CLASSIC Ignore.yaml");
+        }
+        other => panic!("Local Ignore must not become installable, got {other:?}"),
     }
 }
 
@@ -1836,9 +2225,8 @@ async fn apply_with_decision_rejects_stale_even_when_up_to_date() {
         .await;
 
     let client = tokenless_client(&server.url());
-    // Caller supplies the sha directly via insert_with_sha256 so content
-    // identity matches the manifest entry — this mirrors what
-    // `enrich_installed` would do for a real on-disk file.
+    // Generic callers supply the SHA directly; first-party callers receive the
+    // same exact-byte identity from config-owned Installed YAML Data inspection.
     let mut set = ClientSchemaSet::new();
     set.insert_with_sha256(
         "CLASSIC Main.yaml",
@@ -2139,24 +2527,10 @@ async fn apply_with_decision_rejects_duplicate_approved_names() {
 // check_yaml_update: explicit bundled-YAML override (Node/Python host fix).
 // ---------------------------------------------------------------------------
 
-/// Regression for Codex adversarial review finding (high):
-///   "Bundled-version enrichment is tied to `current_exe()`, so Node/Python
-///    clean installs will false-positive forever."
-///
-/// The contract: when a caller supplies `UpdateCheckConfig::bundled_yaml_dir`
-/// (the Node/Python binding path), `check_yaml_update` MUST resolve the
-/// "what's already installed" bytes from that directory — not from the
-/// current-exe fallback. If the bundled file's sha256 already matches the
-/// manifest entry, the classification is `UpToDate`, not `UpdateAvailable`.
-///
-/// Without this wiring, every clean Node/Python install would reclassify
-/// unchanged manifests as updates, churning `.prev` rotations and forcing
-/// pointless network downloads on every check.
+/// Generic checks classify only the installed metadata supplied by their caller.
+/// Installed-source discovery is reserved for the first-party config inspection seam.
 #[tokio::test(flavor = "multi_thread")]
-async fn check_yaml_update_uses_explicit_bundled_dir_for_clean_install() {
-    // Bundled directory living OUTSIDE any plausible current-exe parent so
-    // the `current_exe()` fallback cannot accidentally find it. The only way
-    // enrichment can see this file is via the explicit override.
+async fn generic_check_does_not_inspect_a_bundled_directory() {
     let bundled_tmp = TempDir::new().unwrap();
     let bundled_path = bundled_tmp.path().join("CLASSIC Main.yaml");
     let bundled_body = b"schema_version: \"1.1\"\nkey: value\n";
@@ -2184,16 +2558,11 @@ async fn check_yaml_update_uses_explicit_bundled_dir_for_clean_install() {
         .create_async()
         .await;
 
-    // Clean install: caller leaves `installed` unset so the orchestrator
-    // MUST resolve it from disk. This is exactly the Node/Python binding
-    // DTO default (`has_installed: false`).
+    // An unset installed identity remains unset even when the retained legacy
+    // layout hint happens to point at matching bytes.
     let mut set = ClientSchemaSet::new();
     set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
 
-    // Schema entry note: the manifest's schema_version is "1.1", so
-    // `classify_manifest` compares against the file's sha256 (freshness),
-    // not the raw schema_version (which would always say "updateAvailable"
-    // against a None installed).
     let client = tokenless_client(&server.url());
     let config =
         UpdateCheckConfig::enabled().with_bundled_yaml_dir(bundled_tmp.path().to_path_buf());
@@ -2203,22 +2572,20 @@ async fn check_yaml_update_uses_explicit_bundled_dir_for_clean_install() {
         .expect("check_yaml_update should succeed against mocked Pages");
 
     match status {
-        YamlUpdateStatus::UpToDate { manifest, .. } => {
-            assert_eq!(manifest.release_tag, "yaml-data-v2026.04.17");
+        YamlUpdateStatus::UpdateAvailable {
+            compatible_files, ..
+        } => {
+            assert_eq!(compatible_files[0].name, "CLASSIC Main.yaml");
         }
         other => panic!(
-            "clean install with bundled bytes matching manifest sha must classify as UpToDate, \
-             got {other:?}"
+            "generic check must not inspect bundled bytes behind caller metadata, got {other:?}"
         ),
     }
 }
 
-/// Companion to the UpToDate test: when the caller supplies a bundled_dir
-/// whose bytes do NOT match the manifest's advertised sha, the outcome must
-/// remain `UpdateAvailable`. This guards against the opposite failure mode
-/// where the override silently short-circuits the real update flow.
+/// A generic caller-provided digest remains the freshness source of truth.
 #[tokio::test(flavor = "multi_thread")]
-async fn check_yaml_update_with_bundled_dir_still_reports_update_when_shas_differ() {
+async fn generic_check_uses_caller_supplied_digest() {
     let bundled_tmp = TempDir::new().unwrap();
     let bundled_path = bundled_tmp.path().join("CLASSIC Main.yaml");
     write(&bundled_path, b"schema_version: \"1.0\"\nold: data\n");
@@ -2250,7 +2617,12 @@ async fn check_yaml_update_with_bundled_dir_still_reports_update_when_shas_diffe
         .await;
 
     let mut set = ClientSchemaSet::new();
-    set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
+    set.insert_with_sha256(
+        "CLASSIC Main.yaml",
+        SchemaCompat::new(1, 0),
+        Some(SchemaVersion::new(1, 0)),
+        Some(bundled_sha),
+    );
 
     let client = tokenless_client(&server.url());
     let config =

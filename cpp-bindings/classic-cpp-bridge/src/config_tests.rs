@@ -38,6 +38,32 @@ fn write_explicit_bridge_fixtures(
     }
 }
 
+/// Write valid bundled Main and game files under one isolated installation root.
+fn write_installed_bridge_fixtures(root: &std::path::Path) {
+    let databases = root.join("CLASSIC Data").join("databases");
+    std::fs::create_dir_all(&databases).expect("create Installed YAML Data fixture directory");
+    std::fs::write(databases.join("CLASSIC Main.yaml"), EXPLICIT_MAIN_YAML)
+        .expect("write installed Main fixture");
+    std::fs::write(databases.join("CLASSIC Fallout4.yaml"), EXPLICIT_GAME_YAML)
+        .expect("write installed game fixture");
+}
+
+/// Invoke inspection with no cache environment so tests cannot read developer state.
+fn inspect_installed_without_cache(
+    installation_root: &std::path::Path,
+    game: ffi::ExplicitYamlDataGameId,
+) -> Box<InstalledYamlDataInspectionOperation> {
+    installed_yaml_data_inspection_operation_from_result(
+        classic_config_core::inspect_installed_yaml_data_with_env(
+            CoreInstalledYamlDataInspectionRequest {
+                installation_root: installation_root.to_path_buf(),
+                game: explicit_game_id_to_core(game),
+            },
+            |_| None,
+        ),
+    )
+}
+
 #[test]
 fn explicit_yaml_data_bridge_returns_typed_snapshot_and_exact_identities() {
     let temp = tempdir().expect("create explicit bridge fixture directory");
@@ -120,6 +146,91 @@ fn explicit_yaml_data_bridge_preserves_typed_unsupported_and_ignore_errors() {
         ffi::ExplicitYamlDataRole::LocalIgnore
     );
     assert!(invalid_status.error.has_path);
+}
+
+#[test]
+fn installed_yaml_data_bridge_projects_bundled_files_and_structured_diagnostics() {
+    let temp = tempdir().expect("create Installed YAML Data bridge fixture directory");
+    write_installed_bridge_fixtures(temp.path());
+
+    let operation =
+        inspect_installed_without_cache(temp.path(), ffi::ExplicitYamlDataGameId::Fallout4VR);
+    let status = installed_yaml_data_inspection_status(&operation);
+    assert!(status.has_inspection);
+    assert!(!status.has_error);
+
+    let inspection =
+        installed_yaml_data_inspection_take(operation).expect("take successful inspection");
+    assert_eq!(
+        installed_yaml_data_inspection_game(&inspection),
+        ffi::ExplicitYamlDataGameId::Fallout4VR
+    );
+    assert_eq!(
+        installed_yaml_data_inspection_game_role(&inspection),
+        ffi::InstalledYamlDataGameRole::Fallout4
+    );
+
+    let main = installed_yaml_data_inspection_main(&inspection);
+    assert_eq!(main.role, ffi::InstalledYamlDataRole::Main);
+    assert_eq!(main.provenance, ffi::InstalledYamlDataProvenance::Bundled);
+    assert_eq!(main.schema_version, "2.0");
+    assert_eq!(main.byte_len, EXPLICIT_MAIN_YAML.len() as u64);
+    assert_eq!(main.sha256.len(), 64);
+
+    let game = installed_yaml_data_inspection_game_file(&inspection);
+    assert_eq!(game.role, ffi::InstalledYamlDataRole::Game);
+    assert_eq!(game.provenance, ffi::InstalledYamlDataProvenance::Bundled);
+    assert_eq!(game.schema_version, "1.0");
+    assert_eq!(game.byte_len, EXPLICIT_GAME_YAML.len() as u64);
+    assert_eq!(game.sha256.len(), 64);
+
+    let diagnostics = installed_yaml_data_inspection_diagnostics(&inspection);
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(
+        diagnostics[0].kind,
+        ffi::InstalledYamlDataDiagnosticKind::CacheUnavailable
+    );
+    assert!(!diagnostics[0].has_role);
+    assert!(!diagnostics[0].has_candidate);
+    assert!(!diagnostics[0].has_path);
+    assert!(!diagnostics[0].message.is_empty());
+}
+
+#[test]
+fn installed_yaml_data_bridge_preserves_typed_inspection_errors() {
+    let unsupported_root = tempdir().expect("create unsupported-game inspection root");
+    let unsupported = inspect_installed_without_cache(
+        unsupported_root.path(),
+        ffi::ExplicitYamlDataGameId::Skyrim,
+    );
+    let unsupported_status = installed_yaml_data_inspection_status(&unsupported);
+    assert!(unsupported_status.has_error);
+    assert_eq!(
+        unsupported_status.error.kind,
+        ffi::InstalledYamlDataInspectionErrorKind::UnsupportedGame
+    );
+    assert!(!unsupported_status.error.has_role);
+    assert!(unsupported_status.error.diagnostics.is_empty());
+
+    let missing_root = tempdir().expect("create missing-source inspection root");
+    let missing =
+        inspect_installed_without_cache(missing_root.path(), ffi::ExplicitYamlDataGameId::Fallout4);
+    let missing_status = installed_yaml_data_inspection_status(&missing);
+    assert!(missing_status.has_error);
+    assert_eq!(
+        missing_status.error.kind,
+        ffi::InstalledYamlDataInspectionErrorKind::NoUsableSource
+    );
+    assert!(missing_status.error.has_role);
+    assert_eq!(missing_status.error.role, ffi::InstalledYamlDataRole::Main);
+    assert!(missing_status.error.diagnostics.iter().any(|diagnostic| {
+        diagnostic.kind == ffi::InstalledYamlDataDiagnosticKind::Missing
+            && diagnostic.has_role
+            && diagnostic.role == ffi::InstalledYamlDataRole::Main
+            && diagnostic.has_candidate
+            && diagnostic.candidate == ffi::InstalledYamlDataProvenance::Bundled
+            && diagnostic.has_path
+    }));
 }
 
 #[test]

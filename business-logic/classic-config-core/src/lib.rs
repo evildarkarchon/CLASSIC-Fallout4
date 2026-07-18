@@ -17,6 +17,7 @@ pub mod crashgen_rules;
 pub mod explicit_yaml_data;
 pub(crate) mod game_data;
 pub mod game_local;
+pub mod installed_yaml_data;
 pub mod shippable;
 pub mod yaml_source;
 pub mod yamldata;
@@ -31,6 +32,12 @@ pub use explicit_yaml_data::{
 };
 
 pub use game_local::persist_game_local_paths;
+pub use installed_yaml_data::{
+    InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind,
+    InstalledYamlDataInspection, InstalledYamlDataInspectionError,
+    InstalledYamlDataInspectionRequest, InstalledYamlDataProvenance, InstalledYamlDataRole,
+    inspect_installed_yaml_data, inspect_installed_yaml_data_with_env,
+};
 pub use shippable::{
     CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile,
     YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir,

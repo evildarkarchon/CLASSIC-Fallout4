@@ -2454,6 +2454,18 @@ export declare function hasUpdate(currentVersion: string, latestVersion: string)
 export declare function importLegacyTuiStateIntoUserSettings(classicRoot: string, legacyStatePath: string): JsLegacyTuiStateImportOutcome
 
 /**
+ * Inspect update-eligible Main and game YAML Data for one CLASSIC installation.
+ *
+ * Inspection reads candidate files without creating the cache, promoting
+ * `.prev`, or reading, creating, or repairing Local Ignore YAML Data.
+ *
+ * @param request - Explicit installation root and typed game identity.
+ * @throws an error with stable `code`, optional `yamlRole`, and structured
+ * `diagnostics` metadata when both required roles cannot be selected.
+ */
+export declare function inspectInstalledYamlData(request: JsInstalledYamlDataInspectionRequest): Promise<JsInstalledYamlDataInspection>
+
+/**
  * Intern a string for memory-efficient deduplication.
  *
  * Returns the interned string (content-identical, but stored in a shared pool).
@@ -3609,6 +3621,102 @@ export interface JsIniCheckResult {
   issue?: string
   /** Whether this result indicates a problem. */
   hasIssue: boolean
+}
+
+/** Selected facts for one update-eligible Installed YAML Data file. */
+export interface JsInspectedYamlDataFile {
+  /** Whether this is Main or selected-game YAML Data. */
+  role: JsInstalledYamlDataRole
+  /** Candidate that supplied the selected exact bytes. */
+  provenance: JsInstalledYamlDataProvenance
+  /** Breaking-change component of the selected schema version. */
+  schemaMajor: number
+  /** Additive-change component of the selected schema version. */
+  schemaMinor: number
+  /** Lowercase hexadecimal SHA-256 digest of the selected exact bytes. */
+  sha256: string
+  /** Length of the selected exact bytes. */
+  byteLength: number
+}
+
+/** Structured attribution for one cache-resolution or candidate-rejection event. */
+export interface JsInstalledYamlDataDiagnostic {
+  /** Affected file role, absent for installation-wide diagnostics. */
+  role?: JsInstalledYamlDataRole
+  /** Rejected candidate provenance, absent when no candidate was resolved. */
+  candidate?: JsInstalledYamlDataProvenance
+  /** Candidate path when the diagnostic is path-attributable. */
+  path?: string
+  /** Stable machine-readable diagnostic category. */
+  kind: JsInstalledYamlDataDiagnosticKind
+  /** Actionable human-readable explanation. */
+  message: string
+}
+
+/** Stable category for an Installed YAML Data diagnostic. */
+export declare const enum JsInstalledYamlDataDiagnosticKind {
+  /** The per-user update cache could not be resolved. */
+  CacheUnavailable = 'CacheUnavailable',
+  /** A required final fallback candidate was absent. */
+  Missing = 'Missing',
+  /** A present candidate could not be read. */
+  Read = 'Read',
+  /** Candidate bytes were not valid UTF-8. */
+  InvalidUtf8 = 'InvalidUtf8',
+  /** Candidate text was not valid YAML Data. */
+  Parse = 'Parse',
+  /** A candidate omitted or malformed its schema version. */
+  InvalidSchema = 'InvalidSchema',
+  /** A candidate schema was outside the client-owned compatibility range. */
+  IncompatibleSchema = 'IncompatibleSchema',
+  /** A candidate failed role-specific semantic validation. */
+  InvalidRoleData = 'InvalidRoleData'
+}
+
+/** Registered game-data role selected for Installed YAML Data. */
+export declare const enum JsInstalledYamlDataGameRole {
+  /** Shared Fallout 4 data used for flat-screen and VR identities. */
+  Fallout4 = 'Fallout4'
+}
+
+/** Selected Main/game Installed YAML Data facts and fallback diagnostics. */
+export interface JsInstalledYamlDataInspection {
+  /** Typed game identity requested by the caller. */
+  game: JsGameId
+  /** Registered data role used for the selected game file. */
+  gameDataRole: JsInstalledYamlDataGameRole
+  /** Independently selected Main YAML Data facts. */
+  main: JsInspectedYamlDataFile
+  /** Independently selected game YAML Data facts. */
+  gameFile: JsInspectedYamlDataFile
+  /** Structured fallback and cache-resolution diagnostics. */
+  diagnostics: Array<JsInstalledYamlDataDiagnostic>
+}
+
+/** One installation root and typed game identity to inspect. */
+export interface JsInstalledYamlDataInspectionRequest {
+  /** CLASSIC installation root containing `CLASSIC Data/databases`. */
+  installationRoot: string
+  /** Typed game identity used to select the registered game data role. */
+  game: JsGameId
+}
+
+/** Candidate that supplied one selected Installed YAML Data file. */
+export declare const enum JsInstalledYamlDataProvenance {
+  /** Canonical per-user updated candidate. */
+  Updated = 'Updated',
+  /** Previous updated sibling selected because the canonical file was absent. */
+  Previous = 'Previous',
+  /** Install-tree bundled candidate. */
+  Bundled = 'Bundled'
+}
+
+/** Update-eligible Installed YAML Data role. */
+export declare const enum JsInstalledYamlDataRole {
+  /** Global Main YAML Data. */
+  Main = 'Main',
+  /** Selected-game YAML Data. */
+  Game = 'Game'
 }
 
 /** Result of an integrity check. */

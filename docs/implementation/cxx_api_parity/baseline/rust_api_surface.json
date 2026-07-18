@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-18T04:37:39Z",
+  "generated_at_utc": "2026-07-18T07:19:11Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -52,6 +52,72 @@
         "Main",
         "Game",
         "LocalIgnore"
+      ]
+    },
+    {
+      "id": "75942fa5f3d0fe80",
+      "rustSymbol": "InstalledYamlDataDiagnosticKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "CacheUnavailable",
+        "Missing",
+        "Read",
+        "InvalidUtf8",
+        "Parse",
+        "InvalidSchema",
+        "IncompatibleSchema",
+        "InvalidRoleData"
+      ]
+    },
+    {
+      "id": "c010e0abe2580ab2",
+      "rustSymbol": "InstalledYamlDataGameRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Fallout4"
+      ]
+    },
+    {
+      "id": "8c213f5606888cd0",
+      "rustSymbol": "InstalledYamlDataInspectionErrorKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "UnsupportedGame",
+        "NoUsableSource"
+      ]
+    },
+    {
+      "id": "d956269b815428f0",
+      "rustSymbol": "InstalledYamlDataProvenance",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Updated",
+        "Previous",
+        "Bundled"
+      ]
+    },
+    {
+      "id": "97103d837ce461be",
+      "rustSymbol": "InstalledYamlDataRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Main",
+        "Game"
       ]
     },
     {
@@ -227,6 +293,146 @@
           }
         ],
         "returnType": "Box<YamlData>"
+      }
+    },
+    {
+      "id": "f214164a9d4eb6f0",
+      "rustSymbol": "installed_yaml_data_inspect",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "installation_root",
+            "type": "&str"
+          },
+          {
+            "name": "game",
+            "type": "ExplicitYamlDataGameId"
+          }
+        ],
+        "returnType": "Box<InstalledYamlDataInspectionOperation>"
+      }
+    },
+    {
+      "id": "a089a390b0513c86",
+      "rustSymbol": "installed_yaml_data_inspection_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "inspection",
+            "type": "&InstalledYamlDataInspection"
+          }
+        ],
+        "returnType": "Vec<InstalledYamlDataDiagnosticDto>"
+      }
+    },
+    {
+      "id": "79c00541e9c6b7c5",
+      "rustSymbol": "installed_yaml_data_inspection_game",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "inspection",
+            "type": "&InstalledYamlDataInspection"
+          }
+        ],
+        "returnType": "ExplicitYamlDataGameId"
+      }
+    },
+    {
+      "id": "4d5d79853dc4d389",
+      "rustSymbol": "installed_yaml_data_inspection_game_file",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "inspection",
+            "type": "&InstalledYamlDataInspection"
+          }
+        ],
+        "returnType": "InspectedYamlDataFileDto"
+      }
+    },
+    {
+      "id": "be75f7174e6e40c9",
+      "rustSymbol": "installed_yaml_data_inspection_game_role",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "inspection",
+            "type": "&InstalledYamlDataInspection"
+          }
+        ],
+        "returnType": "InstalledYamlDataGameRole"
+      }
+    },
+    {
+      "id": "c2fdc4d665765109",
+      "rustSymbol": "installed_yaml_data_inspection_main",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "inspection",
+            "type": "&InstalledYamlDataInspection"
+          }
+        ],
+        "returnType": "InspectedYamlDataFileDto"
+      }
+    },
+    {
+      "id": "9e812b792616c2f5",
+      "rustSymbol": "installed_yaml_data_inspection_status",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "operation",
+            "type": "&InstalledYamlDataInspectionOperation"
+          }
+        ],
+        "returnType": "InstalledYamlDataInspectionStatusDto"
+      }
+    },
+    {
+      "id": "2bb4e9453411c734",
+      "rustSymbol": "installed_yaml_data_inspection_take",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "operation",
+            "type": "Box<InstalledYamlDataInspectionOperation>"
+          }
+        ],
+        "returnType": "Result<Box<InstalledYamlDataInspection>>"
       }
     },
     {
@@ -1049,6 +1255,22 @@
       "blockOrigin": "Rust"
     },
     {
+      "id": "b6007d4cc8315383",
+      "rustSymbol": "InstalledYamlDataInspection",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust"
+    },
+    {
+      "id": "16e2ba0287122f6f",
+      "rustSymbol": "InstalledYamlDataInspectionOperation",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust"
+    },
+    {
       "id": "9719f25c94df3c38",
       "rustSymbol": "YamlData",
       "kind": "opaque",
@@ -1161,6 +1383,130 @@
         {
           "name": "ignore_path",
           "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "7e6aeec3be30900e",
+      "rustSymbol": "InspectedYamlDataFileDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "role",
+          "type": "InstalledYamlDataRole"
+        },
+        {
+          "name": "provenance",
+          "type": "InstalledYamlDataProvenance"
+        },
+        {
+          "name": "schema_version",
+          "type": "String"
+        },
+        {
+          "name": "sha256",
+          "type": "String"
+        },
+        {
+          "name": "byte_len",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "id": "4f20ef33a68d7bff",
+      "rustSymbol": "InstalledYamlDataDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_role",
+          "type": "bool"
+        },
+        {
+          "name": "role",
+          "type": "InstalledYamlDataRole"
+        },
+        {
+          "name": "has_candidate",
+          "type": "bool"
+        },
+        {
+          "name": "candidate",
+          "type": "InstalledYamlDataProvenance"
+        },
+        {
+          "name": "has_path",
+          "type": "bool"
+        },
+        {
+          "name": "path",
+          "type": "String"
+        },
+        {
+          "name": "kind",
+          "type": "InstalledYamlDataDiagnosticKind"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "31053421dd71dae8",
+      "rustSymbol": "InstalledYamlDataInspectionErrorDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "kind",
+          "type": "InstalledYamlDataInspectionErrorKind"
+        },
+        {
+          "name": "has_role",
+          "type": "bool"
+        },
+        {
+          "name": "role",
+          "type": "InstalledYamlDataRole"
+        },
+        {
+          "name": "diagnostics",
+          "type": "Vec<InstalledYamlDataDiagnosticDto>"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "965e0b54154c8e65",
+      "rustSymbol": "InstalledYamlDataInspectionStatusDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_inspection",
+          "type": "bool"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "InstalledYamlDataInspectionErrorDto"
         }
       ]
     },

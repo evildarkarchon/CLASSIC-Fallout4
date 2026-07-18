@@ -76,11 +76,23 @@ Typed, mutation-free loading for caller-selected Main, game, and Local Ignore YA
 - `ExplicitYamlDataLoadError` - typed unsupported-game, read, decoding, parse, and role-validation failures
 - `load_explicit_yaml_data()` - async entry point for the deterministic explicit-file operation
 
+### `installed_yaml_data`
+
+Config-owned, side-effect-limited selection of update-eligible Installed YAML Data.
+
+- `InstalledYamlDataInspectionRequest` - one installation root plus typed game identity
+- `InstalledYamlDataInspection` / `InspectedYamlDataFile` - independently selected Main/game provenance, schema, and exact-byte identity
+- `InstalledYamlDataDiagnostic` / `InstalledYamlDataDiagnosticKind` - structured cache and rejected-candidate attribution
+- `InstalledYamlDataInspectionError` - typed unsupported-game or no-usable-source terminal failure
+- `inspect_installed_yaml_data()` - production inspection entry point used by first-party update freshness
+- `inspect_installed_yaml_data_with_env()` - deterministic Rust tooling seam for cache-environment injection
+
 ### Re-exports from `lib.rs`
 
 - `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core)
 - `clear_global_yaml_cache` from [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: that owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
 - crashgen rule-model and Crashgen Expectation Parser types/functions from `crashgen_rules` and `crashgen_expectation_parser`
+- Installed YAML Data request/result/provenance/diagnostic/error types and inspection functions from `installed_yaml_data`
 
 `clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers.
 
@@ -187,6 +199,16 @@ A missing or rejected explicit file is returned as a typed failure for that exac
 | `InvalidRoleData { role, path, reason }` | parsed YAML fails schema compatibility or semantic role validation |
 
 `ExplicitYamlDataRole::{Main, Game, LocalIgnore}` keeps file-specific failures attributable without parsing messages. `reason` and `message` are human-readable diagnostic details; callers should branch on the typed variant and role.
+
+## Installed YAML Data Inspection
+
+`inspect_installed_yaml_data(InstalledYamlDataInspectionRequest { installation_root, game })` is the side-effect-limited Installed YAML Data seam used by the first-party update channel. It inspects only update-eligible Main and selected-game YAML Data; it never reads, creates, repairs, or validates Local Ignore YAML Data.
+
+Main and game select independently. For each role, config core tries the canonical per-user updated candidate first. A `.prev` sibling participates only when the canonical path is absent, and inspection reads it without promotion. A present canonical candidate that fails UTF-8, parsing, config-owned schema compatibility, or strict role validation is preserved, reported as a structured diagnostic, and followed by bundled fallback; it never causes `.prev` selection. If no usable candidate remains, `InstalledYamlDataInspectionError::NoUsableSource` identifies the failed role and retains the diagnostics. `UnsupportedGame` is returned before path or cache resolution; Fallout 4 VR maps to the shared Fallout 4 role.
+
+Each `InspectedYamlDataFile` exposes its `InstalledYamlDataRole`, `InstalledYamlDataProvenance::{Updated, Previous, Bundled}`, compatible `SchemaVersion`, and `YamlDataContentIdentity`. Candidate bytes are read once, then UTF-8 decoding, YAML parsing, semantic validation, schema extraction, SHA-256, and byte length all use that same owned buffer. `InstalledYamlDataDiagnostic` supplies optional role/candidate/path attribution, a typed `InstalledYamlDataDiagnosticKind`, and an actionable message. Cache-root resolution failure is a structured `CacheUnavailable` diagnostic and leaves bundled data eligible.
+
+`inspect_installed_yaml_data_with_env` is the deterministic Rust test/tooling form. Its environment callback controls cache-root resolution without process-environment mutation; bundled paths still derive only from the explicit installation root.
 
 ## `YamlDataCore`
 

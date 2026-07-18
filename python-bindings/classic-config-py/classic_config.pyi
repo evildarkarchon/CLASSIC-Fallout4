@@ -22,7 +22,7 @@ Usage:
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 __version__: str
 
@@ -417,6 +417,84 @@ def load_explicit_yaml_data(
     selected_game_version: str,
 ) -> ExplicitYamlDataSnapshot:
     """Load only the exact supplied files without cache or mutation policy."""
+
+class InstalledYamlDataDiagnostic:
+    """One structured cache-resolution or candidate-rejection diagnostic."""
+
+    @property
+    def role(self) -> Literal["main", "game"] | None: ...
+    @property
+    def candidate(self) -> Literal["updated", "previous", "bundled"] | None: ...
+    @property
+    def path(self) -> Path | None: ...
+    @property
+    def kind(self) -> Literal[
+        "cache_unavailable",
+        "missing",
+        "read",
+        "invalid_utf8",
+        "parse",
+        "invalid_schema",
+        "incompatible_schema",
+        "invalid_role_data",
+    ]: ...
+    @property
+    def message(self) -> str: ...
+
+class InspectedYamlDataFile:
+    """Selected facts for one update-eligible Main or game file."""
+
+    @property
+    def role(self) -> Literal["main", "game"]: ...
+    @property
+    def provenance(self) -> Literal["updated", "previous", "bundled"]: ...
+    @property
+    def schema_major(self) -> int: ...
+    @property
+    def schema_minor(self) -> int: ...
+    @property
+    def sha256(self) -> str: ...
+    @property
+    def byte_length(self) -> int: ...
+
+class InstalledYamlDataInspection:
+    """Immutable selected Main/game facts and retained fallback diagnostics."""
+
+    @property
+    def game(self) -> ExplicitYamlDataGame: ...
+    @property
+    def game_data_role(self) -> Literal["Fallout4"]: ...
+    @property
+    def main(self) -> InspectedYamlDataFile: ...
+    @property
+    def game_file(self) -> InspectedYamlDataFile: ...
+    @property
+    def diagnostics(self) -> list[InstalledYamlDataDiagnostic]: ...
+
+class InstalledYamlDataInspectionError(Exception):
+    """Base class for Installed YAML Data inspection failures."""
+
+    code: str
+    yaml_role: str | None
+    diagnostics: list[InstalledYamlDataDiagnostic]
+
+class InstalledYamlDataUnsupportedGameError(InstalledYamlDataInspectionError): ...
+class InstalledYamlDataNoUsableSourceError(InstalledYamlDataInspectionError): ...
+
+def inspect_installed_yaml_data(
+    installation_root: str | Path,
+    game: ExplicitYamlDataGame,
+) -> InstalledYamlDataInspection:
+    """Inspect installed Main/game data without reading or modifying Local Ignore.
+
+    Returns independently selected Main/game metadata plus non-terminal diagnostics.
+
+    Raises:
+        InstalledYamlDataUnsupportedGameError: The typed game has no registered data role.
+        InstalledYamlDataNoUsableSourceError: Updated and bundled candidates were
+            exhausted for either required role. Its ``diagnostics`` attribute retains
+            the structured rejection trail.
+    """
 
 def create_yamldata(
     yaml_dirs: Sequence[str | Path], game: str, game_version: str

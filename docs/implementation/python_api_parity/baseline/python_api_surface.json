@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-18T04:37:43.454945+00:00",
+  "generated_at_utc": "2026-07-18T07:19:11.311749+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -255,6 +255,66 @@
     },
     {
       "module": "classic_config",
+      "export": "InspectedYamlDataFile",
+      "export_path": "InspectedYamlDataFile",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InspectedYamlDataFile:"
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataDiagnostic",
+      "export_path": "InstalledYamlDataDiagnostic",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataDiagnostic:"
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataInspection",
+      "export_path": "InstalledYamlDataInspection",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataInspection:"
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataInspectionError",
+      "export_path": "InstalledYamlDataInspectionError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataInspectionError(Exception):"
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataNoUsableSourceError",
+      "export_path": "InstalledYamlDataNoUsableSourceError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataNoUsableSourceError(InstalledYamlDataInspectionError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataUnsupportedGameError",
+      "export_path": "InstalledYamlDataUnsupportedGameError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataUnsupportedGameError(InstalledYamlDataInspectionError): ..."
+    },
+    {
+      "module": "classic_config",
       "export": "YamlData",
       "export_path": "YamlData",
       "kind": "class",
@@ -435,6 +495,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def get_application_dir() -> str | None:"
+    },
+    {
+      "module": "classic_config",
+      "export": "inspect_installed_yaml_data",
+      "export_path": "inspect_installed_yaml_data",
+      "kind": "function",
+      "arity": 2,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def inspect_installed_yaml_data( installation_root: str | Path, game: ExplicitYamlDataGame, ) -> InstalledYamlDataInspection:"
     },
     {
       "module": "classic_config",

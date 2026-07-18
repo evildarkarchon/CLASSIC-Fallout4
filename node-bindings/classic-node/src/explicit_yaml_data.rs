@@ -118,7 +118,7 @@ pub struct ExplicitYamlDataLoadTask {
 /// Core result retained until JavaScript-thread resolution.
 pub enum ExplicitYamlDataTaskOutput {
     /// Successfully loaded immutable snapshot.
-    Success(CoreExplicitYamlDataSnapshot),
+    Success(Box<CoreExplicitYamlDataSnapshot>),
     /// Typed core failure awaiting JavaScript error projection.
     Failure(ExplicitYamlDataLoadError),
 }
@@ -136,7 +136,7 @@ impl Task for ExplicitYamlDataLoadTask {
         Ok(
             match classic_shared_core::get_runtime().block_on(core_load_explicit_yaml_data(request))
             {
-                Ok(snapshot) => ExplicitYamlDataTaskOutput::Success(snapshot),
+                Ok(snapshot) => ExplicitYamlDataTaskOutput::Success(Box::new(snapshot)),
                 Err(error) => ExplicitYamlDataTaskOutput::Failure(error),
             },
         )
@@ -145,7 +145,9 @@ impl Task for ExplicitYamlDataLoadTask {
     /// Resolves a snapshot or rejects with stable typed error metadata.
     fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
         match output {
-            ExplicitYamlDataTaskOutput::Success(inner) => Ok(ExplicitYamlDataSnapshot { inner }),
+            ExplicitYamlDataTaskOutput::Success(inner) => {
+                Ok(ExplicitYamlDataSnapshot { inner: *inner })
+            }
             ExplicitYamlDataTaskOutput::Failure(error) => {
                 Err(explicit_yaml_data_error_to_napi(env, error))
             }
@@ -185,8 +187,7 @@ fn explicit_yaml_data_error_to_napi(env: Env, error: ExplicitYamlDataLoadError) 
         }
     };
     let message = error.to_string();
-    let raw_error =
-        JsError::from(napi::Error::new(code.to_string(), message.clone())).into_unknown(env);
+    let raw_error = JsError::from(napi::Error::new(code, message.clone())).into_unknown(env);
     let Ok(mut object) = raw_error.coerce_to_object() else {
         return base_explicit_yaml_data_error(env, code, message);
     };
@@ -211,5 +212,5 @@ fn explicit_yaml_data_error_to_napi(env: Env, error: ExplicitYamlDataLoadError) 
 }
 
 fn base_explicit_yaml_data_error(env: Env, code: &str, message: String) -> napi::Error {
-    napi::Error::from(JsError::from(napi::Error::new(code.to_string(), message)).into_unknown(env))
+    napi::Error::from(JsError::from(napi::Error::new(code, message)).into_unknown(env))
 }

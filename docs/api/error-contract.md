@@ -131,6 +131,20 @@ All three surfaces delegate role selection, validation, and error classification
 
 ---
 
+## Installed YAML Data inspection errors (`unified-installed-yaml-data-inspection`)
+
+`classic_config_core::inspect_installed_yaml_data` returns `UnsupportedGame` before filesystem inspection or `NoUsableSource { role, diagnostics }` after exhausting the allowed candidates for a required role. Non-terminal candidate failures remain structured diagnostics with optional role, provenance, and path plus a typed stable kind. Rust/CXX use enum variants such as `InvalidRoleData`, Node string enums serialize those same PascalCase variant names, and Python projects stable snake-case tokens such as `invalid_role_data`.
+
+| Binding | Failure shape |
+| --- | --- |
+| C++ (CXX) | `installed_yaml_data_inspection_status()` returns `InstalledYamlDataInspectionErrorDto` with a typed error kind, optional failed role, message, and diagnostic DTOs. Expected selection failures are consumed through status/take rather than flattened into `rust::Error`. |
+| Node (NAPI-RS) | `inspectInstalledYamlData(...)` rejects with an `Error` whose `code` is `unsupported_game` or `no_usable_source`; the latter also carries `yamlRole` and structured `diagnostics`. |
+| Python (PyO3) | `classic_config.inspect_installed_yaml_data(...)` raises `InstalledYamlDataUnsupportedGameError` or `InstalledYamlDataNoUsableSourceError` under `InstalledYamlDataInspectionError`. Instances expose `code`, optional `yaml_role`, and structured `diagnostics`. |
+
+Rejected candidates are diagnostic evidence only: adapters do not promote, repair, rewrite, or remove them.
+
+---
+
 ## `CLASSIC Main.yaml` version-reader errors (`schema-gated startup read`)
 
 The schema-gated `CLASSIC_Info.version` reader (`classic_config_core::load_main_yaml_version`) is the native-frontend startup path that replaced the raw `yaml_ops` read in `classic-gui/src/main.cpp`. Its typed core error (`MainYamlVersionError`) projects onto each binding according to the per-language idiom below. Same-family, different-shape-per-binding, just like the notification channel.

@@ -73,6 +73,14 @@ Tooling callers use the separate typed explicit-file flow:
 
 Fallout 4 VR selects the shared Fallout 4 data role. The explicit flow never consults installed cache or bundled candidates and never generates, repairs, backs up, or falls back from a selected file. The existing positional runtime loader is not the contract for this tooling operation.
 
+First-party update tooling uses the separate Installed YAML Data inspection flow:
+
+1. `installed_yaml_data_inspect(installation_root, ExplicitYamlDataGameId)` starts config-owned independent selection for Main and the registered game file, reusing the bridge's shared typed YAML Data game identity.
+2. `installed_yaml_data_inspection_status(...)` returns ready state or `InstalledYamlDataInspectionErrorDto`, preserving typed unsupported-game / no-usable-source failures, the failed role, and structured candidate diagnostics.
+3. `installed_yaml_data_inspection_take(...)` consumes a ready operation; the inspection getters return requested game, shared game-data role, each selected file's provenance/schema/exact SHA-256 and byte length, and all non-terminal fallback diagnostics.
+
+Inspection is read-only: it does not create the update cache, promote a `.prev` sibling, mutate a rejected candidate, or read or modify Local Ignore YAML Data.
+
 The namespace also exposes selected cache controls and generic config helpers.
 These are data-access APIs; they are not partial Crash Log Scan Run entry
 points.
@@ -157,7 +165,7 @@ Native CLI and GUI callers use the first-party YAML Data operations:
 - `yaml_data_rollback_update()`
 
 Rust owns the Pages URL, `yaml-data-v*` channel, shippable-file inventory,
-schema compatibility, installed-file enrichment, and rollback targets. The
+schema compatibility, config-inspected installed identity, and rollback targets. The
 bridge passes the accepted update policy and reviewed update identity through
 typed DTOs. Lower-level `yaml_check_update`, `yaml_apply_update`, and
 `yaml_rollback_update` operations remain for tests and unusual hosts that

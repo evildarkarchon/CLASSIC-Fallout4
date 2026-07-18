@@ -62,7 +62,7 @@ pub struct YamlDataContentIdentity {
 }
 
 impl YamlDataContentIdentity {
-    fn from_bytes(bytes: &[u8]) -> Self {
+    pub(crate) fn from_bytes(bytes: &[u8]) -> Self {
         Self {
             sha256: Sha256::digest(bytes).into(),
             byte_len: bytes.len() as u64,
@@ -329,13 +329,15 @@ async fn read_role_file(
         })
 }
 
-fn game_data_role(game: GameId) -> Result<GameDataRole, ExplicitYamlDataLoadError> {
+pub(crate) const fn registered_game_data_role(game: GameId) -> Option<GameDataRole> {
     match game {
-        GameId::Fallout4 | GameId::Fallout4VR => Ok(GameDataRole::Fallout4),
-        GameId::Skyrim | GameId::Starfield => {
-            Err(ExplicitYamlDataLoadError::UnsupportedGame { game })
-        }
+        GameId::Fallout4 | GameId::Fallout4VR => Some(GameDataRole::Fallout4),
+        GameId::Skyrim | GameId::Starfield => None,
     }
+}
+
+fn game_data_role(game: GameId) -> Result<GameDataRole, ExplicitYamlDataLoadError> {
+    registered_game_data_role(game).ok_or(ExplicitYamlDataLoadError::UnsupportedGame { game })
 }
 
 const fn game_data_key(role: GameDataRole) -> &'static str {
@@ -410,7 +412,7 @@ fn required_non_empty_string(
     }
 }
 
-fn validate_main(yaml: &Yaml, path: &Path) -> Result<(), ExplicitYamlDataLoadError> {
+pub(crate) fn validate_main(yaml: &Yaml, path: &Path) -> Result<(), ExplicitYamlDataLoadError> {
     let info = required_mapping(yaml, "CLASSIC_Info", ExplicitYamlDataRole::Main, path)?;
     required_non_empty_string(
         info,
@@ -462,7 +464,7 @@ fn validate_main(yaml: &Yaml, path: &Path) -> Result<(), ExplicitYamlDataLoadErr
     Ok(())
 }
 
-fn validate_game(yaml: &Yaml, path: &Path) -> Result<(), ExplicitYamlDataLoadError> {
+pub(crate) fn validate_game(yaml: &Yaml, path: &Path) -> Result<(), ExplicitYamlDataLoadError> {
     let info = required_mapping(yaml, "Game_Info", ExplicitYamlDataRole::Game, path)?;
     required_non_empty_string(
         info,
