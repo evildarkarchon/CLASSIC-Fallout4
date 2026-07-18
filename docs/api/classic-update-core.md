@@ -111,7 +111,7 @@ Lower-level compatibility helpers remain public for tests, unusual hosts, and No
 Contributor note:
 
 - the first-party helpers derive the Pages URL from `GithubClient`; `classic-config-core` inspection supplies the selected Main/game schema versions and exact-byte SHA-256 identities under config-owned compatibility, semantic-validation, fallback, and `.prev` policy
-- generic `check_yaml_update` does not inspect cache or bundled paths; its caller-provided `ClientSchemaSet` is the complete installed-state input
+- generic `check_yaml_update` preserves caller-provided installed metadata and enriches only entries with both version and digest absent, using compatible cache bytes first and the configured/native bundled directory second
 - Local Ignore remains reserved user-owned state even on generic seams: classification, installation, and direct rollback refuse `CLASSIC Ignore.yaml` case-insensitively
 - native C++ callers should use the first-party CXX helpers backed by these Rust functions; do not duplicate the Pages URL, `yaml-data-v*` tag prefix, shippable file list, or schema ranges in CLI/GUI code
 

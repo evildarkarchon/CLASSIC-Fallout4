@@ -5001,8 +5001,9 @@ export interface JsYamlClientSchemaEntry {
   acceptedMinimumMinor: number
   /**
    * When `true`, `installedMajor` / `installedMinor` are treated as the
-   * currently-installed schema version. When `false`, the client treats
-   * every compatible manifest entry as "newer".
+   * currently-installed schema version. When `false`, the generic updater
+   * attempts cache/bundled fallback discovery before treating a compatible
+   * manifest entry as newer.
    */
   hasInstalled: boolean
   /** MAJOR currently installed (ignored when `hasInstalled` is false). */

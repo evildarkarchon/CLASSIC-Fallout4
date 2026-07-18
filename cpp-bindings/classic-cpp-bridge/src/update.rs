@@ -523,8 +523,8 @@ mod ffi {
     /// [`yaml_apply_update`]. Callers build one per shippable file family.
     ///
     /// When `has_installed` is `false`, `installed_major` / `installed_minor`
-    /// are ignored and the orchestrator treats every compatible manifest
-    /// entry as "newer".
+    /// are ignored and the generic updater attempts cache/bundled fallback
+    /// discovery before treating a compatible manifest entry as newer.
     struct YamlClientSchemaEntryDto {
         name: String,
         accepted_major: u32,

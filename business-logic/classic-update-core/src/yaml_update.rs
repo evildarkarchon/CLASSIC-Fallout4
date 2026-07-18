@@ -59,9 +59,13 @@ use classic_config_core::{
 };
 use classic_file_io_core::{FileIOError, RollbackOutcome as FsRollbackOutcome, install_atomic};
 use classic_path_core::{ensure_yaml_cache_dir, ensure_yaml_cache_dir_with_env};
-use classic_settings_core::{Compatibility, SchemaCompat, SchemaVersion, schema_compat_check};
+use classic_settings_core::{
+    Compatibility, SchemaCompat, SchemaVersion, extract_schema_version, parse_yaml_content,
+    schema_compat_check,
+};
 use classic_shared_core::GameId;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio::io::AsyncWriteExt;
@@ -78,6 +82,9 @@ const LOCAL_IGNORE_YAML_FILE_NAME: &str = "CLASSIC Ignore.yaml";
 
 /// Release tag prefix owned by the first-party YAML Data Update Channel.
 const YAML_DATA_TAG_PREFIX: &str = "yaml-data-v";
+
+/// Bundled shippable-YAML location relative to a native CLASSIC executable.
+const BUNDLED_YAML_DIR: &str = "CLASSIC Data/databases";
 
 // Pages-cache constants live in [`crate::manifest_fetch`] now that two
 // channels (yaml-data and app-notification) both fetch through the shared
@@ -168,11 +175,12 @@ pub struct YamlManifest {
 ///   production callers; any [`SchemaCompat`] works in tests).
 /// - `installed` optionally names the [`SchemaVersion`] currently on disk in
 ///   the per-user cache; callers pass `None` when there is no cache entry
-///   yet, and [`check_yaml_update`] treats that as "update available" for
-///   every compatible manifest entry.
+///   yet. Generic checks then try the compatible cache/bundled fallback named
+///   by [`UpdateCheckConfig`] before treating the entry as not installed.
 /// - `installed_sha256` is the hex-encoded SHA-256 of the currently-installed
 ///   file bytes. First-party callers populate it from config inspection;
-///   generic callers supply it directly when content freshness matters.
+///   generic callers can supply it directly or let fallback enrichment hash
+///   the selected on-disk source when both installed fields are absent.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ClientSchemaEntry {
     /// Compatibility range the client advertises for this file family.
@@ -1063,10 +1071,12 @@ pub async fn download_release_asset(
 
 /// User-visible configuration for the update subsystem.
 ///
-/// Carries the `Update Check` toggle from `CLASSIC Settings.yaml` and the
-/// optional installation layout used by first-party YAML Data checks. Generic
-/// manifest checks classify only the installed metadata supplied in their
-/// [`ClientSchemaSet`] and do not inspect either layout field.
+/// Carries the `Update Check` toggle from `CLASSIC Settings.yaml` and an
+/// optional installation layout hint. First-party YAML Data checks accept
+/// either the CLASSIC installation root or its `CLASSIC Data/databases`
+/// directory. Generic compatibility checks interpret the explicit path as the
+/// directory containing bundled YAML files and use it to enrich entries whose
+/// installed version and digest are both absent.
 ///
 /// No longer `Copy`: `PathBuf` does not implement `Copy`, and the single
 /// current `check_yaml_update` call inside
@@ -1077,12 +1087,12 @@ pub struct UpdateCheckConfig {
     /// When `false`, [`check_yaml_update`] short-circuits with
     /// [`YamlUpdateStatus::Disabled`] without any HTTP call.
     pub enabled: bool,
-    /// First-party layout hint naming either the CLASSIC installation root or
-    /// its `CLASSIC Data/databases` directory.
+    /// Installation layout hint used to locate bundled YAML files.
     ///
-    /// The established binding-facing field is retained so every supported
-    /// adapter can supply non-native host layout without another Rust-only
-    /// configuration surface. Generic checks ignore this field.
+    /// First-party helpers accept the installation root or its canonical
+    /// `CLASSIC Data/databases` child. Generic helpers preserve the legacy
+    /// binding contract and expect this path to name the bundled directory
+    /// itself; when omitted, they probe that child beside `current_exe()`.
     pub bundled_yaml_dir: Option<PathBuf>,
 }
 
@@ -1103,7 +1113,7 @@ impl UpdateCheckConfig {
         }
     }
 
-    /// Builder-style setter for the explicit first-party layout hint. Pattern:
+    /// Builder-style setter for the explicit installation layout hint. Pattern:
     ///
     /// ```rust,ignore
     /// UpdateCheckConfig::enabled()
@@ -1143,7 +1153,8 @@ fn yaml_data_rollback_targets() -> Vec<String> {
 /// Builds the schema set for the first-party YAML Data Update Channel.
 ///
 /// Installed versions and exact-byte digests come exclusively from the
-/// config-owned inspection result; the generic updater does not inspect disk.
+/// config-owned inspection result, so the generic fallback enrichment has no
+/// missing metadata to resolve when this set reaches the shared classifier.
 fn yaml_data_client_schema_set(inspection: &InstalledYamlDataInspection) -> ClientSchemaSet {
     let mut set = ClientSchemaSet::new();
     set.insert_with_sha256(
@@ -1321,13 +1332,22 @@ pub async fn check_yaml_update(
         return Ok(YamlUpdateStatus::Disabled);
     }
     let cache_dir = prepare_yaml_cache_dir(ensure_yaml_cache_dir());
-    check_yaml_update_with_cache_dir(client, pages_url, tag_prefix, current, cache_dir.as_deref())
-        .await
+    let bundled_dir = config.bundled_yaml_dir.or_else(resolve_bundled_yaml_dir);
+    let enriched = enrich_installed(current, cache_dir.as_deref(), bundled_dir.as_deref());
+    check_yaml_update_with_cache_dir(
+        client,
+        pages_url,
+        tag_prefix,
+        &enriched,
+        cache_dir.as_deref(),
+    )
+    .await
 }
 
 /// Fetch and classify a generic manifest using an already-resolved best-effort cache directory.
 ///
-/// Installed schema and digest facts come only from `current`; this helper never inspects data files.
+/// Installed schema and digest facts come only from `current`; callers that
+/// need disk fallback enrichment perform it before entering this helper.
 async fn check_yaml_update_with_cache_dir(
     client: &GithubClient,
     pages_url: &str,
@@ -1350,6 +1370,116 @@ async fn check_yaml_update_with_cache_dir(
         Err(e) => return Err(e),
     };
     classify_manifest(manifest, current)
+}
+
+/// Resolve the native bundled-YAML directory beside the running executable.
+///
+/// Binding hosts such as Python and Node must pass an explicit directory because
+/// their executable belongs to the interpreter rather than the CLASSIC install.
+/// Resolution failure returns `None` instead of falling back to the process
+/// working directory.
+fn resolve_bundled_yaml_dir() -> Option<PathBuf> {
+    std::env::current_exe().ok().and_then(|executable| {
+        executable
+            .parent()
+            .map(|parent| parent.join(BUNDLED_YAML_DIR))
+    })
+}
+
+/// Read one installed YAML candidate, validate its basename and schema header,
+/// and return the parsed version plus exact-byte SHA-256 identity.
+///
+/// Any missing, malformed, non-UTF-8, or unhashable candidate is treated as
+/// unavailable so the caller can continue to the next fallback source.
+fn resolve_installed_from_path(
+    directory: &Path,
+    file_name: &str,
+) -> Option<(SchemaVersion, String)> {
+    if !is_valid_cache_file_name(file_name) {
+        return None;
+    }
+    let path = directory.join(file_name);
+    let bytes = std::fs::read(&path).ok()?;
+    let content = std::str::from_utf8(&bytes).ok()?;
+    let documents = parse_yaml_content(file_name.to_string(), content).ok()?;
+    let version = extract_schema_version(documents.first()?).ok()?;
+    // Hash the bytes already parsed so a concurrent replacement cannot pair
+    // one generation's schema version with another generation's digest.
+    let sha256 = Sha256::digest(&bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect();
+    Some((version, sha256))
+}
+
+/// Resolve an installed candidate only when its schema is compatible with the
+/// caller's accepted range.
+fn resolve_compatible_installed_from_path(
+    directory: &Path,
+    file_name: &str,
+    accepted: &SchemaCompat,
+) -> Option<(SchemaVersion, String)> {
+    let (version, sha256) = resolve_installed_from_path(directory, file_name)?;
+    matches!(
+        schema_compat_check(&version, accepted),
+        Compatibility::Compatible
+    )
+    .then_some((version, sha256))
+}
+
+/// Resolve the cache source the runtime would use without mutating disk.
+///
+/// A present canonical file owns the decision even when unusable. Only an
+/// absent canonical file permits the `.prev` recovery candidate.
+fn resolve_cache_installed(
+    cache_dir: &Path,
+    file_name: &str,
+    accepted: &SchemaCompat,
+) -> Option<(SchemaVersion, String)> {
+    if cache_dir.join(file_name).exists() {
+        return resolve_compatible_installed_from_path(cache_dir, file_name, accepted);
+    }
+    let previous_name = format!("{file_name}.prev");
+    resolve_compatible_installed_from_path(cache_dir, &previous_name, accepted)
+}
+
+/// Enrich generic entries that omit installed metadata using runtime-compatible
+/// cache-first, bundled-second precedence.
+///
+/// Explicit versions or digests remain authoritative. Disk lookup is
+/// best-effort and never mutates cache state; unresolved entries stay absent so
+/// [`classify_manifest`] retains its clean-install update behavior when no
+/// usable source exists.
+fn enrich_installed(
+    current: &ClientSchemaSet,
+    cache_dir: Option<&Path>,
+    bundled_dir: Option<&Path>,
+) -> ClientSchemaSet {
+    let mut enriched = ClientSchemaSet::new();
+    for (name, entry) in current.iter() {
+        let (installed, installed_sha256) =
+            if entry.installed.is_none() && entry.installed_sha256.is_none() {
+                cache_dir
+                    .and_then(|directory| resolve_cache_installed(directory, name, &entry.accepted))
+                    .or_else(|| {
+                        bundled_dir.and_then(|directory| {
+                            resolve_compatible_installed_from_path(directory, name, &entry.accepted)
+                        })
+                    })
+                    .map_or((None, None), |(version, sha256)| {
+                        (Some(version), Some(sha256))
+                    })
+            } else {
+                (entry.installed, entry.installed_sha256.clone())
+            };
+        enriched.insert_with_sha256(
+            name.to_string(),
+            entry.accepted,
+            installed,
+            installed_sha256,
+        );
+    }
+    enriched
 }
 
 /// Convert cache preparation into the updater's best-effort manifest-cache policy.

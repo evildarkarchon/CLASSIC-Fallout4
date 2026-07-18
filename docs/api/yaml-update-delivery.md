@@ -92,9 +92,11 @@ The embedded default mirror has an independent content-freshness gate because th
 
 The lower-level generic interface remains available for tests, unusual hosts,
 and Node/Python compatibility consumers. Generic callers pass `pages_url`,
-`tag_prefix`, and a complete caller-built `ClientSchemaSet` to
+`tag_prefix`, and a caller-built `ClientSchemaSet` to
 `check_yaml_update` / `apply_yaml_update_with_decision`, or a single
-`file_name` to `rollback_yaml_update`. Generic checks do not inspect disk.
+`file_name` to `rollback_yaml_update`. Generic checks preserve supplied
+installed metadata; entries with neither a version nor digest are enriched
+from compatible cache bytes first and bundled bytes second.
 Native first-party callers should use the `yaml_data_*` helpers so installed
 selection and channel policy stay in Rust.
 
@@ -132,9 +134,9 @@ Binding-layer contract:
 - Native C++ bridge callers use `yaml_data_check_update(enabled)`, `yaml_data_apply_update(enabled, approved)`, and `yaml_data_rollback_update()`. The bridge returns the same status/apply DTO shapes as the generic functions; rollback returns an aggregate `YamlRollbackReportDto`. Typed apply errors map to stable `error_message` prefixes: `"update check disabled: ..."` and `"decision stale: ..."`. GUI / CLI consumers parse the prefix.
 - The native CLI exposes those first-party operations as `--check-yaml-updates`, `--apply-yaml-updates`, and `--rollback-yaml-updates`. Check/apply open the typed `UpdatePreferencesDto`, surface User Settings validation or migration diagnostics, and pass its safety-adjusted policy bit to the update bridge; they do not interpret a raw User Settings key path. Rollback is local-only and does not perform a network check.
 - The native GUI opens Update Check and the canonical `GitHub` / `Both` Update Source token as part of one revision-cohesive `GuiSettingsSnapshotDto`. The Settings dialog writes either preference only through the all-or-nothing User Settings Update preview/commit seam; cancel, validation rejection, and revision conflicts cannot partially change update policy. The YAML Data network gate continues to use the accepted `Update Check` value.
-- Lower-level C++ bridge compatibility callers may still use `yaml_check_update(pages_url, tag_prefix, entries, enabled, bundled_yaml_dir)`, `yaml_apply_update(request)`, and `yaml_rollback_update(file_name)`. The retained bundled-directory argument no longer enriches generic entries; callers supply installed schema/digest facts explicitly.
-- Node `applyYamlUpdate(request)` takes `JsYamlApplyRequest { pagesUrl, tagPrefix, entries, enabled, approved, bundledYamlDir? }`, where `approved` is `JsApprovedUpdate { releaseTag, fileNames, fileSha256 }`. It throws on disabled / stale. The legacy layout field does not replace installed metadata on generic entries.
-- Python `apply_yaml_update(request)` takes `YamlApplyRequest(pages_url, tag_prefix, entries, enabled, approved, bundled_yaml_dir=None)`, where `approved` is `ApprovedUpdate(release_tag, file_names, file_sha256)`. It raises `RuntimeError` on disabled / stale. The legacy layout argument does not cause generic checks to inspect disk.
+- Lower-level C++ bridge compatibility callers may still use `yaml_check_update(pages_url, tag_prefix, entries, enabled, bundled_yaml_dir)`, `yaml_apply_update(request)`, and `yaml_rollback_update(file_name)`. When an entry has `has_installed == false`, the retained bundled-directory argument supplies the fallback source after the per-user cache; an empty path keeps the native `current_exe()`-relative fallback.
+- Node `applyYamlUpdate(request)` takes `JsYamlApplyRequest { pagesUrl, tagPrefix, entries, enabled, approved, bundledYamlDir? }`, where `approved` is `JsApprovedUpdate { releaseTag, fileNames, fileSha256 }`. It throws on disabled / stale. Node/Bun callers pass their package-local bundled directory so entries without installed metadata can be enriched outside the interpreter's executable tree.
+- Python `apply_yaml_update(request)` takes `YamlApplyRequest(pages_url, tag_prefix, entries, enabled, approved, bundled_yaml_dir=None)`, where `approved` is `ApprovedUpdate(release_tag, file_names, file_sha256)`. It raises `RuntimeError` on disabled / stale. Python callers likewise pass the package-local bundled directory when `python.exe` cannot provide the native fallback location.
 
 All generic compatibility seams still reserve `CLASSIC Ignore.yaml` case-insensitively. Registering it in a caller-supplied schema set cannot make it classifiable or installable, and direct rollback refuses it before cache resolution.
 
@@ -142,7 +144,7 @@ All generic compatibility seams still reserve `CLASSIC Ignore.yaml` case-insensi
 
 First-party checks identify one CLASSIC installation root. The binding-compatible `UpdateCheckConfig::bundled_yaml_dir` layout hint accepts either that root or its canonical `CLASSIC Data/databases` directory; native frontends may omit it because the first-party helper falls back to `current_exe().parent()`. Config inspection resolves bundled candidates only beneath `<installation_root>/CLASSIC Data/databases` and resolves the per-user update cache through `classic-path-core`.
 
-First-party helpers translate a canonical `.../CLASSIC Data/databases` hint back to its installation root. Generic `check_yaml_update` does not inspect the layout hint: callers of that compatibility API must populate installed schema/digest metadata themselves.
+First-party helpers translate a canonical `.../CLASSIC Data/databases` hint back to its installation root. Generic `check_yaml_update` preserves the legacy interpretation: an explicit hint names the bundled directory itself, while an omitted hint probes `CLASSIC Data/databases` beside `current_exe()`. The generic lookup runs only for entries whose installed version and digest are both absent.
 
 ### Inspection precedence
 

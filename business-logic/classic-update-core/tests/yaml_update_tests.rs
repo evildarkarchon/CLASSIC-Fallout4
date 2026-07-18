@@ -2527,10 +2527,10 @@ async fn apply_with_decision_rejects_duplicate_approved_names() {
 // check_yaml_update: explicit bundled-YAML override (Node/Python host fix).
 // ---------------------------------------------------------------------------
 
-/// Generic checks classify only the installed metadata supplied by their caller.
-/// Installed-source discovery is reserved for the first-party config inspection seam.
+/// Regression for generic binding callers that supply no installed metadata on
+/// a clean install but do provide their package-local bundled YAML directory.
 #[tokio::test(flavor = "multi_thread")]
-async fn generic_check_does_not_inspect_a_bundled_directory() {
+async fn check_yaml_update_uses_explicit_bundled_dir_for_clean_install() {
     let bundled_tmp = TempDir::new().unwrap();
     let bundled_path = bundled_tmp.path().join("CLASSIC Main.yaml");
     let bundled_body = b"schema_version: \"1.1\"\nkey: value\n";
@@ -2558,8 +2558,8 @@ async fn generic_check_does_not_inspect_a_bundled_directory() {
         .create_async()
         .await;
 
-    // An unset installed identity remains unset even when the retained legacy
-    // layout hint happens to point at matching bytes.
+    // Clean-install binding DTOs use `has_installed: false`, so the generic
+    // orchestrator must recover content identity from the explicit layout hint.
     let mut set = ClientSchemaSet::new();
     set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
 
@@ -2572,20 +2572,18 @@ async fn generic_check_does_not_inspect_a_bundled_directory() {
         .expect("check_yaml_update should succeed against mocked Pages");
 
     match status {
-        YamlUpdateStatus::UpdateAvailable {
-            compatible_files, ..
-        } => {
-            assert_eq!(compatible_files[0].name, "CLASSIC Main.yaml");
+        YamlUpdateStatus::UpToDate { manifest, .. } => {
+            assert_eq!(manifest.release_tag, "yaml-data-v2026.04.17");
         }
         other => panic!(
-            "generic check must not inspect bundled bytes behind caller metadata, got {other:?}"
+            "clean install with matching bundled bytes must classify as UpToDate, got {other:?}"
         ),
     }
 }
 
-/// A generic caller-provided digest remains the freshness source of truth.
+/// A bundled fallback only suppresses an update when its exact bytes match.
 #[tokio::test(flavor = "multi_thread")]
-async fn generic_check_uses_caller_supplied_digest() {
+async fn check_yaml_update_with_bundled_dir_reports_changed_bytes() {
     let bundled_tmp = TempDir::new().unwrap();
     let bundled_path = bundled_tmp.path().join("CLASSIC Main.yaml");
     write(&bundled_path, b"schema_version: \"1.0\"\nold: data\n");
@@ -2617,12 +2615,7 @@ async fn generic_check_uses_caller_supplied_digest() {
         .await;
 
     let mut set = ClientSchemaSet::new();
-    set.insert_with_sha256(
-        "CLASSIC Main.yaml",
-        SchemaCompat::new(1, 0),
-        Some(SchemaVersion::new(1, 0)),
-        Some(bundled_sha),
-    );
+    set.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
 
     let client = tokenless_client(&server.url());
     let config =

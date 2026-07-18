@@ -276,6 +276,65 @@ fn ensure_path_in_cache_rejects_sibling() {
     assert!(ensure_path_in_cache(&cache, &sibling).is_err());
 }
 
+/// Entries without installed metadata use compatible cache bytes before an
+/// older bundled copy, preventing repeat downloads after an applied update.
+#[test]
+fn enrich_installed_prefers_cache_over_bundled_fallback() {
+    let cache = tempfile::tempdir().expect("isolated cache should be created");
+    let bundled = tempfile::tempdir().expect("isolated bundle should be created");
+    let cache_path = cache.path().join("CLASSIC Main.yaml");
+    std::fs::write(&cache_path, "schema_version: \"1.2\"\ncache: current\n")
+        .expect("cache fixture should be written");
+    std::fs::write(
+        bundled.path().join("CLASSIC Main.yaml"),
+        "schema_version: \"1.0\"\nbundled: stale\n",
+    )
+    .expect("bundled fixture should be written");
+    let cache_sha256 = classic_file_io_core::FileHasher::hash_file(&cache_path)
+        .expect("cache fixture should be hashable");
+    let mut current = ClientSchemaSet::new();
+    current.insert("CLASSIC Main.yaml", SchemaCompat::new(1, 0), None);
+
+    let enriched = enrich_installed(&current, Some(cache.path()), Some(bundled.path()));
+    let entry = enriched
+        .get("CLASSIC Main.yaml")
+        .expect("registered entry should remain present");
+
+    assert_eq!(entry.installed, Some(SchemaVersion::new(1, 2)));
+    assert_eq!(
+        entry.installed_sha256.as_deref(),
+        Some(cache_sha256.as_str())
+    );
+}
+
+/// A caller-provided digest remains authoritative even when no installed
+/// schema version accompanies it and fallback files are available.
+#[test]
+fn enrich_installed_preserves_explicit_digest_without_version() {
+    let bundled = tempfile::tempdir().expect("isolated bundle should be created");
+    std::fs::write(
+        bundled.path().join("CLASSIC Main.yaml"),
+        "schema_version: \"1.0\"\nbundled: data\n",
+    )
+    .expect("bundled fixture should be written");
+    let explicit_sha256 = "a".repeat(64);
+    let mut current = ClientSchemaSet::new();
+    current.insert_with_sha256(
+        "CLASSIC Main.yaml",
+        SchemaCompat::new(1, 0),
+        None,
+        Some(explicit_sha256.clone()),
+    );
+
+    let enriched = enrich_installed(&current, None, Some(bundled.path()));
+    let entry = enriched
+        .get("CLASSIC Main.yaml")
+        .expect("registered entry should remain present");
+
+    assert_eq!(entry.installed, None);
+    assert_eq!(entry.installed_sha256, Some(explicit_sha256));
+}
+
 #[test]
 fn client_schema_bounds_accept_when_absent() {
     let entry = YamlManifestFile {

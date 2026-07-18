@@ -93,7 +93,7 @@ Full cross-crate flow: [`app-update-notification-delivery.md`](app-update-notifi
 | Node (NAPI-RS) | Not exposed in this scope | `checkYamlUpdate(...)`, `applyYamlUpdate(request)`, `rollbackYamlUpdate(fileName)` |
 | Python (PyO3) | Not exposed in this scope | `check_yaml_update(...)`, `apply_yaml_update(request)`, `rollback_yaml_update(file_name)` |
 
-The first-party C++ helpers centralize the Pages URL, `yaml-data-v*` tag namespace, config-inspected installed schema/content identity, first-party file set, and rollback target list in Rust. Generic compatibility APIs classify only the installed metadata supplied by their caller. Full cross-crate flow: [`yaml-update-delivery.md`](yaml-update-delivery.md).
+The first-party C++ helpers centralize the Pages URL, `yaml-data-v*` tag namespace, config-inspected installed schema/content identity, first-party file set, and rollback target list in Rust. Generic compatibility APIs preserve caller-supplied installed metadata and use their retained bundled-directory hint to enrich entries whose installed version/digest are absent. Full cross-crate flow: [`yaml-update-delivery.md`](yaml-update-delivery.md).
 
 **Note on `classic-resource-core`**: This crate provides lightweight resource classification helpers used by `classic-file-io-core`. It has no dedicated C++ bridge module. C++ frontends access resource classification functionality transitively through the `classic-file-io-core` bridge surface (`files.rs`) where needed.
 
