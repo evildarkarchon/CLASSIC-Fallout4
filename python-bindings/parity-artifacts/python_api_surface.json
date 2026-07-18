@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-18T08:13:00.384414+00:00",
+  "generated_at_utc": "2026-07-18T09:17:46.788599+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -312,6 +312,26 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "class InstalledYamlDataLoadInvalidSelectedDataError(InstalledYamlDataLoadError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataLoadLocalIgnoreCreateError",
+      "export_path": "InstalledYamlDataLoadLocalIgnoreCreateError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataLoadLocalIgnoreCreateError(InstalledYamlDataLoadError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataLoadLocalIgnoreDefaultInvalidError",
+      "export_path": "InstalledYamlDataLoadLocalIgnoreDefaultInvalidError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataLoadLocalIgnoreDefaultInvalidError("
     },
     {
       "module": "classic_config",

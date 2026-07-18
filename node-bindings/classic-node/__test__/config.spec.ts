@@ -157,6 +157,19 @@ const EXPLICIT_MAIN_YAML = [
   "",
 ].join("\r\n");
 
+const GENERATED_IGNORE_YAML =
+  "CLASSIC_Ignore_Fallout4:\n  - SelectedNodeDefault.dll\n";
+
+const INSTALLED_MAIN_WITH_DEFAULT_YAML = `schema_version: "2.0"
+CLASSIC_Info:
+  version: "9.1.0"
+  default_ignorefile: |
+    CLASSIC_Ignore_Fallout4:
+      - SelectedNodeDefault.dll
+CLASSIC_Interface:
+  autoscan_text_Fallout4: "installed node"
+`;
+
 const EXPLICIT_GAME_YAML = `schema_version: "1.0"
 Game_Info:
   Main_Root_Name: "Fallout 4"
@@ -522,6 +535,58 @@ describe("Installed YAML Data loading", () => {
     }
   });
 
+  test("generates missing Local Ignore from selected Main defaults with structured metadata", async () => {
+    const root = mkdtempSync(join(tmpdir(), "classic-node-installed-yaml-generated-"));
+    const cacheRoot = join(root, "platform-cache");
+    const installationRoot = join(root, "installation");
+    const bundledDir = join(installationRoot, "CLASSIC Data", "databases");
+    const ignorePath = join(
+      installationRoot,
+      "CLASSIC Data",
+      "CLASSIC Ignore.yaml",
+    );
+    try {
+      mkdirSync(bundledDir, { recursive: true });
+      writeFileSync(
+        join(bundledDir, "CLASSIC Main.yaml"),
+        INSTALLED_MAIN_WITH_DEFAULT_YAML,
+      );
+      writeFileSync(join(bundledDir, "CLASSIC Fallout4.yaml"), EXPLICIT_GAME_YAML);
+
+      const outcome = await withIsolatedYamlCache(cacheRoot, () =>
+        loadInstalledYamlData({
+          installationRoot,
+          game: JsGameId.Fallout4,
+          selectedGameVersion: "Original",
+        }),
+      );
+
+      expect(outcome.status).toBe(JsInstalledYamlDataLoadStatus.Ready);
+      expect(outcome.snapshot.localIgnoreState).toBe(
+        JsLocalIgnoreYamlDataState.Generated,
+      );
+      expect(outcome.snapshot.yamlData.ignoreList).toEqual([
+        "SelectedNodeDefault.dll",
+      ]);
+      expect(readFileSync(ignorePath, "utf8")).toBe(GENERATED_IGNORE_YAML);
+      expect(outcome.snapshot.localIgnoreIdentity).toEqual({
+        sha256: createHash("sha256").update(GENERATED_IGNORE_YAML).digest("hex"),
+        byteLen: Buffer.byteLength(GENERATED_IGNORE_YAML),
+      });
+      expect(outcome.snapshot.diagnostics).toEqual([
+        expect.objectContaining({
+          path: ignorePath,
+          kind: JsInstalledYamlDataDiagnosticKind.LocalIgnoreGenerated,
+        }),
+      ]);
+      const [generationDiagnostic] = outcome.snapshot.diagnostics;
+      expect(generationDiagnostic?.role).toBeUndefined();
+      expect(generationDiagnostic?.candidate).toBeUndefined();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("rejects fatal selection failures with stable metadata", async () => {
     const root = mkdtempSync(join(tmpdir(), "classic-node-installed-yaml-load-errors-"));
     const cacheRoot = join(root, "platform-cache");
@@ -558,7 +623,7 @@ describe("Installed YAML Data loading", () => {
     }
   });
 
-  test("projects every Local Ignore failure with stable role and path metadata", async () => {
+  test("projects existing Local Ignore content failures with stable role and path metadata", async () => {
     const root = mkdtempSync(join(tmpdir(), "classic-node-installed-yaml-ignore-errors-"));
     const cacheRoot = join(root, "platform-cache");
     const installationRoot = join(root, "installation");
@@ -594,7 +659,6 @@ describe("Installed YAML Data loading", () => {
         });
       };
 
-      await expectIgnoreFailure("local_ignore_read");
       await expectIgnoreFailure(
         "local_ignore_invalid_utf8",
         Uint8Array.from([0xff]),
@@ -604,6 +668,40 @@ describe("Installed YAML Data loading", () => {
         "local_ignore_invalid_role_data",
         "CLASSIC_Ignore_Fallout4: not-a-sequence\n",
       );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("projects invalid selected Main defaults as a typed Local Ignore load error", async () => {
+    const root = mkdtempSync(join(tmpdir(), "classic-node-installed-yaml-default-error-"));
+    const cacheRoot = join(root, "platform-cache");
+    const installationRoot = join(root, "installation");
+    const bundledDir = join(installationRoot, "CLASSIC Data", "databases");
+    const ignorePath = join(
+      installationRoot,
+      "CLASSIC Data",
+      "CLASSIC Ignore.yaml",
+    );
+    try {
+      mkdirSync(bundledDir, { recursive: true });
+      writeFileSync(join(bundledDir, "CLASSIC Main.yaml"), EXPLICIT_MAIN_YAML);
+      writeFileSync(join(bundledDir, "CLASSIC Fallout4.yaml"), EXPLICIT_GAME_YAML);
+
+      await expect(
+        withIsolatedYamlCache(cacheRoot, () =>
+          loadInstalledYamlData({
+            installationRoot,
+            game: JsGameId.Fallout4,
+            selectedGameVersion: "Original",
+          }),
+        ),
+      ).rejects.toMatchObject({
+        code: "local_ignore_default_invalid",
+        yamlRole: "local_ignore",
+        path: ignorePath,
+      });
+      expect(existsSync(ignorePath)).toBe(false);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

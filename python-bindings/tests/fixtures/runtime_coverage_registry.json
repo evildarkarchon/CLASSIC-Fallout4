@@ -147,12 +147,14 @@
         "classic_config.InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
         "classic_config.InstalledYamlDataLoadLocalIgnoreParseError",
         "classic_config.InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
+        "classic_config.InstalledYamlDataLoadLocalIgnoreDefaultInvalidError",
+        "classic_config.InstalledYamlDataLoadLocalIgnoreCreateError",
         "classic_config.InstalledYamlDataLoadInvalidSelectedDataError"
       ],
       "verificationMode": "contract_test",
       "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
       "testCaseId": "installed-yaml-data-load-contract",
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "coverageId": "python-tier1-scanlog",

@@ -62,25 +62,37 @@ create_exception!(
     classic_config,
     InstalledYamlDataLoadLocalIgnoreReadError,
     InstalledYamlDataLoadError,
-    "Raised when existing Local Ignore YAML Data cannot be read."
+    "Raised when authoritative Local Ignore YAML Data cannot be read."
 );
 create_exception!(
     classic_config,
     InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error,
     InstalledYamlDataLoadError,
-    "Raised when existing Local Ignore YAML Data is not UTF-8."
+    "Raised when authoritative Local Ignore YAML Data is not UTF-8."
 );
 create_exception!(
     classic_config,
     InstalledYamlDataLoadLocalIgnoreParseError,
     InstalledYamlDataLoadError,
-    "Raised when existing Local Ignore YAML Data is malformed YAML."
+    "Raised when authoritative Local Ignore YAML Data is malformed YAML."
 );
 create_exception!(
     classic_config,
     InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError,
     InstalledYamlDataLoadError,
-    "Raised when existing Local Ignore YAML Data violates its role contract."
+    "Raised when authoritative Local Ignore YAML Data violates its role contract."
+);
+create_exception!(
+    classic_config,
+    InstalledYamlDataLoadLocalIgnoreDefaultInvalidError,
+    InstalledYamlDataLoadError,
+    "Raised when selected Main defaults cannot safely initialize Local Ignore YAML Data."
+);
+create_exception!(
+    classic_config,
+    InstalledYamlDataLoadLocalIgnoreCreateError,
+    InstalledYamlDataLoadError,
+    "Raised when missing Local Ignore YAML Data cannot be atomically created."
 );
 create_exception!(
     classic_config,
@@ -89,17 +101,17 @@ create_exception!(
     "Raised when selected Installed YAML Data cannot form the parsed view."
 );
 
-/// One structured cache-resolution or candidate-rejection diagnostic.
+/// One structured selection, candidate-rejection, or Local Ignore generation diagnostic.
 #[pyclass(name = "InstalledYamlDataDiagnostic", frozen, skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyInstalledYamlDataDiagnostic {
-    /// Affected role token, or `None` for an installation-wide diagnostic.
+    /// Affected role token, or `None` when no update-eligible Main/game role applies.
     #[pyo3(get)]
     role: Option<String>,
-    /// Candidate token, or `None` when no candidate path was available.
+    /// Candidate token, or `None` when no installed candidate was involved.
     #[pyo3(get)]
     candidate: Option<String>,
-    /// Candidate path when the diagnostic is path-attributable.
+    /// Affected path when the diagnostic is path-attributable.
     #[pyo3(get)]
     path: Option<PathBuf>,
     /// Stable diagnostic category.
@@ -220,6 +232,7 @@ impl PyInstalledYamlDataSnapshot {
     fn local_ignore_state(&self) -> &'static str {
         match self.inner.local_ignore_state() {
             CoreLocalIgnoreState::Existing => "existing",
+            CoreLocalIgnoreState::Generated => "generated",
         }
     }
 
@@ -229,7 +242,7 @@ impl PyInstalledYamlDataSnapshot {
         content_identity_to_py(self.inner.local_ignore_identity())
     }
 
-    /// Return every structured fallback or cache-resolution diagnostic.
+    /// Return every structured fallback, cache-resolution, or generation diagnostic.
     #[getter]
     fn diagnostics(&self) -> Vec<PyInstalledYamlDataDiagnostic> {
         self.inner
@@ -282,8 +295,8 @@ fn inspect_installed_yaml_data(
 /// Load one immutable Ready Installed YAML Data snapshot.
 ///
 /// The operation releases the GIL while Rust core independently selects Main and game,
-/// reads the existing Local Ignore file, and builds the parsed view. It never replaces
-/// Local Ignore during ordinary loading.
+/// preserves existing Local Ignore or atomically generates it when missing, and builds the
+/// parsed view. Existing Local Ignore is never replaced during ordinary loading.
 ///
 /// # Errors
 ///
@@ -408,6 +421,20 @@ fn installed_yaml_data_load_error_to_py(error: CoreLoadError) -> PyErr {
             Vec::new(),
             InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError::new_err(message),
         ),
+        CoreLoadError::LocalIgnoreDefaultInvalid { path, .. } => (
+            "local_ignore_default_invalid",
+            Some("local_ignore"),
+            Some(path.to_string_lossy().into_owned()),
+            Vec::new(),
+            InstalledYamlDataLoadLocalIgnoreDefaultInvalidError::new_err(message),
+        ),
+        CoreLoadError::LocalIgnoreCreate { path, .. } => (
+            "local_ignore_create",
+            Some("local_ignore"),
+            Some(path.to_string_lossy().into_owned()),
+            Vec::new(),
+            InstalledYamlDataLoadLocalIgnoreCreateError::new_err(message),
+        ),
         CoreLoadError::InvalidSelectedData { .. } => (
             "invalid_selected_data",
             None,
@@ -456,6 +483,7 @@ const fn diagnostic_kind_token(kind: CoreInstalledYamlDataDiagnosticKind) -> &'s
         CoreInstalledYamlDataDiagnosticKind::InvalidSchema => "invalid_schema",
         CoreInstalledYamlDataDiagnosticKind::IncompatibleSchema => "incompatible_schema",
         CoreInstalledYamlDataDiagnosticKind::InvalidRoleData => "invalid_role_data",
+        CoreInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated => "local_ignore_generated",
     }
 }
 
@@ -508,6 +536,14 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add(
         "InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
         py.get_type::<InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError>(),
+    )?;
+    module.add(
+        "InstalledYamlDataLoadLocalIgnoreDefaultInvalidError",
+        py.get_type::<InstalledYamlDataLoadLocalIgnoreDefaultInvalidError>(),
+    )?;
+    module.add(
+        "InstalledYamlDataLoadLocalIgnoreCreateError",
+        py.get_type::<InstalledYamlDataLoadLocalIgnoreCreateError>(),
     )?;
     module.add(
         "InstalledYamlDataLoadInvalidSelectedDataError",

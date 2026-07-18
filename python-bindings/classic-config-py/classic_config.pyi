@@ -419,7 +419,7 @@ def load_explicit_yaml_data(
     """Load only the exact supplied files without cache or mutation policy."""
 
 class InstalledYamlDataDiagnostic:
-    """One structured cache-resolution or candidate-rejection diagnostic."""
+    """One structured selection, rejection, or Local Ignore generation diagnostic."""
 
     @property
     def role(self) -> Literal["main", "game"] | None: ...
@@ -437,6 +437,7 @@ class InstalledYamlDataDiagnostic:
         "invalid_schema",
         "incompatible_schema",
         "invalid_role_data",
+        "local_ignore_generated",
     ]: ...
     @property
     def message(self) -> str: ...
@@ -485,7 +486,7 @@ class InstalledYamlDataSnapshot:
     @property
     def game_file(self) -> InspectedYamlDataFile: ...
     @property
-    def local_ignore_state(self) -> Literal["existing"]: ...
+    def local_ignore_state(self) -> Literal["existing", "generated"]: ...
     @property
     def local_ignore_identity(self) -> YamlDataContentIdentity: ...
     @property
@@ -527,6 +528,10 @@ class InstalledYamlDataLoadLocalIgnoreParseError(InstalledYamlDataLoadError): ..
 class InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError(
     InstalledYamlDataLoadError
 ): ...
+class InstalledYamlDataLoadLocalIgnoreDefaultInvalidError(
+    InstalledYamlDataLoadError
+): ...
+class InstalledYamlDataLoadLocalIgnoreCreateError(InstalledYamlDataLoadError): ...
 class InstalledYamlDataLoadInvalidSelectedDataError(InstalledYamlDataLoadError): ...
 
 def inspect_installed_yaml_data(
@@ -549,10 +554,12 @@ def load_installed_yaml_data(
     game: ExplicitYamlDataGame,
     selected_game_version: str,
 ) -> InstalledYamlDataLoadOutcome:
-    """Load a Ready immutable snapshot with valid existing Local Ignore data.
+    """Load a Ready immutable snapshot, generating Local Ignore when missing.
 
     Main and game are independently selected by Rust core. The returned snapshot owns
     the exact selected bytes and remains stable if any selected path later changes.
+    Existing Local Ignore data is preserved; a missing file is initialized atomically
+    from the selected Main snapshot's strictly validated defaults.
 
     Raises:
         InstalledYamlDataLoadUnsupportedGameError: The game has no registered data role.
@@ -562,6 +569,10 @@ def load_installed_yaml_data(
         InstalledYamlDataLoadLocalIgnoreParseError: Local Ignore is malformed YAML.
         InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError: Local Ignore violates its
             role contract.
+        InstalledYamlDataLoadLocalIgnoreDefaultInvalidError: Selected Main defaults
+            cannot safely initialize Local Ignore.
+        InstalledYamlDataLoadLocalIgnoreCreateError: Missing Local Ignore cannot be
+            atomically created.
         InstalledYamlDataLoadInvalidSelectedDataError: Selected documents cannot form
             the parsed YAML Data view.
     """

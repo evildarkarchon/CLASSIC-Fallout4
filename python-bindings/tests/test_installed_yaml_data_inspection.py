@@ -28,13 +28,26 @@ GAME_BYTES = (
     b"Mods_SOLU: []\n"
 )
 IGNORE_BYTES = b"CLASSIC_Ignore_Fallout4:\r\n  - ExistingUserEntry.dll\r\n"
+DEFAULT_IGNORE_BYTES = b"CLASSIC_Ignore_Fallout4:\n  - SelectedMainDefault.dll\n"
+MAIN_WITH_DEFAULT_BYTES = (
+    b'schema_version: "2.0"\n'
+    b"CLASSIC_Info:\n"
+    b'  version: "9.1.0"\n'
+    b"  default_ignorefile: |\n"
+    b"    CLASSIC_Ignore_Fallout4:\n"
+    b"      - SelectedMainDefault.dll\n"
+    b"CLASSIC_Interface:\n"
+    b'  autoscan_text_Fallout4: "bundled"\n'
+)
 
 
-def write_install(root: Path, *, with_ignore: bool = False) -> None:
+def write_install(
+    root: Path, *, with_ignore: bool = False, main_bytes: bytes = MAIN_BYTES
+) -> None:
     """Write minimum valid bundled data and, when requested, Local Ignore data."""
     databases = root / "CLASSIC Data" / "databases"
     databases.mkdir(parents=True)
-    (databases / "CLASSIC Main.yaml").write_bytes(MAIN_BYTES)
+    (databases / "CLASSIC Main.yaml").write_bytes(main_bytes)
     (databases / "CLASSIC Fallout4.yaml").write_bytes(GAME_BYTES)
     if with_ignore:
         (root / "CLASSIC Data" / "CLASSIC Ignore.yaml").write_bytes(IGNORE_BYTES)
@@ -192,6 +205,37 @@ def test_installed_load_projects_ready_immutable_snapshot(
     assert snapshot.local_ignore_identity.sha256 == hashlib.sha256(IGNORE_BYTES).hexdigest()
 
 
+def test_installed_load_projects_generated_local_ignore(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Missing Local Ignore becomes a Ready snapshot with generated provenance."""
+    installation = tmp_path / "install"
+    write_install(installation, main_bytes=MAIN_WITH_DEFAULT_BYTES)
+    isolate_cache(monkeypatch, tmp_path / "cache-root")
+    ignore_path = installation / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+
+    outcome = classic_config.load_installed_yaml_data(
+        installation,
+        classic_config.ExplicitYamlDataGame.FALLOUT4,
+        "Original",
+    )
+
+    assert outcome.status == "ready"
+    snapshot = outcome.snapshot
+    assert snapshot.local_ignore_state == "generated"
+    assert snapshot.yaml_data.ignore_list == ["SelectedMainDefault.dll"]
+    assert snapshot.local_ignore_identity.sha256 == hashlib.sha256(
+        DEFAULT_IGNORE_BYTES
+    ).hexdigest()
+    assert snapshot.local_ignore_identity.byte_len == len(DEFAULT_IGNORE_BYTES)
+    assert ignore_path.read_bytes() == DEFAULT_IGNORE_BYTES
+    generated = snapshot.diagnostics[-1]
+    assert generated.role is None
+    assert generated.candidate is None
+    assert generated.path == ignore_path
+    assert generated.kind == "local_ignore_generated"
+
+
 def test_installed_load_projects_selection_failures(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -229,7 +273,11 @@ def test_installed_load_projects_selection_failures(
 @pytest.mark.parametrize(
     ("ignore_bytes", "exception_name", "code"),
     [
-        (None, "InstalledYamlDataLoadLocalIgnoreReadError", "local_ignore_read"),
+        (
+            None,
+            "InstalledYamlDataLoadLocalIgnoreDefaultInvalidError",
+            "local_ignore_default_invalid",
+        ),
         (
             b"\xff",
             "InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
@@ -273,6 +321,14 @@ def test_installed_load_projects_local_ignore_failures(
     assert exc_info.value.yaml_role == "local_ignore"
     assert exc_info.value.path == str(ignore_path)
     assert exc_info.value.diagnostics == []
+
+
+def test_installed_load_exports_local_ignore_create_failure_type() -> None:
+    """Atomic publication failures remain a dedicated typed public error."""
+    assert issubclass(
+        classic_config.InstalledYamlDataLoadLocalIgnoreCreateError,
+        classic_config.InstalledYamlDataLoadError,
+    )
 
 
 def test_installed_load_exports_invalid_selected_data_failure_type() -> None:

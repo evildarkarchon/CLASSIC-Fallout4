@@ -321,6 +321,7 @@ fn installed_yaml_data_snapshot_local_ignore_state(
 ) -> ffi::LocalIgnoreYamlDataState {
     match snapshot.inner.local_ignore_state() {
         CoreLocalIgnoreYamlDataState::Existing => ffi::LocalIgnoreYamlDataState::Existing,
+        CoreLocalIgnoreYamlDataState::Generated => ffi::LocalIgnoreYamlDataState::Generated,
     }
 }
 
@@ -331,7 +332,7 @@ fn installed_yaml_data_snapshot_local_ignore_identity(
     content_identity_to_dto(snapshot.inner.local_ignore_identity())
 }
 
-/// Return every structured fallback or cache-resolution diagnostic.
+/// Return every structured fallback, cache-resolution, or Local Ignore generation diagnostic.
 fn installed_yaml_data_snapshot_diagnostics(
     snapshot: &InstalledYamlDataSnapshot,
 ) -> Vec<ffi::InstalledYamlDataDiagnosticDto> {
@@ -564,6 +565,9 @@ fn installed_yaml_data_diagnostic_kind_to_ffi(
         CoreInstalledYamlDataDiagnosticKind::InvalidRoleData => {
             ffi::InstalledYamlDataDiagnosticKind::InvalidRoleData
         }
+        CoreInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated => {
+            ffi::InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
+        }
     }
 }
 
@@ -685,6 +689,18 @@ fn installed_yaml_data_load_error_to_dto(
         ),
         CoreInstalledYamlDataLoadError::LocalIgnoreInvalidRoleData { path, .. } => (
             ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreInvalidRoleData,
+            Some(ffi::InstalledYamlDataLoadRole::LocalIgnore),
+            Some(path),
+            Vec::new(),
+        ),
+        CoreInstalledYamlDataLoadError::LocalIgnoreDefaultInvalid { path, .. } => (
+            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreDefaultInvalid,
+            Some(ffi::InstalledYamlDataLoadRole::LocalIgnore),
+            Some(path),
+            Vec::new(),
+        ),
+        CoreInstalledYamlDataLoadError::LocalIgnoreCreate { path, .. } => (
+            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreCreate,
             Some(ffi::InstalledYamlDataLoadRole::LocalIgnore),
             Some(path),
             Vec::new(),
@@ -1235,7 +1251,7 @@ mod ffi {
         Bundled = 2,
     }
 
-    /// Stable category for an Installed YAML Data inspection diagnostic.
+    /// Stable category for an Installed YAML Data selection or generation diagnostic.
     #[repr(u8)]
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum InstalledYamlDataDiagnosticKind {
@@ -1247,6 +1263,8 @@ mod ffi {
         InvalidSchema = 5,
         IncompatibleSchema = 6,
         InvalidRoleData = 7,
+        /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+        LocalIgnoreGenerated = 8,
     }
 
     /// Stable typed category of an Installed YAML Data inspection failure.
@@ -1268,6 +1286,10 @@ mod ffi {
         LocalIgnoreParse = 4,
         LocalIgnoreInvalidRoleData = 5,
         InvalidSelectedData = 6,
+        /// Selected Main defaults could not safely initialize Local Ignore YAML Data.
+        LocalIgnoreDefaultInvalid = 7,
+        /// Local Ignore YAML Data could not be atomically created.
+        LocalIgnoreCreate = 8,
     }
 
     /// File role attributed by an Installed YAML Data load failure.
@@ -1284,6 +1306,8 @@ mod ffi {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum LocalIgnoreYamlDataState {
         Existing = 0,
+        /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+        Generated = 1,
     }
 
     /// Exact caller-selected paths for deterministic YAML Data loading.
@@ -1325,7 +1349,7 @@ mod ffi {
         byte_len: u64,
     }
 
-    /// Structured attribution for one fallback or cache-resolution event.
+    /// Structured attribution for one fallback, cache-resolution, or Local Ignore generation event.
     struct InstalledYamlDataDiagnosticDto {
         has_role: bool,
         role: InstalledYamlDataRole,

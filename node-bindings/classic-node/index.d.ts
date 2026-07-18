@@ -381,7 +381,7 @@ export declare class InstalledYamlDataSnapshot {
   get localIgnoreState(): JsLocalIgnoreYamlDataState
   /** Returns the SHA-256 identity and byte length of exact Local Ignore bytes. */
   get localIgnoreIdentity(): JsYamlDataContentIdentity
-  /** Returns structured fallback and cache-resolution diagnostics. */
+  /** Returns structured fallback, cache-resolution, and generation diagnostics. */
   get diagnostics(): Array<JsInstalledYamlDataDiagnostic>
 }
 
@@ -3659,13 +3659,13 @@ export interface JsInspectedYamlDataFile {
   byteLength: number
 }
 
-/** Structured attribution for one cache-resolution or candidate-rejection event. */
+/** Structured attribution for one selection, rejection, or local generation event. */
 export interface JsInstalledYamlDataDiagnostic {
-  /** Affected file role, absent for installation-wide diagnostics. */
+  /** Affected update-eligible role, absent for installation-wide or Local Ignore events. */
   role?: JsInstalledYamlDataRole
-  /** Rejected candidate provenance, absent when no candidate was resolved. */
+  /** Rejected candidate provenance, absent when no update-eligible candidate applies. */
   candidate?: JsInstalledYamlDataProvenance
-  /** Candidate path when the diagnostic is path-attributable. */
+  /** Affected path when the diagnostic is path-attributable. */
   path?: string
   /** Stable machine-readable diagnostic category. */
   kind: JsInstalledYamlDataDiagnosticKind
@@ -3690,7 +3690,9 @@ export declare const enum JsInstalledYamlDataDiagnosticKind {
   /** A candidate schema was outside the client-owned compatibility range. */
   IncompatibleSchema = 'IncompatibleSchema',
   /** A candidate failed role-specific semantic validation. */
-  InvalidRoleData = 'InvalidRoleData'
+  InvalidRoleData = 'InvalidRoleData',
+  /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
+  LocalIgnoreGenerated = 'LocalIgnoreGenerated'
 }
 
 /** Registered game-data role selected for Installed YAML Data. */
@@ -3840,7 +3842,9 @@ export interface JsLegacyTuiStateImportRestoreOutcome {
 /** How Local Ignore YAML Data entered an installed snapshot. */
 export declare const enum JsLocalIgnoreYamlDataState {
   /** A valid user-owned Local Ignore file already existed. */
-  Existing = 'Existing'
+  Existing = 'Existing',
+  /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
+  Generated = 'Generated'
 }
 
 /** Log error entry detected during scanning. */

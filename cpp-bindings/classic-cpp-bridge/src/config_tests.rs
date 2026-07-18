@@ -21,6 +21,16 @@ const EXPLICIT_GAME_YAML: &str = concat!(
 );
 const EXPLICIT_EMPTY_IGNORE_YAML: &str = "CLASSIC_Ignore_Fallout4: []\n";
 const INSTALLED_IGNORE_YAML: &str = "CLASSIC_Ignore_Fallout4:\r\n  - ExistingBridgeEntry.dll\r\n";
+const INSTALLED_GENERATING_MAIN_YAML: &str = concat!(
+    "schema_version: \"2.0\"\n",
+    "CLASSIC_Info:\n",
+    "  version: \"9.1.0\"\n",
+    "  default_ignorefile: |\n",
+    "    CLASSIC_Ignore_Fallout4:\n",
+    "      - GeneratedBridgeEntry.dll\n",
+    "CLASSIC_Interface:\n",
+    "  autoscan_text_Fallout4: \"generated bridge\"\n",
+);
 
 fn write_explicit_bridge_fixtures(
     root: &std::path::Path,
@@ -327,6 +337,53 @@ fn installed_yaml_data_load_bridge_projects_ready_snapshot() {
 }
 
 #[test]
+/// The bridge projects generated Local Ignore state, parsed data, identity, and diagnostics.
+fn installed_yaml_data_load_bridge_projects_generated_local_ignore_state_and_diagnostic() {
+    let installation = tempdir().expect("create generated Local Ignore bridge fixture directory");
+    write_installed_bridge_fixtures(installation.path());
+    let data = installation.path().join("CLASSIC Data");
+    std::fs::write(
+        data.join("databases").join("CLASSIC Main.yaml"),
+        INSTALLED_GENERATING_MAIN_YAML,
+    )
+    .expect("write Main fixture with retained Local Ignore defaults");
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    std::fs::remove_file(&ignore_path).expect("remove existing Local Ignore fixture");
+
+    let operation = load_installed_without_cache(
+        installation.path(),
+        ffi::ExplicitYamlDataGameId::Fallout4,
+        "Original",
+    );
+    let status = installed_yaml_data_load_status(&operation);
+    assert!(status.has_snapshot);
+    assert!(!status.has_error);
+
+    let snapshot =
+        installed_yaml_data_load_take_snapshot(operation).expect("take generated ready snapshot");
+    assert_eq!(
+        installed_yaml_data_snapshot_local_ignore_state(&snapshot),
+        ffi::LocalIgnoreYamlDataState::Generated
+    );
+    assert_eq!(
+        yaml_data_ignore_list(&installed_yaml_data_snapshot_yaml_data(&snapshot)),
+        vec!["GeneratedBridgeEntry.dll".to_string()]
+    );
+
+    let generated = installed_yaml_data_snapshot_diagnostics(&snapshot)
+        .into_iter()
+        .find(|diagnostic| {
+            diagnostic.kind == ffi::InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
+        })
+        .expect("generated snapshot should expose its structured Local Ignore diagnostic");
+    assert!(!generated.has_role);
+    assert!(!generated.has_candidate);
+    assert!(generated.has_path);
+    assert_eq!(generated.path, ignore_path.to_string_lossy());
+    assert!(!generated.message.is_empty());
+}
+
+#[test]
 fn installed_yaml_data_load_bridge_preserves_typed_terminal_context() {
     let unsupported_root = tempdir().expect("create unsupported-game load root");
     let unsupported = load_installed_without_cache(
@@ -391,8 +448,16 @@ fn installed_yaml_data_load_bridge_maps_every_core_error_kind() {
             message: "parse fixture".to_string(),
         },
         CoreInstalledYamlDataLoadError::LocalIgnoreInvalidRoleData {
-            path,
+            path: path.clone(),
             reason: "role fixture".to_string(),
+        },
+        CoreInstalledYamlDataLoadError::LocalIgnoreDefaultInvalid {
+            path: path.clone(),
+            reason: "default fixture".to_string(),
+        },
+        CoreInstalledYamlDataLoadError::LocalIgnoreCreate {
+            path,
+            source: std::io::Error::new(std::io::ErrorKind::PermissionDenied, "creation fixture"),
         },
         CoreInstalledYamlDataLoadError::InvalidSelectedData {
             message: "projection fixture".to_string(),
@@ -415,18 +480,20 @@ fn installed_yaml_data_load_bridge_maps_every_core_error_kind() {
             ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreInvalidUtf8,
             ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreParse,
             ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreInvalidRoleData,
+            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreDefaultInvalid,
+            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreCreate,
             ffi::InstalledYamlDataLoadErrorKind::InvalidSelectedData,
         ]
     );
     assert!(!error_dtos[0].has_role);
     assert!(error_dtos[1].has_role);
     assert_eq!(error_dtos[1].role, ffi::InstalledYamlDataLoadRole::Game);
-    for error in &error_dtos[2..=5] {
+    for error in &error_dtos[2..=7] {
         assert!(error.has_role);
         assert_eq!(error.role, ffi::InstalledYamlDataLoadRole::LocalIgnore);
         assert!(error.has_path);
     }
-    assert!(!error_dtos[6].has_role);
+    assert!(!error_dtos[8].has_role);
 }
 
 #[test]

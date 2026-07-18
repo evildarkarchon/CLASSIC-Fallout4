@@ -37,6 +37,7 @@ indexmap = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
 dirs = { workspace = true }
+tempfile = { workspace = true }
 
 # Error handling
 thiserror = { workspace = true }
@@ -46,7 +47,6 @@ anyhow = { workspace = true }
 log = { workspace = true }
 
 [dev-dependencies]
-tempfile = { workspace = true }
 serial_test = "3.2"
 
 [lints.rust]

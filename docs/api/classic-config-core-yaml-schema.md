@@ -110,11 +110,13 @@ Missing, null, mapping, and mixed-type values are not treated as an empty ignore
 
 Explicit loading has no installed-source behavior. It does not resolve or consult the YAML update cache, inspect or promote `.prev`, select bundled data, fall back, generate a missing Local Ignore document, repair/reset a malformed document, create a backup, or write/delete any file. Missing, unreadable, incompatible, or semantically invalid caller-selected content fails with an error attributed to its exact `ExplicitYamlDataRole` and path.
 
-### Installed Snapshot With Existing Local Ignore
+### Installed Snapshot With Existing Or Generated Local Ignore
 
 `classic_config_core::load_installed_yaml_data` accepts one installation root, typed `GameId`, and the separate existing game-version mode. Main and game are independently selected through config-owned installed policy, while Local Ignore is read from `CLASSIC Data/CLASSIC Ignore.yaml` under that root and validated against the same Local Ignore role contract above.
 
-On `InstalledYamlDataLoadOutcome::Ready`, `InstalledYamlDataSnapshot` privately owns the exact bytes selected for all three roles. Its public surface exposes parsed `YamlDataCore`, Main/game provenance and compatible schema versions, exact SHA-256/byte-length identities for all three files, `LocalIgnoreYamlDataState::Existing`, and structured selection diagnostics. It does not expose raw YAML documents or byte buffers. Existing Local Ignore bytes are never replaced during ordinary loading, and later path changes cannot alter the snapshot.
+If Local Ignore is absent, the exact retained selected Main document must contain a non-empty string at `CLASSIC_Info.default_ignorefile`. Its embedded YAML is parsed and strictly validated against the selected Local Ignore role before any staging file is created. Complete bytes are staged and synced in the destination directory, then atomically published without overwriting an existing or concurrently created file. Every caller rereads the canonical destination, making the concurrent winner authoritative; defaults are never reopened from a later version of the installed Main path.
+
+On `InstalledYamlDataLoadOutcome::Ready`, `InstalledYamlDataSnapshot` privately owns the exact bytes selected for all three roles. Its public surface exposes parsed `YamlDataCore`, Main/game provenance and compatible schema versions, exact SHA-256/byte-length identities for all three files, `LocalIgnoreYamlDataState::{Existing, Generated}`, and structured selection/generation diagnostics. It does not expose raw YAML documents or byte buffers. Existing Local Ignore bytes are never replaced during ordinary loading, and later path changes cannot alter the snapshot.
 
 ---
 

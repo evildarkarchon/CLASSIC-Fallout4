@@ -1,3 +1,6 @@
+use super::{
+    LocalIgnoreFileSystem, SystemLocalIgnoreFileSystem, load_installed_yaml_data_with_env_and_io,
+};
 use crate::{
     InstalledYamlDataDiagnosticKind, InstalledYamlDataInspectionError,
     InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome,
@@ -7,13 +10,32 @@ use crate::{
 };
 use classic_shared_core::GameId;
 use sha2::{Digest, Sha256};
+use std::io;
 use std::path::{Path, PathBuf};
+use std::sync::{
+    Arc, Barrier,
+    atomic::{AtomicUsize, Ordering},
+};
 use tempfile::tempdir;
 
 const MAIN_YAML: &str = r#"schema_version: "2.0"
 CLASSIC_Info:
   version: "9.1.0"
   version_date: "2026-07-17"
+CLASSIC_Interface:
+  autoscan_text_Fallout4: "Bundled autoscan"
+catch_log_records: []
+"#;
+
+const DEFAULT_IGNORE_YAML: &str = "CLASSIC_Ignore_Fallout4:\n  - SelectedMainDefault.dll\n";
+
+const MAIN_WITH_DEFAULT_YAML: &str = r#"schema_version: "2.0"
+CLASSIC_Info:
+  version: "9.1.0"
+  version_date: "2026-07-17"
+  default_ignorefile: |
+    CLASSIC_Ignore_Fallout4:
+      - SelectedMainDefault.dll
 CLASSIC_Interface:
   autoscan_text_Fallout4: "Bundled autoscan"
 catch_log_records: []
@@ -57,12 +79,105 @@ fn isolated_cache_env(cache_root: &Path) -> impl Fn(&str) -> Option<String> + us
 }
 
 fn write_bundled_install(installation_root: &Path) {
+    write_bundled_install_with_main(installation_root, MAIN_YAML);
+}
+
+/// Write one isolated bundled installation using the caller-selected Main fixture.
+fn write_bundled_install_with_main(installation_root: &Path, main_yaml: &str) {
     let databases = bundled_dir(installation_root);
     std::fs::create_dir_all(&databases).expect("bundled YAML Data directory should be created");
-    std::fs::write(databases.join("CLASSIC Main.yaml"), MAIN_YAML)
+    std::fs::write(databases.join("CLASSIC Main.yaml"), main_yaml)
         .expect("bundled Main should be written");
     std::fs::write(databases.join("CLASSIC Fallout4.yaml"), GAME_YAML)
         .expect("bundled game should be written");
+}
+
+/// Build valid Main YAML whose retained Local Ignore default identifies one entry.
+fn main_with_default(entry: &str, autoscan_text: &str) -> String {
+    format!(
+        r#"schema_version: "2.0"
+CLASSIC_Info:
+  version: "9.1.0"
+  version_date: "2026-07-17"
+  default_ignorefile: |
+    CLASSIC_Ignore_Fallout4:
+      - {entry}
+CLASSIC_Interface:
+  autoscan_text_Fallout4: "{autoscan_text}"
+catch_log_records: []
+"#
+    )
+}
+
+/// Filesystem seam that makes concurrent publishers rendezvous after validation and staging.
+struct BarrierLocalIgnoreFileSystem {
+    publish_barrier: Arc<Barrier>,
+}
+
+impl LocalIgnoreFileSystem for BarrierLocalIgnoreFileSystem {
+    fn read(&self, path: &Path) -> io::Result<Vec<u8>> {
+        std::fs::read(path)
+    }
+
+    fn publish_staged_noclobber(&self, staged_path: &Path, path: &Path) -> io::Result<bool> {
+        self.publish_barrier.wait();
+        SystemLocalIgnoreFileSystem.publish_staged_noclobber(staged_path, path)
+    }
+}
+
+/// Filesystem seam that rejects the final publication operation.
+struct PublicationFailureLocalIgnoreFileSystem;
+
+impl LocalIgnoreFileSystem for PublicationFailureLocalIgnoreFileSystem {
+    fn read(&self, path: &Path) -> io::Result<Vec<u8>> {
+        std::fs::read(path)
+    }
+
+    fn publish_staged_noclobber(&self, _staged_path: &Path, _path: &Path) -> io::Result<bool> {
+        Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "injected Local Ignore publication failure",
+        ))
+    }
+}
+
+/// Filesystem seam that permits the initial missing read but rejects the authoritative reread.
+struct RereadFailureLocalIgnoreFileSystem {
+    read_count: AtomicUsize,
+}
+
+impl LocalIgnoreFileSystem for RereadFailureLocalIgnoreFileSystem {
+    fn read(&self, path: &Path) -> io::Result<Vec<u8>> {
+        if self.read_count.fetch_add(1, Ordering::SeqCst) == 0 {
+            std::fs::read(path)
+        } else {
+            Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "injected Local Ignore authoritative reread failure",
+            ))
+        }
+    }
+
+    fn publish_staged_noclobber(&self, staged_path: &Path, path: &Path) -> io::Result<bool> {
+        SystemLocalIgnoreFileSystem.publish_staged_noclobber(staged_path, path)
+    }
+}
+
+/// Filesystem seam that replaces selected Main after defaults are staged but before publication.
+struct MainReplacingLocalIgnoreFileSystem {
+    main_path: PathBuf,
+    replacement_main: Vec<u8>,
+}
+
+impl LocalIgnoreFileSystem for MainReplacingLocalIgnoreFileSystem {
+    fn read(&self, path: &Path) -> io::Result<Vec<u8>> {
+        std::fs::read(path)
+    }
+
+    fn publish_staged_noclobber(&self, staged_path: &Path, path: &Path) -> io::Result<bool> {
+        std::fs::write(&self.main_path, &self.replacement_main)?;
+        SystemLocalIgnoreFileSystem.publish_staged_noclobber(staged_path, path)
+    }
 }
 
 fn write_existing_local_ignore(installation_root: &Path) -> PathBuf {
@@ -71,6 +186,442 @@ fn write_existing_local_ignore(installation_root: &Path) -> PathBuf {
         .join("CLASSIC Ignore.yaml");
     std::fs::write(&path, IGNORE_YAML).expect("existing Local Ignore should be written");
     path
+}
+
+#[test]
+/// Missing Local Ignore is initialized from the exact selected Main defaults.
+fn missing_local_ignore_is_generated_from_the_selected_main_snapshot() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    write_bundled_install_with_main(installation.path(), MAIN_WITH_DEFAULT_YAML);
+    let ignore_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+
+    let outcome = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+    )
+    .expect("a missing Local Ignore should be generated from selected Main defaults");
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+
+    assert_eq!(
+        snapshot.local_ignore_state(),
+        LocalIgnoreYamlDataState::Generated
+    );
+    assert_eq!(
+        snapshot.yaml_data().ignore_list,
+        ["SelectedMainDefault.dll"]
+    );
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("generated Local Ignore should be readable"),
+        DEFAULT_IGNORE_YAML.as_bytes()
+    );
+    assert!(snapshot.diagnostics().iter().any(|diagnostic| {
+        diagnostic.role().is_none()
+            && diagnostic.candidate().is_none()
+            && diagnostic.path() == Some(ignore_path.as_path())
+            && diagnostic.kind() == InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
+    }));
+}
+
+#[test]
+/// Invalid selected Main defaults fail before staging or publishing any filesystem content.
+fn invalid_selected_main_defaults_fail_before_any_generation_attempt() {
+    let invalid_mains = [
+        ("missing", MAIN_YAML.to_string()),
+        (
+            "non-string",
+            MAIN_WITH_DEFAULT_YAML.replace(
+                "default_ignorefile: |\n    CLASSIC_Ignore_Fallout4:\n      - SelectedMainDefault.dll",
+                "default_ignorefile: [not, a, string]",
+            ),
+        ),
+        (
+            "empty",
+            MAIN_WITH_DEFAULT_YAML.replace(
+                "default_ignorefile: |\n    CLASSIC_Ignore_Fallout4:\n      - SelectedMainDefault.dll",
+                "default_ignorefile: \"\"",
+            ),
+        ),
+        (
+            "malformed-role",
+            MAIN_WITH_DEFAULT_YAML.replace(
+                "CLASSIC_Ignore_Fallout4:\n      - SelectedMainDefault.dll",
+                "CLASSIC_Ignore_Fallout4: not-a-sequence",
+            ),
+        ),
+        (
+            "malformed-yaml",
+            MAIN_WITH_DEFAULT_YAML.replace(
+                "CLASSIC_Ignore_Fallout4:\n      - SelectedMainDefault.dll",
+                "CLASSIC_Ignore_Fallout4: [unterminated",
+            ),
+        ),
+    ];
+
+    for (case, main_yaml) in invalid_mains {
+        let installation = tempdir().expect("installation root should be created");
+        let cache_root = tempdir().expect("cache root should be created");
+        write_bundled_install_with_main(installation.path(), &main_yaml);
+        let ignore_path = installation
+            .path()
+            .join("CLASSIC Data")
+            .join("CLASSIC Ignore.yaml");
+
+        let error = load_installed_yaml_data_with_env(
+            InstalledYamlDataLoadRequest {
+                installation_root: installation.path().to_path_buf(),
+                game: GameId::Fallout4,
+                selected_game_version: "Original".to_string(),
+            },
+            isolated_cache_env(cache_root.path()),
+        )
+        .expect_err("invalid defaults must prevent Local Ignore generation");
+
+        assert!(
+            matches!(
+                error,
+                InstalledYamlDataLoadError::LocalIgnoreDefaultInvalid { path, .. }
+                    if path == ignore_path
+            ),
+            "case `{case}` should return the typed default-validation failure"
+        );
+        assert!(
+            !ignore_path.exists(),
+            "case `{case}` must not publish partial Local Ignore content"
+        );
+        let data_entries = std::fs::read_dir(installation.path().join("CLASSIC Data"))
+            .expect("CLASSIC Data should remain readable")
+            .map(|entry| {
+                entry
+                    .expect("directory entry should be readable")
+                    .file_name()
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            data_entries,
+            [std::ffi::OsString::from("databases")],
+            "case `{case}` must fail before creating a staging file"
+        );
+    }
+}
+
+#[test]
+/// Accidental deletion follows the same successful generation path on the next load.
+fn deleting_local_ignore_regenerates_it_from_the_new_selected_snapshot() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    let main_path = bundled_dir(installation.path()).join("CLASSIC Main.yaml");
+    write_bundled_install_with_main(
+        installation.path(),
+        &main_with_default("FirstDefault.dll", "First snapshot"),
+    );
+    let request = InstalledYamlDataLoadRequest {
+        installation_root: installation.path().to_path_buf(),
+        game: GameId::Fallout4,
+        selected_game_version: "Original".to_string(),
+    };
+    let ignore_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+
+    let first =
+        load_installed_yaml_data_with_env(request.clone(), isolated_cache_env(cache_root.path()))
+            .expect("first run should generate Local Ignore");
+    let InstalledYamlDataLoadOutcome::Ready(first) = first;
+    assert_eq!(first.yaml_data().ignore_list, ["FirstDefault.dll"]);
+
+    std::fs::remove_file(&ignore_path).expect("generated Local Ignore should be deletable");
+    std::fs::write(
+        &main_path,
+        main_with_default("RegeneratedDefault.dll", "Second snapshot"),
+    )
+    .expect("selected Main should be replaceable before the next load");
+
+    let second = load_installed_yaml_data_with_env(request, isolated_cache_env(cache_root.path()))
+        .expect("accidental deletion should use the successful generation path");
+    let InstalledYamlDataLoadOutcome::Ready(second) = second;
+
+    assert_eq!(
+        second.local_ignore_state(),
+        LocalIgnoreYamlDataState::Generated
+    );
+    assert_eq!(second.yaml_data().ignore_list, ["RegeneratedDefault.dll"]);
+    assert_eq!(second.yaml_data().autoscan_text, "Second snapshot");
+}
+
+#[test]
+/// Concurrent loaders preserve one complete winner and all snapshots reread its bytes.
+fn concurrent_generation_preserves_one_winner_and_every_loader_rereads_it() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_a = tempdir().expect("first cache root should be created");
+    let cache_b = tempdir().expect("second cache root should be created");
+    write_bundled_install_with_main(installation.path(), MAIN_WITH_DEFAULT_YAML);
+    for (cache_root, entry, autoscan) in [
+        (cache_a.path(), "ConcurrentA.dll", "Selected A"),
+        (cache_b.path(), "ConcurrentB.dll", "Selected B"),
+    ] {
+        let cache = cache_dir(cache_root);
+        std::fs::create_dir_all(&cache).expect("updated cache should be created");
+        std::fs::write(
+            cache.join("CLASSIC Main.yaml"),
+            main_with_default(entry, autoscan),
+        )
+        .expect("updated Main should be written");
+    }
+    let installation_root = installation.path().to_path_buf();
+    let start_barrier = Arc::new(Barrier::new(3));
+    let publish_barrier = Arc::new(Barrier::new(2));
+    let spawn_loader = |cache_root: PathBuf, expected_default: &'static str| {
+        let installation_root = installation_root.clone();
+        let start_barrier = Arc::clone(&start_barrier);
+        let local_ignore_io = BarrierLocalIgnoreFileSystem {
+            publish_barrier: Arc::clone(&publish_barrier),
+        };
+        std::thread::spawn(move || {
+            start_barrier.wait();
+            let outcome = load_installed_yaml_data_with_env_and_io(
+                InstalledYamlDataLoadRequest {
+                    installation_root,
+                    game: GameId::Fallout4,
+                    selected_game_version: "Original".to_string(),
+                },
+                isolated_cache_env(&cache_root),
+                &local_ignore_io,
+            )
+            .expect("each concurrent loader should become Ready");
+            let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+            (expected_default, snapshot)
+        })
+    };
+    let loader_a = spawn_loader(cache_a.path().to_path_buf(), "ConcurrentA.dll");
+    let loader_b = spawn_loader(cache_b.path().to_path_buf(), "ConcurrentB.dll");
+
+    start_barrier.wait();
+    let results = [
+        loader_a.join().expect("first loader should not panic"),
+        loader_b.join().expect("second loader should not panic"),
+    ];
+    let ignore_path = installation_root
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+    let winning_bytes = std::fs::read(&ignore_path).expect("winning Local Ignore should exist");
+    let winning_default =
+        if winning_bytes == b"CLASSIC_Ignore_Fallout4:\n  - ConcurrentA.dll\n".as_slice() {
+            "ConcurrentA.dll"
+        } else {
+            assert_eq!(
+                winning_bytes, b"CLASSIC_Ignore_Fallout4:\n  - ConcurrentB.dll\n",
+                "the canonical file must be one complete selected-Main default"
+            );
+            "ConcurrentB.dll"
+        };
+    let winning_digest = Sha256::digest(&winning_bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+
+    assert_eq!(
+        results
+            .iter()
+            .filter(|(_, snapshot)| {
+                snapshot.local_ignore_state() == LocalIgnoreYamlDataState::Generated
+            })
+            .count(),
+        1,
+        "exactly one no-clobber publisher should win"
+    );
+    for (selected_default, snapshot) in results {
+        assert_eq!(
+            snapshot.yaml_data().ignore_list,
+            [winning_default],
+            "every caller must reread the authoritative winner"
+        );
+        assert_eq!(
+            snapshot.local_ignore_identity().sha256_hex(),
+            winning_digest,
+            "snapshot identity must derive from the reread winner bytes"
+        );
+        assert_eq!(
+            snapshot.local_ignore_identity().byte_len(),
+            winning_bytes.len() as u64
+        );
+        if snapshot.local_ignore_state() == LocalIgnoreYamlDataState::Generated {
+            assert_eq!(
+                selected_default, winning_default,
+                "published content must come from the winner's retained Main snapshot"
+            );
+            assert!(snapshot.diagnostics().iter().any(|diagnostic| {
+                diagnostic.kind() == InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
+                    && diagnostic.path() == Some(ignore_path.as_path())
+            }));
+        }
+    }
+}
+
+#[test]
+/// Publication failures return the typed creation error and remove the complete staging file.
+fn publication_failure_leaves_no_local_ignore_or_staging_content() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    write_bundled_install_with_main(installation.path(), MAIN_WITH_DEFAULT_YAML);
+    let ignore_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+
+    let error = load_installed_yaml_data_with_env_and_io(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+        &PublicationFailureLocalIgnoreFileSystem,
+    )
+    .expect_err("an injected publication failure should abort the load");
+
+    match error {
+        InstalledYamlDataLoadError::LocalIgnoreCreate { path, source } => {
+            assert_eq!(path, ignore_path);
+            assert_eq!(source.kind(), io::ErrorKind::PermissionDenied);
+        }
+        other => panic!("publication should return LocalIgnoreCreate, got {other:?}"),
+    }
+    assert!(
+        !ignore_path.exists(),
+        "failed publication must not expose partial canonical content"
+    );
+    let data_entries = std::fs::read_dir(installation.path().join("CLASSIC Data"))
+        .expect("CLASSIC Data should remain readable")
+        .map(|entry| {
+            entry
+                .expect("directory entry should be readable")
+                .file_name()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        data_entries,
+        [std::ffi::OsString::from("databases")],
+        "the dropped staging file must be cleaned up"
+    );
+}
+
+#[test]
+/// Authoritative reread failures return a typed read error without exposing partial content.
+fn authoritative_reread_failure_returns_error_after_complete_publication() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    write_bundled_install_with_main(installation.path(), MAIN_WITH_DEFAULT_YAML);
+    let ignore_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+    let local_ignore_io = RereadFailureLocalIgnoreFileSystem {
+        read_count: AtomicUsize::new(0),
+    };
+
+    let error = load_installed_yaml_data_with_env_and_io(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+        &local_ignore_io,
+    )
+    .expect_err("an injected authoritative reread failure should abort the load");
+
+    match error {
+        InstalledYamlDataLoadError::LocalIgnoreRead { path, source } => {
+            assert_eq!(path, ignore_path);
+            assert_eq!(source.kind(), io::ErrorKind::PermissionDenied);
+        }
+        other => panic!("reread should return LocalIgnoreRead, got {other:?}"),
+    }
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("published canonical bytes should remain complete"),
+        DEFAULT_IGNORE_YAML.as_bytes()
+    );
+    let mut data_entries = std::fs::read_dir(installation.path().join("CLASSIC Data"))
+        .expect("CLASSIC Data should remain readable")
+        .map(|entry| {
+            entry
+                .expect("directory entry should be readable")
+                .file_name()
+        })
+        .collect::<Vec<_>>();
+    data_entries.sort();
+    assert_eq!(
+        data_entries,
+        [
+            std::ffi::OsString::from("CLASSIC Ignore.yaml"),
+            std::ffi::OsString::from("databases"),
+        ],
+        "publication must leave no temporary or partial artifact"
+    );
+}
+
+#[test]
+/// Main replacement during generation cannot change retained defaults or snapshot identity.
+fn generation_uses_retained_main_when_selected_path_changes_before_publication() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    let selected_main = main_with_default("RetainedDefault.dll", "Retained snapshot");
+    let replacement_main = main_with_default("ReplacementDefault.dll", "Replacement snapshot");
+    write_bundled_install_with_main(installation.path(), &selected_main);
+    let main_path = bundled_dir(installation.path()).join("CLASSIC Main.yaml");
+    let ignore_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+    let expected_main_digest = Sha256::digest(selected_main.as_bytes())
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+    let local_ignore_io = MainReplacingLocalIgnoreFileSystem {
+        main_path: main_path.clone(),
+        replacement_main: replacement_main.as_bytes().to_vec(),
+    };
+
+    let outcome = load_installed_yaml_data_with_env_and_io(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+        &local_ignore_io,
+    )
+    .expect("generation should remain bound to the retained selected Main bytes");
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+
+    assert_eq!(
+        std::fs::read(&main_path).expect("replacement Main should be readable"),
+        replacement_main.as_bytes(),
+        "the test seam must replace Main during generation"
+    );
+    assert_eq!(snapshot.yaml_data().autoscan_text, "Retained snapshot");
+    assert_eq!(snapshot.yaml_data().ignore_list, ["RetainedDefault.dll"]);
+    assert_eq!(
+        snapshot.main().identity().sha256_hex(),
+        expected_main_digest
+    );
+    assert_eq!(
+        std::fs::read(ignore_path).expect("generated Local Ignore should be readable"),
+        b"CLASSIC_Ignore_Fallout4:\n  - RetainedDefault.dll\n"
+    );
+    assert_eq!(
+        snapshot.local_ignore_state(),
+        LocalIgnoreYamlDataState::Generated
+    );
 }
 
 #[test]

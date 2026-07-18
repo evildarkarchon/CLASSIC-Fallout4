@@ -1,13 +1,13 @@
 {
-  "generated_at_utc": "2026-07-18T08:12:19.337381+00:00",
+  "generated_at_utc": "2026-07-18T08:57:56.884691+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1592,
-    "runtime_verified_total": 1592,
+    "tracked_surface_total": 1594,
+    "runtime_verified_total": 1594,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 1236,
@@ -17,8 +17,8 @@
   "registryMismatches": [],
   "perOwnerModule": {
     "config": {
-      "runtime_verified": 63,
-      "total": 63
+      "runtime_verified": 65,
+      "total": 65
     },
     "database": {
       "runtime_verified": 56,
@@ -23885,7 +23885,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadOutcome",
@@ -23904,7 +23904,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadOutcome.status",
@@ -23923,7 +23923,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadOutcome.snapshot",
@@ -23942,7 +23942,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot",
@@ -23961,7 +23961,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.game",
@@ -23980,7 +23980,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.game_data_role",
@@ -23999,7 +23999,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.yaml_data",
@@ -24018,7 +24018,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.main",
@@ -24037,7 +24037,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.game_file",
@@ -24056,7 +24056,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.local_ignore_state",
@@ -24075,7 +24075,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.local_ignore_identity",
@@ -24094,7 +24094,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.diagnostics",
@@ -24113,7 +24113,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadError",
@@ -24132,7 +24132,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadUnsupportedGameError",
@@ -24151,7 +24151,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadNoUsableSourceError",
@@ -24170,7 +24170,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadLocalIgnoreReadError",
@@ -24189,7 +24189,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
@@ -24208,7 +24208,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadLocalIgnoreParseError",
@@ -24227,7 +24227,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
@@ -24246,7 +24246,45 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.InstalledYamlDataLoadLocalIgnoreDefaultInvalidError",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.InstalledYamlDataLoadLocalIgnoreDefaultInvalidError",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.InstalledYamlDataLoadLocalIgnoreCreateError",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.InstalledYamlDataLoadLocalIgnoreCreateError",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadInvalidSelectedDataError",
@@ -24265,7 +24303,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, Local Ignore preservation and identity, typed selection failures, every Local Ignore fatal projection, and the defensive invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_scanlog.AnalyzerKind",

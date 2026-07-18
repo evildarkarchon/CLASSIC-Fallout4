@@ -82,6 +82,8 @@ pub enum JsInstalledYamlDataDiagnosticKind {
     IncompatibleSchema,
     /// A candidate failed role-specific semantic validation.
     InvalidRoleData,
+    /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+    LocalIgnoreGenerated,
 }
 
 /// Registered game-data role selected for Installed YAML Data.
@@ -103,16 +105,18 @@ pub enum JsInstalledYamlDataLoadStatus {
 pub enum JsLocalIgnoreYamlDataState {
     /// A valid user-owned Local Ignore file already existed.
     Existing,
+    /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+    Generated,
 }
 
-/// Structured attribution for one cache-resolution or candidate-rejection event.
+/// Structured attribution for one selection, rejection, or local generation event.
 #[napi(object)]
 pub struct JsInstalledYamlDataDiagnostic {
-    /// Affected file role, absent for installation-wide diagnostics.
+    /// Affected update-eligible role, absent for installation-wide or Local Ignore events.
     pub role: Option<JsInstalledYamlDataRole>,
-    /// Rejected candidate provenance, absent when no candidate was resolved.
+    /// Rejected candidate provenance, absent when no update-eligible candidate applies.
     pub candidate: Option<JsInstalledYamlDataProvenance>,
-    /// Candidate path when the diagnostic is path-attributable.
+    /// Affected path when the diagnostic is path-attributable.
     pub path: Option<String>,
     /// Stable machine-readable diagnostic category.
     pub kind: JsInstalledYamlDataDiagnosticKind,
@@ -195,6 +199,7 @@ impl InstalledYamlDataSnapshot {
     pub fn local_ignore_state(&self) -> JsLocalIgnoreYamlDataState {
         match self.inner.local_ignore_state() {
             CoreLocalIgnoreYamlDataState::Existing => JsLocalIgnoreYamlDataState::Existing,
+            CoreLocalIgnoreYamlDataState::Generated => JsLocalIgnoreYamlDataState::Generated,
         }
     }
 
@@ -204,7 +209,7 @@ impl InstalledYamlDataSnapshot {
         content_identity_to_js(self.inner.local_ignore_identity())
     }
 
-    /// Returns structured fallback and cache-resolution diagnostics.
+    /// Returns structured fallback, cache-resolution, and generation diagnostics.
     #[napi(getter)]
     pub fn diagnostics(&self) -> Vec<JsInstalledYamlDataDiagnostic> {
         self.inner
@@ -427,6 +432,9 @@ const fn diagnostic_kind_to_js(
         CoreInstalledYamlDataDiagnosticKind::InvalidRoleData => {
             JsInstalledYamlDataDiagnosticKind::InvalidRoleData
         }
+        CoreInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated => {
+            JsInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
+        }
     }
 }
 
@@ -508,6 +516,18 @@ fn load_error_to_napi(env: Env, error: CoreInstalledYamlDataLoadError) -> napi::
         ),
         CoreInstalledYamlDataLoadError::LocalIgnoreInvalidRoleData { path, .. } => (
             "local_ignore_invalid_role_data",
+            Some("local_ignore"),
+            Some(path.clone()),
+            Vec::new(),
+        ),
+        CoreInstalledYamlDataLoadError::LocalIgnoreDefaultInvalid { path, .. } => (
+            "local_ignore_default_invalid",
+            Some("local_ignore"),
+            Some(path.clone()),
+            Vec::new(),
+        ),
+        CoreInstalledYamlDataLoadError::LocalIgnoreCreate { path, .. } => (
+            "local_ignore_create",
             Some("local_ignore"),
             Some(path.clone()),
             Vec::new(),

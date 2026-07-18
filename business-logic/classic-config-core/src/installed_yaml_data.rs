@@ -11,7 +11,9 @@ use classic_settings_core::{
     Compatibility, SchemaCompat, SchemaVersion, extract_schema_version, schema_compat_check,
 };
 use classic_shared_core::GameId;
+use std::io::Write;
 use std::path::{Path, PathBuf};
+use tempfile::NamedTempFile;
 use thiserror::Error;
 use yaml_rust2::Yaml;
 
@@ -63,9 +65,11 @@ pub enum InstalledYamlDataDiagnosticKind {
     IncompatibleSchema,
     /// A candidate failed role-specific semantic validation.
     InvalidRoleData,
+    /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+    LocalIgnoreGenerated,
 }
 
-/// Structured attribution for a cache-resolution or candidate-rejection event.
+/// Structured attribution for Installed YAML Data selection or local generation events.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InstalledYamlDataDiagnostic {
     role: Option<InstalledYamlDataRole>,
@@ -76,19 +80,19 @@ pub struct InstalledYamlDataDiagnostic {
 }
 
 impl InstalledYamlDataDiagnostic {
-    /// Return the affected file role, or `None` for installation-wide diagnostics.
+    /// Return the affected update-eligible role, or `None` for installation-wide and Local Ignore diagnostics.
     #[must_use]
     pub const fn role(&self) -> Option<InstalledYamlDataRole> {
         self.role
     }
 
-    /// Return the rejected candidate kind, or `None` when no candidate path was available.
+    /// Return the rejected candidate kind, or `None` when the event is not candidate-specific.
     #[must_use]
     pub const fn candidate(&self) -> Option<InstalledYamlDataProvenance> {
         self.candidate
     }
 
-    /// Return the candidate path when the diagnostic is path-attributable.
+    /// Return the affected path when the diagnostic is path-attributable.
     #[must_use]
     pub fn path(&self) -> Option<&Path> {
         self.path.as_deref()
@@ -167,6 +171,8 @@ pub struct InstalledYamlDataLoadRequest {
 pub enum LocalIgnoreYamlDataState {
     /// A valid user-owned Local Ignore file already existed in the installation.
     Existing,
+    /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+    Generated,
 }
 
 /// Selected update-eligible YAML Data facts from one inspection.
@@ -199,6 +205,36 @@ struct SelectedInstalledYamlData {
 struct OwnedLocalIgnoreYamlData {
     bytes: Box<[u8]>,
     identity: YamlDataContentIdentity,
+}
+
+/// Private filesystem seam for deterministic Local Ignore publication and reread tests.
+///
+/// Production uses [`SystemLocalIgnoreFileSystem`]. Keeping this seam private prevents callers
+/// from replacing config-owned generation policy while allowing failure atomicity and races to
+/// be driven at the complete loader boundary.
+trait LocalIgnoreFileSystem {
+    /// Read the canonical Local Ignore path.
+    fn read(&self, path: &Path) -> std::io::Result<Vec<u8>>;
+
+    /// Atomically link one fully synced staged file into an absent canonical path.
+    fn publish_staged_noclobber(&self, staged_path: &Path, path: &Path) -> std::io::Result<bool>;
+}
+
+/// Production Local Ignore filesystem implementation backed by `std::fs`.
+struct SystemLocalIgnoreFileSystem;
+
+impl LocalIgnoreFileSystem for SystemLocalIgnoreFileSystem {
+    fn read(&self, path: &Path) -> std::io::Result<Vec<u8>> {
+        std::fs::read(path)
+    }
+
+    fn publish_staged_noclobber(&self, staged_path: &Path, path: &Path) -> std::io::Result<bool> {
+        match std::fs::hard_link(staged_path, path) {
+            Ok(()) => Ok(true),
+            Err(source) if source.kind() == std::io::ErrorKind::AlreadyExists => Ok(false),
+            Err(source) => Err(source),
+        }
+    }
 }
 
 /// Immutable parsed Installed YAML Data backed by the exact selected file bytes.
@@ -273,7 +309,7 @@ impl InstalledYamlDataSnapshot {
         &self.local_ignore.identity
     }
 
-    /// Return structured fallback and cache-resolution diagnostics.
+    /// Return structured fallback, cache-resolution, and generation diagnostics.
     #[must_use]
     pub fn diagnostics(&self) -> &[InstalledYamlDataDiagnostic] {
         &self.diagnostics
@@ -389,6 +425,23 @@ pub enum InstalledYamlDataLoadError {
         /// Stable validation details.
         reason: String,
     },
+    /// Selected Main defaults could not safely initialize missing Local Ignore YAML Data.
+    #[error("selected Main default for Local Ignore YAML Data `{}` is invalid: {reason}", path.display())]
+    LocalIgnoreDefaultInvalid {
+        /// Expected Local Ignore path.
+        path: PathBuf,
+        /// Stable validation details.
+        reason: String,
+    },
+    /// Missing Local Ignore YAML Data could not be atomically created.
+    #[error("failed to create Local Ignore YAML Data `{}`: {source}", path.display())]
+    LocalIgnoreCreate {
+        /// Expected Local Ignore path.
+        path: PathBuf,
+        /// Underlying staging or publication failure.
+        #[source]
+        source: std::io::Error,
+    },
     /// Selected documents could not be projected into parsed YAML Data.
     #[error("selected Installed YAML Data is invalid: {message}")]
     InvalidSelectedData {
@@ -432,11 +485,11 @@ where
     })
 }
 
-/// Load one immutable Installed YAML Data snapshot, including valid existing Local Ignore.
+/// Load one immutable Installed YAML Data snapshot, generating missing Local Ignore when needed.
 ///
 /// Main and game candidates use the same config-owned selector as inspection. Every selected
 /// file is read once, and parsing, validation, identity, and the returned `YamlDataCore` all
-/// derive from the exact retained bytes. Ordinary loading never rewrites Local Ignore.
+/// derive from the exact retained bytes. Existing Local Ignore is never rewritten.
 pub fn load_installed_yaml_data(
     request: InstalledYamlDataLoadRequest,
 ) -> Result<InstalledYamlDataLoadOutcome, InstalledYamlDataLoadError> {
@@ -457,18 +510,64 @@ pub fn load_installed_yaml_data_with_env<F>(
 where
     F: Fn(&str) -> Option<String>,
 {
-    let selected = select_installed_yaml_data(&request.installation_root, request.game, env)
+    load_installed_yaml_data_with_env_and_io(request, env, &SystemLocalIgnoreFileSystem)
+}
+
+/// Shared installed loader implementation with private Local Ignore filesystem injection.
+///
+/// Main and game selection always uses the production filesystem policy. Only Local Ignore
+/// canonical reads and the final no-clobber publication operation are injected for deterministic
+/// concurrency and failure-atomicity tests.
+fn load_installed_yaml_data_with_env_and_io<F, I>(
+    request: InstalledYamlDataLoadRequest,
+    env: F,
+    local_ignore_io: &I,
+) -> Result<InstalledYamlDataLoadOutcome, InstalledYamlDataLoadError>
+where
+    F: Fn(&str) -> Option<String>,
+    I: LocalIgnoreFileSystem,
+{
+    let mut selected = select_installed_yaml_data(&request.installation_root, request.game, env)
         .map_err(InstalledYamlDataLoadError::from)?;
     let ignore_path = request
         .installation_root
         .join("CLASSIC Data")
         .join("CLASSIC Ignore.yaml");
-    let ignore_bytes = std::fs::read(&ignore_path).map_err(|source| {
-        InstalledYamlDataLoadError::LocalIgnoreRead {
-            path: ignore_path.clone(),
-            source,
+    let (ignore_bytes, local_ignore_state) = match local_ignore_io.read(&ignore_path) {
+        Ok(bytes) => (bytes, LocalIgnoreYamlDataState::Existing),
+        Err(source) if source.kind() == std::io::ErrorKind::NotFound => {
+            let defaults = validated_local_ignore_defaults(&selected, &ignore_path)?;
+            let generated =
+                publish_local_ignore_if_absent(local_ignore_io, &ignore_path, defaults.as_bytes())?;
+            let bytes = local_ignore_io.read(&ignore_path).map_err(|source| {
+                InstalledYamlDataLoadError::LocalIgnoreRead {
+                    path: ignore_path.clone(),
+                    source,
+                }
+            })?;
+            if generated {
+                selected.diagnostics.push(InstalledYamlDataDiagnostic {
+                    role: None,
+                    candidate: None,
+                    path: Some(ignore_path.clone()),
+                    kind: InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated,
+                    message: format!(
+                        "generated missing Local Ignore YAML Data from selected Main defaults at {}",
+                        ignore_path.display()
+                    ),
+                });
+                (bytes, LocalIgnoreYamlDataState::Generated)
+            } else {
+                (bytes, LocalIgnoreYamlDataState::Existing)
+            }
         }
-    })?;
+        Err(source) => {
+            return Err(InstalledYamlDataLoadError::LocalIgnoreRead {
+                path: ignore_path,
+                source,
+            });
+        }
+    };
     let local_ignore = OwnedLocalIgnoreYamlData {
         identity: YamlDataContentIdentity::from_bytes(&ignore_bytes),
         bytes: ignore_bytes.into_boxed_slice(),
@@ -519,10 +618,110 @@ where
             main: selected.main,
             game_file: selected.game_file,
             local_ignore,
-            local_ignore_state: LocalIgnoreYamlDataState::Existing,
+            local_ignore_state,
             diagnostics: selected.diagnostics,
         },
     ))
+}
+
+/// Extract and strictly validate the Local Ignore template retained in selected Main YAML Data.
+///
+/// Validation completes before any staging file is created, so malformed defaults cannot leave
+/// filesystem artifacts or become visible to a concurrent loader.
+fn validated_local_ignore_defaults<'a>(
+    selected: &'a SelectedInstalledYamlData,
+    ignore_path: &Path,
+) -> Result<&'a str, InstalledYamlDataLoadError> {
+    let defaults = selected
+        .main
+        .yaml
+        .as_hash()
+        .and_then(|main| {
+            main.iter().find_map(|(key, value)| {
+                (key.as_str() == Some("CLASSIC_Info"))
+                    .then_some(value)
+                    .and_then(Yaml::as_hash)
+            })
+        })
+        .and_then(|info| {
+            info.iter().find_map(|(key, value)| {
+                (key.as_str() == Some("default_ignorefile"))
+                    .then_some(value)
+                    .and_then(Yaml::as_str)
+            })
+        })
+        .filter(|defaults| !defaults.trim().is_empty())
+        .ok_or_else(|| InstalledYamlDataLoadError::LocalIgnoreDefaultInvalid {
+            path: ignore_path.to_path_buf(),
+            reason: "required `CLASSIC_Info.default_ignorefile` non-empty string is missing or malformed"
+                .to_string(),
+        })?;
+    let yaml = parse_and_merge_yaml_content(
+        "selected Main Local Ignore default",
+        "Selected Main Local Ignore Default",
+        defaults,
+    )
+    .map_err(
+        |source| InstalledYamlDataLoadError::LocalIgnoreDefaultInvalid {
+            path: ignore_path.to_path_buf(),
+            reason: source.to_string(),
+        },
+    )?;
+    validate_ignore(&yaml, selected.game_data_role, ignore_path).map_err(|source| {
+        InstalledYamlDataLoadError::LocalIgnoreDefaultInvalid {
+            path: ignore_path.to_path_buf(),
+            reason: explicit_validation_reason(source),
+        }
+    })?;
+    Ok(defaults)
+}
+
+/// Stage complete bytes beside `path`, then atomically publish them only if `path` is absent.
+///
+/// A hard link makes the fully synced staged inode visible at the canonical path in one
+/// no-clobber filesystem operation. `Ok(false)` means a concurrent creator won; callers must
+/// reread the canonical path and treat that winner as authoritative.
+fn publish_local_ignore_if_absent<I>(
+    local_ignore_io: &I,
+    path: &Path,
+    content: &[u8],
+) -> Result<bool, InstalledYamlDataLoadError>
+where
+    I: LocalIgnoreFileSystem,
+{
+    let parent = path
+        .parent()
+        .ok_or_else(|| InstalledYamlDataLoadError::LocalIgnoreCreate {
+            path: path.to_path_buf(),
+            source: std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "Local Ignore path has no parent directory",
+            ),
+        })?;
+    let mut staged = NamedTempFile::new_in(parent).map_err(|source| {
+        InstalledYamlDataLoadError::LocalIgnoreCreate {
+            path: path.to_path_buf(),
+            source,
+        }
+    })?;
+    staged
+        .write_all(content)
+        .map_err(|source| InstalledYamlDataLoadError::LocalIgnoreCreate {
+            path: path.to_path_buf(),
+            source,
+        })?;
+    staged.as_file().sync_all().map_err(|source| {
+        InstalledYamlDataLoadError::LocalIgnoreCreate {
+            path: path.to_path_buf(),
+            source,
+        }
+    })?;
+    local_ignore_io
+        .publish_staged_noclobber(staged.path(), path)
+        .map_err(|source| InstalledYamlDataLoadError::LocalIgnoreCreate {
+            path: path.to_path_buf(),
+            source,
+        })
 }
 
 impl From<InstalledYamlDataInspectionError> for InstalledYamlDataLoadError {

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-18T08:12:50Z",
+  "generated_at_utc": "2026-07-18T08:51:52Z",
   "schema_version": 1,
   "entries": [
     {
@@ -70,7 +70,8 @@
         "Parse",
         "InvalidSchema",
         "IncompatibleSchema",
-        "InvalidRoleData"
+        "InvalidRoleData",
+        "LocalIgnoreGenerated"
       ]
     },
     {
@@ -110,7 +111,9 @@
         "LocalIgnoreInvalidUtf8",
         "LocalIgnoreParse",
         "LocalIgnoreInvalidRoleData",
-        "InvalidSelectedData"
+        "InvalidSelectedData",
+        "LocalIgnoreDefaultInvalid",
+        "LocalIgnoreCreate"
       ]
     },
     {
@@ -159,7 +162,8 @@
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
       "blockOrigin": "Rust",
       "variants": [
-        "Existing"
+        "Existing",
+        "Generated"
       ]
     },
     {
