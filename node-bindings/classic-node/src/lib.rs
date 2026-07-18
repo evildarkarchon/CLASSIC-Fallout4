@@ -40,6 +40,7 @@ mod scanlog;
 // Wave 3: File I/O & Data
 mod config;
 mod database;
+mod explicit_yaml_data;
 mod fileio;
 mod settings;
 mod user_settings;

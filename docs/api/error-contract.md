@@ -117,6 +117,20 @@ The only Python Crash Log Scan Run operation is the deliberate structured-operat
 
 ---
 
+## Explicit YAML Data load errors (`typed-mutation-free-explicit-yaml-data`)
+
+`classic_config_core::load_explicit_yaml_data` keeps unsupported games and every file role attributable without message parsing. Its stable core variants are `UnsupportedGame`, `Read`, `InvalidUtf8`, `Parse`, and `InvalidRoleData`. The binding shapes preserve those distinctions according to each language's normal idiom:
+
+| Binding | Failure shape |
+| --- | --- |
+| C++ (CXX) | `explicit_yaml_data_load_status()` returns `ExplicitYamlDataLoadErrorDto { kind, has_role, role, has_path, path, message }`. Callers inspect the status before consuming a ready load with `explicit_yaml_data_load_take_snapshot()`; expected load failures are not flattened into `rust::Error`. |
+| Node (NAPI-RS) | `loadExplicitYamlData(...)` rejects with an `Error` whose stable lowercase `code` is `unsupported_game`, `read`, `invalid_utf8`, `parse`, or `invalid_role_data`. File-specific failures also carry `yamlRole` (`main`, `game`, or `local_ignore`) and `path`. |
+| Python (PyO3) | `classic_config.load_explicit_yaml_data(...)` raises a subclass of `ExplicitYamlDataLoadError`: `ExplicitYamlDataUnsupportedGameError`, `ExplicitYamlDataReadError`, `ExplicitYamlDataInvalidUtf8Error`, `ExplicitYamlDataParseError`, or `ExplicitYamlDataInvalidRoleDataError`. Every instance exposes the matching lowercase `code`; file-specific failures also expose `yaml_role` and `path`, while non-file failures set them to `None`. |
+
+All three surfaces delegate role selection, validation, and error classification to Rust. Callers must not respond to an explicit-file failure by silently selecting installed, cached, bundled, or generated data.
+
+---
+
 ## `CLASSIC Main.yaml` version-reader errors (`schema-gated startup read`)
 
 The schema-gated `CLASSIC_Info.version` reader (`classic_config_core::load_main_yaml_version`) is the native-frontend startup path that replaced the raw `yaml_ops` read in `classic-gui/src/main.cpp`. Its typed core error (`MainYamlVersionError`) projects onto each binding according to the per-language idiom below. Same-family, different-shape-per-binding, just like the notification channel.

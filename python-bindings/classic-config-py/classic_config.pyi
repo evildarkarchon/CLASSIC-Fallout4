@@ -344,6 +344,80 @@ def clear_yaml_cache() -> None:
     Forces the next YamlData initialization to reload from disk.
     """
 
+class ExplicitYamlDataGame:
+    """Typed game identity for deterministic explicit YAML Data loading."""
+
+    FALLOUT4: ExplicitYamlDataGame
+    FALLOUT4_VR: ExplicitYamlDataGame
+    SKYRIM: ExplicitYamlDataGame
+    STARFIELD: ExplicitYamlDataGame
+
+    def __str__(self) -> str: ...
+    def __repr__(self) -> str: ...
+    def __hash__(self) -> int: ...
+    def __eq__(self, other: object) -> bool: ...
+
+class ExplicitYamlDataPaths:
+    """Exact caller-selected Main, game, and Local Ignore files."""
+
+    def __init__(
+        self,
+        main_path: str | Path,
+        game_path: str | Path,
+        ignore_path: str | Path,
+    ) -> None: ...
+
+    @property
+    def main_path(self) -> Path: ...
+    @property
+    def game_path(self) -> Path: ...
+    @property
+    def ignore_path(self) -> Path: ...
+
+class YamlDataContentIdentity:
+    """SHA-256 and byte length derived from exact retained file bytes."""
+
+    @property
+    def sha256(self) -> str: ...
+    @property
+    def byte_len(self) -> int: ...
+
+class ExplicitYamlDataSnapshot:
+    """Immutable deterministic YAML Data snapshot with exact identities."""
+
+    @property
+    def game(self) -> ExplicitYamlDataGame: ...
+    @property
+    def game_data_role(self) -> str: ...
+    @property
+    def yaml_data(self) -> YamlData: ...
+    @property
+    def main_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def game_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def ignore_identity(self) -> YamlDataContentIdentity: ...
+
+class ExplicitYamlDataLoadError(Exception):
+    """Base class for deterministic explicit YAML Data load failures."""
+
+    code: str
+    yaml_role: str | None
+    path: str | None
+
+class ExplicitYamlDataUnsupportedGameError(ExplicitYamlDataLoadError): ...
+class ExplicitYamlDataReadError(ExplicitYamlDataLoadError): ...
+class ExplicitYamlDataInvalidUtf8Error(ExplicitYamlDataLoadError): ...
+class ExplicitYamlDataParseError(ExplicitYamlDataLoadError): ...
+class ExplicitYamlDataInvalidRoleDataError(ExplicitYamlDataLoadError): ...
+
+def load_explicit_yaml_data(
+    paths: ExplicitYamlDataPaths,
+    game: ExplicitYamlDataGame,
+    selected_game_version: str,
+) -> ExplicitYamlDataSnapshot:
+    """Load only the exact supplied files without cache or mutation policy."""
+
 def create_yamldata(
     yaml_dirs: Sequence[str | Path], game: str, game_version: str
 ) -> YamlData:

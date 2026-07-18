@@ -214,6 +214,22 @@ export declare class DocumentsChecker {
   get gameName(): string
 }
 
+/** Immutable deterministic explicit YAML Data snapshot. */
+export declare class ExplicitYamlDataSnapshot {
+  /** Returns the caller's typed game identity. */
+  get game(): JsGameId
+  /** Returns the registered game-data role used for parsing and validation. */
+  get gameDataRole(): JsExplicitYamlDataGameRole
+  /** Returns a cloned immutable view of the parsed YAML Data. */
+  get yamlData(): YamlData
+  /** Returns the exact retained Main-file identity. */
+  get mainIdentity(): JsYamlDataContentIdentity
+  /** Returns the exact retained game-file identity. */
+  get gameIdentity(): JsYamlDataContentIdentity
+  /** Returns the exact retained Local Ignore-file identity. */
+  get ignoreIdentity(): JsYamlDataContentIdentity
+}
+
 /** Immutable Node handle over aggregate semantic FormID Finding analysis. */
 export declare class FormIdFindingAnalyzer {
   /**
@@ -3093,6 +3109,22 @@ export interface JsExpectedValue {
   equals: any
 }
 
+/** Registered game-data role selected for an explicit snapshot. */
+export declare const enum JsExplicitYamlDataGameRole {
+  /** Shared Fallout 4 data used for flat-screen and VR identities. */
+  Fallout4 = 'Fallout4'
+}
+
+/** Exact caller-selected paths for deterministic YAML Data loading. */
+export interface JsExplicitYamlDataPaths {
+  /** Exact Main YAML Data file. */
+  mainPath: string
+  /** Exact game YAML Data file. */
+  gamePath: string
+  /** Exact Local Ignore YAML Data file. */
+  ignorePath: string
+}
+
 /** Fallout 4 version variants exposed to JavaScript as string literals. */
 export declare const enum JsFallout4Version {
   /** Original pre-Next-Gen version (1.10.163) */
@@ -4817,6 +4849,14 @@ export interface JsYamlClientSchemaEntry {
   installedMinor: number
 }
 
+/** Content identity derived from the exact bytes retained by a snapshot. */
+export interface JsYamlDataContentIdentity {
+  /** Lowercase hexadecimal SHA-256 digest. */
+  sha256: string
+  /** Exact retained byte length. */
+  byteLen: number
+}
+
 /** YAML configuration file identifiers exposed to JavaScript. */
 export declare const enum JsYamlFile {
   /** CLASSIC Data/databases/CLASSIC Main.yaml */
@@ -4964,6 +5004,19 @@ export declare function loadBatchAsync(paths: Array<string>): Promise<number>
  * Returns the number of files successfully loaded and cached.
  */
 export declare function loadBatchSync(paths: Array<string>): number
+
+/**
+ * Starts one deterministic explicit YAML Data load on the shared runtime.
+ *
+ * The operation reads exactly the supplied files and never consults or mutates
+ * installation, cache, generation, backup, or fallback state.
+ *
+ * @param paths - Exact Main, game, and Local Ignore file paths.
+ * @param game - Typed game identity; Fallout 4 VR selects the Fallout 4 role.
+ * @param selectedGameVersion - Existing Version Registry selection mode.
+ * @throws an error with stable `code` and optional `yamlRole` / `path` fields.
+ */
+export declare function loadExplicitYamlData(paths: JsExplicitYamlDataPaths, game: JsGameId, selectedGameVersion: string): Promise<ExplicitYamlDataSnapshot>
 
 /**
  * Load `CLASSIC Main.yaml` with `MAIN_YAML` schema gating and return

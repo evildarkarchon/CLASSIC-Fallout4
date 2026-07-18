@@ -65,6 +65,14 @@ runtime YAML Data model used by focused C++ consumers. Scalar/vector getters
 return narrowed values or CXX DTOs rather than exposing the complete Rust
 model.
 
+Tooling callers use the separate typed explicit-file flow:
+
+1. `explicit_yaml_data_load(ExplicitYamlDataPathsDto, ExplicitYamlDataGameId, selected_version)` reads exactly the supplied Main, game, and Local Ignore files.
+2. `explicit_yaml_data_load_status(...)` returns either a ready state or a typed `ExplicitYamlDataLoadErrorDto` with error kind, optional YAML role, optional path, and message.
+3. `explicit_yaml_data_load_take_snapshot(...)` consumes a ready load, after which `explicit_yaml_data_snapshot_game(...)` preserves the requested typed game, the role and identity getters expose the selected role plus exact retained SHA-256 and byte lengths, and `explicit_yaml_data_snapshot_yaml_data(...)` clones the parsed `YamlData` view.
+
+Fallout 4 VR selects the shared Fallout 4 data role. The explicit flow never consults installed cache or bundled candidates and never generates, repairs, backs up, or falls back from a selected file. The existing positional runtime loader is not the contract for this tooling operation.
+
 The namespace also exposes selected cache controls and generic config helpers.
 These are data-access APIs; they are not partial Crash Log Scan Run entry
 points.

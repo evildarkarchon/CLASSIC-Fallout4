@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-17T01:10:23.968584+00:00",
+  "generated_at_utc": "2026-07-18T04:37:43.454945+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -105,6 +105,156 @@
     },
     {
       "module": "classic_config",
+      "export": "ExplicitYamlDataGame",
+      "export_path": "ExplicitYamlDataGame",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ExplicitYamlDataGame:"
+    },
+    {
+      "module": "classic_config",
+      "export": "__eq__",
+      "export_path": "ExplicitYamlDataGame.__eq__",
+      "parent_class": "ExplicitYamlDataGame",
+      "kind": "method",
+      "arity": 1,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def __eq__(self, other: object) -> bool: ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "__hash__",
+      "export_path": "ExplicitYamlDataGame.__hash__",
+      "parent_class": "ExplicitYamlDataGame",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def __hash__(self) -> int: ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "__repr__",
+      "export_path": "ExplicitYamlDataGame.__repr__",
+      "parent_class": "ExplicitYamlDataGame",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def __repr__(self) -> str: ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "__str__",
+      "export_path": "ExplicitYamlDataGame.__str__",
+      "parent_class": "ExplicitYamlDataGame",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def __str__(self) -> str: ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "ExplicitYamlDataInvalidRoleDataError",
+      "export_path": "ExplicitYamlDataInvalidRoleDataError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ExplicitYamlDataInvalidRoleDataError(ExplicitYamlDataLoadError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "ExplicitYamlDataInvalidUtf8Error",
+      "export_path": "ExplicitYamlDataInvalidUtf8Error",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ExplicitYamlDataInvalidUtf8Error(ExplicitYamlDataLoadError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "ExplicitYamlDataLoadError",
+      "export_path": "ExplicitYamlDataLoadError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ExplicitYamlDataLoadError(Exception):"
+    },
+    {
+      "module": "classic_config",
+      "export": "ExplicitYamlDataParseError",
+      "export_path": "ExplicitYamlDataParseError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ExplicitYamlDataParseError(ExplicitYamlDataLoadError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "ExplicitYamlDataPaths",
+      "export_path": "ExplicitYamlDataPaths",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ExplicitYamlDataPaths:"
+    },
+    {
+      "module": "classic_config",
+      "export": "__init__",
+      "export_path": "ExplicitYamlDataPaths.__init__",
+      "parent_class": "ExplicitYamlDataPaths",
+      "kind": "method",
+      "arity": 3,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def __init__( self, main_path: str | Path, game_path: str | Path, ignore_path: str | Path, ) -> None: ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "ExplicitYamlDataReadError",
+      "export_path": "ExplicitYamlDataReadError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ExplicitYamlDataReadError(ExplicitYamlDataLoadError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "ExplicitYamlDataSnapshot",
+      "export_path": "ExplicitYamlDataSnapshot",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ExplicitYamlDataSnapshot:"
+    },
+    {
+      "module": "classic_config",
+      "export": "ExplicitYamlDataUnsupportedGameError",
+      "export_path": "ExplicitYamlDataUnsupportedGameError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class ExplicitYamlDataUnsupportedGameError(ExplicitYamlDataLoadError): ..."
+    },
+    {
+      "module": "classic_config",
       "export": "YamlData",
       "export_path": "YamlData",
       "kind": "class",
@@ -148,6 +298,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def from_yaml_content( main_content: str, game_content: str, ignore_content: str, game: str, game_version: str, ) -> YamlData:"
+    },
+    {
+      "module": "classic_config",
+      "export": "YamlDataContentIdentity",
+      "export_path": "YamlDataContentIdentity",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class YamlDataContentIdentity:"
     },
     {
       "module": "classic_config",
@@ -275,6 +435,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def get_application_dir() -> str | None:"
+    },
+    {
+      "module": "classic_config",
+      "export": "load_explicit_yaml_data",
+      "export_path": "load_explicit_yaml_data",
+      "kind": "function",
+      "arity": 3,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def load_explicit_yaml_data( paths: ExplicitYamlDataPaths, game: ExplicitYamlDataGame, selected_game_version: str, ) -> ExplicitYamlDataSnapshot:"
     },
     {
       "module": "classic_config",

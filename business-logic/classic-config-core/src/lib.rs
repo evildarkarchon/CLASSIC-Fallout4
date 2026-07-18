@@ -14,6 +14,7 @@ pub mod client_schemas;
 pub mod crashgen_expectation_parser;
 pub(crate) mod crashgen_registry_yaml;
 pub mod crashgen_rules;
+pub mod explicit_yaml_data;
 pub(crate) mod game_data;
 pub mod game_local;
 pub mod shippable;
@@ -24,6 +25,10 @@ pub use crashgen_expectation_parser::{
     CrashgenExpectationParseDiagnostic, CrashgenExpectationParseResult, parse_crashgen_expectations,
 };
 pub use crashgen_rules::*;
+pub use explicit_yaml_data::{
+    ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole,
+    ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data,
+};
 
 pub use game_local::persist_game_local_paths;
 pub use shippable::{

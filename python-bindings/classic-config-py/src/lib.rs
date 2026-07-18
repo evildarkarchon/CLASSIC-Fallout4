@@ -81,6 +81,7 @@
 
 /// Shared PyO3 parsers for crashgen settings rule dictionaries.
 pub mod crashgen_rules;
+mod explicit_yaml_data;
 mod main_yaml_version;
 
 use classic_config_core::{
@@ -385,6 +386,13 @@ impl PyYamlSource {
 pub struct PyYamlData {
     /// The inner pure Rust data structure
     inner: YamlDataCore,
+}
+
+impl PyYamlData {
+    /// Wraps a cloned core configuration for another in-crate binding projection.
+    pub(crate) fn _from_core(inner: YamlDataCore) -> Self {
+        Self { inner }
+    }
 }
 
 #[pymethods]
@@ -848,6 +856,7 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // schema-incompat, missing-key, empty-value, and non-string-value
     // failures.
     main_yaml_version::register(m)?;
+    explicit_yaml_data::register(m)?;
 
     Ok(())
 }
@@ -870,6 +879,7 @@ pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // See the matching comment in the `classic_config` pymodule above.
     main_yaml_version::register(m)?;
+    explicit_yaml_data::register(m)?;
 
     Ok(())
 }

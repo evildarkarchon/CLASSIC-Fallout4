@@ -64,6 +64,26 @@ _Avoid_: report bucket, hardcoded section, Rust placement rule
 The curated CLASSIC data files that describe game-specific scan rules, ignore lists, Crashgen expectations, and report guidance.
 _Avoid_: config files, databases
 
+**Installed YAML Data**:
+The authoritative YAML Data available to a CLASSIC installation. Update-eligible files are selected from compatible installed-update and bundled sources according to recovery and fallback policy, while the Ignore list is Local Ignore YAML Data. Explicitly supplied test or tooling paths are outside this selection.
+_Avoid_: data directory, YAML file paths, cached YAML
+
+**Installed YAML Data Snapshot**:
+An immutable view of the Main, selected-game, and Local Ignore YAML Data used by one operation. Its update-eligible members may originate independently, but none may change within the snapshot.
+_Avoid_: selected paths, live YAML files, release bundle
+
+**Local Ignore YAML Data**:
+The per-install, user-editable ignore list initialized from selected Main YAML Data defaults when absent. Once present it is preserved and never delivered by the YAML Data Update Channel.
+_Avoid_: bundled Ignore, updated Ignore, User Settings
+
+**Local Ignore Recovery Decision**:
+The explicit caller choice required when Local Ignore YAML Data is malformed: use no ignore entries for the current operation without changing the file, or reset it from the selected Main YAML Data defaults. CLASSIC never chooses a recovery automatically.
+_Avoid_: automatic repair, fatal scan failure, silent empty fallback
+
+**Local Ignore Recovery Plan**:
+An immutable proposal produced from one Installed YAML Data Snapshot when Local Ignore YAML Data is malformed. It preserves the selected defaults and observed malformed-file identity so an accepted recovery can detect intervening changes before proceeding.
+_Avoid_: retry flag, mutable recovery request, unguarded reset
+
 **YAML Data Update Channel**:
 The first-party distribution channel through which CLASSIC clients discover, review, install, and roll back newer YAML Data. It is the maintained update path for curated YAML Data, not a generic arbitrary data feed.
 _Avoid_: YAML updater, data update constants, update feed
@@ -148,12 +168,16 @@ _Avoid_: scan transaction, analysis job, scan session
 The structured outcome of a Crash Log Scan Run, including run status, discovery results, optional setup validation details, and per-log outcomes in discovery order. It represents expected run-level outcomes such as no Crash Logs found, cancellation before discovery, or setup failure as data rather than exceptions.
 _Avoid_: result list, exception status, scan summary string
 
+**Crash Log Scan Run Continuation**:
+A single-use continuation that retains completed discovery and prepared intake when a Crash Log Scan Run requires an explicit caller decision before analysis. Accepting the decision resumes that same run rather than discovering a new scan set.
+_Avoid_: retry request, new scan run, serialized scan session
+
 **Crash Log Scan Discovery Result**:
 The structured discovery outcome of a Crash Log Scan Run, available when discovery completes and retained in the terminal Crash Log Scan Run Result. It records the scan source, accepted Crash Logs, rejected targeted inputs, and searched locations while preserving the existing Standard and Targeted discovery contracts.
 _Avoid_: selected paths list, pre-scan event, discovery exception
 
 **Crash Log Scan Run Status**:
-The lifecycle state of a Crash Log Scan Run as a whole, such as completed, no Crash Logs found, setup failed, cancelled before discovery, or cancelled after discovery. It does not encode whether individual Crash Logs succeeded or failed.
+The lifecycle state of a Crash Log Scan Run as a whole, such as completed, no Crash Logs found, Local Ignore recovery required, setup failed, cancelled before discovery, or cancelled after discovery. It does not encode whether individual Crash Logs succeeded or failed.
 _Avoid_: completed-with-errors, summary quality, per-log outcome
 
 **Crash Suspect Finding**:

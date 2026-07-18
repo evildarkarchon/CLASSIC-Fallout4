@@ -3,6 +3,125 @@ use std::io::Write;
 use tempfile::NamedTempFile;
 use tempfile::tempdir;
 
+const EXPLICIT_MAIN_YAML: &str = concat!(
+    "schema_version: \"2.0\"\r\n",
+    "CLASSIC_Info:\r\n",
+    "  version: \"9.1.0\"\r\n",
+    "CLASSIC_Interface:\r\n",
+    "  autoscan_text_Fallout4: \"explicit bridge\"\r\n",
+);
+const EXPLICIT_GAME_YAML: &str = concat!(
+    "schema_version: \"1.0\"\n",
+    "Game_Info:\n",
+    "  Main_Root_Name: \"Fallout 4\"\n",
+    "Crashlog_Error_Check: []\n",
+    "Crashlog_Stack_Check: []\n",
+    "Mods_FREQ: []\n",
+    "Mods_SOLU: []\n",
+);
+const EXPLICIT_EMPTY_IGNORE_YAML: &str = "CLASSIC_Ignore_Fallout4: []\n";
+
+fn write_explicit_bridge_fixtures(
+    root: &std::path::Path,
+    ignore: &[u8],
+) -> ffi::ExplicitYamlDataPathsDto {
+    let main_path = root.join("chosen-main.fixture");
+    let game_path = root.join("chosen-game.fixture");
+    let ignore_path = root.join("chosen-ignore.fixture");
+    std::fs::write(&main_path, EXPLICIT_MAIN_YAML).expect("write explicit Main fixture");
+    std::fs::write(&game_path, EXPLICIT_GAME_YAML).expect("write explicit game fixture");
+    std::fs::write(&ignore_path, ignore).expect("write explicit Ignore fixture");
+    ffi::ExplicitYamlDataPathsDto {
+        main_path: main_path.to_string_lossy().into_owned(),
+        game_path: game_path.to_string_lossy().into_owned(),
+        ignore_path: ignore_path.to_string_lossy().into_owned(),
+    }
+}
+
+#[test]
+fn explicit_yaml_data_bridge_returns_typed_snapshot_and_exact_identities() {
+    let temp = tempdir().expect("create explicit bridge fixture directory");
+    let paths = write_explicit_bridge_fixtures(temp.path(), EXPLICIT_EMPTY_IGNORE_YAML.as_bytes());
+
+    let load = explicit_yaml_data_load(paths, ffi::ExplicitYamlDataGameId::Fallout4VR, "VR");
+    let status = explicit_yaml_data_load_status(&load);
+    assert!(status.has_snapshot);
+    assert!(!status.has_error);
+
+    let snapshot = explicit_yaml_data_load_take_snapshot(load).expect("take ready snapshot");
+    assert_eq!(
+        explicit_yaml_data_snapshot_game(&snapshot),
+        ffi::ExplicitYamlDataGameId::Fallout4VR
+    );
+    assert_eq!(
+        explicit_yaml_data_snapshot_game_role(&snapshot),
+        ffi::ExplicitYamlDataGameRole::Fallout4
+    );
+    let main_identity = explicit_yaml_data_snapshot_main_identity(&snapshot);
+    assert_eq!(main_identity.byte_len, EXPLICIT_MAIN_YAML.len() as u64);
+    assert_eq!(main_identity.sha256.len(), 64);
+    assert_eq!(
+        explicit_yaml_data_snapshot_ignore_identity(&snapshot).byte_len,
+        EXPLICIT_EMPTY_IGNORE_YAML.len() as u64
+    );
+
+    let data = explicit_yaml_data_snapshot_yaml_data(&snapshot);
+    assert_eq!(yaml_data_classic_version(&data), "9.1.0");
+    assert!(yaml_data_ignore_list(&data).is_empty());
+}
+
+#[test]
+fn explicit_yaml_data_bridge_preserves_typed_unsupported_and_ignore_errors() {
+    let missing = tempdir().expect("create unsupported-game fixture directory");
+    let unsupported = explicit_yaml_data_load(
+        ffi::ExplicitYamlDataPathsDto {
+            main_path: missing
+                .path()
+                .join("missing-main")
+                .to_string_lossy()
+                .into_owned(),
+            game_path: missing
+                .path()
+                .join("missing-game")
+                .to_string_lossy()
+                .into_owned(),
+            ignore_path: missing
+                .path()
+                .join("missing-ignore")
+                .to_string_lossy()
+                .into_owned(),
+        },
+        ffi::ExplicitYamlDataGameId::Skyrim,
+        "AnniversaryEdition",
+    );
+    let unsupported_status = explicit_yaml_data_load_status(&unsupported);
+    assert!(unsupported_status.has_error);
+    assert_eq!(
+        unsupported_status.error.kind,
+        ffi::ExplicitYamlDataLoadErrorKind::UnsupportedGame
+    );
+    assert!(!unsupported_status.error.has_role);
+
+    let malformed = tempdir().expect("create malformed-ignore fixture directory");
+    let paths = write_explicit_bridge_fixtures(
+        malformed.path(),
+        b"CLASSIC_Ignore_Fallout4: not-a-sequence\n",
+    );
+    let invalid = explicit_yaml_data_load(paths, ffi::ExplicitYamlDataGameId::Fallout4, "Original");
+    let invalid_status = explicit_yaml_data_load_status(&invalid);
+    assert!(invalid_status.has_error);
+    assert_eq!(
+        invalid_status.error.kind,
+        ffi::ExplicitYamlDataLoadErrorKind::InvalidRoleData
+    );
+    assert!(invalid_status.error.has_role);
+    assert_eq!(
+        invalid_status.error.role,
+        ffi::ExplicitYamlDataRole::LocalIgnore
+    );
+    assert!(invalid_status.error.has_path);
+}
+
 #[test]
 fn test_yaml_data_load_invalid_dirs() {
     let result = yaml_data_load(

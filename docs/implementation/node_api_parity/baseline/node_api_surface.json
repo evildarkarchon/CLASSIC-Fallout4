@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-17T01:10:30.633537+00:00",
+  "generated_at_utc": "2026-07-18T04:37:40.395026+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -99,6 +99,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class DocumentsChecker {"
+    },
+    {
+      "export": "ExplicitYamlDataSnapshot",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class ExplicitYamlDataSnapshot {"
     },
     {
       "export": "Fallout4VersionInfo",
@@ -579,6 +587,22 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsExpectedValue {"
+    },
+    {
+      "export": "JsExplicitYamlDataGameRole",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsExplicitYamlDataGameRole {"
+    },
+    {
+      "export": "JsExplicitYamlDataPaths",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsExplicitYamlDataPaths {"
     },
     {
       "export": "JsFallout4Version",
@@ -1723,6 +1747,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsYamlClientSchemaEntry {"
+    },
+    {
+      "export": "JsYamlDataContentIdentity",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsYamlDataContentIdentity {"
     },
     {
       "export": "JsYamlFile",
@@ -3057,6 +3089,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function loadBatchSync(paths: Array<string>): number",
       "arity": 1
+    },
+    {
+      "export": "loadExplicitYamlData",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function loadExplicitYamlData(paths: JsExplicitYamlDataPaths, game: JsGameId, selectedGameVersion: string): Promise<ExplicitYamlDataSnapshot>",
+      "arity": 3
     },
     {
       "export": "loadMainYamlVersion",

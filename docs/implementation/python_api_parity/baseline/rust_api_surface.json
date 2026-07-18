@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-17T01:10:23.956936+00:00",
+  "generated_at_utc": "2026-07-18T04:37:43.442301+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -289,12 +289,107 @@
       "tier": "tier1"
     },
     {
+      "symbol": "ExplicitYamlDataLoadError",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub enum ExplicitYamlDataLoadError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataLoadError",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::ExplicitYamlDataLoadError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataRequest",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::ExplicitYamlDataRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataRequest",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub struct ExplicitYamlDataRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataRole",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub enum ExplicitYamlDataRole",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataRole",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::ExplicitYamlDataRole",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataSnapshot",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::ExplicitYamlDataSnapshot",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataSnapshot",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub struct ExplicitYamlDataSnapshot",
+      "tier": "tier1"
+    },
+    {
       "symbol": "GAME_FALLOUT4_YAML",
       "kind": "const",
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/client_schemas.rs",
       "source_decl": "pub const GAME_FALLOUT4_YAML",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameDataRole",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub enum GameDataRole",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameDataRole",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::GameDataRole",
       "tier": "tier1"
     },
     {
@@ -636,6 +731,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "YamlDataContentIdentity",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::YamlDataContentIdentity",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlDataContentIdentity",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub struct YamlDataContentIdentity",
+      "tier": "tier1"
+    },
+    {
       "symbol": "YamlDataCore",
       "kind": "reexport",
       "crate": "classic-config-core",
@@ -770,6 +884,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "explicit_yaml_data",
+      "kind": "module",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub mod explicit_yaml_data;",
+      "tier": "tier1"
+    },
+    {
       "symbol": "final_settings",
       "kind": "function",
       "arity": 1,
@@ -777,6 +900,69 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
       "source_decl": "pub fn final_settings(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
       "tier": "tier1"
     },
     {
@@ -905,6 +1091,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
       "source_decl": "pub fn is_empty(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_explicit_yaml_data",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::load_explicit_yaml_data",
       "tier": "tier1"
     },
     {
@@ -1135,6 +1331,16 @@
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::resolve_registry_version_info",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "sha256_hex",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub fn sha256_hex(&self)",
       "tier": "tier1"
     },
     {

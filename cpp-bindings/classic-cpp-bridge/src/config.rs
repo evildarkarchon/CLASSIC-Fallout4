@@ -11,6 +11,13 @@ use classic_config_core::{
     MainYamlVersionError, ModSolutionCriteria, SuspectErrorRule as CoreSuspectErrorRule,
     SuspectStackCountRule as CoreSuspectStackCountRule, SuspectStackRule as CoreSuspectStackRule,
     YamlDataCore,
+    explicit_yaml_data::{
+        ExplicitYamlDataLoadError as CoreExplicitYamlDataLoadError,
+        ExplicitYamlDataRequest as CoreExplicitYamlDataRequest,
+        ExplicitYamlDataRole as CoreExplicitYamlDataRole,
+        ExplicitYamlDataSnapshot as CoreExplicitYamlDataSnapshot, GameDataRole as CoreGameDataRole,
+        YamlDataContentIdentity, load_explicit_yaml_data as core_load_explicit_yaml_data,
+    },
     load_main_yaml_version_with_bundled_dir as core_load_main_yaml_version_with_bundled_dir,
     persist_game_local_paths,
 };
@@ -18,12 +25,23 @@ use classic_settings_core::{
     cache_stats as settings_core_cache_stats, clear_cache as clear_settings_cache,
     reset_cache_stats as reset_settings_core_cache_stats,
 };
+use classic_shared_core::GameId as CoreGameId;
 use classic_shared_core::get_runtime;
 use std::path::{Path, PathBuf};
 
 /// Opaque wrapper around `YamlDataCore` for CXX FFI.
 pub struct YamlData {
     pub(crate) inner: YamlDataCore,
+}
+
+/// Opaque result holder for one deterministic explicit YAML Data load.
+pub struct ExplicitYamlDataLoad {
+    result: Result<CoreExplicitYamlDataSnapshot, CoreExplicitYamlDataLoadError>,
+}
+
+/// Opaque immutable snapshot returned by deterministic explicit YAML Data loading.
+pub struct ExplicitYamlDataSnapshot {
+    inner: CoreExplicitYamlDataSnapshot,
 }
 
 // ── Construction ────────────────────────────────────────────────────
@@ -43,6 +61,194 @@ fn yaml_data_load(
         ))
         .map_err(|e| format!("{e}"))?;
     Ok(Box::new(YamlData { inner }))
+}
+
+/// Load exactly the three caller-selected YAML Data files without installation policy.
+///
+/// The returned handle always exists so C++ callers can inspect the stable typed
+/// status before consuming a successful snapshot.
+fn explicit_yaml_data_load(
+    paths: ffi::ExplicitYamlDataPathsDto,
+    game: ffi::ExplicitYamlDataGameId,
+    selected_game_version: &str,
+) -> Box<ExplicitYamlDataLoad> {
+    let request = CoreExplicitYamlDataRequest {
+        main_path: PathBuf::from(paths.main_path),
+        game_path: PathBuf::from(paths.game_path),
+        ignore_path: PathBuf::from(paths.ignore_path),
+        game: explicit_game_id_to_core(game),
+        selected_game_version: selected_game_version.to_string(),
+    };
+    Box::new(ExplicitYamlDataLoad {
+        result: get_runtime().block_on(core_load_explicit_yaml_data(request)),
+    })
+}
+
+/// Return the success/error status captured by an explicit YAML Data load.
+fn explicit_yaml_data_load_status(
+    load: &ExplicitYamlDataLoad,
+) -> ffi::ExplicitYamlDataLoadStatusDto {
+    match &load.result {
+        Ok(_) => ffi::ExplicitYamlDataLoadStatusDto {
+            has_snapshot: true,
+            has_error: false,
+            error: empty_explicit_yaml_data_error(),
+        },
+        Err(error) => ffi::ExplicitYamlDataLoadStatusDto {
+            has_snapshot: false,
+            has_error: true,
+            error: explicit_yaml_data_error_to_dto(error),
+        },
+    }
+}
+
+/// Consume a successful load handle and return its immutable snapshot.
+///
+/// Callers inspect [`explicit_yaml_data_load_status`] first. This `Result`
+/// protects against consuming a failed handle.
+fn explicit_yaml_data_load_take_snapshot(
+    load: Box<ExplicitYamlDataLoad>,
+) -> Result<Box<ExplicitYamlDataSnapshot>, String> {
+    match load.result {
+        Ok(inner) => Ok(Box::new(ExplicitYamlDataSnapshot { inner })),
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Clone the parsed configuration view retained by an explicit snapshot.
+fn explicit_yaml_data_snapshot_yaml_data(snapshot: &ExplicitYamlDataSnapshot) -> Box<YamlData> {
+    Box::new(YamlData {
+        inner: snapshot.inner.yaml_data().clone(),
+    })
+}
+
+/// Return the registered game-data role used by the snapshot.
+fn explicit_yaml_data_snapshot_game_role(
+    snapshot: &ExplicitYamlDataSnapshot,
+) -> ffi::ExplicitYamlDataGameRole {
+    match snapshot.inner.game_data_role() {
+        CoreGameDataRole::Fallout4 => ffi::ExplicitYamlDataGameRole::Fallout4,
+    }
+}
+
+/// Return the caller's typed game identity retained by the snapshot.
+fn explicit_yaml_data_snapshot_game(
+    snapshot: &ExplicitYamlDataSnapshot,
+) -> ffi::ExplicitYamlDataGameId {
+    explicit_game_id_to_ffi(snapshot.inner.game())
+}
+
+/// Return the exact retained Main-file content identity.
+fn explicit_yaml_data_snapshot_main_identity(
+    snapshot: &ExplicitYamlDataSnapshot,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(snapshot.inner.main_identity())
+}
+
+/// Return the exact retained game-file content identity.
+fn explicit_yaml_data_snapshot_game_identity(
+    snapshot: &ExplicitYamlDataSnapshot,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(snapshot.inner.game_identity())
+}
+
+/// Return the exact retained Local Ignore-file content identity.
+fn explicit_yaml_data_snapshot_ignore_identity(
+    snapshot: &ExplicitYamlDataSnapshot,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(snapshot.inner.ignore_identity())
+}
+
+fn explicit_game_id_to_core(game: ffi::ExplicitYamlDataGameId) -> CoreGameId {
+    match game {
+        ffi::ExplicitYamlDataGameId::Fallout4 => CoreGameId::Fallout4,
+        ffi::ExplicitYamlDataGameId::Fallout4VR => CoreGameId::Fallout4VR,
+        ffi::ExplicitYamlDataGameId::Skyrim => CoreGameId::Skyrim,
+        ffi::ExplicitYamlDataGameId::Starfield => CoreGameId::Starfield,
+        // Unknown CXX enum values must fail as unsupported and must never
+        // silently select Fallout 4 data.
+        _ => CoreGameId::Starfield,
+    }
+}
+
+fn explicit_game_id_to_ffi(game: CoreGameId) -> ffi::ExplicitYamlDataGameId {
+    match game {
+        CoreGameId::Fallout4 => ffi::ExplicitYamlDataGameId::Fallout4,
+        CoreGameId::Fallout4VR => ffi::ExplicitYamlDataGameId::Fallout4VR,
+        CoreGameId::Skyrim => ffi::ExplicitYamlDataGameId::Skyrim,
+        CoreGameId::Starfield => ffi::ExplicitYamlDataGameId::Starfield,
+    }
+}
+
+fn explicit_yaml_data_role_to_ffi(role: CoreExplicitYamlDataRole) -> ffi::ExplicitYamlDataRole {
+    match role {
+        CoreExplicitYamlDataRole::Main => ffi::ExplicitYamlDataRole::Main,
+        CoreExplicitYamlDataRole::Game => ffi::ExplicitYamlDataRole::Game,
+        CoreExplicitYamlDataRole::LocalIgnore => ffi::ExplicitYamlDataRole::LocalIgnore,
+    }
+}
+
+fn explicit_yaml_data_error_to_dto(
+    error: &CoreExplicitYamlDataLoadError,
+) -> ffi::ExplicitYamlDataLoadErrorDto {
+    let (kind, role, path) = match error {
+        CoreExplicitYamlDataLoadError::UnsupportedGame { .. } => (
+            ffi::ExplicitYamlDataLoadErrorKind::UnsupportedGame,
+            None,
+            None,
+        ),
+        CoreExplicitYamlDataLoadError::Read { role, path, .. } => (
+            ffi::ExplicitYamlDataLoadErrorKind::Read,
+            Some(*role),
+            Some(path),
+        ),
+        CoreExplicitYamlDataLoadError::InvalidUtf8 { role, path, .. } => (
+            ffi::ExplicitYamlDataLoadErrorKind::InvalidUtf8,
+            Some(*role),
+            Some(path),
+        ),
+        CoreExplicitYamlDataLoadError::Parse { role, path, .. } => (
+            ffi::ExplicitYamlDataLoadErrorKind::Parse,
+            Some(*role),
+            Some(path),
+        ),
+        CoreExplicitYamlDataLoadError::InvalidRoleData { role, path, .. } => (
+            ffi::ExplicitYamlDataLoadErrorKind::InvalidRoleData,
+            Some(*role),
+            Some(path),
+        ),
+    };
+    ffi::ExplicitYamlDataLoadErrorDto {
+        kind,
+        has_role: role.is_some(),
+        role: role
+            .map(explicit_yaml_data_role_to_ffi)
+            .unwrap_or(ffi::ExplicitYamlDataRole::Main),
+        has_path: path.is_some(),
+        path: path
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        message: error.to_string(),
+    }
+}
+
+fn empty_explicit_yaml_data_error() -> ffi::ExplicitYamlDataLoadErrorDto {
+    // CXX shared structs cannot omit nested records; `has_error` is authoritative.
+    ffi::ExplicitYamlDataLoadErrorDto {
+        kind: ffi::ExplicitYamlDataLoadErrorKind::UnsupportedGame,
+        has_role: false,
+        role: ffi::ExplicitYamlDataRole::Main,
+        has_path: false,
+        path: String::new(),
+        message: String::new(),
+    }
+}
+
+fn content_identity_to_dto(identity: &YamlDataContentIdentity) -> ffi::YamlDataContentIdentityDto {
+    ffi::YamlDataContentIdentityDto {
+        sha256: identity.sha256_hex(),
+        byte_len: identity.byte_len(),
+    }
 }
 
 /// Persist optional game and documents paths through the standalone Game Local writer.
@@ -493,6 +699,76 @@ fn yaml_data_suspects_stack_count_rules_for_id(
 
 #[cxx::bridge(namespace = "classic::config")]
 mod ffi {
+    /// Typed game identity for deterministic explicit YAML Data loading.
+    ///
+    /// CXX bridge modules cannot share enum definitions, so this mirrors
+    /// `classic_shared_core::GameId` in the config namespace.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ExplicitYamlDataGameId {
+        Fallout4 = 0,
+        Fallout4VR = 1,
+        Skyrim = 2,
+        Starfield = 3,
+    }
+
+    /// Registered game-data role selected for an explicit snapshot.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ExplicitYamlDataGameRole {
+        Fallout4 = 0,
+    }
+
+    /// Role of one exact file in an explicit YAML Data request.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ExplicitYamlDataRole {
+        Main = 0,
+        Game = 1,
+        LocalIgnore = 2,
+    }
+
+    /// Stable typed category of one explicit YAML Data load failure.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ExplicitYamlDataLoadErrorKind {
+        UnsupportedGame = 0,
+        Read = 1,
+        InvalidUtf8 = 2,
+        Parse = 3,
+        InvalidRoleData = 4,
+    }
+
+    /// Exact caller-selected paths for deterministic YAML Data loading.
+    struct ExplicitYamlDataPathsDto {
+        main_path: String,
+        game_path: String,
+        ignore_path: String,
+    }
+
+    /// Content identity derived from the exact retained file bytes.
+    struct YamlDataContentIdentityDto {
+        sha256: String,
+        byte_len: u64,
+    }
+
+    /// Typed explicit-load failure with optional role and path context.
+    struct ExplicitYamlDataLoadErrorDto {
+        kind: ExplicitYamlDataLoadErrorKind,
+        has_role: bool,
+        role: ExplicitYamlDataRole,
+        has_path: bool,
+        path: String,
+        message: String,
+    }
+
+    /// Exactly one of `has_snapshot` and `has_error` is true.
+    struct ExplicitYamlDataLoadStatusDto {
+        has_snapshot: bool,
+        has_error: bool,
+        error: ExplicitYamlDataLoadErrorDto,
+    }
+
     struct CacheStats {
         hits: u64,
         misses: u64,
@@ -571,6 +847,8 @@ mod ffi {
 
     extern "Rust" {
         type YamlData;
+        type ExplicitYamlDataLoad;
+        type ExplicitYamlDataSnapshot;
 
         // Construction (async, block_on)
         fn yaml_data_load(
@@ -579,6 +857,41 @@ mod ffi {
             game: &str,
             game_version: &str,
         ) -> Result<Box<YamlData>>;
+
+        /// Begin a deterministic load of exactly the supplied Main, game, and
+        /// Local Ignore files. This operation never consults installation state.
+        fn explicit_yaml_data_load(
+            paths: ExplicitYamlDataPathsDto,
+            game: ExplicitYamlDataGameId,
+            selected_game_version: &str,
+        ) -> Box<ExplicitYamlDataLoad>;
+        /// Inspect the stable typed result before consuming a successful snapshot.
+        fn explicit_yaml_data_load_status(
+            load: &ExplicitYamlDataLoad,
+        ) -> ExplicitYamlDataLoadStatusDto;
+        /// Consume a ready load and return its immutable snapshot.
+        fn explicit_yaml_data_load_take_snapshot(
+            load: Box<ExplicitYamlDataLoad>,
+        ) -> Result<Box<ExplicitYamlDataSnapshot>>;
+        /// Clone the parsed configuration view retained by a snapshot.
+        fn explicit_yaml_data_snapshot_yaml_data(
+            snapshot: &ExplicitYamlDataSnapshot,
+        ) -> Box<YamlData>;
+        fn explicit_yaml_data_snapshot_game_role(
+            snapshot: &ExplicitYamlDataSnapshot,
+        ) -> ExplicitYamlDataGameRole;
+        fn explicit_yaml_data_snapshot_game(
+            snapshot: &ExplicitYamlDataSnapshot,
+        ) -> ExplicitYamlDataGameId;
+        fn explicit_yaml_data_snapshot_main_identity(
+            snapshot: &ExplicitYamlDataSnapshot,
+        ) -> YamlDataContentIdentityDto;
+        fn explicit_yaml_data_snapshot_game_identity(
+            snapshot: &ExplicitYamlDataSnapshot,
+        ) -> YamlDataContentIdentityDto;
+        fn explicit_yaml_data_snapshot_ignore_identity(
+            snapshot: &ExplicitYamlDataSnapshot,
+        ) -> YamlDataContentIdentityDto;
 
         fn save_local_yaml_paths(
             local_yaml_path: &str,

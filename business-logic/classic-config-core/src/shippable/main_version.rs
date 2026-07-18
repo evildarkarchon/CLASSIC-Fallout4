@@ -317,7 +317,7 @@ fn extract_main_yaml_version(loaded: &LoadedShippable) -> Result<String, MainYam
 /// dropped in schema_version 2.0 and is explicitly rejected here so a
 /// stale bundled file surfaces the policy mismatch instead of leaking
 /// into update classification.
-fn validate_release_semver_shape(value: &str) -> std::result::Result<(), String> {
+pub(crate) fn validate_release_semver_shape(value: &str) -> std::result::Result<(), String> {
     // Explicitly reject the pre-2.0 `CLASSIC v...` / `CLASSIC ...` form
     // so the diagnostic is specific instead of the generic
     // "missing MAJOR.MINOR.PATCH".

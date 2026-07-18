@@ -35,6 +35,7 @@ yaml-rust2 = { workspace = true }
 indexmap = { workspace = true }
 
 serde_json = { workspace = true }
+sha2 = { workspace = true }
 dirs = { workspace = true }
 
 # Error handling

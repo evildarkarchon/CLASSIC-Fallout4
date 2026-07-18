@@ -23,6 +23,7 @@ Use this crate when you need to:
 
 - resolve standard CLASSIC YAML file locations
 - load the three-file CLASSIC YAML dataset into a single Rust struct
+- load three explicitly identified YAML Data files deterministically for tests and tooling
 - apply version-registry-backed metadata fallbacks while building config data
 - hand configuration data to higher layers such as scanlog orchestration or bindings
 - load generic Main, Game, Game Local, Ignore, Test, and Cache YAML sources
@@ -62,6 +63,18 @@ Bulk YAML dataset loader for scanlog/business logic.
 - `ConfigError` - typed errors for bulk YAML loading/parsing
 - `resolve_registry_version_info()` - version-registry lookup helper
 - `format_registry_game_version()` - formatting helper for registry versions
+
+### `explicit_yaml_data`
+
+Typed, mutation-free loading for caller-selected Main, game, and Local Ignore YAML Data files.
+
+- `ExplicitYamlDataRequest` - the three exact paths, typed game identity, and existing game-version mode
+- `ExplicitYamlDataSnapshot` - immutable parsed YAML Data backed by the exact retained source bytes
+- `YamlDataContentIdentity` - SHA-256 and byte length derived from one retained file
+- `GameDataRole` - the registered YAML Data role selected from `GameId`
+- `ExplicitYamlDataRole` - Main, game, or Local Ignore error attribution
+- `ExplicitYamlDataLoadError` - typed unsupported-game, read, decoding, parse, and role-validation failures
+- `load_explicit_yaml_data()` - async entry point for the deterministic explicit-file operation
 
 ### Re-exports from `lib.rs`
 
@@ -108,6 +121,72 @@ Contributor notes:
 The writer creates parent directories when needed, merges an existing multi-document YAML stream, updates only `Game_Info.Root_Folder_Game` and `Game_Info.Root_Folder_Docs`, and preserves unrelated content. It never reads or writes `CLASSIC Settings.yaml`.
 
 Binding adapters expose the same operation as CXX `save_local_yaml_paths(...)`, Node `persistGameLocalPaths(...) -> Promise<void>`, and Python `persist_game_local_paths(...) -> None`. Each adapter only converts optional path values and delegates document behavior to the Rust writer.
+
+## Explicit YAML Data Loading
+
+`load_explicit_yaml_data(request) -> Result<ExplicitYamlDataSnapshot, ExplicitYamlDataLoadError>` is the typed tooling and test seam for loading exactly three caller-selected files. It is deliberately separate from Installed YAML Data selection: the caller supplies each complete file identity rather than an installation root or positional directory vector.
+
+`ExplicitYamlDataRequest` contains:
+
+| Field | Meaning |
+|---|---|
+| `main_path: PathBuf` | exact Main YAML Data file |
+| `game_path: PathBuf` | exact game YAML Data file |
+| `ignore_path: PathBuf` | exact Local Ignore YAML Data file |
+| `game: GameId` | typed game identity used to select a registered YAML Data role |
+| `selected_game_version: String` | existing Version Registry selection mode; it affects metadata fallback, not file selection |
+
+The current registered `GameDataRole` is `Fallout4`. Both `GameId::Fallout4` and `GameId::Fallout4VR` select that shared role, so they use `Fallout4`-keyed data such as `CLASSIC_Ignore_Fallout4`. `GameId::Skyrim` and `GameId::Starfield` have no registered YAML Data role in this client and return `ExplicitYamlDataLoadError::UnsupportedGame` before any requested path is read.
+
+### Snapshot And Content Identity
+
+`ExplicitYamlDataSnapshot` privately retains the exact bytes read for all three roles and exposes:
+
+- `yaml_data() -> &YamlDataCore` - the combined model parsed and built from those retained bytes
+- `game() -> GameId` - the caller's typed game identity
+- `game_data_role() -> GameDataRole` - the registered role used for keyed parsing and validation
+- `main_identity()`, `game_identity()`, and `ignore_identity()` - identities of the retained role bytes
+
+Each `YamlDataContentIdentity` reports `sha256_hex()` and `byte_len()`. The loader reads each requested path once, then derives UTF-8 decoding, merged YAML, role validation, model construction, SHA-256, and byte length from the resulting owned bytes. Replacing or deleting a source path after loading therefore cannot change either the snapshot's parsed data or its identities.
+
+The snapshot does not expose raw YAML documents or its retained byte buffers as general-purpose APIs. Consumers receive the typed `YamlDataCore` view and content identities rather than a path-backed live view.
+
+### Explicit Role Validation
+
+All three files must be valid UTF-8 YAML streams that satisfy the repository's multi-document merge rules. Main and game are shippable roles, so the loader extracts `schema_version` and checks it against config-owned `client_schemas::MAIN_YAML` or `client_schemas::GAME_FALLOUT4_YAML`; callers cannot supply a compatibility range.
+
+After schema compatibility succeeds, the implemented semantic checks are:
+
+- Main requires a `CLASSIC_Info` mapping whose non-empty string `version` satisfies the schema-2 release-SemVer shape: optional leading `v`/`V`, no `CLASSIC ` display prefix, prerelease suffix, or build metadata. Present `version_date`, Fallout 4 autoscan text, and `catch_log_records` values must retain the scalar or string-list shapes consumed by the typed model.
+- Game requires a `Game_Info` mapping with a non-empty string `Main_Root_Name`; after normalization to lowercase ASCII alphanumeric characters, that value must equal `fallout4` and identify the registered Fallout 4 data role. Every consumed scalar, string-list, `Mods_CONF`, `Mods_CORE`, `Mods_FREQ`, `Mods_SOLU`, `Crashlog_Error_Check`, `Crashlog_Stack_Check`, and `Crashgen_Registry` value is validated before model construction, including nested criteria, count rules, registry metadata, and settings-rule diagnostics, so malformed entries cannot be silently discarded or defaulted by the general production parser.
+- Local Ignore requires `CLASSIC_Ignore_Fallout4` to be a sequence containing only strings. An empty sequence is valid; a missing key, scalar, mapping, null, or sequence containing a non-string is malformed.
+
+The remaining keys are interpreted by `YamlDataCore` according to the schema and fallback rules below. Optional fields remain optional, but any consumed field that is present must have the strict shape and semantics expected by the typed model.
+
+### No Installed Policy Or Mutation
+
+Explicit loading performs no source selection beyond the three supplied paths. It never:
+
+- resolves an installation layout, bundled-data directory, platform cache, or `YamlSource`
+- consults or promotes a `.prev` cache sibling
+- retries with a bundled, cached, or alternate file
+- creates a missing Local Ignore file
+- generates, repairs, resets, replaces, or backs up any selected file
+- deletes or rewrites a rejected file
+
+A missing or rejected explicit file is returned as a typed failure for that exact role and path. Installed selection, recovery, and fallback policy must not be reconstructed around this operation.
+
+### `ExplicitYamlDataLoadError`
+
+| Variant | Meaning |
+|---|---|
+| `UnsupportedGame { game }` | the typed game has no registered YAML Data role; no paths are read |
+| `Read { role, path, source }` | the exact role path could not be read |
+| `InvalidUtf8 { role, path, source }` | retained bytes are not valid UTF-8 |
+| `Parse { role, path, message }` | the UTF-8 content is not a valid mergeable YAML stream |
+| `InvalidRoleData { role, path, reason }` | parsed YAML fails schema compatibility or semantic role validation |
+
+`ExplicitYamlDataRole::{Main, Game, LocalIgnore}` keeps file-specific failures attributable without parsing messages. `reason` and `message` are human-readable diagnostic details; callers should branch on the typed variant and role.
 
 ## `YamlDataCore`
 
@@ -181,6 +260,16 @@ These helpers bridge the config layer to [`classic-version-registry-core`](../..
 
 ## Loading And Processing Flow
 
+### Explicit YAML Data flow
+
+1. Validate that the request's `GameId` has a registered `GameDataRole`; unsupported games fail before file I/O.
+2. Read the exact Main, game, and Local Ignore paths once each, concurrently on the shared Tokio runtime.
+3. Retain each byte buffer and derive its SHA-256 and byte length.
+4. Decode and merge each YAML stream from its retained bytes.
+5. Enforce config-owned Main/game schema compatibility and semantic validation for all three roles.
+6. Build one `YamlDataCore` from the validated documents using the registered data key and caller-supplied game-version mode.
+7. Return an immutable snapshot that owns the parsed model, registered role, retained bytes, and their identities.
+
 ## Game Local persistence flow
 
 1. A caller supplies an explicit Game Local YAML path and either or both runtime path updates.
@@ -212,7 +301,11 @@ One subtle rule from the implementation: explicit values already present in `Gam
 
 ## Error Handling Model
 
-The crate uses two error styles, depending on API family.
+The crate uses distinct error styles depending on API family.
+
+### Explicit YAML Data
+
+`load_explicit_yaml_data()` returns `ExplicitYamlDataLoadError`. It preserves the typed game or file role and exact requested path wherever applicable, and it separates filesystem, UTF-8, YAML parsing, and role-validation failures. Model-construction errors originate in consumed Game data and are therefore returned as Game-role validation failures rather than as an unattributed category. The loader does not hide a failed explicit source behind fallback.
 
 ## `YamlSource`
 
@@ -263,6 +356,31 @@ In practice, `classic-config-core` is the data-loading layer between raw YAML fi
 
 ## Usage Examples
 
+### Load three exact tooling files
+
+```rust
+use classic_config_core::{ExplicitYamlDataRequest, load_explicit_yaml_data};
+use classic_shared_core::GameId;
+use std::path::PathBuf;
+
+# async fn example() -> Result<(), classic_config_core::ExplicitYamlDataLoadError> {
+let snapshot = load_explicit_yaml_data(ExplicitYamlDataRequest {
+    main_path: PathBuf::from("fixtures/CLASSIC Main.yaml"),
+    game_path: PathBuf::from("fixtures/CLASSIC Fallout4.yaml"),
+    ignore_path: PathBuf::from("fixtures/CLASSIC Ignore.yaml"),
+    game: GameId::Fallout4VR,
+    selected_game_version: "VR".to_string(),
+})
+.await?;
+
+assert_eq!(snapshot.yaml_data().classic_version, "9.1.0");
+println!("Main SHA-256: {}", snapshot.main_identity().sha256_hex());
+# Ok(())
+# }
+```
+
+The paths may use arbitrary fixture or tooling filenames. Their basenames and directories do not participate in role selection; the request fields declare each role, and the document content must validate for that role.
+
 ### Load the three-file YAML dataset
 
 This example matches the preferred 2-directory API used in tests and bindings.
@@ -308,6 +426,7 @@ C:/CLASSIC/CLASSIC Data/databases/CLASSIC Fallout4.yaml
 If you extend the crate, update this document when you change:
 
 - exported types or re-exports
+- explicit request, snapshot, identity, role-validation, or mutation-free behavior
 - accepted directory layout rules
 - fallback precedence between YAML and version registry data
 - runtime assumptions

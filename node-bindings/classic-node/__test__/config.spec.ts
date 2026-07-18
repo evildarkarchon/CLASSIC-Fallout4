@@ -8,6 +8,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { createHash } from "node:crypto";
 import {
   // YamlData class
   YamlData,
@@ -21,6 +22,8 @@ import {
   getYamlSourceDisplayName,
   getYamlSourceDisplayNameWithGame,
   persistGameLocalPaths,
+  JsGameId,
+  loadExplicitYamlData,
 } from "../index.js";
 import { getRuntimeCoverageEntries } from "./fixtures/runtime_coverage_registry";
 
@@ -137,6 +140,26 @@ Crashgen_Registry:
     checks: []
 `;
 
+const EXPLICIT_MAIN_YAML = [
+  'schema_version: "2.0"',
+  "CLASSIC_Info:",
+  '  version: "9.1.0"',
+  "CLASSIC_Interface:",
+  '  autoscan_text_Fallout4: "explicit node"',
+  "",
+].join("\r\n");
+
+const EXPLICIT_GAME_YAML = `schema_version: "1.0"
+Game_Info:
+  Main_Root_Name: "Fallout 4"
+Crashlog_Error_Check: []
+Crashlog_Stack_Check: []
+Mods_FREQ: []
+Mods_SOLU: []
+`;
+
+const EXPLICIT_EMPTY_IGNORE_YAML = "CLASSIC_Ignore_Fallout4: []\n";
+
 // ============================================================================
 // YamlData: Construction
 // ============================================================================
@@ -217,6 +240,83 @@ describe("YamlData construction", () => {
     expect(data.crashgenName.length).toBeGreaterThan(0);
     expect(data.xseAcronym.length).toBeGreaterThan(0);
     expect(data.gameVersion.length).toBeGreaterThan(0);
+  });
+});
+
+describe("explicit YAML Data loading", () => {
+  test("loads arbitrary paths with typed VR role and exact byte identities", async () => {
+    const root = mkdtempSync(join(tmpdir(), "classic-node-explicit-yaml-"));
+    try {
+      const mainPath = join(root, "chosen-main.fixture");
+      const gamePath = join(root, "chosen-game.fixture");
+      const ignorePath = join(root, "chosen-ignore.fixture");
+      writeFileSync(mainPath, EXPLICIT_MAIN_YAML);
+      writeFileSync(gamePath, EXPLICIT_GAME_YAML);
+      writeFileSync(ignorePath, EXPLICIT_EMPTY_IGNORE_YAML);
+
+      const snapshot = await loadExplicitYamlData(
+        { mainPath, gamePath, ignorePath },
+        JsGameId.Fallout4Vr,
+        "VR",
+      );
+
+      expect(snapshot.game).toBe(JsGameId.Fallout4Vr);
+      expect(snapshot.gameDataRole).toBe("Fallout4");
+      expect(snapshot.yamlData.classicVersion).toBe("9.1.0");
+      expect(snapshot.yamlData.ignoreList).toEqual([]);
+      expect(snapshot.mainIdentity.byteLen).toBe(
+        Buffer.byteLength(EXPLICIT_MAIN_YAML),
+      );
+      expect(snapshot.mainIdentity.sha256).toBe(
+        createHash("sha256").update(EXPLICIT_MAIN_YAML).digest("hex"),
+      );
+
+      writeFileSync(mainPath, "replacement bytes");
+      expect(snapshot.yamlData.classicVersion).toBe("9.1.0");
+      expect(snapshot.mainIdentity.sha256).toBe(
+        createHash("sha256").update(EXPLICIT_MAIN_YAML).digest("hex"),
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("returns stable typed unsupported-game and Local Ignore errors", async () => {
+    const root = mkdtempSync(join(tmpdir(), "classic-node-explicit-yaml-errors-"));
+    try {
+      await expect(
+        loadExplicitYamlData(
+          {
+            mainPath: join(root, "missing-main"),
+            gamePath: join(root, "missing-game"),
+            ignorePath: join(root, "missing-ignore"),
+          },
+          JsGameId.Skyrim,
+          "AnniversaryEdition",
+        ),
+      ).rejects.toMatchObject({ code: "unsupported_game" });
+
+      const mainPath = join(root, "chosen-main.fixture");
+      const gamePath = join(root, "chosen-game.fixture");
+      const ignorePath = join(root, "chosen-ignore.fixture");
+      writeFileSync(mainPath, EXPLICIT_MAIN_YAML);
+      writeFileSync(gamePath, EXPLICIT_GAME_YAML);
+      writeFileSync(ignorePath, "CLASSIC_Ignore_Fallout4: not-a-sequence\n");
+
+      await expect(
+        loadExplicitYamlData(
+          { mainPath, gamePath, ignorePath },
+          JsGameId.Fallout4,
+          "Original",
+        ),
+      ).rejects.toMatchObject({
+        code: "invalid_role_data",
+        yamlRole: "local_ignore",
+        path: ignorePath,
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });
 
