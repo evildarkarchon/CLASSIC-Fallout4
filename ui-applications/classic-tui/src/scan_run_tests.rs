@@ -28,14 +28,16 @@ fn configuration() -> Configuration {
     }
 }
 
+/// Builds an executable request configuration from the tracked scan-run YAML corpus.
 fn executable_configuration(max_concurrent: usize) -> Configuration {
-    let repository_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
+    let fixture_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/crash_log_scan_run")
         .canonicalize()
-        .expect("repository root should resolve");
+        .expect("scan-run fixture root should resolve");
+
     Configuration {
-        yaml_dir_root: repository_root.clone(),
-        yaml_dir_data: repository_root.join("CLASSIC Data"),
+        yaml_dir_root: fixture_root.clone(),
+        yaml_dir_data: fixture_root.join("CLASSIC Data"),
         game: GameId::Fallout4,
         game_version: "Original".to_string(),
         options: Options::new(false, false),
