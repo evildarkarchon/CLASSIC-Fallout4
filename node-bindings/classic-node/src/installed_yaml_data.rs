@@ -249,7 +249,7 @@ pub fn inspect_installed_yaml_data(
     })
 }
 
-/// Load one immutable Installed YAML Data snapshot with existing Local Ignore content.
+/// Load one immutable Installed YAML Data snapshot with valid existing-or-generated Local Ignore content.
 ///
 /// Config core owns selection, compatibility, parsing, and filesystem policy. This adapter
 /// performs only request/result projection and runs blocking file I/O on N-API's worker pool.

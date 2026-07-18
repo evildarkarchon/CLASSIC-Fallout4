@@ -1553,8 +1553,8 @@ mod ffi {
             inspection: &InstalledYamlDataInspection,
         ) -> Vec<InstalledYamlDataDiagnosticDto>;
 
-        /// Load Main, game, and existing Local Ignore YAML Data through the
-        /// config-owned Installed YAML Data policy.
+        /// Load Main, game, and valid existing-or-generated Local Ignore YAML Data
+        /// through the config-owned Installed YAML Data policy.
         fn installed_yaml_data_load(
             installation_root: &str,
             game: ExplicitYamlDataGameId,
