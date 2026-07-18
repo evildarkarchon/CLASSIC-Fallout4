@@ -35,8 +35,11 @@ pub use game_local::persist_game_local_paths;
 pub use installed_yaml_data::{
     InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind,
     InstalledYamlDataInspection, InstalledYamlDataInspectionError,
-    InstalledYamlDataInspectionRequest, InstalledYamlDataProvenance, InstalledYamlDataRole,
-    inspect_installed_yaml_data, inspect_installed_yaml_data_with_env,
+    InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome,
+    InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole,
+    InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data,
+    inspect_installed_yaml_data_with_env, load_installed_yaml_data,
+    load_installed_yaml_data_with_env,
 };
 pub use shippable::{
     CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile,

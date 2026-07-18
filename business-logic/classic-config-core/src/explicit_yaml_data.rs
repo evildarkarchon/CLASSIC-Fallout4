@@ -340,7 +340,7 @@ fn game_data_role(game: GameId) -> Result<GameDataRole, ExplicitYamlDataLoadErro
     registered_game_data_role(game).ok_or(ExplicitYamlDataLoadError::UnsupportedGame { game })
 }
 
-const fn game_data_key(role: GameDataRole) -> &'static str {
+pub(crate) const fn game_data_key(role: GameDataRole) -> &'static str {
     match role {
         GameDataRole::Fallout4 => "Fallout4",
     }
@@ -877,7 +877,7 @@ fn validate_suspect_stack_rules(yaml: &Yaml, path: &Path) -> Result<(), Explicit
     Ok(())
 }
 
-fn validate_ignore(
+pub(crate) fn validate_ignore(
     yaml: &Yaml,
     role: GameDataRole,
     path: &Path,

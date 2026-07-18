@@ -243,7 +243,9 @@ fn load_explicit_yaml_data(
     Ok(PyExplicitYamlDataSnapshot { inner })
 }
 
-fn content_identity_to_py(identity: &YamlDataContentIdentity) -> PyYamlDataContentIdentity {
+pub(crate) fn content_identity_to_py(
+    identity: &YamlDataContentIdentity,
+) -> PyYamlDataContentIdentity {
     PyYamlDataContentIdentity {
         sha256: identity.sha256_hex(),
         byte_len: identity.byte_len(),

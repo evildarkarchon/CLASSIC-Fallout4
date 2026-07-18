@@ -1,5 +1,7 @@
-//! Installed YAML Data inspection for Node and Bun callers.
+//! Installed YAML Data inspection and immutable loading for Node and Bun callers.
 
+use crate::config::YamlData;
+use crate::explicit_yaml_data::{JsYamlDataContentIdentity, content_identity_to_js};
 use crate::shared::{JsGameId, core_to_js_game_id, js_to_core_game_id};
 use classic_config_core::{
     GameDataRole, InspectedYamlDataFile as CoreInspectedYamlDataFile,
@@ -8,9 +10,15 @@ use classic_config_core::{
     InstalledYamlDataInspection as CoreInstalledYamlDataInspection,
     InstalledYamlDataInspectionError as CoreInstalledYamlDataInspectionError,
     InstalledYamlDataInspectionRequest as CoreInstalledYamlDataInspectionRequest,
+    InstalledYamlDataLoadError as CoreInstalledYamlDataLoadError,
+    InstalledYamlDataLoadOutcome as CoreInstalledYamlDataLoadOutcome,
+    InstalledYamlDataLoadRequest as CoreInstalledYamlDataLoadRequest,
     InstalledYamlDataProvenance as CoreInstalledYamlDataProvenance,
     InstalledYamlDataRole as CoreInstalledYamlDataRole,
+    InstalledYamlDataSnapshot as CoreInstalledYamlDataSnapshot,
+    LocalIgnoreYamlDataState as CoreLocalIgnoreYamlDataState,
     inspect_installed_yaml_data as core_inspect_installed_yaml_data,
+    load_installed_yaml_data as core_load_installed_yaml_data,
 };
 use napi::bindgen_prelude::*;
 use std::path::PathBuf;
@@ -22,6 +30,17 @@ pub struct JsInstalledYamlDataInspectionRequest {
     pub installation_root: String,
     /// Typed game identity used to select the registered game data role.
     pub game: JsGameId,
+}
+
+/// One installation root, typed game, and Version Registry selection mode to load.
+#[napi(object)]
+pub struct JsInstalledYamlDataLoadRequest {
+    /// CLASSIC installation root containing `CLASSIC Data`.
+    pub installation_root: String,
+    /// Typed game identity used to select the registered game data role.
+    pub game: JsGameId,
+    /// Existing game-version mode used for Version Registry metadata selection.
+    pub selected_game_version: String,
 }
 
 /// Update-eligible Installed YAML Data role.
@@ -72,6 +91,20 @@ pub enum JsInstalledYamlDataGameRole {
     Fallout4,
 }
 
+/// Expected Installed YAML Data loading outcome.
+#[napi(string_enum)]
+pub enum JsInstalledYamlDataLoadStatus {
+    /// Main, game, and valid Local Ignore data are ready for use.
+    Ready,
+}
+
+/// How Local Ignore YAML Data entered an installed snapshot.
+#[napi(string_enum)]
+pub enum JsLocalIgnoreYamlDataState {
+    /// A valid user-owned Local Ignore file already existed.
+    Existing,
+}
+
 /// Structured attribution for one cache-resolution or candidate-rejection event.
 #[napi(object)]
 pub struct JsInstalledYamlDataDiagnostic {
@@ -119,6 +152,78 @@ pub struct JsInstalledYamlDataInspection {
     pub diagnostics: Vec<JsInstalledYamlDataDiagnostic>,
 }
 
+/// Immutable Installed YAML Data snapshot backed by exact core-owned bytes.
+#[napi]
+pub struct InstalledYamlDataSnapshot {
+    inner: CoreInstalledYamlDataSnapshot,
+}
+
+#[napi]
+impl InstalledYamlDataSnapshot {
+    /// Returns the typed game identity requested by the caller.
+    #[napi(getter)]
+    pub fn game(&self) -> JsGameId {
+        core_to_js_game_id(&self.inner.game())
+    }
+
+    /// Returns the registered game-data role used by the snapshot.
+    #[napi(getter)]
+    pub fn game_data_role(&self) -> JsInstalledYamlDataGameRole {
+        game_role_to_js(self.inner.game_data_role())
+    }
+
+    /// Returns a cloned immutable view of the parsed YAML Data.
+    #[napi(getter)]
+    pub fn yaml_data(&self) -> YamlData {
+        YamlData::from_core(self.inner.yaml_data().clone())
+    }
+
+    /// Returns metadata for the independently selected Main YAML Data.
+    #[napi(getter)]
+    pub fn main(&self) -> JsInspectedYamlDataFile {
+        inspected_file_to_js(self.inner.main())
+    }
+
+    /// Returns metadata for the independently selected game YAML Data.
+    #[napi(getter)]
+    pub fn game_file(&self) -> JsInspectedYamlDataFile {
+        inspected_file_to_js(self.inner.game_file())
+    }
+
+    /// Returns how Local Ignore YAML Data entered this snapshot.
+    #[napi(getter)]
+    pub fn local_ignore_state(&self) -> JsLocalIgnoreYamlDataState {
+        match self.inner.local_ignore_state() {
+            CoreLocalIgnoreYamlDataState::Existing => JsLocalIgnoreYamlDataState::Existing,
+        }
+    }
+
+    /// Returns the SHA-256 identity and byte length of exact Local Ignore bytes.
+    #[napi(getter)]
+    pub fn local_ignore_identity(&self) -> JsYamlDataContentIdentity {
+        content_identity_to_js(self.inner.local_ignore_identity())
+    }
+
+    /// Returns structured fallback and cache-resolution diagnostics.
+    #[napi(getter)]
+    pub fn diagnostics(&self) -> Vec<JsInstalledYamlDataDiagnostic> {
+        self.inner
+            .diagnostics()
+            .iter()
+            .map(diagnostic_to_js)
+            .collect()
+    }
+}
+
+/// Typed Ready outcome from Installed YAML Data loading.
+#[napi(object, object_from_js = false)]
+pub struct JsInstalledYamlDataLoadOutcome {
+    /// Stable expected-outcome discriminator.
+    pub status: JsInstalledYamlDataLoadStatus,
+    /// Immutable snapshot retained by the Ready outcome.
+    pub snapshot: InstalledYamlDataSnapshot,
+}
+
 /// Inspect update-eligible Main and game YAML Data for one CLASSIC installation.
 ///
 /// Inspection reads candidate files without creating the cache, promoting
@@ -137,6 +242,71 @@ pub fn inspect_installed_yaml_data(
             game: js_to_core_game_id(&request.game),
         }),
     })
+}
+
+/// Load one immutable Installed YAML Data snapshot with existing Local Ignore content.
+///
+/// Config core owns selection, compatibility, parsing, and filesystem policy. This adapter
+/// performs only request/result projection and runs blocking file I/O on N-API's worker pool.
+///
+/// @param request - Installation root, typed game identity, and game-version mode.
+/// @throws an error with stable `code` plus role, path, or diagnostics metadata when applicable.
+#[napi(ts_return_type = "Promise<JsInstalledYamlDataLoadOutcome>")]
+pub fn load_installed_yaml_data(
+    request: JsInstalledYamlDataLoadRequest,
+) -> AsyncTask<InstalledYamlDataLoadTask> {
+    AsyncTask::new(InstalledYamlDataLoadTask {
+        request: Some(CoreInstalledYamlDataLoadRequest {
+            installation_root: PathBuf::from(request.installation_root),
+            game: js_to_core_game_id(&request.game),
+            selected_game_version: request.selected_game_version,
+        }),
+    })
+}
+
+/// Background task that keeps installed snapshot loading off the JavaScript thread.
+pub struct InstalledYamlDataLoadTask {
+    request: Option<CoreInstalledYamlDataLoadRequest>,
+}
+
+/// Core load result retained until JavaScript-thread resolution.
+pub enum InstalledYamlDataLoadTaskOutput {
+    /// Successfully loaded a typed core outcome.
+    Success(Box<CoreInstalledYamlDataLoadOutcome>),
+    /// Typed core failure awaiting JavaScript error projection.
+    Failure(CoreInstalledYamlDataLoadError),
+}
+
+impl Task for InstalledYamlDataLoadTask {
+    type Output = InstalledYamlDataLoadTaskOutput;
+    type JsValue = JsInstalledYamlDataLoadOutcome;
+
+    /// Executes synchronous core loading on N-API's worker pool.
+    fn compute(&mut self) -> Result<Self::Output> {
+        let request = self
+            .request
+            .take()
+            .ok_or_else(|| napi::Error::from_reason("Installed YAML Data load task already ran"))?;
+        Ok(match core_load_installed_yaml_data(request) {
+            Ok(outcome) => InstalledYamlDataLoadTaskOutput::Success(Box::new(outcome)),
+            Err(error) => InstalledYamlDataLoadTaskOutput::Failure(error),
+        })
+    }
+
+    /// Resolves a typed Ready snapshot or rejects with stable error metadata.
+    fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
+        match output {
+            InstalledYamlDataLoadTaskOutput::Success(outcome) => match *outcome {
+                CoreInstalledYamlDataLoadOutcome::Ready(snapshot) => {
+                    Ok(JsInstalledYamlDataLoadOutcome {
+                        status: JsInstalledYamlDataLoadStatus::Ready,
+                        snapshot: InstalledYamlDataSnapshot { inner: snapshot },
+                    })
+                }
+            },
+            InstalledYamlDataLoadTaskOutput::Failure(error) => Err(load_error_to_napi(env, error)),
+        }
+    }
 }
 
 /// Background task that keeps installed-file I/O off the JavaScript thread.
@@ -289,6 +459,87 @@ fn inspection_error_to_napi(env: Env, error: CoreInstalledYamlDataInspectionErro
     if let Some(role) = role
         && object
             .set_named_property("yamlRole", role_name(role))
+            .is_err()
+    {
+        return base_inspection_error(env, code, message);
+    }
+    if !diagnostics.is_empty()
+        && object
+            .set_named_property("diagnostics", diagnostics)
+            .is_err()
+    {
+        return base_inspection_error(env, code, message);
+    }
+    object
+        .into_unknown(&env)
+        .map(napi::Error::from)
+        .unwrap_or_else(|_| base_inspection_error(env, code, message))
+}
+
+/// Project every fatal Installed YAML Data load error into stable JavaScript metadata.
+fn load_error_to_napi(env: Env, error: CoreInstalledYamlDataLoadError) -> napi::Error {
+    let (code, role, path, diagnostics) = match &error {
+        CoreInstalledYamlDataLoadError::UnsupportedGame { .. } => {
+            ("unsupported_game", None, None, Vec::new())
+        }
+        CoreInstalledYamlDataLoadError::NoUsableSource { role, diagnostics } => (
+            "no_usable_source",
+            Some(role_name(*role)),
+            None,
+            diagnostics.iter().map(diagnostic_to_js).collect(),
+        ),
+        CoreInstalledYamlDataLoadError::LocalIgnoreRead { path, .. } => (
+            "local_ignore_read",
+            Some("local_ignore"),
+            Some(path.clone()),
+            Vec::new(),
+        ),
+        CoreInstalledYamlDataLoadError::LocalIgnoreInvalidUtf8 { path, .. } => (
+            "local_ignore_invalid_utf8",
+            Some("local_ignore"),
+            Some(path.clone()),
+            Vec::new(),
+        ),
+        CoreInstalledYamlDataLoadError::LocalIgnoreParse { path, .. } => (
+            "local_ignore_parse",
+            Some("local_ignore"),
+            Some(path.clone()),
+            Vec::new(),
+        ),
+        CoreInstalledYamlDataLoadError::LocalIgnoreInvalidRoleData { path, .. } => (
+            "local_ignore_invalid_role_data",
+            Some("local_ignore"),
+            Some(path.clone()),
+            Vec::new(),
+        ),
+        CoreInstalledYamlDataLoadError::InvalidSelectedData { .. } => {
+            ("invalid_selected_data", None, None, Vec::new())
+        }
+    };
+    installed_load_error(env, code, error.to_string(), role, path, diagnostics)
+}
+
+/// Build one JavaScript `Error` and attach only metadata owned by the core variant.
+fn installed_load_error(
+    env: Env,
+    code: &str,
+    message: String,
+    role: Option<&str>,
+    path: Option<PathBuf>,
+    diagnostics: Vec<JsInstalledYamlDataDiagnostic>,
+) -> napi::Error {
+    let raw_error = JsError::from(napi::Error::new(code, message.clone())).into_unknown(env);
+    let Ok(mut object) = raw_error.coerce_to_object() else {
+        return base_inspection_error(env, code, message);
+    };
+    if let Some(role) = role
+        && object.set_named_property("yamlRole", role).is_err()
+    {
+        return base_inspection_error(env, code, message);
+    }
+    if let Some(path) = path
+        && object
+            .set_named_property("path", path.to_string_lossy().into_owned())
             .is_err()
     {
         return base_inspection_error(env, code, message);

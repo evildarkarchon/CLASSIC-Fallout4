@@ -143,6 +143,16 @@ All three surfaces delegate role selection, validation, and error classification
 
 Rejected candidates are diagnostic evidence only: adapters do not promote, repair, rewrite, or remove them.
 
+### Installed YAML Data loading errors
+
+`classic_config_core::load_installed_yaml_data` returns `InstalledYamlDataLoadOutcome::Ready` for a valid installation with existing Local Ignore YAML Data. Fatal Rust errors preserve `UnsupportedGame` and `NoUsableSource { role, diagnostics }` as direct typed variants rather than wrapping inspection errors. Existing Local Ignore failures are attributed by `LocalIgnoreRead`, `LocalIgnoreInvalidUtf8`, `LocalIgnoreParse`, or `LocalIgnoreInvalidRoleData`; `InvalidSelectedData` covers failure to build the final parsed view after role validation.
+
+| Binding | Failure shape |
+| --- | --- |
+| C++ (CXX) | `installed_yaml_data_load_status()` returns `InstalledYamlDataLoadErrorDto` with an exhaustive typed kind, optional load-specific Main/game/Local Ignore role, optional path, no-usable-source diagnostics, and message before a Ready snapshot can be consumed. |
+| Node (NAPI-RS) | `loadInstalledYamlData(...)` rejects with stable `code`: `unsupported_game`, `no_usable_source`, `local_ignore_read`, `local_ignore_invalid_utf8`, `local_ignore_parse`, `local_ignore_invalid_role_data`, or `invalid_selected_data`. Applicable errors also carry `yamlRole`, `path`, and `diagnostics`. |
+| Python (PyO3) | `classic_config.load_installed_yaml_data(...)` raises the matching dedicated subclass of `InstalledYamlDataLoadError`. Every instance exposes the same lowercase `code` and applicable `yaml_role`, `path`, and `diagnostics` attributes. |
+
 ---
 
 ## `CLASSIC Main.yaml` version-reader errors (`schema-gated startup read`)

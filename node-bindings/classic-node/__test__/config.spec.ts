@@ -25,10 +25,13 @@ import {
   persistGameLocalPaths,
   JsGameId,
   JsInstalledYamlDataDiagnosticKind,
+  JsInstalledYamlDataLoadStatus,
   JsInstalledYamlDataProvenance,
   JsInstalledYamlDataRole,
+  JsLocalIgnoreYamlDataState,
   inspectInstalledYamlData,
   loadExplicitYamlData,
+  loadInstalledYamlData,
 } from "../index.js";
 import { getRuntimeCoverageEntries } from "./fixtures/runtime_coverage_registry";
 
@@ -451,8 +454,164 @@ describe("Installed YAML Data inspection", () => {
   });
 });
 
+describe("Installed YAML Data loading", () => {
+  test("returns a typed Ready snapshot with exact identities and stable parsed data", async () => {
+    const root = mkdtempSync(join(tmpdir(), "classic-node-installed-yaml-load-"));
+    const cacheRoot = join(root, "platform-cache");
+    const installationRoot = join(root, "installation");
+    const bundledDir = join(installationRoot, "CLASSIC Data", "databases");
+    const ignorePath = join(
+      installationRoot,
+      "CLASSIC Data",
+      "CLASSIC Ignore.yaml",
+    );
+    try {
+      mkdirSync(bundledDir, { recursive: true });
+      writeFileSync(join(bundledDir, "CLASSIC Main.yaml"), EXPLICIT_MAIN_YAML);
+      writeFileSync(join(bundledDir, "CLASSIC Fallout4.yaml"), EXPLICIT_GAME_YAML);
+      writeFileSync(ignorePath, IGNORE_YAML);
+
+      const outcome = await withIsolatedYamlCache(cacheRoot, () =>
+        loadInstalledYamlData({
+          installationRoot,
+          game: JsGameId.Fallout4Vr,
+          selectedGameVersion: "VR",
+        }),
+      );
+
+      expect(outcome.status).toBe(JsInstalledYamlDataLoadStatus.Ready);
+      expect(outcome.snapshot.game).toBe(JsGameId.Fallout4Vr);
+      expect(outcome.snapshot.gameDataRole).toBe("Fallout4");
+      expect(outcome.snapshot.localIgnoreState).toBe(
+        JsLocalIgnoreYamlDataState.Existing,
+      );
+      expect(outcome.snapshot.yamlData.classicVersion).toBe("9.1.0");
+      expect(outcome.snapshot.yamlData.ignoreList).toEqual([
+        "IgnoreItem1",
+        "IgnoreItem2",
+      ]);
+      expect(outcome.snapshot.main).toMatchObject({
+        role: JsInstalledYamlDataRole.Main,
+        provenance: JsInstalledYamlDataProvenance.Bundled,
+        schemaMajor: 2,
+        schemaMinor: 0,
+        sha256: createHash("sha256").update(EXPLICIT_MAIN_YAML).digest("hex"),
+      });
+      expect(outcome.snapshot.gameFile).toMatchObject({
+        role: JsInstalledYamlDataRole.Game,
+        provenance: JsInstalledYamlDataProvenance.Bundled,
+        schemaMajor: 1,
+        schemaMinor: 0,
+        sha256: createHash("sha256").update(EXPLICIT_GAME_YAML).digest("hex"),
+      });
+      expect(outcome.snapshot.localIgnoreIdentity).toEqual({
+        sha256: createHash("sha256").update(IGNORE_YAML).digest("hex"),
+        byteLen: Buffer.byteLength(IGNORE_YAML),
+      });
+      expect(outcome.snapshot.diagnostics).toEqual([]);
+
+      writeFileSync(join(bundledDir, "CLASSIC Main.yaml"), "replacement bytes");
+      writeFileSync(ignorePath, "replacement bytes");
+      expect(outcome.snapshot.yamlData.classicVersion).toBe("9.1.0");
+      expect(outcome.snapshot.yamlData.ignoreList).toEqual([
+        "IgnoreItem1",
+        "IgnoreItem2",
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects fatal selection failures with stable metadata", async () => {
+    const root = mkdtempSync(join(tmpdir(), "classic-node-installed-yaml-load-errors-"));
+    const cacheRoot = join(root, "platform-cache");
+    const installationRoot = join(root, "installation");
+    try {
+      await expect(
+        loadInstalledYamlData({
+          installationRoot,
+          game: JsGameId.Skyrim,
+          selectedGameVersion: "AnniversaryEdition",
+        }),
+      ).rejects.toMatchObject({ code: "unsupported_game" });
+
+      const missingSource = withIsolatedYamlCache(cacheRoot, () =>
+        loadInstalledYamlData({
+          installationRoot,
+          game: JsGameId.Fallout4,
+          selectedGameVersion: "Original",
+        }),
+      );
+      await expect(missingSource).rejects.toMatchObject({
+        code: "no_usable_source",
+        yamlRole: "main",
+        diagnostics: [
+          {
+            role: JsInstalledYamlDataRole.Main,
+            candidate: JsInstalledYamlDataProvenance.Bundled,
+            kind: JsInstalledYamlDataDiagnosticKind.Missing,
+          },
+        ],
+      });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("projects every Local Ignore failure with stable role and path metadata", async () => {
+    const root = mkdtempSync(join(tmpdir(), "classic-node-installed-yaml-ignore-errors-"));
+    const cacheRoot = join(root, "platform-cache");
+    const installationRoot = join(root, "installation");
+    const bundledDir = join(installationRoot, "CLASSIC Data", "databases");
+    const ignorePath = join(
+      installationRoot,
+      "CLASSIC Data",
+      "CLASSIC Ignore.yaml",
+    );
+    const request = {
+      installationRoot,
+      game: JsGameId.Fallout4,
+      selectedGameVersion: "Original",
+    };
+    try {
+      mkdirSync(bundledDir, { recursive: true });
+      writeFileSync(join(bundledDir, "CLASSIC Main.yaml"), EXPLICIT_MAIN_YAML);
+      writeFileSync(join(bundledDir, "CLASSIC Fallout4.yaml"), EXPLICIT_GAME_YAML);
+
+      const expectIgnoreFailure = async (
+        code: string,
+        content?: string | Uint8Array,
+      ): Promise<void> => {
+        if (content !== undefined) {
+          writeFileSync(ignorePath, content);
+        }
+        await expect(
+          withIsolatedYamlCache(cacheRoot, () => loadInstalledYamlData(request)),
+        ).rejects.toMatchObject({
+          code,
+          yamlRole: "local_ignore",
+          path: ignorePath,
+        });
+      };
+
+      await expectIgnoreFailure("local_ignore_read");
+      await expectIgnoreFailure(
+        "local_ignore_invalid_utf8",
+        Uint8Array.from([0xff]),
+      );
+      await expectIgnoreFailure("local_ignore_parse", "unterminated: [\n");
+      await expectIgnoreFailure(
+        "local_ignore_invalid_role_data",
+        "CLASSIC_Ignore_Fallout4: not-a-sequence\n",
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
 describe("runtime coverage metadata", () => {
-  test("tracks application directory and Game Local persistence adapters", () => {
+  test("tracks Installed YAML Data, application directory, and Game Local adapters", () => {
     const bindingIdentifiers = new Set(
       getRuntimeCoverageEntries(THIS_SUITE).flatMap(
         (entry) => entry.bindingIdentifiers ?? [],
@@ -462,6 +621,7 @@ describe("runtime coverage metadata", () => {
     expect(bindingIdentifiers.has("getApplicationDir")).toBe(true);
     expect(bindingIdentifiers.has("setApplicationDir")).toBe(true);
     expect(bindingIdentifiers.has("persistGameLocalPaths")).toBe(true);
+    expect(bindingIdentifiers.has("loadInstalledYamlData")).toBe(true);
   });
 });
 

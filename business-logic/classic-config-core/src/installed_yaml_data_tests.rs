@@ -1,7 +1,9 @@
-use super::{
+use crate::{
     InstalledYamlDataDiagnosticKind, InstalledYamlDataInspectionError,
-    InstalledYamlDataInspectionRequest, InstalledYamlDataProvenance, InstalledYamlDataRole,
-    inspect_installed_yaml_data_with_env,
+    InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome,
+    InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole,
+    LocalIgnoreYamlDataState, inspect_installed_yaml_data_with_env,
+    load_installed_yaml_data_with_env,
 };
 use classic_shared_core::GameId;
 use sha2::{Digest, Sha256};
@@ -27,6 +29,13 @@ Crashlog_Stack_Check: []
 Mods_FREQ: []
 Mods_SOLU: []
 "#;
+
+const IGNORE_YAML: &str = "CLASSIC_Ignore_Fallout4:\r\n  - ExistingUserEntry.dll\r\n";
+const MAIN_SHA256: &str = "a1cc5332af4aeaaf0ddf8c8f4f151c5c445657ada5e2823b45ccf1a135c3bcde";
+const GAME_SHA256: &str = "1bc32a693c96e4d51adce3d0f44f8ca02eac953dbcbb78f6898be56577aa7e08";
+const IGNORE_SHA256: &str = "8876f72865dba00b7a7bf3dac0081d383a9b85053e5935d551e03b228d6e4743";
+const UPDATED_MAIN_SHA256: &str =
+    "e2cef80697286fa0e374b3f2eb1f10dd8f5fa5cf10d58ff3a94c0465a809da75";
 
 fn bundled_dir(installation_root: &Path) -> PathBuf {
     installation_root.join("CLASSIC Data").join("databases")
@@ -54,6 +63,217 @@ fn write_bundled_install(installation_root: &Path) {
         .expect("bundled Main should be written");
     std::fs::write(databases.join("CLASSIC Fallout4.yaml"), GAME_YAML)
         .expect("bundled game should be written");
+}
+
+fn write_existing_local_ignore(installation_root: &Path) -> PathBuf {
+    let path = installation_root
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+    std::fs::write(&path, IGNORE_YAML).expect("existing Local Ignore should be written");
+    path
+}
+
+#[test]
+fn installed_loading_returns_ready_snapshot_with_valid_existing_local_ignore() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    write_bundled_install(installation.path());
+    let ignore_path = write_existing_local_ignore(installation.path());
+
+    let outcome = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+    )
+    .expect("a valid installation should load");
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+
+    assert_eq!(snapshot.game(), GameId::Fallout4);
+    assert_eq!(snapshot.game_data_role(), crate::GameDataRole::Fallout4);
+    assert_eq!(
+        snapshot.local_ignore_state(),
+        LocalIgnoreYamlDataState::Existing
+    );
+    assert_eq!(snapshot.yaml_data().ignore_list, ["ExistingUserEntry.dll"]);
+    assert_eq!(
+        snapshot.main().provenance(),
+        InstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(
+        snapshot.game_file().provenance(),
+        InstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(snapshot.main().schema_version().to_string(), "2.0");
+    assert_eq!(snapshot.game_file().schema_version().to_string(), "1.0");
+    assert_eq!(
+        snapshot.local_ignore_identity().byte_len(),
+        IGNORE_YAML.len() as u64
+    );
+    assert!(snapshot.diagnostics().is_empty());
+    assert_eq!(
+        std::fs::read(ignore_path).expect("existing Local Ignore should remain readable"),
+        IGNORE_YAML.as_bytes()
+    );
+}
+
+#[test]
+fn installed_snapshot_debug_does_not_expose_retained_content() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    write_bundled_install(installation.path());
+    write_existing_local_ignore(installation.path());
+
+    let outcome = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+    )
+    .expect("a valid installation should load");
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+    let debug = format!("{snapshot:?}");
+
+    assert!(!debug.contains("Bundled autoscan"));
+    assert!(!debug.contains("ExistingUserEntry.dll"));
+}
+
+#[test]
+fn installed_loading_selects_main_and_game_independently() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    write_bundled_install(installation.path());
+    write_existing_local_ignore(installation.path());
+    let cache = cache_dir(cache_root.path());
+    std::fs::create_dir_all(&cache).expect("cache directory should be created");
+    let updated_main = MAIN_YAML.replace("Bundled autoscan", "Updated installed autoscan");
+    std::fs::write(cache.join("CLASSIC Main.yaml"), updated_main)
+        .expect("updated Main should be written");
+    std::fs::write(
+        cache.join("CLASSIC Fallout4.yaml"),
+        GAME_YAML.replace(
+            "Main_Root_Name: \"Fallout 4\"",
+            "Main_Root_Name: \"Skyrim\"",
+        ),
+    )
+    .expect("semantically invalid updated game should be written");
+
+    let outcome = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+    )
+    .expect("independently selectable candidates should load");
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+
+    assert_eq!(
+        snapshot.main().provenance(),
+        InstalledYamlDataProvenance::Updated
+    );
+    assert_eq!(
+        snapshot.game_file().provenance(),
+        InstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(snapshot.main().identity().sha256_hex(), UPDATED_MAIN_SHA256);
+    assert_eq!(snapshot.game_file().identity().sha256_hex(), GAME_SHA256);
+    assert_eq!(
+        snapshot.yaml_data().autoscan_text,
+        "Updated installed autoscan"
+    );
+    assert!(snapshot.diagnostics().iter().any(|diagnostic| {
+        diagnostic.role() == Some(InstalledYamlDataRole::Game)
+            && diagnostic.candidate() == Some(InstalledYamlDataProvenance::Updated)
+            && diagnostic.kind() == InstalledYamlDataDiagnosticKind::InvalidRoleData
+    }));
+}
+
+#[test]
+fn installed_snapshot_remains_stable_after_selected_files_change() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    write_bundled_install(installation.path());
+    let ignore_path = write_existing_local_ignore(installation.path());
+
+    let outcome = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+    )
+    .expect("valid selected files should load");
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+
+    let databases = bundled_dir(installation.path());
+    std::fs::write(databases.join("CLASSIC Main.yaml"), "changed after loading")
+        .expect("selected Main path should be replaceable");
+    std::fs::write(
+        databases.join("CLASSIC Fallout4.yaml"),
+        "changed after loading",
+    )
+    .expect("selected game path should be replaceable");
+    std::fs::write(&ignore_path, "changed after loading")
+        .expect("selected Local Ignore path should be replaceable");
+
+    assert_eq!(snapshot.yaml_data().autoscan_text, "Bundled autoscan");
+    assert_eq!(snapshot.yaml_data().game_root_name, "Fallout 4");
+    assert_eq!(snapshot.yaml_data().ignore_list, ["ExistingUserEntry.dll"]);
+    assert_eq!(snapshot.main().identity().sha256_hex(), MAIN_SHA256);
+    assert_eq!(snapshot.game_file().identity().sha256_hex(), GAME_SHA256);
+    assert_eq!(snapshot.local_ignore_identity().sha256_hex(), IGNORE_SHA256);
+}
+
+#[test]
+fn installed_loading_rejects_unsupported_games_before_file_io() {
+    let error = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: PathBuf::from("paths-must-not-be-read"),
+            game: GameId::Skyrim,
+            selected_game_version: "auto".to_string(),
+        },
+        |_| panic!("unsupported game must fail before cache resolution"),
+    )
+    .expect_err("unsupported game should return a typed fatal result");
+
+    assert!(matches!(
+        error,
+        InstalledYamlDataLoadError::UnsupportedGame {
+            game: GameId::Skyrim
+        }
+    ));
+}
+
+#[test]
+fn installed_loading_reports_no_usable_required_source() {
+    let installation = tempdir().expect("installation root should be created");
+
+    let error = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        |_| None,
+    )
+    .expect_err("missing required Main data should return a typed fatal result");
+
+    let InstalledYamlDataLoadError::NoUsableSource { role, diagnostics } = error else {
+        panic!("missing required Main should report no usable source");
+    };
+    assert_eq!(role, InstalledYamlDataRole::Main);
+    assert!(diagnostics.iter().any(|diagnostic| {
+        diagnostic.role() == Some(InstalledYamlDataRole::Main)
+            && diagnostic.candidate() == Some(InstalledYamlDataProvenance::Bundled)
+            && diagnostic.kind() == InstalledYamlDataDiagnosticKind::Missing
+    }));
 }
 
 #[test]

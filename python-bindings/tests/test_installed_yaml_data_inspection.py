@@ -27,14 +27,17 @@ GAME_BYTES = (
     b"Mods_FREQ: []\n"
     b"Mods_SOLU: []\n"
 )
+IGNORE_BYTES = b"CLASSIC_Ignore_Fallout4:\r\n  - ExistingUserEntry.dll\r\n"
 
 
-def write_install(root: Path) -> None:
-    """Write the minimum semantically valid bundled Main and Fallout 4 data."""
+def write_install(root: Path, *, with_ignore: bool = False) -> None:
+    """Write minimum valid bundled data and, when requested, Local Ignore data."""
     databases = root / "CLASSIC Data" / "databases"
     databases.mkdir(parents=True)
     (databases / "CLASSIC Main.yaml").write_bytes(MAIN_BYTES)
     (databases / "CLASSIC Fallout4.yaml").write_bytes(GAME_BYTES)
+    if with_ignore:
+        (root / "CLASSIC Data" / "CLASSIC Ignore.yaml").write_bytes(IGNORE_BYTES)
 
 
 def isolate_cache(monkeypatch: pytest.MonkeyPatch, root: Path) -> Path:
@@ -137,3 +140,144 @@ def test_inspection_exposes_typed_terminal_failures(
     assert diagnostic.role == "main"
     assert diagnostic.candidate == "bundled"
     assert diagnostic.kind == "missing"
+
+
+def test_installed_load_projects_ready_immutable_snapshot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A valid load exposes one stable snapshot of independently selected bytes."""
+    installation = tmp_path / "install"
+    write_install(installation, with_ignore=True)
+    cache = isolate_cache(monkeypatch, tmp_path / "cache-root")
+    cache.mkdir(parents=True)
+    updated_main = MAIN_BYTES.replace(b"bundled", b"updated cache")
+    (cache / "CLASSIC Main.yaml").write_bytes(updated_main)
+    (cache / "CLASSIC Fallout4.yaml").write_bytes(
+        GAME_BYTES.replace(b'"Fallout 4"', b'"Skyrim"')
+    )
+
+    outcome = classic_config.load_installed_yaml_data(
+        installation,
+        classic_config.ExplicitYamlDataGame.FALLOUT4_VR,
+        "VR",
+    )
+    assert outcome.status == "ready"
+    snapshot = outcome.snapshot
+
+    assert snapshot.game == classic_config.ExplicitYamlDataGame.FALLOUT4_VR
+    assert snapshot.game_data_role == "Fallout4"
+    assert snapshot.yaml_data.classic_version == "9.1.0"
+    assert snapshot.yaml_data.ignore_list == ["ExistingUserEntry.dll"]
+    assert snapshot.main.provenance == "updated"
+    assert snapshot.main.sha256 == hashlib.sha256(updated_main).hexdigest()
+    assert snapshot.game_file.provenance == "bundled"
+    assert snapshot.game_file.sha256 == hashlib.sha256(GAME_BYTES).hexdigest()
+    assert snapshot.local_ignore_state == "existing"
+    assert snapshot.local_ignore_identity.sha256 == hashlib.sha256(IGNORE_BYTES).hexdigest()
+    assert snapshot.local_ignore_identity.byte_len == len(IGNORE_BYTES)
+    assert [(diagnostic.role, diagnostic.kind) for diagnostic in snapshot.diagnostics] == [
+        ("game", "invalid_role_data")
+    ]
+
+    (cache / "CLASSIC Main.yaml").write_bytes(b"changed after loading")
+    (installation / "CLASSIC Data" / "databases" / "CLASSIC Fallout4.yaml").write_bytes(
+        b"changed after loading"
+    )
+    (installation / "CLASSIC Data" / "CLASSIC Ignore.yaml").write_bytes(
+        b"changed after loading"
+    )
+    assert snapshot.yaml_data.classic_version == "9.1.0"
+    assert snapshot.yaml_data.game_root_name == "Fallout 4"
+    assert snapshot.yaml_data.ignore_list == ["ExistingUserEntry.dll"]
+    assert snapshot.local_ignore_identity.sha256 == hashlib.sha256(IGNORE_BYTES).hexdigest()
+
+
+def test_installed_load_projects_selection_failures(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Typed selection failures retain stable codes, roles, paths, and diagnostics."""
+    isolate_cache(monkeypatch, tmp_path / "cache-root")
+
+    with pytest.raises(
+        classic_config.InstalledYamlDataLoadUnsupportedGameError
+    ) as unsupported:
+        classic_config.load_installed_yaml_data(
+            tmp_path / "missing",
+            classic_config.ExplicitYamlDataGame.SKYRIM,
+            "AnniversaryEdition",
+        )
+    assert unsupported.value.code == "unsupported_game"
+    assert unsupported.value.yaml_role is None
+    assert unsupported.value.path is None
+    assert unsupported.value.diagnostics == []
+
+    with pytest.raises(
+        classic_config.InstalledYamlDataLoadNoUsableSourceError
+    ) as unavailable:
+        classic_config.load_installed_yaml_data(
+            tmp_path / "missing",
+            classic_config.ExplicitYamlDataGame.FALLOUT4,
+            "Original",
+        )
+    assert unavailable.value.code == "no_usable_source"
+    assert unavailable.value.yaml_role == "main"
+    assert unavailable.value.path is None
+    assert len(unavailable.value.diagnostics) == 1
+    assert unavailable.value.diagnostics[0].kind == "missing"
+
+
+@pytest.mark.parametrize(
+    ("ignore_bytes", "exception_name", "code"),
+    [
+        (None, "InstalledYamlDataLoadLocalIgnoreReadError", "local_ignore_read"),
+        (
+            b"\xff",
+            "InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
+            "local_ignore_invalid_utf8",
+        ),
+        (
+            b"CLASSIC_Ignore_Fallout4: [unterminated",
+            "InstalledYamlDataLoadLocalIgnoreParseError",
+            "local_ignore_parse",
+        ),
+        (
+            b"CLASSIC_Ignore_Fallout4: not-a-sequence\n",
+            "InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
+            "local_ignore_invalid_role_data",
+        ),
+    ],
+)
+def test_installed_load_projects_local_ignore_failures(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    ignore_bytes: bytes | None,
+    exception_name: str,
+    code: str,
+) -> None:
+    """Every Local Ignore fatal result is separately catchable with path metadata."""
+    installation = tmp_path / "install"
+    write_install(installation)
+    isolate_cache(monkeypatch, tmp_path / "cache-root")
+    ignore_path = installation / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    if ignore_bytes is not None:
+        ignore_path.write_bytes(ignore_bytes)
+
+    exception_type = getattr(classic_config, exception_name)
+    with pytest.raises(exception_type) as exc_info:
+        classic_config.load_installed_yaml_data(
+            installation,
+            classic_config.ExplicitYamlDataGame.FALLOUT4,
+            "Original",
+        )
+    assert exc_info.value.code == code
+    assert exc_info.value.yaml_role == "local_ignore"
+    assert exc_info.value.path == str(ignore_path)
+    assert exc_info.value.diagnostics == []
+
+
+def test_installed_load_exports_invalid_selected_data_failure_type() -> None:
+    """The defensive post-selection projection failure remains a typed public error."""
+    assert issubclass(
+        classic_config.InstalledYamlDataLoadInvalidSelectedDataError,
+        classic_config.InstalledYamlDataLoadError,
+    )

@@ -1,14 +1,20 @@
-//! Side-effect-limited Installed YAML Data inspection for Python callers.
+//! Installed YAML Data inspection and immutable loading for Python callers.
 
-use super::explicit_yaml_data::PyExplicitYamlDataGame;
+use super::PyYamlData;
+use super::explicit_yaml_data::{
+    PyExplicitYamlDataGame, PyYamlDataContentIdentity, content_identity_to_py,
+};
 use classic_config_core::{
     InspectedYamlDataFile as CoreInspectedYamlDataFile,
     InstalledYamlDataDiagnostic as CoreInstalledYamlDataDiagnostic,
     InstalledYamlDataDiagnosticKind as CoreInstalledYamlDataDiagnosticKind,
     InstalledYamlDataInspectionError as CoreInstalledYamlDataInspectionError,
-    InstalledYamlDataInspectionRequest, InstalledYamlDataProvenance as CoreProvenance,
-    InstalledYamlDataRole as CoreRole,
+    InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError as CoreLoadError,
+    InstalledYamlDataLoadOutcome as CoreLoadOutcome, InstalledYamlDataLoadRequest,
+    InstalledYamlDataProvenance as CoreProvenance, InstalledYamlDataRole as CoreRole,
+    InstalledYamlDataSnapshot as CoreSnapshot, LocalIgnoreYamlDataState as CoreLocalIgnoreState,
     inspect_installed_yaml_data as core_inspect_installed_yaml_data,
+    load_installed_yaml_data as core_load_installed_yaml_data,
 };
 use classic_shared::without_gil;
 use pyo3::create_exception;
@@ -33,6 +39,54 @@ create_exception!(
     InstalledYamlDataNoUsableSourceError,
     InstalledYamlDataInspectionError,
     "Raised when neither updated nor bundled data is usable for a required role."
+);
+create_exception!(
+    classic_config,
+    InstalledYamlDataLoadError,
+    PyException,
+    "Base class for fatal Installed YAML Data load failures."
+);
+create_exception!(
+    classic_config,
+    InstalledYamlDataLoadUnsupportedGameError,
+    InstalledYamlDataLoadError,
+    "Raised when a typed game has no registered Installed YAML Data role."
+);
+create_exception!(
+    classic_config,
+    InstalledYamlDataLoadNoUsableSourceError,
+    InstalledYamlDataLoadError,
+    "Raised when neither updated nor bundled data is usable for a required role."
+);
+create_exception!(
+    classic_config,
+    InstalledYamlDataLoadLocalIgnoreReadError,
+    InstalledYamlDataLoadError,
+    "Raised when existing Local Ignore YAML Data cannot be read."
+);
+create_exception!(
+    classic_config,
+    InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error,
+    InstalledYamlDataLoadError,
+    "Raised when existing Local Ignore YAML Data is not UTF-8."
+);
+create_exception!(
+    classic_config,
+    InstalledYamlDataLoadLocalIgnoreParseError,
+    InstalledYamlDataLoadError,
+    "Raised when existing Local Ignore YAML Data is malformed YAML."
+);
+create_exception!(
+    classic_config,
+    InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError,
+    InstalledYamlDataLoadError,
+    "Raised when existing Local Ignore YAML Data violates its role contract."
+);
+create_exception!(
+    classic_config,
+    InstalledYamlDataLoadInvalidSelectedDataError,
+    InstalledYamlDataLoadError,
+    "Raised when selected Installed YAML Data cannot form the parsed view."
 );
 
 /// One structured cache-resolution or candidate-rejection diagnostic.
@@ -100,6 +154,92 @@ pub struct PyInstalledYamlDataInspection {
     diagnostics: Vec<PyInstalledYamlDataDiagnostic>,
 }
 
+/// Immutable Ready snapshot for one explicit installation root and game-version mode.
+#[pyclass(name = "InstalledYamlDataSnapshot", frozen, skip_from_py_object)]
+pub struct PyInstalledYamlDataSnapshot {
+    inner: CoreSnapshot,
+}
+
+/// Typed Ready outcome containing one immutable Installed YAML Data snapshot.
+#[pyclass(name = "InstalledYamlDataLoadOutcome", frozen, skip_from_py_object)]
+pub struct PyInstalledYamlDataLoadOutcome {
+    snapshot: Py<PyInstalledYamlDataSnapshot>,
+}
+
+#[pymethods]
+impl PyInstalledYamlDataLoadOutcome {
+    /// Return the stable expected-outcome discriminator.
+    #[getter]
+    fn status(&self) -> &'static str {
+        "ready"
+    }
+
+    /// Return the immutable snapshot owned by this Ready outcome.
+    #[getter]
+    fn snapshot(&self, py: Python<'_>) -> Py<PyInstalledYamlDataSnapshot> {
+        self.snapshot.clone_ref(py)
+    }
+}
+
+#[pymethods]
+impl PyInstalledYamlDataSnapshot {
+    /// Return the typed game identity retained by Rust core.
+    #[getter]
+    fn game(&self) -> PyExplicitYamlDataGame {
+        PyExplicitYamlDataGame::from_core(self.inner.game())
+    }
+
+    /// Return the registered data role used by the selected game file.
+    #[getter]
+    fn game_data_role(&self) -> &'static str {
+        match self.inner.game_data_role() {
+            classic_config_core::GameDataRole::Fallout4 => "Fallout4",
+        }
+    }
+
+    /// Clone the parsed view derived from the snapshot's exact retained bytes.
+    #[getter]
+    fn yaml_data(&self) -> PyYamlData {
+        PyYamlData::_from_core(self.inner.yaml_data().clone())
+    }
+
+    /// Return selected Main provenance, schema, and exact-byte identity.
+    #[getter]
+    fn main(&self) -> PyInspectedYamlDataFile {
+        inspected_file_to_py(self.inner.main())
+    }
+
+    /// Return selected game provenance, schema, and exact-byte identity.
+    #[getter]
+    fn game_file(&self) -> PyInspectedYamlDataFile {
+        inspected_file_to_py(self.inner.game_file())
+    }
+
+    /// Return how Local Ignore YAML Data entered this Ready snapshot.
+    #[getter]
+    fn local_ignore_state(&self) -> &'static str {
+        match self.inner.local_ignore_state() {
+            CoreLocalIgnoreState::Existing => "existing",
+        }
+    }
+
+    /// Return the identity of the exact retained Local Ignore bytes.
+    #[getter]
+    fn local_ignore_identity(&self) -> PyYamlDataContentIdentity {
+        content_identity_to_py(self.inner.local_ignore_identity())
+    }
+
+    /// Return every structured fallback or cache-resolution diagnostic.
+    #[getter]
+    fn diagnostics(&self) -> Vec<PyInstalledYamlDataDiagnostic> {
+        self.inner
+            .diagnostics()
+            .iter()
+            .map(diagnostic_to_py)
+            .collect()
+    }
+}
+
 /// Inspects installed Main and game YAML Data without reading or modifying Local Ignore.
 ///
 /// The operation releases the GIL while config core resolves updated and bundled
@@ -137,6 +277,34 @@ fn inspect_installed_yaml_data(
             .map(diagnostic_to_py)
             .collect(),
     })
+}
+
+/// Load one immutable Ready Installed YAML Data snapshot.
+///
+/// The operation releases the GIL while Rust core independently selects Main and game,
+/// reads the existing Local Ignore file, and builds the parsed view. It never replaces
+/// Local Ignore during ordinary loading.
+///
+/// # Errors
+///
+/// Raises a typed `InstalledYamlDataLoadError` subclass for every fatal core result.
+#[pyfunction]
+fn load_installed_yaml_data(
+    py: Python<'_>,
+    installation_root: PathBuf,
+    game: PyExplicitYamlDataGame,
+    selected_game_version: String,
+) -> PyResult<PyInstalledYamlDataLoadOutcome> {
+    let request = InstalledYamlDataLoadRequest {
+        installation_root,
+        game: game.into_core(),
+        selected_game_version,
+    };
+    let outcome = without_gil(py, || core_load_installed_yaml_data(request))
+        .map_err(installed_yaml_data_load_error_to_py)?;
+    let CoreLoadOutcome::Ready(inner) = outcome;
+    let snapshot = Py::new(py, PyInstalledYamlDataSnapshot { inner })?;
+    Ok(PyInstalledYamlDataLoadOutcome { snapshot })
 }
 
 /// Projects one selected file without retaining an independent path or byte cache.
@@ -194,6 +362,72 @@ fn installed_yaml_data_error_to_py(error: CoreInstalledYamlDataInspectionError) 
     py_error
 }
 
+/// Convert every fatal core load result into a stable typed Python exception.
+fn installed_yaml_data_load_error_to_py(error: CoreLoadError) -> PyErr {
+    let message = error.to_string();
+    let (code, yaml_role, path, diagnostics, py_error) = match error {
+        CoreLoadError::UnsupportedGame { .. } => (
+            "unsupported_game",
+            None,
+            None,
+            Vec::new(),
+            InstalledYamlDataLoadUnsupportedGameError::new_err(message),
+        ),
+        CoreLoadError::NoUsableSource { role, diagnostics } => (
+            "no_usable_source",
+            Some(role_token(role)),
+            None,
+            diagnostics.iter().map(diagnostic_to_py).collect(),
+            InstalledYamlDataLoadNoUsableSourceError::new_err(message),
+        ),
+        CoreLoadError::LocalIgnoreRead { path, .. } => (
+            "local_ignore_read",
+            Some("local_ignore"),
+            Some(path.to_string_lossy().into_owned()),
+            Vec::new(),
+            InstalledYamlDataLoadLocalIgnoreReadError::new_err(message),
+        ),
+        CoreLoadError::LocalIgnoreInvalidUtf8 { path, .. } => (
+            "local_ignore_invalid_utf8",
+            Some("local_ignore"),
+            Some(path.to_string_lossy().into_owned()),
+            Vec::new(),
+            InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error::new_err(message),
+        ),
+        CoreLoadError::LocalIgnoreParse { path, .. } => (
+            "local_ignore_parse",
+            Some("local_ignore"),
+            Some(path.to_string_lossy().into_owned()),
+            Vec::new(),
+            InstalledYamlDataLoadLocalIgnoreParseError::new_err(message),
+        ),
+        CoreLoadError::LocalIgnoreInvalidRoleData { path, .. } => (
+            "local_ignore_invalid_role_data",
+            Some("local_ignore"),
+            Some(path.to_string_lossy().into_owned()),
+            Vec::new(),
+            InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError::new_err(message),
+        ),
+        CoreLoadError::InvalidSelectedData { .. } => (
+            "invalid_selected_data",
+            None,
+            None,
+            Vec::new(),
+            InstalledYamlDataLoadInvalidSelectedDataError::new_err(message),
+        ),
+    };
+    Python::attach(|py| {
+        let value = py_error.value(py);
+        value.setattr("code", code)?;
+        value.setattr("yaml_role", yaml_role)?;
+        value.setattr("path", path)?;
+        value.setattr("diagnostics", diagnostics)?;
+        Ok::<(), PyErr>(())
+    })
+    .expect("CLASSIC Installed YAML Data load exceptions must accept contract attributes");
+    py_error
+}
+
 /// Returns the stable Python role token.
 const fn role_token(role: CoreRole) -> &'static str {
     match role {
@@ -230,7 +464,10 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyInstalledYamlDataDiagnostic>()?;
     module.add_class::<PyInspectedYamlDataFile>()?;
     module.add_class::<PyInstalledYamlDataInspection>()?;
+    module.add_class::<PyInstalledYamlDataSnapshot>()?;
+    module.add_class::<PyInstalledYamlDataLoadOutcome>()?;
     module.add_function(wrap_pyfunction!(inspect_installed_yaml_data, module)?)?;
+    module.add_function(wrap_pyfunction!(load_installed_yaml_data, module)?)?;
     let py = module.py();
     module.add(
         "InstalledYamlDataInspectionError",
@@ -243,6 +480,38 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add(
         "InstalledYamlDataNoUsableSourceError",
         py.get_type::<InstalledYamlDataNoUsableSourceError>(),
+    )?;
+    module.add(
+        "InstalledYamlDataLoadError",
+        py.get_type::<InstalledYamlDataLoadError>(),
+    )?;
+    module.add(
+        "InstalledYamlDataLoadUnsupportedGameError",
+        py.get_type::<InstalledYamlDataLoadUnsupportedGameError>(),
+    )?;
+    module.add(
+        "InstalledYamlDataLoadNoUsableSourceError",
+        py.get_type::<InstalledYamlDataLoadNoUsableSourceError>(),
+    )?;
+    module.add(
+        "InstalledYamlDataLoadLocalIgnoreReadError",
+        py.get_type::<InstalledYamlDataLoadLocalIgnoreReadError>(),
+    )?;
+    module.add(
+        "InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
+        py.get_type::<InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error>(),
+    )?;
+    module.add(
+        "InstalledYamlDataLoadLocalIgnoreParseError",
+        py.get_type::<InstalledYamlDataLoadLocalIgnoreParseError>(),
+    )?;
+    module.add(
+        "InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
+        py.get_type::<InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError>(),
+    )?;
+    module.add(
+        "InstalledYamlDataLoadInvalidSelectedDataError",
+        py.get_type::<InstalledYamlDataLoadInvalidSelectedDataError>(),
     )?;
     Ok(())
 }

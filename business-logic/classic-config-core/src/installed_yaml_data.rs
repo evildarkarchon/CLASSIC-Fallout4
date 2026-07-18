@@ -2,10 +2,10 @@
 
 use crate::client_schemas;
 use crate::explicit_yaml_data::{
-    ExplicitYamlDataLoadError, GameDataRole, YamlDataContentIdentity, registered_game_data_role,
-    validate_game, validate_main,
+    ExplicitYamlDataLoadError, GameDataRole, YamlDataContentIdentity, game_data_key,
+    registered_game_data_role, validate_game, validate_ignore, validate_main,
 };
-use crate::yamldata::parse_and_merge_yaml_content;
+use crate::yamldata::{YamlDataCore, parse_and_merge_yaml_content};
 use classic_path_core::yaml_cache_dir_with_env;
 use classic_settings_core::{
     Compatibility, SchemaCompat, SchemaVersion, extract_schema_version, schema_compat_check,
@@ -151,6 +151,24 @@ pub struct InstalledYamlDataInspectionRequest {
     pub game: GameId,
 }
 
+/// One installation root, typed game, and game-version mode to load.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InstalledYamlDataLoadRequest {
+    /// CLASSIC installation root containing `CLASSIC Data`.
+    pub installation_root: PathBuf,
+    /// Typed game identity used to select registered game YAML Data.
+    pub game: GameId,
+    /// Existing game-version mode used only for Version Registry metadata selection.
+    pub selected_game_version: String,
+}
+
+/// How Local Ignore YAML Data entered an installed snapshot.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LocalIgnoreYamlDataState {
+    /// A valid user-owned Local Ignore file already existed in the installation.
+    Existing,
+}
+
 /// Selected update-eligible YAML Data facts from one inspection.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InstalledYamlDataInspection {
@@ -159,6 +177,114 @@ pub struct InstalledYamlDataInspection {
     main: InspectedYamlDataFile,
     game_file: InspectedYamlDataFile,
     diagnostics: Vec<InstalledYamlDataDiagnostic>,
+}
+
+#[derive(Debug)]
+struct OwnedInstalledYamlDataFile {
+    bytes: Box<[u8]>,
+    yaml: Yaml,
+    inspected: InspectedYamlDataFile,
+}
+
+#[derive(Debug)]
+struct SelectedInstalledYamlData {
+    requested_game: GameId,
+    game_data_role: GameDataRole,
+    main: OwnedInstalledYamlDataFile,
+    game_file: OwnedInstalledYamlDataFile,
+    diagnostics: Vec<InstalledYamlDataDiagnostic>,
+}
+
+#[derive(Debug)]
+struct OwnedLocalIgnoreYamlData {
+    bytes: Box<[u8]>,
+    identity: YamlDataContentIdentity,
+}
+
+/// Immutable parsed Installed YAML Data backed by the exact selected file bytes.
+pub struct InstalledYamlDataSnapshot {
+    yaml_data: YamlDataCore,
+    requested_game: GameId,
+    game_data_role: GameDataRole,
+    main: OwnedInstalledYamlDataFile,
+    game_file: OwnedInstalledYamlDataFile,
+    local_ignore: OwnedLocalIgnoreYamlData,
+    local_ignore_state: LocalIgnoreYamlDataState,
+    diagnostics: Vec<InstalledYamlDataDiagnostic>,
+}
+
+// A custom formatter prevents private retained bytes and parsed YAML documents from becoming
+// observable through a derived `Debug` implementation.
+impl std::fmt::Debug for InstalledYamlDataSnapshot {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("InstalledYamlDataSnapshot")
+            .field("requested_game", &self.requested_game)
+            .field("game_data_role", &self.game_data_role)
+            .field("main", &self.main.inspected)
+            .field("game_file", &self.game_file.inspected)
+            .field("local_ignore_identity", &self.local_ignore.identity)
+            .field("local_ignore_state", &self.local_ignore_state)
+            .field("diagnostics", &self.diagnostics)
+            .finish_non_exhaustive()
+    }
+}
+
+impl InstalledYamlDataSnapshot {
+    /// Return parsed YAML Data derived only from the retained selected bytes.
+    #[must_use]
+    pub const fn yaml_data(&self) -> &YamlDataCore {
+        &self.yaml_data
+    }
+
+    /// Return the typed game requested by the caller.
+    #[must_use]
+    pub const fn game(&self) -> GameId {
+        self.requested_game
+    }
+
+    /// Return the registered data role used for the selected game file.
+    #[must_use]
+    pub const fn game_data_role(&self) -> GameDataRole {
+        self.game_data_role
+    }
+
+    /// Return the independently selected Main file facts.
+    #[must_use]
+    pub const fn main(&self) -> &InspectedYamlDataFile {
+        &self.main.inspected
+    }
+
+    /// Return the independently selected game file facts.
+    #[must_use]
+    pub const fn game_file(&self) -> &InspectedYamlDataFile {
+        &self.game_file.inspected
+    }
+
+    /// Return how Local Ignore YAML Data entered this snapshot.
+    #[must_use]
+    pub const fn local_ignore_state(&self) -> LocalIgnoreYamlDataState {
+        self.local_ignore_state
+    }
+
+    /// Return the identity derived from the exact retained Local Ignore bytes.
+    #[must_use]
+    pub const fn local_ignore_identity(&self) -> &YamlDataContentIdentity {
+        &self.local_ignore.identity
+    }
+
+    /// Return structured fallback and cache-resolution diagnostics.
+    #[must_use]
+    pub fn diagnostics(&self) -> &[InstalledYamlDataDiagnostic] {
+        &self.diagnostics
+    }
+}
+
+/// Expected outcomes from loading Installed YAML Data.
+#[derive(Debug)]
+pub enum InstalledYamlDataLoadOutcome {
+    /// Main, game, and valid Local Ignore data were loaded into one immutable snapshot.
+    Ready(InstalledYamlDataSnapshot),
 }
 
 impl InstalledYamlDataInspection {
@@ -212,6 +338,65 @@ pub enum InstalledYamlDataInspectionError {
     },
 }
 
+/// Fatal failures that prevent Installed YAML Data from becoming ready.
+#[derive(Debug, Error)]
+pub enum InstalledYamlDataLoadError {
+    /// The typed game has no registered YAML Data role in this client.
+    #[error("unsupported game for Installed YAML Data loading: {game}")]
+    UnsupportedGame {
+        /// Unsupported typed game identity.
+        game: GameId,
+    },
+    /// Neither updated nor bundled data was usable for one required role.
+    #[error("no usable Installed YAML Data source for {role}")]
+    NoUsableSource {
+        /// Required role that could not be selected.
+        role: InstalledYamlDataRole,
+        /// Every actionable diagnostic observed before selection failed.
+        diagnostics: Vec<InstalledYamlDataDiagnostic>,
+    },
+    /// Existing Local Ignore YAML Data could not be read.
+    #[error("failed to read Local Ignore YAML Data `{}`: {source}", path.display())]
+    LocalIgnoreRead {
+        /// Expected Local Ignore path.
+        path: PathBuf,
+        /// Underlying filesystem failure.
+        #[source]
+        source: std::io::Error,
+    },
+    /// Existing Local Ignore bytes were not valid UTF-8.
+    #[error("Local Ignore YAML Data `{}` is not UTF-8: {source}", path.display())]
+    LocalIgnoreInvalidUtf8 {
+        /// Existing Local Ignore path.
+        path: PathBuf,
+        /// Underlying UTF-8 failure.
+        #[source]
+        source: std::str::Utf8Error,
+    },
+    /// Existing Local Ignore content could not be parsed as YAML.
+    #[error("failed to parse Local Ignore YAML Data `{}`: {message}", path.display())]
+    LocalIgnoreParse {
+        /// Existing Local Ignore path.
+        path: PathBuf,
+        /// Parser failure details.
+        message: String,
+    },
+    /// Existing Local Ignore content did not satisfy its role contract.
+    #[error("Local Ignore YAML Data `{}` is invalid: {reason}", path.display())]
+    LocalIgnoreInvalidRoleData {
+        /// Existing Local Ignore path.
+        path: PathBuf,
+        /// Stable validation details.
+        reason: String,
+    },
+    /// Selected documents could not be projected into parsed YAML Data.
+    #[error("selected Installed YAML Data is invalid: {message}")]
+    InvalidSelectedData {
+        /// Projection failure details.
+        message: String,
+    },
+}
+
 /// Inspect installed Main and game YAML Data without reading or modifying Local Ignore.
 ///
 /// Candidate files are read at most once. Parsing, semantic validation, schema extraction,
@@ -237,12 +422,138 @@ pub fn inspect_installed_yaml_data_with_env<F>(
 where
     F: Fn(&str) -> Option<String>,
 {
-    let game_data_role = registered_game_data_role(request.game)
-        .ok_or(InstalledYamlDataInspectionError::UnsupportedGame { game: request.game })?;
-    let bundled_dir = request
+    let selected = select_installed_yaml_data(&request.installation_root, request.game, env)?;
+    Ok(InstalledYamlDataInspection {
+        requested_game: selected.requested_game,
+        game_data_role: selected.game_data_role,
+        main: selected.main.inspected,
+        game_file: selected.game_file.inspected,
+        diagnostics: selected.diagnostics,
+    })
+}
+
+/// Load one immutable Installed YAML Data snapshot, including valid existing Local Ignore.
+///
+/// Main and game candidates use the same config-owned selector as inspection. Every selected
+/// file is read once, and parsing, validation, identity, and the returned `YamlDataCore` all
+/// derive from the exact retained bytes. Ordinary loading never rewrites Local Ignore.
+pub fn load_installed_yaml_data(
+    request: InstalledYamlDataLoadRequest,
+) -> Result<InstalledYamlDataLoadOutcome, InstalledYamlDataLoadError> {
+    load_installed_yaml_data_with_env(request, |name| match std::env::var(name) {
+        Ok(value) if !value.is_empty() => Some(value),
+        _ => None,
+    })
+}
+
+/// Testable form of [`load_installed_yaml_data`] with injected cache environment lookup.
+///
+/// The environment callback controls only per-user cache resolution. The installation root
+/// remains the sole authority for bundled and Local Ignore paths.
+pub fn load_installed_yaml_data_with_env<F>(
+    request: InstalledYamlDataLoadRequest,
+    env: F,
+) -> Result<InstalledYamlDataLoadOutcome, InstalledYamlDataLoadError>
+where
+    F: Fn(&str) -> Option<String>,
+{
+    let selected = select_installed_yaml_data(&request.installation_root, request.game, env)
+        .map_err(InstalledYamlDataLoadError::from)?;
+    let ignore_path = request
         .installation_root
         .join("CLASSIC Data")
-        .join("databases");
+        .join("CLASSIC Ignore.yaml");
+    let ignore_bytes = std::fs::read(&ignore_path).map_err(|source| {
+        InstalledYamlDataLoadError::LocalIgnoreRead {
+            path: ignore_path.clone(),
+            source,
+        }
+    })?;
+    let local_ignore = OwnedLocalIgnoreYamlData {
+        identity: YamlDataContentIdentity::from_bytes(&ignore_bytes),
+        bytes: ignore_bytes.into_boxed_slice(),
+    };
+    let ignore_content = std::str::from_utf8(&local_ignore.bytes).map_err(|source| {
+        InstalledYamlDataLoadError::LocalIgnoreInvalidUtf8 {
+            path: ignore_path.clone(),
+            source,
+        }
+    })?;
+    let ignore_yaml =
+        parse_and_merge_yaml_content("Local Ignore YAML", "Local Ignore YAML", ignore_content)
+            .map_err(|source| InstalledYamlDataLoadError::LocalIgnoreParse {
+                path: ignore_path.clone(),
+                message: source.to_string(),
+            })?;
+    validate_ignore(&ignore_yaml, selected.game_data_role, &ignore_path).map_err(|source| {
+        InstalledYamlDataLoadError::LocalIgnoreInvalidRoleData {
+            path: ignore_path,
+            reason: explicit_validation_reason(source),
+        }
+    })?;
+    // Keep the retained byte buffers tied to the public identities even after parsing.
+    debug_assert_eq!(
+        selected.main.bytes.len() as u64,
+        selected.main.inspected.identity().byte_len()
+    );
+    debug_assert_eq!(
+        selected.game_file.bytes.len() as u64,
+        selected.game_file.inspected.identity().byte_len()
+    );
+    let yaml_data = YamlDataCore::build_from_yaml_documents(
+        &selected.main.yaml,
+        &selected.game_file.yaml,
+        &ignore_yaml,
+        game_data_key(selected.game_data_role),
+        &request.selected_game_version,
+    )
+    .map_err(|source| InstalledYamlDataLoadError::InvalidSelectedData {
+        message: source.to_string(),
+    })?;
+
+    Ok(InstalledYamlDataLoadOutcome::Ready(
+        InstalledYamlDataSnapshot {
+            yaml_data,
+            requested_game: selected.requested_game,
+            game_data_role: selected.game_data_role,
+            main: selected.main,
+            game_file: selected.game_file,
+            local_ignore,
+            local_ignore_state: LocalIgnoreYamlDataState::Existing,
+            diagnostics: selected.diagnostics,
+        },
+    ))
+}
+
+impl From<InstalledYamlDataInspectionError> for InstalledYamlDataLoadError {
+    fn from(source: InstalledYamlDataInspectionError) -> Self {
+        match source {
+            InstalledYamlDataInspectionError::UnsupportedGame { game } => {
+                Self::UnsupportedGame { game }
+            }
+            InstalledYamlDataInspectionError::NoUsableSource { role, diagnostics } => {
+                Self::NoUsableSource { role, diagnostics }
+            }
+        }
+    }
+}
+
+/// Selects Main and game YAML Data independently from updated and bundled candidates.
+///
+/// The environment callback is used only to resolve the shared cache directory. Cache
+/// failures and rejected candidates become diagnostics while bundled candidates remain
+/// eligible; this selector does not read or validate the installation's Local Ignore file.
+fn select_installed_yaml_data<F>(
+    installation_root: &Path,
+    game: GameId,
+    env: F,
+) -> Result<SelectedInstalledYamlData, InstalledYamlDataInspectionError>
+where
+    F: Fn(&str) -> Option<String>,
+{
+    let game_data_role = registered_game_data_role(game)
+        .ok_or(InstalledYamlDataInspectionError::UnsupportedGame { game })?;
+    let bundled_dir = installation_root.join("CLASSIC Data").join("databases");
     let mut diagnostics = Vec::new();
     let cache_dir = match yaml_cache_dir_with_env(env) {
         Ok(path) => Some(path),
@@ -277,8 +588,8 @@ where
         &mut diagnostics,
     )?;
 
-    Ok(InstalledYamlDataInspection {
-        requested_game: request.game,
+    Ok(SelectedInstalledYamlData {
+        requested_game: game,
         game_data_role,
         main,
         game_file,
@@ -302,7 +613,7 @@ fn select_file(
     cache_dir: Option<&Path>,
     bundled_dir: &Path,
     diagnostics: &mut Vec<InstalledYamlDataDiagnostic>,
-) -> Result<InspectedYamlDataFile, InstalledYamlDataInspectionError> {
+) -> Result<OwnedInstalledYamlDataFile, InstalledYamlDataInspectionError> {
     if let Some(cache_dir) = cache_dir {
         let canonical = cache_dir.join(file_name);
         match inspect_candidate(
@@ -361,7 +672,7 @@ fn select_file(
 }
 
 enum CandidateAttempt {
-    Selected(InspectedYamlDataFile),
+    Selected(OwnedInstalledYamlDataFile),
     Missing,
     Rejected(InstalledYamlDataDiagnostic),
 }
@@ -439,11 +750,15 @@ fn inspect_candidate(
         ));
     }
 
-    CandidateAttempt::Selected(InspectedYamlDataFile {
-        role,
-        provenance,
-        schema_version,
-        identity: YamlDataContentIdentity::from_bytes(&bytes),
+    CandidateAttempt::Selected(OwnedInstalledYamlDataFile {
+        inspected: InspectedYamlDataFile {
+            role,
+            provenance,
+            schema_version,
+            identity: YamlDataContentIdentity::from_bytes(&bytes),
+        },
+        bytes: bytes.into_boxed_slice(),
+        yaml,
     })
 }
 
@@ -479,10 +794,14 @@ fn validate_candidate_role(
         InstalledYamlDataRole::Main => validate_main(yaml, path),
         InstalledYamlDataRole::Game => validate_game(yaml, path),
     };
-    result.map_err(|source| match source {
+    result.map_err(explicit_validation_reason)
+}
+
+fn explicit_validation_reason(source: ExplicitYamlDataLoadError) -> String {
+    match source {
         ExplicitYamlDataLoadError::InvalidRoleData { reason, .. } => reason,
         other => other.to_string(),
-    })
+    }
 }
 
 /// Build one path-attributed rejection diagnostic without changing the rejected file.

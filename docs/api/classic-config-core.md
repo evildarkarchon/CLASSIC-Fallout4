@@ -78,7 +78,7 @@ Typed, mutation-free loading for caller-selected Main, game, and Local Ignore YA
 
 ### `installed_yaml_data`
 
-Config-owned, side-effect-limited selection of update-eligible Installed YAML Data.
+Config-owned selection and immutable loading of Installed YAML Data.
 
 - `InstalledYamlDataInspectionRequest` - one installation root plus typed game identity
 - `InstalledYamlDataInspection` / `InspectedYamlDataFile` - independently selected Main/game provenance, schema, and exact-byte identity
@@ -86,13 +86,19 @@ Config-owned, side-effect-limited selection of update-eligible Installed YAML Da
 - `InstalledYamlDataInspectionError` - typed unsupported-game or no-usable-source terminal failure
 - `inspect_installed_yaml_data()` - production inspection entry point used by first-party update freshness
 - `inspect_installed_yaml_data_with_env()` - deterministic Rust tooling seam for cache-environment injection
+- `InstalledYamlDataLoadRequest` - one installation root, typed game identity, and separate game-version mode
+- `InstalledYamlDataLoadOutcome::Ready` / `InstalledYamlDataSnapshot` - parsed Main, game, and valid existing Local Ignore data backed by retained exact bytes
+- `LocalIgnoreYamlDataState::Existing` - identifies preserved, user-owned Local Ignore content
+- `InstalledYamlDataLoadError` - typed selection, Local Ignore, and parsed-data failures
+- `load_installed_yaml_data()` - production installed snapshot entry point
+- `load_installed_yaml_data_with_env()` - deterministic Rust test/tooling seam for cache-environment injection
 
 ### Re-exports from `lib.rs`
 
 - `get_runtime` from [`classic-shared-core`](../../foundation/classic-shared-core)
 - `clear_global_yaml_cache` from [`classic-settings-core`](../../business-logic/classic-settings-core) (historical note: that owner absorbed the former `classic-yaml-core` crate in v9.1.0 Phase 1)
 - crashgen rule-model and Crashgen Expectation Parser types/functions from `crashgen_rules` and `crashgen_expectation_parser`
-- Installed YAML Data request/result/provenance/diagnostic/error types and inspection functions from `installed_yaml_data`
+- Installed YAML Data request/result/snapshot/provenance/diagnostic/error types and loading/inspection functions from `installed_yaml_data`
 
 `clear_global_yaml_cache` is re-exported mainly for tests and cache-sensitive consumers.
 
@@ -209,6 +215,26 @@ Main and game select independently. For each role, config core tries the canonic
 Each `InspectedYamlDataFile` exposes its `InstalledYamlDataRole`, `InstalledYamlDataProvenance::{Updated, Previous, Bundled}`, compatible `SchemaVersion`, and `YamlDataContentIdentity`. Candidate bytes are read once, then UTF-8 decoding, YAML parsing, semantic validation, schema extraction, SHA-256, and byte length all use that same owned buffer. `InstalledYamlDataDiagnostic` supplies optional role/candidate/path attribution, a typed `InstalledYamlDataDiagnosticKind`, and an actionable message. Cache-root resolution failure is a structured `CacheUnavailable` diagnostic and leaves bundled data eligible.
 
 `inspect_installed_yaml_data_with_env` is the deterministic Rust test/tooling form. Its environment callback controls cache-root resolution without process-environment mutation; bundled paths still derive only from the explicit installation root.
+
+## Installed YAML Data Loading
+
+`load_installed_yaml_data(InstalledYamlDataLoadRequest { installation_root, game, selected_game_version })` loads the immutable runtime snapshot for an installation whose user-owned `CLASSIC Data/CLASSIC Ignore.yaml` already exists and is valid. `game` selects the registered YAML Data role; the separate `selected_game_version` string retains its existing Version Registry metadata interpretation and does not affect file selection.
+
+Main and game use the same private selector as [`inspect_installed_yaml_data`](#installed-yaml-data-inspection), including independent updated/previous/bundled precedence, config-owned compatibility, strict role validation, and structured fallback diagnostics. The selected bytes and parsed YAML documents are retained privately. Local Ignore is read once from the installation root, strictly validated for the selected game-data role, and retained byte-for-byte. Ordinary loading never rewrites it.
+
+A valid installation returns `InstalledYamlDataLoadOutcome::Ready(InstalledYamlDataSnapshot)`. The snapshot exposes:
+
+- the parsed `YamlDataCore` and requested typed game;
+- the registered shared game-data role;
+- Main and game provenance, schema versions, SHA-256 identities, and byte lengths through `main()` and `game_file()`;
+- `LocalIgnoreYamlDataState::Existing` plus the exact Local Ignore SHA-256 identity and byte length;
+- structured cache and rejected-candidate diagnostics.
+
+Raw retained bytes and parsed YAML documents are not public APIs, and the snapshot's custom `Debug` output includes metadata only. Replacing any selected path after loading cannot change the snapshot's parsed data or identities.
+
+`InstalledYamlDataLoadError::UnsupportedGame` is returned before cache or installation file access. `NoUsableSource { role, diagnostics }` identifies a required Main or game role after every allowed candidate is exhausted. Existing Local Ignore read, UTF-8, parse, and role-validation failures remain separately typed, as does an invalid final projection into `YamlDataCore`.
+
+`load_installed_yaml_data_with_env` injects only cache-environment lookup for isolated tests and tooling. It never consults the developer's process cache when the caller supplies an isolated environment callback; bundled and Local Ignore paths always derive from the request's one installation root.
 
 ## `YamlDataCore`
 

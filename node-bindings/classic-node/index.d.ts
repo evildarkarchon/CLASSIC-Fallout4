@@ -365,6 +365,26 @@ export declare class GithubClient {
   getAllReleases(includePrereleases?: boolean | undefined | null, includeDrafts?: boolean | undefined | null): Promise<Array<JsGithubRelease>>
 }
 
+/** Immutable Installed YAML Data snapshot backed by exact core-owned bytes. */
+export declare class InstalledYamlDataSnapshot {
+  /** Returns the typed game identity requested by the caller. */
+  get game(): JsGameId
+  /** Returns the registered game-data role used by the snapshot. */
+  get gameDataRole(): JsInstalledYamlDataGameRole
+  /** Returns a cloned immutable view of the parsed YAML Data. */
+  get yamlData(): YamlData
+  /** Returns metadata for the independently selected Main YAML Data. */
+  get main(): JsInspectedYamlDataFile
+  /** Returns metadata for the independently selected game YAML Data. */
+  get gameFile(): JsInspectedYamlDataFile
+  /** Returns how Local Ignore YAML Data entered this snapshot. */
+  get localIgnoreState(): JsLocalIgnoreYamlDataState
+  /** Returns the SHA-256 identity and byte length of exact Local Ignore bytes. */
+  get localIgnoreIdentity(): JsYamlDataContentIdentity
+  /** Returns structured fallback and cache-resolution diagnostics. */
+  get diagnostics(): Array<JsInstalledYamlDataDiagnostic>
+}
+
 /**
  * BA2 archive scanner for validating Fallout 4 BA2 archives.
  *
@@ -3701,6 +3721,30 @@ export interface JsInstalledYamlDataInspectionRequest {
   game: JsGameId
 }
 
+/** Typed Ready outcome from Installed YAML Data loading. */
+export interface JsInstalledYamlDataLoadOutcome {
+  /** Stable expected-outcome discriminator. */
+  status: JsInstalledYamlDataLoadStatus
+  /** Immutable snapshot retained by the Ready outcome. */
+  snapshot: InstalledYamlDataSnapshot
+}
+
+/** One installation root, typed game, and Version Registry selection mode to load. */
+export interface JsInstalledYamlDataLoadRequest {
+  /** CLASSIC installation root containing `CLASSIC Data`. */
+  installationRoot: string
+  /** Typed game identity used to select the registered game data role. */
+  game: JsGameId
+  /** Existing game-version mode used for Version Registry metadata selection. */
+  selectedGameVersion: string
+}
+
+/** Expected Installed YAML Data loading outcome. */
+export declare const enum JsInstalledYamlDataLoadStatus {
+  /** Main, game, and valid Local Ignore data are ready for use. */
+  Ready = 'Ready'
+}
+
 /** Candidate that supplied one selected Installed YAML Data file. */
 export declare const enum JsInstalledYamlDataProvenance {
   /** Canonical per-user updated candidate. */
@@ -3791,6 +3835,12 @@ export interface JsLegacyTuiStateImportRestoreOutcome {
   expectedRevision?: string
   /** Latest User Settings revision, present only when conflicted. */
   actualRevision?: string
+}
+
+/** How Local Ignore YAML Data entered an installed snapshot. */
+export declare const enum JsLocalIgnoreYamlDataState {
+  /** A valid user-owned Local Ignore file already existed. */
+  Existing = 'Existing'
 }
 
 /** Log error entry detected during scanning. */
@@ -5125,6 +5175,17 @@ export declare function loadBatchSync(paths: Array<string>): number
  * @throws an error with stable `code` and optional `yamlRole` / `path` fields.
  */
 export declare function loadExplicitYamlData(paths: JsExplicitYamlDataPaths, game: JsGameId, selectedGameVersion: string): Promise<ExplicitYamlDataSnapshot>
+
+/**
+ * Load one immutable Installed YAML Data snapshot with existing Local Ignore content.
+ *
+ * Config core owns selection, compatibility, parsing, and filesystem policy. This adapter
+ * performs only request/result projection and runs blocking file I/O on N-API's worker pool.
+ *
+ * @param request - Installation root, typed game identity, and game-version mode.
+ * @throws an error with stable `code` plus role, path, or diagnostics metadata when applicable.
+ */
+export declare function loadInstalledYamlData(request: JsInstalledYamlDataLoadRequest): Promise<JsInstalledYamlDataLoadOutcome>
 
 /**
  * Load `CLASSIC Main.yaml` with `MAIN_YAML` schema gating and return

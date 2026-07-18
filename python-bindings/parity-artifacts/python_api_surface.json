@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-18T07:19:11.953694+00:00",
+  "generated_at_utc": "2026-07-18T08:13:00.384414+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -295,6 +295,96 @@
     },
     {
       "module": "classic_config",
+      "export": "InstalledYamlDataLoadError",
+      "export_path": "InstalledYamlDataLoadError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataLoadError(Exception):"
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataLoadInvalidSelectedDataError",
+      "export_path": "InstalledYamlDataLoadInvalidSelectedDataError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataLoadInvalidSelectedDataError(InstalledYamlDataLoadError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
+      "export_path": "InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError("
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
+      "export_path": "InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error("
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataLoadLocalIgnoreParseError",
+      "export_path": "InstalledYamlDataLoadLocalIgnoreParseError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataLoadLocalIgnoreParseError(InstalledYamlDataLoadError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataLoadLocalIgnoreReadError",
+      "export_path": "InstalledYamlDataLoadLocalIgnoreReadError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataLoadLocalIgnoreReadError(InstalledYamlDataLoadError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataLoadNoUsableSourceError",
+      "export_path": "InstalledYamlDataLoadNoUsableSourceError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataLoadNoUsableSourceError(InstalledYamlDataLoadError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataLoadOutcome",
+      "export_path": "InstalledYamlDataLoadOutcome",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataLoadOutcome:"
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataLoadUnsupportedGameError",
+      "export_path": "InstalledYamlDataLoadUnsupportedGameError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataLoadUnsupportedGameError(InstalledYamlDataLoadError): ..."
+    },
+    {
+      "module": "classic_config",
       "export": "InstalledYamlDataNoUsableSourceError",
       "export_path": "InstalledYamlDataNoUsableSourceError",
       "kind": "class",
@@ -302,6 +392,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "class InstalledYamlDataNoUsableSourceError(InstalledYamlDataInspectionError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "InstalledYamlDataSnapshot",
+      "export_path": "InstalledYamlDataSnapshot",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataSnapshot:"
     },
     {
       "module": "classic_config",
@@ -517,6 +617,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def load_explicit_yaml_data( paths: ExplicitYamlDataPaths, game: ExplicitYamlDataGame, selected_game_version: str, ) -> ExplicitYamlDataSnapshot:"
+    },
+    {
+      "module": "classic_config",
+      "export": "load_installed_yaml_data",
+      "export_path": "load_installed_yaml_data",
+      "kind": "function",
+      "arity": 3,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def load_installed_yaml_data( installation_root: str | Path, game: ExplicitYamlDataGame, selected_game_version: str, ) -> InstalledYamlDataLoadOutcome:"
     },
     {
       "module": "classic_config",

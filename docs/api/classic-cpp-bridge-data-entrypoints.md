@@ -81,6 +81,14 @@ First-party update tooling uses the separate Installed YAML Data inspection flow
 
 Inspection is read-only: it does not create the update cache, promote a `.prev` sibling, mutate a rejected candidate, or read or modify Local Ignore YAML Data.
 
+Runtime callers that already have valid Local Ignore YAML Data use the Installed YAML Data load flow:
+
+1. `installed_yaml_data_load(installation_root, ExplicitYamlDataGameId, selected_game_version)` delegates Main/game selection and existing Local Ignore validation to config core.
+2. `installed_yaml_data_load_status(...)` reports Ready or `InstalledYamlDataLoadErrorDto`. Its load-specific role is Main or game for `NoUsableSource` and Local Ignore for every Local Ignore read/UTF-8/parse/role-validation failure; the DTO also preserves the optional path, structured no-usable-source diagnostics, and core message.
+3. `installed_yaml_data_load_take_snapshot(...)` consumes Ready. Snapshot getters expose parsed `YamlData`, requested game and registered role, Main/game provenance/schema/exact-byte identity, `LocalIgnoreYamlDataState::Existing` and Local Ignore identity, plus selection diagnostics.
+
+The adapter owns no source-selection, validation, repair, or fallback policy. Existing Local Ignore bytes remain core-owned and immutable for the snapshot lifetime; the bridge exposes neither raw bytes nor parsed YAML documents.
+
 The namespace also exposes selected cache controls and generic config helpers.
 These are data-access APIs; they are not partial Crash Log Scan Run entry
 points.

@@ -155,7 +155,9 @@ impl Task for ExplicitYamlDataLoadTask {
     }
 }
 
-fn content_identity_to_js(identity: &YamlDataContentIdentity) -> JsYamlDataContentIdentity {
+pub(crate) fn content_identity_to_js(
+    identity: &YamlDataContentIdentity,
+) -> JsYamlDataContentIdentity {
     JsYamlDataContentIdentity {
         sha256: identity.sha256_hex(),
         byte_len: identity.byte_len() as i64,

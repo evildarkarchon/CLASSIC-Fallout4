@@ -471,6 +471,34 @@ class InstalledYamlDataInspection:
     @property
     def diagnostics(self) -> list[InstalledYamlDataDiagnostic]: ...
 
+class InstalledYamlDataSnapshot:
+    """Immutable Ready snapshot loaded from one CLASSIC installation root."""
+
+    @property
+    def game(self) -> ExplicitYamlDataGame: ...
+    @property
+    def game_data_role(self) -> Literal["Fallout4"]: ...
+    @property
+    def yaml_data(self) -> YamlData: ...
+    @property
+    def main(self) -> InspectedYamlDataFile: ...
+    @property
+    def game_file(self) -> InspectedYamlDataFile: ...
+    @property
+    def local_ignore_state(self) -> Literal["existing"]: ...
+    @property
+    def local_ignore_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def diagnostics(self) -> list[InstalledYamlDataDiagnostic]: ...
+
+class InstalledYamlDataLoadOutcome:
+    """Typed Ready outcome containing one immutable Installed YAML Data snapshot."""
+
+    @property
+    def status(self) -> Literal["ready"]: ...
+    @property
+    def snapshot(self) -> InstalledYamlDataSnapshot: ...
+
 class InstalledYamlDataInspectionError(Exception):
     """Base class for Installed YAML Data inspection failures."""
 
@@ -480,6 +508,26 @@ class InstalledYamlDataInspectionError(Exception):
 
 class InstalledYamlDataUnsupportedGameError(InstalledYamlDataInspectionError): ...
 class InstalledYamlDataNoUsableSourceError(InstalledYamlDataInspectionError): ...
+
+class InstalledYamlDataLoadError(Exception):
+    """Base class for fatal Installed YAML Data load failures."""
+
+    code: str
+    yaml_role: Literal["main", "game", "local_ignore"] | None
+    path: str | None
+    diagnostics: list[InstalledYamlDataDiagnostic]
+
+class InstalledYamlDataLoadUnsupportedGameError(InstalledYamlDataLoadError): ...
+class InstalledYamlDataLoadNoUsableSourceError(InstalledYamlDataLoadError): ...
+class InstalledYamlDataLoadLocalIgnoreReadError(InstalledYamlDataLoadError): ...
+class InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error(
+    InstalledYamlDataLoadError
+): ...
+class InstalledYamlDataLoadLocalIgnoreParseError(InstalledYamlDataLoadError): ...
+class InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError(
+    InstalledYamlDataLoadError
+): ...
+class InstalledYamlDataLoadInvalidSelectedDataError(InstalledYamlDataLoadError): ...
 
 def inspect_installed_yaml_data(
     installation_root: str | Path,
@@ -494,6 +542,28 @@ def inspect_installed_yaml_data(
         InstalledYamlDataNoUsableSourceError: Updated and bundled candidates were
             exhausted for either required role. Its ``diagnostics`` attribute retains
             the structured rejection trail.
+    """
+
+def load_installed_yaml_data(
+    installation_root: str | Path,
+    game: ExplicitYamlDataGame,
+    selected_game_version: str,
+) -> InstalledYamlDataLoadOutcome:
+    """Load a Ready immutable snapshot with valid existing Local Ignore data.
+
+    Main and game are independently selected by Rust core. The returned snapshot owns
+    the exact selected bytes and remains stable if any selected path later changes.
+
+    Raises:
+        InstalledYamlDataLoadUnsupportedGameError: The game has no registered data role.
+        InstalledYamlDataLoadNoUsableSourceError: No usable Main or game source exists.
+        InstalledYamlDataLoadLocalIgnoreReadError: Local Ignore cannot be read.
+        InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error: Local Ignore is not UTF-8.
+        InstalledYamlDataLoadLocalIgnoreParseError: Local Ignore is malformed YAML.
+        InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError: Local Ignore violates its
+            role contract.
+        InstalledYamlDataLoadInvalidSelectedDataError: Selected documents cannot form
+            the parsed YAML Data view.
     """
 
 def create_yamldata(

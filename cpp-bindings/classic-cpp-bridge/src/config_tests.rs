@@ -20,6 +20,7 @@ const EXPLICIT_GAME_YAML: &str = concat!(
     "Mods_SOLU: []\n",
 );
 const EXPLICIT_EMPTY_IGNORE_YAML: &str = "CLASSIC_Ignore_Fallout4: []\n";
+const INSTALLED_IGNORE_YAML: &str = "CLASSIC_Ignore_Fallout4:\r\n  - ExistingBridgeEntry.dll\r\n";
 
 fn write_explicit_bridge_fixtures(
     root: &std::path::Path,
@@ -40,12 +41,15 @@ fn write_explicit_bridge_fixtures(
 
 /// Write valid bundled Main and game files under one isolated installation root.
 fn write_installed_bridge_fixtures(root: &std::path::Path) {
-    let databases = root.join("CLASSIC Data").join("databases");
+    let data = root.join("CLASSIC Data");
+    let databases = data.join("databases");
     std::fs::create_dir_all(&databases).expect("create Installed YAML Data fixture directory");
     std::fs::write(databases.join("CLASSIC Main.yaml"), EXPLICIT_MAIN_YAML)
         .expect("write installed Main fixture");
     std::fs::write(databases.join("CLASSIC Fallout4.yaml"), EXPLICIT_GAME_YAML)
         .expect("write installed game fixture");
+    std::fs::write(data.join("CLASSIC Ignore.yaml"), INSTALLED_IGNORE_YAML)
+        .expect("write installed Local Ignore fixture");
 }
 
 /// Invoke inspection with no cache environment so tests cannot read developer state.
@@ -58,6 +62,24 @@ fn inspect_installed_without_cache(
             CoreInstalledYamlDataInspectionRequest {
                 installation_root: installation_root.to_path_buf(),
                 game: explicit_game_id_to_core(game),
+            },
+            |_| None,
+        ),
+    )
+}
+
+/// Invoke loading with no cache environment so tests cannot read developer state.
+fn load_installed_without_cache(
+    installation_root: &std::path::Path,
+    game: ffi::ExplicitYamlDataGameId,
+    selected_game_version: &str,
+) -> Box<InstalledYamlDataLoadOperation> {
+    installed_yaml_data_load_operation_from_result(
+        classic_config_core::load_installed_yaml_data_with_env(
+            CoreInstalledYamlDataLoadRequest {
+                installation_root: installation_root.to_path_buf(),
+                game: explicit_game_id_to_core(game),
+                selected_game_version: selected_game_version.to_string(),
             },
             |_| None,
         ),
@@ -231,6 +253,180 @@ fn installed_yaml_data_bridge_preserves_typed_inspection_errors() {
             && diagnostic.candidate == ffi::InstalledYamlDataProvenance::Bundled
             && diagnostic.has_path
     }));
+}
+
+#[test]
+fn installed_yaml_data_load_bridge_projects_ready_snapshot() {
+    let installation = tempdir().expect("create Installed YAML Data load fixture directory");
+    write_installed_bridge_fixtures(installation.path());
+
+    let operation = load_installed_without_cache(
+        installation.path(),
+        ffi::ExplicitYamlDataGameId::Fallout4VR,
+        "VR",
+    );
+    let status = installed_yaml_data_load_status(&operation);
+    assert!(status.has_snapshot);
+    assert!(!status.has_error);
+
+    let snapshot =
+        installed_yaml_data_load_take_snapshot(operation).expect("take ready installed snapshot");
+    assert_eq!(
+        installed_yaml_data_snapshot_game(&snapshot),
+        ffi::ExplicitYamlDataGameId::Fallout4VR
+    );
+    assert_eq!(
+        installed_yaml_data_snapshot_game_role(&snapshot),
+        ffi::InstalledYamlDataGameRole::Fallout4
+    );
+    assert_eq!(
+        installed_yaml_data_snapshot_local_ignore_state(&snapshot),
+        ffi::LocalIgnoreYamlDataState::Existing
+    );
+
+    let main = installed_yaml_data_snapshot_main(&snapshot);
+    assert_eq!(main.provenance, ffi::InstalledYamlDataProvenance::Bundled);
+    assert_eq!(main.schema_version, "2.0");
+    assert_eq!(main.byte_len, EXPLICIT_MAIN_YAML.len() as u64);
+    let game = installed_yaml_data_snapshot_game_file(&snapshot);
+    assert_eq!(game.provenance, ffi::InstalledYamlDataProvenance::Bundled);
+    assert_eq!(game.schema_version, "1.0");
+    assert_eq!(game.byte_len, EXPLICIT_GAME_YAML.len() as u64);
+
+    let ignore_identity = installed_yaml_data_snapshot_local_ignore_identity(&snapshot);
+    assert_eq!(ignore_identity.byte_len, INSTALLED_IGNORE_YAML.len() as u64);
+    assert_eq!(ignore_identity.sha256.len(), 64);
+    let yaml_data = installed_yaml_data_snapshot_yaml_data(&snapshot);
+    assert_eq!(
+        yaml_data_ignore_list(&yaml_data),
+        vec!["ExistingBridgeEntry.dll".to_string()]
+    );
+    assert!(
+        installed_yaml_data_snapshot_diagnostics(&snapshot)
+            .iter()
+            .any(|diagnostic| diagnostic.kind
+                == ffi::InstalledYamlDataDiagnosticKind::CacheUnavailable)
+    );
+
+    std::fs::write(
+        installation
+            .path()
+            .join("CLASSIC Data")
+            .join("CLASSIC Ignore.yaml"),
+        "changed after loading",
+    )
+    .expect("replace selected Local Ignore after loading");
+    assert_eq!(
+        installed_yaml_data_snapshot_local_ignore_identity(&snapshot).byte_len,
+        INSTALLED_IGNORE_YAML.len() as u64
+    );
+    assert_eq!(
+        yaml_data_ignore_list(&installed_yaml_data_snapshot_yaml_data(&snapshot)),
+        vec!["ExistingBridgeEntry.dll".to_string()]
+    );
+}
+
+#[test]
+fn installed_yaml_data_load_bridge_preserves_typed_terminal_context() {
+    let unsupported_root = tempdir().expect("create unsupported-game load root");
+    let unsupported = load_installed_without_cache(
+        unsupported_root.path(),
+        ffi::ExplicitYamlDataGameId::Skyrim,
+        "AnniversaryEdition",
+    );
+    let unsupported_status = installed_yaml_data_load_status(&unsupported);
+    assert!(unsupported_status.has_error);
+    assert_eq!(
+        unsupported_status.error.kind,
+        ffi::InstalledYamlDataLoadErrorKind::UnsupportedGame
+    );
+    assert!(!unsupported_status.error.has_role);
+    assert!(!unsupported_status.error.has_path);
+
+    let missing_root = tempdir().expect("create missing-source load root");
+    let missing = load_installed_without_cache(
+        missing_root.path(),
+        ffi::ExplicitYamlDataGameId::Fallout4,
+        "Original",
+    );
+    let missing_status = installed_yaml_data_load_status(&missing);
+    assert_eq!(
+        missing_status.error.kind,
+        ffi::InstalledYamlDataLoadErrorKind::NoUsableSource
+    );
+    assert!(missing_status.error.has_role);
+    assert_eq!(
+        missing_status.error.role,
+        ffi::InstalledYamlDataLoadRole::Main
+    );
+    assert!(missing_status.error.diagnostics.iter().any(|diagnostic| {
+        diagnostic.kind == ffi::InstalledYamlDataDiagnosticKind::Missing && diagnostic.has_path
+    }));
+}
+
+#[test]
+fn installed_yaml_data_load_bridge_maps_every_core_error_kind() {
+    let path = std::path::PathBuf::from("isolated/CLASSIC Ignore.yaml");
+    let invalid_bytes = vec![0xff];
+    let invalid_utf8 =
+        std::str::from_utf8(&invalid_bytes).expect_err("fixture must be invalid UTF-8");
+    let errors = [
+        CoreInstalledYamlDataLoadError::UnsupportedGame {
+            game: CoreGameId::Skyrim,
+        },
+        CoreInstalledYamlDataLoadError::NoUsableSource {
+            role: CoreInstalledYamlDataRole::Game,
+            diagnostics: Vec::new(),
+        },
+        CoreInstalledYamlDataLoadError::LocalIgnoreRead {
+            path: path.clone(),
+            source: std::io::Error::new(std::io::ErrorKind::NotFound, "missing fixture"),
+        },
+        CoreInstalledYamlDataLoadError::LocalIgnoreInvalidUtf8 {
+            path: path.clone(),
+            source: invalid_utf8,
+        },
+        CoreInstalledYamlDataLoadError::LocalIgnoreParse {
+            path: path.clone(),
+            message: "parse fixture".to_string(),
+        },
+        CoreInstalledYamlDataLoadError::LocalIgnoreInvalidRoleData {
+            path,
+            reason: "role fixture".to_string(),
+        },
+        CoreInstalledYamlDataLoadError::InvalidSelectedData {
+            message: "projection fixture".to_string(),
+        },
+    ];
+    let error_dtos = errors
+        .iter()
+        .map(installed_yaml_data_load_error_to_dto)
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        error_dtos
+            .iter()
+            .map(|error| error.kind)
+            .collect::<Vec<_>>(),
+        vec![
+            ffi::InstalledYamlDataLoadErrorKind::UnsupportedGame,
+            ffi::InstalledYamlDataLoadErrorKind::NoUsableSource,
+            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreRead,
+            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreInvalidUtf8,
+            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreParse,
+            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreInvalidRoleData,
+            ffi::InstalledYamlDataLoadErrorKind::InvalidSelectedData,
+        ]
+    );
+    assert!(!error_dtos[0].has_role);
+    assert!(error_dtos[1].has_role);
+    assert_eq!(error_dtos[1].role, ffi::InstalledYamlDataLoadRole::Game);
+    for error in &error_dtos[2..=5] {
+        assert!(error.has_role);
+        assert_eq!(error.role, ffi::InstalledYamlDataLoadRole::LocalIgnore);
+        assert!(error.has_path);
+    }
+    assert!(!error_dtos[6].has_role);
 }
 
 #[test]

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-18T07:19:37.164601+00:00",
+  "generated_at_utc": "2026-07-18T08:12:21.171221+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -155,6 +155,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface HashCacheStats {"
+    },
+    {
+      "export": "InstalledYamlDataSnapshot",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class InstalledYamlDataSnapshot {"
     },
     {
       "export": "JsAddressLibInfo",
@@ -949,6 +957,30 @@
       "signature": "export interface JsInstalledYamlDataInspectionRequest {"
     },
     {
+      "export": "JsInstalledYamlDataLoadOutcome",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInstalledYamlDataLoadOutcome {"
+    },
+    {
+      "export": "JsInstalledYamlDataLoadRequest",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInstalledYamlDataLoadRequest {"
+    },
+    {
+      "export": "JsInstalledYamlDataLoadStatus",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsInstalledYamlDataLoadStatus {"
+    },
+    {
       "export": "JsInstalledYamlDataProvenance",
       "kind": "const_enum",
       "owner_module": "config",
@@ -1011,6 +1043,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsLegacyTuiStateImportRestoreOutcome {"
+    },
+    {
+      "export": "JsLocalIgnoreYamlDataState",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsLocalIgnoreYamlDataState {"
     },
     {
       "export": "JsLogCollector",
@@ -3171,6 +3211,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function loadExplicitYamlData(paths: JsExplicitYamlDataPaths, game: JsGameId, selectedGameVersion: string): Promise<ExplicitYamlDataSnapshot>",
       "arity": 3
+    },
+    {
+      "export": "loadInstalledYamlData",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function loadInstalledYamlData(request: JsInstalledYamlDataLoadRequest): Promise<JsInstalledYamlDataLoadOutcome>",
+      "arity": 1
     },
     {
       "export": "loadMainYamlVersion",

@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 554,
-    "current_total": 554,
-    "matched": 554,
+    "contract_total": 572,
+    "current_total": 572,
+    "matched": 572,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -65,6 +65,22 @@
       "reason": "-"
     },
     {
+      "id": "baaff5630bc6d152",
+      "rustSymbol": "InstalledYamlDataLoadErrorKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6e782896f6e6efc1",
+      "rustSymbol": "InstalledYamlDataLoadRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "d956269b815428f0",
       "rustSymbol": "InstalledYamlDataProvenance",
       "kind": "enum",
@@ -75,6 +91,14 @@
     {
       "id": "97103d837ce461be",
       "rustSymbol": "InstalledYamlDataRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "30c322625eae2fc6",
+      "rustSymbol": "LocalIgnoreYamlDataState",
       "kind": "enum",
       "bridgeModule": "config",
       "status": "matched",
@@ -219,6 +243,94 @@
     {
       "id": "2bb4e9453411c734",
       "rustSymbol": "installed_yaml_data_inspection_take",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e6ac015edd41b7b0",
+      "rustSymbol": "installed_yaml_data_load",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0c1607fcb9a1c354",
+      "rustSymbol": "installed_yaml_data_load_status",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "df6e0230342a3d0b",
+      "rustSymbol": "installed_yaml_data_load_take_snapshot",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8f8c7430e730a71f",
+      "rustSymbol": "installed_yaml_data_snapshot_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "77c00497e2aee6c4",
+      "rustSymbol": "installed_yaml_data_snapshot_game",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f9fd50d9f68b0a48",
+      "rustSymbol": "installed_yaml_data_snapshot_game_file",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "9d3723fd3e79f5a2",
+      "rustSymbol": "installed_yaml_data_snapshot_game_role",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b94a65e01d41dfd6",
+      "rustSymbol": "installed_yaml_data_snapshot_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "01725a5af9a194c1",
+      "rustSymbol": "installed_yaml_data_snapshot_local_ignore_state",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "94c44bd78fe1d419",
+      "rustSymbol": "installed_yaml_data_snapshot_main",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "eee7642555cd2405",
+      "rustSymbol": "installed_yaml_data_snapshot_yaml_data",
       "kind": "function",
       "bridgeModule": "config",
       "status": "matched",
@@ -633,6 +745,22 @@
       "reason": "-"
     },
     {
+      "id": "e80c97d786e49c15",
+      "rustSymbol": "InstalledYamlDataLoadOperation",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "dbe40950823ca347",
+      "rustSymbol": "InstalledYamlDataSnapshot",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "9719f25c94df3c38",
       "rustSymbol": "YamlData",
       "kind": "opaque",
@@ -699,6 +827,22 @@
     {
       "id": "965e0b54154c8e65",
       "rustSymbol": "InstalledYamlDataInspectionStatusDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4b9506517c00a4db",
+      "rustSymbol": "InstalledYamlDataLoadErrorDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "985812440f95f7ad",
+      "rustSymbol": "InstalledYamlDataLoadStatusDto",
       "kind": "struct",
       "bridgeModule": "config",
       "status": "matched",
