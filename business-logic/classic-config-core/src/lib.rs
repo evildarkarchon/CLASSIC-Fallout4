@@ -37,8 +37,10 @@ pub use installed_yaml_data::{
     InstalledYamlDataInspection, InstalledYamlDataInspectionError,
     InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome,
     InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole,
-    InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState,
-    inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data,
+    InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict,
+    LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage,
+    LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data,
+    inspect_installed_yaml_data_with_env, load_installed_yaml_data,
     load_installed_yaml_data_with_env,
 };
 pub use shippable::{

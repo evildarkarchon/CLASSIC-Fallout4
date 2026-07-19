@@ -13,7 +13,10 @@ use classic_config_core::{
     InstalledYamlDataLoadOutcome as CoreLoadOutcome, InstalledYamlDataLoadRequest,
     InstalledYamlDataProvenance as CoreProvenance, InstalledYamlDataRole as CoreRole,
     InstalledYamlDataSnapshot as CoreSnapshot, LocalIgnoreRecoveryPlan as CoreRecoveryPlan,
+    LocalIgnoreResetError as CoreResetError, LocalIgnoreResetOutcome as CoreResetOutcome,
+    LocalIgnoreResetPublicationStage as CoreResetPublicationStage,
     LocalIgnoreYamlDataState as CoreLocalIgnoreState,
+    YamlDataContentIdentity as CoreYamlDataContentIdentity,
     inspect_installed_yaml_data as core_inspect_installed_yaml_data,
     load_installed_yaml_data as core_load_installed_yaml_data,
 };
@@ -85,6 +88,54 @@ create_exception!(
     InstalledYamlDataLoadInvalidSelectedDataError,
     InstalledYamlDataLoadError,
     "Raised when selected Installed YAML Data cannot form the parsed view."
+);
+create_exception!(
+    classic_config,
+    LocalIgnoreResetError,
+    PyException,
+    "Base class for operational Local Ignore reset failures."
+);
+create_exception!(
+    classic_config,
+    LocalIgnoreResetDefaultsUnavailableError,
+    LocalIgnoreResetError,
+    "Raised when the recovery plan retained no usable selected-Main defaults."
+);
+create_exception!(
+    classic_config,
+    LocalIgnoreResetLockError,
+    LocalIgnoreResetError,
+    "Raised when the Local Ignore reset lock cannot be acquired."
+);
+create_exception!(
+    classic_config,
+    LocalIgnoreResetReadError,
+    LocalIgnoreResetError,
+    "Raised when authoritative Local Ignore bytes cannot be read during reset."
+);
+create_exception!(
+    classic_config,
+    LocalIgnoreResetBackupDirectoryError,
+    LocalIgnoreResetError,
+    "Raised when the config-owned Local Ignore backup directory cannot be prepared."
+);
+create_exception!(
+    classic_config,
+    LocalIgnoreResetBackupPublicationError,
+    LocalIgnoreResetError,
+    "Raised when the byte-exact Local Ignore backup cannot be durably published."
+);
+create_exception!(
+    classic_config,
+    LocalIgnoreResetBackupVerificationError,
+    LocalIgnoreResetError,
+    "Raised when the published Local Ignore backup cannot be verified byte-for-byte."
+);
+create_exception!(
+    classic_config,
+    LocalIgnoreResetReplacementPublicationError,
+    LocalIgnoreResetError,
+    "Raised when retained defaults cannot be atomically published as Local Ignore."
 );
 
 /// One structured selection, candidate-rejection, or Local Ignore generation diagnostic.
@@ -180,6 +231,26 @@ pub struct PyInstalledYamlDataLocalIgnoreRecoveryRequiredOutcome {
     recovery_plan: Py<PyLocalIgnoreRecoveryPlan>,
 }
 
+/// Typed successful reset outcome with durable publication metadata and retained snapshot.
+#[pyclass(name = "LocalIgnoreResetOutcome", frozen, skip_from_py_object)]
+pub struct PyLocalIgnoreResetOutcome {
+    snapshot: Py<PyInstalledYamlDataSnapshot>,
+    local_ignore_path: PathBuf,
+    backup_path: PathBuf,
+    malformed_local_ignore_identity: CoreYamlDataContentIdentity,
+    backup_identity: CoreYamlDataContentIdentity,
+    replacement_identity: CoreYamlDataContentIdentity,
+    diagnostics: Vec<PyInstalledYamlDataDiagnostic>,
+}
+
+/// Typed conflict outcome returned when the approved malformed file changed or disappeared.
+#[pyclass(name = "LocalIgnoreResetConflictOutcome", frozen, skip_from_py_object)]
+pub struct PyLocalIgnoreResetConflictOutcome {
+    expected_identity: CoreYamlDataContentIdentity,
+    actual_identity: Option<CoreYamlDataContentIdentity>,
+    backup_path: Option<PathBuf>,
+}
+
 #[pymethods]
 impl PyInstalledYamlDataLoadOutcome {
     /// Return the stable expected-outcome discriminator.
@@ -207,6 +278,84 @@ impl PyInstalledYamlDataLocalIgnoreRecoveryRequiredOutcome {
     #[getter]
     fn recovery_plan(&self, py: Python<'_>) -> Py<PyLocalIgnoreRecoveryPlan> {
         self.recovery_plan.clone_ref(py)
+    }
+}
+
+#[pymethods]
+impl PyLocalIgnoreResetOutcome {
+    /// Return the stable successful-reset discriminator.
+    #[getter]
+    fn status(&self) -> &'static str {
+        "reset"
+    }
+
+    /// Return the immutable reset-ready snapshot retained from the recovery plan.
+    #[getter]
+    fn snapshot(&self, py: Python<'_>) -> Py<PyInstalledYamlDataSnapshot> {
+        self.snapshot.clone_ref(py)
+    }
+
+    /// Return the canonical Local Ignore path that became authoritative.
+    #[getter]
+    fn local_ignore_path(&self) -> PathBuf {
+        self.local_ignore_path.clone()
+    }
+
+    /// Return the durable byte-exact backup path verified before replacement.
+    #[getter]
+    fn backup_path(&self) -> PathBuf {
+        self.backup_path.clone()
+    }
+
+    /// Return the malformed-file identity retained when recovery became necessary.
+    #[getter]
+    fn malformed_local_ignore_identity(&self) -> PyYamlDataContentIdentity {
+        content_identity_to_py(&self.malformed_local_ignore_identity)
+    }
+
+    /// Return the identity independently verified from the durable backup bytes.
+    #[getter]
+    fn backup_identity(&self) -> PyYamlDataContentIdentity {
+        content_identity_to_py(&self.backup_identity)
+    }
+
+    /// Return the identity of retained defaults published as the replacement.
+    #[getter]
+    fn replacement_identity(&self) -> PyYamlDataContentIdentity {
+        content_identity_to_py(&self.replacement_identity)
+    }
+
+    /// Return retained selection, malformed-file, and successful-reset diagnostics.
+    #[getter]
+    fn diagnostics(&self) -> Vec<PyInstalledYamlDataDiagnostic> {
+        self.diagnostics.clone()
+    }
+}
+
+#[pymethods]
+impl PyLocalIgnoreResetConflictOutcome {
+    /// Return the stable conflict discriminator.
+    #[getter]
+    fn status(&self) -> &'static str {
+        "conflict"
+    }
+
+    /// Return the malformed-file identity against which reset was approved.
+    #[getter]
+    fn expected_identity(&self) -> PyYamlDataContentIdentity {
+        content_identity_to_py(&self.expected_identity)
+    }
+
+    /// Return the current canonical identity, or `None` when the file disappeared.
+    #[getter]
+    fn actual_identity(&self) -> Option<PyYamlDataContentIdentity> {
+        self.actual_identity.as_ref().map(content_identity_to_py)
+    }
+
+    /// Return the verified backup retained before a late conflict, when one was published.
+    #[getter]
+    fn backup_path(&self) -> Option<PathBuf> {
+        self.backup_path.clone()
     }
 }
 
@@ -343,6 +492,65 @@ impl PyLocalIgnoreRecoveryPlan {
             inner: plan.proceed_without_ignore(),
         })
     }
+
+    /// Consume this plan to durably back up malformed bytes and publish retained defaults.
+    ///
+    /// The synchronous core reset runs without the GIL and is non-interruptible after entry.
+    /// It returns a typed successful-reset or conflict outcome and never reselects Main, game,
+    /// or default bytes. Any attempt, including an operational failure, consumes the plan.
+    ///
+    /// # Errors
+    ///
+    /// Raises `RuntimeError` when this plan was already consumed. Raises a typed
+    /// `LocalIgnoreResetError` subclass when the accepted reset cannot complete safely.
+    fn reset_to_default(&mut self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let plan = self
+            .inner
+            .take()
+            .ok_or_else(|| PyRuntimeError::new_err(LOCAL_IGNORE_RECOVERY_PLAN_CONSUMED))?;
+        let outcome = without_gil(py, move || plan.reset_to_default())
+            .map_err(local_ignore_reset_error_to_py)?;
+
+        match outcome {
+            CoreResetOutcome::Reset(result) => {
+                let local_ignore_path = result.local_ignore_path().to_path_buf();
+                let backup_path = result.backup_path().to_path_buf();
+                let malformed_local_ignore_identity =
+                    result.malformed_local_ignore_identity().clone();
+                let backup_identity = result.backup_identity().clone();
+                let replacement_identity = result.replacement_identity().clone();
+                let diagnostics = result.diagnostics().iter().map(diagnostic_to_py).collect();
+                let snapshot = Py::new(
+                    py,
+                    PyInstalledYamlDataSnapshot {
+                        inner: result.into_snapshot(),
+                    },
+                )?;
+                Ok(Py::new(
+                    py,
+                    PyLocalIgnoreResetOutcome {
+                        snapshot,
+                        local_ignore_path,
+                        backup_path,
+                        malformed_local_ignore_identity,
+                        backup_identity,
+                        replacement_identity,
+                        diagnostics,
+                    },
+                )?
+                .into_any())
+            }
+            CoreResetOutcome::Conflict(conflict) => Ok(Py::new(
+                py,
+                PyLocalIgnoreResetConflictOutcome {
+                    expected_identity: conflict.expected_identity().clone(),
+                    actual_identity: conflict.actual_identity().cloned(),
+                    backup_path: conflict.backup_path().map(PathBuf::from),
+                },
+            )?
+            .into_any()),
+        }
+    }
 }
 
 #[pymethods]
@@ -386,6 +594,7 @@ impl PyInstalledYamlDataSnapshot {
             CoreLocalIgnoreState::Existing => "existing",
             CoreLocalIgnoreState::Generated => "generated",
             CoreLocalIgnoreState::ProceedWithoutIgnore => "proceed_without_ignore",
+            CoreLocalIgnoreState::ResetToDefault => "reset_to_default",
         }
     }
 
@@ -599,6 +808,80 @@ fn installed_yaml_data_load_error_to_py(error: CoreLoadError) -> PyErr {
     py_error
 }
 
+/// Convert every operational reset failure into its typed Python subclass and metadata.
+fn local_ignore_reset_error_to_py(error: CoreResetError) -> PyErr {
+    let message = error.to_string();
+    let (code, path, stage, reason, py_error) = match error {
+        CoreResetError::DefaultsUnavailable { path, reason } => (
+            "defaults_unavailable",
+            path,
+            None,
+            reason,
+            LocalIgnoreResetDefaultsUnavailableError::new_err(message),
+        ),
+        CoreResetError::Lock { path, source } => (
+            "lock",
+            path,
+            None,
+            source.to_string(),
+            LocalIgnoreResetLockError::new_err(message),
+        ),
+        CoreResetError::Read { path, source } => (
+            "read",
+            path,
+            None,
+            source.to_string(),
+            LocalIgnoreResetReadError::new_err(message),
+        ),
+        CoreResetError::BackupDirectory { path, source } => (
+            "backup_directory",
+            path,
+            None,
+            source.to_string(),
+            LocalIgnoreResetBackupDirectoryError::new_err(message),
+        ),
+        CoreResetError::BackupPublication {
+            path,
+            stage,
+            source,
+        } => (
+            "backup_publication",
+            path,
+            Some(reset_publication_stage_token(stage)),
+            source.to_string(),
+            LocalIgnoreResetBackupPublicationError::new_err(message),
+        ),
+        CoreResetError::BackupVerification { path, reason } => (
+            "backup_verification",
+            path,
+            None,
+            reason,
+            LocalIgnoreResetBackupVerificationError::new_err(message),
+        ),
+        CoreResetError::ReplacementPublication {
+            path,
+            stage,
+            source,
+        } => (
+            "replacement_publication",
+            path,
+            Some(reset_publication_stage_token(stage)),
+            source.to_string(),
+            LocalIgnoreResetReplacementPublicationError::new_err(message),
+        ),
+    };
+    Python::attach(|py| {
+        let value = py_error.value(py);
+        value.setattr("code", code)?;
+        value.setattr("path", path.to_string_lossy().into_owned())?;
+        value.setattr("stage", stage)?;
+        value.setattr("reason", reason)?;
+        Ok::<(), PyErr>(())
+    })
+    .expect("CLASSIC Local Ignore reset exceptions must accept contract attributes");
+    py_error
+}
+
 /// Returns the stable Python role token.
 const fn role_token(role: CoreRole) -> &'static str {
     match role {
@@ -616,6 +899,17 @@ const fn provenance_token(provenance: CoreProvenance) -> &'static str {
     }
 }
 
+/// Returns the stable Python token for one durable reset publication boundary.
+const fn reset_publication_stage_token(stage: CoreResetPublicationStage) -> &'static str {
+    match stage {
+        CoreResetPublicationStage::Create => "create",
+        CoreResetPublicationStage::Write => "write",
+        CoreResetPublicationStage::Flush => "flush",
+        CoreResetPublicationStage::Sync => "sync",
+        CoreResetPublicationStage::Publish => "publish",
+    }
+}
+
 /// Returns the stable Python diagnostic-kind token.
 const fn diagnostic_kind_token(kind: CoreInstalledYamlDataDiagnosticKind) -> &'static str {
     match kind {
@@ -628,6 +922,7 @@ const fn diagnostic_kind_token(kind: CoreInstalledYamlDataDiagnosticKind) -> &'s
         CoreInstalledYamlDataDiagnosticKind::IncompatibleSchema => "incompatible_schema",
         CoreInstalledYamlDataDiagnosticKind::InvalidRoleData => "invalid_role_data",
         CoreInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated => "local_ignore_generated",
+        CoreInstalledYamlDataDiagnosticKind::LocalIgnoreReset => "local_ignore_reset",
     }
 }
 
@@ -640,6 +935,8 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyLocalIgnoreRecoveryPlan>()?;
     module.add_class::<PyInstalledYamlDataLoadOutcome>()?;
     module.add_class::<PyInstalledYamlDataLocalIgnoreRecoveryRequiredOutcome>()?;
+    module.add_class::<PyLocalIgnoreResetOutcome>()?;
+    module.add_class::<PyLocalIgnoreResetConflictOutcome>()?;
     module.add_function(wrap_pyfunction!(inspect_installed_yaml_data, module)?)?;
     module.add_function(wrap_pyfunction!(load_installed_yaml_data, module)?)?;
     let py = module.py();
@@ -682,6 +979,38 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add(
         "InstalledYamlDataLoadInvalidSelectedDataError",
         py.get_type::<InstalledYamlDataLoadInvalidSelectedDataError>(),
+    )?;
+    module.add(
+        "LocalIgnoreResetError",
+        py.get_type::<LocalIgnoreResetError>(),
+    )?;
+    module.add(
+        "LocalIgnoreResetDefaultsUnavailableError",
+        py.get_type::<LocalIgnoreResetDefaultsUnavailableError>(),
+    )?;
+    module.add(
+        "LocalIgnoreResetLockError",
+        py.get_type::<LocalIgnoreResetLockError>(),
+    )?;
+    module.add(
+        "LocalIgnoreResetReadError",
+        py.get_type::<LocalIgnoreResetReadError>(),
+    )?;
+    module.add(
+        "LocalIgnoreResetBackupDirectoryError",
+        py.get_type::<LocalIgnoreResetBackupDirectoryError>(),
+    )?;
+    module.add(
+        "LocalIgnoreResetBackupPublicationError",
+        py.get_type::<LocalIgnoreResetBackupPublicationError>(),
+    )?;
+    module.add(
+        "LocalIgnoreResetBackupVerificationError",
+        py.get_type::<LocalIgnoreResetBackupVerificationError>(),
+    )?;
+    module.add(
+        "LocalIgnoreResetReplacementPublicationError",
+        py.get_type::<LocalIgnoreResetReplacementPublicationError>(),
     )?;
     Ok(())
 }

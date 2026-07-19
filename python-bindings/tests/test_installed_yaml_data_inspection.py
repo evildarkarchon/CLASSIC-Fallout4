@@ -448,6 +448,131 @@ def test_installed_load_projects_consumable_local_ignore_recovery_without_writes
     } == files_before_proceed
 
 
+def test_local_ignore_reset_projects_durable_success_metadata(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reset exposes the durable backup, replacement identities, and retained snapshot."""
+    installation = tmp_path / "install"
+    write_install(installation, main_bytes=MAIN_WITH_DEFAULT_BYTES)
+    isolate_cache(monkeypatch, tmp_path / "cache-root")
+    ignore_path = installation / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    malformed_bytes = b"CLASSIC_Ignore_Fallout4: not-a-sequence\r\n"
+    ignore_path.write_bytes(malformed_bytes)
+
+    load_outcome = classic_config.load_installed_yaml_data(
+        installation,
+        classic_config.ExplicitYamlDataGame.FALLOUT4,
+        "Original",
+    )
+    plan = load_outcome.recovery_plan
+    reset_outcome = plan.reset_to_default()
+
+    assert isinstance(reset_outcome, classic_config.LocalIgnoreResetOutcome)
+    assert reset_outcome.status == "reset"
+    assert reset_outcome.local_ignore_path == ignore_path
+    assert reset_outcome.backup_path.read_bytes() == malformed_bytes
+    assert ignore_path.read_bytes() == DEFAULT_IGNORE_BYTES
+    malformed_sha256 = hashlib.sha256(malformed_bytes).hexdigest()
+    replacement_sha256 = hashlib.sha256(DEFAULT_IGNORE_BYTES).hexdigest()
+    assert reset_outcome.malformed_local_ignore_identity.sha256 == malformed_sha256
+    assert reset_outcome.backup_identity.sha256 == malformed_sha256
+    assert reset_outcome.replacement_identity.sha256 == replacement_sha256
+    assert reset_outcome.snapshot.local_ignore_state == "reset_to_default"
+    assert reset_outcome.snapshot.local_ignore_identity.sha256 == replacement_sha256
+    assert reset_outcome.snapshot.yaml_data.ignore_list == ["SelectedMainDefault.dll"]
+    reset_diagnostic = reset_outcome.diagnostics[-1]
+    assert reset_diagnostic.path == ignore_path
+    assert reset_diagnostic.kind == "local_ignore_reset"
+
+    with pytest.raises(
+        RuntimeError, match="Local Ignore recovery plan has already been consumed"
+    ):
+        plan.reset_to_default()
+
+
+def test_local_ignore_reset_projects_conflict_without_overwriting_newer_state(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A changed canonical file returns typed identity metadata and is never overwritten."""
+    installation = tmp_path / "install"
+    write_install(installation, main_bytes=MAIN_WITH_DEFAULT_BYTES)
+    isolate_cache(monkeypatch, tmp_path / "cache-root")
+    ignore_path = installation / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    malformed_bytes = b"CLASSIC_Ignore_Fallout4: not-a-sequence\n"
+    changed_bytes = b"CLASSIC_Ignore_Fallout4:\n  - NewerUserEdit.dll\n"
+    ignore_path.write_bytes(malformed_bytes)
+
+    load_outcome = classic_config.load_installed_yaml_data(
+        installation,
+        classic_config.ExplicitYamlDataGame.FALLOUT4,
+        "Original",
+    )
+    plan = load_outcome.recovery_plan
+    ignore_path.write_bytes(changed_bytes)
+    conflict = plan.reset_to_default()
+
+    assert isinstance(conflict, classic_config.LocalIgnoreResetConflictOutcome)
+    assert conflict.status == "conflict"
+    assert conflict.expected_identity.sha256 == hashlib.sha256(
+        malformed_bytes
+    ).hexdigest()
+    assert conflict.actual_identity is not None
+    assert conflict.actual_identity.sha256 == hashlib.sha256(changed_bytes).hexdigest()
+    assert conflict.backup_path is None
+    assert ignore_path.read_bytes() == changed_bytes
+    assert not (installation / "CLASSIC Backup").exists()
+
+    with pytest.raises(
+        RuntimeError, match="Local Ignore recovery plan has already been consumed"
+    ):
+        plan.proceed_without_ignore()
+
+
+def test_local_ignore_reset_projects_defaults_unavailable_and_error_hierarchy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Every reset failure remains catchable through a typed operational hierarchy."""
+    installation = tmp_path / "install"
+    write_install(installation)
+    isolate_cache(monkeypatch, tmp_path / "cache-root")
+    ignore_path = installation / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    malformed_bytes = b"CLASSIC_Ignore_Fallout4: not-a-sequence\n"
+    ignore_path.write_bytes(malformed_bytes)
+
+    load_outcome = classic_config.load_installed_yaml_data(
+        installation,
+        classic_config.ExplicitYamlDataGame.FALLOUT4,
+        "Original",
+    )
+    plan = load_outcome.recovery_plan
+    with pytest.raises(
+        classic_config.LocalIgnoreResetDefaultsUnavailableError
+    ) as exc_info:
+        plan.reset_to_default()
+
+    assert isinstance(exc_info.value, classic_config.LocalIgnoreResetError)
+    assert exc_info.value.code == "defaults_unavailable"
+    assert exc_info.value.path == str(ignore_path)
+    assert exc_info.value.stage is None
+    assert exc_info.value.reason
+    assert ignore_path.read_bytes() == malformed_bytes
+    with pytest.raises(
+        RuntimeError, match="Local Ignore recovery plan has already been consumed"
+    ):
+        plan.reset_to_default()
+
+    for error_type in (
+        classic_config.LocalIgnoreResetDefaultsUnavailableError,
+        classic_config.LocalIgnoreResetLockError,
+        classic_config.LocalIgnoreResetReadError,
+        classic_config.LocalIgnoreResetBackupDirectoryError,
+        classic_config.LocalIgnoreResetBackupPublicationError,
+        classic_config.LocalIgnoreResetBackupVerificationError,
+        classic_config.LocalIgnoreResetReplacementPublicationError,
+    ):
+        assert issubclass(error_type, classic_config.LocalIgnoreResetError)
+
+
 def test_installed_load_exports_local_ignore_create_failure_type() -> None:
     """Atomic publication failures remain a dedicated typed public error."""
     assert issubclass(

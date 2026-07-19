@@ -92,8 +92,8 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 99,
-      "contractIdsHash": "a89fcf61c0cdaa5685f22a4472f76f014b0b80928a0ecd326023d684c6d370e8",
+      "contractCount": 104,
+      "contractIdsHash": "58a9e790c2ee9de389456766416658910c41fd2a0170422705017f1065822bcf",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "config-tier1-parity",
@@ -294,6 +294,11 @@
         "JsInstalledYamlDataLoadOutcome",
         "JsInstalledYamlDataLoadRequest",
         "JsInstalledYamlDataLoadStatus",
+        "JsLocalIgnoreResetConflict",
+        "JsLocalIgnoreResetOutcome",
+        "JsLocalIgnoreResetPublicationStage",
+        "JsLocalIgnoreResetResult",
+        "JsLocalIgnoreResetStatus",
         "JsLocalIgnoreYamlDataState",
         "LocalIgnoreRecoveryPlan",
         "loadInstalledYamlData"
@@ -302,7 +307,7 @@
       "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
       "testCaseId": "installed-yaml-data-loading-runtime",
       "fixtureRefs": [],
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "coverageId": "node-tier2-config-game-local-runtime",

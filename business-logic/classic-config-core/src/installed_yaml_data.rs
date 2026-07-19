@@ -11,11 +11,17 @@ use classic_settings_core::{
     Compatibility, SchemaCompat, SchemaVersion, extract_schema_version, schema_compat_check,
 };
 use classic_shared_core::GameId;
+use fs4::fs_std::FileExt;
+use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
 use tempfile::NamedTempFile;
 use thiserror::Error;
 use yaml_rust2::Yaml;
+
+static LOCAL_IGNORE_BACKUP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 /// The update-eligible role being inspected.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -67,6 +73,8 @@ pub enum InstalledYamlDataDiagnosticKind {
     InvalidRoleData,
     /// Missing Local Ignore YAML Data was generated from selected Main defaults.
     LocalIgnoreGenerated,
+    /// Malformed Local Ignore YAML Data was reset from retained selected-Main defaults.
+    LocalIgnoreReset,
 }
 
 /// Structured attribution for Installed YAML Data selection or local generation events.
@@ -175,6 +183,8 @@ pub enum LocalIgnoreYamlDataState {
     Generated,
     /// Malformed Local Ignore bytes were retained but ignored for this operation only.
     ProceedWithoutIgnore,
+    /// Malformed Local Ignore bytes were backed up and reset from retained defaults.
+    ResetToDefault,
 }
 
 /// Selected update-eligible YAML Data facts from one inspection.
@@ -187,14 +197,14 @@ pub struct InstalledYamlDataInspection {
     diagnostics: Vec<InstalledYamlDataDiagnostic>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct OwnedInstalledYamlDataFile {
     bytes: Box<[u8]>,
     yaml: Yaml,
     inspected: InspectedYamlDataFile,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct SelectedInstalledYamlData {
     requested_game: GameId,
     game_data_role: GameDataRole,
@@ -203,20 +213,15 @@ struct SelectedInstalledYamlData {
     diagnostics: Vec<InstalledYamlDataDiagnostic>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct OwnedLocalIgnoreYamlData {
     bytes: Box<[u8]>,
     identity: YamlDataContentIdentity,
 }
 
-enum OwnedLocalIgnoreDefaults {
-    Valid {
-        bytes: Box<[u8]>,
-        identity: YamlDataContentIdentity,
-    },
-    Unavailable {
-        reason: String,
-    },
+enum PreparedLocalIgnoreReset {
+    Ready(Box<InstalledYamlDataSnapshot>),
+    Unavailable { reason: String },
 }
 
 /// Private filesystem seam for deterministic Local Ignore publication and reread tests.
@@ -249,6 +254,245 @@ impl LocalIgnoreFileSystem for SystemLocalIgnoreFileSystem {
     }
 }
 
+/// Private durable-publication seam for Local Ignore reset fault and race tests.
+trait LocalIgnoreResetPublisher {
+    /// Durably publish the byte-exact backup without replacing an existing backup identity.
+    fn publish_backup(&self, path: &Path, bytes: &[u8]) -> Result<(), LocalIgnoreResetError>;
+
+    /// Stage replacement bytes, recheck the canonical bytes, then atomically replace on match.
+    fn replace_if_unchanged(
+        &self,
+        path: &Path,
+        expected: &[u8],
+        replacement: &[u8],
+    ) -> Result<ConditionalReplacement, LocalIgnoreResetError>;
+}
+
+/// Result of the conflict check immediately adjacent to atomic replacement.
+enum ConditionalReplacement {
+    Replaced,
+    Conflict(Option<YamlDataContentIdentity>),
+}
+
+/// Which durable publication in the reset transaction is being staged.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LocalIgnoreResetPublicationKind {
+    Backup,
+    Replacement,
+}
+
+/// Production reset publisher using fully synchronized same-directory staging files.
+struct SystemLocalIgnoreResetPublisher {
+    fail_at: Option<(
+        LocalIgnoreResetPublicationKind,
+        LocalIgnoreResetPublicationStage,
+    )>,
+}
+
+impl SystemLocalIgnoreResetPublisher {
+    /// Build the production publisher without fault injection.
+    const fn system() -> Self {
+        Self { fail_at: None }
+    }
+
+    /// Build a publisher that fails immediately before one real publication boundary.
+    #[cfg(test)]
+    const fn failing_at(
+        kind: LocalIgnoreResetPublicationKind,
+        stage: LocalIgnoreResetPublicationStage,
+    ) -> Self {
+        Self {
+            fail_at: Some((kind, stage)),
+        }
+    }
+
+    /// Return an injected I/O failure before the requested boundary mutates state.
+    fn before(
+        &self,
+        kind: LocalIgnoreResetPublicationKind,
+        stage: LocalIgnoreResetPublicationStage,
+    ) -> Result<(), ResetPublicationFailure> {
+        if self.fail_at == Some((kind, stage)) {
+            return Err(ResetPublicationFailure {
+                stage,
+                source: std::io::Error::new(
+                    std::io::ErrorKind::PermissionDenied,
+                    format!("injected {kind:?} {stage:?} failure"),
+                ),
+            });
+        }
+        Ok(())
+    }
+}
+
+impl LocalIgnoreResetPublisher for SystemLocalIgnoreResetPublisher {
+    fn publish_backup(&self, path: &Path, bytes: &[u8]) -> Result<(), LocalIgnoreResetError> {
+        publish_local_ignore_reset_backup(self, path, bytes).map_err(|failure| {
+            LocalIgnoreResetError::BackupPublication {
+                path: path.to_path_buf(),
+                stage: failure.stage,
+                source: failure.source,
+            }
+        })
+    }
+
+    fn replace_if_unchanged(
+        &self,
+        path: &Path,
+        expected: &[u8],
+        replacement: &[u8],
+    ) -> Result<ConditionalReplacement, LocalIgnoreResetError> {
+        let staged = stage_local_ignore_reset_bytes(
+            self,
+            LocalIgnoreResetPublicationKind::Replacement,
+            path,
+            replacement,
+        )
+        .map_err(|failure| LocalIgnoreResetError::ReplacementPublication {
+            path: path.to_path_buf(),
+            stage: failure.stage,
+            source: failure.source,
+        })?;
+        let current = match std::fs::read(path) {
+            Ok(bytes) => bytes,
+            Err(source) if source.kind() == std::io::ErrorKind::NotFound => {
+                return Ok(ConditionalReplacement::Conflict(None));
+            }
+            Err(source) => {
+                return Err(LocalIgnoreResetError::Read {
+                    path: path.to_path_buf(),
+                    source,
+                });
+            }
+        };
+        if current != expected {
+            return Ok(ConditionalReplacement::Conflict(Some(
+                YamlDataContentIdentity::from_bytes(&current),
+            )));
+        }
+
+        self.before(
+            LocalIgnoreResetPublicationKind::Replacement,
+            LocalIgnoreResetPublicationStage::Publish,
+        )
+        .map_err(|failure| LocalIgnoreResetError::ReplacementPublication {
+            path: path.to_path_buf(),
+            stage: failure.stage,
+            source: failure.source,
+        })?;
+        staged
+            .persist(path)
+            .map_err(|failure| LocalIgnoreResetError::ReplacementPublication {
+                path: path.to_path_buf(),
+                stage: LocalIgnoreResetPublicationStage::Publish,
+                source: failure.error,
+            })?;
+        if let Some(parent) = path.parent() {
+            sync_replacement_parent_best_effort(parent);
+        }
+        Ok(ConditionalReplacement::Replaced)
+    }
+}
+
+/// Stage-specific internal filesystem failure used by both reset publications.
+struct ResetPublicationFailure {
+    stage: LocalIgnoreResetPublicationStage,
+    source: std::io::Error,
+}
+
+/// Write, flush, and synchronize a same-directory staging file without publishing it.
+fn stage_local_ignore_reset_bytes(
+    publisher: &SystemLocalIgnoreResetPublisher,
+    kind: LocalIgnoreResetPublicationKind,
+    path: &Path,
+    bytes: &[u8],
+) -> Result<NamedTempFile, ResetPublicationFailure> {
+    let parent = path.parent().ok_or_else(|| ResetPublicationFailure {
+        stage: LocalIgnoreResetPublicationStage::Create,
+        source: std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "Local Ignore publication path has no parent directory",
+        ),
+    })?;
+    publisher.before(kind, LocalIgnoreResetPublicationStage::Create)?;
+    let mut staged = tempfile::Builder::new()
+        .prefix(".classic-local-ignore-reset-")
+        .suffix(".tmp")
+        .tempfile_in(parent)
+        .map_err(|source| ResetPublicationFailure {
+            stage: LocalIgnoreResetPublicationStage::Create,
+            source,
+        })?;
+    publisher.before(kind, LocalIgnoreResetPublicationStage::Write)?;
+    staged
+        .write_all(bytes)
+        .map_err(|source| ResetPublicationFailure {
+            stage: LocalIgnoreResetPublicationStage::Write,
+            source,
+        })?;
+    publisher.before(kind, LocalIgnoreResetPublicationStage::Flush)?;
+    staged.flush().map_err(|source| ResetPublicationFailure {
+        stage: LocalIgnoreResetPublicationStage::Flush,
+        source,
+    })?;
+    publisher.before(kind, LocalIgnoreResetPublicationStage::Sync)?;
+    staged
+        .as_file()
+        .sync_all()
+        .map_err(|source| ResetPublicationFailure {
+            stage: LocalIgnoreResetPublicationStage::Sync,
+            source,
+        })?;
+    Ok(staged)
+}
+
+/// Durably publish complete backup bytes to one uniquely owned final path.
+fn publish_local_ignore_reset_backup(
+    publisher: &SystemLocalIgnoreResetPublisher,
+    path: &Path,
+    bytes: &[u8],
+) -> Result<(), ResetPublicationFailure> {
+    let staged = stage_local_ignore_reset_bytes(
+        publisher,
+        LocalIgnoreResetPublicationKind::Backup,
+        path,
+        bytes,
+    )?;
+    publisher.before(
+        LocalIgnoreResetPublicationKind::Backup,
+        LocalIgnoreResetPublicationStage::Publish,
+    )?;
+    let (staged_file, staged_path) = staged.keep().map_err(|failure| ResetPublicationFailure {
+        stage: LocalIgnoreResetPublicationStage::Publish,
+        source: failure.error,
+    })?;
+    drop(staged_file);
+    if let Err(source) = atomicwrites::move_atomic(&staged_path, path) {
+        // `keep` must clear Windows' temporary attribute before a write-through move; remove the
+        // now caller-owned staging path best-effort when that final move fails.
+        let _ = std::fs::remove_file(&staged_path);
+        return Err(ResetPublicationFailure {
+            stage: LocalIgnoreResetPublicationStage::Publish,
+            source,
+        });
+    }
+    Ok(())
+}
+
+/// Best-effort directory synchronization after canonical replacement is already authoritative.
+#[cfg(unix)]
+fn sync_replacement_parent_best_effort(parent: &Path) {
+    // A post-replacement sync failure cannot be reported without falsely claiming the prior
+    // canonical file remains authoritative, so replacement metadata durability is best-effort.
+    if let Ok(directory) = std::fs::File::open(parent) {
+        let _ = directory.sync_all();
+    }
+}
+
+/// Windows journals same-directory replacement metadata; std has no directory fsync handle.
+#[cfg(not(unix))]
+fn sync_replacement_parent_best_effort(_parent: &Path) {}
+
 /// Immutable parsed Installed YAML Data backed by the exact selected file bytes.
 pub struct InstalledYamlDataSnapshot {
     yaml_data: YamlDataCore,
@@ -268,8 +512,192 @@ pub struct InstalledYamlDataSnapshot {
 pub struct LocalIgnoreRecoveryPlan {
     proceed_without_ignore_snapshot: InstalledYamlDataSnapshot,
     local_ignore_path: PathBuf,
-    default_local_ignore: OwnedLocalIgnoreDefaults,
+    backup_directory: PathBuf,
+    reset: PreparedLocalIgnoreReset,
     selected_game_version: String,
+}
+
+/// Typed result of attempting to reset malformed Local Ignore YAML Data.
+#[derive(Debug)]
+pub enum LocalIgnoreResetOutcome {
+    /// The malformed bytes were durably backed up and retained defaults became authoritative.
+    Reset(LocalIgnoreResetResult),
+    /// The canonical file no longer matched the identity retained by the recovery plan.
+    Conflict(LocalIgnoreResetConflict),
+}
+
+/// Identity mismatch that prevented a Local Ignore reset from overwriting newer state.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LocalIgnoreResetConflict {
+    expected_identity: YamlDataContentIdentity,
+    actual_identity: Option<YamlDataContentIdentity>,
+    backup_path: Option<PathBuf>,
+}
+
+impl LocalIgnoreResetConflict {
+    /// Return the malformed-file identity against which the caller approved reset.
+    #[must_use]
+    pub const fn expected_identity(&self) -> &YamlDataContentIdentity {
+        &self.expected_identity
+    }
+
+    /// Return the current canonical identity, or `None` when the file was removed.
+    #[must_use]
+    pub const fn actual_identity(&self) -> Option<&YamlDataContentIdentity> {
+        self.actual_identity.as_ref()
+    }
+
+    /// Return the verified backup retained before a late conflict, when one was published.
+    #[must_use]
+    pub fn backup_path(&self) -> Option<&Path> {
+        self.backup_path.as_deref()
+    }
+}
+
+/// Successful durable Local Ignore reset and the retained operation snapshot it completed.
+#[derive(Debug)]
+pub struct LocalIgnoreResetResult {
+    snapshot: Box<InstalledYamlDataSnapshot>,
+    local_ignore_path: PathBuf,
+    backup_path: PathBuf,
+    malformed_local_ignore_identity: YamlDataContentIdentity,
+    backup_identity: YamlDataContentIdentity,
+    replacement_identity: YamlDataContentIdentity,
+}
+
+impl LocalIgnoreResetResult {
+    /// Return the reset-ready snapshot built from the already selected Main and game bytes.
+    #[must_use]
+    pub const fn snapshot(&self) -> &InstalledYamlDataSnapshot {
+        &self.snapshot
+    }
+
+    /// Consume the reset result and return its retained Installed YAML Data snapshot.
+    #[must_use]
+    pub fn into_snapshot(self) -> InstalledYamlDataSnapshot {
+        *self.snapshot
+    }
+
+    /// Return the canonical Local Ignore path that was reset.
+    #[must_use]
+    pub fn local_ignore_path(&self) -> &Path {
+        &self.local_ignore_path
+    }
+
+    /// Return the durable byte-exact backup path verified before replacement.
+    #[must_use]
+    pub fn backup_path(&self) -> &Path {
+        &self.backup_path
+    }
+
+    /// Return the malformed identity observed when the recovery plan was created.
+    #[must_use]
+    pub const fn malformed_local_ignore_identity(&self) -> &YamlDataContentIdentity {
+        &self.malformed_local_ignore_identity
+    }
+
+    /// Return the identity independently verified from the durable backup bytes.
+    #[must_use]
+    pub const fn backup_identity(&self) -> &YamlDataContentIdentity {
+        &self.backup_identity
+    }
+
+    /// Return the identity of the retained defaults published as the replacement.
+    #[must_use]
+    pub const fn replacement_identity(&self) -> &YamlDataContentIdentity {
+        &self.replacement_identity
+    }
+
+    /// Return selection, malformed-file, and successful-reset diagnostics.
+    #[must_use]
+    pub fn diagnostics(&self) -> &[InstalledYamlDataDiagnostic] {
+        self.snapshot.diagnostics()
+    }
+}
+
+/// Durable publication stage attributed by a Local Ignore reset failure.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LocalIgnoreResetPublicationStage {
+    /// A same-directory staging file could not be created.
+    Create,
+    /// Complete bytes could not be written to the staging file.
+    Write,
+    /// Buffered staging bytes could not be flushed.
+    Flush,
+    /// Staging bytes could not be synchronized to durable storage.
+    Sync,
+    /// The fully synchronized staging file could not be atomically or durably published.
+    Publish,
+}
+
+/// Operational failure encountered before a Local Ignore reset became authoritative.
+#[derive(Debug, Error)]
+pub enum LocalIgnoreResetError {
+    /// The selected Main defaults retained by the plan were unusable.
+    #[error("retained selected Main defaults cannot reset Local Ignore YAML Data `{}`: {reason}", path.display())]
+    DefaultsUnavailable {
+        /// Canonical Local Ignore path that would have been reset.
+        path: PathBuf,
+        /// Stable validation detail captured when the recovery plan was created.
+        reason: String,
+    },
+    /// The canonical Local Ignore file could not be opened and locked for the critical section.
+    #[error("failed to lock Local Ignore YAML Data `{}` for reset: {source}", path.display())]
+    Lock {
+        /// Canonical Local Ignore path.
+        path: PathBuf,
+        /// Underlying filesystem failure.
+        #[source]
+        source: std::io::Error,
+    },
+    /// The authoritative Local Ignore bytes could not be read during conflict protection.
+    #[error("failed to read Local Ignore YAML Data `{}` during reset: {source}", path.display())]
+    Read {
+        /// Canonical Local Ignore path.
+        path: PathBuf,
+        /// Underlying filesystem failure.
+        #[source]
+        source: std::io::Error,
+    },
+    /// The config-owned Local Ignore backup directory could not be created.
+    #[error("failed to create Local Ignore backup directory `{}`: {source}", path.display())]
+    BackupDirectory {
+        /// Backup directory that could not be prepared.
+        path: PathBuf,
+        /// Underlying filesystem failure.
+        #[source]
+        source: std::io::Error,
+    },
+    /// The byte-exact backup could not be durably published.
+    #[error("failed to publish Local Ignore backup `{}` at {stage:?}: {source}", path.display())]
+    BackupPublication {
+        /// Intended durable backup path.
+        path: PathBuf,
+        /// Publication boundary that failed.
+        stage: LocalIgnoreResetPublicationStage,
+        /// Underlying filesystem failure.
+        #[source]
+        source: std::io::Error,
+    },
+    /// The published backup could not be reread or did not match the retained malformed bytes.
+    #[error("failed to verify Local Ignore backup `{}`: {reason}", path.display())]
+    BackupVerification {
+        /// Published backup path.
+        path: PathBuf,
+        /// Stable verification detail.
+        reason: String,
+    },
+    /// Retained defaults could not be atomically published at the canonical path.
+    #[error("failed to publish Local Ignore replacement `{}` at {stage:?}: {source}", path.display())]
+    ReplacementPublication {
+        /// Canonical Local Ignore path.
+        path: PathBuf,
+        /// Publication boundary that failed.
+        stage: LocalIgnoreResetPublicationStage,
+        /// Underlying filesystem failure.
+        #[source]
+        source: std::io::Error,
+    },
 }
 
 // A custom formatter prevents private retained bytes and parsed YAML documents from becoming
@@ -364,9 +792,9 @@ impl std::fmt::Debug for LocalIgnoreRecoveryPlan {
             )
             .field(
                 "default_local_ignore_unavailable_reason",
-                &match &self.default_local_ignore {
-                    OwnedLocalIgnoreDefaults::Valid { .. } => None,
-                    OwnedLocalIgnoreDefaults::Unavailable { reason } => Some(reason),
+                &match &self.reset {
+                    PreparedLocalIgnoreReset::Ready(_) => None,
+                    PreparedLocalIgnoreReset::Unavailable { reason } => Some(reason),
                 },
             )
             .field("selected_game_version", &self.selected_game_version)
@@ -421,12 +849,9 @@ impl LocalIgnoreRecoveryPlan {
     /// decision does not read or publish them.
     #[must_use]
     pub fn default_local_ignore_identity(&self) -> Option<&YamlDataContentIdentity> {
-        match &self.default_local_ignore {
-            OwnedLocalIgnoreDefaults::Valid { bytes, identity } => {
-                debug_assert_eq!(bytes.len() as u64, identity.byte_len());
-                Some(identity)
-            }
-            OwnedLocalIgnoreDefaults::Unavailable { .. } => None,
+        match &self.reset {
+            PreparedLocalIgnoreReset::Ready(snapshot) => Some(snapshot.local_ignore_identity()),
+            PreparedLocalIgnoreReset::Unavailable { .. } => None,
         }
     }
 
@@ -450,6 +875,227 @@ impl LocalIgnoreRecoveryPlan {
     #[must_use]
     pub fn proceed_without_ignore(self) -> InstalledYamlDataSnapshot {
         self.proceed_without_ignore_snapshot
+    }
+
+    /// Durably back up malformed bytes and atomically publish retained selected-Main defaults.
+    ///
+    /// This synchronous call is the reset's explicit non-interruptible critical section. A scan
+    /// coordinator checks cancellation immediately before entering; once called, reset never
+    /// polls cancellation or yields until it has either preserved the original as authoritative
+    /// or completed the verified backup and atomic replacement. The selected Main, game, and
+    /// replacement bytes all come from this plan and are never reselected.
+    ///
+    /// # Errors
+    ///
+    /// Returns a stage-specific [`LocalIgnoreResetError`] before replacement becomes
+    /// authoritative. A typed [`LocalIgnoreResetOutcome::Conflict`] means the malformed file was
+    /// changed or removed after this plan was created and was not overwritten.
+    pub fn reset_to_default(self) -> Result<LocalIgnoreResetOutcome, LocalIgnoreResetError> {
+        self.reset_to_default_with_publisher(&SystemLocalIgnoreResetPublisher::system())
+    }
+
+    /// Runs reset through an injected durable-publication boundary for fault and race tests.
+    fn reset_to_default_with_publisher(
+        self,
+        publisher: &impl LocalIgnoreResetPublisher,
+    ) -> Result<LocalIgnoreResetOutcome, LocalIgnoreResetError> {
+        let Self {
+            proceed_without_ignore_snapshot,
+            local_ignore_path,
+            backup_directory,
+            reset,
+            selected_game_version: _,
+        } = self;
+        let expected_bytes = proceed_without_ignore_snapshot.local_ignore.bytes;
+        let expected_identity = proceed_without_ignore_snapshot.local_ignore.identity;
+        let _reset_lock = match acquire_local_ignore_reset_lock(&local_ignore_path) {
+            Ok(lock) => lock,
+            Err(LocalIgnoreResetError::Lock { source, .. })
+                if source.kind() == std::io::ErrorKind::NotFound =>
+            {
+                let current = read_reset_canonical(&local_ignore_path)?;
+                return Ok(LocalIgnoreResetOutcome::Conflict(
+                    LocalIgnoreResetConflict {
+                        expected_identity,
+                        actual_identity: current
+                            .as_deref()
+                            .map(YamlDataContentIdentity::from_bytes),
+                        backup_path: None,
+                    },
+                ));
+            }
+            Err(error) => return Err(error),
+        };
+        let current = read_reset_canonical(&local_ignore_path)?;
+        if current.as_deref() != Some(expected_bytes.as_ref()) {
+            return Ok(LocalIgnoreResetOutcome::Conflict(
+                LocalIgnoreResetConflict {
+                    expected_identity,
+                    actual_identity: current.as_deref().map(YamlDataContentIdentity::from_bytes),
+                    backup_path: None,
+                },
+            ));
+        }
+        let PreparedLocalIgnoreReset::Ready(mut reset_snapshot) = reset else {
+            let PreparedLocalIgnoreReset::Unavailable { reason } = reset else {
+                unreachable!("Local Ignore reset preparation has only two states")
+            };
+            return Err(LocalIgnoreResetError::DefaultsUnavailable {
+                path: local_ignore_path,
+                reason,
+            });
+        };
+
+        create_local_ignore_backup_directory(&backup_directory)?;
+        let backup_path = unique_local_ignore_backup_path(&backup_directory, &expected_identity);
+        publisher.publish_backup(&backup_path, &expected_bytes)?;
+        let backup_bytes = std::fs::read(&backup_path).map_err(|source| {
+            LocalIgnoreResetError::BackupVerification {
+                path: backup_path.clone(),
+                reason: source.to_string(),
+            }
+        })?;
+        if backup_bytes != expected_bytes.as_ref() {
+            return Err(LocalIgnoreResetError::BackupVerification {
+                path: backup_path,
+                reason: "published backup bytes differ from the retained malformed bytes"
+                    .to_string(),
+            });
+        }
+        let backup_identity = YamlDataContentIdentity::from_bytes(&backup_bytes);
+
+        let replacement_bytes = reset_snapshot.local_ignore.bytes.clone();
+        let replacement_identity = reset_snapshot.local_ignore.identity.clone();
+        match publisher.replace_if_unchanged(
+            &local_ignore_path,
+            &expected_bytes,
+            &replacement_bytes,
+        )? {
+            ConditionalReplacement::Replaced => {}
+            ConditionalReplacement::Conflict(actual_identity) => {
+                return Ok(LocalIgnoreResetOutcome::Conflict(
+                    LocalIgnoreResetConflict {
+                        expected_identity,
+                        actual_identity,
+                        backup_path: Some(backup_path),
+                    },
+                ));
+            }
+        }
+
+        reset_snapshot.diagnostics.push(InstalledYamlDataDiagnostic {
+            role: None,
+            candidate: None,
+            path: Some(local_ignore_path.clone()),
+            kind: InstalledYamlDataDiagnosticKind::LocalIgnoreReset,
+            message: format!(
+                "reset malformed Local Ignore YAML Data from retained selected Main defaults; byte-exact backup verified at {}",
+                backup_path.display()
+            ),
+        });
+        Ok(LocalIgnoreResetOutcome::Reset(LocalIgnoreResetResult {
+            snapshot: reset_snapshot,
+            local_ignore_path,
+            backup_path,
+            malformed_local_ignore_identity: expected_identity,
+            backup_identity,
+            replacement_identity,
+        }))
+    }
+}
+
+/// Build a process-unique backup name while retaining the malformed content identity in its stem.
+fn unique_local_ignore_backup_path(
+    directory: &Path,
+    identity: &YamlDataContentIdentity,
+) -> PathBuf {
+    let unix_nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
+    let sequence = LOCAL_IGNORE_BACKUP_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+    directory.join(format!(
+        "CLASSIC Ignore.yaml.{}.{}-{}-{}.bak",
+        identity.sha256_hex(),
+        unix_nanos,
+        std::process::id(),
+        sequence
+    ))
+}
+
+/// Acquire the config-owned installation lock held across conflict check, backup, and replacement.
+fn acquire_local_ignore_reset_lock(path: &Path) -> Result<File, LocalIgnoreResetError> {
+    let lock_parent = path
+        .parent()
+        .and_then(Path::parent)
+        .or_else(|| path.parent())
+        .unwrap_or_else(|| Path::new("."));
+    let lock_path = lock_parent.join(".classic-local-ignore-reset.lock");
+    let lock = OpenOptions::new()
+        .create(true)
+        .read(true)
+        .write(true)
+        .truncate(false)
+        .open(&lock_path)
+        .map_err(|source| LocalIgnoreResetError::Lock {
+            path: path.to_path_buf(),
+            source,
+        })?;
+    FileExt::lock_exclusive(&lock).map_err(|source| LocalIgnoreResetError::Lock {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    Ok(lock)
+}
+
+/// Create and durably record the config-owned backup directory hierarchy before publication.
+fn create_local_ignore_backup_directory(path: &Path) -> Result<(), LocalIgnoreResetError> {
+    std::fs::create_dir_all(path).map_err(|source| LocalIgnoreResetError::BackupDirectory {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    sync_local_ignore_backup_directory_chain(path)
+}
+
+/// Synchronize each installation-owned directory entry used by the backup path on Unix.
+#[cfg(unix)]
+fn sync_local_ignore_backup_directory_chain(path: &Path) -> Result<(), LocalIgnoreResetError> {
+    // The backup path is `<installation>/CLASSIC Backup/YAML Data/Local Ignore`; syncing from
+    // the installation root downward makes every newly created directory entry durable before
+    // the byte-exact backup itself is published.
+    let mut directories = path.ancestors().take(4).collect::<Vec<_>>();
+    directories.reverse();
+    for directory in directories {
+        let handle =
+            File::open(directory).map_err(|source| LocalIgnoreResetError::BackupDirectory {
+                path: directory.to_path_buf(),
+                source,
+            })?;
+        handle
+            .sync_all()
+            .map_err(|source| LocalIgnoreResetError::BackupDirectory {
+                path: directory.to_path_buf(),
+                source,
+            })?;
+    }
+    Ok(())
+}
+
+/// Windows journals directory creation metadata; std exposes no directory fsync handle.
+#[cfg(not(unix))]
+fn sync_local_ignore_backup_directory_chain(_path: &Path) -> Result<(), LocalIgnoreResetError> {
+    Ok(())
+}
+
+/// Read the canonical reset path while preserving removal as conflict data.
+fn read_reset_canonical(path: &Path) -> Result<Option<Vec<u8>>, LocalIgnoreResetError> {
+    match std::fs::read(path) {
+        Ok(bytes) => Ok(Some(bytes)),
+        Err(source) if source.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(source) => Err(LocalIgnoreResetError::Read {
+            path: path.to_path_buf(),
+            source,
+        }),
     }
 }
 
@@ -651,8 +1297,11 @@ where
         Ok(bytes) => (bytes, LocalIgnoreYamlDataState::Existing),
         Err(source) if source.kind() == std::io::ErrorKind::NotFound => {
             let defaults = validated_local_ignore_defaults(&selected, &ignore_path)?;
-            let generated =
-                publish_local_ignore_if_absent(local_ignore_io, &ignore_path, defaults.as_bytes())?;
+            let generated = publish_local_ignore_if_absent(
+                local_ignore_io,
+                &ignore_path,
+                defaults.content.as_bytes(),
+            )?;
             let bytes = local_ignore_io.read(&ignore_path).map_err(|source| {
                 InstalledYamlDataLoadError::LocalIgnoreRead {
                     path: ignore_path.clone(),
@@ -798,16 +1447,13 @@ fn local_ignore_recovery_required(
 ) -> Result<InstalledYamlDataLoadOutcome, InstalledYamlDataLoadError> {
     // Proceed Without Ignore never reads or publishes defaults. Preserve their validity state for
     // a later reset decision without turning this non-mutating recovery choice into a fatal load.
-    let default_local_ignore = match validate_local_ignore_defaults(&selected, &local_ignore_path) {
-        Ok(defaults) => {
-            let bytes = defaults.as_bytes().to_vec().into_boxed_slice();
-            OwnedLocalIgnoreDefaults::Valid {
-                identity: YamlDataContentIdentity::from_bytes(&bytes),
-                bytes,
-            }
-        }
-        Err(reason) => OwnedLocalIgnoreDefaults::Unavailable { reason },
-    };
+    let validated_defaults =
+        validate_local_ignore_defaults(&selected, &local_ignore_path).map(|defaults| {
+            (
+                defaults.content.as_bytes().to_vec().into_boxed_slice(),
+                defaults.yaml,
+            )
+        });
     selected.diagnostics.push(InstalledYamlDataDiagnostic {
         role: None,
         candidate: None,
@@ -815,6 +1461,22 @@ fn local_ignore_recovery_required(
         kind,
         message,
     });
+    let reset = match validated_defaults {
+        Ok((bytes, yaml)) => {
+            let local_ignore = OwnedLocalIgnoreYamlData {
+                identity: YamlDataContentIdentity::from_bytes(&bytes),
+                bytes,
+            };
+            PreparedLocalIgnoreReset::Ready(Box::new(build_installed_yaml_data_snapshot(
+                selected.clone(),
+                local_ignore,
+                LocalIgnoreYamlDataState::ResetToDefault,
+                &yaml,
+                &selected_game_version,
+            )?))
+        }
+        Err(reason) => PreparedLocalIgnoreReset::Unavailable { reason },
+    };
     let mut empty_ignore_mapping = yaml_rust2::yaml::Hash::new();
     empty_ignore_mapping.insert(
         Yaml::String(format!(
@@ -830,12 +1492,20 @@ fn local_ignore_recovery_required(
         &Yaml::Hash(empty_ignore_mapping),
         &selected_game_version,
     )?;
+    let backup_directory = local_ignore_path
+        .ancestors()
+        .nth(2)
+        .unwrap_or_else(|| local_ignore_path.parent().unwrap_or_else(|| Path::new(".")))
+        .join("CLASSIC Backup")
+        .join("YAML Data")
+        .join("Local Ignore");
 
     Ok(InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(
         LocalIgnoreRecoveryPlan {
             proceed_without_ignore_snapshot,
             local_ignore_path,
-            default_local_ignore,
+            backup_directory,
+            reset,
             selected_game_version,
         },
     ))
@@ -848,7 +1518,7 @@ fn local_ignore_recovery_required(
 fn validated_local_ignore_defaults<'a>(
     selected: &'a SelectedInstalledYamlData,
     ignore_path: &Path,
-) -> Result<&'a str, InstalledYamlDataLoadError> {
+) -> Result<ValidatedLocalIgnoreDefaults<'a>, InstalledYamlDataLoadError> {
     validate_local_ignore_defaults(selected, ignore_path).map_err(|reason| {
         InstalledYamlDataLoadError::LocalIgnoreDefaultInvalid {
             path: ignore_path.to_path_buf(),
@@ -858,10 +1528,16 @@ fn validated_local_ignore_defaults<'a>(
 }
 
 /// Validate selected-Main Local Ignore defaults without deciding how a caller classifies failure.
+struct ValidatedLocalIgnoreDefaults<'a> {
+    content: &'a str,
+    yaml: Yaml,
+}
+
+/// Validate selected-Main defaults and retain both their exact text and parsed document.
 fn validate_local_ignore_defaults<'a>(
     selected: &'a SelectedInstalledYamlData,
     ignore_path: &Path,
-) -> Result<&'a str, String> {
+) -> Result<ValidatedLocalIgnoreDefaults<'a>, String> {
     let defaults = selected
         .main
         .yaml
@@ -893,7 +1569,10 @@ fn validate_local_ignore_defaults<'a>(
     .map_err(|source| source.to_string())?;
     validate_ignore(&yaml, selected.game_data_role, ignore_path)
         .map_err(explicit_validation_reason)?;
-    Ok(defaults)
+    Ok(ValidatedLocalIgnoreDefaults {
+        content: defaults,
+        yaml,
+    })
 }
 
 /// Stage complete bytes beside `path`, then atomically publish them only if `path` is absent.

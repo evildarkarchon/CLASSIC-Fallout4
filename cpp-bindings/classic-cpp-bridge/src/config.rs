@@ -21,6 +21,11 @@ use classic_config_core::{
     InstalledYamlDataRole as CoreInstalledYamlDataRole,
     InstalledYamlDataSnapshot as CoreInstalledYamlDataSnapshot,
     LocalIgnoreRecoveryPlan as CoreLocalIgnoreRecoveryPlan,
+    LocalIgnoreResetConflict as CoreLocalIgnoreResetConflict,
+    LocalIgnoreResetError as CoreLocalIgnoreResetError,
+    LocalIgnoreResetOutcome as CoreLocalIgnoreResetOutcome,
+    LocalIgnoreResetPublicationStage as CoreLocalIgnoreResetPublicationStage,
+    LocalIgnoreResetResult as CoreLocalIgnoreResetResult,
     LocalIgnoreYamlDataState as CoreLocalIgnoreYamlDataState, MainYamlVersionError,
     ModSolutionCriteria, SuspectErrorRule as CoreSuspectErrorRule,
     SuspectStackCountRule as CoreSuspectStackCountRule, SuspectStackRule as CoreSuspectStackRule,
@@ -83,6 +88,21 @@ pub struct InstalledYamlDataSnapshot {
 /// Opaque immutable recovery proposal for malformed Local Ignore YAML Data.
 pub struct LocalIgnoreRecoveryPlan {
     inner: CoreLocalIgnoreRecoveryPlan,
+}
+
+/// Opaque result holder for one consuming Local Ignore reset operation.
+pub struct LocalIgnoreResetOperation {
+    result: Result<CoreLocalIgnoreResetOutcome, CoreLocalIgnoreResetError>,
+}
+
+/// Opaque successful Local Ignore reset metadata and retained snapshot.
+pub struct LocalIgnoreResetResult {
+    inner: CoreLocalIgnoreResetResult,
+}
+
+/// Opaque identity conflict returned when Local Ignore changed before reset.
+pub struct LocalIgnoreResetConflict {
+    inner: CoreLocalIgnoreResetConflict,
 }
 
 // ── Construction ────────────────────────────────────────────────────
@@ -399,6 +419,188 @@ fn local_ignore_recovery_plan_diagnostics(
         .collect()
 }
 
+/// Consume a recovery plan and run its synchronous non-interruptible reset critical section.
+///
+/// The returned operation always exists so C++ callers can inspect the typed Reset,
+/// Conflict, or Error status before consuming the corresponding payload.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn local_ignore_recovery_plan_reset_to_default(
+    plan: Box<LocalIgnoreRecoveryPlan>,
+) -> Box<LocalIgnoreResetOperation> {
+    Box::new(LocalIgnoreResetOperation {
+        result: plan.inner.reset_to_default(),
+    })
+}
+
+/// Return the Reset, Conflict, or Error status captured by a Local Ignore reset.
+fn local_ignore_reset_status(
+    operation: &LocalIgnoreResetOperation,
+) -> ffi::LocalIgnoreResetStatusDto {
+    match &operation.result {
+        Ok(CoreLocalIgnoreResetOutcome::Reset(_)) => ffi::LocalIgnoreResetStatusDto {
+            has_reset: true,
+            has_conflict: false,
+            has_error: false,
+            error: empty_local_ignore_reset_error(),
+        },
+        Ok(CoreLocalIgnoreResetOutcome::Conflict(_)) => ffi::LocalIgnoreResetStatusDto {
+            has_reset: false,
+            has_conflict: true,
+            has_error: false,
+            error: empty_local_ignore_reset_error(),
+        },
+        Err(error) => ffi::LocalIgnoreResetStatusDto {
+            has_reset: false,
+            has_conflict: false,
+            has_error: true,
+            error: local_ignore_reset_error_to_dto(error),
+        },
+    }
+}
+
+/// Consume a reset operation and return its successful durable reset payload.
+///
+/// Callers inspect [`local_ignore_reset_status`] first. This `Result` prevents a
+/// conflict or operational failure from being consumed as successful reset data.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn local_ignore_reset_take_result(
+    operation: Box<LocalIgnoreResetOperation>,
+) -> Result<Box<LocalIgnoreResetResult>, String> {
+    match operation.result {
+        Ok(CoreLocalIgnoreResetOutcome::Reset(inner)) => {
+            Ok(Box::new(LocalIgnoreResetResult { inner }))
+        }
+        Ok(CoreLocalIgnoreResetOutcome::Conflict(_)) => {
+            Err("Local Ignore reset detected a content identity conflict".to_string())
+        }
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Consume a reset operation and return its typed content identity conflict.
+///
+/// Callers inspect [`local_ignore_reset_status`] first. This `Result` prevents a
+/// successful reset or operational failure from being consumed as a conflict.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn local_ignore_reset_take_conflict(
+    operation: Box<LocalIgnoreResetOperation>,
+) -> Result<Box<LocalIgnoreResetConflict>, String> {
+    match operation.result {
+        Ok(CoreLocalIgnoreResetOutcome::Conflict(inner)) => {
+            Ok(Box::new(LocalIgnoreResetConflict { inner }))
+        }
+        Ok(CoreLocalIgnoreResetOutcome::Reset(_)) => {
+            Err("Local Ignore reset completed successfully".to_string())
+        }
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Return the canonical Local Ignore path replaced by a successful reset.
+fn local_ignore_reset_result_local_ignore_path(result: &LocalIgnoreResetResult) -> String {
+    result
+        .inner
+        .local_ignore_path()
+        .to_string_lossy()
+        .into_owned()
+}
+
+/// Return the durable byte-exact backup path verified by a successful reset.
+fn local_ignore_reset_result_backup_path(result: &LocalIgnoreResetResult) -> String {
+    result.inner.backup_path().to_string_lossy().into_owned()
+}
+
+/// Return the malformed identity against which the successful reset was approved.
+fn local_ignore_reset_result_malformed_local_ignore_identity(
+    result: &LocalIgnoreResetResult,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(result.inner.malformed_local_ignore_identity())
+}
+
+/// Return the identity independently verified from the durable backup bytes.
+fn local_ignore_reset_result_backup_identity(
+    result: &LocalIgnoreResetResult,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(result.inner.backup_identity())
+}
+
+/// Return the identity of the retained selected-Main defaults published as replacement.
+fn local_ignore_reset_result_replacement_identity(
+    result: &LocalIgnoreResetResult,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(result.inner.replacement_identity())
+}
+
+/// Return selection, malformed-file, and successful-reset diagnostics.
+fn local_ignore_reset_result_diagnostics(
+    result: &LocalIgnoreResetResult,
+) -> Vec<ffi::InstalledYamlDataDiagnosticDto> {
+    result
+        .inner
+        .diagnostics()
+        .iter()
+        .map(installed_yaml_data_diagnostic_to_dto)
+        .collect()
+}
+
+/// Consume successful reset metadata and return its retained Installed YAML Data snapshot.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn local_ignore_reset_result_take_snapshot(
+    result: Box<LocalIgnoreResetResult>,
+) -> Box<InstalledYamlDataSnapshot> {
+    Box::new(InstalledYamlDataSnapshot {
+        inner: result.inner.into_snapshot(),
+    })
+}
+
+/// Return the malformed-file identity against which reset was approved.
+fn local_ignore_reset_conflict_expected_identity(
+    conflict: &LocalIgnoreResetConflict,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(conflict.inner.expected_identity())
+}
+
+/// Report whether the reset conflict observed a current canonical file identity.
+fn local_ignore_reset_conflict_has_actual_identity(conflict: &LocalIgnoreResetConflict) -> bool {
+    conflict.inner.actual_identity().is_some()
+}
+
+/// Return the current canonical identity captured by a reset conflict.
+///
+/// CXX does not bridge `Option<YamlDataContentIdentityDto>`, so callers inspect
+/// [`local_ignore_reset_conflict_has_actual_identity`] first. A removed canonical file
+/// projects as an empty DTO.
+fn local_ignore_reset_conflict_actual_identity(
+    conflict: &LocalIgnoreResetConflict,
+) -> ffi::YamlDataContentIdentityDto {
+    conflict
+        .inner
+        .actual_identity()
+        .map(content_identity_to_dto)
+        .unwrap_or_else(empty_content_identity)
+}
+
+/// Report whether a verified byte-exact backup was retained before a late conflict.
+fn local_ignore_reset_conflict_has_backup_path(conflict: &LocalIgnoreResetConflict) -> bool {
+    conflict.inner.backup_path().is_some()
+}
+
+/// Return the verified backup retained before a late reset conflict.
+///
+/// Callers inspect [`local_ignore_reset_conflict_has_backup_path`] first. A conflict
+/// detected before backup publication projects as an empty string.
+fn local_ignore_reset_conflict_backup_path(conflict: &LocalIgnoreResetConflict) -> String {
+    conflict
+        .inner
+        .backup_path()
+        .map(|path| path.to_string_lossy().into_owned())
+        .unwrap_or_default()
+}
+
 /// Consume a recovery plan and complete the retained operation with no ignore entries.
 ///
 /// The returned snapshot retains the plan's exact Main, game, and malformed Local Ignore
@@ -459,6 +661,9 @@ fn installed_yaml_data_snapshot_local_ignore_state(
         CoreLocalIgnoreYamlDataState::Generated => ffi::LocalIgnoreYamlDataState::Generated,
         CoreLocalIgnoreYamlDataState::ProceedWithoutIgnore => {
             ffi::LocalIgnoreYamlDataState::ProceedWithoutIgnore
+        }
+        CoreLocalIgnoreYamlDataState::ResetToDefault => {
+            ffi::LocalIgnoreYamlDataState::ResetToDefault
         }
     }
 }
@@ -649,6 +854,91 @@ fn content_identity_to_dto(identity: &YamlDataContentIdentity) -> ffi::YamlDataC
     }
 }
 
+/// Return the sentinel content identity used when an optional identity is absent.
+fn empty_content_identity() -> ffi::YamlDataContentIdentityDto {
+    ffi::YamlDataContentIdentityDto {
+        sha256: String::new(),
+        byte_len: 0,
+    }
+}
+
+/// Convert a durable Local Ignore publication boundary to its stable CXX projection.
+fn local_ignore_reset_publication_stage_to_ffi(
+    stage: CoreLocalIgnoreResetPublicationStage,
+) -> ffi::LocalIgnoreResetPublicationStage {
+    match stage {
+        CoreLocalIgnoreResetPublicationStage::Create => {
+            ffi::LocalIgnoreResetPublicationStage::Create
+        }
+        CoreLocalIgnoreResetPublicationStage::Write => ffi::LocalIgnoreResetPublicationStage::Write,
+        CoreLocalIgnoreResetPublicationStage::Flush => ffi::LocalIgnoreResetPublicationStage::Flush,
+        CoreLocalIgnoreResetPublicationStage::Sync => ffi::LocalIgnoreResetPublicationStage::Sync,
+        CoreLocalIgnoreResetPublicationStage::Publish => {
+            ffi::LocalIgnoreResetPublicationStage::Publish
+        }
+    }
+}
+
+/// Convert one core Local Ignore reset failure into its typed CXX error DTO.
+fn local_ignore_reset_error_to_dto(
+    error: &CoreLocalIgnoreResetError,
+) -> ffi::LocalIgnoreResetErrorDto {
+    let (kind, path, stage) = match error {
+        CoreLocalIgnoreResetError::DefaultsUnavailable { path, .. } => (
+            ffi::LocalIgnoreResetErrorKind::DefaultsUnavailable,
+            path,
+            None,
+        ),
+        CoreLocalIgnoreResetError::Lock { path, .. } => {
+            (ffi::LocalIgnoreResetErrorKind::Lock, path, None)
+        }
+        CoreLocalIgnoreResetError::Read { path, .. } => {
+            (ffi::LocalIgnoreResetErrorKind::Read, path, None)
+        }
+        CoreLocalIgnoreResetError::BackupDirectory { path, .. } => {
+            (ffi::LocalIgnoreResetErrorKind::BackupDirectory, path, None)
+        }
+        CoreLocalIgnoreResetError::BackupPublication { path, stage, .. } => (
+            ffi::LocalIgnoreResetErrorKind::BackupPublication,
+            path,
+            Some(*stage),
+        ),
+        CoreLocalIgnoreResetError::BackupVerification { path, .. } => (
+            ffi::LocalIgnoreResetErrorKind::BackupVerification,
+            path,
+            None,
+        ),
+        CoreLocalIgnoreResetError::ReplacementPublication { path, stage, .. } => (
+            ffi::LocalIgnoreResetErrorKind::ReplacementPublication,
+            path,
+            Some(*stage),
+        ),
+    };
+    ffi::LocalIgnoreResetErrorDto {
+        kind,
+        has_path: true,
+        path: path.to_string_lossy().into_owned(),
+        has_stage: stage.is_some(),
+        stage: stage
+            .map(local_ignore_reset_publication_stage_to_ffi)
+            .unwrap_or(ffi::LocalIgnoreResetPublicationStage::Create),
+        message: error.to_string(),
+    }
+}
+
+/// Return the placeholder nested error used when reset `has_error` is false.
+fn empty_local_ignore_reset_error() -> ffi::LocalIgnoreResetErrorDto {
+    // CXX shared structs cannot omit nested records; `has_error` is authoritative.
+    ffi::LocalIgnoreResetErrorDto {
+        kind: ffi::LocalIgnoreResetErrorKind::DefaultsUnavailable,
+        has_path: false,
+        path: String::new(),
+        has_stage: false,
+        stage: ffi::LocalIgnoreResetPublicationStage::Create,
+        message: String::new(),
+    }
+}
+
 /// Convert a core Installed YAML Data role to its CXX projection.
 fn installed_yaml_data_role_to_ffi(role: CoreInstalledYamlDataRole) -> ffi::InstalledYamlDataRole {
     match role {
@@ -705,6 +995,9 @@ fn installed_yaml_data_diagnostic_kind_to_ffi(
         }
         CoreInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated => {
             ffi::InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
+        }
+        CoreInstalledYamlDataDiagnosticKind::LocalIgnoreReset => {
+            ffi::InstalledYamlDataDiagnosticKind::LocalIgnoreReset
         }
     }
 }
@@ -1385,6 +1678,8 @@ mod ffi {
         InvalidRoleData = 7,
         /// Missing Local Ignore YAML Data was generated from selected Main defaults.
         LocalIgnoreGenerated = 8,
+        /// Malformed Local Ignore YAML Data was reset from retained selected-Main defaults.
+        LocalIgnoreReset = 9,
     }
 
     /// Stable typed category of an Installed YAML Data inspection failure.
@@ -1427,6 +1722,32 @@ mod ffi {
         Generated = 1,
         /// Malformed Local Ignore bytes were ignored for this operation without changing them.
         ProceedWithoutIgnore = 2,
+        /// Malformed Local Ignore bytes were backed up and reset from retained defaults.
+        ResetToDefault = 3,
+    }
+
+    /// Stable typed category of a Local Ignore reset operational failure.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum LocalIgnoreResetErrorKind {
+        DefaultsUnavailable = 0,
+        Lock = 1,
+        Read = 2,
+        BackupDirectory = 3,
+        BackupPublication = 4,
+        BackupVerification = 5,
+        ReplacementPublication = 6,
+    }
+
+    /// Durable publication boundary attributed by a Local Ignore reset failure.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum LocalIgnoreResetPublicationStage {
+        Create = 0,
+        Write = 1,
+        Flush = 2,
+        Sync = 3,
+        Publish = 4,
     }
 
     /// Exact caller-selected paths for deterministic YAML Data loading.
@@ -1515,6 +1836,24 @@ mod ffi {
         error: InstalledYamlDataLoadErrorDto,
     }
 
+    /// Typed Local Ignore reset failure with path and optional publication-stage context.
+    struct LocalIgnoreResetErrorDto {
+        kind: LocalIgnoreResetErrorKind,
+        has_path: bool,
+        path: String,
+        has_stage: bool,
+        stage: LocalIgnoreResetPublicationStage,
+        message: String,
+    }
+
+    /// Exactly one of `has_reset`, `has_conflict`, and `has_error` is true.
+    struct LocalIgnoreResetStatusDto {
+        has_reset: bool,
+        has_conflict: bool,
+        has_error: bool,
+        error: LocalIgnoreResetErrorDto,
+    }
+
     struct CacheStats {
         hits: u64,
         misses: u64,
@@ -1600,6 +1939,9 @@ mod ffi {
         type InstalledYamlDataLoadOperation;
         type InstalledYamlDataSnapshot;
         type LocalIgnoreRecoveryPlan;
+        type LocalIgnoreResetOperation;
+        type LocalIgnoreResetResult;
+        type LocalIgnoreResetConflict;
 
         // Construction (async, block_on)
         fn yaml_data_load(
@@ -1721,6 +2063,63 @@ mod ffi {
         fn local_ignore_recovery_plan_diagnostics(
             plan: &LocalIgnoreRecoveryPlan,
         ) -> Vec<InstalledYamlDataDiagnosticDto>;
+        /// Consume the plan and run its non-interruptible durable reset critical section.
+        fn local_ignore_recovery_plan_reset_to_default(
+            plan: Box<LocalIgnoreRecoveryPlan>,
+        ) -> Box<LocalIgnoreResetOperation>;
+        /// Inspect typed Reset, Conflict, or Error status before consuming the operation.
+        fn local_ignore_reset_status(
+            operation: &LocalIgnoreResetOperation,
+        ) -> LocalIgnoreResetStatusDto;
+        /// Consume an operation that completed with a successful durable reset.
+        fn local_ignore_reset_take_result(
+            operation: Box<LocalIgnoreResetOperation>,
+        ) -> Result<Box<LocalIgnoreResetResult>>;
+        /// Consume an operation that stopped at a content identity conflict.
+        fn local_ignore_reset_take_conflict(
+            operation: Box<LocalIgnoreResetOperation>,
+        ) -> Result<Box<LocalIgnoreResetConflict>>;
+        /// Return the canonical Local Ignore path replaced by a successful reset.
+        fn local_ignore_reset_result_local_ignore_path(result: &LocalIgnoreResetResult) -> String;
+        /// Return the verified durable byte-exact backup path.
+        fn local_ignore_reset_result_backup_path(result: &LocalIgnoreResetResult) -> String;
+        /// Return the malformed identity against which reset was approved.
+        fn local_ignore_reset_result_malformed_local_ignore_identity(
+            result: &LocalIgnoreResetResult,
+        ) -> YamlDataContentIdentityDto;
+        /// Return the independently verified backup identity.
+        fn local_ignore_reset_result_backup_identity(
+            result: &LocalIgnoreResetResult,
+        ) -> YamlDataContentIdentityDto;
+        /// Return the retained-default identity published as replacement.
+        fn local_ignore_reset_result_replacement_identity(
+            result: &LocalIgnoreResetResult,
+        ) -> YamlDataContentIdentityDto;
+        /// Return selection, malformed-file, and successful-reset diagnostics.
+        fn local_ignore_reset_result_diagnostics(
+            result: &LocalIgnoreResetResult,
+        ) -> Vec<InstalledYamlDataDiagnosticDto>;
+        /// Consume successful reset metadata and return its retained ready snapshot.
+        fn local_ignore_reset_result_take_snapshot(
+            result: Box<LocalIgnoreResetResult>,
+        ) -> Box<InstalledYamlDataSnapshot>;
+        /// Return the malformed identity against which reset was approved.
+        fn local_ignore_reset_conflict_expected_identity(
+            conflict: &LocalIgnoreResetConflict,
+        ) -> YamlDataContentIdentityDto;
+        /// Report whether the conflict observed a current canonical file identity.
+        fn local_ignore_reset_conflict_has_actual_identity(
+            conflict: &LocalIgnoreResetConflict,
+        ) -> bool;
+        /// Return the current canonical identity, or an empty DTO when the file was removed.
+        fn local_ignore_reset_conflict_actual_identity(
+            conflict: &LocalIgnoreResetConflict,
+        ) -> YamlDataContentIdentityDto;
+        /// Report whether a verified backup was retained before a late conflict.
+        fn local_ignore_reset_conflict_has_backup_path(conflict: &LocalIgnoreResetConflict)
+        -> bool;
+        /// Return a late-conflict backup path, or an empty string when none was published.
+        fn local_ignore_reset_conflict_backup_path(conflict: &LocalIgnoreResetConflict) -> String;
         /// Complete the retained operation with no ignore entries and no filesystem writes.
         fn local_ignore_recovery_plan_proceed_without_ignore(
             plan: Box<LocalIgnoreRecoveryPlan>,

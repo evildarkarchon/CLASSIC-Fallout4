@@ -567,6 +567,270 @@ fn installed_yaml_data_load_bridge_recovers_from_malformed_ignore_without_valid_
 }
 
 #[test]
+/// The consuming reset bridge exposes durable success metadata and its retained snapshot.
+fn local_ignore_reset_bridge_projects_success_metadata_and_snapshot() {
+    let installation = tempdir().expect("create successful reset bridge fixture directory");
+    write_installed_bridge_fixtures(installation.path());
+    let data = installation.path().join("CLASSIC Data");
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: not-a-sequence\r\n";
+    let replacement = b"CLASSIC_Ignore_Fallout4:\n  - GeneratedBridgeEntry.dll\n";
+    std::fs::write(
+        data.join("databases").join("CLASSIC Main.yaml"),
+        INSTALLED_GENERATING_MAIN_YAML,
+    )
+    .expect("write Main fixture with reset defaults");
+    std::fs::write(&ignore_path, malformed_ignore).expect("write malformed Local Ignore fixture");
+
+    let operation = load_installed_without_cache(
+        installation.path(),
+        ffi::ExplicitYamlDataGameId::Fallout4,
+        "Original",
+    );
+    let plan = installed_yaml_data_load_take_recovery_plan(operation)
+        .expect("take reset-ready recovery plan");
+    let malformed_identity = local_ignore_recovery_plan_malformed_local_ignore_identity(&plan);
+    let replacement_identity = local_ignore_recovery_plan_default_local_ignore_identity(&plan);
+
+    let reset = local_ignore_recovery_plan_reset_to_default(plan);
+    let status = local_ignore_reset_status(&reset);
+    assert!(status.has_reset);
+    assert!(!status.has_conflict);
+    assert!(!status.has_error);
+
+    let result = local_ignore_reset_take_result(reset).expect("take successful reset result");
+    assert_eq!(
+        local_ignore_reset_result_local_ignore_path(&result),
+        ignore_path.to_string_lossy()
+    );
+    let backup_path = local_ignore_reset_result_backup_path(&result);
+    assert_eq!(
+        std::fs::read(&backup_path).expect("read durable reset backup"),
+        malformed_ignore
+    );
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("read reset Local Ignore"),
+        replacement
+    );
+    assert_eq!(
+        local_ignore_reset_result_malformed_local_ignore_identity(&result).sha256,
+        malformed_identity.sha256
+    );
+    assert_eq!(
+        local_ignore_reset_result_backup_identity(&result).sha256,
+        malformed_identity.sha256
+    );
+    assert_eq!(
+        local_ignore_reset_result_replacement_identity(&result).sha256,
+        replacement_identity.sha256
+    );
+    assert!(
+        local_ignore_reset_result_diagnostics(&result)
+            .iter()
+            .any(|diagnostic| {
+                diagnostic.kind == ffi::InstalledYamlDataDiagnosticKind::LocalIgnoreReset
+                    && diagnostic.has_path
+                    && diagnostic.path == ignore_path.to_string_lossy()
+            })
+    );
+
+    let snapshot = local_ignore_reset_result_take_snapshot(result);
+    assert_eq!(
+        installed_yaml_data_snapshot_local_ignore_state(&snapshot),
+        ffi::LocalIgnoreYamlDataState::ResetToDefault
+    );
+    assert_eq!(
+        installed_yaml_data_snapshot_local_ignore_identity(&snapshot).sha256,
+        replacement_identity.sha256
+    );
+    assert_eq!(
+        yaml_data_ignore_list(&installed_yaml_data_snapshot_yaml_data(&snapshot)),
+        vec!["GeneratedBridgeEntry.dll".to_string()]
+    );
+}
+
+#[test]
+/// The reset bridge preserves typed identity conflict data without overwriting newer bytes.
+fn local_ignore_reset_bridge_projects_conflict_identities_and_optional_backup() {
+    let installation = tempdir().expect("create reset conflict bridge fixture directory");
+    write_installed_bridge_fixtures(installation.path());
+    let data = installation.path().join("CLASSIC Data");
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: not-a-sequence\r\n";
+    let changed_ignore = b"changed while the caller was deciding";
+    std::fs::write(
+        data.join("databases").join("CLASSIC Main.yaml"),
+        INSTALLED_GENERATING_MAIN_YAML,
+    )
+    .expect("write Main fixture with reset defaults");
+    std::fs::write(&ignore_path, malformed_ignore).expect("write malformed Local Ignore fixture");
+
+    let operation = load_installed_without_cache(
+        installation.path(),
+        ffi::ExplicitYamlDataGameId::Fallout4,
+        "Original",
+    );
+    let plan = installed_yaml_data_load_take_recovery_plan(operation)
+        .expect("take conflict-tested recovery plan");
+    let expected = local_ignore_recovery_plan_malformed_local_ignore_identity(&plan);
+    std::fs::write(&ignore_path, changed_ignore).expect("replace Local Ignore before reset");
+
+    let reset = local_ignore_recovery_plan_reset_to_default(plan);
+    let status = local_ignore_reset_status(&reset);
+    assert!(!status.has_reset);
+    assert!(status.has_conflict);
+    assert!(!status.has_error);
+
+    let conflict = local_ignore_reset_take_conflict(reset).expect("take typed reset conflict");
+    assert_eq!(
+        local_ignore_reset_conflict_expected_identity(&conflict).sha256,
+        expected.sha256
+    );
+    assert!(local_ignore_reset_conflict_has_actual_identity(&conflict));
+    let actual = local_ignore_reset_conflict_actual_identity(&conflict);
+    assert_eq!(actual.byte_len, changed_ignore.len() as u64);
+    assert_ne!(actual.sha256, expected.sha256);
+    assert!(!local_ignore_reset_conflict_has_backup_path(&conflict));
+    assert!(local_ignore_reset_conflict_backup_path(&conflict).is_empty());
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("read conflict-preserved Local Ignore"),
+        changed_ignore
+    );
+}
+
+#[test]
+/// The reset bridge keeps every core error kind and durable publication stage typed.
+fn local_ignore_reset_bridge_maps_every_error_kind_and_publication_stage() {
+    let path = std::path::PathBuf::from("isolated/CLASSIC Ignore.yaml");
+    let io_error = || std::io::Error::other("reset fixture");
+    let errors = [
+        CoreLocalIgnoreResetError::DefaultsUnavailable {
+            path: path.clone(),
+            reason: "defaults fixture".to_string(),
+        },
+        CoreLocalIgnoreResetError::Lock {
+            path: path.clone(),
+            source: io_error(),
+        },
+        CoreLocalIgnoreResetError::Read {
+            path: path.clone(),
+            source: io_error(),
+        },
+        CoreLocalIgnoreResetError::BackupDirectory {
+            path: path.clone(),
+            source: io_error(),
+        },
+        CoreLocalIgnoreResetError::BackupVerification {
+            path: path.clone(),
+            reason: "verification fixture".to_string(),
+        },
+        CoreLocalIgnoreResetError::BackupPublication {
+            path: path.clone(),
+            stage: CoreLocalIgnoreResetPublicationStage::Create,
+            source: io_error(),
+        },
+        CoreLocalIgnoreResetError::BackupPublication {
+            path: path.clone(),
+            stage: CoreLocalIgnoreResetPublicationStage::Write,
+            source: io_error(),
+        },
+        CoreLocalIgnoreResetError::ReplacementPublication {
+            path: path.clone(),
+            stage: CoreLocalIgnoreResetPublicationStage::Flush,
+            source: io_error(),
+        },
+        CoreLocalIgnoreResetError::ReplacementPublication {
+            path: path.clone(),
+            stage: CoreLocalIgnoreResetPublicationStage::Sync,
+            source: io_error(),
+        },
+        CoreLocalIgnoreResetError::ReplacementPublication {
+            path,
+            stage: CoreLocalIgnoreResetPublicationStage::Publish,
+            source: io_error(),
+        },
+    ];
+    let dtos = errors
+        .iter()
+        .map(local_ignore_reset_error_to_dto)
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        dtos[..5].iter().map(|error| error.kind).collect::<Vec<_>>(),
+        vec![
+            ffi::LocalIgnoreResetErrorKind::DefaultsUnavailable,
+            ffi::LocalIgnoreResetErrorKind::Lock,
+            ffi::LocalIgnoreResetErrorKind::Read,
+            ffi::LocalIgnoreResetErrorKind::BackupDirectory,
+            ffi::LocalIgnoreResetErrorKind::BackupVerification,
+        ]
+    );
+    assert!(
+        dtos[..5]
+            .iter()
+            .all(|error| error.has_path && !error.has_stage && !error.message.is_empty())
+    );
+    assert_eq!(
+        dtos[5..]
+            .iter()
+            .map(|error| error.stage)
+            .collect::<Vec<_>>(),
+        vec![
+            ffi::LocalIgnoreResetPublicationStage::Create,
+            ffi::LocalIgnoreResetPublicationStage::Write,
+            ffi::LocalIgnoreResetPublicationStage::Flush,
+            ffi::LocalIgnoreResetPublicationStage::Sync,
+            ffi::LocalIgnoreResetPublicationStage::Publish,
+        ]
+    );
+    assert_eq!(
+        dtos[5..].iter().map(|error| error.kind).collect::<Vec<_>>(),
+        vec![
+            ffi::LocalIgnoreResetErrorKind::BackupPublication,
+            ffi::LocalIgnoreResetErrorKind::BackupPublication,
+            ffi::LocalIgnoreResetErrorKind::ReplacementPublication,
+            ffi::LocalIgnoreResetErrorKind::ReplacementPublication,
+            ffi::LocalIgnoreResetErrorKind::ReplacementPublication,
+        ]
+    );
+    assert!(dtos[5..].iter().all(|error| error.has_stage));
+}
+
+#[test]
+/// An unavailable retained default is exposed through the operation's typed error status.
+fn local_ignore_reset_bridge_projects_defaults_unavailable_status() {
+    let installation = tempdir().expect("create unavailable-default reset fixture directory");
+    write_installed_bridge_fixtures(installation.path());
+    let ignore_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+    std::fs::write(&ignore_path, b"CLASSIC_Ignore_Fallout4: not-a-sequence\r\n")
+        .expect("write malformed Local Ignore fixture");
+
+    let operation = load_installed_without_cache(
+        installation.path(),
+        ffi::ExplicitYamlDataGameId::Fallout4,
+        "Original",
+    );
+    let plan = installed_yaml_data_load_take_recovery_plan(operation)
+        .expect("take recovery plan without defaults");
+    let reset = local_ignore_recovery_plan_reset_to_default(plan);
+    let status = local_ignore_reset_status(&reset);
+    assert!(!status.has_reset);
+    assert!(!status.has_conflict);
+    assert!(status.has_error);
+    assert_eq!(
+        status.error.kind,
+        ffi::LocalIgnoreResetErrorKind::DefaultsUnavailable
+    );
+    assert!(status.error.has_path);
+    assert_eq!(status.error.path, ignore_path.to_string_lossy());
+    assert!(!status.error.has_stage);
+    assert!(!status.error.message.is_empty());
+}
+
+#[test]
 fn installed_yaml_data_load_bridge_preserves_typed_terminal_context() {
     let unsupported_root = tempdir().expect("create unsupported-game load root");
     let unsupported = load_installed_without_cache(

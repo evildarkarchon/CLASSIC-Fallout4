@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-07-19T01:49:13.818086+00:00",
+  "generated_at_utc": "2026-07-19T02:48:53.693299+00:00",
   "summary": {
-    "tier1_contract_total": 908,
-    "tier1_matched": 908,
+    "tier1_contract_total": 913,
+    "tier1_matched": 913,
     "tier1_missing_rust": 0,
     "tier1_missing_node": 0,
     "tier1_signature_mismatch": 0,
@@ -11811,6 +11811,71 @@
       "status": "matched",
       "expected_node_kind": null,
       "actual_node_kind": null,
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.local-ignore-reset-conflict-type",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "LocalIgnoreResetConflict",
+      "node_export": "JsLocalIgnoreResetConflict",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.local-ignore-reset-outcome-type",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "LocalIgnoreResetOutcome",
+      "node_export": "JsLocalIgnoreResetOutcome",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.local-ignore-reset-publication-stage-type",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "LocalIgnoreResetPublicationStage",
+      "node_export": "JsLocalIgnoreResetPublicationStage",
+      "status": "matched",
+      "expected_node_kind": "const_enum",
+      "actual_node_kind": "const_enum",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.local-ignore-reset-result-type",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "LocalIgnoreResetResult",
+      "node_export": "JsLocalIgnoreResetResult",
+      "status": "matched",
+      "expected_node_kind": "interface",
+      "actual_node_kind": "interface",
+      "expected_node_arity": null,
+      "actual_node_arity": null
+    },
+    {
+      "id": "config.local-ignore-reset-status-type",
+      "tier": "tier1",
+      "owner_module": "config",
+      "squad": "Squad A (scanlog/config)",
+      "rust_symbol": "LocalIgnoreResetOutcome",
+      "node_export": "JsLocalIgnoreResetStatus",
+      "status": "matched",
+      "expected_node_kind": "const_enum",
+      "actual_node_kind": "const_enum",
       "expected_node_arity": null,
       "actual_node_arity": null
     }

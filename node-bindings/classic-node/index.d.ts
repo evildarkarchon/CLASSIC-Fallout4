@@ -1255,8 +1255,8 @@ export declare class LocalIgnoreRecoveryPlan {
   /**
    * Returns the identity of validated selected-Main defaults, or `null` when unavailable.
    *
-   * Missing or invalid defaults do not block proceeding because malformed installed Local
-   * Ignore bytes are never replaced during this recovery operation.
+   * Missing or invalid defaults do not block `proceedWithoutIgnore`; `resetToDefault` instead
+   * rejects with `defaults_unavailable` because replacement requires validated defaults.
    */
   get defaultLocalIgnoreIdentity(): JsYamlDataContentIdentity | null
   /** Returns the Version Registry selection mode retained for the interrupted operation. */
@@ -1270,6 +1270,18 @@ export declare class LocalIgnoreRecoveryPlan {
    * `local_ignore_recovery_plan_consumed` error code instead of re-running the operation.
    */
   proceedWithoutIgnore(): InstalledYamlDataSnapshot
+  /**
+   * Durably backs up malformed bytes and resets Local Ignore from retained defaults.
+   *
+   * This decision consumes the plan before scheduling work. Blocking core reset runs on the
+   * N-API worker pool as one non-interruptible atomic critical section; typed conflicts resolve
+   * as data, while operational failures reject with stable `code`, `yamlRole`, `path`, optional
+   * `stage`, and human-readable `reason` metadata.
+   *
+   * Reusing the JavaScript plan throws `local_ignore_recovery_plan_consumed` without scheduling
+   * another reset.
+   */
+  resetToDefault(): Promise<JsLocalIgnoreResetOutcome>
 }
 
 /** Immutable Node handle over validated aggregate Mod Guidance configuration. */
@@ -3726,7 +3738,9 @@ export declare const enum JsInstalledYamlDataDiagnosticKind {
   /** A candidate failed role-specific semantic validation. */
   InvalidRoleData = 'InvalidRoleData',
   /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
-  LocalIgnoreGenerated = 'LocalIgnoreGenerated'
+  LocalIgnoreGenerated = 'LocalIgnoreGenerated',
+  /** Malformed Local Ignore YAML Data was reset from retained selected-Main defaults. */
+  LocalIgnoreReset = 'LocalIgnoreReset'
 }
 
 /** Registered game-data role selected for Installed YAML Data. */
@@ -3877,6 +3891,66 @@ export interface JsLegacyTuiStateImportRestoreOutcome {
   actualRevision?: string
 }
 
+/** Identity mismatch that prevented a Local Ignore reset from overwriting newer state. */
+export interface JsLocalIgnoreResetConflict {
+  /** Malformed-file identity against which the caller approved reset. */
+  expectedIdentity: JsYamlDataContentIdentity
+  /** Current canonical identity, absent when the file was removed. */
+  actualIdentity?: JsYamlDataContentIdentity
+  /** Verified backup retained before a late conflict, when one was published. */
+  backupPath?: string
+}
+
+/** Typed Local Ignore reset outcome with exactly one status-selected payload. */
+export interface JsLocalIgnoreResetOutcome {
+  /** Stable expected-outcome discriminator. */
+  status: JsLocalIgnoreResetStatus
+  /** Successful reset metadata and snapshot, populated only for `reset`. */
+  reset?: JsLocalIgnoreResetResult
+  /** Conflict identities, populated only for `conflict`. */
+  conflict?: JsLocalIgnoreResetConflict
+}
+
+/** Durable publication boundary attributed by a Local Ignore reset failure. */
+export declare const enum JsLocalIgnoreResetPublicationStage {
+  /** A same-directory staging file could not be created. */
+  Create = 'Create',
+  /** Complete bytes could not be written to the staging file. */
+  Write = 'Write',
+  /** Buffered staging bytes could not be flushed. */
+  Flush = 'Flush',
+  /** Staging bytes could not be synchronized to durable storage. */
+  Sync = 'Sync',
+  /** The fully synchronized staging file could not be atomically published. */
+  Publish = 'Publish'
+}
+
+/** Successful durable Local Ignore reset and its retained Installed YAML Data snapshot. */
+export interface JsLocalIgnoreResetResult {
+  /** Reset-ready snapshot built from the retained Main, game, and default bytes. */
+  snapshot: InstalledYamlDataSnapshot
+  /** Canonical Local Ignore path that was reset. */
+  localIgnorePath: string
+  /** Durable byte-exact backup path verified before replacement. */
+  backupPath: string
+  /** Identity observed when the recovery plan retained the malformed bytes. */
+  malformedLocalIgnoreIdentity: JsYamlDataContentIdentity
+  /** Identity independently verified from the durable backup bytes. */
+  backupIdentity: JsYamlDataContentIdentity
+  /** Identity of retained selected-Main defaults published as the replacement. */
+  replacementIdentity: JsYamlDataContentIdentity
+  /** Selection, malformed-file, and successful-reset diagnostics. */
+  diagnostics: Array<JsInstalledYamlDataDiagnostic>
+}
+
+/** Expected outcome of resetting malformed Local Ignore YAML Data. */
+export declare const enum JsLocalIgnoreResetStatus {
+  /** The retained malformed bytes were backed up and defaults became authoritative. */
+  Reset = 'Reset',
+  /** The canonical file changed after the recovery plan was created. */
+  Conflict = 'Conflict'
+}
+
 /** How Local Ignore YAML Data entered an installed snapshot. */
 export declare const enum JsLocalIgnoreYamlDataState {
   /** A valid user-owned Local Ignore file already existed. */
@@ -3884,7 +3958,9 @@ export declare const enum JsLocalIgnoreYamlDataState {
   /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
   Generated = 'Generated',
   /** The current operation explicitly proceeded with no Local Ignore entries. */
-  ProceedWithoutIgnore = 'ProceedWithoutIgnore'
+  ProceedWithoutIgnore = 'ProceedWithoutIgnore',
+  /** Malformed Local Ignore YAML Data was reset from retained selected-Main defaults. */
+  ResetToDefault = 'ResetToDefault'
 }
 
 /** Log error entry detected during scanning. */

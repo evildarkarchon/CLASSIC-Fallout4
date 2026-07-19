@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T01:49:13.815009+00:00",
+  "generated_at_utc": "2026-07-19T02:48:53.690441+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -1043,6 +1043,46 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsLegacyTuiStateImportRestoreOutcome {"
+    },
+    {
+      "export": "JsLocalIgnoreResetConflict",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsLocalIgnoreResetConflict {"
+    },
+    {
+      "export": "JsLocalIgnoreResetOutcome",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsLocalIgnoreResetOutcome {"
+    },
+    {
+      "export": "JsLocalIgnoreResetPublicationStage",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsLocalIgnoreResetPublicationStage {"
+    },
+    {
+      "export": "JsLocalIgnoreResetResult",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsLocalIgnoreResetResult {"
+    },
+    {
+      "export": "JsLocalIgnoreResetStatus",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsLocalIgnoreResetStatus {"
     },
     {
       "export": "JsLocalIgnoreYamlDataState",

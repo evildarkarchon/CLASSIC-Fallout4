@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T01:49:10Z",
+  "generated_at_utc": "2026-07-19T02:28:45Z",
   "schema_version": 1,
   "entries": [
     {
@@ -71,7 +71,8 @@
         "InvalidSchema",
         "IncompatibleSchema",
         "InvalidRoleData",
-        "LocalIgnoreGenerated"
+        "LocalIgnoreGenerated",
+        "LocalIgnoreReset"
       ]
     },
     {
@@ -152,6 +153,38 @@
       ]
     },
     {
+      "id": "467825b86f31980c",
+      "rustSymbol": "LocalIgnoreResetErrorKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "DefaultsUnavailable",
+        "Lock",
+        "Read",
+        "BackupDirectory",
+        "BackupPublication",
+        "BackupVerification",
+        "ReplacementPublication"
+      ]
+    },
+    {
+      "id": "45a481c1f7080f80",
+      "rustSymbol": "LocalIgnoreResetPublicationStage",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Create",
+        "Write",
+        "Flush",
+        "Sync",
+        "Publish"
+      ]
+    },
+    {
       "id": "30c322625eae2fc6",
       "rustSymbol": "LocalIgnoreYamlDataState",
       "kind": "enum",
@@ -161,7 +194,8 @@
       "variants": [
         "Existing",
         "Generated",
-        "ProceedWithoutIgnore"
+        "ProceedWithoutIgnore",
+        "ResetToDefault"
       ]
     },
     {
@@ -879,6 +913,23 @@
       }
     },
     {
+      "id": "bbb8ff75577dc70c",
+      "rustSymbol": "local_ignore_recovery_plan_reset_to_default",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "plan",
+            "type": "Box<LocalIgnoreRecoveryPlan>"
+          }
+        ],
+        "returnType": "Box<LocalIgnoreResetOperation>"
+      }
+    },
+    {
       "id": "0652d87cbbbad64b",
       "rustSymbol": "local_ignore_recovery_plan_selected_game_version",
       "kind": "function",
@@ -893,6 +944,261 @@
           }
         ],
         "returnType": "String"
+      }
+    },
+    {
+      "id": "66951d1fda4db345",
+      "rustSymbol": "local_ignore_reset_conflict_actual_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "conflict",
+            "type": "&LocalIgnoreResetConflict"
+          }
+        ],
+        "returnType": "YamlDataContentIdentityDto"
+      }
+    },
+    {
+      "id": "05ba651b12e06072",
+      "rustSymbol": "local_ignore_reset_conflict_backup_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "conflict",
+            "type": "&LocalIgnoreResetConflict"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "14a7448d83b53b4e",
+      "rustSymbol": "local_ignore_reset_conflict_expected_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "conflict",
+            "type": "&LocalIgnoreResetConflict"
+          }
+        ],
+        "returnType": "YamlDataContentIdentityDto"
+      }
+    },
+    {
+      "id": "a431d055a0672c48",
+      "rustSymbol": "local_ignore_reset_conflict_has_actual_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "conflict",
+            "type": "&LocalIgnoreResetConflict"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
+      "id": "63529dbf6b96286a",
+      "rustSymbol": "local_ignore_reset_conflict_has_backup_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "conflict",
+            "type": "&LocalIgnoreResetConflict"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
+      "id": "3826799282880de4",
+      "rustSymbol": "local_ignore_reset_result_backup_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "result",
+            "type": "&LocalIgnoreResetResult"
+          }
+        ],
+        "returnType": "YamlDataContentIdentityDto"
+      }
+    },
+    {
+      "id": "063a438f552ae962",
+      "rustSymbol": "local_ignore_reset_result_backup_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "result",
+            "type": "&LocalIgnoreResetResult"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "f132e54d8b09b4af",
+      "rustSymbol": "local_ignore_reset_result_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "result",
+            "type": "&LocalIgnoreResetResult"
+          }
+        ],
+        "returnType": "Vec<InstalledYamlDataDiagnosticDto>"
+      }
+    },
+    {
+      "id": "8f79b89d012e692f",
+      "rustSymbol": "local_ignore_reset_result_local_ignore_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "result",
+            "type": "&LocalIgnoreResetResult"
+          }
+        ],
+        "returnType": "String"
+      }
+    },
+    {
+      "id": "7e952ca9b9e5564c",
+      "rustSymbol": "local_ignore_reset_result_malformed_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "result",
+            "type": "&LocalIgnoreResetResult"
+          }
+        ],
+        "returnType": "YamlDataContentIdentityDto"
+      }
+    },
+    {
+      "id": "4badd555c22fea3b",
+      "rustSymbol": "local_ignore_reset_result_replacement_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "result",
+            "type": "&LocalIgnoreResetResult"
+          }
+        ],
+        "returnType": "YamlDataContentIdentityDto"
+      }
+    },
+    {
+      "id": "a0f067057740682d",
+      "rustSymbol": "local_ignore_reset_result_take_snapshot",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "result",
+            "type": "Box<LocalIgnoreResetResult>"
+          }
+        ],
+        "returnType": "Box<InstalledYamlDataSnapshot>"
+      }
+    },
+    {
+      "id": "2ae9f534e125ea75",
+      "rustSymbol": "local_ignore_reset_status",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "operation",
+            "type": "&LocalIgnoreResetOperation"
+          }
+        ],
+        "returnType": "LocalIgnoreResetStatusDto"
+      }
+    },
+    {
+      "id": "dd3197bb4ec7ff78",
+      "rustSymbol": "local_ignore_reset_take_conflict",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "operation",
+            "type": "Box<LocalIgnoreResetOperation>"
+          }
+        ],
+        "returnType": "Result<Box<LocalIgnoreResetConflict>>"
+      }
+    },
+    {
+      "id": "66f714501c41701b",
+      "rustSymbol": "local_ignore_reset_take_result",
+      "kind": "function",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "operation",
+            "type": "Box<LocalIgnoreResetOperation>"
+          }
+        ],
+        "returnType": "Result<Box<LocalIgnoreResetResult>>"
       }
     },
     {
@@ -1738,6 +2044,30 @@
       "blockOrigin": "Rust"
     },
     {
+      "id": "3f1a6fda380d25bb",
+      "rustSymbol": "LocalIgnoreResetConflict",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust"
+    },
+    {
+      "id": "a4bf40e5594d9afa",
+      "rustSymbol": "LocalIgnoreResetOperation",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust"
+    },
+    {
+      "id": "28b913c45be7bcb2",
+      "rustSymbol": "LocalIgnoreResetResult",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust"
+    },
+    {
       "id": "9719f25c94df3c38",
       "rustSymbol": "YamlData",
       "kind": "opaque",
@@ -2038,6 +2368,66 @@
         {
           "name": "error",
           "type": "InstalledYamlDataLoadErrorDto"
+        }
+      ]
+    },
+    {
+      "id": "e4dcff0e1be52937",
+      "rustSymbol": "LocalIgnoreResetErrorDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "kind",
+          "type": "LocalIgnoreResetErrorKind"
+        },
+        {
+          "name": "has_path",
+          "type": "bool"
+        },
+        {
+          "name": "path",
+          "type": "String"
+        },
+        {
+          "name": "has_stage",
+          "type": "bool"
+        },
+        {
+          "name": "stage",
+          "type": "LocalIgnoreResetPublicationStage"
+        },
+        {
+          "name": "message",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "d81ba71bfa4db7d0",
+      "rustSymbol": "LocalIgnoreResetStatusDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/config.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "has_reset",
+          "type": "bool"
+        },
+        {
+          "name": "has_conflict",
+          "type": "bool"
+        },
+        {
+          "name": "has_error",
+          "type": "bool"
+        },
+        {
+          "name": "error",
+          "type": "LocalIgnoreResetErrorDto"
         }
       ]
     },

@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-19T01:49:13.818086+00:00`
-- Tier-1 contract rows: **908**
-- Tier-1 matched: **908**
+- Generated: `2026-07-19T02:48:53.693299+00:00`
+- Tier-1 contract rows: **913**
+- Tier-1 matched: **913**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -920,6 +920,11 @@
 | `scangame.game_setup_intake@rust` | `scangame` | `game_setup_intake@rust` | `None` | `matched` |
 | `scangame.game_setup_needs_path_detection@rust` | `scangame` | `game_setup_needs_path_detection@rust` | `None` | `matched` |
 | `scangame.normalize_game_setup_version_selection@rust` | `scangame` | `normalize_game_setup_version_selection@rust` | `None` | `matched` |
+| `config.local-ignore-reset-conflict-type` | `config` | `LocalIgnoreResetConflict` | `JsLocalIgnoreResetConflict` | `matched` |
+| `config.local-ignore-reset-outcome-type` | `config` | `LocalIgnoreResetOutcome` | `JsLocalIgnoreResetOutcome` | `matched` |
+| `config.local-ignore-reset-publication-stage-type` | `config` | `LocalIgnoreResetPublicationStage` | `JsLocalIgnoreResetPublicationStage` | `matched` |
+| `config.local-ignore-reset-result-type` | `config` | `LocalIgnoreResetResult` | `JsLocalIgnoreResetResult` | `matched` |
+| `config.local-ignore-reset-status-type` | `config` | `LocalIgnoreResetOutcome` | `JsLocalIgnoreResetStatus` | `matched` |
 
 ## Gap Counts By Owner/Tier
 

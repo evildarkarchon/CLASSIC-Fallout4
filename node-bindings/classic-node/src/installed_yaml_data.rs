@@ -17,6 +17,11 @@ use classic_config_core::{
     InstalledYamlDataRole as CoreInstalledYamlDataRole,
     InstalledYamlDataSnapshot as CoreInstalledYamlDataSnapshot,
     LocalIgnoreRecoveryPlan as CoreLocalIgnoreRecoveryPlan,
+    LocalIgnoreResetConflict as CoreLocalIgnoreResetConflict,
+    LocalIgnoreResetError as CoreLocalIgnoreResetError,
+    LocalIgnoreResetOutcome as CoreLocalIgnoreResetOutcome,
+    LocalIgnoreResetPublicationStage as CoreLocalIgnoreResetPublicationStage,
+    LocalIgnoreResetResult as CoreLocalIgnoreResetResult,
     LocalIgnoreYamlDataState as CoreLocalIgnoreYamlDataState,
     inspect_installed_yaml_data as core_inspect_installed_yaml_data,
     load_installed_yaml_data as core_load_installed_yaml_data,
@@ -85,6 +90,8 @@ pub enum JsInstalledYamlDataDiagnosticKind {
     InvalidRoleData,
     /// Missing Local Ignore YAML Data was generated from selected Main defaults.
     LocalIgnoreGenerated,
+    /// Malformed Local Ignore YAML Data was reset from retained selected-Main defaults.
+    LocalIgnoreReset,
 }
 
 /// Registered game-data role selected for Installed YAML Data.
@@ -113,6 +120,73 @@ pub enum JsLocalIgnoreYamlDataState {
     Generated,
     /// The current operation explicitly proceeded with no Local Ignore entries.
     ProceedWithoutIgnore,
+    /// Malformed Local Ignore YAML Data was reset from retained selected-Main defaults.
+    ResetToDefault,
+}
+
+/// Expected outcome of resetting malformed Local Ignore YAML Data.
+#[napi(string_enum)]
+pub enum JsLocalIgnoreResetStatus {
+    /// The retained malformed bytes were backed up and defaults became authoritative.
+    Reset,
+    /// The canonical file changed after the recovery plan was created.
+    Conflict,
+}
+
+/// Durable publication boundary attributed by a Local Ignore reset failure.
+#[napi(string_enum)]
+pub enum JsLocalIgnoreResetPublicationStage {
+    /// A same-directory staging file could not be created.
+    Create,
+    /// Complete bytes could not be written to the staging file.
+    Write,
+    /// Buffered staging bytes could not be flushed.
+    Flush,
+    /// Staging bytes could not be synchronized to durable storage.
+    Sync,
+    /// The fully synchronized staging file could not be atomically published.
+    Publish,
+}
+
+/// Identity mismatch that prevented a Local Ignore reset from overwriting newer state.
+#[napi(object, object_from_js = false)]
+pub struct JsLocalIgnoreResetConflict {
+    /// Malformed-file identity against which the caller approved reset.
+    pub expected_identity: JsYamlDataContentIdentity,
+    /// Current canonical identity, absent when the file was removed.
+    pub actual_identity: Option<JsYamlDataContentIdentity>,
+    /// Verified backup retained before a late conflict, when one was published.
+    pub backup_path: Option<String>,
+}
+
+/// Successful durable Local Ignore reset and its retained Installed YAML Data snapshot.
+#[napi(object, object_from_js = false)]
+pub struct JsLocalIgnoreResetResult {
+    /// Reset-ready snapshot built from the retained Main, game, and default bytes.
+    pub snapshot: InstalledYamlDataSnapshot,
+    /// Canonical Local Ignore path that was reset.
+    pub local_ignore_path: String,
+    /// Durable byte-exact backup path verified before replacement.
+    pub backup_path: String,
+    /// Identity observed when the recovery plan retained the malformed bytes.
+    pub malformed_local_ignore_identity: JsYamlDataContentIdentity,
+    /// Identity independently verified from the durable backup bytes.
+    pub backup_identity: JsYamlDataContentIdentity,
+    /// Identity of retained selected-Main defaults published as the replacement.
+    pub replacement_identity: JsYamlDataContentIdentity,
+    /// Selection, malformed-file, and successful-reset diagnostics.
+    pub diagnostics: Vec<JsInstalledYamlDataDiagnostic>,
+}
+
+/// Typed Local Ignore reset outcome with exactly one status-selected payload.
+#[napi(object, object_from_js = false)]
+pub struct JsLocalIgnoreResetOutcome {
+    /// Stable expected-outcome discriminator.
+    pub status: JsLocalIgnoreResetStatus,
+    /// Successful reset metadata and snapshot, populated only for `reset`.
+    pub reset: Option<JsLocalIgnoreResetResult>,
+    /// Conflict identities, populated only for `conflict`.
+    pub conflict: Option<JsLocalIgnoreResetConflict>,
 }
 
 /// Structured attribution for one selection, rejection, or local generation event.
@@ -209,6 +283,9 @@ impl InstalledYamlDataSnapshot {
             CoreLocalIgnoreYamlDataState::ProceedWithoutIgnore => {
                 JsLocalIgnoreYamlDataState::ProceedWithoutIgnore
             }
+            CoreLocalIgnoreYamlDataState::ResetToDefault => {
+                JsLocalIgnoreYamlDataState::ResetToDefault
+            }
         }
     }
 
@@ -281,8 +358,8 @@ impl LocalIgnoreRecoveryPlan {
 
     /// Returns the identity of validated selected-Main defaults, or `null` when unavailable.
     ///
-    /// Missing or invalid defaults do not block proceeding because malformed installed Local
-    /// Ignore bytes are never replaced during this recovery operation.
+    /// Missing or invalid defaults do not block `proceedWithoutIgnore`; `resetToDefault` instead
+    /// rejects with `defaults_unavailable` because replacement requires validated defaults.
     #[napi(getter)]
     pub fn default_local_ignore_identity(&self) -> Result<Option<JsYamlDataContentIdentity>> {
         Ok(self
@@ -325,6 +402,27 @@ impl LocalIgnoreRecoveryPlan {
             inner: plan.proceed_without_ignore(),
         })
     }
+
+    /// Durably backs up malformed bytes and resets Local Ignore from retained defaults.
+    ///
+    /// This decision consumes the plan before scheduling work. Blocking core reset runs on the
+    /// N-API worker pool as one non-interruptible atomic critical section; typed conflicts resolve
+    /// as data, while operational failures reject with stable `code`, `yamlRole`, `path`, optional
+    /// `stage`, and human-readable `reason` metadata.
+    ///
+    /// Reusing the JavaScript plan throws `local_ignore_recovery_plan_consumed` without scheduling
+    /// another reset.
+    #[napi(ts_return_type = "Promise<JsLocalIgnoreResetOutcome>")]
+    pub fn reset_to_default(&mut self, env: Env) -> Result<AsyncTask<LocalIgnoreResetTask>> {
+        let plan = self.inner.take().ok_or_else(|| {
+            base_inspection_error(
+                env,
+                "local_ignore_recovery_plan_consumed",
+                "Local Ignore recovery plan has already been consumed".to_string(),
+            )
+        })?;
+        Ok(AsyncTask::new(LocalIgnoreResetTask { plan: Some(plan) }))
+    }
 }
 
 impl LocalIgnoreRecoveryPlan {
@@ -336,6 +434,48 @@ impl LocalIgnoreRecoveryPlan {
                 "Local Ignore recovery plan has already been consumed",
             )
         })
+    }
+}
+
+/// Background task that keeps the synchronous Local Ignore reset off the JavaScript thread.
+pub struct LocalIgnoreResetTask {
+    plan: Option<CoreLocalIgnoreRecoveryPlan>,
+}
+
+/// Core reset outcome retained until JavaScript-thread resolution.
+pub enum LocalIgnoreResetTaskOutput {
+    /// Typed reset or conflict outcome from config core.
+    Success(Box<CoreLocalIgnoreResetOutcome>),
+    /// Stage-attributed operational failure awaiting JavaScript error projection.
+    Failure(CoreLocalIgnoreResetError),
+}
+
+impl Task for LocalIgnoreResetTask {
+    type Output = LocalIgnoreResetTaskOutput;
+    type JsValue = JsLocalIgnoreResetOutcome;
+
+    /// Executes the consuming synchronous core reset on N-API's worker pool.
+    fn compute(&mut self) -> Result<Self::Output> {
+        let plan = self
+            .plan
+            .take()
+            .ok_or_else(|| napi::Error::from_reason("Local Ignore reset task already ran"))?;
+        Ok(match plan.reset_to_default() {
+            Ok(outcome) => LocalIgnoreResetTaskOutput::Success(Box::new(outcome)),
+            Err(error) => LocalIgnoreResetTaskOutput::Failure(error),
+        })
+    }
+
+    /// Resolves expected outcomes as tagged data and rejects operational failures with metadata.
+    fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
+        match output {
+            LocalIgnoreResetTaskOutput::Success(outcome) => {
+                Ok(local_ignore_reset_outcome_to_js(*outcome))
+            }
+            LocalIgnoreResetTaskOutput::Failure(error) => {
+                Err(local_ignore_reset_error_to_napi(env, error))
+            }
+        }
     }
 }
 
@@ -523,6 +663,59 @@ fn diagnostic_to_js(diagnostic: &CoreInstalledYamlDataDiagnostic) -> JsInstalled
     }
 }
 
+/// Project the core's reset and conflict variants into one stable tagged JavaScript shape.
+fn local_ignore_reset_outcome_to_js(
+    outcome: CoreLocalIgnoreResetOutcome,
+) -> JsLocalIgnoreResetOutcome {
+    match outcome {
+        CoreLocalIgnoreResetOutcome::Reset(result) => JsLocalIgnoreResetOutcome {
+            status: JsLocalIgnoreResetStatus::Reset,
+            reset: Some(local_ignore_reset_result_to_js(result)),
+            conflict: None,
+        },
+        CoreLocalIgnoreResetOutcome::Conflict(conflict) => JsLocalIgnoreResetOutcome {
+            status: JsLocalIgnoreResetStatus::Conflict,
+            reset: None,
+            conflict: Some(local_ignore_reset_conflict_to_js(&conflict)),
+        },
+    }
+}
+
+/// Project a successful reset without exposing or rereading any private retained core bytes.
+fn local_ignore_reset_result_to_js(result: CoreLocalIgnoreResetResult) -> JsLocalIgnoreResetResult {
+    let local_ignore_path = result.local_ignore_path().to_string_lossy().into_owned();
+    let backup_path = result.backup_path().to_string_lossy().into_owned();
+    let malformed_local_ignore_identity =
+        content_identity_to_js(result.malformed_local_ignore_identity());
+    let backup_identity = content_identity_to_js(result.backup_identity());
+    let replacement_identity = content_identity_to_js(result.replacement_identity());
+    let diagnostics = result.diagnostics().iter().map(diagnostic_to_js).collect();
+    JsLocalIgnoreResetResult {
+        snapshot: InstalledYamlDataSnapshot {
+            inner: result.into_snapshot(),
+        },
+        local_ignore_path,
+        backup_path,
+        malformed_local_ignore_identity,
+        backup_identity,
+        replacement_identity,
+        diagnostics,
+    }
+}
+
+/// Project conflict identities and the optional already-verified late-conflict backup path.
+fn local_ignore_reset_conflict_to_js(
+    conflict: &CoreLocalIgnoreResetConflict,
+) -> JsLocalIgnoreResetConflict {
+    JsLocalIgnoreResetConflict {
+        expected_identity: content_identity_to_js(conflict.expected_identity()),
+        actual_identity: conflict.actual_identity().map(content_identity_to_js),
+        backup_path: conflict
+            .backup_path()
+            .map(|path| path.to_string_lossy().into_owned()),
+    }
+}
+
 const fn role_to_js(role: CoreInstalledYamlDataRole) -> JsInstalledYamlDataRole {
     match role {
         CoreInstalledYamlDataRole::Main => JsInstalledYamlDataRole::Main,
@@ -565,6 +758,23 @@ const fn diagnostic_kind_to_js(
         CoreInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated => {
             JsInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
         }
+        CoreInstalledYamlDataDiagnosticKind::LocalIgnoreReset => {
+            JsInstalledYamlDataDiagnosticKind::LocalIgnoreReset
+        }
+    }
+}
+
+const fn reset_publication_stage_to_js(
+    stage: CoreLocalIgnoreResetPublicationStage,
+) -> JsLocalIgnoreResetPublicationStage {
+    match stage {
+        CoreLocalIgnoreResetPublicationStage::Create => JsLocalIgnoreResetPublicationStage::Create,
+        CoreLocalIgnoreResetPublicationStage::Write => JsLocalIgnoreResetPublicationStage::Write,
+        CoreLocalIgnoreResetPublicationStage::Flush => JsLocalIgnoreResetPublicationStage::Flush,
+        CoreLocalIgnoreResetPublicationStage::Sync => JsLocalIgnoreResetPublicationStage::Sync,
+        CoreLocalIgnoreResetPublicationStage::Publish => {
+            JsLocalIgnoreResetPublicationStage::Publish
+        }
     }
 }
 
@@ -589,29 +799,16 @@ fn inspection_error_to_napi(env: Env, error: CoreInstalledYamlDataInspectionErro
             diagnostics.iter().map(diagnostic_to_js).collect(),
         ),
     };
-    let message = error.to_string();
-    let raw_error = JsError::from(napi::Error::new(code, message.clone())).into_unknown(env);
-    let Ok(mut object) = raw_error.coerce_to_object() else {
-        return base_inspection_error(env, code, message);
-    };
-    if let Some(role) = role
-        && object
-            .set_named_property("yamlRole", role_name(role))
-            .is_err()
-    {
-        return base_inspection_error(env, code, message);
-    }
-    if !diagnostics.is_empty()
-        && object
-            .set_named_property("diagnostics", diagnostics)
-            .is_err()
-    {
-        return base_inspection_error(env, code, message);
-    }
-    object
-        .into_unknown(&env)
-        .map(napi::Error::from)
-        .unwrap_or_else(|_| base_inspection_error(env, code, message))
+    installed_yaml_data_error(
+        env,
+        code,
+        error.to_string(),
+        InstalledYamlDataErrorMetadata {
+            role: role.map(role_name),
+            diagnostics,
+            ..InstalledYamlDataErrorMetadata::default()
+        },
+    )
 }
 
 /// Project every fatal Installed YAML Data load error into stable JavaScript metadata.
@@ -648,18 +845,96 @@ fn load_error_to_napi(env: Env, error: CoreInstalledYamlDataLoadError) -> napi::
             ("invalid_selected_data", None, None, Vec::new())
         }
     };
-    installed_load_error(env, code, error.to_string(), role, path, diagnostics)
+    installed_yaml_data_error(
+        env,
+        code,
+        error.to_string(),
+        InstalledYamlDataErrorMetadata {
+            role,
+            path,
+            diagnostics,
+            ..InstalledYamlDataErrorMetadata::default()
+        },
+    )
 }
 
-/// Build one JavaScript `Error` and attach only metadata owned by the core variant.
-fn installed_load_error(
+/// Project every Local Ignore reset failure into stable JavaScript operation metadata.
+fn local_ignore_reset_error_to_napi(env: Env, error: CoreLocalIgnoreResetError) -> napi::Error {
+    let (code, path, stage, reason) = match &error {
+        CoreLocalIgnoreResetError::DefaultsUnavailable { path, reason } => {
+            ("defaults_unavailable", path.clone(), None, reason.clone())
+        }
+        CoreLocalIgnoreResetError::Lock { path, source } => {
+            ("lock", path.clone(), None, source.to_string())
+        }
+        CoreLocalIgnoreResetError::Read { path, source } => {
+            ("read", path.clone(), None, source.to_string())
+        }
+        CoreLocalIgnoreResetError::BackupDirectory { path, source } => {
+            ("backup_directory", path.clone(), None, source.to_string())
+        }
+        CoreLocalIgnoreResetError::BackupPublication {
+            path,
+            stage,
+            source,
+        } => (
+            "backup_publication",
+            path.clone(),
+            Some(*stage),
+            source.to_string(),
+        ),
+        CoreLocalIgnoreResetError::BackupVerification { path, reason } => {
+            ("backup_verification", path.clone(), None, reason.clone())
+        }
+        CoreLocalIgnoreResetError::ReplacementPublication {
+            path,
+            stage,
+            source,
+        } => (
+            "replacement_publication",
+            path.clone(),
+            Some(*stage),
+            source.to_string(),
+        ),
+    };
+    installed_yaml_data_error(
+        env,
+        code,
+        error.to_string(),
+        InstalledYamlDataErrorMetadata {
+            role: Some("local_ignore"),
+            path: Some(path),
+            stage,
+            reason: Some(reason),
+            ..InstalledYamlDataErrorMetadata::default()
+        },
+    )
+}
+
+/// Optional JavaScript metadata shared by Installed YAML Data operation failures.
+#[derive(Default)]
+struct InstalledYamlDataErrorMetadata {
+    role: Option<&'static str>,
+    path: Option<PathBuf>,
+    diagnostics: Vec<JsInstalledYamlDataDiagnostic>,
+    stage: Option<CoreLocalIgnoreResetPublicationStage>,
+    reason: Option<String>,
+}
+
+/// Build one JavaScript `Error` with only the metadata applicable to its core variant.
+fn installed_yaml_data_error(
     env: Env,
     code: &str,
     message: String,
-    role: Option<&str>,
-    path: Option<PathBuf>,
-    diagnostics: Vec<JsInstalledYamlDataDiagnostic>,
+    metadata: InstalledYamlDataErrorMetadata,
 ) -> napi::Error {
+    let InstalledYamlDataErrorMetadata {
+        role,
+        path,
+        diagnostics,
+        stage,
+        reason,
+    } = metadata;
     let raw_error = JsError::from(napi::Error::new(code, message.clone())).into_unknown(env);
     let Ok(mut object) = raw_error.coerce_to_object() else {
         return base_inspection_error(env, code, message);
@@ -680,6 +955,18 @@ fn installed_load_error(
         && object
             .set_named_property("diagnostics", diagnostics)
             .is_err()
+    {
+        return base_inspection_error(env, code, message);
+    }
+    if let Some(stage) = stage
+        && object
+            .set_named_property("stage", reset_publication_stage_to_js(stage))
+            .is_err()
+    {
+        return base_inspection_error(env, code, message);
+    }
+    if let Some(reason) = reason
+        && object.set_named_property("reason", reason).is_err()
     {
         return base_inspection_error(env, code, message);
     }

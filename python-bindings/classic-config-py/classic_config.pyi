@@ -438,6 +438,7 @@ class InstalledYamlDataDiagnostic:
         "incompatible_schema",
         "invalid_role_data",
         "local_ignore_generated",
+        "local_ignore_reset",
     ]: ...
     @property
     def message(self) -> str: ...
@@ -488,7 +489,9 @@ class InstalledYamlDataSnapshot:
     @property
     def local_ignore_state(
         self,
-    ) -> Literal["existing", "generated", "proceed_without_ignore"]: ...
+    ) -> Literal[
+        "existing", "generated", "proceed_without_ignore", "reset_to_default"
+    ]: ...
     @property
     def local_ignore_identity(self) -> YamlDataContentIdentity: ...
     @property
@@ -502,11 +505,43 @@ class InstalledYamlDataLoadOutcome:
     @property
     def snapshot(self) -> InstalledYamlDataSnapshot: ...
 
+class LocalIgnoreResetOutcome:
+    """Typed successful reset with durable metadata and its retained snapshot."""
+
+    @property
+    def status(self) -> Literal["reset"]: ...
+    @property
+    def snapshot(self) -> InstalledYamlDataSnapshot: ...
+    @property
+    def local_ignore_path(self) -> Path: ...
+    @property
+    def backup_path(self) -> Path: ...
+    @property
+    def malformed_local_ignore_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def backup_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def replacement_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def diagnostics(self) -> list[InstalledYamlDataDiagnostic]: ...
+
+class LocalIgnoreResetConflictOutcome:
+    """Typed conflict returned when approved malformed bytes changed or disappeared."""
+
+    @property
+    def status(self) -> Literal["conflict"]: ...
+    @property
+    def expected_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def actual_identity(self) -> YamlDataContentIdentity | None: ...
+    @property
+    def backup_path(self) -> Path | None: ...
+
 class LocalIgnoreRecoveryPlan:
     """Opaque, read-only recovery proposal that owns one consumable Rust plan.
 
-    Every property and ``proceed_without_ignore`` raises ``RuntimeError`` after
-    the plan has been consumed by a successful proceed decision.
+    Every property and decision method raises ``RuntimeError`` after the plan
+    has been consumed by an earlier proceed or reset attempt.
     """
 
     @property
@@ -535,6 +570,19 @@ class LocalIgnoreRecoveryPlan:
             RuntimeError: This plan was already consumed by an earlier proceed decision.
         """
 
+    def reset_to_default(
+        self,
+    ) -> LocalIgnoreResetOutcome | LocalIgnoreResetConflictOutcome:
+        """Consume the plan and run the synchronous reset without holding the GIL.
+
+        Returns a typed success or conflict outcome. The durable reset is
+        non-interruptible after entry and uses only state retained by this plan.
+
+        Raises:
+            RuntimeError: This plan was already consumed by an earlier decision.
+            LocalIgnoreResetError: The accepted reset could not complete safely.
+        """
+
 class InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome:
     """Typed expected outcome containing one Local Ignore recovery plan."""
 
@@ -542,6 +590,30 @@ class InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome:
     def status(self) -> Literal["local_ignore_recovery_required"]: ...
     @property
     def recovery_plan(self) -> LocalIgnoreRecoveryPlan: ...
+
+class LocalIgnoreResetError(Exception):
+    """Base class for operational Local Ignore reset failures."""
+
+    code: Literal[
+        "defaults_unavailable",
+        "lock",
+        "read",
+        "backup_directory",
+        "backup_publication",
+        "backup_verification",
+        "replacement_publication",
+    ]
+    path: str
+    stage: Literal["create", "write", "flush", "sync", "publish"] | None
+    reason: str
+
+class LocalIgnoreResetDefaultsUnavailableError(LocalIgnoreResetError): ...
+class LocalIgnoreResetLockError(LocalIgnoreResetError): ...
+class LocalIgnoreResetReadError(LocalIgnoreResetError): ...
+class LocalIgnoreResetBackupDirectoryError(LocalIgnoreResetError): ...
+class LocalIgnoreResetBackupPublicationError(LocalIgnoreResetError): ...
+class LocalIgnoreResetBackupVerificationError(LocalIgnoreResetError): ...
+class LocalIgnoreResetReplacementPublicationError(LocalIgnoreResetError): ...
 
 class InstalledYamlDataInspectionError(Exception):
     """Base class for Installed YAML Data inspection failures."""

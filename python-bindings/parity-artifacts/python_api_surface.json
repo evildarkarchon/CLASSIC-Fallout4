@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T01:51:06.985288+00:00",
+  "generated_at_utc": "2026-07-19T03:10:05.859118+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -434,6 +434,118 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "def proceed_without_ignore(self) -> InstalledYamlDataSnapshot:"
+    },
+    {
+      "module": "classic_config",
+      "export": "reset_to_default",
+      "export_path": "LocalIgnoreRecoveryPlan.reset_to_default",
+      "parent_class": "LocalIgnoreRecoveryPlan",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def reset_to_default( self, ) -> LocalIgnoreResetOutcome | LocalIgnoreResetConflictOutcome:"
+    },
+    {
+      "module": "classic_config",
+      "export": "LocalIgnoreResetBackupDirectoryError",
+      "export_path": "LocalIgnoreResetBackupDirectoryError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class LocalIgnoreResetBackupDirectoryError(LocalIgnoreResetError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "LocalIgnoreResetBackupPublicationError",
+      "export_path": "LocalIgnoreResetBackupPublicationError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class LocalIgnoreResetBackupPublicationError(LocalIgnoreResetError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "LocalIgnoreResetBackupVerificationError",
+      "export_path": "LocalIgnoreResetBackupVerificationError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class LocalIgnoreResetBackupVerificationError(LocalIgnoreResetError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "LocalIgnoreResetConflictOutcome",
+      "export_path": "LocalIgnoreResetConflictOutcome",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class LocalIgnoreResetConflictOutcome:"
+    },
+    {
+      "module": "classic_config",
+      "export": "LocalIgnoreResetDefaultsUnavailableError",
+      "export_path": "LocalIgnoreResetDefaultsUnavailableError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class LocalIgnoreResetDefaultsUnavailableError(LocalIgnoreResetError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "LocalIgnoreResetError",
+      "export_path": "LocalIgnoreResetError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class LocalIgnoreResetError(Exception):"
+    },
+    {
+      "module": "classic_config",
+      "export": "LocalIgnoreResetLockError",
+      "export_path": "LocalIgnoreResetLockError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class LocalIgnoreResetLockError(LocalIgnoreResetError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "LocalIgnoreResetOutcome",
+      "export_path": "LocalIgnoreResetOutcome",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class LocalIgnoreResetOutcome:"
+    },
+    {
+      "module": "classic_config",
+      "export": "LocalIgnoreResetReadError",
+      "export_path": "LocalIgnoreResetReadError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class LocalIgnoreResetReadError(LocalIgnoreResetError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "LocalIgnoreResetReplacementPublicationError",
+      "export_path": "LocalIgnoreResetReplacementPublicationError",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class LocalIgnoreResetReplacementPublicationError(LocalIgnoreResetError): ..."
     },
     {
       "module": "classic_config",

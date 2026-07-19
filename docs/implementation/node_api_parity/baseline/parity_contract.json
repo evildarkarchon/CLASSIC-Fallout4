@@ -7951,6 +7951,56 @@
       "rustCrate": "classic-scangame-core",
       "rustSymbol": "normalize_game_setup_version_selection@rust",
       "rustKind": "reexport"
+    },
+    {
+      "id": "config.local-ignore-reset-conflict-type",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "LocalIgnoreResetConflict",
+      "rustKind": "struct",
+      "nodeExport": "JsLocalIgnoreResetConflict",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "config.local-ignore-reset-outcome-type",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "LocalIgnoreResetOutcome",
+      "rustKind": "enum",
+      "nodeExport": "JsLocalIgnoreResetOutcome",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "config.local-ignore-reset-publication-stage-type",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "LocalIgnoreResetPublicationStage",
+      "rustKind": "enum",
+      "nodeExport": "JsLocalIgnoreResetPublicationStage",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "config.local-ignore-reset-result-type",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "LocalIgnoreResetResult",
+      "rustKind": "struct",
+      "nodeExport": "JsLocalIgnoreResetResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "config.local-ignore-reset-status-type",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "LocalIgnoreResetOutcome",
+      "rustKind": "enum",
+      "nodeExport": "JsLocalIgnoreResetStatus",
+      "nodeKind": "const_enum"
     }
   ]
 }

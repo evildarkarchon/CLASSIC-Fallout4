@@ -84,6 +84,10 @@ _Avoid_: automatic repair, fatal scan failure, silent empty fallback
 An immutable proposal produced from one Installed YAML Data Snapshot when Local Ignore YAML Data is malformed. It preserves the selected defaults and observed malformed-file identity so an accepted recovery can detect intervening changes before proceeding.
 _Avoid_: retry flag, mutable recovery request, unguarded reset
 
+**Local Ignore Reset Result**:
+The structured success from explicitly accepting Reset To Default on a Local Ignore Recovery Plan. It pairs the retained reset-ready Installed YAML Data Snapshot with the canonical path, a durable byte-exact verified backup, malformed/backup/replacement identities, and reset diagnostics; it is not YAML Data Update Channel rollback state.
+_Avoid_: backup path string, automatic repair, `.prev` rollback
+
 **YAML Data Update Channel**:
 The first-party distribution channel through which CLASSIC clients discover, review, install, and roll back newer YAML Data. It is the maintained update path for curated YAML Data, not a generic arbitrary data feed.
 _Avoid_: YAML updater, data update constants, update feed

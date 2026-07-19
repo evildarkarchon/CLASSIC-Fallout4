@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T01:49:13.826732+00:00",
+  "generated_at_utc": "2026-07-19T02:48:53.699555+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,11 +7,11 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1045,
-    "runtime_verified_total": 1045,
+    "tracked_surface_total": 1055,
+    "runtime_verified_total": 1055,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 908,
+    "tier1_contract_total": 913,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -22,8 +22,8 @@
       "total": 166
     },
     "config": {
-      "runtime_verified": 111,
-      "total": 111
+      "runtime_verified": 121,
+      "total": 121
     },
     "database": {
       "runtime_verified": 23,
@@ -16502,6 +16502,101 @@
       "notes": null
     },
     {
+      "trackedId": "contract:config.local-ignore-reset-conflict-type",
+      "trackedType": "contract_row",
+      "contractId": "config.local-ignore-reset-conflict-type",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "LocalIgnoreResetConflict",
+      "bindingIdentifier": "JsLocalIgnoreResetConflict",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "trackedId": "contract:config.local-ignore-reset-outcome-type",
+      "trackedType": "contract_row",
+      "contractId": "config.local-ignore-reset-outcome-type",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "LocalIgnoreResetOutcome",
+      "bindingIdentifier": "JsLocalIgnoreResetOutcome",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "trackedId": "contract:config.local-ignore-reset-publication-stage-type",
+      "trackedType": "contract_row",
+      "contractId": "config.local-ignore-reset-publication-stage-type",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "LocalIgnoreResetPublicationStage",
+      "bindingIdentifier": "JsLocalIgnoreResetPublicationStage",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "trackedId": "contract:config.local-ignore-reset-result-type",
+      "trackedType": "contract_row",
+      "contractId": "config.local-ignore-reset-result-type",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "LocalIgnoreResetResult",
+      "bindingIdentifier": "JsLocalIgnoreResetResult",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "trackedId": "contract:config.local-ignore-reset-status-type",
+      "trackedType": "contract_row",
+      "contractId": "config.local-ignore-reset-status-type",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "LocalIgnoreResetOutcome",
+      "bindingIdentifier": "JsLocalIgnoreResetStatus",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
       "trackedId": "binding:JsCrashLogScanSettings",
       "trackedType": "registry_only",
       "ownerModule": "user_settings",
@@ -18386,7 +18481,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsInstalledYamlDataLoadOutcome",
@@ -18405,7 +18500,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsInstalledYamlDataLoadRequest",
@@ -18424,7 +18519,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsInstalledYamlDataLoadStatus",
@@ -18443,7 +18538,102 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsLocalIgnoreResetConflict",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsLocalIgnoreResetConflict",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsLocalIgnoreResetOutcome",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsLocalIgnoreResetOutcome",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsLocalIgnoreResetPublicationStage",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsLocalIgnoreResetPublicationStage",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsLocalIgnoreResetResult",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsLocalIgnoreResetResult",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsLocalIgnoreResetStatus",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsLocalIgnoreResetStatus",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsLocalIgnoreYamlDataState",
@@ -18462,7 +18652,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:LocalIgnoreRecoveryPlan",
@@ -18481,7 +18671,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:loadInstalledYamlData",
@@ -18500,7 +18690,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:persistGameLocalPaths",

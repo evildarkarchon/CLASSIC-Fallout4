@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 585,
-    "current_total": 585,
-    "matched": 585,
+    "contract_total": 608,
+    "current_total": 608,
+    "matched": 608,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -91,6 +91,22 @@
     {
       "id": "97103d837ce461be",
       "rustSymbol": "InstalledYamlDataRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "467825b86f31980c",
+      "rustSymbol": "LocalIgnoreResetErrorKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "45a481c1f7080f80",
+      "rustSymbol": "LocalIgnoreResetPublicationStage",
       "kind": "enum",
       "bridgeModule": "config",
       "status": "matched",
@@ -433,8 +449,136 @@
       "reason": "-"
     },
     {
+      "id": "bbb8ff75577dc70c",
+      "rustSymbol": "local_ignore_recovery_plan_reset_to_default",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "0652d87cbbbad64b",
       "rustSymbol": "local_ignore_recovery_plan_selected_game_version",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "66951d1fda4db345",
+      "rustSymbol": "local_ignore_reset_conflict_actual_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "05ba651b12e06072",
+      "rustSymbol": "local_ignore_reset_conflict_backup_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "14a7448d83b53b4e",
+      "rustSymbol": "local_ignore_reset_conflict_expected_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a431d055a0672c48",
+      "rustSymbol": "local_ignore_reset_conflict_has_actual_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "63529dbf6b96286a",
+      "rustSymbol": "local_ignore_reset_conflict_has_backup_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3826799282880de4",
+      "rustSymbol": "local_ignore_reset_result_backup_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "063a438f552ae962",
+      "rustSymbol": "local_ignore_reset_result_backup_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f132e54d8b09b4af",
+      "rustSymbol": "local_ignore_reset_result_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8f79b89d012e692f",
+      "rustSymbol": "local_ignore_reset_result_local_ignore_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7e952ca9b9e5564c",
+      "rustSymbol": "local_ignore_reset_result_malformed_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4badd555c22fea3b",
+      "rustSymbol": "local_ignore_reset_result_replacement_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a0f067057740682d",
+      "rustSymbol": "local_ignore_reset_result_take_snapshot",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2ae9f534e125ea75",
+      "rustSymbol": "local_ignore_reset_status",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "dd3197bb4ec7ff78",
+      "rustSymbol": "local_ignore_reset_take_conflict",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "66f714501c41701b",
+      "rustSymbol": "local_ignore_reset_take_result",
       "kind": "function",
       "bridgeModule": "config",
       "status": "matched",
@@ -865,6 +1009,30 @@
       "reason": "-"
     },
     {
+      "id": "3f1a6fda380d25bb",
+      "rustSymbol": "LocalIgnoreResetConflict",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a4bf40e5594d9afa",
+      "rustSymbol": "LocalIgnoreResetOperation",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "28b913c45be7bcb2",
+      "rustSymbol": "LocalIgnoreResetResult",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "9719f25c94df3c38",
       "rustSymbol": "YamlData",
       "kind": "opaque",
@@ -947,6 +1115,22 @@
     {
       "id": "985812440f95f7ad",
       "rustSymbol": "InstalledYamlDataLoadStatusDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e4dcff0e1be52937",
+      "rustSymbol": "LocalIgnoreResetErrorDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d81ba71bfa4db7d0",
+      "rustSymbol": "LocalIgnoreResetStatusDto",
       "kind": "struct",
       "bridgeModule": "config",
       "status": "matched",
