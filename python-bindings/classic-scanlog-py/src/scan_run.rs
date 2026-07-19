@@ -1557,7 +1557,7 @@ pub fn scan_run_execute(
 fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> PyErr {
     let code = error.kind().as_str();
     let message = error.to_string();
-    let py_error = match error {
+    match error {
         contract::ResumeError::LocalIgnoreResetConflict(conflict) => {
             let py_error = ScanRunLocalIgnoreResetConflictError::new_err(message);
             let value = py_error.value(py);
@@ -1607,8 +1607,7 @@ fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> P
         contract::ResumeError::ContinuationConsumed | contract::ResumeError::Infrastructure(_) => {
             unreachable!("non-reset resume errors are handled before reset exception projection")
         }
-    };
-    py_error
+    }
 }
 
 /// Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
