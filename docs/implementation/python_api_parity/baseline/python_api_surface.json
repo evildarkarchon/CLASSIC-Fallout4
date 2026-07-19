@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T08:45:19.089801+00:00",
+  "generated_at_utc": "2026-07-19T10:13:16.827063+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -7021,6 +7021,46 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class ScanRunLocalIgnoreRecoveryDecision:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLocalIgnoreResetBackupError",
+      "export_path": "ScanRunLocalIgnoreResetBackupError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunLocalIgnoreResetBackupError(RuntimeError):"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLocalIgnoreResetConflictError",
+      "export_path": "ScanRunLocalIgnoreResetConflictError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunLocalIgnoreResetConflictError(RuntimeError):"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLocalIgnoreResetReplacementError",
+      "export_path": "ScanRunLocalIgnoreResetReplacementError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunLocalIgnoreResetReplacementError(RuntimeError):"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLocalIgnoreResetRunData",
+      "export_path": "ScanRunLocalIgnoreResetRunData",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunLocalIgnoreResetRunData:"
     },
     {
       "module": "classic_scanlog",

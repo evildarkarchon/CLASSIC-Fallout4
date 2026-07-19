@@ -278,13 +278,13 @@ fn execution_from_resume_result(
         Err(contract::ResumeError::Infrastructure(error)) => {
             infrastructure_execution_result_dto(error)
         }
-        Err(contract::ResumeError::ContinuationConsumed) => ffi::ScanRunContractExecutionResult {
+        Err(error) => ffi::ScanRunContractExecutionResult {
             has_result: false,
             result: empty_run_result_dto(),
             has_error: false,
             error: empty_infrastructure_error_dto(),
             has_resume_error: true,
-            resume_error: continuation_consumed_error_dto(),
+            resume_error: resume_error_to_dto(error),
         },
     };
     ScanRunContractExecution {
@@ -605,14 +605,38 @@ fn empty_infrastructure_error_dto() -> ffi::ScanRunContractInfrastructureError {
     }
 }
 
-fn continuation_consumed_error_dto() -> ffi::ScanRunContractResumeError {
-    ffi::ScanRunContractResumeError {
-        kind: ffi::ScanRunContractResumeErrorKind::ContinuationConsumed,
-        code: contract::ResumeErrorKind::ContinuationConsumed
-            .as_str()
-            .to_string(),
-        message: contract::ResumeError::ContinuationConsumed.to_string(),
+fn resume_error_to_dto(error: contract::ResumeError) -> ffi::ScanRunContractResumeError {
+    let kind = error.kind();
+    let message = error.to_string();
+    let mut dto = empty_resume_error_dto();
+    dto.kind = map_resume_error_kind(kind);
+    dto.code = kind.as_str().to_string();
+    dto.message = message;
+    match error {
+        contract::ResumeError::ContinuationConsumed | contract::ResumeError::Infrastructure(_) => {}
+        contract::ResumeError::LocalIgnoreResetConflict(conflict) => {
+            dto.has_expected_identity = true;
+            dto.expected_identity = yaml_data_content_identity_to_dto(conflict.expected_identity);
+            if let Some(actual) = conflict.actual_identity {
+                dto.has_actual_identity = true;
+                dto.actual_identity = yaml_data_content_identity_to_dto(actual);
+            }
+            if let Some(backup_path) = conflict.backup_path {
+                dto.has_backup_path = true;
+                dto.backup_path = path_to_string(backup_path);
+            }
+        }
+        contract::ResumeError::LocalIgnoreResetBackupFailure(failure)
+        | contract::ResumeError::LocalIgnoreResetReplacementFailure(failure) => {
+            dto.has_path = true;
+            dto.path = path_to_string(failure.path);
+            if let Some(stage) = failure.stage {
+                dto.has_stage = true;
+                dto.stage = map_reset_failure_stage(stage);
+            }
+        }
     }
+    dto
 }
 
 fn empty_resume_error_dto() -> ffi::ScanRunContractResumeError {
@@ -620,6 +644,16 @@ fn empty_resume_error_dto() -> ffi::ScanRunContractResumeError {
         kind: ffi::ScanRunContractResumeErrorKind::ContinuationConsumed,
         code: String::new(),
         message: String::new(),
+        has_path: false,
+        path: String::new(),
+        has_stage: false,
+        stage: ffi::ScanRunLocalIgnoreResetFailureStage::Create,
+        has_expected_identity: false,
+        expected_identity: empty_yaml_data_content_identity_dto(),
+        has_actual_identity: false,
+        actual_identity: empty_yaml_data_content_identity_dto(),
+        has_backup_path: false,
+        backup_path: String::new(),
     }
 }
 
@@ -722,6 +756,25 @@ fn empty_installed_yaml_data_dto() -> ffi::ScanRunInstalledYamlDataRunDataDto {
             byte_len: 0,
         },
         diagnostics: Vec::new(),
+        has_local_ignore_reset: false,
+        local_ignore_reset: empty_local_ignore_reset_run_data_dto(),
+    }
+}
+
+fn empty_yaml_data_content_identity_dto() -> ffi::ScanRunYamlDataContentIdentityDto {
+    ffi::ScanRunYamlDataContentIdentityDto {
+        sha256: String::new(),
+        byte_len: 0,
+    }
+}
+
+fn empty_local_ignore_reset_run_data_dto() -> ffi::ScanRunLocalIgnoreResetRunDataDto {
+    ffi::ScanRunLocalIgnoreResetRunDataDto {
+        local_ignore_path: String::new(),
+        backup_path: String::new(),
+        malformed_identity: empty_yaml_data_content_identity_dto(),
+        backup_identity: empty_yaml_data_content_identity_dto(),
+        replacement_identity: empty_yaml_data_content_identity_dto(),
     }
 }
 
@@ -790,6 +843,10 @@ fn installed_yaml_data_diagnostic_to_dto(
 fn installed_yaml_data_to_dto(
     value: contract::InstalledYamlDataRunData,
 ) -> ffi::ScanRunInstalledYamlDataRunDataDto {
+    let (has_local_ignore_reset, local_ignore_reset) = value
+        .local_ignore_reset
+        .map(|reset| (true, local_ignore_reset_run_data_to_dto(reset)))
+        .unwrap_or_else(|| (false, empty_local_ignore_reset_run_data_dto()));
     ffi::ScanRunInstalledYamlDataRunDataDto {
         main: inspected_yaml_data_file_to_dto(value.main),
         game_file: inspected_yaml_data_file_to_dto(value.game_file),
@@ -800,6 +857,20 @@ fn installed_yaml_data_to_dto(
             .into_iter()
             .map(installed_yaml_data_diagnostic_to_dto)
             .collect(),
+        has_local_ignore_reset,
+        local_ignore_reset,
+    }
+}
+
+fn local_ignore_reset_run_data_to_dto(
+    value: contract::LocalIgnoreResetRunData,
+) -> ffi::ScanRunLocalIgnoreResetRunDataDto {
+    ffi::ScanRunLocalIgnoreResetRunDataDto {
+        local_ignore_path: path_to_string(value.local_ignore_path),
+        backup_path: path_to_string(value.backup_path),
+        malformed_identity: yaml_data_content_identity_to_dto(value.malformed_identity),
+        backup_identity: yaml_data_content_identity_to_dto(value.backup_identity),
+        replacement_identity: yaml_data_content_identity_to_dto(value.replacement_identity),
     }
 }
 
@@ -835,6 +906,9 @@ fn map_local_ignore_yaml_data_state(
         contract::LocalIgnoreRunState::ProceedWithoutIgnore => {
             ffi::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore
         }
+        contract::LocalIgnoreRunState::ResetToDefault => {
+            ffi::ScanRunLocalIgnoreYamlDataState::ResetToDefault
+        }
     }
 }
 
@@ -845,6 +919,9 @@ fn map_local_ignore_recovery_decision(
     match value {
         ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
             Ok(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore)
+        }
+        ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault => {
+            Ok(contract::LocalIgnoreRecoveryDecision::ResetToDefault)
         }
         _ => Err(format!(
             "unsupported ScanRunLocalIgnoreRecoveryDecision discriminant: {}",
@@ -869,6 +946,49 @@ fn map_installed_yaml_data_diagnostic_kind(
         Kind::InvalidRoleData => ffi::ScanRunInstalledYamlDataDiagnosticKind::InvalidRoleData,
         Kind::LocalIgnoreGenerated => {
             ffi::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
+        }
+        Kind::LocalIgnoreReset => ffi::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset,
+    }
+}
+
+fn map_resume_error_kind(value: contract::ResumeErrorKind) -> ffi::ScanRunContractResumeErrorKind {
+    match value {
+        contract::ResumeErrorKind::ContinuationConsumed => {
+            ffi::ScanRunContractResumeErrorKind::ContinuationConsumed
+        }
+        contract::ResumeErrorKind::LocalIgnoreResetConflict => {
+            ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetConflict
+        }
+        contract::ResumeErrorKind::LocalIgnoreResetBackupFailure => {
+            ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetBackupFailure
+        }
+        contract::ResumeErrorKind::LocalIgnoreResetReplacementFailure => {
+            ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetReplacementFailure
+        }
+        contract::ResumeErrorKind::Infrastructure => {
+            unreachable!("infrastructure resume errors use the infrastructure envelope")
+        }
+    }
+}
+
+fn map_reset_failure_stage(
+    value: contract::LocalIgnoreResetFailureStage,
+) -> ffi::ScanRunLocalIgnoreResetFailureStage {
+    match value {
+        contract::LocalIgnoreResetFailureStage::Create => {
+            ffi::ScanRunLocalIgnoreResetFailureStage::Create
+        }
+        contract::LocalIgnoreResetFailureStage::Write => {
+            ffi::ScanRunLocalIgnoreResetFailureStage::Write
+        }
+        contract::LocalIgnoreResetFailureStage::Flush => {
+            ffi::ScanRunLocalIgnoreResetFailureStage::Flush
+        }
+        contract::LocalIgnoreResetFailureStage::Sync => {
+            ffi::ScanRunLocalIgnoreResetFailureStage::Sync
+        }
+        contract::LocalIgnoreResetFailureStage::Publish => {
+            ffi::ScanRunLocalIgnoreResetFailureStage::Publish
         }
     }
 }

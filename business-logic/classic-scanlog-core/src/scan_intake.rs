@@ -218,14 +218,16 @@ impl ScanReadyAnalysis {
         self.formid_readiness.is_enabled() && !self.formid_readiness.database_paths().is_empty()
     }
 
-    /// Attaches the owned Installed YAML Data snapshot that backed recovery-time preparation.
+    /// Applies and retains the owned Installed YAML Data snapshot selected by recovery.
     ///
-    /// The continuation calls this only after consuming its one-shot recovery decision, keeping
-    /// the exact selected bytes alive for the resumed run without reopening installation files.
-    pub(crate) fn retain_installed_yaml_data_snapshot(
+    /// Recovery preparation uses the plan's operation-scoped empty Ignore snapshot. Reset To
+    /// Default changes only that retained Ignore payload, so refresh the already prepared
+    /// analysis configuration from the accepted snapshot without reopening any selected path.
+    pub(crate) fn apply_recovered_installed_yaml_data_snapshot(
         &mut self,
         snapshot: Arc<InstalledYamlDataSnapshot>,
     ) {
+        self.analysis_config.ignore_list = snapshot.yaml_data().ignore_list.clone();
         self._installed_yaml_data_snapshot = Some(snapshot);
     }
 }

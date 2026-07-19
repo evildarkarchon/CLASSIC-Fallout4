@@ -1,8 +1,8 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-07-19T08:45:19.099285+00:00`
-- Tracked surfaces: **1659**
-- Runtime verified: **1659**
+- Generated: `2026-07-19T10:13:16.837264+00:00`
+- Tracked surfaces: **1683**
+- Runtime verified: **1683**
 - Contract mapped only: **0**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
@@ -20,7 +20,7 @@
 | `registry` | 20 | 0 | 0 | 20 |
 | `resource` | 36 | 0 | 0 | 36 |
 | `scangame` | 169 | 0 | 0 | 169 |
-| `scanlog` | 507 | 0 | 0 | 507 |
+| `scanlog` | 531 | 0 | 0 | 531 |
 | `settings` | 65 | 0 | 0 | 65 |
 | `shared` | 69 | 0 | 0 | 69 |
 | `update` | 10 | 0 | 0 | 10 |

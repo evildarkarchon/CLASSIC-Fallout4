@@ -16,8 +16,8 @@ use crate::{
 #[cfg(test)]
 use classic_config_core::{InstalledYamlDataLoadError, load_installed_yaml_data_with_env};
 use classic_config_core::{
-    InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, LocalIgnoreRecoveryPlan,
-    load_installed_yaml_data,
+    InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataSnapshot,
+    LocalIgnoreRecoveryPlan, load_installed_yaml_data,
 };
 use classic_database_core::DatabasePool;
 use classic_file_io_core::{LogCollector, RejectedInput, resolve_targeted_inputs};
@@ -293,8 +293,8 @@ pub(super) struct PreparedCrashLogScanRun {
 
 /// Private state retained behind one opaque, process-local continuation.
 pub(super) struct PreparedCrashLogScanRunContinuation {
-    recovery_plan: LocalIgnoreRecoveryPlan,
-    prepared: PreparedCrashLogScanRun,
+    pub(super) recovery_plan: LocalIgnoreRecoveryPlan,
+    pub(super) prepared: PreparedCrashLogScanRun,
 }
 
 /// Finishes request-specific preparation without starting database access or analysis.
@@ -327,33 +327,22 @@ fn prepare_scan_run_execution(
     }
 }
 
-/// Consumes the retained recovery decision and resumes the already prepared run.
+/// Applies a completed recovery snapshot and resumes the already prepared run.
 pub(super) async fn resume_prepared_scan_run<F>(
-    continuation: PreparedCrashLogScanRunContinuation,
+    mut prepared: PreparedCrashLogScanRun,
+    snapshot: InstalledYamlDataSnapshot,
+    installed_yaml_data: contract::InstalledYamlDataRunData,
     cancellation: Arc<AtomicBool>,
     on_event: F,
 ) -> std::result::Result<CrashLogScanRunResult, CrashLogScanRunServiceError>
 where
     F: FnMut(CrashLogScanRunServiceEvent),
 {
-    let PreparedCrashLogScanRunContinuation {
-        recovery_plan,
-        mut prepared,
-    } = continuation;
-    let snapshot = Arc::new(recovery_plan.proceed_without_ignore());
+    let snapshot = Arc::new(snapshot);
     prepared
         .ready
-        .retain_installed_yaml_data_snapshot(Arc::clone(&snapshot));
-    prepared.installed_yaml_data = contract::InstalledYamlDataRunData::from_snapshot(&snapshot)
-        .ok_or_else(|| {
-            CrashLogScanRunServiceError::new(
-                contract::InfrastructureErrorStage::InternalInvariant,
-                None,
-                ScanLogError::ConfigError(
-                    "Proceed Without Ignore produced unsupported scan metadata".to_string(),
-                ),
-            )
-        })?;
+        .apply_recovered_installed_yaml_data_snapshot(Arc::clone(&snapshot));
+    prepared.installed_yaml_data = installed_yaml_data;
     execute_prepared_scan_run(prepared, Some(cancellation), on_event).await
 }
 

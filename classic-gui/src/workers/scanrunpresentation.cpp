@@ -142,6 +142,18 @@ ScanRunInstalledYamlDataPresentation presentInstalledYamlData(
     presentation.localIgnoreState = installed.local_ignore_state;
     presentation.localIgnoreIdentity.sha256 = classic::toQString(installed.local_ignore_identity.sha256);
     presentation.localIgnoreIdentity.byteLength = installed.local_ignore_identity.byte_len;
+    presentation.hasLocalIgnoreReset = installed.has_local_ignore_reset;
+    if (installed.has_local_ignore_reset) {
+        const auto& reset = installed.local_ignore_reset;
+        presentation.localIgnoreReset.localIgnorePath = classic::toQString(reset.local_ignore_path);
+        presentation.localIgnoreReset.backupPath = classic::toQString(reset.backup_path);
+        presentation.localIgnoreReset.malformedIdentity.sha256 = classic::toQString(reset.malformed_identity.sha256);
+        presentation.localIgnoreReset.malformedIdentity.byteLength = reset.malformed_identity.byte_len;
+        presentation.localIgnoreReset.backupIdentity.sha256 = classic::toQString(reset.backup_identity.sha256);
+        presentation.localIgnoreReset.backupIdentity.byteLength = reset.backup_identity.byte_len;
+        presentation.localIgnoreReset.replacementIdentity.sha256 = classic::toQString(reset.replacement_identity.sha256);
+        presentation.localIgnoreReset.replacementIdentity.byteLength = reset.replacement_identity.byte_len;
+    }
     presentation.diagnostics.reserve(static_cast<qsizetype>(installed.diagnostics.size()));
     for (const auto& diagnostic : installed.diagnostics) {
         ScanRunInstalledYamlDataDiagnosticPresentation mapped;

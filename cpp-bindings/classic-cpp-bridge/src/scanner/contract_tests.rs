@@ -341,6 +341,10 @@ fn maps_every_core_enum_variant_to_a_typed_cxx_variant() {
             contract::LocalIgnoreRunState::ProceedWithoutIgnore,
             ffi::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore,
         ),
+        (
+            contract::LocalIgnoreRunState::ResetToDefault,
+            ffi::ScanRunLocalIgnoreYamlDataState::ResetToDefault,
+        ),
     ] {
         assert_eq!(map_local_ignore_yaml_data_state(core), cxx);
     }
@@ -349,6 +353,12 @@ fn maps_every_core_enum_variant_to_a_typed_cxx_variant() {
             ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
         ),
         Ok(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore)
+    );
+    assert_eq!(
+        map_local_ignore_recovery_decision(
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        ),
+        Ok(contract::LocalIgnoreRecoveryDecision::ResetToDefault)
     );
 
     let diagnostic_pairs = [
@@ -387,6 +397,10 @@ fn maps_every_core_enum_variant_to_a_typed_cxx_variant() {
         (
             contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated,
             ffi::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset,
         ),
     ];
     for (core, cxx) in diagnostic_pairs {
@@ -1124,6 +1138,49 @@ fn cxx_continuation_resumes_retained_recovery_once_and_projects_typed_replay_fai
         ffi::ScanRunContractResumeErrorKind::ContinuationConsumed
     );
     assert_eq!(replay.resume_error.code, "scan_run_continuation_consumed");
+}
+
+/// Reset backup and replacement failures retain stable CXX path and publication metadata.
+#[test]
+fn cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field() {
+    for (error, expected_kind, expected_code) in [
+        (
+            contract::ResumeError::LocalIgnoreResetBackupFailure(
+                contract::LocalIgnoreResetFailure {
+                    path: PathBuf::from("C:/backup"),
+                    stage: None,
+                    message: "backup failed".to_string(),
+                },
+            ),
+            ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetBackupFailure,
+            "local_ignore_reset_backup_failure",
+        ),
+        (
+            contract::ResumeError::LocalIgnoreResetReplacementFailure(
+                contract::LocalIgnoreResetFailure {
+                    path: PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml"),
+                    stage: Some(contract::LocalIgnoreResetFailureStage::Publish),
+                    message: "replacement failed".to_string(),
+                },
+            ),
+            ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetReplacementFailure,
+            "local_ignore_reset_replacement_failure",
+        ),
+    ] {
+        let projected = super::resume_error_to_dto(error);
+        assert_eq!(projected.kind, expected_kind);
+        assert_eq!(projected.code, expected_code);
+        assert!(projected.has_path);
+        if expected_kind
+            == ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetReplacementFailure
+        {
+            assert!(projected.has_stage);
+            assert_eq!(
+                projected.stage,
+                ffi::ScanRunLocalIgnoreResetFailureStage::Publish
+            );
+        }
+    }
 }
 
 #[test]

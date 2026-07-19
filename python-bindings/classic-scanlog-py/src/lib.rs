@@ -143,12 +143,14 @@ pub use scan_run::{
     PyScanRunCancellation, PyScanRunConfiguration, PyScanRunContinuation, PyScanRunDiscoveryResult,
     PyScanRunEvent, PyScanRunExecution, PyScanRunInfrastructureError,
     PyScanRunInspectedYamlDataFile, PyScanRunInstalledYamlDataDiagnostic,
-    PyScanRunInstalledYamlDataRunData, PyScanRunLocalIgnoreRecoveryDecision, PyScanRunLogEvent,
-    PyScanRunLogFailure, PyScanRunLogResult, PyScanRunRejectedInput, PyScanRunRequest,
-    PyScanRunResult, PyScanRunSetupCheck, PyScanRunSetupContext, PyScanRunSetupPathUpdate,
-    PyScanRunSetupResult, PyScanRunStandardSource, PyScanRunTargetedSource, PyScanRunUnsolvedLogs,
-    PyScanRunYamlDataContentIdentity, ScanRunContinuationConsumedError, scan_run_execute,
-    scan_run_resume,
+    PyScanRunInstalledYamlDataRunData, PyScanRunLocalIgnoreRecoveryDecision,
+    PyScanRunLocalIgnoreResetRunData, PyScanRunLogEvent, PyScanRunLogFailure, PyScanRunLogResult,
+    PyScanRunRejectedInput, PyScanRunRequest, PyScanRunResult, PyScanRunSetupCheck,
+    PyScanRunSetupContext, PyScanRunSetupPathUpdate, PyScanRunSetupResult, PyScanRunStandardSource,
+    PyScanRunTargetedSource, PyScanRunUnsolvedLogs, PyScanRunYamlDataContentIdentity,
+    ScanRunContinuationConsumedError, ScanRunLocalIgnoreResetBackupError,
+    ScanRunLocalIgnoreResetConflictError, ScanRunLocalIgnoreResetReplacementError,
+    scan_run_execute, scan_run_resume,
 };
 pub use version::{
     PyCrashgenVersion, PyCrashgenVersionStatus, check_crashgen_version_status,
@@ -206,6 +208,7 @@ fn register_scan_run_exports(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyScanRunInspectedYamlDataFile>()?;
     m.add_class::<PyScanRunInstalledYamlDataDiagnostic>()?;
     m.add_class::<PyScanRunInstalledYamlDataRunData>()?;
+    m.add_class::<PyScanRunLocalIgnoreResetRunData>()?;
     m.add_class::<PyScanRunLocalIgnoreRecoveryDecision>()?;
     m.add_class::<PyScanRunContinuation>()?;
     m.add_class::<PyScanRunResult>()?;
@@ -218,6 +221,18 @@ fn register_scan_run_exports(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add(
         "ScanRunContinuationConsumedError",
         m.py().get_type::<ScanRunContinuationConsumedError>(),
+    )?;
+    m.add(
+        "ScanRunLocalIgnoreResetConflictError",
+        m.py().get_type::<ScanRunLocalIgnoreResetConflictError>(),
+    )?;
+    m.add(
+        "ScanRunLocalIgnoreResetBackupError",
+        m.py().get_type::<ScanRunLocalIgnoreResetBackupError>(),
+    )?;
+    m.add(
+        "ScanRunLocalIgnoreResetReplacementError",
+        m.py().get_type::<ScanRunLocalIgnoreResetReplacementError>(),
     )?;
     Ok(())
 }

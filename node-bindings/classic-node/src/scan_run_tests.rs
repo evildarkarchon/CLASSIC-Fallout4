@@ -17,6 +17,14 @@ fn shared_failure_fixtures() -> serde_json::Value {
         .clone()
 }
 
+/// Loads the shared reset-outcome expectations used by Node rejection mapping tests.
+fn shared_reset_outcomes() -> serde_json::Value {
+    serde_json::from_str::<serde_json::Value>(SHARED_SCAN_RUN_MANIFEST)
+        .expect("shared scan-run manifest should deserialize")["fixtures"]["installedYamlData"]
+        ["resetOutcomes"]
+        .clone()
+}
+
 fn log_event() -> LogEvent {
     LogEvent {
         discovery_index: 7,
@@ -71,11 +79,21 @@ fn installed_yaml_data_run_enums_cover_recovery_and_every_diagnostic() {
         local_ignore_run_state_to_js(contract::LocalIgnoreRunState::ProceedWithoutIgnore),
         JsScanRunLocalIgnoreState::ProceedWithoutIgnore
     ));
+    assert!(matches!(
+        local_ignore_run_state_to_js(contract::LocalIgnoreRunState::ResetToDefault),
+        JsScanRunLocalIgnoreState::ResetToDefault
+    ));
     assert_eq!(
         local_ignore_recovery_decision_to_core(
             JsScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
         ),
         contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+    );
+    assert_eq!(
+        local_ignore_recovery_decision_to_core(
+            JsScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+        ),
+        contract::LocalIgnoreRecoveryDecision::ResetToDefault
     );
 
     for (kind, expected) in [
@@ -115,6 +133,10 @@ fn installed_yaml_data_run_enums_cover_recovery_and_every_diagnostic() {
             contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated,
             JsScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated,
         ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset,
+            JsScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset,
+        ),
     ] {
         let actual = installed_yaml_data_run_diagnostic_kind_to_js(kind);
         assert_eq!(
@@ -122,6 +144,37 @@ fn installed_yaml_data_run_enums_cover_recovery_and_every_diagnostic() {
             std::mem::discriminant(&expected)
         );
     }
+}
+
+/// Replacement publication failure retains the shared Node rejection code, path, and stage.
+#[test]
+fn replacement_failure_projects_shared_node_rejection_metadata() {
+    let expected = shared_reset_outcomes();
+    let path = PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
+    let projection =
+        project_scan_run_resume_error(contract::ResumeError::LocalIgnoreResetReplacementFailure(
+            contract::LocalIgnoreResetFailure {
+                path: path.clone(),
+                stage: Some(contract::LocalIgnoreResetFailureStage::Publish),
+                message: "injected replacement publication failure".to_string(),
+            },
+        ));
+
+    assert_eq!(
+        projection.code,
+        expected["replacementFailureCode"]
+            .as_str()
+            .expect("shared replacement code should be a string")
+    );
+    let ScanRunResumeErrorMetadata::OperationalFailure {
+        path: projected_path,
+        stage,
+    } = projection.metadata
+    else {
+        panic!("replacement failure should retain operational metadata");
+    };
+    assert_eq!(PathBuf::from(projected_path), path);
+    assert_eq!(stage, Some("publish"));
 }
 
 #[test]

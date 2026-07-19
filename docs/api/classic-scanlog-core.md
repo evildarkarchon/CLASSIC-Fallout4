@@ -31,8 +31,9 @@ an optional observer. It returns either a meaningful terminal `RunResult` or a
 typed run-wide `InfrastructureError`.
 
 Malformed Local Ignore is a meaningful `LocalIgnoreRecoveryRequired` result.
-That result owns an opaque `CrashLogScanRunContinuation`; the only current
-decision is `LocalIgnoreRecoveryDecision::ProceedWithoutIgnore`. Calling
+That result owns an opaque `CrashLogScanRunContinuation`; callers explicitly
+choose `LocalIgnoreRecoveryDecision::ProceedWithoutIgnore` or
+`LocalIgnoreRecoveryDecision::ResetToDefault`. Calling
 `continuation.resume(decision, cancellation, observer).await` consumes the
 retained work once and returns `Result<RunResult, ResumeError>`.
 
@@ -165,12 +166,22 @@ report bytes.
 
 Ready runs expose `Existing` and `Generated`. A malformed file returns
 `RecoveryRequired`; accepting Proceed Without Ignore resumes with
-`ProceedWithoutIgnore` and an operation-scoped empty ignore list. The retained
-plan is consumed only at resume, so the exact prepared intake and selected
-snapshot are reused without rediscovery, reselection, or filesystem mutation.
-Changing Main/game files or creating a formerly missing Targeted input while
-paused cannot change the resumed run. Reset To Default remains a separate
-follow-up decision and is not exposed by this continuation yet.
+`ProceedWithoutIgnore` and an operation-scoped empty ignore list. Accepting
+Reset To Default conflict-checks the retained malformed identity, verifies a
+durable byte-exact backup, atomically publishes retained selected-Main defaults,
+and resumes with `ResetToDefault`, reset diagnostics, and backup/replacement
+metadata. The retained plan is consumed only at resume, so either decision
+reuses the exact prepared intake and selected snapshot without rediscovery or
+reselection. Changing Main/game files or creating a formerly missing Targeted
+input while paused cannot change the resumed run.
+
+Cancellation already observed before Reset To Default begins performs no
+backup, replacement, or analysis. Once the synchronous reset transaction has
+begun, it completes durably before cancellation is observed again; the run then
+returns the ordinary post-discovery `Cancelled` result without analysis. Reset
+conflict, backup failure, and replacement failure are distinct typed
+`ResumeError` variants with stable codes and applicable identities, path, and
+publication stage metadata.
 
 ### Durable finalization
 

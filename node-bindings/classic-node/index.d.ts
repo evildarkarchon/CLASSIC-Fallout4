@@ -3836,6 +3836,8 @@ export interface JsInstalledYamlDataRunData {
   localIgnoreIdentity: JsYamlDataContentIdentity
   /** Structured fallback, validation, and generation diagnostics. */
   diagnostics: Array<JsScanRunInstalledYamlDataDiagnostic>
+  /** Durable reset metadata populated only after successful Reset To Default resume. */
+  localIgnoreReset?: JsScanRunLocalIgnoreResetRunData
 }
 
 /** Result of an integrity check. */
@@ -4527,13 +4529,26 @@ export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {
   /** A candidate failed role-specific semantic validation. */
   InvalidRoleData = 'InvalidRoleData',
   /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
-  LocalIgnoreGenerated = 'LocalIgnoreGenerated'
+  LocalIgnoreGenerated = 'LocalIgnoreGenerated',
+  /** Malformed Local Ignore YAML Data was reset from retained selected-Main defaults. */
+  LocalIgnoreReset = 'LocalIgnoreReset'
 }
 
 /** Explicit Local Ignore recovery decisions owned by Rust scan coordination. */
 export declare const enum JsScanRunLocalIgnoreRecoveryDecision {
   /** Resume with an empty ignore list scoped only to the retained run. */
-  ProceedWithoutIgnore = 'ProceedWithoutIgnore'
+  ProceedWithoutIgnore = 'ProceedWithoutIgnore',
+  /** Durably reset malformed Local Ignore, then resume the retained run. */
+  ResetToDefault = 'ResetToDefault'
+}
+
+/** Durable backup and replacement metadata from successful Reset To Default resume. */
+export interface JsScanRunLocalIgnoreResetRunData {
+  localIgnorePath: string
+  backupPath: string
+  malformedIdentity: JsYamlDataContentIdentity
+  backupIdentity: JsYamlDataContentIdentity
+  replacementIdentity: JsYamlDataContentIdentity
 }
 
 /** Local Ignore states possible for the complete scan-run recovery contract. */
@@ -4545,7 +4560,9 @@ export declare const enum JsScanRunLocalIgnoreState {
   /** Malformed Local Ignore YAML Data requires an explicit caller decision. */
   RecoveryRequired = 'RecoveryRequired',
   /** The retained run resumed with operation-scoped empty ignores. */
-  ProceedWithoutIgnore = 'ProceedWithoutIgnore'
+  ProceedWithoutIgnore = 'ProceedWithoutIgnore',
+  /** Malformed Local Ignore was durably reset from retained selected-Main defaults. */
+  ResetToDefault = 'ResetToDefault'
 }
 
 /** Common log-scoped event payload. */
@@ -5810,8 +5827,9 @@ export declare function scanRunExecute(request: ScanRunRequest, cancellation: Sc
  * Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
  *
  * Replay and concurrent double consumption reject with JavaScript error code
- * `scan_run_continuation_consumed`. Infrastructure failures retain the same resolved envelope
- * used by [`scan_run_execute`].
+ * `scan_run_continuation_consumed`. Reset conflict, backup failure, and replacement failure
+ * reject with their stable codes plus applicable identity, path, and publication-stage metadata.
+ * Infrastructure failures retain the same resolved envelope used by [`scan_run_execute`].
  */
 export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
 

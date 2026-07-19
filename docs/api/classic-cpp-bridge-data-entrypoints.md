@@ -271,7 +271,8 @@ repository shared Tokio runtime. An expected malformed Local Ignore result may
 leave an opaque continuation beside the moved result. Call
 `scan_run_contract_execution_has_continuation(...)`, move it once with
 `scan_run_contract_execution_take_continuation(...)`, and resume it through
-`scan_run_continuation_resume(..., ProceedWithoutIgnore, ...)`. The bridge has
+`scan_run_continuation_resume(...)` with either `ProceedWithoutIgnore` or
+`ResetToDefault`. The bridge has
 no public orchestration object, single-log analysis executor, batch lifecycle,
 reconstructable prepared-run executor, resettable scan token, process-global
 FCX control, or direct report writer.
@@ -337,8 +338,10 @@ The opaque operation owns one `ScanRunContractExecutionResult`; callers move it
 out with `scan_run_contract_execution_take_result(...)`. Exactly one of
 `has_result`, `has_error`, and `has_resume_error` is true for a populated
 envelope. Initial expected recovery remains result data. Replay of a consumed
-continuation sets `has_resume_error` with stable code
-`scan_run_continuation_consumed`; failures reached by valid resumed execution
+continuation and reset conflict/backup/replacement failures set
+`has_resume_error` with stable kinds and codes; the reset variants also retain
+expected/current identities, optional verified backup path, or applicable
+path/publication stage. Failures reached by otherwise valid resumed execution
 continue to use the typed infrastructure envelope.
 
 The result retains:
@@ -359,11 +362,16 @@ provenance, schema and exact-byte identity; Local Ignore state and identity;
 and structured role/candidate/path/kind/message diagnostics. The DTO uses
 `has_installed_yaml_data` for intake presence. The bridge maps only Rust-owned
 facts; diagnostics never become Autoscan Report text. The run inventory covers
-`Existing`, `Generated`, `RecoveryRequired`, and `ProceedWithoutIgnore`. A
+`Existing`, `Generated`, `RecoveryRequired`, `ProceedWithoutIgnore`, and
+`ResetToDefault`. A
 recovery result retains the malformed identity and structured diagnostic while
 its process-local, non-cloneable continuation owns prepared intake and the exact
 selected snapshot. Resume does not rediscover inputs or reselect YAML Data.
-Reset diagnostics remain outside this continuation contract.
+Successful reset resume projects the durable backup metadata and
+`LocalIgnoreReset` diagnostic. Pre-reset cancellation performs no filesystem
+work; cancellation after the reset transaction begins is observed only after
+the durable backup and replacement complete and returns normal cancelled result
+data without analysis.
 
 The infrastructure error retains one of the six stable stages, its message, and
 an optional relevant path. Expected no-logs, setup, Local Ignore recovery,

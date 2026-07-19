@@ -29,6 +29,24 @@ create_exception!(
     PyRuntimeError,
     "A Crash Log Scan Run continuation was already consumed."
 );
+create_exception!(
+    classic_scanlog,
+    ScanRunLocalIgnoreResetConflictError,
+    PyRuntimeError,
+    "Local Ignore reset conflicted with current canonical state."
+);
+create_exception!(
+    classic_scanlog,
+    ScanRunLocalIgnoreResetBackupError,
+    PyRuntimeError,
+    "Local Ignore reset failed before replacement could safely begin."
+);
+create_exception!(
+    classic_scanlog,
+    ScanRunLocalIgnoreResetReplacementError,
+    PyRuntimeError,
+    "Local Ignore reset failed while publishing retained defaults."
+);
 
 /// Explicit configuration shared by Standard and Targeted requests.
 #[pyclass(name = "ScanRunConfiguration", from_py_object)]
@@ -736,6 +754,25 @@ pub struct PyScanRunInstalledYamlDataRunData {
     /// Structured fallback, validation, and generation diagnostics.
     #[pyo3(get)]
     diagnostics: Vec<PyScanRunInstalledYamlDataDiagnostic>,
+    /// Durable reset metadata populated only after successful Reset To Default resume.
+    #[pyo3(get)]
+    local_ignore_reset: Option<PyScanRunLocalIgnoreResetRunData>,
+}
+
+/// Durable backup and replacement metadata from successful Reset To Default resume.
+#[pyclass(name = "ScanRunLocalIgnoreResetRunData", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunLocalIgnoreResetRunData {
+    #[pyo3(get)]
+    local_ignore_path: PathBuf,
+    #[pyo3(get)]
+    backup_path: PathBuf,
+    #[pyo3(get)]
+    malformed_identity: PyScanRunYamlDataContentIdentity,
+    #[pyo3(get)]
+    backup_identity: PyScanRunYamlDataContentIdentity,
+    #[pyo3(get)]
+    replacement_identity: PyScanRunYamlDataContentIdentity,
 }
 
 /// Explicit Local Ignore recovery decisions owned by Rust scan coordination.
@@ -750,6 +787,8 @@ pub struct PyScanRunInstalledYamlDataRunData {
 pub enum PyScanRunLocalIgnoreRecoveryDecision {
     /// Resume with an empty ignore list scoped only to the retained run.
     ProceedWithoutIgnore = 0,
+    /// Durably reset malformed Local Ignore, then resume the retained run.
+    ResetToDefault = 1,
 }
 
 /// Opaque process-local carrier for one paused Crash Log Scan Run.
@@ -1217,6 +1256,7 @@ const fn installed_yaml_data_diagnostic_kind_to_string(
         Kind::IncompatibleSchema => "incompatible_schema",
         Kind::InvalidRoleData => "invalid_role_data",
         Kind::LocalIgnoreGenerated => "local_ignore_generated",
+        Kind::LocalIgnoreReset => "local_ignore_reset",
     }
 }
 
@@ -1227,6 +1267,7 @@ const fn local_ignore_state_to_string(value: contract::LocalIgnoreRunState) -> &
         contract::LocalIgnoreRunState::Generated => "generated",
         contract::LocalIgnoreRunState::RecoveryRequired => "recovery_required",
         contract::LocalIgnoreRunState::ProceedWithoutIgnore => "proceed_without_ignore",
+        contract::LocalIgnoreRunState::ResetToDefault => "reset_to_default",
     }
 }
 
@@ -1286,6 +1327,17 @@ fn installed_yaml_data_to_py(
             .into_iter()
             .map(installed_yaml_data_diagnostic_to_py)
             .collect(),
+        local_ignore_reset: value.local_ignore_reset.map(|reset| {
+            PyScanRunLocalIgnoreResetRunData {
+                local_ignore_path: reset.local_ignore_path,
+                backup_path: reset.backup_path,
+                malformed_identity: installed_yaml_data_identity_to_py(reset.malformed_identity),
+                backup_identity: installed_yaml_data_identity_to_py(reset.backup_identity),
+                replacement_identity: installed_yaml_data_identity_to_py(
+                    reset.replacement_identity,
+                ),
+            }
+        }),
     }
 }
 
@@ -1501,11 +1553,71 @@ pub fn scan_run_execute(
     })
 }
 
+/// Converts scan-run reset outcomes into stable Python exception subclasses and metadata.
+fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> PyErr {
+    let code = error.kind().as_str();
+    let message = error.to_string();
+    let py_error = match error {
+        contract::ResumeError::LocalIgnoreResetConflict(conflict) => {
+            let py_error = ScanRunLocalIgnoreResetConflictError::new_err(message);
+            let value = py_error.value(py);
+            value
+                .setattr("code", code)
+                .and_then(|()| value.setattr("kind", code))
+                .and_then(|()| {
+                    value.setattr(
+                        "expected_identity",
+                        installed_yaml_data_identity_to_py(conflict.expected_identity),
+                    )
+                })
+                .and_then(|()| {
+                    value.setattr(
+                        "actual_identity",
+                        conflict
+                            .actual_identity
+                            .map(installed_yaml_data_identity_to_py),
+                    )
+                })
+                .and_then(|()| value.setattr("backup_path", conflict.backup_path))
+                .expect("scan-run reset conflict exceptions must accept contract attributes");
+            py_error
+        }
+        contract::ResumeError::LocalIgnoreResetBackupFailure(failure) => {
+            let py_error = ScanRunLocalIgnoreResetBackupError::new_err(message);
+            let value = py_error.value(py);
+            value
+                .setattr("code", code)
+                .and_then(|()| value.setattr("kind", code))
+                .and_then(|()| value.setattr("path", failure.path))
+                .and_then(|()| value.setattr("stage", failure.stage.map(|stage| stage.as_str())))
+                .expect("scan-run reset backup exceptions must accept contract attributes");
+            py_error
+        }
+        contract::ResumeError::LocalIgnoreResetReplacementFailure(failure) => {
+            let py_error = ScanRunLocalIgnoreResetReplacementError::new_err(message);
+            let value = py_error.value(py);
+            value
+                .setattr("code", code)
+                .and_then(|()| value.setattr("kind", code))
+                .and_then(|()| value.setattr("path", failure.path))
+                .and_then(|()| value.setattr("stage", failure.stage.map(|stage| stage.as_str())))
+                .expect("scan-run reset replacement exceptions must accept contract attributes");
+            py_error
+        }
+        contract::ResumeError::ContinuationConsumed | contract::ResumeError::Infrastructure(_) => {
+            unreachable!("non-reset resume errors are handled before reset exception projection")
+        }
+    };
+    py_error
+}
+
 /// Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
 ///
 /// The GIL is released while the shared runtime executes. Sequential or concurrent replay raises
-/// [`ScanRunContinuationConsumedError`] with code `scan_run_continuation_consumed`; resumed
-/// infrastructure failures retain the same execution envelope as [`scan_run_execute`].
+/// [`ScanRunContinuationConsumedError`] with code `scan_run_continuation_consumed`. Reset conflict,
+/// backup failure, and replacement failure raise their dedicated typed exceptions with applicable
+/// identity, path, and publication-stage metadata. Resumed infrastructure failures retain the same
+/// execution envelope as [`scan_run_execute`].
 #[pyfunction]
 #[pyo3(signature = (continuation, decision, cancellation, observer=None, cancel_on_observer_error=false))]
 pub fn scan_run_resume(
@@ -1521,6 +1633,9 @@ pub fn scan_run_resume(
     let decision = match decision {
         PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
             contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        }
+        PyScanRunLocalIgnoreRecoveryDecision::ResetToDefault => {
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault
         }
     };
     let (result, observer_error) = without_gil_block_on(py, || async move {
@@ -1565,6 +1680,7 @@ pub fn scan_run_resume(
                 .setattr("code", "scan_run_continuation_consumed");
             Err(py_error)
         }
+        Err(error) => Err(scan_run_reset_error_to_py(py, error)),
     }
 }
 

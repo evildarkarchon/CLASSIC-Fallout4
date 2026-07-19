@@ -63,6 +63,15 @@ struct ScanRunInstalledYamlDataDiagnosticPresentation {
     QString message;
 };
 
+/// Qt-owned durable metadata from a successful Local Ignore reset.
+struct ScanRunLocalIgnoreResetPresentation {
+    QString localIgnorePath;
+    QString backupPath;
+    ScanRunYamlDataContentIdentityPresentation malformedIdentity;
+    ScanRunYamlDataContentIdentityPresentation backupIdentity;
+    ScanRunYamlDataContentIdentityPresentation replacementIdentity;
+};
+
 /// Qt-owned projection of the immutable Installed YAML Data selected for one run.
 struct ScanRunInstalledYamlDataPresentation {
     ScanRunInstalledYamlDataFilePresentation main;
@@ -71,6 +80,8 @@ struct ScanRunInstalledYamlDataPresentation {
         classic::scanner::ScanRunLocalIgnoreYamlDataState::Existing;
     ScanRunYamlDataContentIdentityPresentation localIgnoreIdentity;
     QVector<ScanRunInstalledYamlDataDiagnosticPresentation> diagnostics;
+    bool hasLocalIgnoreReset = false;
+    ScanRunLocalIgnoreResetPresentation localIgnoreReset;
 };
 
 /// Presentation-ready terminal state without flattening typed counts or per-log dispositions.

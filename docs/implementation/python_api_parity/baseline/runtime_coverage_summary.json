@@ -1,13 +1,13 @@
 {
-  "generated_at_utc": "2026-07-19T08:45:19.099285+00:00",
+  "generated_at_utc": "2026-07-19T10:13:16.837264+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1659,
-    "runtime_verified_total": 1659,
+    "tracked_surface_total": 1683,
+    "runtime_verified_total": 1683,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 1236,
@@ -53,8 +53,8 @@
       "total": 169
     },
     "scanlog": {
-      "runtime_verified": 507,
-      "total": 507
+      "runtime_verified": 531,
+      "total": 531
     },
     "settings": {
       "runtime_verified": 65,
@@ -28882,7 +28882,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunConfiguration.__init__",
@@ -28901,7 +28901,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunStandardSource",
@@ -28920,7 +28920,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunStandardSource.__init__",
@@ -28939,7 +28939,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunTargetedSource",
@@ -28958,7 +28958,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunTargetedSource.__init__",
@@ -28977,7 +28977,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunSetupContext",
@@ -28996,7 +28996,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunSetupContext.__init__",
@@ -29015,7 +29015,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunUnsolvedLogs",
@@ -29034,7 +29034,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunUnsolvedLogs.leave_in_place",
@@ -29053,7 +29053,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunUnsolvedLogs.move_to_configured_or_default",
@@ -29072,7 +29072,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunUnsolvedLogs.move_to_custom",
@@ -29091,7 +29091,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunRequest",
@@ -29110,7 +29110,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunRequest.standard",
@@ -29129,7 +29129,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunRequest.standard_with_fcx",
@@ -29148,7 +29148,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunRequest.targeted",
@@ -29167,7 +29167,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunRequest.targeted_with_fcx",
@@ -29186,7 +29186,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunCancellation",
@@ -29205,7 +29205,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunCancellation.__init__",
@@ -29224,7 +29224,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunCancellation.cancel",
@@ -29243,7 +29243,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunCancellation.is_cancelled",
@@ -29262,7 +29262,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunRejectedInput",
@@ -29281,7 +29281,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunDiscoveryResult",
@@ -29300,7 +29300,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunSetupCheck",
@@ -29319,7 +29319,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunSetupPathUpdate",
@@ -29338,7 +29338,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunSetupResult",
@@ -29357,7 +29357,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunLogFailure",
@@ -29376,7 +29376,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunLogResult",
@@ -29395,7 +29395,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunYamlDataContentIdentity",
@@ -29414,7 +29414,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunYamlDataContentIdentity.sha256",
@@ -29433,7 +29433,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunYamlDataContentIdentity.byte_len",
@@ -29452,7 +29452,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile",
@@ -29471,7 +29471,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile.role",
@@ -29490,7 +29490,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile.provenance",
@@ -29509,7 +29509,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile.schema_major",
@@ -29528,7 +29528,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile.schema_minor",
@@ -29547,7 +29547,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile.sha256",
@@ -29566,7 +29566,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile.byte_length",
@@ -29585,7 +29585,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataDiagnostic",
@@ -29604,7 +29604,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataDiagnostic.role",
@@ -29623,7 +29623,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataDiagnostic.candidate",
@@ -29642,7 +29642,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataDiagnostic.path",
@@ -29661,7 +29661,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataDiagnostic.kind",
@@ -29680,7 +29680,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataDiagnostic.message",
@@ -29699,7 +29699,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData",
@@ -29718,7 +29718,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData.main",
@@ -29737,7 +29737,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData.game_file",
@@ -29756,7 +29756,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData.local_ignore_state",
@@ -29775,7 +29775,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData.local_ignore_identity",
@@ -29794,7 +29794,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData.diagnostics",
@@ -29813,7 +29813,140 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData.local_ignore_reset",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataRunData.local_ignore_reset",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetRunData",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetRunData",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetRunData.local_ignore_path",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetRunData.local_ignore_path",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetRunData.backup_path",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetRunData.backup_path",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetRunData.malformed_identity",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetRunData.malformed_identity",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetRunData.backup_identity",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetRunData.backup_identity",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetRunData.replacement_identity",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetRunData.replacement_identity",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreRecoveryDecision",
@@ -29832,7 +29965,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore",
@@ -29851,7 +29984,26 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ResetToDefault",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ResetToDefault",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunContinuation",
@@ -29870,7 +30022,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunContinuationConsumedError",
@@ -29889,7 +30041,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunContinuationConsumedError.code",
@@ -29908,7 +30060,311 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetConflictError",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetConflictError",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetConflictError.code",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetConflictError.code",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetConflictError.kind",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetConflictError.kind",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetConflictError.expected_identity",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetConflictError.expected_identity",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetConflictError.actual_identity",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetConflictError.actual_identity",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetConflictError.backup_path",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetConflictError.backup_path",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetBackupError",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetBackupError",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetBackupError.code",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetBackupError.code",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetBackupError.kind",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetBackupError.kind",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetBackupError.path",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetBackupError.path",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetBackupError.stage",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetBackupError.stage",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetReplacementError",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetReplacementError",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetReplacementError.code",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetReplacementError.code",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetReplacementError.kind",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetReplacementError.kind",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetReplacementError.path",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetReplacementError.path",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunLocalIgnoreResetReplacementError.stage",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunLocalIgnoreResetReplacementError.stage",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunResult",
@@ -29927,7 +30383,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunResult.installed_yaml_data",
@@ -29946,7 +30402,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunResult.continuation",
@@ -29965,7 +30421,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInfrastructureError",
@@ -29984,7 +30440,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunLogEvent",
@@ -30003,7 +30459,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunEvent",
@@ -30022,7 +30478,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunExecution",
@@ -30041,7 +30497,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.scan_run_execute",
@@ -30060,7 +30516,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.scan_run_resume",
@@ -30079,7 +30535,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated and recovery-required Local Ignore diagnostics, the opaque Proceed Without Ignore continuation, retained discovery and snapshot identity, typed replay failure, cancellation precedence, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, and exhaustive immutable Installed YAML Data metadata. The opaque continuation exercises Proceed Without Ignore and Reset To Default, retained discovery and selected Main/game identity, durable byte-exact backup/replacement metadata, reset diagnostics, typed conflict and backup failures, pre-reset cancellation without filesystem work, and cancellation after reset lock acquisition waiting for durable repair before the normal cancelled result. A companion PyO3 adapter test maps replacement-publication failure to its dedicated exception and shared code/path/stage metadata. Tests also cover replay, byte-identical reports, typed infrastructure errors, every serialized observer variant, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_config.YamlData.classic_version",

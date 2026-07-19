@@ -22,7 +22,9 @@ use crate::{CrashLogScanFacts, CrashLogScanOptions, ScanProgressPhase};
 use classic_config_core::{
     InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind,
     InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot,
-    LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, YamlDataContentIdentity,
+    LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError,
+    LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult,
+    LocalIgnoreYamlDataState, YamlDataContentIdentity,
 };
 use classic_shared_core::GameId;
 use std::fmt;
@@ -397,6 +399,8 @@ impl Cancellation {
 pub enum LocalIgnoreRecoveryDecision {
     /// Resume the retained run with an empty ignore list scoped to this operation.
     ProceedWithoutIgnore,
+    /// Durably reset malformed Local Ignore from retained selected-Main defaults, then resume.
+    ResetToDefault,
 }
 
 impl LocalIgnoreRecoveryDecision {
@@ -405,6 +409,7 @@ impl LocalIgnoreRecoveryDecision {
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::ProceedWithoutIgnore => "proceed_without_ignore",
+            Self::ResetToDefault => "reset_to_default",
         }
     }
 }
@@ -414,6 +419,12 @@ impl LocalIgnoreRecoveryDecision {
 pub enum ResumeErrorKind {
     /// The opaque continuation was already claimed by an earlier resume attempt.
     ContinuationConsumed,
+    /// The canonical Local Ignore identity changed while the caller was deciding.
+    LocalIgnoreResetConflict,
+    /// Reset failed before a verified backup was ready for replacement.
+    LocalIgnoreResetBackupFailure,
+    /// Reset failed while publishing the retained defaults as authoritative.
+    LocalIgnoreResetReplacementFailure,
     /// The retained run encountered a run-wide infrastructure failure after resume.
     Infrastructure,
 }
@@ -424,9 +435,63 @@ impl ResumeErrorKind {
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::ContinuationConsumed => "scan_run_continuation_consumed",
+            Self::LocalIgnoreResetConflict => "local_ignore_reset_conflict",
+            Self::LocalIgnoreResetBackupFailure => "local_ignore_reset_backup_failure",
+            Self::LocalIgnoreResetReplacementFailure => "local_ignore_reset_replacement_failure",
             Self::Infrastructure => "infrastructure",
         }
     }
+}
+
+/// Conflict details retained when Reset To Default refuses to overwrite newer Local Ignore state.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LocalIgnoreResetConflictError {
+    /// Malformed-file identity against which the caller approved reset.
+    pub expected_identity: YamlDataContentIdentity,
+    /// Current canonical identity, absent when another actor removed the file.
+    pub actual_identity: Option<YamlDataContentIdentity>,
+    /// Verified backup retained before a late conflict, when publication had already completed.
+    pub backup_path: Option<PathBuf>,
+}
+
+/// Stable publication stages exposed by reset operational failures.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LocalIgnoreResetFailureStage {
+    /// A same-directory staging file could not be created.
+    Create,
+    /// Complete bytes could not be written to the staging file.
+    Write,
+    /// Buffered staging bytes could not be flushed.
+    Flush,
+    /// Staging bytes could not be synchronized to durable storage.
+    Sync,
+    /// The synchronized staging file could not be published.
+    Publish,
+}
+
+impl LocalIgnoreResetFailureStage {
+    /// Returns the stable adapter-facing publication stage identifier.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Create => "create",
+            Self::Write => "write",
+            Self::Flush => "flush",
+            Self::Sync => "sync",
+            Self::Publish => "publish",
+        }
+    }
+}
+
+/// Presentation-safe details for a Local Ignore reset operational failure.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LocalIgnoreResetFailure {
+    /// Relevant backup, staging, or canonical path.
+    pub path: PathBuf,
+    /// Publication stage when the failure came from staged durable publication.
+    pub stage: Option<LocalIgnoreResetFailureStage>,
+    /// Human-readable diagnostic preserving the config-core failure context.
+    pub message: String,
 }
 
 /// Typed failure returned by [`CrashLogScanRunContinuation::resume`].
@@ -434,6 +499,12 @@ impl ResumeErrorKind {
 pub enum ResumeError {
     /// The continuation was already consumed by a sequential or concurrent caller.
     ContinuationConsumed,
+    /// Reset detected newer or removed canonical Local Ignore state.
+    LocalIgnoreResetConflict(LocalIgnoreResetConflictError),
+    /// Reset failed before replacement could safely begin.
+    LocalIgnoreResetBackupFailure(LocalIgnoreResetFailure),
+    /// Reset failed while publishing the retained defaults.
+    LocalIgnoreResetReplacementFailure(LocalIgnoreResetFailure),
     /// Resume reached a run-wide infrastructure failure.
     Infrastructure(InfrastructureError),
 }
@@ -444,6 +515,13 @@ impl ResumeError {
     pub const fn kind(&self) -> ResumeErrorKind {
         match self {
             Self::ContinuationConsumed => ResumeErrorKind::ContinuationConsumed,
+            Self::LocalIgnoreResetConflict(_) => ResumeErrorKind::LocalIgnoreResetConflict,
+            Self::LocalIgnoreResetBackupFailure(_) => {
+                ResumeErrorKind::LocalIgnoreResetBackupFailure
+            }
+            Self::LocalIgnoreResetReplacementFailure(_) => {
+                ResumeErrorKind::LocalIgnoreResetReplacementFailure
+            }
             Self::Infrastructure(_) => ResumeErrorKind::Infrastructure,
         }
     }
@@ -452,7 +530,10 @@ impl ResumeError {
     #[must_use]
     pub const fn infrastructure(&self) -> Option<&InfrastructureError> {
         match self {
-            Self::ContinuationConsumed => None,
+            Self::ContinuationConsumed
+            | Self::LocalIgnoreResetConflict(_)
+            | Self::LocalIgnoreResetBackupFailure(_)
+            | Self::LocalIgnoreResetReplacementFailure(_) => None,
             Self::Infrastructure(error) => Some(error),
         }
     }
@@ -464,6 +545,13 @@ impl fmt::Display for ResumeError {
             Self::ContinuationConsumed => {
                 formatter.write_str("Crash Log Scan Run continuation was already consumed")
             }
+            Self::LocalIgnoreResetConflict(_) => {
+                formatter.write_str("Local Ignore reset conflicted with current canonical state")
+            }
+            Self::LocalIgnoreResetBackupFailure(failure)
+            | Self::LocalIgnoreResetReplacementFailure(failure) => {
+                formatter.write_str(&failure.message)
+            }
             Self::Infrastructure(error) => error.fmt(formatter),
         }
     }
@@ -472,9 +560,64 @@ impl fmt::Display for ResumeError {
 impl std::error::Error for ResumeError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::ContinuationConsumed => None,
+            Self::ContinuationConsumed
+            | Self::LocalIgnoreResetConflict(_)
+            | Self::LocalIgnoreResetBackupFailure(_)
+            | Self::LocalIgnoreResetReplacementFailure(_) => None,
             Self::Infrastructure(error) => Some(error),
         }
+    }
+}
+
+/// Projects config-core conflict data without exposing the consumed recovery plan.
+fn project_local_ignore_reset_conflict(
+    conflict: LocalIgnoreResetConflict,
+) -> LocalIgnoreResetConflictError {
+    LocalIgnoreResetConflictError {
+        expected_identity: conflict.expected_identity().clone(),
+        actual_identity: conflict.actual_identity().cloned(),
+        backup_path: conflict.backup_path().map(std::path::Path::to_path_buf),
+    }
+}
+
+/// Converts config-core reset failures into stable continuation outcomes for every adapter.
+fn project_local_ignore_reset_error(error: LocalIgnoreResetError) -> ResumeError {
+    let message = error.to_string();
+    let (replacement_failure, path, stage) = match error {
+        LocalIgnoreResetError::DefaultsUnavailable { path, .. }
+        | LocalIgnoreResetError::Lock { path, .. }
+        | LocalIgnoreResetError::Read { path, .. }
+        | LocalIgnoreResetError::BackupDirectory { path, .. }
+        | LocalIgnoreResetError::BackupVerification { path, .. } => (false, path, None),
+        LocalIgnoreResetError::BackupPublication { path, stage, .. } => {
+            (false, path, Some(project_reset_publication_stage(stage)))
+        }
+        LocalIgnoreResetError::ReplacementPublication { path, stage, .. } => {
+            (true, path, Some(project_reset_publication_stage(stage)))
+        }
+    };
+    let failure = LocalIgnoreResetFailure {
+        path,
+        stage,
+        message,
+    };
+    if replacement_failure {
+        ResumeError::LocalIgnoreResetReplacementFailure(failure)
+    } else {
+        ResumeError::LocalIgnoreResetBackupFailure(failure)
+    }
+}
+
+/// Maps config-core durable-publication stages into the scan-run contract vocabulary.
+const fn project_reset_publication_stage(
+    stage: LocalIgnoreResetPublicationStage,
+) -> LocalIgnoreResetFailureStage {
+    match stage {
+        LocalIgnoreResetPublicationStage::Create => LocalIgnoreResetFailureStage::Create,
+        LocalIgnoreResetPublicationStage::Write => LocalIgnoreResetFailureStage::Write,
+        LocalIgnoreResetPublicationStage::Flush => LocalIgnoreResetFailureStage::Flush,
+        LocalIgnoreResetPublicationStage::Sync => LocalIgnoreResetFailureStage::Sync,
+        LocalIgnoreResetPublicationStage::Publish => LocalIgnoreResetFailureStage::Publish,
     }
 }
 
@@ -509,11 +652,15 @@ impl CrashLogScanRunContinuation {
     ///
     /// Cancellation is checked after the one-shot claim but before the recovery plan is consumed,
     /// so a cancelled resume returns the normal cancelled-after-discovery result without analysis.
+    /// Reset To Default then runs as one synchronous non-interruptible transaction; cancellation
+    /// observed after that transaction returns the same normal cancelled result after preserving
+    /// its durable backup and replacement.
     ///
     /// # Errors
     ///
-    /// Returns [`ResumeError::ContinuationConsumed`] for sequential or concurrent replay, or
-    /// [`ResumeError::Infrastructure`] when the resumed run cannot produce a terminal result.
+    /// Returns [`ResumeError::ContinuationConsumed`] for sequential or concurrent replay, a typed
+    /// Local Ignore reset conflict/backup/replacement failure, or [`ResumeError::Infrastructure`]
+    /// when the resumed run cannot produce a terminal result.
     pub async fn resume(
         &self,
         decision: LocalIgnoreRecoveryDecision,
@@ -534,31 +681,90 @@ impl CrashLogScanRunContinuation {
             ));
         }
 
-        let mut effective_concurrency = None;
-        let engine_result = match decision {
+        let PreparedCrashLogScanRunContinuation {
+            recovery_plan,
+            prepared,
+        } = state;
+        let (snapshot, installed_yaml_data, reset_completed) = match decision {
             LocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
-                resume_prepared_scan_run(state, cancellation.engine_flag(), |event| match event {
-                    CrashLogScanRunServiceEvent::DiscoveryCompleted(_) => {
-                        // Resume owns completed discovery already and never rediscovery events.
-                    }
-                    CrashLogScanRunServiceEvent::EffectiveConcurrencySelected(value) => {
-                        effective_concurrency = Some(value);
-                        emit(
-                            &mut observer,
-                            Event::EffectiveConcurrencySelected {
-                                effective_concurrency: value,
-                            },
-                        );
-                    }
-                    CrashLogScanRunServiceEvent::Log(event) => {
-                        if let Some(event) = translate_engine_event(event) {
-                            emit(&mut observer, event);
-                        }
-                    }
-                })
-                .await
+                let snapshot = recovery_plan.proceed_without_ignore();
+                let installed_yaml_data = InstalledYamlDataRunData::from_snapshot(&snapshot)
+                    .ok_or_else(|| {
+                        ResumeError::Infrastructure(InfrastructureError {
+                            stage: InfrastructureErrorStage::InternalInvariant,
+                            message: "Proceed Without Ignore produced unsupported scan metadata"
+                                .to_string(),
+                            path: None,
+                        })
+                    })?;
+                (snapshot, installed_yaml_data, false)
             }
+            LocalIgnoreRecoveryDecision::ResetToDefault => {
+                #[cfg(test)]
+                prepared
+                    .test_hooks
+                    .enter_local_ignore_reset_critical_section();
+                match recovery_plan.reset_to_default() {
+                    Ok(LocalIgnoreResetOutcome::Reset(reset)) => {
+                        let installed_yaml_data = InstalledYamlDataRunData::from_reset_result(
+                            &reset,
+                        )
+                        .ok_or_else(|| {
+                            ResumeError::Infrastructure(InfrastructureError {
+                                stage: InfrastructureErrorStage::InternalInvariant,
+                                message: "Reset To Default produced unsupported scan metadata"
+                                    .to_string(),
+                                path: None,
+                            })
+                        })?;
+                        (reset.into_snapshot(), installed_yaml_data, true)
+                    }
+                    Ok(LocalIgnoreResetOutcome::Conflict(conflict)) => {
+                        return Err(ResumeError::LocalIgnoreResetConflict(
+                            project_local_ignore_reset_conflict(conflict),
+                        ));
+                    }
+                    Err(error) => {
+                        return Err(project_local_ignore_reset_error(error));
+                    }
+                }
+            }
+        };
+
+        if reset_completed && cancellation.is_cancelled() {
+            return Ok(project_engine_result(
+                EngineRunResult::cancelled_after_discovery(prepared.discovery),
+                None,
+            ));
         }
+
+        let mut effective_concurrency = None;
+        let engine_result = resume_prepared_scan_run(
+            prepared,
+            snapshot,
+            installed_yaml_data,
+            cancellation.engine_flag(),
+            |event| match event {
+                CrashLogScanRunServiceEvent::DiscoveryCompleted(_) => {
+                    // Resume owns completed discovery already and never emits rediscovery events.
+                }
+                CrashLogScanRunServiceEvent::EffectiveConcurrencySelected(value) => {
+                    effective_concurrency = Some(value);
+                    emit(
+                        &mut observer,
+                        Event::EffectiveConcurrencySelected {
+                            effective_concurrency: value,
+                        },
+                    );
+                }
+                CrashLogScanRunServiceEvent::Log(event) => {
+                    if let Some(event) = translate_engine_event(event) {
+                        emit(&mut observer, event);
+                    }
+                }
+            },
+        )
+        .await
         .map_err(|error| ResumeError::Infrastructure(InfrastructureError::from_service(error)))?;
 
         Ok(project_engine_result(engine_result, effective_concurrency))
@@ -780,6 +986,8 @@ pub enum LocalIgnoreRunState {
     RecoveryRequired,
     /// This operation resumed with an empty, operation-scoped ignore list.
     ProceedWithoutIgnore,
+    /// Malformed Local Ignore was durably reset from retained selected-Main defaults.
+    ResetToDefault,
 }
 
 impl LocalIgnoreRunState {
@@ -791,6 +999,7 @@ impl LocalIgnoreRunState {
             Self::Generated => "generated",
             Self::RecoveryRequired => "recovery_required",
             Self::ProceedWithoutIgnore => "proceed_without_ignore",
+            Self::ResetToDefault => "reset_to_default",
         }
     }
 }
@@ -816,6 +1025,8 @@ pub enum InstalledYamlDataRunDiagnosticKind {
     InvalidRoleData,
     /// Missing Local Ignore YAML Data was generated from selected Main defaults.
     LocalIgnoreGenerated,
+    /// Malformed Local Ignore YAML Data was reset from retained selected-Main defaults.
+    LocalIgnoreReset,
 }
 
 /// Structured attribution for one scan-run selection, fallback, or generation event.
@@ -873,12 +1084,27 @@ pub struct InstalledYamlDataRunData {
     pub local_ignore_identity: YamlDataContentIdentity,
     /// Structured fallback, validation, and generation diagnostics.
     pub diagnostics: Vec<InstalledYamlDataRunDiagnostic>,
+    /// Durable reset metadata, present only after successful Reset To Default resume.
+    pub local_ignore_reset: Option<LocalIgnoreResetRunData>,
+}
+
+/// Durable Local Ignore reset metadata retained in a successful Crash Log Scan Run Result.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LocalIgnoreResetRunData {
+    /// Canonical Local Ignore path repaired by the retained recovery plan.
+    pub local_ignore_path: PathBuf,
+    /// Durable byte-exact backup verified before replacement became authoritative.
+    pub backup_path: PathBuf,
+    /// Identity of the malformed bytes retained while the caller decided.
+    pub malformed_identity: YamlDataContentIdentity,
+    /// Identity independently verified from the durable backup bytes.
+    pub backup_identity: YamlDataContentIdentity,
+    /// Identity of the retained selected-Main defaults published as replacement.
+    pub replacement_identity: YamlDataContentIdentity,
 }
 
 impl InstalledYamlDataRunData {
     /// Copies scan-run metadata from a selected Installed YAML Data snapshot.
-    ///
-    /// Reset-to-default metadata remains reserved for the reset continuation change.
     #[must_use]
     pub(super) fn from_snapshot(snapshot: &InstalledYamlDataSnapshot) -> Option<Self> {
         let local_ignore_state = match snapshot.local_ignore_state() {
@@ -887,7 +1113,7 @@ impl InstalledYamlDataRunData {
             LocalIgnoreYamlDataState::ProceedWithoutIgnore => {
                 LocalIgnoreRunState::ProceedWithoutIgnore
             }
-            LocalIgnoreYamlDataState::ResetToDefault => return None,
+            LocalIgnoreYamlDataState::ResetToDefault => LocalIgnoreRunState::ResetToDefault,
         };
         let diagnostics = Self::map_diagnostics(snapshot.diagnostics())?;
 
@@ -897,6 +1123,7 @@ impl InstalledYamlDataRunData {
             local_ignore_state,
             local_ignore_identity: snapshot.local_ignore_identity().clone(),
             diagnostics,
+            local_ignore_reset: None,
         })
     }
 
@@ -909,7 +1136,22 @@ impl InstalledYamlDataRunData {
             local_ignore_state: LocalIgnoreRunState::RecoveryRequired,
             local_ignore_identity: plan.malformed_local_ignore_identity().clone(),
             diagnostics: Self::map_diagnostics(plan.diagnostics())?,
+            local_ignore_reset: None,
         })
+    }
+
+    /// Copies reset-ready snapshot facts plus durable backup and replacement metadata.
+    #[must_use]
+    pub(super) fn from_reset_result(result: &LocalIgnoreResetResult) -> Option<Self> {
+        let mut data = Self::from_snapshot(result.snapshot())?;
+        data.local_ignore_reset = Some(LocalIgnoreResetRunData {
+            local_ignore_path: result.local_ignore_path().to_path_buf(),
+            backup_path: result.backup_path().to_path_buf(),
+            malformed_identity: result.malformed_local_ignore_identity().clone(),
+            backup_identity: result.backup_identity().clone(),
+            replacement_identity: result.replacement_identity().clone(),
+        });
+        Some(data)
     }
 
     /// Maps Config Core diagnostics exhaustively into the language-neutral run contract.
@@ -947,7 +1189,9 @@ impl InstalledYamlDataRunData {
                     InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated => {
                         InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated
                     }
-                    InstalledYamlDataDiagnosticKind::LocalIgnoreReset => return None,
+                    InstalledYamlDataDiagnosticKind::LocalIgnoreReset => {
+                        InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset
+                    }
                 };
                 Some(InstalledYamlDataRunDiagnostic {
                     role: diagnostic.role(),

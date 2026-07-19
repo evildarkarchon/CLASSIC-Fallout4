@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T08:45:19.078248+00:00",
+  "generated_at_utc": "2026-07-19T10:13:16.815159+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -10687,6 +10687,42 @@
       "tier": "tier1"
     },
     {
+      "symbol": "LocalIgnoreResetConflictError",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct LocalIgnoreResetConflictError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetFailure",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct LocalIgnoreResetFailure",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetFailureStage",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum LocalIgnoreResetFailureStage",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetRunData",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct LocalIgnoreResetRunData",
+      "tier": "tier1"
+    },
+    {
       "symbol": "LocalIgnoreRunState",
       "kind": "enum",
       "crate": "classic-scanlog-core",
@@ -12140,6 +12176,15 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "source_decl": "pub const fn",
       "tier": "tier1"
     },

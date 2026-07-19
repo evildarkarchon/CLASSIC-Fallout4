@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T08:45:18.725935+00:00",
+  "generated_at_utc": "2026-07-19T10:13:05.514885+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,8 +7,8 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1062,
-    "runtime_verified_total": 1062,
+    "tracked_surface_total": 1063,
+    "runtime_verified_total": 1063,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 913,
@@ -54,8 +54,8 @@
       "total": 77
     },
     "scanlog": {
-      "runtime_verified": 190,
-      "total": 190
+      "runtime_verified": 191,
+      "total": 191
     },
     "settings": {
       "runtime_verified": 45,
@@ -19597,7 +19597,29 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the opaque Local Ignore recovery continuation, explicit Proceed Without Ignore decision, retained discovery and Installed YAML Data snapshot, stable consumed-error code, cancellation precedence, unchanged malformed bytes, and byte-identical report output."
+      "notes": "Exercises the opaque Local Ignore recovery continuation and both explicit decisions. Proceed Without Ignore retains discovery/snapshot identity without mutation. Reset To Default retains the same discovery and selected Main/game facts, exposes durable byte-exact backup and replacement metadata plus reset diagnostics, preserves conflict and backup failures as stable coded rejections, honors pre-reset cancellation without filesystem work, and proves cancellation after reset lock acquisition waits for durable repair before returning the normal cancelled result. The companion Rust adapter test projects replacement-publication failure through the same pure Node rejection metadata path. Replay remains typed and successful report output is byte-identical."
+    },
+    {
+      "trackedId": "binding:JsScanRunLocalIgnoreResetRunData",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsScanRunLocalIgnoreResetRunData",
+      "coverageId": "node-tier2-scanlog-local-ignore-recovery-runtime",
+      "verificationMode": "contract_test",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "shared Local Ignore recovery continuation retains snapshots and rejects replay",
+      "fixtureRefs": [
+        "MAIN_YAML",
+        "GAME_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises the opaque Local Ignore recovery continuation and both explicit decisions. Proceed Without Ignore retains discovery/snapshot identity without mutation. Reset To Default retains the same discovery and selected Main/game facts, exposes durable byte-exact backup and replacement metadata plus reset diagnostics, preserves conflict and backup failures as stable coded rejections, honors pre-reset cancellation without filesystem work, and proves cancellation after reset lock acquisition waits for durable repair before returning the normal cancelled result. The companion Rust adapter test projects replacement-publication failure through the same pure Node rejection metadata path. Replay remains typed and successful report output is byte-identical."
     },
     {
       "trackedId": "binding:ScanRunContinuation",
@@ -19619,7 +19641,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the opaque Local Ignore recovery continuation, explicit Proceed Without Ignore decision, retained discovery and Installed YAML Data snapshot, stable consumed-error code, cancellation precedence, unchanged malformed bytes, and byte-identical report output."
+      "notes": "Exercises the opaque Local Ignore recovery continuation and both explicit decisions. Proceed Without Ignore retains discovery/snapshot identity without mutation. Reset To Default retains the same discovery and selected Main/game facts, exposes durable byte-exact backup and replacement metadata plus reset diagnostics, preserves conflict and backup failures as stable coded rejections, honors pre-reset cancellation without filesystem work, and proves cancellation after reset lock acquisition waits for durable repair before returning the normal cancelled result. The companion Rust adapter test projects replacement-publication failure through the same pure Node rejection metadata path. Replay remains typed and successful report output is byte-identical."
     },
     {
       "trackedId": "binding:scanRunResume",
@@ -19641,7 +19663,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the opaque Local Ignore recovery continuation, explicit Proceed Without Ignore decision, retained discovery and Installed YAML Data snapshot, stable consumed-error code, cancellation precedence, unchanged malformed bytes, and byte-identical report output."
+      "notes": "Exercises the opaque Local Ignore recovery continuation and both explicit decisions. Proceed Without Ignore retains discovery/snapshot identity without mutation. Reset To Default retains the same discovery and selected Main/game facts, exposes durable byte-exact backup and replacement metadata plus reset diagnostics, preserves conflict and backup failures as stable coded rejections, honors pre-reset cancellation without filesystem work, and proves cancellation after reset lock acquisition waits for durable repair before returning the normal cancelled result. The companion Rust adapter test projects replacement-publication failure through the same pure Node rejection metadata path. Replay remains typed and successful report output is byte-identical."
     }
   ]
 }

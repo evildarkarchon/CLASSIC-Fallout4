@@ -98,6 +98,25 @@
         "diagnosticKinds": [
           "parse"
         ]
+      },
+      "expectedResetToDefault": {
+        "mainProvenance": "bundled",
+        "gameProvenance": "bundled",
+        "localIgnoreState": "reset_to_default",
+        "diagnosticKinds": [
+          "parse",
+          "local_ignore_reset"
+        ]
+      },
+      "resetOutcomes": {
+        "conflictCode": "local_ignore_reset_conflict",
+        "backupFailureCode": "local_ignore_reset_backup_failure",
+        "replacementFailureCode": "local_ignore_reset_replacement_failure",
+        "consumedCode": "scan_run_continuation_consumed",
+        "backupMustEqualMalformedBytes": true,
+        "reportMustEqualExistingBytes": true,
+        "preResetCancellationMutates": false,
+        "postCriticalCancellationStatus": "cancelled"
       }
     }
   },
@@ -298,16 +317,26 @@
     "installed_yaml_data_diagnostic_kind.incompatible_schema",
     "installed_yaml_data_diagnostic_kind.invalid_role_data",
     "installed_yaml_data_diagnostic_kind.local_ignore_generated",
+    "installed_yaml_data_diagnostic_kind.local_ignore_reset",
     "local_ignore_yaml_data_state.existing",
     "local_ignore_yaml_data_state.generated",
     "local_ignore_yaml_data_state.recovery_required",
     "local_ignore_yaml_data_state.proceed_without_ignore",
+    "local_ignore_yaml_data_state.reset_to_default",
     "local_ignore_recovery_decision.proceed_without_ignore",
+    "local_ignore_recovery_decision.reset_to_default",
     "resume_error_kind.continuation_consumed",
+    "resume_error_kind.local_ignore_reset_conflict",
+    "resume_error_kind.local_ignore_reset_backup_failure",
+    "resume_error_kind.local_ignore_reset_replacement_failure",
     "resume_error_kind.infrastructure",
     "recovery_continuation.retained_snapshot",
     "recovery_continuation.single_use",
     "recovery_continuation.pre_resume_cancelled",
+    "recovery_continuation.reset_success",
+    "recovery_continuation.reset_conflict",
+    "recovery_continuation.reset_operational_failure",
+    "recovery_continuation.reset_post_critical_cancelled",
     "cancellation_seam.pre_discovery",
     "cancellation_seam.post_discovery_queued",
     "cancellation_seam.admitted"
@@ -640,16 +669,26 @@
         "installed_yaml_data_diagnostic_kind.incompatible_schema",
         "installed_yaml_data_diagnostic_kind.invalid_role_data",
         "installed_yaml_data_diagnostic_kind.local_ignore_generated",
+        "installed_yaml_data_diagnostic_kind.local_ignore_reset",
         "local_ignore_yaml_data_state.existing",
         "local_ignore_yaml_data_state.generated",
         "local_ignore_yaml_data_state.recovery_required",
         "local_ignore_yaml_data_state.proceed_without_ignore",
+        "local_ignore_yaml_data_state.reset_to_default",
         "local_ignore_recovery_decision.proceed_without_ignore",
+        "local_ignore_recovery_decision.reset_to_default",
         "resume_error_kind.continuation_consumed",
+        "resume_error_kind.local_ignore_reset_conflict",
+        "resume_error_kind.local_ignore_reset_backup_failure",
+        "resume_error_kind.local_ignore_reset_replacement_failure",
         "resume_error_kind.infrastructure",
         "recovery_continuation.retained_snapshot",
         "recovery_continuation.single_use",
         "recovery_continuation.pre_resume_cancelled",
+        "recovery_continuation.reset_success",
+        "recovery_continuation.reset_conflict",
+        "recovery_continuation.reset_operational_failure",
+        "recovery_continuation.reset_post_critical_cancelled",
         "cancellation_seam.pre_discovery",
         "cancellation_seam.post_discovery_queued",
         "cancellation_seam.admitted"
@@ -662,7 +701,13 @@
             "targeted_cancellation_before_discovery_has_no_discovery_result",
             "cancellation_while_queued_never_emits_started",
             "cancellation_with_multiple_admitted_logs_preserves_their_durable_boundary",
-            "injected_infrastructure_failures_preserve_every_stable_contract_field"
+            "injected_infrastructure_failures_preserve_every_stable_contract_field",
+            "targeted_run_resets_local_ignore_and_resumes_retained_discovery_and_snapshot",
+            "reset_to_default_returns_typed_conflict_without_overwriting_current_local_ignore",
+            "reset_to_default_returns_typed_backup_failure_without_mutation_or_analysis",
+            "reset_replacement_publication_failure_projects_stable_typed_details",
+            "cancellation_before_reset_to_default_performs_no_durable_or_analysis_work",
+            "cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset"
           ]
         },
         {
@@ -724,16 +769,26 @@
         "installed_yaml_data_diagnostic_kind.incompatible_schema",
         "installed_yaml_data_diagnostic_kind.invalid_role_data",
         "installed_yaml_data_diagnostic_kind.local_ignore_generated",
+        "installed_yaml_data_diagnostic_kind.local_ignore_reset",
         "local_ignore_yaml_data_state.existing",
         "local_ignore_yaml_data_state.generated",
         "local_ignore_yaml_data_state.recovery_required",
         "local_ignore_yaml_data_state.proceed_without_ignore",
+        "local_ignore_yaml_data_state.reset_to_default",
         "local_ignore_recovery_decision.proceed_without_ignore",
+        "local_ignore_recovery_decision.reset_to_default",
         "resume_error_kind.continuation_consumed",
+        "resume_error_kind.local_ignore_reset_conflict",
+        "resume_error_kind.local_ignore_reset_backup_failure",
+        "resume_error_kind.local_ignore_reset_replacement_failure",
         "resume_error_kind.infrastructure",
         "recovery_continuation.retained_snapshot",
         "recovery_continuation.single_use",
         "recovery_continuation.pre_resume_cancelled",
+        "recovery_continuation.reset_success",
+        "recovery_continuation.reset_conflict",
+        "recovery_continuation.reset_operational_failure",
+        "recovery_continuation.reset_post_critical_cancelled",
         "cancellation_seam.pre_discovery",
         "cancellation_seam.post_discovery_queued",
         "cancellation_seam.admitted"
@@ -746,7 +801,8 @@
             "event_mapping_covers_discovery_concurrency_and_every_log_variant",
             "structured_result_mapping_preserves_pairs_options_failures_and_paths",
             "shared_failure_fixture_maps_every_cxx_failure_field",
-            "execute_covers_standard_no_logs_and_cancellation_before_discovery"
+            "execute_covers_standard_no_logs_and_cancellation_before_discovery",
+            "cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field"
           ]
         },
         {
@@ -755,7 +811,8 @@
             "CXX executes the shared Standard fixture with Rust-owned facts",
             "CXX executes the shared Targeted fixture without Unsolved Logs movement",
             "CXX shared cancellation fixture distinguishes every safe seam",
-            "Scan Run observer can cancel after adapter delivery failure"
+            "Scan Run observer can cancel after adapter delivery failure",
+            "CXX Reset To Default exposes durable metadata and typed failures"
           ]
         }
       ]
@@ -811,16 +868,26 @@
         "installed_yaml_data_diagnostic_kind.incompatible_schema",
         "installed_yaml_data_diagnostic_kind.invalid_role_data",
         "installed_yaml_data_diagnostic_kind.local_ignore_generated",
+        "installed_yaml_data_diagnostic_kind.local_ignore_reset",
         "local_ignore_yaml_data_state.existing",
         "local_ignore_yaml_data_state.generated",
         "local_ignore_yaml_data_state.recovery_required",
         "local_ignore_yaml_data_state.proceed_without_ignore",
+        "local_ignore_yaml_data_state.reset_to_default",
         "local_ignore_recovery_decision.proceed_without_ignore",
+        "local_ignore_recovery_decision.reset_to_default",
         "resume_error_kind.continuation_consumed",
+        "resume_error_kind.local_ignore_reset_conflict",
+        "resume_error_kind.local_ignore_reset_backup_failure",
+        "resume_error_kind.local_ignore_reset_replacement_failure",
         "resume_error_kind.infrastructure",
         "recovery_continuation.retained_snapshot",
         "recovery_continuation.single_use",
         "recovery_continuation.pre_resume_cancelled",
+        "recovery_continuation.reset_success",
+        "recovery_continuation.reset_conflict",
+        "recovery_continuation.reset_operational_failure",
+        "recovery_continuation.reset_post_critical_cancelled",
         "cancellation_seam.pre_discovery",
         "cancellation_seam.post_discovery_queued",
         "cancellation_seam.admitted"
@@ -832,7 +899,8 @@
             "event_mapping_covers_every_variant_and_phase",
             "terminal_mapping_preserves_every_status_failure_and_optional_path",
             "shared_failure_fixture_maps_every_node_failure_field",
-            "infrastructure_mapping_covers_every_stage_with_and_without_paths"
+            "infrastructure_mapping_covers_every_stage_with_and_without_paths",
+            "replacement_failure_projects_shared_node_rejection_metadata"
           ]
         },
         {
@@ -841,7 +909,10 @@
             "shared Standard fixture writes durable reports and exposes every serialized event variant",
             "shared Targeted fixture preserves discovery order, rejections, artifacts, and no movement",
             "shared cancellation fixture distinguishes pre-discovery, queued, and admitted work",
-            "observer delivery failures stay separate and can request safe cancellation"
+            "observer delivery failures stay separate and can request safe cancellation",
+            "Reset To Default returns durable metadata and the unchanged shared report",
+            "Reset To Default exposes typed conflict and backup failure outcomes",
+            "cancellation observed after reset entry waits for durable repair"
           ]
         }
       ]
@@ -897,16 +968,26 @@
         "installed_yaml_data_diagnostic_kind.incompatible_schema",
         "installed_yaml_data_diagnostic_kind.invalid_role_data",
         "installed_yaml_data_diagnostic_kind.local_ignore_generated",
+        "installed_yaml_data_diagnostic_kind.local_ignore_reset",
         "local_ignore_yaml_data_state.existing",
         "local_ignore_yaml_data_state.generated",
         "local_ignore_yaml_data_state.recovery_required",
         "local_ignore_yaml_data_state.proceed_without_ignore",
+        "local_ignore_yaml_data_state.reset_to_default",
         "local_ignore_recovery_decision.proceed_without_ignore",
+        "local_ignore_recovery_decision.reset_to_default",
         "resume_error_kind.continuation_consumed",
+        "resume_error_kind.local_ignore_reset_conflict",
+        "resume_error_kind.local_ignore_reset_backup_failure",
+        "resume_error_kind.local_ignore_reset_replacement_failure",
         "resume_error_kind.infrastructure",
         "recovery_continuation.retained_snapshot",
         "recovery_continuation.single_use",
         "recovery_continuation.pre_resume_cancelled",
+        "recovery_continuation.reset_success",
+        "recovery_continuation.reset_conflict",
+        "recovery_continuation.reset_operational_failure",
+        "recovery_continuation.reset_post_critical_cancelled",
         "cancellation_seam.pre_discovery",
         "cancellation_seam.post_discovery_queued",
         "cancellation_seam.admitted"
@@ -919,7 +1000,8 @@
             "maps_every_event_variant_and_variant_payload",
             "maps_complete_log_result_and_all_failure_stages",
             "shared_failure_fixture_maps_every_python_failure_field",
-            "maps_every_infrastructure_stage_and_optional_path"
+            "maps_every_infrastructure_stage_and_optional_path",
+            "replacement_failure_maps_shared_outcome_to_typed_python_exception"
           ]
         },
         {
@@ -928,7 +1010,10 @@
             "test_standard_scan_run_persists_reports_in_discovery_order",
             "test_targeted_scan_run_preserves_input_order_and_never_moves",
             "test_shared_cancellation_fixture_distinguishes_safe_seams",
-            "test_scan_run_maps_no_logs_and_pre_discovery_cancellation"
+            "test_scan_run_maps_no_logs_and_pre_discovery_cancellation",
+            "test_reset_to_default_returns_durable_metadata_and_unchanged_shared_report",
+            "test_reset_to_default_exposes_typed_conflict_and_backup_failure",
+            "test_post_critical_cancellation_waits_for_durable_reset"
           ]
         }
       ]

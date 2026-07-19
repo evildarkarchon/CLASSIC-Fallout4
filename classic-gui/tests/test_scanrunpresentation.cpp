@@ -45,6 +45,8 @@ private slots:
     void local_ignore_recovery_required_remains_distinct();
     void setup_failure_presents_checks_updates_configuration_issues_actions_and_fatal_errors();
     void installed_yaml_data_presence_preserves_generated_ignore_metadata_and_diagnostics();
+    /// Verifies successful reset metadata remains typed and Qt-owned for later interaction work.
+    void reset_to_default_preserves_durable_metadata_and_diagnostic();
     /// Verifies continuation replay misuse retains its stable code and message.
     void consumed_resume_error_preserves_typed_context();
     void infrastructure_error_preserves_typed_stage_message_and_path();
@@ -112,6 +114,48 @@ void ScanRunPresentationTests::installed_yaml_data_presence_preserves_generated_
              classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated);
     QVERIFY(presentation.installedYamlData.diagnostics[0].hasPath);
     QVERIFY(presentation.installedYamlData.diagnostics[0].path.endsWith(QStringLiteral("CLASSIC Ignore.yaml")));
+}
+
+void ScanRunPresentationTests::reset_to_default_preserves_durable_metadata_and_diagnostic()
+{
+    auto execution = executionWithStatus(classic::scanner::ScanRunContractStatus::Completed);
+    execution.result.has_installed_yaml_data = true;
+    auto& installed = execution.result.installed_yaml_data;
+    installed.local_ignore_state = classic::scanner::ScanRunLocalIgnoreYamlDataState::ResetToDefault;
+    installed.local_ignore_identity.sha256 = "replacement-hash";
+    installed.local_ignore_identity.byte_len = 42;
+    installed.has_local_ignore_reset = true;
+    installed.local_ignore_reset.local_ignore_path = "C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml";
+    installed.local_ignore_reset.backup_path = "C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.backup.yaml";
+    installed.local_ignore_reset.malformed_identity.sha256 = "malformed-hash";
+    installed.local_ignore_reset.malformed_identity.byte_len = 30;
+    installed.local_ignore_reset.backup_identity = installed.local_ignore_reset.malformed_identity;
+    installed.local_ignore_reset.replacement_identity = installed.local_ignore_identity;
+    classic::scanner::ScanRunInstalledYamlDataDiagnosticDto diagnostic{};
+    diagnostic.kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset;
+    diagnostic.has_path = true;
+    diagnostic.path = installed.local_ignore_reset.local_ignore_path;
+    diagnostic.message = "reset malformed Local Ignore from retained defaults";
+    installed.diagnostics.push_back(std::move(diagnostic));
+
+    const auto presentation = classic::gui::presentScanRunExecution(execution);
+
+    QVERIFY(presentation.hasInstalledYamlData);
+    QCOMPARE(presentation.installedYamlData.localIgnoreState,
+             classic::scanner::ScanRunLocalIgnoreYamlDataState::ResetToDefault);
+    QVERIFY(presentation.installedYamlData.hasLocalIgnoreReset);
+    QCOMPARE(presentation.installedYamlData.localIgnoreReset.localIgnorePath,
+             QStringLiteral("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml"));
+    QCOMPARE(presentation.installedYamlData.localIgnoreReset.backupPath,
+             QStringLiteral("C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.backup.yaml"));
+    QCOMPARE(presentation.installedYamlData.localIgnoreReset.malformedIdentity.sha256,
+             QStringLiteral("malformed-hash"));
+    QCOMPARE(presentation.installedYamlData.localIgnoreReset.backupIdentity.sha256,
+             QStringLiteral("malformed-hash"));
+    QCOMPARE(presentation.installedYamlData.localIgnoreReset.replacementIdentity.sha256,
+             QStringLiteral("replacement-hash"));
+    QCOMPARE(presentation.installedYamlData.diagnostics[0].kind,
+             classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset);
 }
 
 void ScanRunPresentationTests::discovery_report_directories_are_deduplicated_case_insensitively()

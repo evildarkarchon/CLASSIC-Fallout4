@@ -86,6 +86,12 @@ QString localIgnoreStateLabel(classic::scanner::ScanRunLocalIgnoreYamlDataState 
         return QStringLiteral("existing");
     case State::Generated:
         return QStringLiteral("generated");
+    case State::RecoveryRequired:
+        return QStringLiteral("recovery required");
+    case State::ProceedWithoutIgnore:
+        return QStringLiteral("proceed without Ignore");
+    case State::ResetToDefault:
+        return QStringLiteral("reset to default");
     }
     return QStringLiteral("unknown");
 }
@@ -128,6 +134,8 @@ QString installedYamlDataDiagnosticKindLabel(classic::scanner::ScanRunInstalledY
         return QStringLiteral("invalid role data");
     case Kind::LocalIgnoreGenerated:
         return QStringLiteral("local ignore generated");
+    case Kind::LocalIgnoreReset:
+        return QStringLiteral("local ignore reset");
     }
     return QStringLiteral("unknown");
 }
@@ -1635,6 +1643,12 @@ void MainWindow::onScanInstalledYamlDataResolved(
                              .arg(localIgnoreStateLabel(installedYamlData.localIgnoreState))
                              .arg(installedYamlData.localIgnoreIdentity.byteLength)
                              .arg(installedYamlData.localIgnoreIdentity.sha256);
+    if (installedYamlData.hasLocalIgnoreReset) {
+        qInfo().noquote() << QStringLiteral("Local Ignore reset backup: %1 (%2 bytes, sha256 %3)")
+                                 .arg(installedYamlData.localIgnoreReset.backupPath)
+                                 .arg(installedYamlData.localIgnoreReset.backupIdentity.byteLength)
+                                 .arg(installedYamlData.localIgnoreReset.backupIdentity.sha256);
+    }
     for (const auto& diagnostic : installedYamlData.diagnostics) {
         QStringList context;
         if (diagnostic.hasRole) {

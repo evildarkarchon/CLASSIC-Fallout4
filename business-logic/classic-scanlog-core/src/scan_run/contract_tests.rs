@@ -1,6 +1,6 @@
 use crate::CrashLogScanFacts;
 use crate::scan_run::contract;
-use crate::scan_run::test_support::{InfrastructureFault, ScanRunTestHooks};
+use crate::scan_run::test_support::{InfrastructureFault, LocalIgnoreResetGate, ScanRunTestHooks};
 use crate::scan_run::test_support::{
     write_fixture_log, write_fixture_log_at, write_minimal_yaml_tree,
 };
@@ -66,6 +66,16 @@ struct SharedInfrastructureFailure {
     path: Option<String>,
 }
 
+/// Shared reset outcome expectations exercised at the Rust-owned transaction boundary.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SharedResetOutcomes {
+    replacement_failure_code: String,
+    backup_must_equal_malformed_bytes: bool,
+    pre_reset_cancellation_mutates: bool,
+    post_critical_cancellation_status: String,
+}
+
 /// Loads the failure corpus used by core and binding mapping tests.
 fn shared_failure_fixtures() -> SharedFailureFixtures {
     #[derive(Deserialize)]
@@ -77,6 +87,33 @@ fn shared_failure_fixtures() -> SharedFailureFixtures {
     serde_json::from_str::<Manifest>(SHARED_SCAN_RUN_MANIFEST)
         .expect("shared scan-run manifest should deserialize")
         .failure_fixtures
+}
+
+/// Loads reset failure and cancellation expectations from the cross-binding fixture.
+fn shared_reset_outcomes() -> SharedResetOutcomes {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Manifest {
+        fixtures: Fixtures,
+    }
+
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Fixtures {
+        installed_yaml_data: InstalledYamlDataFixture,
+    }
+
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct InstalledYamlDataFixture {
+        reset_outcomes: SharedResetOutcomes,
+    }
+
+    serde_json::from_str::<Manifest>(SHARED_SCAN_RUN_MANIFEST)
+        .expect("shared scan-run manifest should deserialize")
+        .fixtures
+        .installed_yaml_data
+        .reset_outcomes
 }
 
 fn final_run_configuration() -> contract::Configuration {
@@ -265,6 +302,20 @@ fn paused_recovery_fixture(
     Vec<u8>,
     contract::RunResult,
 ) {
+    paused_recovery_fixture_with_hooks(log_names, ScanRunTestHooks::default())
+}
+
+/// Creates one malformed-Ignore targeted run paused with request-scoped deterministic hooks.
+fn paused_recovery_fixture_with_hooks(
+    log_names: &[&str],
+    hooks: ScanRunTestHooks,
+) -> (
+    tempfile::TempDir,
+    Vec<PathBuf>,
+    PathBuf,
+    Vec<u8>,
+    contract::RunResult,
+) {
     let temp = tempdir().expect("tempdir should succeed");
     let root = temp.path();
     let data = root.join("CLASSIC Data");
@@ -295,7 +346,7 @@ fn paused_recovery_fixture(
             request,
             &contract::Cancellation::new(),
             None,
-            ScanRunTestHooks::default().with_yaml_cache_root(root.join("isolated-cache")),
+            hooks.with_yaml_cache_root(root.join("isolated-cache")),
         ))
         .expect("malformed Local Ignore should pause with expected result data");
     assert_eq!(
@@ -658,6 +709,359 @@ fn targeted_run_resumes_without_ignore_from_retained_discovery_and_snapshot() {
     assert!(crate::report::autoscan_report_path(&first_log).is_file());
     assert!(crate::report::autoscan_report_path(&second_log).is_file());
     assert!(!crate::report::autoscan_report_path(&undiscovered_log).exists());
+}
+
+/// Reset To Default durably repairs Local Ignore and resumes the retained run exactly once.
+#[test]
+fn targeted_run_resets_local_ignore_and_resumes_retained_discovery_and_snapshot() {
+    let (temp, logs, ignore_path, malformed_ignore, mut initial) = paused_recovery_fixture(&[
+        "crash-reset-recovery-first.log",
+        "crash-reset-recovery-second.log",
+    ]);
+    let initial_installed = initial
+        .installed_yaml_data
+        .as_ref()
+        .expect("recovery-required result should expose selected Installed YAML Data");
+    let selected_main = initial_installed.main.clone();
+    let selected_game = initial_installed.game_file.clone();
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry an opaque continuation");
+    let data = temp.path().join("CLASSIC Data");
+    std::fs::write(
+        data.join("databases/CLASSIC Main.yaml"),
+        b"schema_version: \"2.0\"\ninvalid: changed\n",
+    )
+    .expect("selected Main path should be replaced after recovery paused");
+    std::fs::write(
+        data.join("databases/CLASSIC Fallout4.yaml"),
+        b"schema_version: \"1.0\"\ninvalid: changed\n",
+    )
+    .expect("selected game path should be replaced after recovery paused");
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let resumed = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            Some(&mut observer),
+        ))
+        .expect("Reset To Default should repair Local Ignore and resume retained preparation");
+
+    assert_eq!(resumed.status, contract::RunStatus::Completed);
+    assert_eq!(
+        resumed
+            .discovery
+            .as_ref()
+            .expect("resumed reset should retain completed discovery")
+            .accepted_logs,
+        logs
+    );
+    assert_eq!(resumed.logs.len(), 2);
+    assert!(
+        events
+            .iter()
+            .all(|event| !matches!(event, contract::Event::DiscoveryCompleted(_))),
+        "resume must not emit a second discovery event"
+    );
+    assert_eq!(
+        resumed
+            .logs
+            .iter()
+            .map(|log| log.discovery_index)
+            .collect::<Vec<_>>(),
+        vec![0, 1]
+    );
+    let installed = resumed
+        .installed_yaml_data
+        .as_ref()
+        .expect("successful reset should expose Installed YAML Data and reset metadata");
+    assert_eq!(installed.main, selected_main);
+    assert_eq!(installed.game_file, selected_game);
+    assert_eq!(
+        installed.local_ignore_state,
+        contract::LocalIgnoreRunState::ResetToDefault
+    );
+    let reset = installed
+        .local_ignore_reset
+        .as_ref()
+        .expect("successful reset should expose backup and replacement metadata");
+    assert_eq!(reset.local_ignore_path, ignore_path);
+    assert_eq!(
+        std::fs::read(&reset.backup_path).expect("verified reset backup should be readable"),
+        malformed_ignore
+    );
+    assert_eq!(reset.malformed_identity, reset.backup_identity);
+    assert_eq!(reset.replacement_identity, installed.local_ignore_identity);
+    assert!(installed.diagnostics.iter().any(|diagnostic| {
+        diagnostic.kind() == contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset
+            && diagnostic.path() == Some(ignore_path.as_path())
+    }));
+    assert_eq!(
+        std::fs::read_to_string(&ignore_path).expect("reset Local Ignore should be readable"),
+        "CLASSIC_Ignore_Fallout4:\n  - IgnoreThis.dll\n"
+    );
+    assert!(
+        logs.iter()
+            .all(|log| crate::report::autoscan_report_path(log).is_file())
+    );
+    let replay = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("successful reset resume should consume the continuation");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+/// A changed canonical Local Ignore returns typed conflict data without backup or analysis.
+#[test]
+fn reset_to_default_returns_typed_conflict_without_overwriting_current_local_ignore() {
+    let (_temp, logs, ignore_path, _malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-reset-conflict.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry an opaque continuation");
+    let replacement = b"CLASSIC_Ignore_Fallout4:\n  - UserChanged.dll\n";
+    std::fs::write(&ignore_path, replacement)
+        .expect("conflicting Local Ignore bytes should be written");
+
+    let error = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("changed Local Ignore should reject reset as typed conflict data");
+
+    let contract::ResumeError::LocalIgnoreResetConflict(conflict) = &error else {
+        panic!("expected reset conflict, got {error:?}");
+    };
+    assert_eq!(
+        error.kind(),
+        contract::ResumeErrorKind::LocalIgnoreResetConflict
+    );
+    assert_eq!(error.kind().as_str(), "local_ignore_reset_conflict");
+    assert_ne!(
+        conflict.expected_identity,
+        conflict.actual_identity.clone().unwrap()
+    );
+    assert!(conflict.backup_path.is_none());
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("conflicting Local Ignore should remain readable"),
+        replacement
+    );
+    assert!(
+        logs.iter()
+            .all(|log| !crate::report::autoscan_report_path(log).exists())
+    );
+    let replay = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("conflicted reset resume should consume the continuation");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+/// Backup preparation failure is a stable reset outcome and never starts replacement or analysis.
+#[test]
+fn reset_to_default_returns_typed_backup_failure_without_mutation_or_analysis() {
+    let (_temp, logs, ignore_path, malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-reset-backup-failure.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry an opaque continuation");
+    let root = ignore_path
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("fixture Local Ignore should be below the installation root");
+    let blocked_backup_root = root.join("CLASSIC Backup");
+    std::fs::write(&blocked_backup_root, b"not a directory")
+        .expect("backup root blocker should be written");
+
+    let error = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("backup preparation should fail with a stable reset outcome");
+
+    let contract::ResumeError::LocalIgnoreResetBackupFailure(failure) = &error else {
+        panic!("expected reset backup failure, got {error:?}");
+    };
+    assert_eq!(
+        error.kind(),
+        contract::ResumeErrorKind::LocalIgnoreResetBackupFailure
+    );
+    assert_eq!(error.kind().as_str(), "local_ignore_reset_backup_failure");
+    assert!(failure.path.starts_with(&blocked_backup_root));
+    assert!(failure.stage.is_none());
+    assert!(!failure.message.is_empty());
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
+    assert!(
+        logs.iter()
+            .all(|log| !crate::report::autoscan_report_path(log).exists())
+    );
+    let replay = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("failed reset resume should consume the continuation");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+/// Replacement publication failures retain their stable kind, path, stage, and message.
+#[test]
+fn reset_replacement_publication_failure_projects_stable_typed_details() {
+    let expected = shared_reset_outcomes();
+    let path = PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
+    let error = contract::project_local_ignore_reset_error(
+        classic_config_core::LocalIgnoreResetError::ReplacementPublication {
+            path: path.clone(),
+            stage: classic_config_core::LocalIgnoreResetPublicationStage::Publish,
+            source: std::io::Error::other("injected replacement failure"),
+        },
+    );
+
+    let contract::ResumeError::LocalIgnoreResetReplacementFailure(failure) = &error else {
+        panic!("expected reset replacement failure, got {error:?}");
+    };
+    assert_eq!(
+        error.kind(),
+        contract::ResumeErrorKind::LocalIgnoreResetReplacementFailure
+    );
+    assert_eq!(error.kind().as_str(), expected.replacement_failure_code);
+    assert_eq!(failure.path, path);
+    assert_eq!(
+        failure.stage,
+        Some(contract::LocalIgnoreResetFailureStage::Publish)
+    );
+    assert_eq!(
+        failure
+            .stage
+            .expect("replacement publication should retain its stage")
+            .as_str(),
+        "publish"
+    );
+    assert!(failure.message.contains("injected replacement failure"));
+}
+
+/// Cancellation observed before reset begins performs no backup, replacement, or analysis.
+#[test]
+fn cancellation_before_reset_to_default_performs_no_durable_or_analysis_work() {
+    let expected = shared_reset_outcomes();
+    let (_temp, logs, ignore_path, malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-reset-pre-cancelled.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry an opaque continuation");
+    let cancellation = contract::Cancellation::new();
+    cancellation.cancel();
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let cancelled = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &cancellation,
+            Some(&mut observer),
+        ))
+        .expect("pre-reset cancellation should remain normal result data");
+
+    assert_eq!(cancelled.status, contract::RunStatus::Cancelled);
+    assert_eq!(cancelled.cancelled, logs.len());
+    assert!(cancelled.installed_yaml_data.is_none());
+    assert!(cancelled.effective_concurrency.is_none());
+    assert!(events.is_empty());
+    let root = ignore_path
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("fixture Local Ignore should be below the installation root");
+    let mutated = std::fs::read(&ignore_path)
+        .expect("malformed Local Ignore should remain readable")
+        != malformed_ignore
+        || root.join("CLASSIC Backup").exists()
+        || logs
+            .iter()
+            .any(|log| crate::report::autoscan_report_path(log).exists());
+    assert_eq!(mutated, expected.pre_reset_cancellation_mutates);
+}
+
+/// Cancellation after reset enters its critical section waits for durability, then skips analysis.
+#[test]
+fn cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset() {
+    let expected = shared_reset_outcomes();
+    let gate = LocalIgnoreResetGate::new();
+    let hooks = ScanRunTestHooks::default().with_local_ignore_reset_gate(gate.clone());
+    let (_temp, logs, ignore_path, malformed_ignore, mut initial) =
+        paused_recovery_fixture_with_hooks(&["crash-reset-racing-cancel.log"], hooks);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry an opaque continuation");
+    let cancellation = contract::Cancellation::new();
+    let resume_cancellation = cancellation.clone();
+
+    let handle = std::thread::spawn(move || {
+        get_runtime().block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &resume_cancellation,
+            None,
+        ))
+    });
+    gate.wait_until_entered();
+    cancellation.cancel();
+    gate.release();
+    let cancelled = handle
+        .join()
+        .expect("racing reset resume thread should join")
+        .expect("post-critical cancellation should remain normal result data");
+
+    assert_eq!(
+        cancelled.status.as_str(),
+        expected.post_critical_cancellation_status
+    );
+    assert_eq!(cancelled.cancelled, logs.len());
+    assert!(cancelled.installed_yaml_data.is_none());
+    assert!(cancelled.effective_concurrency.is_none());
+    assert_eq!(
+        std::fs::read_to_string(&ignore_path).expect("reset Local Ignore should be readable"),
+        "CLASSIC_Ignore_Fallout4:\n  - IgnoreThis.dll\n"
+    );
+    let root = ignore_path
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("fixture Local Ignore should be below the installation root");
+    let backup_directory = root.join("CLASSIC Backup/YAML Data/Local Ignore");
+    let backups = std::fs::read_dir(&backup_directory)
+        .expect("durable reset should create its backup directory")
+        .map(|entry| entry.expect("backup entry should be readable").path())
+        .collect::<Vec<_>>();
+    assert_eq!(backups.len(), 1);
+    if expected.backup_must_equal_malformed_bytes {
+        assert_eq!(
+            std::fs::read(&backups[0]).expect("durable reset backup should be readable"),
+            malformed_ignore
+        );
+    }
+    assert!(
+        logs.iter()
+            .all(|log| !crate::report::autoscan_report_path(log).exists())
+    );
 }
 
 /// Sequential and concurrent replay both return the same typed consumed-continuation failure.
@@ -1476,12 +1880,32 @@ fn final_contract_exposes_all_stable_variant_identifiers() {
         "proceed_without_ignore"
     );
     assert_eq!(
+        contract::LocalIgnoreRunState::ResetToDefault.as_str(),
+        "reset_to_default"
+    );
+    assert_eq!(
         contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore.as_str(),
         "proceed_without_ignore"
     );
     assert_eq!(
+        contract::LocalIgnoreRecoveryDecision::ResetToDefault.as_str(),
+        "reset_to_default"
+    );
+    assert_eq!(
         contract::ResumeErrorKind::ContinuationConsumed.as_str(),
         "scan_run_continuation_consumed"
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::LocalIgnoreResetConflict.as_str(),
+        "local_ignore_reset_conflict"
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::LocalIgnoreResetBackupFailure.as_str(),
+        "local_ignore_reset_backup_failure"
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::LocalIgnoreResetReplacementFailure.as_str(),
+        "local_ignore_reset_replacement_failure"
     );
 
     assert_eq!(

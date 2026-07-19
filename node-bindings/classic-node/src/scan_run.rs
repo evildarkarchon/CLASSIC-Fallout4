@@ -21,11 +21,11 @@ use classic_scanlog_core::{
     CrashLogScanRunStatus, CrashLogScanSetupContext, CrashLogScanSetupResult, ScanProgressPhase,
     StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
-use napi::bindgen_prelude::{AsyncTask, Either, FnArgs, Function};
+use napi::bindgen_prelude::{AsyncTask, Either, FnArgs, Function, JsObjectValue, ToNapiValue};
 use napi::threadsafe_function::{
     ThreadsafeFunction, ThreadsafeFunctionCallMode, UnknownReturnValue,
 };
-use napi::{Env, JsError, Status, Task};
+use napi::{Env, JsError, JsValue, Status, Task};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, mpsc};
 
@@ -307,6 +307,8 @@ pub enum JsScanRunLocalIgnoreState {
     RecoveryRequired,
     /// The retained run resumed with operation-scoped empty ignores.
     ProceedWithoutIgnore,
+    /// Malformed Local Ignore was durably reset from retained selected-Main defaults.
+    ResetToDefault,
 }
 
 /// Explicit Local Ignore recovery decisions owned by Rust scan coordination.
@@ -314,6 +316,8 @@ pub enum JsScanRunLocalIgnoreState {
 pub enum JsScanRunLocalIgnoreRecoveryDecision {
     /// Resume with an empty ignore list scoped only to the retained run.
     ProceedWithoutIgnore,
+    /// Durably reset malformed Local Ignore, then resume the retained run.
+    ResetToDefault,
 }
 
 /// Opaque process-local carrier for one paused Crash Log Scan Run.
@@ -343,6 +347,8 @@ pub enum JsScanRunInstalledYamlDataDiagnosticKind {
     InvalidRoleData,
     /// Missing Local Ignore YAML Data was generated from selected Main defaults.
     LocalIgnoreGenerated,
+    /// Malformed Local Ignore YAML Data was reset from retained selected-Main defaults.
+    LocalIgnoreReset,
 }
 
 /// Structured attribution for one scan-run selection, fallback, or generation event.
@@ -361,7 +367,7 @@ pub struct JsScanRunInstalledYamlDataDiagnostic {
 }
 
 /// Installed YAML Data metadata retained from the immutable run snapshot.
-#[napi(object)]
+#[napi(object, object_from_js = false)]
 pub struct JsInstalledYamlDataRunData {
     /// Selected Main YAML Data schema, identity, and provenance.
     pub main: JsInspectedYamlDataFile,
@@ -373,6 +379,18 @@ pub struct JsInstalledYamlDataRunData {
     pub local_ignore_identity: JsYamlDataContentIdentity,
     /// Structured fallback, validation, and generation diagnostics.
     pub diagnostics: Vec<JsScanRunInstalledYamlDataDiagnostic>,
+    /// Durable reset metadata populated only after successful Reset To Default resume.
+    pub local_ignore_reset: Option<JsScanRunLocalIgnoreResetRunData>,
+}
+
+/// Durable backup and replacement metadata from successful Reset To Default resume.
+#[napi(object, object_from_js = false)]
+pub struct JsScanRunLocalIgnoreResetRunData {
+    pub local_ignore_path: String,
+    pub backup_path: String,
+    pub malformed_identity: JsYamlDataContentIdentity,
+    pub backup_identity: JsYamlDataContentIdentity,
+    pub replacement_identity: JsYamlDataContentIdentity,
 }
 
 /// Complete terminal Crash Log Scan Run result.
@@ -561,6 +579,8 @@ pub enum ScanRunResumeTaskOutput {
     Failure(JsScanRunFailure),
     /// Another sequential or concurrent caller already claimed the continuation.
     ContinuationConsumed,
+    /// Reset conflict or operational failure rejected with stable structured metadata.
+    LocalIgnoreResetError(contract::ResumeError),
 }
 
 /// Background task that resumes one Rust-owned continuation on the shared runtime.
@@ -614,10 +634,11 @@ impl Task for ScanRunResumeTask {
             Err(contract::ResumeError::ContinuationConsumed) => {
                 ScanRunResumeTaskOutput::ContinuationConsumed
             }
+            Err(error) => ScanRunResumeTaskOutput::LocalIgnoreResetError(error),
         })
     }
 
-    /// Resolves normal envelopes and rejects consumed-continuation replay with a stable code.
+    /// Resolves normal envelopes and rejects replay or reset failures with stable metadata.
     fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
         match output {
             ScanRunResumeTaskOutput::Success(result) => Ok(Either::A(*result)),
@@ -629,6 +650,9 @@ impl Task for ScanRunResumeTask {
                 ))
                 .into_unknown(env),
             )),
+            ScanRunResumeTaskOutput::LocalIgnoreResetError(error) => {
+                Err(scan_run_resume_error_to_napi(env, error))
+            }
         }
     }
 }
@@ -636,8 +660,9 @@ impl Task for ScanRunResumeTask {
 /// Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
 ///
 /// Replay and concurrent double consumption reject with JavaScript error code
-/// `scan_run_continuation_consumed`. Infrastructure failures retain the same resolved envelope
-/// used by [`scan_run_execute`].
+/// `scan_run_continuation_consumed`. Reset conflict, backup failure, and replacement failure
+/// reject with their stable codes plus applicable identity, path, and publication-stage metadata.
+/// Infrastructure failures retain the same resolved envelope used by [`scan_run_execute`].
 #[napi(ts_return_type = "Promise<JsScanRunSuccess | JsScanRunFailure>")]
 pub fn scan_run_resume(
     continuation: &ScanRunContinuation,
@@ -674,6 +699,9 @@ const fn local_ignore_recovery_decision_to_core(
     match decision {
         JsScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
             contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        }
+        JsScanRunLocalIgnoreRecoveryDecision::ResetToDefault => {
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault
         }
     }
 }
@@ -764,6 +792,21 @@ fn installed_yaml_data_run_to_js(
             .iter()
             .map(installed_yaml_data_run_diagnostic_to_js)
             .collect(),
+        local_ignore_reset: value
+            .local_ignore_reset
+            .map(local_ignore_reset_run_data_to_js),
+    }
+}
+
+fn local_ignore_reset_run_data_to_js(
+    value: contract::LocalIgnoreResetRunData,
+) -> JsScanRunLocalIgnoreResetRunData {
+    JsScanRunLocalIgnoreResetRunData {
+        local_ignore_path: value.local_ignore_path.to_string_lossy().into_owned(),
+        backup_path: value.backup_path.to_string_lossy().into_owned(),
+        malformed_identity: content_identity_to_js(&value.malformed_identity),
+        backup_identity: content_identity_to_js(&value.backup_identity),
+        replacement_identity: content_identity_to_js(&value.replacement_identity),
     }
 }
 
@@ -780,6 +823,7 @@ const fn local_ignore_run_state_to_js(
         contract::LocalIgnoreRunState::ProceedWithoutIgnore => {
             JsScanRunLocalIgnoreState::ProceedWithoutIgnore
         }
+        contract::LocalIgnoreRunState::ResetToDefault => JsScanRunLocalIgnoreState::ResetToDefault,
     }
 }
 
@@ -826,7 +870,129 @@ const fn installed_yaml_data_run_diagnostic_kind_to_js(
         Kind::LocalIgnoreGenerated => {
             JsScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
         }
+        Kind::LocalIgnoreReset => JsScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset,
     }
+}
+
+/// Pure metadata projected before allocating a JavaScript reset error.
+enum ScanRunResumeErrorMetadata {
+    None,
+    Conflict {
+        expected_identity: JsYamlDataContentIdentity,
+        actual_identity: Option<JsYamlDataContentIdentity>,
+        backup_path: Option<String>,
+    },
+    OperationalFailure {
+        path: String,
+        stage: Option<&'static str>,
+    },
+}
+
+/// Stable code, message, and optional metadata for one rejected continuation resume.
+struct ScanRunResumeErrorProjection {
+    code: &'static str,
+    message: String,
+    metadata: ScanRunResumeErrorMetadata,
+}
+
+/// Projects every resume failure without depending on a live N-API environment.
+fn project_scan_run_resume_error(error: contract::ResumeError) -> ScanRunResumeErrorProjection {
+    let code = error.kind().as_str();
+    let message = error.to_string();
+    let metadata = match error {
+        contract::ResumeError::LocalIgnoreResetConflict(conflict) => {
+            ScanRunResumeErrorMetadata::Conflict {
+                expected_identity: content_identity_to_js(&conflict.expected_identity),
+                actual_identity: conflict
+                    .actual_identity
+                    .as_ref()
+                    .map(content_identity_to_js),
+                backup_path: conflict
+                    .backup_path
+                    .map(|path| path.to_string_lossy().into_owned()),
+            }
+        }
+        contract::ResumeError::LocalIgnoreResetBackupFailure(failure)
+        | contract::ResumeError::LocalIgnoreResetReplacementFailure(failure) => {
+            ScanRunResumeErrorMetadata::OperationalFailure {
+                path: failure.path.to_string_lossy().into_owned(),
+                stage: failure
+                    .stage
+                    .map(contract::LocalIgnoreResetFailureStage::as_str),
+            }
+        }
+        contract::ResumeError::ContinuationConsumed | contract::ResumeError::Infrastructure(_) => {
+            ScanRunResumeErrorMetadata::None
+        }
+    };
+    ScanRunResumeErrorProjection {
+        code,
+        message,
+        metadata,
+    }
+}
+
+/// Builds a JavaScript error that preserves stable reset outcome metadata.
+fn scan_run_resume_error_to_napi(env: Env, error: contract::ResumeError) -> napi::Error {
+    let projection = project_scan_run_resume_error(error);
+    let raw_error = JsError::from(napi::Error::new(
+        projection.code,
+        projection.message.clone(),
+    ))
+    .into_unknown(env);
+    let Ok(mut object) = raw_error.coerce_to_object() else {
+        return napi::Error::from(
+            JsError::from(napi::Error::new(projection.code, projection.message)).into_unknown(env),
+        );
+    };
+    if object.set_named_property("kind", projection.code).is_err() {
+        return napi::Error::from(
+            JsError::from(napi::Error::new(projection.code, projection.message)).into_unknown(env),
+        );
+    }
+    let metadata_result = match projection.metadata {
+        ScanRunResumeErrorMetadata::Conflict {
+            expected_identity,
+            actual_identity,
+            backup_path,
+        } => object
+            .set_named_property("expectedIdentity", expected_identity)
+            .and_then(|()| {
+                if let Some(actual) = actual_identity {
+                    object.set_named_property("actualIdentity", actual)
+                } else {
+                    Ok(())
+                }
+            })
+            .and_then(|()| {
+                if let Some(backup_path) = backup_path {
+                    object.set_named_property("backupPath", backup_path)
+                } else {
+                    Ok(())
+                }
+            }),
+        ScanRunResumeErrorMetadata::OperationalFailure { path, stage } => object
+            .set_named_property("path", path)
+            .and_then(|()| match stage {
+                Some(stage) => object.set_named_property("stage", stage),
+                None => Ok(()),
+            }),
+        ScanRunResumeErrorMetadata::None => Ok(()),
+    };
+    if metadata_result.is_err() {
+        return napi::Error::from(
+            JsError::from(napi::Error::new(projection.code, projection.message)).into_unknown(env),
+        );
+    }
+    object
+        .into_unknown(&env)
+        .map(napi::Error::from)
+        .unwrap_or_else(|_| {
+            napi::Error::from(
+                JsError::from(napi::Error::new(projection.code, projection.message))
+                    .into_unknown(env),
+            )
+        })
 }
 
 /// Converts Standard discovery inputs without adding policy.

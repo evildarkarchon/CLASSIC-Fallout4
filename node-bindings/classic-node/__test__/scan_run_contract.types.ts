@@ -3,9 +3,8 @@ import {
 	ScanRunUnsolvedLogs,
 	scanRunExecute,
 	JsGameId,
-	JsInstalledYamlDataDiagnosticKind,
-	JsLocalIgnoreYamlDataState,
 	JsScanRunInstalledYamlDataDiagnosticKind,
+	JsScanRunLocalIgnoreRecoveryDecision,
 	JsScanRunLocalIgnoreState,
 	type JsScanRunConfiguration,
 	type JsScanRunEvent,
@@ -55,6 +54,7 @@ if ("result" in execution) {
 		execution.result.installedYamlData?.localIgnoreState;
 	void localIgnoreState;
 	execution.result.installedYamlData?.localIgnoreIdentity.byteLen;
+	execution.result.installedYamlData?.localIgnoreReset?.backupPath;
 	const diagnosticKind: JsScanRunInstalledYamlDataDiagnosticKind | undefined =
 		execution.result.installedYamlData?.diagnostics[0]?.kind;
 	void diagnosticKind;
@@ -66,17 +66,14 @@ if ("result" in execution) {
 	execution.result;
 }
 
-const recoveryOnlyState = JsLocalIgnoreYamlDataState.ResetToDefault;
-// @ts-expect-error Recovery-only Local Ignore states cannot inhabit scan-run results.
-const invalidRunState: JsScanRunLocalIgnoreState = recoveryOnlyState;
-void invalidRunState;
-
-const recoveryOnlyDiagnostic =
-	JsInstalledYamlDataDiagnosticKind.LocalIgnoreReset;
-// @ts-expect-error Recovery-only diagnostic kinds cannot inhabit scan-run results.
-const invalidRunDiagnostic: JsScanRunInstalledYamlDataDiagnosticKind =
-	recoveryOnlyDiagnostic;
-void invalidRunDiagnostic;
+const resetRunState: JsScanRunLocalIgnoreState =
+	JsScanRunLocalIgnoreState.ResetToDefault;
+const resetRunDiagnostic: JsScanRunInstalledYamlDataDiagnosticKind =
+	JsScanRunInstalledYamlDataDiagnosticKind.LocalIgnoreReset;
+const resetDecision = JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault;
+void resetRunState;
+void resetRunDiagnostic;
+void resetDecision;
 
 // @ts-expect-error Targeted requests deliberately expose no movement capability.
 ScanRunRequest.targeted(configuration, targetedSource, movement);

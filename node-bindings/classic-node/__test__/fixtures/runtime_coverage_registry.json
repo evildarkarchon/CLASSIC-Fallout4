@@ -420,6 +420,7 @@
       "tier": "tier2",
       "bindingIdentifiers": [
         "JsScanRunLocalIgnoreRecoveryDecision",
+        "JsScanRunLocalIgnoreResetRunData",
         "ScanRunContinuation",
         "scanRunResume"
       ],
@@ -430,7 +431,7 @@
         "MAIN_YAML",
         "GAME_YAML"
       ],
-      "notes": "Exercises the opaque Local Ignore recovery continuation, explicit Proceed Without Ignore decision, retained discovery and Installed YAML Data snapshot, stable consumed-error code, cancellation precedence, unchanged malformed bytes, and byte-identical report output."
+      "notes": "Exercises the opaque Local Ignore recovery continuation and both explicit decisions. Proceed Without Ignore retains discovery/snapshot identity without mutation. Reset To Default retains the same discovery and selected Main/game facts, exposes durable byte-exact backup and replacement metadata plus reset diagnostics, preserves conflict and backup failures as stable coded rejections, honors pre-reset cancellation without filesystem work, and proves cancellation after reset lock acquisition waits for durable repair before returning the normal cancelled result. The companion Rust adapter test projects replacement-publication failure through the same pure Node rejection metadata path. Replay remains typed and successful report output is byte-identical."
     },
     {
       "coverageId": "node-tier1-database",

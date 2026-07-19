@@ -110,6 +110,8 @@ std::string local_ignore_state_name(scanner::ScanRunLocalIgnoreYamlDataState sta
         return "recovery required";
     case scanner::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore:
         return "proceed without Ignore";
+    case scanner::ScanRunLocalIgnoreYamlDataState::ResetToDefault:
+        return "reset to default";
     }
     return "unknown state";
 }
@@ -135,6 +137,8 @@ std::string installed_yaml_data_diagnostic_name(scanner::ScanRunInstalledYamlDat
         return "invalid role data";
     case scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated:
         return "local ignore generated";
+    case scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset:
+        return "local ignore reset";
     }
     return "unknown diagnostic";
 }
@@ -163,6 +167,13 @@ void append_installed_yaml_data_messages(const scanner::ScanRunContractRunResult
                             local_ignore_state_name(installed.local_ignore_state),
                             installed.local_ignore_identity.byte_len,
                             to_std_string(installed.local_ignore_identity.sha256))});
+    if (installed.has_local_ignore_reset) {
+        messages.push_back(
+            {false, fmt::format("  Local Ignore backup: {} ({} bytes, sha256 {})",
+                                to_std_string(installed.local_ignore_reset.backup_path),
+                                installed.local_ignore_reset.backup_identity.byte_len,
+                                to_std_string(installed.local_ignore_reset.backup_identity.sha256))});
+    }
     for (const auto& diagnostic : installed.diagnostics) {
         std::string line = fmt::format("  YAML Data diagnostic [{}]: {}",
                                        installed_yaml_data_diagnostic_name(diagnostic.kind),

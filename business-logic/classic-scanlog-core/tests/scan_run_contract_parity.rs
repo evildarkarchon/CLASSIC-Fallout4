@@ -43,6 +43,21 @@ struct InstalledYamlDataFixture {
     expected_generated: InstalledYamlDataExpected,
     expected_recovery_required: InstalledYamlDataExpected,
     expected_proceed_without_ignore: InstalledYamlDataExpected,
+    expected_reset_to_default: InstalledYamlDataExpected,
+    reset_outcomes: ResetOutcomeExpectations,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ResetOutcomeExpectations {
+    conflict_code: String,
+    backup_failure_code: String,
+    replacement_failure_code: String,
+    consumed_code: String,
+    backup_must_equal_malformed_bytes: bool,
+    report_must_equal_existing_bytes: bool,
+    pre_reset_cancellation_mutates: bool,
+    post_critical_cancellation_status: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -169,6 +184,7 @@ fn local_ignore_state_token(state: contract::LocalIgnoreRunState) -> &'static st
         contract::LocalIgnoreRunState::Generated => "generated",
         contract::LocalIgnoreRunState::RecoveryRequired => "recovery_required",
         contract::LocalIgnoreRunState::ProceedWithoutIgnore => "proceed_without_ignore",
+        contract::LocalIgnoreRunState::ResetToDefault => "reset_to_default",
     }
 }
 
@@ -185,6 +201,7 @@ fn diagnostic_kind_token(kind: contract::InstalledYamlDataRunDiagnosticKind) -> 
         Kind::IncompatibleSchema => "incompatible_schema",
         Kind::InvalidRoleData => "invalid_role_data",
         Kind::LocalIgnoreGenerated => "local_ignore_generated",
+        Kind::LocalIgnoreReset => "local_ignore_reset",
     }
 }
 
@@ -465,7 +482,7 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
         .expect("malformed Local Ignore fixture should be written");
     let mut recovery = get_runtime()
         .block_on(contract::execute(
-            request,
+            request.clone(),
             &contract::Cancellation::new(),
             None,
         ))
@@ -499,7 +516,70 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
         "operation-scoped empty ignores must not change shared Autoscan Report bytes"
     );
     assert_eq!(
-        std::fs::read(ignore_path).expect("malformed Local Ignore should remain readable"),
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
         malformed_ignore
+    );
+
+    let mut reset_recovery = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("shared malformed Local Ignore should pause again for reset coverage");
+    let reset_continuation = reset_recovery
+        .continuation
+        .take()
+        .expect("shared reset fixture should retain its continuation");
+    let reset = get_runtime()
+        .block_on(reset_continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("shared Reset To Default fixture should complete");
+    assert_installed_yaml_data(&reset, &fixture.expected_reset_to_default);
+    let reset_metadata = reset
+        .installed_yaml_data
+        .as_ref()
+        .and_then(|installed| installed.local_ignore_reset.as_ref())
+        .expect("shared reset result should expose durable reset metadata");
+    if fixture.reset_outcomes.backup_must_equal_malformed_bytes {
+        assert_eq!(
+            std::fs::read(&reset_metadata.backup_path)
+                .expect("shared reset backup should remain readable"),
+            malformed_ignore
+        );
+    }
+    let reset_report = std::fs::read(
+        reset.logs[0]
+            .autoscan_report
+            .as_ref()
+            .expect("shared reset should write an Autoscan Report"),
+    )
+    .expect("shared reset Autoscan Report should be readable");
+    if fixture.reset_outcomes.report_must_equal_existing_bytes {
+        assert_eq!(reset_report, existing_report);
+    }
+    assert_eq!(
+        contract::ResumeErrorKind::LocalIgnoreResetConflict.as_str(),
+        fixture.reset_outcomes.conflict_code
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::LocalIgnoreResetBackupFailure.as_str(),
+        fixture.reset_outcomes.backup_failure_code
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::LocalIgnoreResetReplacementFailure.as_str(),
+        fixture.reset_outcomes.replacement_failure_code
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::ContinuationConsumed.as_str(),
+        fixture.reset_outcomes.consumed_code
+    );
+    assert!(!fixture.reset_outcomes.pre_reset_cancellation_mutates);
+    assert_eq!(
+        fixture.reset_outcomes.post_critical_cancellation_status,
+        contract::RunStatus::Cancelled.as_str()
     );
 }

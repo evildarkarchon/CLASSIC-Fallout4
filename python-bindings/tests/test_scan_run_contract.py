@@ -2,6 +2,8 @@
 
 import json
 import shutil
+import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -644,6 +646,125 @@ def test_shared_local_ignore_recovery_continuation_retains_snapshot_and_rejects_
     assert replay.value.code == "scan_run_continuation_consumed"
 
 
+def test_reset_to_default_returns_durable_metadata_and_unchanged_shared_report(
+    tmp_path: Path,
+) -> None:
+    """Reset resumes retained discovery and selected bytes with verified backup metadata."""
+
+    import classic_scanlog
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["installedYamlData"]
+    _copy_shared_scan_run_data_root(tmp_path)
+    crash_log = _write_shared_scan_run_logs(tmp_path, [fixture["input"]])[0]
+    ignore_path = tmp_path / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    request = classic_scanlog.ScanRunRequest.targeted(
+        _configuration(classic_scanlog, tmp_path),
+        classic_scanlog.ScanRunTargetedSource(inputs=[str(crash_log)]),
+    )
+    baseline = classic_scanlog.scan_run_execute(
+        request,
+        classic_scanlog.ScanRunCancellation(),
+    ).result
+    baseline_report = Path(baseline.logs[0].autoscan_report).read_bytes()
+    ignore_path.write_text(fixture["malformedLocalIgnore"], encoding="utf-8")
+    initial = classic_scanlog.scan_run_execute(
+        request,
+        classic_scanlog.ScanRunCancellation(),
+    ).result
+    retained_main = initial.installed_yaml_data.main.sha256
+    retained_game = initial.installed_yaml_data.game_file.sha256
+    (tmp_path / "CLASSIC Data" / "databases" / "CLASSIC Main.yaml").write_text(
+        "invalid: [unterminated",
+        encoding="utf-8",
+    )
+    (tmp_path / "CLASSIC Data" / "databases" / "CLASSIC Fallout4.yaml").write_text(
+        "invalid: [unterminated",
+        encoding="utf-8",
+    )
+    events: list[object] = []
+
+    reset = classic_scanlog.scan_run_resume(
+        initial.continuation,
+        classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+        classic_scanlog.ScanRunCancellation(),
+        events.append,
+    ).result
+
+    assert reset.status == "completed"
+    assert reset.discovery.accepted_logs == initial.discovery.accepted_logs
+    assert reset.installed_yaml_data.main.sha256 == retained_main
+    assert reset.installed_yaml_data.game_file.sha256 == retained_game
+    assert reset.installed_yaml_data.local_ignore_state == "reset_to_default"
+    assert "local_ignore_reset" in {
+        diagnostic.kind for diagnostic in reset.installed_yaml_data.diagnostics
+    }
+    metadata = reset.installed_yaml_data.local_ignore_reset
+    assert metadata is not None
+    assert metadata.backup_path.read_bytes() == fixture["malformedLocalIgnore"].encode()
+    assert metadata.malformed_identity.sha256 == metadata.backup_identity.sha256
+    assert (
+        metadata.replacement_identity.sha256
+        == reset.installed_yaml_data.local_ignore_identity.sha256
+    )
+    assert Path(reset.logs[0].autoscan_report).read_bytes() == baseline_report
+    assert all(event.kind != "discovery_completed" for event in events)
+    with pytest.raises(classic_scanlog.ScanRunContinuationConsumedError) as replay:
+        classic_scanlog.scan_run_resume(
+            initial.continuation,
+            classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+            classic_scanlog.ScanRunCancellation(),
+        )
+    assert replay.value.code == fixture["resetOutcomes"]["consumedCode"]
+
+
+def test_reset_to_default_exposes_typed_conflict_and_backup_failure(
+    tmp_path: Path,
+) -> None:
+    """Reset conflict and pre-replacement operational failure remain distinct exceptions."""
+
+    import classic_scanlog
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["installedYamlData"]
+
+    def paused(root: Path) -> tuple[object, Path]:
+        _copy_shared_scan_run_data_root(root)
+        crash_log = _write_shared_scan_run_logs(root, [fixture["input"]])[0]
+        ignore_path = root / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+        ignore_path.write_text(fixture["malformedLocalIgnore"], encoding="utf-8")
+        result = classic_scanlog.scan_run_execute(
+            classic_scanlog.ScanRunRequest.targeted(
+                _configuration(classic_scanlog, root),
+                classic_scanlog.ScanRunTargetedSource(inputs=[str(crash_log)]),
+            ),
+            classic_scanlog.ScanRunCancellation(),
+        ).result
+        return result.continuation, ignore_path
+
+    conflict_continuation, conflict_ignore = paused(tmp_path / "conflict")
+    conflict_ignore.write_text("CLASSIC_Ignore_Fallout4: []\n", encoding="utf-8")
+    with pytest.raises(classic_scanlog.ScanRunLocalIgnoreResetConflictError) as conflict:
+        classic_scanlog.scan_run_resume(
+            conflict_continuation,
+            classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+            classic_scanlog.ScanRunCancellation(),
+        )
+    assert conflict.value.code == fixture["resetOutcomes"]["conflictCode"]
+    assert conflict.value.expected_identity.sha256 != conflict.value.actual_identity.sha256
+
+    failure_root = tmp_path / "backup-failure"
+    failure_continuation, failure_ignore = paused(failure_root)
+    (failure_root / "CLASSIC Backup").write_text("not a directory", encoding="utf-8")
+    with pytest.raises(classic_scanlog.ScanRunLocalIgnoreResetBackupError) as failure:
+        classic_scanlog.scan_run_resume(
+            failure_continuation,
+            classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+            classic_scanlog.ScanRunCancellation(),
+        )
+    assert failure.value.code == fixture["resetOutcomes"]["backupFailureCode"]
+    assert failure.value.stage is None
+    assert failure_ignore.read_text(encoding="utf-8") == fixture["malformedLocalIgnore"]
+
+
 def test_pre_resume_cancellation_wins_without_mutating_local_ignore(
     tmp_path: Path,
 ) -> None:
@@ -669,7 +790,7 @@ def test_pre_resume_cancellation_wins_without_mutating_local_ignore(
 
     resumed = classic_scanlog.scan_run_resume(
         initial.continuation,
-        classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+        classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
         cancellation,
         events.append,
     ).result
@@ -679,6 +800,61 @@ def test_pre_resume_cancellation_wins_without_mutating_local_ignore(
     assert all(log.disposition == "cancelled_before_start" for log in resumed.logs)
     assert events == []
     assert ignore_path.read_text(encoding="utf-8") == fixture["malformedLocalIgnore"]
+    assert (tmp_path / "CLASSIC Backup").exists() is fixture["resetOutcomes"][
+        "preResetCancellationMutates"
+    ]
+
+
+def test_post_critical_cancellation_waits_for_durable_reset(tmp_path: Path) -> None:
+    """Cancellation after reset lock acquisition waits for backup and replacement durability."""
+
+    import classic_scanlog
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["installedYamlData"]
+    _copy_shared_scan_run_data_root(tmp_path)
+    crash_log = _write_shared_scan_run_logs(tmp_path, [fixture["input"]])[0]
+    ignore_path = tmp_path / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    large_malformed_ignore = fixture["malformedLocalIgnore"] + "x" * (16 * 1024 * 1024)
+    ignore_path.write_text(large_malformed_ignore, encoding="utf-8")
+    initial = classic_scanlog.scan_run_execute(
+        classic_scanlog.ScanRunRequest.targeted(
+            _configuration(classic_scanlog, tmp_path),
+            classic_scanlog.ScanRunTargetedSource(inputs=[str(crash_log)]),
+        ),
+        classic_scanlog.ScanRunCancellation(),
+    ).result
+    cancellation = classic_scanlog.ScanRunCancellation()
+    reset_lock = tmp_path / ".classic-local-ignore-reset.lock"
+    observed_reset_entry = threading.Event()
+
+    def cancel_after_reset_entry() -> None:
+        """Request cancellation only after config core has entered its reset transaction."""
+
+        deadline = time.monotonic() + 5
+        while not reset_lock.exists() and time.monotonic() < deadline:
+            time.sleep(0.001)
+        if reset_lock.exists():
+            observed_reset_entry.set()
+            cancellation.cancel()
+
+    canceller = threading.Thread(target=cancel_after_reset_entry)
+    canceller.start()
+    cancelled = classic_scanlog.scan_run_resume(
+        initial.continuation,
+        classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+        cancellation,
+    ).result
+    canceller.join()
+
+    assert observed_reset_entry.is_set()
+    assert cancelled.status == fixture["resetOutcomes"]["postCriticalCancellationStatus"]
+    assert all(log.autoscan_report is None for log in cancelled.logs)
+    backup_directory = tmp_path / "CLASSIC Backup" / "YAML Data" / "Local Ignore"
+    backups = list(backup_directory.iterdir())
+    assert len(backups) == 1
+    if fixture["resetOutcomes"]["backupMustEqualMalformedBytes"]:
+        assert backups[0].read_text(encoding="utf-8") == large_malformed_ignore
+    assert ignore_path.read_text(encoding="utf-8") != large_malformed_ignore
 
 
 def test_targeted_scan_run_preserves_input_order_and_never_moves(

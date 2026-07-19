@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T08:34:49Z",
+  "generated_at_utc": "2026-07-19T09:34:38Z",
   "schema_version": 1,
   "entries": [
     {
@@ -6165,7 +6165,10 @@
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "variants": [
-        "ContinuationConsumed"
+        "ContinuationConsumed",
+        "LocalIgnoreResetConflict",
+        "LocalIgnoreResetBackupFailure",
+        "LocalIgnoreResetReplacementFailure"
       ]
     },
     {
@@ -6214,7 +6217,8 @@
         "InvalidSchema",
         "IncompatibleSchema",
         "InvalidRoleData",
-        "LocalIgnoreGenerated"
+        "LocalIgnoreGenerated",
+        "LocalIgnoreReset"
       ]
     },
     {
@@ -6250,7 +6254,23 @@
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
       "blockOrigin": "Rust",
       "variants": [
-        "ProceedWithoutIgnore"
+        "ProceedWithoutIgnore",
+        "ResetToDefault"
+      ]
+    },
+    {
+      "id": "82770c04cc35ca65",
+      "rustSymbol": "ScanRunLocalIgnoreResetFailureStage",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "Create",
+        "Write",
+        "Flush",
+        "Sync",
+        "Publish"
       ]
     },
     {
@@ -6264,7 +6284,8 @@
         "Existing",
         "Generated",
         "RecoveryRequired",
-        "ProceedWithoutIgnore"
+        "ProceedWithoutIgnore",
+        "ResetToDefault"
       ]
     },
     {
@@ -8846,6 +8867,46 @@
         {
           "name": "message",
           "type": "String"
+        },
+        {
+          "name": "has_path",
+          "type": "bool"
+        },
+        {
+          "name": "path",
+          "type": "String"
+        },
+        {
+          "name": "has_stage",
+          "type": "bool"
+        },
+        {
+          "name": "stage",
+          "type": "ScanRunLocalIgnoreResetFailureStage"
+        },
+        {
+          "name": "has_expected_identity",
+          "type": "bool"
+        },
+        {
+          "name": "expected_identity",
+          "type": "ScanRunYamlDataContentIdentityDto"
+        },
+        {
+          "name": "has_actual_identity",
+          "type": "bool"
+        },
+        {
+          "name": "actual_identity",
+          "type": "ScanRunYamlDataContentIdentityDto"
+        },
+        {
+          "name": "has_backup_path",
+          "type": "bool"
+        },
+        {
+          "name": "backup_path",
+          "type": "String"
         }
       ]
     },
@@ -9068,6 +9129,44 @@
         {
           "name": "diagnostics",
           "type": "Vec<ScanRunInstalledYamlDataDiagnosticDto>"
+        },
+        {
+          "name": "has_local_ignore_reset",
+          "type": "bool"
+        },
+        {
+          "name": "local_ignore_reset",
+          "type": "ScanRunLocalIgnoreResetRunDataDto"
+        }
+      ]
+    },
+    {
+      "id": "e0e0fec08acd4c5b",
+      "rustSymbol": "ScanRunLocalIgnoreResetRunDataDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "local_ignore_path",
+          "type": "String"
+        },
+        {
+          "name": "backup_path",
+          "type": "String"
+        },
+        {
+          "name": "malformed_identity",
+          "type": "ScanRunYamlDataContentIdentityDto"
+        },
+        {
+          "name": "backup_identity",
+          "type": "ScanRunYamlDataContentIdentityDto"
+        },
+        {
+          "name": "replacement_identity",
+          "type": "ScanRunYamlDataContentIdentityDto"
         }
       ]
     },

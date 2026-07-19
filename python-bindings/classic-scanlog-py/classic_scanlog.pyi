@@ -634,6 +634,7 @@ class ScanRunInstalledYamlDataDiagnostic:
         "incompatible_schema",
         "invalid_role_data",
         "local_ignore_generated",
+        "local_ignore_reset",
     ]
     message: str
 
@@ -647,14 +648,26 @@ class ScanRunInstalledYamlDataRunData:
         "generated",
         "recovery_required",
         "proceed_without_ignore",
+        "reset_to_default",
     ]
     local_ignore_identity: ScanRunYamlDataContentIdentity
     diagnostics: list[ScanRunInstalledYamlDataDiagnostic]
+    local_ignore_reset: ScanRunLocalIgnoreResetRunData | None
+
+class ScanRunLocalIgnoreResetRunData:
+    """Durable metadata from successful Reset To Default resume."""
+
+    local_ignore_path: Path
+    backup_path: Path
+    malformed_identity: ScanRunYamlDataContentIdentity
+    backup_identity: ScanRunYamlDataContentIdentity
+    replacement_identity: ScanRunYamlDataContentIdentity
 
 class ScanRunLocalIgnoreRecoveryDecision:
     """Explicit Rust-owned choice for resuming Local Ignore recovery."""
 
     ProceedWithoutIgnore: ScanRunLocalIgnoreRecoveryDecision
+    ResetToDefault: ScanRunLocalIgnoreRecoveryDecision
 
 class ScanRunContinuation:
     """Opaque process-local carrier for one paused Crash Log Scan Run."""
@@ -663,6 +676,31 @@ class ScanRunContinuationConsumedError(RuntimeError):
     """Raised when a recovery continuation is consumed more than once."""
 
     code: Literal["scan_run_continuation_consumed"]
+
+class ScanRunLocalIgnoreResetConflictError(RuntimeError):
+    """Raised when Local Ignore changed while the caller was deciding."""
+
+    code: Literal["local_ignore_reset_conflict"]
+    kind: Literal["local_ignore_reset_conflict"]
+    expected_identity: ScanRunYamlDataContentIdentity
+    actual_identity: ScanRunYamlDataContentIdentity | None
+    backup_path: Path | None
+
+class ScanRunLocalIgnoreResetBackupError(RuntimeError):
+    """Raised when reset fails before replacement can safely begin."""
+
+    code: Literal["local_ignore_reset_backup_failure"]
+    kind: Literal["local_ignore_reset_backup_failure"]
+    path: Path
+    stage: Literal["create", "write", "flush", "sync", "publish"] | None
+
+class ScanRunLocalIgnoreResetReplacementError(RuntimeError):
+    """Raised when reset fails while publishing retained defaults."""
+
+    code: Literal["local_ignore_reset_replacement_failure"]
+    kind: Literal["local_ignore_reset_replacement_failure"]
+    path: Path
+    stage: Literal["create", "write", "flush", "sync", "publish"] | None
 
 class ScanRunResult:
     """Complete terminal Crash Log Scan Run result."""

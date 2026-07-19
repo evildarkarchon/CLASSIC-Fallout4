@@ -167,8 +167,8 @@ Terminal mapping:
 - `Cancelled` emits `cancelled(...)` with completed and not-started counts
 - `NoCrashLogsFound` emits the dedicated `noLogsFound(...)` signal with searched locations when available; the controller relays `scanNoLogsFound(...)`, and MainWindow restores idle state without presenting an error dialog
 - `SetupFailed` emits `error(...)` with structured setup details
-- `LocalIgnoreRecoveryRequired` remains distinct from setup and infrastructure failure and currently emits `error(...)`; a later frontend interaction change will take and resume the CXX continuation
-- a typed consumed-continuation replay error emits `error(...)` with its stable code and message
+- `LocalIgnoreRecoveryRequired` remains distinct from setup and infrastructure failure and currently emits `error(...)`; a later frontend interaction change will take the CXX continuation and present its Proceed Without Ignore and Reset To Default decisions
+- typed continuation replay and Local Ignore reset conflict/backup/replacement errors emit `error(...)` with their stable code, message, and applicable path
 - a typed infrastructure error emits `error(...)` with its stage, message, and optional path
 
 Cancellation after discovery does not interrupt admitted work. Rust finishes durable report/movement handling for admitted logs, prevents later admissions at safe seams, and returns non-started accepted logs as `CancelledBeforeStart`. The worker skips those entries when emitting `logScanned(...)`.

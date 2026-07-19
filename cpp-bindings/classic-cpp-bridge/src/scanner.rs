@@ -581,6 +581,7 @@ mod ffi {
         IncompatibleSchema = 6,
         InvalidRoleData = 7,
         LocalIgnoreGenerated = 8,
+        LocalIgnoreReset = 9,
     }
 
     /// How Local Ignore YAML Data entered the immutable scan-run snapshot.
@@ -591,6 +592,7 @@ mod ffi {
         Generated = 1,
         RecoveryRequired = 2,
         ProceedWithoutIgnore = 3,
+        ResetToDefault = 4,
     }
 
     /// Explicit choice accepted by a Local Ignore recovery continuation.
@@ -598,6 +600,7 @@ mod ffi {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum ScanRunLocalIgnoreRecoveryDecision {
         ProceedWithoutIgnore = 0,
+        ResetToDefault = 1,
     }
 
     /// One setup check in a Crash Log Scan Setup Result.
@@ -699,10 +702,23 @@ mod ffi {
         InternalInvariant = 5,
     }
 
-    /// Stable misuse category returned when a recovery continuation is replayed.
+    /// Stable continuation replay or Local Ignore reset failure category.
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum ScanRunContractResumeErrorKind {
         ContinuationConsumed = 0,
+        LocalIgnoreResetConflict = 1,
+        LocalIgnoreResetBackupFailure = 2,
+        LocalIgnoreResetReplacementFailure = 3,
+    }
+
+    /// Durable publication stage retained by a Local Ignore reset failure.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLocalIgnoreResetFailureStage {
+        Create = 0,
+        Write = 1,
+        Flush = 2,
+        Sync = 3,
+        Publish = 4,
     }
 
     /// Stable event variants emitted by the final contract.
@@ -801,6 +817,17 @@ mod ffi {
         local_ignore_state: ScanRunLocalIgnoreYamlDataState,
         local_ignore_identity: ScanRunYamlDataContentIdentityDto,
         diagnostics: Vec<ScanRunInstalledYamlDataDiagnosticDto>,
+        has_local_ignore_reset: bool,
+        local_ignore_reset: ScanRunLocalIgnoreResetRunDataDto,
+    }
+
+    /// Durable backup and replacement metadata from successful Reset To Default resume.
+    struct ScanRunLocalIgnoreResetRunDataDto {
+        local_ignore_path: String,
+        backup_path: String,
+        malformed_identity: ScanRunYamlDataContentIdentityDto,
+        backup_identity: ScanRunYamlDataContentIdentityDto,
+        replacement_identity: ScanRunYamlDataContentIdentityDto,
     }
 
     /// Complete terminal result from the final Crash Log Scan Run contract.
@@ -836,6 +863,16 @@ mod ffi {
         kind: ScanRunContractResumeErrorKind,
         code: String,
         message: String,
+        has_path: bool,
+        path: String,
+        has_stage: bool,
+        stage: ScanRunLocalIgnoreResetFailureStage,
+        has_expected_identity: bool,
+        expected_identity: ScanRunYamlDataContentIdentityDto,
+        has_actual_identity: bool,
+        actual_identity: ScanRunYamlDataContentIdentityDto,
+        has_backup_path: bool,
+        backup_path: String,
     }
 
     /// Exactly one of `result`, `error`, or `resume_error`, identified by presence flags.
