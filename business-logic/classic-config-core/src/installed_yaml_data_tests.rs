@@ -192,6 +192,53 @@ fn write_existing_local_ignore(installation_root: &Path) -> PathBuf {
 }
 
 #[test]
+/// Production publication moves staged bytes into place without retaining a hard-linked source.
+fn system_local_ignore_publication_uses_a_noclobber_move() {
+    let directory = tempdir().expect("publication directory should be created");
+    let staged_path = directory.path().join("staged-ignore.yaml");
+    let ignore_path = directory.path().join("CLASSIC Ignore.yaml");
+    std::fs::write(&staged_path, DEFAULT_IGNORE_YAML).expect("staged defaults should be written");
+
+    assert!(
+        SystemLocalIgnoreFileSystem
+            .publish_staged_noclobber(&staged_path, &ignore_path)
+            .expect("no-clobber move should publish into an absent path")
+    );
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("published Local Ignore should be readable"),
+        DEFAULT_IGNORE_YAML.as_bytes()
+    );
+    assert!(
+        !staged_path.exists(),
+        "publication must move the staging name instead of retaining it as a hard-link source"
+    );
+}
+
+#[test]
+/// Production publication preserves an existing canonical winner and the losing staged bytes.
+fn system_local_ignore_publication_does_not_clobber_an_existing_path() {
+    let directory = tempdir().expect("publication directory should be created");
+    let staged_path = directory.path().join("staged-ignore.yaml");
+    let ignore_path = directory.path().join("CLASSIC Ignore.yaml");
+    std::fs::write(&staged_path, DEFAULT_IGNORE_YAML).expect("staged defaults should be written");
+    std::fs::write(&ignore_path, IGNORE_YAML).expect("canonical winner should be written");
+
+    assert!(
+        !SystemLocalIgnoreFileSystem
+            .publish_staged_noclobber(&staged_path, &ignore_path)
+            .expect("an existing canonical path should be reported as a lost race")
+    );
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("canonical winner should remain readable"),
+        IGNORE_YAML.as_bytes()
+    );
+    assert_eq!(
+        std::fs::read(&staged_path).expect("losing staged bytes should remain caller-owned"),
+        DEFAULT_IGNORE_YAML.as_bytes()
+    );
+}
+
+#[test]
 /// Missing Local Ignore is initialized from the exact selected Main defaults.
 fn missing_local_ignore_is_generated_from_the_selected_main_snapshot() {
     let installation = tempdir().expect("installation root should be created");
@@ -475,6 +522,21 @@ fn concurrent_generation_preserves_one_winner_and_every_loader_rereads_it() {
             }));
         }
     }
+    let data_entries = std::fs::read_dir(installation_root.join("CLASSIC Data"))
+        .expect("CLASSIC Data should remain readable")
+        .map(|entry| {
+            entry
+                .expect("directory entry should be readable")
+                .file_name()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        data_entries.len(),
+        2,
+        "the losing publisher must clean its caller-owned staging file"
+    );
+    assert!(data_entries.contains(&std::ffi::OsString::from("databases")));
+    assert!(data_entries.contains(&std::ffi::OsString::from("CLASSIC Ignore.yaml")));
 }
 
 #[test]

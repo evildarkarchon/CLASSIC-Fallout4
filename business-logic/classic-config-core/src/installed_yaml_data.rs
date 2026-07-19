@@ -234,7 +234,7 @@ trait LocalIgnoreFileSystem {
     /// Read the canonical Local Ignore path.
     fn read(&self, path: &Path) -> std::io::Result<Vec<u8>>;
 
-    /// Atomically link one fully synced staged file into an absent canonical path.
+    /// Atomically move one fully synced staged file into an absent canonical path.
     fn publish_staged_noclobber(&self, staged_path: &Path, path: &Path) -> std::io::Result<bool>;
 }
 
@@ -247,7 +247,9 @@ impl LocalIgnoreFileSystem for SystemLocalIgnoreFileSystem {
     }
 
     fn publish_staged_noclobber(&self, staged_path: &Path, path: &Path) -> std::io::Result<bool> {
-        match std::fs::hard_link(staged_path, path) {
+        // Local Ignore may live on FAT or network volumes where hard links are unavailable;
+        // atomicwrites maps this to a no-replace, write-through move on Windows.
+        match atomicwrites::move_atomic(staged_path, path) {
             Ok(()) => Ok(true),
             Err(source) if source.kind() == std::io::ErrorKind::AlreadyExists => Ok(false),
             Err(source) => Err(source),
@@ -1602,9 +1604,10 @@ fn validate_local_ignore_defaults<'a>(
 
 /// Stage complete bytes beside `path`, then atomically publish them only if `path` is absent.
 ///
-/// A hard link makes the fully synced staged inode visible at the canonical path in one
-/// no-clobber filesystem operation. `Ok(false)` means a concurrent creator won; callers must
-/// reread the canonical path and treat that winner as authoritative.
+/// A no-clobber move makes the fully synced staged file visible at the canonical path; on Windows,
+/// this is a write-through rename that does not require hard-link support. `Ok(false)` means a
+/// concurrent creator won; callers must reread the canonical path and treat that winner as
+/// authoritative.
 fn publish_local_ignore_if_absent<I>(
     local_ignore_io: &I,
     path: &Path,
@@ -1640,12 +1643,29 @@ where
             source,
         }
     })?;
-    local_ignore_io
-        .publish_staged_noclobber(staged.path(), path)
-        .map_err(|source| InstalledYamlDataLoadError::LocalIgnoreCreate {
-            path: path.to_path_buf(),
-            source,
-        })
+    let (staged_file, staged_path) =
+        staged
+            .keep()
+            .map_err(|failure| InstalledYamlDataLoadError::LocalIgnoreCreate {
+                path: path.to_path_buf(),
+                source: failure.error,
+            })?;
+    drop(staged_file);
+    let publication = local_ignore_io.publish_staged_noclobber(&staged_path, path);
+    if let Err(source) = std::fs::remove_file(&staged_path)
+        && source.kind() != std::io::ErrorKind::NotFound
+    {
+        // Match NamedTempFile's best-effort drop cleanup: a private staging artifact must not
+        // override either a complete canonical winner or the primary publication error.
+        log::warn!(
+            "failed to clean Local Ignore staging file `{}`: {source}",
+            staged_path.display()
+        );
+    }
+    publication.map_err(|source| InstalledYamlDataLoadError::LocalIgnoreCreate {
+        path: path.to_path_buf(),
+        source,
+    })
 }
 
 impl From<InstalledYamlDataInspectionError> for InstalledYamlDataLoadError {
