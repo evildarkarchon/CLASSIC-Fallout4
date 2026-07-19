@@ -63,10 +63,12 @@ No caller-supplied input index or completion-order reconstruction participates i
 
 ## Where Terminal Results Enter Qt
 
-`ScanWorker::doScan(...)` receives one `ScanRunContractExecutionResult` from:
+`ScanWorker::doScan(...)` moves one `ScanRunContractExecutionResult` from the
+opaque execution operation:
 
 ```cpp
-scan_run_contract_execute(*request, *m_cancellation, &observer)
+auto operation = scan_run_contract_execute(*request, *m_cancellation, &observer);
+auto execution = scan_run_contract_execution_take_result(*operation);
 ```
 
 `presentScanRunExecution(...)` first preserves the result-level counts and run status, then projects logs in their existing order:

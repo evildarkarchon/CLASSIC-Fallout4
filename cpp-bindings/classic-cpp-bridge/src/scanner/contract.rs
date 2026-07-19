@@ -30,6 +30,17 @@ pub(crate) struct ScanRunCancellation {
     inner: contract::Cancellation,
 }
 
+/// Opaque execution operation that owns a DTO envelope and optional recovery continuation.
+pub(crate) struct ScanRunContractExecution {
+    result: ffi::ScanRunContractExecutionResult,
+    continuation: Option<ScanRunContinuation>,
+}
+
+/// Process-local, non-cloneable carrier for one retained Local Ignore recovery.
+pub(crate) struct ScanRunContinuation {
+    inner: contract::CrashLogScanRunContinuation,
+}
+
 /// Creates Standard intent that leaves failed Crash Logs and reports in place.
 pub(crate) fn scan_run_unsolved_logs_leave_in_place() -> Box<ScanRunUnsolvedLogs> {
     Box::new(ScanRunUnsolvedLogs {
@@ -156,7 +167,7 @@ pub(crate) unsafe fn scan_run_contract_execute(
     request: &ScanRunRequest,
     cancellation: &ScanRunCancellation,
     observer: *const ffi::ScanRunObserver,
-) -> ffi::ScanRunContractExecutionResult {
+) -> Box<ScanRunContractExecution> {
     // SAFETY: the caller contract requires a non-null pointer to stay live for
     // this synchronous invocation; null explicitly means observation is disabled.
     let observer = unsafe { observer.as_ref() };
@@ -176,19 +187,135 @@ pub(crate) unsafe fn scan_run_contract_execute(
         )),
     };
 
+    Box::new(execution_from_initial_result(result))
+}
+
+/// Moves the DTO envelope out while leaving an ignored default behind.
+pub(crate) fn scan_run_contract_execution_take_result(
+    execution: &mut ScanRunContractExecution,
+) -> ffi::ScanRunContractExecutionResult {
+    std::mem::replace(&mut execution.result, empty_execution_result_dto())
+}
+
+/// Returns whether the operation still owns a recovery continuation.
+pub(crate) fn scan_run_contract_execution_has_continuation(
+    execution: &ScanRunContractExecution,
+) -> bool {
+    execution.continuation.is_some()
+}
+
+/// Moves the non-cloneable continuation out of its initial execution operation.
+pub(crate) fn scan_run_contract_execution_take_continuation(
+    execution: &mut ScanRunContractExecution,
+) -> Result<Box<ScanRunContinuation>, String> {
+    execution
+        .continuation
+        .take()
+        .map(Box::new)
+        .ok_or_else(|| "scan run execution has no recovery continuation".to_string())
+}
+
+/// Resumes retained work without repeating discovery or YAML Data selection.
+///
+/// Replay is projected into the stable typed resume-error envelope.
+///
+/// # Safety
+///
+/// A non-null `observer` must point to a live `ScanRunObserver` for this synchronous call.
+pub(crate) unsafe fn scan_run_continuation_resume(
+    continuation: &ScanRunContinuation,
+    decision: ffi::ScanRunLocalIgnoreRecoveryDecision,
+    cancellation: &ScanRunCancellation,
+    observer: *const ffi::ScanRunObserver,
+) -> Result<Box<ScanRunContractExecution>, String> {
+    // SAFETY: the caller contract requires a non-null pointer to stay live for
+    // this synchronous invocation; null explicitly means observation is disabled.
+    let observer = unsafe { observer.as_ref() };
+    // Reject CXX's non-exhaustive sentinel before claiming the one-shot continuation.
+    let decision = map_local_ignore_recovery_decision(decision)?;
+    let result = match observer {
+        Some(observer) => {
+            let mut adapter = CxxObserverAdapter { observer };
+            block_on(
+                continuation
+                    .inner
+                    .resume(decision, &cancellation.inner, Some(&mut adapter)),
+            )
+        }
+        None => block_on(
+            continuation
+                .inner
+                .resume(decision, &cancellation.inner, None),
+        ),
+    };
+
+    Ok(Box::new(execution_from_resume_result(result)))
+}
+
+fn execution_from_initial_result(
+    result: Result<contract::RunResult, contract::InfrastructureError>,
+) -> ScanRunContractExecution {
     match result {
-        Ok(result) => ffi::ScanRunContractExecutionResult {
-            has_result: true,
-            result: run_result_to_dto(result),
-            has_error: false,
-            error: empty_infrastructure_error_dto(),
+        Ok(mut result) => ScanRunContractExecution {
+            continuation: result
+                .continuation
+                .take()
+                .map(|inner| ScanRunContinuation { inner }),
+            result: success_execution_result_dto(result),
         },
-        Err(error) => ffi::ScanRunContractExecutionResult {
+        Err(error) => ScanRunContractExecution {
+            result: infrastructure_execution_result_dto(error),
+            continuation: None,
+        },
+    }
+}
+
+fn execution_from_resume_result(
+    result: Result<contract::RunResult, contract::ResumeError>,
+) -> ScanRunContractExecution {
+    let result = match result {
+        Ok(result) => success_execution_result_dto(result),
+        Err(contract::ResumeError::Infrastructure(error)) => {
+            infrastructure_execution_result_dto(error)
+        }
+        Err(contract::ResumeError::ContinuationConsumed) => ffi::ScanRunContractExecutionResult {
             has_result: false,
             result: empty_run_result_dto(),
-            has_error: true,
-            error: infrastructure_error_to_dto(error),
+            has_error: false,
+            error: empty_infrastructure_error_dto(),
+            has_resume_error: true,
+            resume_error: continuation_consumed_error_dto(),
         },
+    };
+    ScanRunContractExecution {
+        result,
+        continuation: None,
+    }
+}
+
+fn success_execution_result_dto(
+    result: contract::RunResult,
+) -> ffi::ScanRunContractExecutionResult {
+    ffi::ScanRunContractExecutionResult {
+        has_result: true,
+        result: run_result_to_dto(result),
+        has_error: false,
+        error: empty_infrastructure_error_dto(),
+        has_resume_error: false,
+        resume_error: empty_resume_error_dto(),
+    }
+}
+
+fn infrastructure_execution_result_dto(
+    error: contract::InfrastructureError,
+) -> ffi::ScanRunContractExecutionResult {
+    ffi::ScanRunContractExecutionResult {
+        has_result: false,
+        result: empty_run_result_dto(),
+        has_error: true,
+        error: infrastructure_error_to_dto(error),
+        has_resume_error: false,
+        resume_error: empty_resume_error_dto(),
     }
 }
 
@@ -215,6 +342,9 @@ fn map_run_status(value: CrashLogScanRunStatus) -> ffi::ScanRunContractStatus {
             ffi::ScanRunContractStatus::CancelledBeforeDiscovery
         }
         CrashLogScanRunStatus::Cancelled => ffi::ScanRunContractStatus::Cancelled,
+        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired => {
+            ffi::ScanRunContractStatus::LocalIgnoreRecoveryRequired
+        }
     }
 }
 
@@ -475,6 +605,35 @@ fn empty_infrastructure_error_dto() -> ffi::ScanRunContractInfrastructureError {
     }
 }
 
+fn continuation_consumed_error_dto() -> ffi::ScanRunContractResumeError {
+    ffi::ScanRunContractResumeError {
+        kind: ffi::ScanRunContractResumeErrorKind::ContinuationConsumed,
+        code: contract::ResumeErrorKind::ContinuationConsumed
+            .as_str()
+            .to_string(),
+        message: contract::ResumeError::ContinuationConsumed.to_string(),
+    }
+}
+
+fn empty_resume_error_dto() -> ffi::ScanRunContractResumeError {
+    ffi::ScanRunContractResumeError {
+        kind: ffi::ScanRunContractResumeErrorKind::ContinuationConsumed,
+        code: String::new(),
+        message: String::new(),
+    }
+}
+
+fn empty_execution_result_dto() -> ffi::ScanRunContractExecutionResult {
+    ffi::ScanRunContractExecutionResult {
+        has_result: false,
+        result: empty_run_result_dto(),
+        has_error: false,
+        error: empty_infrastructure_error_dto(),
+        has_resume_error: false,
+        resume_error: empty_resume_error_dto(),
+    }
+}
+
 fn optional_string_to_dto(value: Option<String>) -> (bool, String) {
     value.map(|value| (true, value)).unwrap_or_default()
 }
@@ -670,6 +829,27 @@ fn map_local_ignore_yaml_data_state(
     match value {
         contract::LocalIgnoreRunState::Existing => ffi::ScanRunLocalIgnoreYamlDataState::Existing,
         contract::LocalIgnoreRunState::Generated => ffi::ScanRunLocalIgnoreYamlDataState::Generated,
+        contract::LocalIgnoreRunState::RecoveryRequired => {
+            ffi::ScanRunLocalIgnoreYamlDataState::RecoveryRequired
+        }
+        contract::LocalIgnoreRunState::ProceedWithoutIgnore => {
+            ffi::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore
+        }
+    }
+}
+
+/// Maps the explicit CXX recovery choice into the Rust-owned continuation contract.
+fn map_local_ignore_recovery_decision(
+    value: ffi::ScanRunLocalIgnoreRecoveryDecision,
+) -> Result<contract::LocalIgnoreRecoveryDecision, String> {
+    match value {
+        ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
+            Ok(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore)
+        }
+        _ => Err(format!(
+            "unsupported ScanRunLocalIgnoreRecoveryDecision discriminant: {}",
+            value.repr
+        )),
     }
 }
 

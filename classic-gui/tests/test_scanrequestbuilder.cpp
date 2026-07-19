@@ -12,6 +12,16 @@
 
 namespace {
 
+/// Executes an opaque bridge operation and moves out its typed terminal envelope.
+classic::scanner::ScanRunContractExecutionResult executeResult(
+    const classic::scanner::ScanRunRequest& request,
+    const classic::scanner::ScanRunCancellation& cancellation,
+    const classic::scanner::ScanRunObserver* observer)
+{
+    auto operation = classic::scanner::scan_run_contract_execute(request, cancellation, observer);
+    return classic::scanner::scan_run_contract_execution_take_result(*operation);
+}
+
 /// Creates representative accepted GUI settings for tagged request behavior tests.
 classic::gui::CrashLogScanLaunchSettings makeSettings()
 {
@@ -69,7 +79,7 @@ classic::scanner::ScanRunContractExecutionResult execute(const QString& installa
     const auto request =
         classic::gui::buildScanRunRequest(installationRoot, baseDirectory, settings, {}, targetedInputs);
     const auto cancellation = classic::scanner::scan_run_cancellation_new();
-    return classic::scanner::scan_run_contract_execute(*request, *cancellation, nullptr);
+    return executeResult(*request, *cancellation, nullptr);
 }
 
 } // namespace
@@ -91,7 +101,7 @@ void ScanRequestBuilderTests::no_targeted_inputs_constructs_a_tagged_standard_re
     const auto request = classic::gui::buildScanRunRequest(root.path(), root.path(), makeSettings(), {}, {});
     const auto cancellation = classic::scanner::scan_run_cancellation_new();
     const DiscoveryCancellingObserver observer(*cancellation);
-    const auto execution = classic::scanner::scan_run_contract_execute(*request, *cancellation, &observer);
+    const auto execution = executeResult(*request, *cancellation, &observer);
 
     QVERIFY2(execution.has_result, "Standard discovery should produce an expected lifecycle result");
     QVERIFY(!execution.has_error);
@@ -139,7 +149,7 @@ void ScanRequestBuilderTests::every_supported_game_maps_to_the_scanner_local_typ
         const auto request = classic::gui::buildScanRunRequest(root.path(), root.path(), settings, {}, {});
         const auto cancellation = classic::scanner::scan_run_cancellation_new();
         classic::scanner::scan_run_cancellation_cancel(*cancellation);
-        const auto execution = classic::scanner::scan_run_contract_execute(*request, *cancellation, nullptr);
+        const auto execution = executeResult(*request, *cancellation, nullptr);
         QVERIFY(execution.has_result);
         QCOMPARE(execution.result.status, classic::scanner::ScanRunContractStatus::CancelledBeforeDiscovery);
     }

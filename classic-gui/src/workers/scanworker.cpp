@@ -157,7 +157,8 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
         auto request = classic::gui::buildScanRunRequest(installationRoot, baseDirectory, settings, setupXseLogPath,
                                                          targetedInputs);
         GuiScanRunObserver observer(*this, *m_cancellation);
-        const auto execution = scanner::scan_run_contract_execute(*request, *m_cancellation, &observer);
+        auto operation = scanner::scan_run_contract_execute(*request, *m_cancellation, &observer);
+        const auto execution = scanner::scan_run_contract_execution_take_result(*operation);
         if (observer.deliveryFailed()) {
             emit error(QStringLiteral("Crash Log Scan progress delivery failed; the run was cancelled safely."));
             return;
@@ -211,6 +212,7 @@ void ScanWorker::doScan(const QString& installationRoot, const classic::gui::Cra
             emit noLogsFound(terminal.message);
             break;
         case TerminalKind::SetupFailed:
+        case TerminalKind::LocalIgnoreRecoveryRequired:
         case TerminalKind::InfrastructureError:
             emit error(terminal.message);
             break;

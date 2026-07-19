@@ -25,9 +25,12 @@ pub(crate) use analyzer::{
     plugin_evidence_analyzer_construction_result, plugin_evidence_analyzer_new,
 };
 pub(crate) use contract::{
-    ScanRunCancellation, ScanRunRequest, ScanRunUnsolvedLogs, scan_run_cancellation_cancel,
-    scan_run_cancellation_is_cancelled, scan_run_cancellation_new, scan_run_contract_execute,
-    scan_run_request_standard, scan_run_request_standard_with_fcx, scan_run_request_targeted,
+    ScanRunCancellation, ScanRunContinuation, ScanRunContractExecution, ScanRunRequest,
+    ScanRunUnsolvedLogs, scan_run_cancellation_cancel, scan_run_cancellation_is_cancelled,
+    scan_run_cancellation_new, scan_run_continuation_resume, scan_run_contract_execute,
+    scan_run_contract_execution_has_continuation, scan_run_contract_execution_take_continuation,
+    scan_run_contract_execution_take_result, scan_run_request_standard,
+    scan_run_request_standard_with_fcx, scan_run_request_targeted,
     scan_run_request_targeted_with_fcx, scan_run_unsolved_logs_leave_in_place,
     scan_run_unsolved_logs_move_to_configured_or_default, scan_run_unsolved_logs_move_to_custom,
 };
@@ -586,6 +589,15 @@ mod ffi {
     enum ScanRunLocalIgnoreYamlDataState {
         Existing = 0,
         Generated = 1,
+        RecoveryRequired = 2,
+        ProceedWithoutIgnore = 3,
+    }
+
+    /// Explicit choice accepted by a Local Ignore recovery continuation.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLocalIgnoreRecoveryDecision {
+        ProceedWithoutIgnore = 0,
     }
 
     /// One setup check in a Crash Log Scan Setup Result.
@@ -650,6 +662,7 @@ mod ffi {
         SetupFailed = 2,
         CancelledBeforeDiscovery = 3,
         Cancelled = 4,
+        LocalIgnoreRecoveryRequired = 5,
     }
 
     /// Discovery source retained by the final contract.
@@ -684,6 +697,12 @@ mod ffi {
         FormIdDatabaseAccess = 3,
         Initialization = 4,
         InternalInvariant = 5,
+    }
+
+    /// Stable misuse category returned when a recovery continuation is replayed.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunContractResumeErrorKind {
+        ContinuationConsumed = 0,
     }
 
     /// Stable event variants emitted by the final contract.
@@ -812,12 +831,21 @@ mod ffi {
         path: String,
     }
 
-    /// Exactly one of `result` or `error`, identified by the presence flags.
+    /// Typed recovery-resume failure that is distinct from infrastructure failure.
+    struct ScanRunContractResumeError {
+        kind: ScanRunContractResumeErrorKind,
+        code: String,
+        message: String,
+    }
+
+    /// Exactly one of `result`, `error`, or `resume_error`, identified by presence flags.
     struct ScanRunContractExecutionResult {
         has_result: bool,
         result: ScanRunContractRunResult,
         has_error: bool,
         error: ScanRunContractInfrastructureError,
+        has_resume_error: bool,
+        resume_error: ScanRunContractResumeError,
     }
 
     /// One serialized lifecycle event from the final contract.
@@ -888,6 +916,8 @@ mod ffi {
         type ScanRunRequest;
         type ScanRunUnsolvedLogs;
         type ScanRunCancellation;
+        type ScanRunContractExecution;
+        type ScanRunContinuation;
 
         /// Constructs and validates an immutable analyzer handle from owned configuration.
         ///
@@ -1034,7 +1064,7 @@ mod ffi {
         fn scan_run_cancellation_cancel(cancellation: &ScanRunCancellation);
         /// Returns whether cancellation was requested for this control.
         fn scan_run_cancellation_is_cancelled(cancellation: &ScanRunCancellation) -> bool;
-        /// Executes one tagged request and returns either a terminal result or typed infrastructure error.
+        /// Executes one tagged request and retains any opaque recovery continuation beside its result.
         ///
         /// `observer` may be null. A non-null observer must remain live for the synchronous call and its
         /// `on_scan_run_event` implementation must not throw across the CXX boundary.
@@ -1042,7 +1072,28 @@ mod ffi {
             request: &ScanRunRequest,
             cancellation: &ScanRunCancellation,
             observer: *const ScanRunObserver,
+        ) -> Box<ScanRunContractExecution>;
+        /// Moves the execution envelope out of an opaque execution operation.
+        fn scan_run_contract_execution_take_result(
+            execution: &mut ScanRunContractExecution,
         ) -> ScanRunContractExecutionResult;
+        /// Returns whether an initial recovery result retained an opaque continuation.
+        fn scan_run_contract_execution_has_continuation(
+            execution: &ScanRunContractExecution,
+        ) -> bool;
+        /// Moves the opaque single-use continuation out of its execution operation.
+        fn scan_run_contract_execution_take_continuation(
+            execution: &mut ScanRunContractExecution,
+        ) -> Result<Box<ScanRunContinuation>>;
+        /// Resumes retained work with an explicit Local Ignore recovery decision.
+        ///
+        /// `observer` may be null and receives only post-discovery lifecycle events.
+        unsafe fn scan_run_continuation_resume(
+            continuation: &ScanRunContinuation,
+            decision: ScanRunLocalIgnoreRecoveryDecision,
+            cancellation: &ScanRunCancellation,
+            observer: *const ScanRunObserver,
+        ) -> Result<Box<ScanRunContractExecution>>;
 
         // Utilities
         fn detect_vr_log(content: &str) -> bool;

@@ -7,6 +7,7 @@ use classic_scanlog_core::{
     CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupPathUpdate,
     CrashLogScanSetupResult, ScanProgressPhase,
 };
+use pyo3::Python;
 
 use super::{
     PyScanRunConfiguration, configuration_to_core, disposition_to_string, event_to_py,
@@ -74,6 +75,7 @@ fn maps_every_stable_enum_identifier() {
         CrashLogScanRunStatus::Completed,
         CrashLogScanRunStatus::NoCrashLogsFound,
         CrashLogScanRunStatus::SetupFailed,
+        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
         CrashLogScanRunStatus::CancelledBeforeDiscovery,
         CrashLogScanRunStatus::Cancelled,
     ];
@@ -83,6 +85,7 @@ fn maps_every_stable_enum_identifier() {
             "completed",
             "no_crash_logs_found",
             "setup_failed",
+            "local_ignore_recovery_required",
             "cancelled_before_discovery",
             "cancelled",
         ]
@@ -138,9 +141,24 @@ fn maps_every_stable_enum_identifier() {
         [
             contract::LocalIgnoreRunState::Existing,
             contract::LocalIgnoreRunState::Generated,
+            contract::LocalIgnoreRunState::RecoveryRequired,
+            contract::LocalIgnoreRunState::ProceedWithoutIgnore,
         ]
         .map(local_ignore_state_to_string),
-        ["existing", "generated"],
+        [
+            "existing",
+            "generated",
+            "recovery_required",
+            "proceed_without_ignore",
+        ],
+    );
+    assert_eq!(
+        super::PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore as u8,
+        0
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::ContinuationConsumed.as_str(),
+        "scan_run_continuation_consumed"
     );
     assert_eq!(
         [
@@ -436,58 +454,66 @@ fn maps_setup_and_run_optional_fields_without_loss() {
     assert_eq!(setup.actions, ["choose path"]);
     assert_eq!(setup.fatal_errors, ["fatal"]);
 
-    let with_values = run_result_to_py(contract::RunResult {
-        status: CrashLogScanRunStatus::SetupFailed,
-        discovery: Some(discovery()),
-        setup: Some(CrashLogScanSetupResult {
-            status: setup.status.clone(),
-            checks: Vec::new(),
-            path_updates: Vec::new(),
-            configuration_issues: Vec::new(),
-            actions: Vec::new(),
-            fatal_errors: Vec::new(),
-            message: setup.message.clone(),
-            rendered_report: setup.rendered_report.clone(),
-        }),
-        installed_yaml_data: None,
-        effective_concurrency: Some(2),
-        message: Some("run message".to_string()),
-        total: 4,
-        succeeded: 1,
-        failed: 2,
-        cancelled: 1,
-        logs: Vec::new(),
-    });
-    assert_eq!(with_values.status, "setup_failed");
-    assert!(with_values.discovery.is_some());
-    assert!(with_values.setup.is_some());
-    assert_eq!(with_values.effective_concurrency, Some(2));
-    assert_eq!(with_values.message.as_deref(), Some("run message"));
-    assert_eq!(
-        (
-            with_values.total,
-            with_values.succeeded,
-            with_values.failed,
-            with_values.cancelled,
-        ),
-        (4, 1, 2, 1),
-    );
+    Python::attach(|py| {
+        let with_values = run_result_to_py(py, contract::RunResult {
+            status: CrashLogScanRunStatus::SetupFailed,
+            discovery: Some(discovery()),
+            setup: Some(CrashLogScanSetupResult {
+                status: setup.status.clone(),
+                checks: Vec::new(),
+                path_updates: Vec::new(),
+                configuration_issues: Vec::new(),
+                actions: Vec::new(),
+                fatal_errors: Vec::new(),
+                message: setup.message.clone(),
+                rendered_report: setup.rendered_report.clone(),
+            }),
+            installed_yaml_data: None,
+            continuation: None,
+            effective_concurrency: Some(2),
+            message: Some("run message".to_string()),
+            total: 4,
+            succeeded: 1,
+            failed: 2,
+            cancelled: 1,
+            logs: Vec::new(),
+        })
+        .expect("mapped result should allocate");
+        let with_values = with_values.borrow(py);
+        assert_eq!(with_values.status, "setup_failed");
+        assert!(with_values.discovery.is_some());
+        assert!(with_values.setup.is_some());
+        assert_eq!(with_values.effective_concurrency, Some(2));
+        assert_eq!(with_values.message.as_deref(), Some("run message"));
+        assert_eq!(
+            (
+                with_values.total,
+                with_values.succeeded,
+                with_values.failed,
+                with_values.cancelled,
+            ),
+            (4, 1, 2, 1),
+        );
 
-    let without_values = run_result_to_py(contract::RunResult {
-        status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
-        discovery: None,
-        setup: None,
-        installed_yaml_data: None,
-        effective_concurrency: None,
-        message: None,
-        total: 0,
-        succeeded: 0,
-        failed: 0,
-        cancelled: 0,
-        logs: Vec::new(),
+        let without_values = run_result_to_py(py, contract::RunResult {
+            status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
+            discovery: None,
+            setup: None,
+            installed_yaml_data: None,
+            continuation: None,
+            effective_concurrency: None,
+            message: None,
+            total: 0,
+            succeeded: 0,
+            failed: 0,
+            cancelled: 0,
+            logs: Vec::new(),
+        })
+        .expect("mapped result should allocate");
+        let without_values = without_values.borrow(py);
+        assert!(without_values.discovery.is_none());
+        assert!(without_values.setup.is_none());
+        assert!(without_values.effective_concurrency.is_none());
+        assert!(without_values.message.is_none());
     });
-    assert!(without_values.discovery.is_none());
-    assert!(without_values.setup.is_none());
-    assert!(without_values.effective_concurrency.is_none());
-    assert!(without_values.message.is_none());
 }

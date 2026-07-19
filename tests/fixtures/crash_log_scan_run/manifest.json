@@ -68,6 +68,7 @@
     "installedYamlData": {
       "logTemplate": "valid-crash.log",
       "input": "Targeted/crash-shared-installed-yaml-data.log",
+      "malformedLocalIgnore": "CLASSIC_Ignore_Fallout4: [unterminated",
       "expectedExisting": {
         "mainProvenance": "bundled",
         "gameProvenance": "bundled",
@@ -80,6 +81,22 @@
         "localIgnoreState": "generated",
         "diagnosticKinds": [
           "local_ignore_generated"
+        ]
+      },
+      "expectedRecoveryRequired": {
+        "mainProvenance": "bundled",
+        "gameProvenance": "bundled",
+        "localIgnoreState": "recovery_required",
+        "diagnosticKinds": [
+          "parse"
+        ]
+      },
+      "expectedProceedWithoutIgnore": {
+        "mainProvenance": "bundled",
+        "gameProvenance": "bundled",
+        "localIgnoreState": "proceed_without_ignore",
+        "diagnosticKinds": [
+          "parse"
         ]
       }
     }
@@ -219,6 +236,16 @@
       "category": "local_ignore_yaml_data_state",
       "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "name": "LocalIgnoreRunState"
+    },
+    {
+      "category": "local_ignore_recovery_decision",
+      "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "name": "LocalIgnoreRecoveryDecision"
+    },
+    {
+      "category": "resume_error_kind",
+      "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "name": "ResumeErrorKind"
     }
   ],
   "contractVariants": [
@@ -235,6 +262,7 @@
     "run_status.setup_failed",
     "run_status.cancelled_before_discovery",
     "run_status.cancelled",
+    "run_status.local_ignore_recovery_required",
     "discovery_source.standard",
     "discovery_source.targeted",
     "log_disposition.succeeded",
@@ -272,6 +300,14 @@
     "installed_yaml_data_diagnostic_kind.local_ignore_generated",
     "local_ignore_yaml_data_state.existing",
     "local_ignore_yaml_data_state.generated",
+    "local_ignore_yaml_data_state.recovery_required",
+    "local_ignore_yaml_data_state.proceed_without_ignore",
+    "local_ignore_recovery_decision.proceed_without_ignore",
+    "resume_error_kind.continuation_consumed",
+    "resume_error_kind.infrastructure",
+    "recovery_continuation.retained_snapshot",
+    "recovery_continuation.single_use",
+    "recovery_continuation.pre_resume_cancelled",
     "cancellation_seam.pre_discovery",
     "cancellation_seam.post_discovery_queued",
     "cancellation_seam.admitted"
@@ -568,6 +604,7 @@
         "run_status.setup_failed",
         "run_status.cancelled_before_discovery",
         "run_status.cancelled",
+        "run_status.local_ignore_recovery_required",
         "discovery_source.standard",
         "discovery_source.targeted",
         "log_disposition.succeeded",
@@ -605,6 +642,14 @@
         "installed_yaml_data_diagnostic_kind.local_ignore_generated",
         "local_ignore_yaml_data_state.existing",
         "local_ignore_yaml_data_state.generated",
+        "local_ignore_yaml_data_state.recovery_required",
+        "local_ignore_yaml_data_state.proceed_without_ignore",
+        "local_ignore_recovery_decision.proceed_without_ignore",
+        "resume_error_kind.continuation_consumed",
+        "resume_error_kind.infrastructure",
+        "recovery_continuation.retained_snapshot",
+        "recovery_continuation.single_use",
+        "recovery_continuation.pre_resume_cancelled",
         "cancellation_seam.pre_discovery",
         "cancellation_seam.post_discovery_queued",
         "cancellation_seam.admitted"
@@ -643,6 +688,7 @@
         "run_status.setup_failed",
         "run_status.cancelled_before_discovery",
         "run_status.cancelled",
+        "run_status.local_ignore_recovery_required",
         "discovery_source.standard",
         "discovery_source.targeted",
         "log_disposition.succeeded",
@@ -680,6 +726,14 @@
         "installed_yaml_data_diagnostic_kind.local_ignore_generated",
         "local_ignore_yaml_data_state.existing",
         "local_ignore_yaml_data_state.generated",
+        "local_ignore_yaml_data_state.recovery_required",
+        "local_ignore_yaml_data_state.proceed_without_ignore",
+        "local_ignore_recovery_decision.proceed_without_ignore",
+        "resume_error_kind.continuation_consumed",
+        "resume_error_kind.infrastructure",
+        "recovery_continuation.retained_snapshot",
+        "recovery_continuation.single_use",
+        "recovery_continuation.pre_resume_cancelled",
         "cancellation_seam.pre_discovery",
         "cancellation_seam.post_discovery_queued",
         "cancellation_seam.admitted"
@@ -721,6 +775,7 @@
         "run_status.setup_failed",
         "run_status.cancelled_before_discovery",
         "run_status.cancelled",
+        "run_status.local_ignore_recovery_required",
         "discovery_source.standard",
         "discovery_source.targeted",
         "log_disposition.succeeded",
@@ -758,6 +813,14 @@
         "installed_yaml_data_diagnostic_kind.local_ignore_generated",
         "local_ignore_yaml_data_state.existing",
         "local_ignore_yaml_data_state.generated",
+        "local_ignore_yaml_data_state.recovery_required",
+        "local_ignore_yaml_data_state.proceed_without_ignore",
+        "local_ignore_recovery_decision.proceed_without_ignore",
+        "resume_error_kind.continuation_consumed",
+        "resume_error_kind.infrastructure",
+        "recovery_continuation.retained_snapshot",
+        "recovery_continuation.single_use",
+        "recovery_continuation.pre_resume_cancelled",
         "cancellation_seam.pre_discovery",
         "cancellation_seam.post_discovery_queued",
         "cancellation_seam.admitted"
@@ -798,6 +861,7 @@
         "run_status.setup_failed",
         "run_status.cancelled_before_discovery",
         "run_status.cancelled",
+        "run_status.local_ignore_recovery_required",
         "discovery_source.standard",
         "discovery_source.targeted",
         "log_disposition.succeeded",
@@ -835,6 +899,14 @@
         "installed_yaml_data_diagnostic_kind.local_ignore_generated",
         "local_ignore_yaml_data_state.existing",
         "local_ignore_yaml_data_state.generated",
+        "local_ignore_yaml_data_state.recovery_required",
+        "local_ignore_yaml_data_state.proceed_without_ignore",
+        "local_ignore_recovery_decision.proceed_without_ignore",
+        "resume_error_kind.continuation_consumed",
+        "resume_error_kind.infrastructure",
+        "recovery_continuation.retained_snapshot",
+        "recovery_continuation.single_use",
+        "recovery_continuation.pre_resume_cancelled",
         "cancellation_seam.pre_discovery",
         "cancellation_seam.post_discovery_queued",
         "cancellation_seam.admitted"
@@ -987,6 +1059,58 @@
             "contains": [
               "test_standard_scan_run_persists_reports_in_discovery_order",
               "test_missing_local_ignore_is_generated_and_reported_as_run_data"
+            ]
+          }
+        ]
+      }
+    },
+    "local_ignore_recovery_continuation": {
+      "requiredOwners": [
+        "rust",
+        "cxx",
+        "node",
+        "python"
+      ],
+      "evidence": {
+        "rust": [
+          {
+            "path": "business-logic/classic-scanlog-core/src/scan_run/contract_tests.rs",
+            "contains": [
+              "targeted_run_resumes_without_ignore_from_retained_discovery_and_snapshot",
+              "proceed_without_ignore_continuation_rejects_every_replay",
+              "cancellation_before_recovery_resume_returns_normal_cancelled_after_discovery_result"
+            ]
+          },
+          {
+            "path": "business-logic/classic-scanlog-core/tests/scan_run_contract_parity.rs",
+            "contains": [
+              "shared_installed_yaml_data_fixture_preserves_report_bytes_when_ignore_is_generated"
+            ]
+          }
+        ],
+        "cxx": [
+          {
+            "path": "classic-cli/tests/test_scan_run_contract.cpp",
+            "contains": [
+              "CXX shared Local Ignore recovery retains snapshots and rejects replay"
+            ]
+          }
+        ],
+        "node": [
+          {
+            "path": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+            "contains": [
+              "shared Local Ignore recovery continuation retains snapshots and rejects replay",
+              "pre-resume cancellation wins without changing malformed Local Ignore"
+            ]
+          }
+        ],
+        "python": [
+          {
+            "path": "python-bindings/tests/test_scan_run_contract.py",
+            "contains": [
+              "test_shared_local_ignore_recovery_continuation_retains_snapshot_and_rejects_replay",
+              "test_pre_resume_cancellation_wins_without_mutating_local_ignore"
             ]
           }
         ]

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T05:03:44.414130+00:00",
+  "generated_at_utc": "2026-07-19T08:45:18.718892+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -1485,6 +1485,14 @@
       "signature": "export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {"
     },
     {
+      "export": "JsScanRunLocalIgnoreRecoveryDecision",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsScanRunLocalIgnoreRecoveryDecision {"
+    },
+    {
       "export": "JsScanRunLocalIgnoreState",
       "kind": "const_enum",
       "owner_module": "aux",
@@ -2083,6 +2091,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class ScanRunCancellation {"
+    },
+    {
+      "export": "ScanRunContinuation",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class ScanRunContinuation {"
     },
     {
       "export": "ScanRunRequest",
@@ -3696,6 +3712,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
       "arity": 4
+    },
+    {
+      "export": "scanRunResume",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
+      "arity": 5
     },
     {
       "export": "scanUnpackedFiles",

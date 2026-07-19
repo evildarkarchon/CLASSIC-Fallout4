@@ -17,8 +17,10 @@ import {
   ScanRunUnsolvedLogs,
   JsGameId,
   JsScanRunInstalledYamlDataDiagnosticKind,
+  JsScanRunLocalIgnoreRecoveryDecision,
   JsScanRunLocalIgnoreState,
   scanRunExecute,
+  scanRunResume,
   parseLogSegments,
   extractFormIds,
   extractPluginList,
@@ -179,6 +181,10 @@ const SHARED_SCAN_RUN_MANIFEST = JSON.parse(
         dispositions: string[];
         unsolvedLogsArtifacts: string[];
       };
+    };
+    installedYamlData: {
+      input: string;
+      malformedLocalIgnore: string;
     };
   };
 };
@@ -502,6 +508,113 @@ describe("final Crash Log Scan Run contract", () => {
       expect(scanResult.logs[0]?.autoscanReport).toSatisfy(
         (path: string | undefined) => path !== undefined && existsSync(path),
       );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("shared Local Ignore recovery continuation retains snapshots and rejects replay", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-ignore-recovery");
+    const crashLog = writeSharedScanRunLog(root, fixture.input);
+    const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
+    const request = ScanRunRequest.targeted(
+      scanRunConfiguration(root),
+      { inputs: [crashLog] },
+    );
+
+    try {
+      const baseline = requireScanRunSuccess(
+        await scanRunExecute(request, new ScanRunCancellation()),
+      ).result;
+      const baselineReport = readFileSync(baseline.logs[0]!.autoscanReport!);
+      writeFileSync(ignorePath, fixture.malformedLocalIgnore);
+      const initialEvents: JsScanRunEvent[] = [];
+      const initial = requireScanRunSuccess(
+        await scanRunExecute(request, new ScanRunCancellation(), initialEvents.push.bind(initialEvents)),
+      ).result;
+
+      expect(initial.status).toBe("local_ignore_recovery_required");
+      expect(initial.installedYamlData?.localIgnoreState).toBe(
+        JsScanRunLocalIgnoreState.RecoveryRequired,
+      );
+      expect(initial.installedYamlData?.diagnostics.map((diagnostic) => diagnostic.kind)).toContain(
+        JsScanRunInstalledYamlDataDiagnosticKind.Parse,
+      );
+      expect(initialEvents.map((event) => event.kind)).toEqual(["discovery_completed"]);
+      const continuation = initial.continuation;
+      expect(continuation).toBeDefined();
+
+      writeFileSync(
+        join(root, "CLASSIC Data", "databases", "CLASSIC Main.yaml"),
+        "invalid: [unterminated",
+      );
+      const resumedEvents: JsScanRunEvent[] = [];
+      const resumed = requireScanRunSuccess(
+        await scanRunResume(
+          continuation!,
+          JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+          new ScanRunCancellation(),
+          resumedEvents.push.bind(resumedEvents),
+        ),
+      ).result;
+
+      expect(resumed.status).toBe("completed");
+      expect(resumed.discovery).toEqual(initial.discovery);
+      expect(resumed.installedYamlData?.main.sha256).toBe(initial.installedYamlData?.main.sha256);
+      expect(resumed.installedYamlData?.gameFile.sha256).toBe(
+        initial.installedYamlData?.gameFile.sha256,
+      );
+      expect(resumed.installedYamlData?.localIgnoreState).toBe(
+        JsScanRunLocalIgnoreState.ProceedWithoutIgnore,
+      );
+      expect(resumedEvents.some((event) => event.kind === "discovery_completed")).toBe(false);
+      expect(readFileSync(resumed.logs[0]!.autoscanReport!)).toEqual(baselineReport);
+      expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
+
+      await expect(
+        scanRunResume(
+          continuation!,
+          JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+          new ScanRunCancellation(),
+        ),
+      ).rejects.toMatchObject({ code: "scan_run_continuation_consumed" });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("pre-resume cancellation wins without changing malformed Local Ignore", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-ignore-recovery-cancelled");
+    const crashLog = writeSharedScanRunLog(root, fixture.input);
+    const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
+    writeFileSync(ignorePath, fixture.malformedLocalIgnore);
+
+    try {
+      const initial = requireScanRunSuccess(
+        await scanRunExecute(
+          ScanRunRequest.targeted(scanRunConfiguration(root), { inputs: [crashLog] }),
+          new ScanRunCancellation(),
+        ),
+      ).result;
+      const cancellation = new ScanRunCancellation();
+      cancellation.cancel();
+      const resumedEvents: JsScanRunEvent[] = [];
+      const resumed = requireScanRunSuccess(
+        await scanRunResume(
+          initial.continuation!,
+          JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+          cancellation,
+          resumedEvents.push.bind(resumedEvents),
+        ),
+      ).result;
+
+      expect(resumed.status).toBe("cancelled");
+      expect(resumed.cancelled).toBe(resumed.total);
+      expect(resumed.logs.every((log) => log.disposition === "cancelled_before_start")).toBe(true);
+      expect(resumedEvents).toEqual([]);
+      expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

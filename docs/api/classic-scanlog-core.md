@@ -7,7 +7,9 @@ Contributor-facing API documentation for [`business-logic/classic-scanlog-core/`
 - independently useful Crash Log parsing, inspection, and semantic-analysis utilities
 - the single complete Crash Log Scan Run use-case boundary in `scan_run::contract`
 
-A complete run always enters through `scan_run::contract::execute`. Discovery,
+A new run always enters through `scan_run::contract::execute`. A run paused for
+Local Ignore recovery resumes only through its returned
+`CrashLogScanRunContinuation`. Discovery,
 setup, intake, scheduling, analysis, Autoscan Report persistence, failed-log
 accounting, and Standard-run Unsolved Logs finalization are internal parts of
 that operation. They are not public lifecycle building blocks.
@@ -27,6 +29,12 @@ scan_run::contract::execute(request, cancellation, observer).await
 It accepts one tagged request, a separate monotonic cancellation control, and
 an optional observer. It returns either a meaningful terminal `RunResult` or a
 typed run-wide `InfrastructureError`.
+
+Malformed Local Ignore is a meaningful `LocalIgnoreRecoveryRequired` result.
+That result owns an opaque `CrashLogScanRunContinuation`; the only current
+decision is `LocalIgnoreRecoveryDecision::ProceedWithoutIgnore`. Calling
+`continuation.resume(decision, cancellation, observer).await` consumes the
+retained work once and returns `Result<RunResult, ResumeError>`.
 
 There is no public prepared-run, orchestration, batch-lifecycle, direct
 Autoscan Report writer, concurrency-policy helper, or process-global FCX
@@ -77,6 +85,8 @@ Cancellation is cooperative at Rust-owned safe seams:
 - cancellation before discovery completes returns `CancelledBeforeDiscovery`
   and no discovery result
 - once discovery completes, the complete discovery result is retained
+- cancellation already requested before recovery resume consumes the
+  continuation and returns the normal post-discovery `Cancelled` result
 - queued logs do not start after cancellation is observed
 - an admitted log finishes analysis, report persistence, and applicable
   Unsolved Logs finalization before its terminal outcome is published
@@ -108,6 +118,7 @@ control, but observation itself cannot change scheduling or outcomes.
 `RunResult` retains:
 
 - `Completed`, `NoCrashLogsFound`, `SetupFailed`,
+  `LocalIgnoreRecoveryRequired`,
   `CancelledBeforeDiscovery`, or `Cancelled`
 - the complete discovery result when discovery finished
 - the run-scoped FCX setup result when applicable
@@ -124,6 +135,14 @@ analysis, report-write, and movement failures into one message.
 `NoCrashLogsFound`, setup failure, cancellation, and per-log failures are
 expected lifecycle data. They are not run-wide exceptions.
 
+`LocalIgnoreRecoveryRequired` also retains completed discovery, setup data,
+the exact selected Main/game snapshot, malformed Local Ignore identity and
+diagnostics, and an opaque process-local continuation. The continuation is not
+cloneable or serializable. Its state is atomically consumed, so sequential or
+concurrent replay returns `ResumeError::ContinuationConsumed` with stable kind
+`scan_run_continuation_consumed`. Resume never emits a second
+`DiscoveryCompleted` event.
+
 ### Installed YAML Data intake
 
 After discovery, the final operation loads Installed YAML Data once from the
@@ -137,13 +156,21 @@ Local Ignore paths after accepting that snapshot.
 `RunResult::installed_yaml_data` exposes stable run-level metadata: selected
 Main/game schema, provenance and exact-byte identity, Local Ignore state and
 identity, and structured fallback, validation, or generation
-diagnostics. It is absent only when execution did not reach intake. These
-diagnostics are operational metadata and never enter Autoscan Report text;
-equivalent accepted data therefore preserves report bytes.
+diagnostics. It is absent when initial execution did not reach intake. A
+pre-resume cancellation also intentionally returns the ordinary
+cancelled-after-discovery shape without recovery metadata, because the recovery
+decision was never applied. These diagnostics are operational metadata and
+never enter Autoscan Report text; equivalent accepted data therefore preserves
+report bytes.
 
-This valid-or-generated operation exposes only `Existing` and `Generated`
-Local Ignore states and excludes the reset-only diagnostic. Malformed Local
-Ignore recovery status, continuation, and resumed-run states belong to #147.
+Ready runs expose `Existing` and `Generated`. A malformed file returns
+`RecoveryRequired`; accepting Proceed Without Ignore resumes with
+`ProceedWithoutIgnore` and an operation-scoped empty ignore list. The retained
+plan is consumed only at resume, so the exact prepared intake and selected
+snapshot are reused without rediscovery, reselection, or filesystem mutation.
+Changing Main/game files or creating a formerly missing Targeted input while
+paused cannot change the resumed run. Reset To Default remains a separate
+follow-up decision and is not exposed by this continuation yet.
 
 ### Durable finalization
 
@@ -314,7 +341,9 @@ report-section order, grouping, sorting, headings, separators, padding, icons,
 markdown, and code-authored prose. Its output includes header/version facts,
 settings and preflight results, plugins, FormIDs, named records, suspects,
 run-scoped FCX facts, and final guidance. Full scan persistence belongs
-exclusively to `scan_run::contract::execute`.
+exclusively to the Rust-owned execution flow started by
+`scan_run::contract::execute` and, after an expected recovery pause, completed
+by `CrashLogScanRunContinuation::resume`.
 
 Successful runs over identical Crash Log, YAML Data, scan facts, and options
 must persist byte-identical Autoscan Reports. The public-seam regression test

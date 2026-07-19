@@ -239,6 +239,12 @@ A valid installation returns `InstalledYamlDataLoadOutcome::Ready(InstalledYamlD
 
 Raw retained bytes and parsed YAML documents are not public APIs, and the snapshot's custom `Debug` output includes metadata only. Replacing any selected path after loading cannot change the snapshot's parsed data or identities.
 
+`LocalIgnoreRecoveryPlan::snapshot_for_scan_preparation()` is a hidden,
+workspace-only borrow used by `classic-scanlog-core`. It lets scan intake be
+prepared before a user decision while leaving the consuming recovery plan
+available for the later one-shot scan continuation. Binding callers do not use
+this seam, and it does not expose raw retained documents.
+
 If retained Local Ignore bytes are invalid UTF-8, malformed YAML, or invalid for the selected game-data role, loading instead returns `InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(LocalIgnoreRecoveryPlan)`. The immutable plan retains the selected Main/game bytes and metadata, selected game-version mode, selected-Main default state, malformed path and exact-byte identity, and all selection plus malformed-content diagnostics. Valid defaults expose an identity; invalid or unavailable defaults remain explicitly unavailable for a future reset decision but never block the non-mutating Proceed Without Ignore path. Its custom `Debug` output exposes metadata only.
 
 `LocalIgnoreRecoveryPlan::proceed_without_ignore()` consumes the plan and returns the already prepared snapshot without selection, rereads, generation, backup, or writes. The snapshot uses `LocalIgnoreYamlDataState::ProceedWithoutIgnore`, exposes the malformed installed identity for attribution, and supplies an empty `ignore_list` only to that in-memory operation. Main and game still come from the retained selection even if their paths changed while the caller decided. Because the malformed file is unchanged, a later installed load returns recovery required again.

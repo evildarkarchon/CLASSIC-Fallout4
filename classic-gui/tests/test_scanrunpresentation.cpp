@@ -41,8 +41,12 @@ private slots:
     void discovery_report_directories_are_deduplicated_case_insensitively();
     void terminal_logs_preserve_discovery_order_and_structured_dispositions();
     void expected_lifecycle_statuses_remain_distinct_from_infrastructure_errors();
+    /// Verifies Local Ignore recovery remains expected result data with its own terminal kind.
+    void local_ignore_recovery_required_remains_distinct();
     void setup_failure_presents_checks_updates_configuration_issues_actions_and_fatal_errors();
     void installed_yaml_data_presence_preserves_generated_ignore_metadata_and_diagnostics();
+    /// Verifies continuation replay misuse retains its stable code and message.
+    void consumed_resume_error_preserves_typed_context();
     void infrastructure_error_preserves_typed_stage_message_and_path();
     void invalid_execution_envelope_is_presented_as_an_infrastructure_error();
 };
@@ -214,6 +218,24 @@ void ScanRunPresentationTests::expected_lifecycle_statuses_remain_distinct_from_
     QVERIFY(cancelledPresentation.message.contains(QStringLiteral("2 not started")));
 }
 
+void ScanRunPresentationTests::local_ignore_recovery_required_remains_distinct()
+{
+    auto execution = executionWithStatus(classic::scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+    execution.result.has_message = true;
+    execution.result.message = "Local Ignore recovery is required";
+    execution.result.has_installed_yaml_data = true;
+    execution.result.installed_yaml_data.local_ignore_state =
+        classic::scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired;
+
+    const auto presentation = classic::gui::presentScanRunExecution(execution);
+
+    QCOMPARE(presentation.kind, classic::gui::ScanRunTerminalKind::LocalIgnoreRecoveryRequired);
+    QCOMPARE(presentation.message, QStringLiteral("Local Ignore recovery is required"));
+    QVERIFY(presentation.hasInstalledYamlData);
+    QCOMPARE(presentation.installedYamlData.localIgnoreState,
+             classic::scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired);
+}
+
 void ScanRunPresentationTests::setup_failure_presents_checks_updates_configuration_issues_actions_and_fatal_errors()
 {
     auto execution = executionWithStatus(classic::scanner::ScanRunContractStatus::SetupFailed);
@@ -282,6 +304,22 @@ void ScanRunPresentationTests::infrastructure_error_preserves_typed_stage_messag
     QCOMPARE(presentation.message,
              QStringLiteral("Crash Log Scan Run failed during FormID database access: database could not be opened "
                             "(path: C:/CLASSIC/databases/formids.db)"));
+}
+
+void ScanRunPresentationTests::consumed_resume_error_preserves_typed_context()
+{
+    classic::scanner::ScanRunContractExecutionResult execution{};
+    execution.has_resume_error = true;
+    execution.resume_error.kind = classic::scanner::ScanRunContractResumeErrorKind::ContinuationConsumed;
+    execution.resume_error.code = "scan_run_continuation_consumed";
+    execution.resume_error.message = "Crash Log Scan Run continuation was already consumed";
+
+    const auto presentation = classic::gui::presentScanRunExecution(execution);
+
+    QCOMPARE(presentation.kind, classic::gui::ScanRunTerminalKind::InfrastructureError);
+    QCOMPARE(presentation.message,
+             QStringLiteral("Crash Log Scan recovery failed (scan_run_continuation_consumed): "
+                            "Crash Log Scan Run continuation was already consumed"));
 }
 
 void ScanRunPresentationTests::invalid_execution_envelope_is_presented_as_an_infrastructure_error()

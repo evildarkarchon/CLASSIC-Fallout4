@@ -1353,6 +1353,11 @@ export declare class ScanRunCancellation {
   get isCancelled(): boolean
 }
 
+/** Opaque process-local carrier for one paused Crash Log Scan Run. */
+export declare class ScanRunContinuation {
+
+}
+
 /** Opaque invariant-preserving request for the final scan-run operation. */
 export declare class ScanRunRequest {
   /** Constructs a non-FCX Standard request. */
@@ -4525,12 +4530,22 @@ export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {
   LocalIgnoreGenerated = 'LocalIgnoreGenerated'
 }
 
-/** Local Ignore origins possible for the valid-or-generated scan-run intake contract. */
+/** Explicit Local Ignore recovery decisions owned by Rust scan coordination. */
+export declare const enum JsScanRunLocalIgnoreRecoveryDecision {
+  /** Resume with an empty ignore list scoped only to the retained run. */
+  ProceedWithoutIgnore = 'ProceedWithoutIgnore'
+}
+
+/** Local Ignore states possible for the complete scan-run recovery contract. */
 export declare const enum JsScanRunLocalIgnoreState {
   /** A valid user-owned Local Ignore file already existed in the installation. */
   Existing = 'Existing',
   /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
-  Generated = 'Generated'
+  Generated = 'Generated',
+  /** Malformed Local Ignore YAML Data requires an explicit caller decision. */
+  RecoveryRequired = 'RecoveryRequired',
+  /** The retained run resumed with operation-scoped empty ignores. */
+  ProceedWithoutIgnore = 'ProceedWithoutIgnore'
 }
 
 /** Common log-scoped event payload. */
@@ -4571,11 +4586,13 @@ export interface JsScanRunRejectedInput {
 
 /** Complete terminal Crash Log Scan Run result. */
 export interface JsScanRunResult {
-  status: 'completed' | 'no_crash_logs_found' | 'setup_failed' | 'cancelled_before_discovery' | 'cancelled'
+  status: 'completed' | 'no_crash_logs_found' | 'setup_failed' | 'local_ignore_recovery_required' | 'cancelled_before_discovery' | 'cancelled'
   discovery?: JsScanRunDiscoveryResult
   setup?: JsScanRunSetupResult
   /** Installed YAML Data selected after discovery, absent when intake was not reached. */
   installedYamlData?: JsInstalledYamlDataRunData
+  /** Opaque one-shot continuation populated only for Local Ignore Recovery Required. */
+  continuation?: ScanRunContinuation
   effectiveConcurrency?: number
   message?: string
   total: number
@@ -5788,6 +5805,15 @@ export declare function scanModInis(gameRoot: string, gameName: string): JsModIn
  * control to request safe stopping.
  */
 export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
+
+/**
+ * Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
+ *
+ * Replay and concurrent double consumption reject with JavaScript error code
+ * `scan_run_continuation_consumed`. Infrastructure failures retain the same resolved envelope
+ * used by [`scan_run_execute`].
+ */
+export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
 
 /**
  * Convenience function to scan for unpacked files.

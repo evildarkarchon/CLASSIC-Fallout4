@@ -54,7 +54,7 @@ fn request_conversion_treats_blank_optional_paths_as_absent() {
 }
 
 #[test]
-fn installed_yaml_data_run_enums_exclude_recovery_only_variants() {
+fn installed_yaml_data_run_enums_cover_recovery_and_every_diagnostic() {
     assert!(matches!(
         local_ignore_run_state_to_js(contract::LocalIgnoreRunState::Existing),
         JsScanRunLocalIgnoreState::Existing
@@ -63,6 +63,20 @@ fn installed_yaml_data_run_enums_exclude_recovery_only_variants() {
         local_ignore_run_state_to_js(contract::LocalIgnoreRunState::Generated),
         JsScanRunLocalIgnoreState::Generated
     ));
+    assert!(matches!(
+        local_ignore_run_state_to_js(contract::LocalIgnoreRunState::RecoveryRequired),
+        JsScanRunLocalIgnoreState::RecoveryRequired
+    ));
+    assert!(matches!(
+        local_ignore_run_state_to_js(contract::LocalIgnoreRunState::ProceedWithoutIgnore),
+        JsScanRunLocalIgnoreState::ProceedWithoutIgnore
+    ));
+    assert_eq!(
+        local_ignore_recovery_decision_to_core(
+            JsScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        ),
+        contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+    );
 
     for (kind, expected) in [
         (
@@ -187,6 +201,10 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
         ),
         (CrashLogScanRunStatus::SetupFailed, "setup_failed"),
         (
+            CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+            "local_ignore_recovery_required",
+        ),
+        (
             CrashLogScanRunStatus::CancelledBeforeDiscovery,
             "cancelled_before_discovery",
         ),
@@ -197,6 +215,7 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
             discovery: None,
             setup: None,
             installed_yaml_data: None,
+            continuation: None,
             effective_concurrency: Some(2),
             message: Some("terminal message".to_string()),
             total: 1,

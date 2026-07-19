@@ -14,7 +14,9 @@
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -25,6 +27,14 @@ namespace {
 namespace fs = std::filesystem;
 namespace scanner = classic::scanner;
 namespace fixture = classic::scan_run_fixture;
+
+/// Executes an opaque bridge operation and moves out its typed terminal envelope.
+scanner::ScanRunContractExecutionResult execute_result(
+    const scanner::ScanRunRequest& request, const scanner::ScanRunCancellation& cancellation,
+    const scanner::ScanRunObserver* observer) {
+    auto operation = scanner::scan_run_contract_execute(request, cancellation, observer);
+    return scanner::scan_run_contract_execution_take_result(*operation);
+}
 
 const fs::path SHARED_FIXTURE_ROOT = fs::path(CLASSIC_REPO_ROOT) / "tests" / "fixtures" / "crash_log_scan_run";
 
@@ -114,6 +124,15 @@ fs::path copy_shared_log(const fs::path& root, const fs::path& relative) {
     fs::create_directories(destination.parent_path());
     fs::copy_file(SHARED_FIXTURE_ROOT / "valid-crash.log", destination);
     return destination;
+}
+
+/// Reads one generated report or retained YAML file as exact binary bytes.
+std::string read_file_bytes(const fs::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        throw std::runtime_error("cannot read fixture output: " + path.string());
+    }
+    return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
 }
 
 /// Converts a generated CXX string into the native filesystem representation.
@@ -270,7 +289,7 @@ TEST_CASE("CXX executes the shared Standard fixture with Rust-owned facts", "[br
     const auto cancellation = scanner::scan_run_cancellation_new();
     const RecordingObserver observer;
 
-    const auto execution = scanner::scan_run_contract_execute(*request, *cancellation, &observer);
+    const auto execution = execute_result(*request, *cancellation, &observer);
 
     INFO("scan-run error: " << std::string(execution.error.message));
     REQUIRE(execution.has_result);
@@ -328,7 +347,7 @@ TEST_CASE("CXX executes the shared Targeted fixture without Unsolved Logs moveme
     }
     const auto request = scanner::scan_run_request_targeted(configuration, source);
 
-    const auto execution = scanner::scan_run_contract_execute(*request, *scanner::scan_run_cancellation_new(), nullptr);
+    const auto execution = execute_result(*request, *scanner::scan_run_cancellation_new(), nullptr);
 
     INFO("scan-run error: " << std::string(execution.error.message));
     REQUIRE(execution.has_result);
@@ -368,7 +387,7 @@ TEST_CASE("CXX final result preserves generated Local Ignore metadata and diagno
     source.inputs.push_back(crash_log.string());
     const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
 
-    const auto execution = scanner::scan_run_contract_execute(*request, *scanner::scan_run_cancellation_new(), nullptr);
+    const auto execution = execute_result(*request, *scanner::scan_run_cancellation_new(), nullptr);
 
     INFO("scan-run error: " << std::string(execution.error.message));
     REQUIRE(execution.has_result);
@@ -383,6 +402,71 @@ TEST_CASE("CXX final result preserves generated Local Ignore metadata and diagno
                          diagnostic.kind == scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated;
     }
     REQUIRE(saw_generation);
+}
+
+TEST_CASE("CXX shared Local Ignore recovery retains snapshots and rejects replay", "[bridge][scan-run][parity]") {
+    TemporaryDirectory temporary;
+    copy_shared_yaml_tree(temporary.path());
+    const auto crash_log = copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT);
+    scanner::ScanRunTargetedSourceDto source{};
+    source.inputs.push_back(crash_log.string());
+    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+
+    const auto baseline = execute_result(*request, *scanner::scan_run_cancellation_new(), nullptr);
+    REQUIRE(baseline.has_result);
+    REQUIRE(baseline.result.status == scanner::ScanRunContractStatus::Completed);
+    const auto baseline_report = read_file_bytes(native_path(baseline.result.logs[0].autoscan_report));
+    const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
+    {
+        std::ofstream malformed(ignore_path, std::ios::binary | std::ios::trunc);
+        malformed << fixture::MALFORMED_LOCAL_IGNORE;
+    }
+
+    auto initial_operation = scanner::scan_run_contract_execute(
+        *request, *scanner::scan_run_cancellation_new(), nullptr);
+    REQUIRE(scanner::scan_run_contract_execution_has_continuation(*initial_operation));
+    const auto initial = scanner::scan_run_contract_execution_take_result(*initial_operation);
+    REQUIRE(initial.has_result);
+    REQUIRE(initial.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+    REQUIRE(initial.result.installed_yaml_data.local_ignore_state ==
+            scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired);
+    REQUIRE(initial.result.discovery.accepted_logs.size() == 1);
+    const auto retained_log = std::string(initial.result.discovery.accepted_logs[0]);
+    const auto retained_main_sha = std::string(initial.result.installed_yaml_data.main.sha256);
+    const auto retained_game_sha = std::string(initial.result.installed_yaml_data.game_file.sha256);
+    auto continuation = scanner::scan_run_contract_execution_take_continuation(*initial_operation);
+
+    {
+        std::ofstream changed(temporary.path() / "CLASSIC Data" / "databases" / "CLASSIC Main.yaml",
+                              std::ios::binary | std::ios::trunc);
+        changed << "invalid: [unterminated";
+    }
+    const RecordingObserver observer;
+    auto resumed_operation = scanner::scan_run_continuation_resume(
+        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+        *scanner::scan_run_cancellation_new(), &observer);
+    const auto resumed = scanner::scan_run_contract_execution_take_result(*resumed_operation);
+
+    REQUIRE(resumed.has_result);
+    REQUIRE(resumed.result.status == scanner::ScanRunContractStatus::Completed);
+    REQUIRE(std::string(resumed.result.discovery.accepted_logs[0]) == retained_log);
+    REQUIRE(std::string(resumed.result.installed_yaml_data.main.sha256) == retained_main_sha);
+    REQUIRE(std::string(resumed.result.installed_yaml_data.game_file.sha256) == retained_game_sha);
+    REQUIRE(resumed.result.installed_yaml_data.local_ignore_state ==
+            scanner::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore);
+    REQUIRE_FALSE(observer.kinds().contains(scanner::ScanRunContractEventKind::DiscoveryCompleted));
+    REQUIRE(read_file_bytes(native_path(resumed.result.logs[0].autoscan_report)) == baseline_report);
+    REQUIRE(read_file_bytes(ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
+
+    auto replay_operation = scanner::scan_run_continuation_resume(
+        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+        *scanner::scan_run_cancellation_new(), nullptr);
+    const auto replay = scanner::scan_run_contract_execution_take_result(*replay_operation);
+    REQUIRE_FALSE(replay.has_result);
+    REQUIRE_FALSE(replay.has_error);
+    REQUIRE(replay.has_resume_error);
+    REQUIRE(replay.resume_error.kind == scanner::ScanRunContractResumeErrorKind::ContinuationConsumed);
+    REQUIRE(std::string(replay.resume_error.code) == "scan_run_continuation_consumed");
 }
 
 TEST_CASE("CXX shared cancellation fixture distinguishes every safe seam", "[bridge][scan-run][parity]") {
@@ -410,7 +494,7 @@ TEST_CASE("CXX shared cancellation fixture distinguishes every safe seam", "[bri
         scanner::scan_run_cancellation_cancel(*cancellation);
         const RecordingObserver observer;
 
-        const auto execution = scanner::scan_run_contract_execute(*make_request(), *cancellation, &observer);
+        const auto execution = execute_result(*make_request(), *cancellation, &observer);
 
         REQUIRE(execution.has_result);
         REQUIRE(execution.result.status == scanner::ScanRunContractStatus::CancelledBeforeDiscovery);
@@ -424,7 +508,7 @@ TEST_CASE("CXX shared cancellation fixture distinguishes every safe seam", "[bri
         const auto cancellation = scanner::scan_run_cancellation_new();
         const BoundaryCancellingObserver observer(*cancellation, scanner::ScanRunContractEventKind::LogQueued);
 
-        const auto execution = scanner::scan_run_contract_execute(*make_request(), *cancellation, &observer);
+        const auto execution = execute_result(*make_request(), *cancellation, &observer);
 
         REQUIRE(observer.triggered());
         REQUIRE(execution.result.status == scanner::ScanRunContractStatus::Cancelled);
@@ -447,7 +531,7 @@ TEST_CASE("CXX shared cancellation fixture distinguishes every safe seam", "[bri
         const BoundaryCancellingObserver observer(*cancellation, scanner::ScanRunContractEventKind::LogStarted, true,
                                                   0);
 
-        const auto execution = scanner::scan_run_contract_execute(*make_request(), *cancellation, &observer);
+        const auto execution = execute_result(*make_request(), *cancellation, &observer);
 
         REQUIRE(observer.triggered());
         REQUIRE(execution.result.status == scanner::ScanRunContractStatus::Cancelled);
@@ -482,7 +566,7 @@ TEST_CASE("Scan Run observer can cancel after adapter delivery failure", "[bridg
     const auto cancellation = scanner::scan_run_cancellation_new();
     const CancellingObserver observer(*cancellation);
 
-    const auto execution = scanner::scan_run_contract_execute(*request, *cancellation, &observer);
+    const auto execution = execute_result(*request, *cancellation, &observer);
 
     REQUIRE(observer.delivery_failed());
     REQUIRE(observer.event_count() == 1);

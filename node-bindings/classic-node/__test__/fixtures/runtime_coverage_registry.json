@@ -414,6 +414,25 @@
       "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
+      "coverageId": "node-tier2-scanlog-local-ignore-recovery-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "JsScanRunLocalIgnoreRecoveryDecision",
+        "ScanRunContinuation",
+        "scanRunResume"
+      ],
+      "verificationMode": "contract_test",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "shared Local Ignore recovery continuation retains snapshots and rejects replay",
+      "fixtureRefs": [
+        "MAIN_YAML",
+        "GAME_YAML"
+      ],
+      "notes": "Exercises the opaque Local Ignore recovery continuation, explicit Proceed Without Ignore decision, retained discovery and Installed YAML Data snapshot, stable consumed-error code, cancellation precedence, unchanged malformed bytes, and byte-identical report output."
+    },
+    {
       "coverageId": "node-tier1-database",
       "classification": "runtime_verified",
       "ownerModule": "database",

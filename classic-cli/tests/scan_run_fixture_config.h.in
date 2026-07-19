@@ -32,4 +32,7 @@ inline constexpr std::array<std::string_view, 2> TARGETED_DISPOSITIONS{"@SCAN_TA
 inline constexpr std::string_view TARGETED_ARTIFACT_SUFFIX = "@SCAN_TARGETED_ARTIFACT_SUFFIX@";
 inline constexpr std::size_t TARGETED_UNSOLVED_ARTIFACT_COUNT = @SCAN_TARGETED_UNSOLVED_COUNT@;
 
+inline constexpr std::string_view INSTALLED_YAML_INPUT = "@SCAN_INSTALLED_YAML_INPUT@";
+inline constexpr std::string_view MALFORMED_LOCAL_IGNORE = "@SCAN_MALFORMED_LOCAL_IGNORE@";
+
 } // namespace classic::scan_run_fixture

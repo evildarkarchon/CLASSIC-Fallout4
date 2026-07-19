@@ -14,6 +14,7 @@ enum class ScanRunTerminalKind {
     Completed,
     NoCrashLogsFound,
     SetupFailed,
+    LocalIgnoreRecoveryRequired,
     CancelledBeforeDiscovery,
     Cancelled,
     InfrastructureError,

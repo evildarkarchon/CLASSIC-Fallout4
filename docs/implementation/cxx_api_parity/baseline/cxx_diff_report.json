@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 619,
-    "current_total": 619,
-    "matched": 619,
+    "contract_total": 628,
+    "current_total": 628,
+    "matched": 628,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -2657,6 +2657,14 @@
       "reason": "-"
     },
     {
+      "id": "5d861f1371811b6e",
+      "rustSymbol": "ScanRunContractResumeErrorKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "6fac94d2ef62d67d",
       "rustSymbol": "ScanRunContractStatus",
       "kind": "enum",
@@ -2691,6 +2699,14 @@
     {
       "id": "48e45574328d0baf",
       "rustSymbol": "ScanRunInstalledYamlDataRole",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1ca5c72cad0943dd",
+      "rustSymbol": "ScanRunLocalIgnoreRecoveryDecision",
       "kind": "enum",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -2969,8 +2985,40 @@
       "reason": "-"
     },
     {
+      "id": "1473c74ad462f005",
+      "rustSymbol": "scan_run_continuation_resume",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "f1a23f880846dde0",
       "rustSymbol": "scan_run_contract_execute",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8b7e216f62dd5d3b",
+      "rustSymbol": "scan_run_contract_execution_has_continuation",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "bcba7f5d14da68c4",
+      "rustSymbol": "scan_run_contract_execution_take_continuation",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "db795bbb11e180e8",
+      "rustSymbol": "scan_run_contract_execution_take_result",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -3091,6 +3139,22 @@
     {
       "id": "7e171291b252d3dd",
       "rustSymbol": "ScanRunCancellation",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "841c557115efd105",
+      "rustSymbol": "ScanRunContinuation",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "20927c22fed83137",
+      "rustSymbol": "ScanRunContractExecution",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -3587,6 +3651,14 @@
     {
       "id": "6f699e1d4081f7e3",
       "rustSymbol": "ScanRunContractRejectedInput",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "70d603c217c3cd76",
+      "rustSymbol": "ScanRunContractResumeError",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

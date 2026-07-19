@@ -16,10 +16,19 @@ use classic_scanlog_core::{
 };
 use classic_shared::without_gil_block_on;
 use classic_shared_core::GameId;
-use pyo3::exceptions::{PyTypeError, PyValueError};
+use pyo3::create_exception;
+use pyo3::exceptions::{PyRuntimeError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use std::path::PathBuf;
+use std::sync::Arc;
+
+create_exception!(
+    classic_scanlog,
+    ScanRunContinuationConsumedError,
+    PyRuntimeError,
+    "A Crash Log Scan Run continuation was already consumed."
+);
 
 /// Explicit configuration shared by Standard and Targeted requests.
 #[pyclass(name = "ScanRunConfiguration", from_py_object)]
@@ -729,14 +738,34 @@ pub struct PyScanRunInstalledYamlDataRunData {
     diagnostics: Vec<PyScanRunInstalledYamlDataDiagnostic>,
 }
 
+/// Explicit Local Ignore recovery decisions owned by Rust scan coordination.
+#[pyclass(
+    name = "ScanRunLocalIgnoreRecoveryDecision",
+    eq,
+    eq_int,
+    frozen,
+    from_py_object
+)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PyScanRunLocalIgnoreRecoveryDecision {
+    /// Resume with an empty ignore list scoped only to the retained run.
+    ProceedWithoutIgnore = 0,
+}
+
+/// Opaque process-local carrier for one paused Crash Log Scan Run.
+#[pyclass(name = "ScanRunContinuation", frozen, skip_from_py_object)]
+pub struct PyScanRunContinuation {
+    inner: Arc<contract::CrashLogScanRunContinuation>,
+}
+
 /// Complete terminal Crash Log Scan Run result.
-#[pyclass(name = "ScanRunResult", from_py_object)]
-#[derive(Clone)]
+#[pyclass(name = "ScanRunResult", skip_from_py_object)]
 pub struct PyScanRunResult {
     status: String,
     discovery: Option<PyScanRunDiscoveryResult>,
     setup: Option<PyScanRunSetupResult>,
     installed_yaml_data: Option<PyScanRunInstalledYamlDataRunData>,
+    continuation: Option<Py<PyScanRunContinuation>>,
     effective_concurrency: Option<usize>,
     message: Option<String>,
     total: usize,
@@ -770,6 +799,14 @@ impl PyScanRunResult {
     #[getter]
     pub fn installed_yaml_data(&self) -> Option<PyScanRunInstalledYamlDataRunData> {
         self.installed_yaml_data.clone()
+    }
+
+    /// Returns the opaque one-shot continuation for Local Ignore Recovery Required.
+    #[getter]
+    pub fn continuation(&self, py: Python<'_>) -> Option<Py<PyScanRunContinuation>> {
+        self.continuation
+            .as_ref()
+            .map(|continuation| continuation.clone_ref(py))
     }
 
     /// Returns Rust-selected concurrency once scheduling was reached.
@@ -934,10 +971,9 @@ impl PyScanRunEvent {
 }
 
 /// Final operation envelope with independent adapter observation failure data.
-#[pyclass(name = "ScanRunExecution", from_py_object)]
-#[derive(Clone)]
+#[pyclass(name = "ScanRunExecution", skip_from_py_object)]
 pub struct PyScanRunExecution {
-    result: Option<PyScanRunResult>,
+    result: Option<Py<PyScanRunResult>>,
     error: Option<PyScanRunInfrastructureError>,
     observer_error: Option<String>,
 }
@@ -946,8 +982,8 @@ pub struct PyScanRunExecution {
 impl PyScanRunExecution {
     /// Returns a terminal result when core execution succeeded.
     #[getter]
-    pub fn result(&self) -> Option<PyScanRunResult> {
-        self.result.clone()
+    pub fn result(&self, py: Python<'_>) -> Option<Py<PyScanRunResult>> {
+        self.result.as_ref().map(|result| result.clone_ref(py))
     }
 
     /// Returns a typed infrastructure failure when no result could be produced.
@@ -1140,6 +1176,7 @@ fn run_status_to_string(value: CrashLogScanRunStatus) -> String {
         CrashLogScanRunStatus::Completed => "completed",
         CrashLogScanRunStatus::NoCrashLogsFound => "no_crash_logs_found",
         CrashLogScanRunStatus::SetupFailed => "setup_failed",
+        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired => "local_ignore_recovery_required",
         CrashLogScanRunStatus::CancelledBeforeDiscovery => "cancelled_before_discovery",
         CrashLogScanRunStatus::Cancelled => "cancelled",
     }
@@ -1183,11 +1220,13 @@ const fn installed_yaml_data_diagnostic_kind_to_string(
     }
 }
 
-/// Returns the stable Python token for every valid-or-generated Local Ignore state.
+/// Returns the stable Python token for every scan-run Local Ignore state.
 const fn local_ignore_state_to_string(value: contract::LocalIgnoreRunState) -> &'static str {
     match value {
         contract::LocalIgnoreRunState::Existing => "existing",
         contract::LocalIgnoreRunState::Generated => "generated",
+        contract::LocalIgnoreRunState::RecoveryRequired => "recovery_required",
+        contract::LocalIgnoreRunState::ProceedWithoutIgnore => "proceed_without_ignore",
     }
 }
 
@@ -1250,21 +1289,36 @@ fn installed_yaml_data_to_py(
     }
 }
 
-/// Maps the complete terminal result including selected Installed YAML Data.
-fn run_result_to_py(value: contract::RunResult) -> PyScanRunResult {
-    PyScanRunResult {
-        status: run_status_to_string(value.status),
-        discovery: value.discovery.map(discovery_to_py),
-        setup: value.setup.map(setup_to_py),
-        installed_yaml_data: value.installed_yaml_data.map(installed_yaml_data_to_py),
-        effective_concurrency: value.effective_concurrency,
-        message: value.message,
-        total: value.total,
-        succeeded: value.succeeded,
-        failed: value.failed,
-        cancelled: value.cancelled,
-        logs: value.logs.into_iter().map(log_result_to_py).collect(),
-    }
+/// Maps the complete terminal result while preserving one opaque continuation object.
+fn run_result_to_py(py: Python<'_>, value: contract::RunResult) -> PyResult<Py<PyScanRunResult>> {
+    let continuation = value
+        .continuation
+        .map(|continuation| {
+            Py::new(
+                py,
+                PyScanRunContinuation {
+                    inner: Arc::new(continuation),
+                },
+            )
+        })
+        .transpose()?;
+    Py::new(
+        py,
+        PyScanRunResult {
+            status: run_status_to_string(value.status),
+            discovery: value.discovery.map(discovery_to_py),
+            setup: value.setup.map(setup_to_py),
+            installed_yaml_data: value.installed_yaml_data.map(installed_yaml_data_to_py),
+            continuation,
+            effective_concurrency: value.effective_concurrency,
+            message: value.message,
+            total: value.total,
+            succeeded: value.succeeded,
+            failed: value.failed,
+            cancelled: value.cancelled,
+            logs: value.logs.into_iter().map(log_result_to_py).collect(),
+        },
+    )
 }
 
 /// Maps every typed run-wide error field, including its optional path.
@@ -1435,7 +1489,7 @@ pub fn scan_run_execute(
     let (result, observer_error) = result;
     Ok(match result {
         Ok(result) => PyScanRunExecution {
-            result: Some(run_result_to_py(result)),
+            result: Some(run_result_to_py(py, result)?),
             error: None,
             observer_error,
         },
@@ -1445,6 +1499,73 @@ pub fn scan_run_execute(
             observer_error,
         },
     })
+}
+
+/// Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
+///
+/// The GIL is released while the shared runtime executes. Sequential or concurrent replay raises
+/// [`ScanRunContinuationConsumedError`] with code `scan_run_continuation_consumed`; resumed
+/// infrastructure failures retain the same execution envelope as [`scan_run_execute`].
+#[pyfunction]
+#[pyo3(signature = (continuation, decision, cancellation, observer=None, cancel_on_observer_error=false))]
+pub fn scan_run_resume(
+    py: Python<'_>,
+    continuation: PyRef<'_, PyScanRunContinuation>,
+    decision: PyScanRunLocalIgnoreRecoveryDecision,
+    cancellation: PyRef<'_, PyScanRunCancellation>,
+    observer: Option<Py<PyAny>>,
+    cancel_on_observer_error: bool,
+) -> PyResult<PyScanRunExecution> {
+    let continuation = Arc::clone(&continuation.inner);
+    let cancellation = cancellation.inner.clone();
+    let decision = match decision {
+        PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        }
+    };
+    let (result, observer_error) = without_gil_block_on(py, || async move {
+        let mut observer = observer.map(|callback| PyObserverAdapter {
+            callback,
+            cancellation: cancellation.clone(),
+            cancel_on_error: cancel_on_observer_error,
+            delivery_error: None,
+            delivery_failed: false,
+        });
+        let result = continuation
+            .resume(
+                decision,
+                &cancellation,
+                observer
+                    .as_mut()
+                    .map(|adapter| adapter as &mut dyn contract::Observer),
+            )
+            .await;
+        let observer_error = observer.and_then(|adapter| adapter.delivery_error);
+        (result, observer_error)
+    });
+
+    match result {
+        Ok(result) => Ok(PyScanRunExecution {
+            result: Some(run_result_to_py(py, result)?),
+            error: None,
+            observer_error,
+        }),
+        Err(contract::ResumeError::Infrastructure(error)) => Ok(PyScanRunExecution {
+            result: None,
+            error: Some(infrastructure_error_to_py(error)),
+            observer_error,
+        }),
+        Err(contract::ResumeError::ContinuationConsumed) => {
+            let py_error = PyErr::new::<ScanRunContinuationConsumedError, _>(
+                "Crash Log Scan Run continuation was already consumed",
+            );
+            // The typed exception remains authoritative if Python rejects optional metadata.
+            let _ = py_error
+                .value(py)
+                .setattr("code", "scan_run_continuation_consumed");
+            Err(py_error)
+        }
+    }
 }
 
 // Keep the repository's required sibling-test declaration intact under rustfmt.

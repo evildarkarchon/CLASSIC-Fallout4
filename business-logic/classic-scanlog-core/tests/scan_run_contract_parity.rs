@@ -38,8 +38,11 @@ struct Fixtures {
 struct InstalledYamlDataFixture {
     log_template: String,
     input: String,
+    malformed_local_ignore: String,
     expected_existing: InstalledYamlDataExpected,
     expected_generated: InstalledYamlDataExpected,
+    expected_recovery_required: InstalledYamlDataExpected,
+    expected_proceed_without_ignore: InstalledYamlDataExpected,
 }
 
 #[derive(Debug, Deserialize)]
@@ -164,6 +167,8 @@ fn local_ignore_state_token(state: contract::LocalIgnoreRunState) -> &'static st
     match state {
         contract::LocalIgnoreRunState::Existing => "existing",
         contract::LocalIgnoreRunState::Generated => "generated",
+        contract::LocalIgnoreRunState::RecoveryRequired => "recovery_required",
+        contract::LocalIgnoreRunState::ProceedWithoutIgnore => "proceed_without_ignore",
     }
 }
 
@@ -435,7 +440,7 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
         .expect("Local Ignore should be removed before generation coverage");
     let generated = get_runtime()
         .block_on(contract::execute(
-            request,
+            request.clone(),
             &contract::Cancellation::new(),
             None,
         ))
@@ -452,5 +457,49 @@ fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache
     assert_eq!(
         generated_report, existing_report,
         "Installed YAML Data diagnostics must remain outside report text"
+    );
+
+    let ignore_path = temp.path().join("CLASSIC Data/CLASSIC Ignore.yaml");
+    let malformed_ignore = fixture.malformed_local_ignore.as_bytes();
+    std::fs::write(&ignore_path, malformed_ignore)
+        .expect("malformed Local Ignore fixture should be written");
+    let mut recovery = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("malformed Local Ignore should return expected recovery data");
+    assert_eq!(
+        recovery.status,
+        contract::RunStatus::LocalIgnoreRecoveryRequired
+    );
+    assert_installed_yaml_data(&recovery, &fixture.expected_recovery_required);
+    let continuation = recovery
+        .continuation
+        .take()
+        .expect("recovery-required fixture should retain an opaque continuation");
+    let proceeded = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("Proceed Without Ignore should complete the retained shared run");
+    assert_installed_yaml_data(&proceeded, &fixture.expected_proceed_without_ignore);
+    let proceeded_report = std::fs::read(
+        proceeded.logs[0]
+            .autoscan_report
+            .as_ref()
+            .expect("Proceed Without Ignore should write an Autoscan Report"),
+    )
+    .expect("Proceed Without Ignore Autoscan Report should be readable");
+    assert_eq!(
+        proceeded_report, existing_report,
+        "operation-scoped empty ignores must not change shared Autoscan Report bytes"
+    );
+    assert_eq!(
+        std::fs::read(ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
     );
 }

@@ -259,17 +259,22 @@ prose, or markdown.
 
 ### Complete-run entry point
 
-The only public complete-run operation is:
+The only public complete-run flow starts through an opaque operation:
 
 ```cpp
-scan_run_contract_execute(request, cancellation, observer)
-    -> ScanRunContractExecutionResult
+auto operation = scan_run_contract_execute(request, cancellation, observer);
+auto execution = scan_run_contract_execution_take_result(*operation);
 ```
 
 It forwards to `classic_scanlog_core::scan_run::contract::execute(...)` on the
-repository shared Tokio runtime. The bridge has no public orchestration object,
-single-log analysis executor, batch lifecycle, prepared-run executor,
-resettable scan token, process-global FCX control, or direct report writer.
+repository shared Tokio runtime. An expected malformed Local Ignore result may
+leave an opaque continuation beside the moved result. Call
+`scan_run_contract_execution_has_continuation(...)`, move it once with
+`scan_run_contract_execution_take_continuation(...)`, and resume it through
+`scan_run_continuation_resume(..., ProceedWithoutIgnore, ...)`. The bridge has
+no public orchestration object, single-log analysis executor, batch lifecycle,
+reconstructable prepared-run executor, resettable scan token, process-global
+FCX control, or direct report writer.
 
 ### Tagged request construction
 
@@ -328,8 +333,13 @@ for the complete event and ordering contract.
 
 ### Result and error envelope
 
-Exactly one of `ScanRunContractExecutionResult.has_result` and `has_error` is
-true.
+The opaque operation owns one `ScanRunContractExecutionResult`; callers move it
+out with `scan_run_contract_execution_take_result(...)`. Exactly one of
+`has_result`, `has_error`, and `has_resume_error` is true for a populated
+envelope. Initial expected recovery remains result data. Replay of a consumed
+continuation sets `has_resume_error` with stable code
+`scan_run_continuation_consumed`; failures reached by valid resumed execution
+continue to use the typed infrastructure envelope.
 
 The result retains:
 
@@ -348,13 +358,16 @@ Installed YAML Data metadata contains the selected Main/game role,
 provenance, schema and exact-byte identity; Local Ignore state and identity;
 and structured role/candidate/path/kind/message diagnostics. The DTO uses
 `has_installed_yaml_data` for intake presence. The bridge maps only Rust-owned
-facts; diagnostics never become Autoscan Report text. This #146 result
-inventory contains only `Existing`/`Generated` Local Ignore states and excludes
-reset diagnostics; the config-owned load/recovery API above remains broader.
+facts; diagnostics never become Autoscan Report text. The run inventory covers
+`Existing`, `Generated`, `RecoveryRequired`, and `ProceedWithoutIgnore`. A
+recovery result retains the malformed identity and structured diagnostic while
+its process-local, non-cloneable continuation owns prepared intake and the exact
+selected snapshot. Resume does not rediscover inputs or reselect YAML Data.
+Reset diagnostics remain outside this continuation contract.
 
-The error retains one of the six stable infrastructure stages, its message, and
-an optional relevant path. Expected no-logs, setup, cancellation, and per-log
-failure states remain result data.
+The infrastructure error retains one of the six stable stages, its message, and
+an optional relevant path. Expected no-logs, setup, Local Ignore recovery,
+cancellation, and per-log failure states remain result data.
 
 Paths use the repository's established lossy UTF-8 CXX string conversion.
 Optional output fields use explicit presence flags so absence is not conflated

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T05:03:53.795125+00:00",
+  "generated_at_utc": "2026-07-19T08:48:16.617366+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -6924,6 +6924,26 @@
     },
     {
       "module": "classic_scanlog",
+      "export": "ScanRunContinuation",
+      "export_path": "ScanRunContinuation",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunContinuation:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunContinuationConsumedError",
+      "export_path": "ScanRunContinuationConsumedError",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunContinuationConsumedError(RuntimeError):"
+    },
+    {
+      "module": "classic_scanlog",
       "export": "ScanRunDiscoveryResult",
       "export_path": "ScanRunDiscoveryResult",
       "kind": "class",
@@ -6991,6 +7011,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class ScanRunInstalledYamlDataRunData:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunLocalIgnoreRecoveryDecision",
+      "export_path": "ScanRunLocalIgnoreRecoveryDecision",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunLocalIgnoreRecoveryDecision:"
     },
     {
       "module": "classic_scanlog",
@@ -7361,6 +7391,17 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def scan_run_execute( request: ScanRunRequest, cancellation: ScanRunCancellation, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunExecution:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "scan_run_resume",
+      "export_path": "scan_run_resume",
+      "kind": "function",
+      "arity": 5,
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "def scan_run_resume( continuation: ScanRunContinuation, decision: ScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer: Callable[[ScanRunEvent], None] | None = None, cancel_on_observer_error: bool = False, ) -> ScanRunExecution:"
     },
     {
       "module": "classic_scanlog",

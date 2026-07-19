@@ -645,9 +645,24 @@ class ScanRunInstalledYamlDataRunData:
     local_ignore_state: Literal[
         "existing",
         "generated",
+        "recovery_required",
+        "proceed_without_ignore",
     ]
     local_ignore_identity: ScanRunYamlDataContentIdentity
     diagnostics: list[ScanRunInstalledYamlDataDiagnostic]
+
+class ScanRunLocalIgnoreRecoveryDecision:
+    """Explicit Rust-owned choice for resuming Local Ignore recovery."""
+
+    ProceedWithoutIgnore: ScanRunLocalIgnoreRecoveryDecision
+
+class ScanRunContinuation:
+    """Opaque process-local carrier for one paused Crash Log Scan Run."""
+
+class ScanRunContinuationConsumedError(RuntimeError):
+    """Raised when a recovery continuation is consumed more than once."""
+
+    code: Literal["scan_run_continuation_consumed"]
 
 class ScanRunResult:
     """Complete terminal Crash Log Scan Run result."""
@@ -656,12 +671,14 @@ class ScanRunResult:
         "completed",
         "no_crash_logs_found",
         "setup_failed",
+        "local_ignore_recovery_required",
         "cancelled_before_discovery",
         "cancelled",
     ]
     discovery: ScanRunDiscoveryResult | None
     setup: ScanRunSetupResult | None
     installed_yaml_data: ScanRunInstalledYamlDataRunData | None
+    continuation: ScanRunContinuation | None
     effective_concurrency: int | None
     message: str | None
     total: int
@@ -723,6 +740,15 @@ def scan_run_execute(
     cancel_on_observer_error: bool = False,
 ) -> ScanRunExecution:
     """Execute one final-contract Crash Log Scan Run."""
+
+def scan_run_resume(
+    continuation: ScanRunContinuation,
+    decision: ScanRunLocalIgnoreRecoveryDecision,
+    cancellation: ScanRunCancellation,
+    observer: Callable[[ScanRunEvent], None] | None = None,
+    cancel_on_observer_error: bool = False,
+) -> ScanRunExecution:
+    """Resume retained work without repeating discovery or YAML Data selection."""
 
 
 # =============================================================================

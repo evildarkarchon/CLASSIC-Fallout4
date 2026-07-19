@@ -818,6 +818,17 @@ impl std::fmt::Debug for LocalIgnoreRecoveryPlan {
 }
 
 impl LocalIgnoreRecoveryPlan {
+    /// Borrows the retained Proceed Without Ignore snapshot for workspace-owned preparation.
+    ///
+    /// This hidden seam lets the Crash Log Scan coordinator prepare intake before presenting
+    /// recovery without transferring, cloning, or serializing the retained snapshot. Callers
+    /// still must consume this plan through [`Self::proceed_without_ignore`] before analysis.
+    #[doc(hidden)]
+    #[must_use]
+    pub fn snapshot_for_scan_preparation(&self) -> &InstalledYamlDataSnapshot {
+        &self.proceed_without_ignore_snapshot
+    }
+
     /// Return the typed game retained by the already selected snapshot.
     #[must_use]
     pub const fn game(&self) -> GameId {

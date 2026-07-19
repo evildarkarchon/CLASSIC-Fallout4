@@ -106,6 +106,10 @@ std::string local_ignore_state_name(scanner::ScanRunLocalIgnoreYamlDataState sta
         return "existing";
     case scanner::ScanRunLocalIgnoreYamlDataState::Generated:
         return "generated";
+    case scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired:
+        return "recovery required";
+    case scanner::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore:
+        return "proceed without Ignore";
     }
     return "unknown state";
 }
@@ -371,6 +375,14 @@ CliScanRunPresentation present_cli_scan_run_execution(const scanner::ScanRunCont
         presentation.messages.push_back({true, std::move(message)});
         return presentation;
     }
+    if (execution.has_resume_error) {
+        presentation.exit_code = 2;
+        presentation.messages.push_back(
+            {true, fmt::format("Fatal: Crash Log Scan recovery failed ({}): {}",
+                               to_std_string(execution.resume_error.code),
+                               to_std_string(execution.resume_error.message))});
+        return presentation;
+    }
     if (!execution.has_result) {
         presentation.exit_code = 2;
         presentation.messages.push_back(
@@ -406,6 +418,14 @@ CliScanRunPresentation present_cli_scan_run_execution(const scanner::ScanRunCont
         append_log_messages(result, presentation.messages);
         presentation.messages.push_back({false, fmt::format("Scan cancelled safely: {} completed, {} not started.",
                                                             result.succeeded + result.failed, result.cancelled)});
+        return presentation;
+    case scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired:
+        presentation.exit_code = 1;
+        append_setup_messages(result, presentation.messages);
+        append_installed_yaml_data_messages(result, presentation.messages);
+        presentation.messages.push_back(
+            {true, result.has_message ? to_std_string(result.message)
+                                      : "Local Ignore recovery is required before scanning can continue."});
         return presentation;
     case scanner::ScanRunContractStatus::Completed:
         break;

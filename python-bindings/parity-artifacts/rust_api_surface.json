@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T05:03:53.779752+00:00",
+  "generated_at_utc": "2026-07-19T08:48:16.605479+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -2211,6 +2211,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
       "source_decl": "pub fn simplify_remove_list(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "snapshot_for_scan_preparation",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn snapshot_for_scan_preparation(&self)",
       "tier": "tier1"
     },
     {
@@ -10035,6 +10045,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CrashLogScanRunContinuation",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct CrashLogScanRunContinuation",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CrashLogScanRunStatus",
       "kind": "enum",
       "crate": "classic-scanlog-core",
@@ -10659,6 +10678,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "LocalIgnoreRecoveryDecision",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum LocalIgnoreRecoveryDecision",
+      "tier": "tier1"
+    },
+    {
       "symbol": "LocalIgnoreRunState",
       "kind": "enum",
       "crate": "classic-scanlog-core",
@@ -11172,6 +11200,24 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/error.rs",
       "source_decl": "pub type Result",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ResumeError",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum ResumeError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ResumeErrorKind",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum ResumeErrorKind",
       "tier": "tier1"
     },
     {
@@ -12094,6 +12140,51 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "source_decl": "pub const fn",
       "tier": "tier1"
     },

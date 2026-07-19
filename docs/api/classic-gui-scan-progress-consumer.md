@@ -42,10 +42,11 @@ For the CXX observer contract, see [`classic-cpp-bridge-scan-progress-callback.m
 - FCX requests use the corresponding `_with_fcx` constructor and must carry `ScanRunSetupContextDto`
 - a positive configured concurrency becomes an explicit value; a non-positive GUI setting omits it and selects Rust's adaptive policy
 
-The worker then calls exactly one operation:
+The worker starts exactly one operation and moves out its result envelope:
 
 ```cpp
-scan_run_contract_execute(*request, *m_cancellation, &observer)
+auto operation = scan_run_contract_execute(*request, *m_cancellation, &observer);
+auto execution = scan_run_contract_execution_take_result(*operation);
 ```
 
 Rust owns discovery, Targeted rejection policy, effective-concurrency selection, scheduling, FCX setup evaluation, Autoscan Report persistence, Unsolved Logs finalization, cancellation admission seams, aggregate counts, and terminal ordering. Qt supplies facts and presents the resulting contract; it does not repeat those decisions.
@@ -154,7 +155,10 @@ For each log, only an event at the same or a later rank may replace stored state
 
 ## Terminal Presentation And Cancellation
 
-After `scan_run_contract_execute(...)` returns, `presentScanRunExecution(...)` maps the typed execution envelope into `ScanRunTerminalPresentation` without flattening distinct lifecycle states.
+After `scan_run_contract_execute(...)` returns an opaque operation and the
+worker moves its result through `scan_run_contract_execution_take_result(...)`,
+`presentScanRunExecution(...)` maps the typed envelope into
+`ScanRunTerminalPresentation` without flattening distinct lifecycle states.
 
 Terminal mapping:
 
@@ -163,6 +167,8 @@ Terminal mapping:
 - `Cancelled` emits `cancelled(...)` with completed and not-started counts
 - `NoCrashLogsFound` emits the dedicated `noLogsFound(...)` signal with searched locations when available; the controller relays `scanNoLogsFound(...)`, and MainWindow restores idle state without presenting an error dialog
 - `SetupFailed` emits `error(...)` with structured setup details
+- `LocalIgnoreRecoveryRequired` remains distinct from setup and infrastructure failure and currently emits `error(...)`; a later frontend interaction change will take and resume the CXX continuation
+- a typed consumed-continuation replay error emits `error(...)` with its stable code and message
 - a typed infrastructure error emits `error(...)` with its stage, message, and optional path
 
 Cancellation after discovery does not interrupt admitted work. Rust finishes durable report/movement handling for admitted logs, prevents later admissions at safe seams, and returns non-started accepted logs as `CancelledBeforeStart`. The worker skips those entries when emitting `logScanned(...)`.
@@ -170,7 +176,7 @@ Cancellation after discovery does not interrupt admitted work. Rust finishes dur
 The presentation layer projects:
 
 - the run-scoped FCX setup status, message, rendered report, checks, proposed path updates, complete configuration-issue severity/file/section/setting/current/recommended/description data, actions, and fatal errors
-- optional Installed YAML Data presence plus selected Main/game role, provenance, schema, SHA-256 and byte length; `Existing`/`Generated` Local Ignore state and exact identity; and diagnostic role/candidate/path/kind/message context
+- optional Installed YAML Data presence plus selected Main/game role, provenance, schema, SHA-256 and byte length; `Existing`, `Generated`, `RecoveryRequired`, or `ProceedWithoutIgnore` Local Ignore state and exact identity; and diagnostic role/candidate/path/kind/message context
 - per-log `Succeeded`, `Failed`, and `CancelledBeforeStart` dispositions
 - all applicable `Analysis`, `ReportWrite`, and `UnsolvedLogsFinalization` failures
 - Autoscan Report paths and movement state
@@ -183,8 +189,9 @@ When intake metadata is present, `ScanWorker` emits the Qt-owned snapshot throug
 the worker. `ScanController` relays it as `scanInstalledYamlDataResolved(...)`;
 MainWindow clears stale state at scan start, retains the complete snapshot past
 worker lifetime, logs exact identities and diagnostics, and includes selected
-provenance/schema and Local Ignore state in terminal status. Recovery-only scan
-states remain reserved for #147.
+provenance/schema and Local Ignore state in terminal status. The CXX bridge now
+owns the opaque recovery carrier; wiring the GUI prompt and decision interaction
+remains a separate frontend concern.
 
 ---
 
@@ -194,7 +201,7 @@ states remain reserved for #147.
 
 [`test_scan_progress_model.cpp`](../../classic-gui/tests/test_scan_progress_model.cpp) uses `ScanRunContractEvent` directly. It verifies discovery/concurrency initialization, monotonic serialized lifecycle progress, interleaved per-log advancement, late-phase suppression, and full work contribution for a failed `LogFinished` event.
 
-[`test_scanrunpresentation.cpp`](../../classic-gui/tests/test_scanrunpresentation.cpp) verifies paired Targeted rejections, report-directory de-duplication, discovery-ordered typed dispositions and failure stages, every expected lifecycle status, complete FCX setup presentation including configuration-issue current/recommended values, Installed YAML Data presence/identity/generated-Ignore diagnostics, infrastructure-stage/path preservation, and invalid-envelope handling.
+[`test_scanrunpresentation.cpp`](../../classic-gui/tests/test_scanrunpresentation.cpp) verifies paired Targeted rejections, report-directory de-duplication, discovery-ordered typed dispositions and failure stages, every expected lifecycle status including Local Ignore Recovery Required, complete FCX setup presentation including configuration-issue current/recommended values, Installed YAML Data presence/identity/generated-Ignore diagnostics, consumed-resume and infrastructure error preservation, and invalid-envelope handling.
 
 [`test_scanworker_cancellation.cpp`](../../classic-gui/tests/test_scanworker_cancellation.cpp) verifies monotonic/idempotent cancellation, that cancellation requested before execution reaches Rust's `CancelledBeforeDiscovery` lifecycle rather than a generic error, and that a completed shared-fixture run publishes typed Installed YAML Data with exact identities.
 

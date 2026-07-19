@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T05:03:44Z",
+  "generated_at_utc": "2026-07-19T08:34:58Z",
   "entries": [
     {
       "id": "0f1ce653765981f0",
@@ -6157,6 +6157,17 @@
       ]
     },
     {
+      "id": "5d861f1371811b6e",
+      "rustSymbol": "ScanRunContractResumeErrorKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "ContinuationConsumed"
+      ]
+    },
+    {
       "id": "6fac94d2ef62d67d",
       "rustSymbol": "ScanRunContractStatus",
       "kind": "enum",
@@ -6168,7 +6179,8 @@
         "NoCrashLogsFound",
         "SetupFailed",
         "CancelledBeforeDiscovery",
-        "Cancelled"
+        "Cancelled",
+        "LocalIgnoreRecoveryRequired"
       ]
     },
     {
@@ -6230,6 +6242,17 @@
       ]
     },
     {
+      "id": "1ca5c72cad0943dd",
+      "rustSymbol": "ScanRunLocalIgnoreRecoveryDecision",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "variants": [
+        "ProceedWithoutIgnore"
+      ]
+    },
+    {
       "id": "1ad54c3b19d79960",
       "rustSymbol": "ScanRunLocalIgnoreYamlDataState",
       "kind": "enum",
@@ -6238,7 +6261,9 @@
       "blockOrigin": "Rust",
       "variants": [
         "Existing",
-        "Generated"
+        "Generated",
+        "RecoveryRequired",
+        "ProceedWithoutIgnore"
       ]
     },
     {
@@ -6822,6 +6847,35 @@
       }
     },
     {
+      "id": "1473c74ad462f005",
+      "rustSymbol": "scan_run_continuation_resume",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "continuation",
+            "type": "&ScanRunContinuation"
+          },
+          {
+            "name": "decision",
+            "type": "ScanRunLocalIgnoreRecoveryDecision"
+          },
+          {
+            "name": "cancellation",
+            "type": "&ScanRunCancellation"
+          },
+          {
+            "name": "observer",
+            "type": "*const ScanRunObserver"
+          }
+        ],
+        "returnType": "Result<Box<ScanRunContractExecution>>"
+      }
+    },
+    {
       "id": "f1a23f880846dde0",
       "rustSymbol": "scan_run_contract_execute",
       "kind": "function",
@@ -6841,6 +6895,57 @@
           {
             "name": "observer",
             "type": "*const ScanRunObserver"
+          }
+        ],
+        "returnType": "Box<ScanRunContractExecution>"
+      }
+    },
+    {
+      "id": "8b7e216f62dd5d3b",
+      "rustSymbol": "scan_run_contract_execution_has_continuation",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "execution",
+            "type": "&ScanRunContractExecution"
+          }
+        ],
+        "returnType": "bool"
+      }
+    },
+    {
+      "id": "bcba7f5d14da68c4",
+      "rustSymbol": "scan_run_contract_execution_take_continuation",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "execution",
+            "type": "&mut ScanRunContractExecution"
+          }
+        ],
+        "returnType": "Result<Box<ScanRunContinuation>>"
+      }
+    },
+    {
+      "id": "db795bbb11e180e8",
+      "rustSymbol": "scan_run_contract_execution_take_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "signature": {
+        "args": [
+          {
+            "name": "execution",
+            "type": "&mut ScanRunContractExecution"
           }
         ],
         "returnType": "ScanRunContractExecutionResult"
@@ -7046,6 +7151,22 @@
     {
       "id": "7e171291b252d3dd",
       "rustSymbol": "ScanRunCancellation",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust"
+    },
+    {
+      "id": "841c557115efd105",
+      "rustSymbol": "ScanRunContinuation",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust"
+    },
+    {
+      "id": "20927c22fed83137",
+      "rustSymbol": "ScanRunContractExecution",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
@@ -8566,6 +8687,14 @@
         {
           "name": "error",
           "type": "ScanRunContractInfrastructureError"
+        },
+        {
+          "name": "has_resume_error",
+          "type": "bool"
+        },
+        {
+          "name": "resume_error",
+          "type": "ScanRunContractResumeError"
         }
       ]
     },
@@ -8693,6 +8822,28 @@
         },
         {
           "name": "reason",
+          "type": "String"
+        }
+      ]
+    },
+    {
+      "id": "70d603c217c3cd76",
+      "rustSymbol": "ScanRunContractResumeError",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "sourceFile": "cpp-bindings/classic-cpp-bridge/src/scanner.rs",
+      "blockOrigin": "Rust",
+      "fields": [
+        {
+          "name": "kind",
+          "type": "ScanRunContractResumeErrorKind"
+        },
+        {
+          "name": "code",
+          "type": "String"
+        },
+        {
+          "name": "message",
           "type": "String"
         }
       ]

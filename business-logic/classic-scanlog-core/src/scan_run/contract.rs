@@ -1,8 +1,9 @@
 //! Final language-neutral Crash Log Scan Run contract.
 //!
-//! [`execute`] is the only public execution operation for a complete Crash Log
-//! Scan Run. Discovery, setup, scheduling, durable finalization, cancellation,
-//! events, results, and typed infrastructure failures cross this boundary.
+//! [`execute`] starts the only public execution flow for a complete Crash Log
+//! Scan Run, while [`CrashLogScanRunContinuation::resume`] completes retained
+//! Local Ignore recovery work. Discovery, setup, scheduling, durable finalization,
+//! cancellation, events, results, and typed infrastructure failures cross this boundary.
 
 #[cfg(test)]
 #[path = "contract_tests.rs"]
@@ -13,19 +14,21 @@ use super::{
     CrashLogScanRunEventKind as EngineEventKind, CrashLogScanRunLogOutcome as EngineLogOutcome,
     CrashLogScanRunResult as EngineRunResult, CrashLogScanRunServiceError,
     CrashLogScanRunServiceEvent, CrashLogScanRunServiceRequest, CrashLogScanSetupContext,
-    CrashLogScanSetupResult, CrashLogScanSource, StandardCrashLogScanSource,
-    StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, execute_service,
+    CrashLogScanSetupResult, CrashLogScanSource, PreparedCrashLogScanRunContinuation,
+    StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
+    execute_service, resume_prepared_scan_run,
 };
 use crate::{CrashLogScanFacts, CrashLogScanOptions, ScanProgressPhase};
 use classic_config_core::{
-    InspectedYamlDataFile, InstalledYamlDataDiagnosticKind, InstalledYamlDataProvenance,
-    InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState,
-    YamlDataContentIdentity,
+    InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind,
+    InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot,
+    LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, YamlDataContentIdentity,
 };
 use classic_shared_core::GameId;
 use std::fmt;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 #[cfg(test)]
@@ -389,6 +392,179 @@ impl Cancellation {
     }
 }
 
+/// Explicit recovery choices supported by this continuation contract.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LocalIgnoreRecoveryDecision {
+    /// Resume the retained run with an empty ignore list scoped to this operation.
+    ProceedWithoutIgnore,
+}
+
+impl LocalIgnoreRecoveryDecision {
+    /// Returns the stable adapter-facing decision identifier.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::ProceedWithoutIgnore => "proceed_without_ignore",
+        }
+    }
+}
+
+/// Stable categories returned when continuation resume cannot complete normally.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ResumeErrorKind {
+    /// The opaque continuation was already claimed by an earlier resume attempt.
+    ContinuationConsumed,
+    /// The retained run encountered a run-wide infrastructure failure after resume.
+    Infrastructure,
+}
+
+impl ResumeErrorKind {
+    /// Returns the stable adapter-facing error identifier.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::ContinuationConsumed => "scan_run_continuation_consumed",
+            Self::Infrastructure => "infrastructure",
+        }
+    }
+}
+
+/// Typed failure returned by [`CrashLogScanRunContinuation::resume`].
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ResumeError {
+    /// The continuation was already consumed by a sequential or concurrent caller.
+    ContinuationConsumed,
+    /// Resume reached a run-wide infrastructure failure.
+    Infrastructure(InfrastructureError),
+}
+
+impl ResumeError {
+    /// Returns the stable category for exhaustive binding projection.
+    #[must_use]
+    pub const fn kind(&self) -> ResumeErrorKind {
+        match self {
+            Self::ContinuationConsumed => ResumeErrorKind::ContinuationConsumed,
+            Self::Infrastructure(_) => ResumeErrorKind::Infrastructure,
+        }
+    }
+
+    /// Returns retained infrastructure failure details when that category applies.
+    #[must_use]
+    pub const fn infrastructure(&self) -> Option<&InfrastructureError> {
+        match self {
+            Self::ContinuationConsumed => None,
+            Self::Infrastructure(error) => Some(error),
+        }
+    }
+}
+
+impl fmt::Display for ResumeError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::ContinuationConsumed => {
+                formatter.write_str("Crash Log Scan Run continuation was already consumed")
+            }
+            Self::Infrastructure(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for ResumeError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::ContinuationConsumed => None,
+            Self::Infrastructure(error) => Some(error),
+        }
+    }
+}
+
+/// Opaque, process-local, non-cloneable continuation for one paused scan run.
+pub struct CrashLogScanRunContinuation {
+    state: Mutex<Option<PreparedCrashLogScanRunContinuation>>,
+}
+
+impl fmt::Debug for CrashLogScanRunContinuation {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let consumed = self
+            .state
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .is_none();
+        formatter
+            .debug_struct("CrashLogScanRunContinuation")
+            .field("consumed", &consumed)
+            .finish_non_exhaustive()
+    }
+}
+
+impl CrashLogScanRunContinuation {
+    /// Wraps prepared Rust-owned state without exposing reconstructable fields.
+    pub(super) fn new(state: PreparedCrashLogScanRunContinuation) -> Self {
+        Self {
+            state: Mutex::new(Some(state)),
+        }
+    }
+
+    /// Atomically claims this continuation and resumes the retained run once.
+    ///
+    /// Cancellation is checked after the one-shot claim but before the recovery plan is consumed,
+    /// so a cancelled resume returns the normal cancelled-after-discovery result without analysis.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ResumeError::ContinuationConsumed`] for sequential or concurrent replay, or
+    /// [`ResumeError::Infrastructure`] when the resumed run cannot produce a terminal result.
+    pub async fn resume(
+        &self,
+        decision: LocalIgnoreRecoveryDecision,
+        cancellation: &Cancellation,
+        mut observer: Option<&mut dyn Observer>,
+    ) -> Result<RunResult, ResumeError> {
+        let state = self
+            .state
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .take()
+            .ok_or(ResumeError::ContinuationConsumed)?;
+
+        if cancellation.is_cancelled() {
+            return Ok(project_engine_result(
+                EngineRunResult::cancelled_after_discovery(state.prepared.discovery),
+                None,
+            ));
+        }
+
+        let mut effective_concurrency = None;
+        let engine_result = match decision {
+            LocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
+                resume_prepared_scan_run(state, cancellation.engine_flag(), |event| match event {
+                    CrashLogScanRunServiceEvent::DiscoveryCompleted(_) => {
+                        // Resume owns completed discovery already and never rediscovery events.
+                    }
+                    CrashLogScanRunServiceEvent::EffectiveConcurrencySelected(value) => {
+                        effective_concurrency = Some(value);
+                        emit(
+                            &mut observer,
+                            Event::EffectiveConcurrencySelected {
+                                effective_concurrency: value,
+                            },
+                        );
+                    }
+                    CrashLogScanRunServiceEvent::Log(event) => {
+                        if let Some(event) = translate_engine_event(event) {
+                            emit(&mut observer, event);
+                        }
+                    }
+                })
+                .await
+            }
+        }
+        .map_err(|error| ResumeError::Infrastructure(InfrastructureError::from_service(error)))?;
+
+        Ok(project_engine_result(engine_result, effective_concurrency))
+    }
+}
+
 /// One log-scoped lifecycle event payload.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct LogEvent {
@@ -593,13 +769,30 @@ impl From<EngineLogOutcome> for LogResult {
 /// Stable lifecycle status used by [`RunResult`].
 pub use super::CrashLogScanRunStatus as RunStatus;
 
-/// Local Ignore origins that the valid-or-generated final operation can return.
+/// Local Ignore state retained by a Crash Log Scan Run.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum LocalIgnoreRunState {
     /// A valid user-owned Local Ignore file already existed in the installation.
     Existing,
     /// Missing Local Ignore YAML Data was generated from selected Main defaults.
     Generated,
+    /// Malformed Local Ignore YAML Data requires an explicit caller decision.
+    RecoveryRequired,
+    /// This operation resumed with an empty, operation-scoped ignore list.
+    ProceedWithoutIgnore,
+}
+
+impl LocalIgnoreRunState {
+    /// Returns the stable adapter-facing Local Ignore state identifier.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Existing => "existing",
+            Self::Generated => "generated",
+            Self::RecoveryRequired => "recovery_required",
+            Self::ProceedWithoutIgnore => "proceed_without_ignore",
+        }
+    }
 }
 
 /// Stable diagnostic categories emitted by valid-or-generated scan-run intake.
@@ -683,19 +876,47 @@ pub struct InstalledYamlDataRunData {
 }
 
 impl InstalledYamlDataRunData {
-    /// Copies #146 metadata from a Ready snapshot.
+    /// Copies scan-run metadata from a selected Installed YAML Data snapshot.
     ///
-    /// Returns `None` for recovery-only Local Ignore state or diagnostics reserved for #147.
+    /// Reset-to-default metadata remains reserved for the reset continuation change.
     #[must_use]
-    pub(super) fn from_ready_snapshot(snapshot: &InstalledYamlDataSnapshot) -> Option<Self> {
+    pub(super) fn from_snapshot(snapshot: &InstalledYamlDataSnapshot) -> Option<Self> {
         let local_ignore_state = match snapshot.local_ignore_state() {
             LocalIgnoreYamlDataState::Existing => LocalIgnoreRunState::Existing,
             LocalIgnoreYamlDataState::Generated => LocalIgnoreRunState::Generated,
-            LocalIgnoreYamlDataState::ProceedWithoutIgnore
-            | LocalIgnoreYamlDataState::ResetToDefault => return None,
+            LocalIgnoreYamlDataState::ProceedWithoutIgnore => {
+                LocalIgnoreRunState::ProceedWithoutIgnore
+            }
+            LocalIgnoreYamlDataState::ResetToDefault => return None,
         };
-        let diagnostics = snapshot
-            .diagnostics()
+        let diagnostics = Self::map_diagnostics(snapshot.diagnostics())?;
+
+        Some(Self {
+            main: snapshot.main().clone(),
+            game_file: snapshot.game_file().clone(),
+            local_ignore_state,
+            local_ignore_identity: snapshot.local_ignore_identity().clone(),
+            diagnostics,
+        })
+    }
+
+    /// Copies presentation-safe metadata from a malformed Local Ignore recovery plan.
+    #[must_use]
+    pub(super) fn from_recovery_plan(plan: &LocalIgnoreRecoveryPlan) -> Option<Self> {
+        Some(Self {
+            main: plan.main().clone(),
+            game_file: plan.game_file().clone(),
+            local_ignore_state: LocalIgnoreRunState::RecoveryRequired,
+            local_ignore_identity: plan.malformed_local_ignore_identity().clone(),
+            diagnostics: Self::map_diagnostics(plan.diagnostics())?,
+        })
+    }
+
+    /// Maps Config Core diagnostics exhaustively into the language-neutral run contract.
+    fn map_diagnostics(
+        diagnostics: &[InstalledYamlDataDiagnostic],
+    ) -> Option<Vec<InstalledYamlDataRunDiagnostic>> {
+        diagnostics
             .iter()
             .map(|diagnostic| {
                 let kind = match diagnostic.kind() {
@@ -736,20 +957,12 @@ impl InstalledYamlDataRunData {
                     message: diagnostic.message().to_string(),
                 })
             })
-            .collect::<Option<Vec<_>>>()?;
-
-        Some(Self {
-            main: snapshot.main().clone(),
-            game_file: snapshot.game_file().clone(),
-            local_ignore_state,
-            local_ignore_identity: snapshot.local_ignore_identity().clone(),
-            diagnostics,
-        })
+            .collect()
     }
 }
 
 /// Terminal result of the final Crash Log Scan Run operation.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct RunResult {
     /// Expected lifecycle status for the run as a whole.
     pub status: RunStatus,
@@ -759,6 +972,8 @@ pub struct RunResult {
     pub setup: Option<CrashLogScanSetupResult>,
     /// Installed YAML Data selected after discovery, absent when intake was not reached.
     pub installed_yaml_data: Option<InstalledYamlDataRunData>,
+    /// Opaque one-shot continuation present only for Local Ignore Recovery Required.
+    pub continuation: Option<CrashLogScanRunContinuation>,
     /// Rust-selected concurrency, once scheduling was reached.
     pub effective_concurrency: Option<usize>,
     /// Optional concise run-level message.
@@ -941,11 +1156,20 @@ async fn execute_inner(
     .await
     .map_err(InfrastructureError::from_service)?;
 
+    Ok(project_engine_result(engine_result, effective_concurrency))
+}
+
+/// Projects the internal terminal state without cloning an opaque continuation.
+fn project_engine_result(
+    engine_result: EngineRunResult,
+    effective_concurrency: Option<usize>,
+) -> RunResult {
     let EngineRunResult {
         status,
         discovery,
         setup,
         installed_yaml_data,
+        continuation,
         message,
         total,
         succeeded,
@@ -955,11 +1179,12 @@ async fn execute_inner(
     } = engine_result;
     let logs: Vec<LogResult> = logs.into_iter().map(LogResult::from).collect();
 
-    Ok(RunResult {
+    RunResult {
         status,
         discovery,
         setup,
         installed_yaml_data,
+        continuation,
         effective_concurrency,
         message,
         total,
@@ -967,7 +1192,7 @@ async fn execute_inner(
         failed,
         cancelled,
         logs,
-    })
+    }
 }
 
 fn emit(observer: &mut Option<&mut dyn Observer>, event: Event) {

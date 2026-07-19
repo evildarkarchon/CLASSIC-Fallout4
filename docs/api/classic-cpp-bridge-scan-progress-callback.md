@@ -8,8 +8,16 @@ and projected by
 The CXX bridge exposes one complete scan operation:
 
 ```cpp
-scan_run_contract_execute(request, cancellation, observer)
+auto operation = scan_run_contract_execute(request, cancellation, observer);
+auto execution = scan_run_contract_execution_take_result(*operation);
 ```
+
+`operation` is Rust-owned because a recovery-required result may also retain a
+non-cloneable `ScanRunContinuation`. Call
+`scan_run_contract_execution_has_continuation`, then
+`scan_run_contract_execution_take_continuation`; resume it exactly once with
+`scan_run_continuation_resume(..., ProceedWithoutIgnore, ...)` and take that
+operation's result envelope. Resume emits post-discovery events only.
 
 There is no CXX batch-scan callback, orchestration object, prepared-run entry
 point, resettable scan token, or direct report-writing operation. Native
@@ -115,17 +123,21 @@ may receive a corresponding finished event, but never a started event.
 
 ## Terminal Data And Errors
 
-`ScanRunContractExecutionResult` is an explicit result/error envelope. Exactly
-one of `has_result` and `has_error` is true.
+`ScanRunContractExecutionResult` is an explicit result/error envelope. Initial
+execution sets exactly one of `has_result` and `has_error`. Resume sets exactly
+one of `has_result`, `has_error`, and `has_resume_error`; the last contains
+`ContinuationConsumed` plus stable code `scan_run_continuation_consumed`.
 
 The result retains lifecycle status, optional discovery and setup data,
 optional Installed YAML Data metadata, optional effective concurrency,
 aggregate counts, and discovery-ordered log results. Installed metadata records
 the independently selected Main/game provenance and identity, Local Ignore
 state and identity, and structured fallback/generation diagnostics from the
-single immutable run snapshot. The #146 run projection is limited to valid
-`Existing`/`Generated` Local Ignore states; recovery continuation belongs to
-#147. Per-log failures preserve `Analysis`,
+single immutable run snapshot. Recovery-required results retain completed
+discovery plus `RecoveryRequired` metadata beside the opaque continuation.
+Proceed Without Ignore reuses that exact snapshot and projects
+`ProceedWithoutIgnore` without reopening files or mutating the malformed
+Ignore. Per-log failures preserve `Analysis`,
 `ReportWrite`, and `UnsolvedLogsFinalization` as structured data.
 
 The error side is reserved for run-wide infrastructure failures and preserves

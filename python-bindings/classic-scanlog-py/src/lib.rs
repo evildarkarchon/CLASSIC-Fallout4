@@ -140,13 +140,15 @@ pub use plugin_evidence_analyzer::{
 };
 pub use record_scanner::{PyRecordScanner, contains_record, scan_records_batch};
 pub use scan_run::{
-    PyScanRunCancellation, PyScanRunConfiguration, PyScanRunDiscoveryResult, PyScanRunEvent,
-    PyScanRunExecution, PyScanRunInfrastructureError, PyScanRunInspectedYamlDataFile,
-    PyScanRunInstalledYamlDataDiagnostic, PyScanRunInstalledYamlDataRunData, PyScanRunLogEvent,
+    PyScanRunCancellation, PyScanRunConfiguration, PyScanRunContinuation, PyScanRunDiscoveryResult,
+    PyScanRunEvent, PyScanRunExecution, PyScanRunInfrastructureError,
+    PyScanRunInspectedYamlDataFile, PyScanRunInstalledYamlDataDiagnostic,
+    PyScanRunInstalledYamlDataRunData, PyScanRunLocalIgnoreRecoveryDecision, PyScanRunLogEvent,
     PyScanRunLogFailure, PyScanRunLogResult, PyScanRunRejectedInput, PyScanRunRequest,
     PyScanRunResult, PyScanRunSetupCheck, PyScanRunSetupContext, PyScanRunSetupPathUpdate,
     PyScanRunSetupResult, PyScanRunStandardSource, PyScanRunTargetedSource, PyScanRunUnsolvedLogs,
-    PyScanRunYamlDataContentIdentity, scan_run_execute,
+    PyScanRunYamlDataContentIdentity, ScanRunContinuationConsumedError, scan_run_execute,
+    scan_run_resume,
 };
 pub use version::{
     PyCrashgenVersion, PyCrashgenVersionStatus, check_crashgen_version_status,
@@ -204,12 +206,19 @@ fn register_scan_run_exports(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyScanRunInspectedYamlDataFile>()?;
     m.add_class::<PyScanRunInstalledYamlDataDiagnostic>()?;
     m.add_class::<PyScanRunInstalledYamlDataRunData>()?;
+    m.add_class::<PyScanRunLocalIgnoreRecoveryDecision>()?;
+    m.add_class::<PyScanRunContinuation>()?;
     m.add_class::<PyScanRunResult>()?;
     m.add_class::<PyScanRunInfrastructureError>()?;
     m.add_class::<PyScanRunLogEvent>()?;
     m.add_class::<PyScanRunEvent>()?;
     m.add_class::<PyScanRunExecution>()?;
     m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;
+    m.add_function(wrap_pyfunction!(scan_run_resume, m)?)?;
+    m.add(
+        "ScanRunContinuationConsumedError",
+        m.py().get_type::<ScanRunContinuationConsumedError>(),
+    )?;
     Ok(())
 }
 

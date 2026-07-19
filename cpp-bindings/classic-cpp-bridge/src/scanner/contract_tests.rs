@@ -214,6 +214,10 @@ fn maps_every_core_enum_variant_to_a_typed_cxx_variant() {
         map_run_status(CrashLogScanRunStatus::Cancelled),
         ffi::ScanRunContractStatus::Cancelled
     );
+    assert_eq!(
+        map_run_status(CrashLogScanRunStatus::LocalIgnoreRecoveryRequired),
+        ffi::ScanRunContractStatus::LocalIgnoreRecoveryRequired
+    );
 
     assert_eq!(
         map_discovery_source(CrashLogScanDiscoverySource::Standard),
@@ -329,9 +333,23 @@ fn maps_every_core_enum_variant_to_a_typed_cxx_variant() {
             contract::LocalIgnoreRunState::Generated,
             ffi::ScanRunLocalIgnoreYamlDataState::Generated,
         ),
+        (
+            contract::LocalIgnoreRunState::RecoveryRequired,
+            ffi::ScanRunLocalIgnoreYamlDataState::RecoveryRequired,
+        ),
+        (
+            contract::LocalIgnoreRunState::ProceedWithoutIgnore,
+            ffi::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore,
+        ),
     ] {
         assert_eq!(map_local_ignore_yaml_data_state(core), cxx);
     }
+    assert_eq!(
+        map_local_ignore_recovery_decision(
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+        ),
+        Ok(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore)
+    );
 
     let diagnostic_pairs = [
         (
@@ -426,6 +444,7 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
         failed: 1,
         cancelled: 0,
         logs: vec![log],
+        continuation: None,
     });
 
     assert!(dto.has_discovery);
@@ -659,7 +678,9 @@ fn execute_without_observer_returns_targeted_rejections_as_a_terminal_result() {
     let cancellation = scan_run_cancellation_new();
 
     // SAFETY: null is the documented representation of an omitted observer.
-    let execution = unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+    let mut operation =
+        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+    let execution = scan_run_contract_execution_take_result(&mut operation);
 
     assert!(execution.has_result);
     assert!(!execution.has_error);
@@ -720,9 +741,10 @@ fn explicit_zero_concurrency_reaches_typed_request_validation_error() {
     let request = scan_run_request_targeted(&configuration, &sample_targeted_source()).unwrap();
 
     // SAFETY: null is the documented representation of an omitted observer.
-    let execution = unsafe {
+    let mut operation = unsafe {
         scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
     };
+    let execution = scan_run_contract_execution_take_result(&mut operation);
 
     assert!(execution.has_error);
     assert_eq!(
@@ -761,7 +783,9 @@ fn execute_covers_standard_no_logs_and_cancellation_before_discovery() {
     let cancellation = scan_run_cancellation_new();
 
     // SAFETY: null is the documented representation of an omitted observer.
-    let no_logs = unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+    let mut no_logs_operation =
+        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+    let no_logs = scan_run_contract_execution_take_result(&mut no_logs_operation);
     assert!(no_logs.has_result, "{}", no_logs.error.message);
     assert_eq!(
         no_logs.result.status,
@@ -778,8 +802,9 @@ fn execute_covers_standard_no_logs_and_cancellation_before_discovery() {
     let cancelled = scan_run_cancellation_new();
     scan_run_cancellation_cancel(&cancelled);
     // SAFETY: null is the documented representation of an omitted observer.
-    let cancelled_result =
+    let mut cancelled_operation =
         unsafe { scan_run_contract_execute(&request, &cancelled, std::ptr::null()) };
+    let cancelled_result = scan_run_contract_execution_take_result(&mut cancelled_operation);
     assert_eq!(
         cancelled_result.result.status,
         ffi::ScanRunContractStatus::CancelledBeforeDiscovery
@@ -882,9 +907,10 @@ fn execute_retains_structured_setup_result_data() {
         scan_run_request_targeted_with_fcx(&configuration, &source, &setup).unwrap();
 
     // SAFETY: null is the documented representation of an omitted observer.
-    let execution = unsafe {
+    let mut operation = unsafe {
         scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
     };
+    let execution = scan_run_contract_execution_take_result(&mut operation);
 
     assert!(execution.has_result, "{}", execution.error.message);
     assert_eq!(
@@ -951,9 +977,10 @@ fn execute_projects_generated_local_ignore_metadata_and_diagnostic_at_the_final_
         .expect("valid generated-ignore request should be constructible");
 
     // SAFETY: null is the documented representation of an omitted observer.
-    let execution = unsafe {
+    let mut operation = unsafe {
         scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
     };
+    let execution = scan_run_contract_execution_take_result(&mut operation);
 
     assert!(execution.has_result, "{}", execution.error.message);
     assert!(!execution.has_error);
@@ -982,6 +1009,124 @@ fn execute_projects_generated_local_ignore_metadata_and_diagnostic_at_the_final_
 }
 
 #[test]
+fn cxx_continuation_resumes_retained_recovery_once_and_projects_typed_replay_failure() {
+    let temp = tempdir().expect("create Local Ignore recovery fixture root");
+    let data = temp.path().join("CLASSIC Data");
+    write_minimal_scan_yaml_tree(temp.path(), &data);
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated";
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    std::fs::write(&ignore_path, malformed_ignore).expect("write malformed Local Ignore fixture");
+    let log = temp.path().join("crash-bridge-recovery.log");
+    std::fs::write(&log, FIXTURE_LOG_SMALL).expect("write accepted Crash Log fixture");
+    let mut configuration = sample_configuration();
+    configuration.installation_root = temp.path().to_string_lossy().into_owned();
+    configuration.game_version = "Original".to_string();
+    let source = ffi::ScanRunTargetedSourceDto {
+        inputs: vec![log.to_string_lossy().into_owned()],
+    };
+    let request = scan_run_request_targeted(&configuration, &source)
+        .expect("valid recovery request should be constructible");
+
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut initial_operation = unsafe {
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+    };
+    assert!(scan_run_contract_execution_has_continuation(
+        &initial_operation
+    ));
+    let initial = scan_run_contract_execution_take_result(&mut initial_operation);
+    assert!(initial.has_result, "{}", initial.error.message);
+    assert_eq!(
+        initial.result.status,
+        ffi::ScanRunContractStatus::LocalIgnoreRecoveryRequired
+    );
+    assert_eq!(
+        initial.result.installed_yaml_data.local_ignore_state,
+        ffi::ScanRunLocalIgnoreYamlDataState::RecoveryRequired
+    );
+    let retained_discovery = initial.result.discovery.accepted_logs.clone();
+    let retained_main_identity = initial.result.installed_yaml_data.main.sha256.clone();
+    let retained_game_identity = initial.result.installed_yaml_data.game_file.sha256.clone();
+    let continuation = scan_run_contract_execution_take_continuation(&mut initial_operation)
+        .expect("recovery result must expose its opaque continuation");
+
+    // CXX enums can carry a non-exhaustive sentinel; rejecting it must not claim retained work.
+    let invalid_decision = ffi::ScanRunLocalIgnoreRecoveryDecision { repr: u8::MAX };
+    // SAFETY: null is the documented representation of an omitted observer.
+    let invalid_error = unsafe {
+        scan_run_continuation_resume(
+            &continuation,
+            invalid_decision,
+            &scan_run_cancellation_new(),
+            std::ptr::null(),
+        )
+    }
+    .err()
+    .expect("an unknown recovery decision must be rejected");
+    assert!(invalid_error.contains("unsupported ScanRunLocalIgnoreRecoveryDecision discriminant"));
+
+    // The resumed operation must use the retained snapshot rather than reading the now-invalid file.
+    std::fs::write(
+        data.join("databases").join("CLASSIC Main.yaml"),
+        b"invalid: [unterminated",
+    )
+    .expect("mutate selected Main YAML after pause");
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut resumed_operation = unsafe {
+        scan_run_continuation_resume(
+            &continuation,
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &scan_run_cancellation_new(),
+            std::ptr::null(),
+        )
+    }
+    .expect("the explicit recovery decision must resume retained work");
+    let resumed = scan_run_contract_execution_take_result(&mut resumed_operation);
+    assert!(resumed.has_result, "{}", resumed.error.message);
+    assert_eq!(resumed.result.status, ffi::ScanRunContractStatus::Completed);
+    assert_eq!(
+        resumed.result.discovery.accepted_logs,
+        retained_discovery
+    );
+    assert_eq!(
+        resumed.result.installed_yaml_data.local_ignore_state,
+        ffi::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore
+    );
+    assert_eq!(
+        resumed.result.installed_yaml_data.main.sha256,
+        retained_main_identity
+    );
+    assert_eq!(
+        resumed.result.installed_yaml_data.game_file.sha256,
+        retained_game_identity
+    );
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("read malformed Local Ignore after resume"),
+        malformed_ignore
+    );
+
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut replay_operation = unsafe {
+        scan_run_continuation_resume(
+            &continuation,
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &scan_run_cancellation_new(),
+            std::ptr::null(),
+        )
+    }
+    .expect("the explicit recovery decision must reach the typed replay envelope");
+    let replay = scan_run_contract_execution_take_result(&mut replay_operation);
+    assert!(!replay.has_result);
+    assert!(!replay.has_error);
+    assert!(replay.has_resume_error);
+    assert_eq!(
+        replay.resume_error.kind,
+        ffi::ScanRunContractResumeErrorKind::ContinuationConsumed
+    );
+    assert_eq!(replay.resume_error.code, "scan_run_continuation_consumed");
+}
+
+#[test]
 fn execute_preserves_typed_intake_failure_stage_and_relevant_path() {
     let temp = tempdir().unwrap();
     let log = temp.path().join("crash-bridge-intake-failure.log");
@@ -995,9 +1140,10 @@ fn execute_preserves_typed_intake_failure_stage_and_relevant_path() {
     let request = scan_run_request_targeted(&configuration, &source).unwrap();
 
     // SAFETY: null is the documented representation of an omitted observer.
-    let execution = unsafe {
+    let mut operation = unsafe {
         scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
     };
+    let execution = scan_run_contract_execution_take_result(&mut operation);
 
     assert!(!execution.has_result);
     assert!(execution.has_error);

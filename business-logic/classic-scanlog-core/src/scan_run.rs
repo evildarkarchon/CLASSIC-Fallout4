@@ -16,7 +16,8 @@ use crate::{
 #[cfg(test)]
 use classic_config_core::{InstalledYamlDataLoadError, load_installed_yaml_data_with_env};
 use classic_config_core::{
-    InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, load_installed_yaml_data,
+    InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, LocalIgnoreRecoveryPlan,
+    load_installed_yaml_data,
 };
 use classic_database_core::DatabasePool;
 use classic_file_io_core::{LogCollector, RejectedInput, resolve_targeted_inputs};
@@ -174,77 +175,137 @@ where
     let installed_outcome = load_installed_yaml_data_for_run(load_request, &request.test_hooks);
     #[cfg(not(test))]
     let installed_outcome = load_installed_yaml_data(load_request);
-    let snapshot = match installed_outcome.map_err(|error| {
+    let installed_outcome = installed_outcome.map_err(|error| {
         CrashLogScanRunServiceError::new(
             contract::InfrastructureErrorStage::Intake,
             Some(installed_yaml_data_path.clone()),
             ScanLogError::ConfigError(error.to_string()),
         )
-    })? {
-        InstalledYamlDataLoadOutcome::Ready(snapshot) => Arc::new(snapshot),
-        InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(_) => {
-            return Err(CrashLogScanRunServiceError::new(
-                contract::InfrastructureErrorStage::Intake,
-                Some(installed_yaml_data_path),
-                ScanLogError::ConfigError(
-                    "Local Ignore recovery is required before Crash Log Scan Intake".to_string(),
-                ),
-            ));
-        }
-    };
-    let installed_yaml_data = contract::InstalledYamlDataRunData::from_ready_snapshot(&snapshot)
-        .ok_or_else(|| {
-            // Ready loading cannot yield recovery-only metadata; keep #147 states out of this contract.
-            CrashLogScanRunServiceError::new(
-                contract::InfrastructureErrorStage::InternalInvariant,
-                Some(installed_yaml_data_path.clone()),
-                ScanLogError::ConfigError(
-                    "Ready Installed YAML Data contained recovery-only scan metadata".to_string(),
-                ),
-            )
-        })?;
-    let ready = CrashLogScanIntake::from_installed_yaml_data(
-        Arc::clone(&snapshot),
-        request.installation_root.clone(),
-        request.game_version.clone(),
-        request.options,
-    )
-    .with_scan_facts(scan_facts)
-    .prepare()
-    .await
-    .map_err(|error| {
-        CrashLogScanRunServiceError::new(
-            contract::InfrastructureErrorStage::Intake,
-            intake_path,
-            error,
-        )
     })?;
 
-    let database_path = ready.formid_readiness().database_paths().first().cloned();
-    #[cfg(test)]
-    if let Some(error) = request
-        .test_hooks
-        .infrastructure_failure(InfrastructureFault::FormIdDatabaseAccess)
-    {
-        return Err(service_execution_error(error, database_path));
+    match installed_outcome {
+        InstalledYamlDataLoadOutcome::Ready(snapshot) => {
+            let snapshot = Arc::new(snapshot);
+            let installed_yaml_data = contract::InstalledYamlDataRunData::from_snapshot(&snapshot)
+                .ok_or_else(|| {
+                    CrashLogScanRunServiceError::new(
+                        contract::InfrastructureErrorStage::InternalInvariant,
+                        Some(installed_yaml_data_path.clone()),
+                        ScanLogError::ConfigError(
+                            "Ready Installed YAML Data contained unsupported scan metadata"
+                                .to_string(),
+                        ),
+                    )
+                })?;
+            let ready = CrashLogScanIntake::from_installed_yaml_data(
+                Arc::clone(&snapshot),
+                request.installation_root.clone(),
+                request.game_version.clone(),
+                request.options,
+            )
+            .with_scan_facts(scan_facts)
+            .prepare()
+            .await
+            .map_err(|error| {
+                CrashLogScanRunServiceError::new(
+                    contract::InfrastructureErrorStage::Intake,
+                    intake_path,
+                    error,
+                )
+            })?;
+            let prepared = prepare_scan_run_execution(
+                &request,
+                discovery,
+                setup,
+                ready,
+                installed_yaml_data,
+                targeted_mode,
+            );
+            execute_prepared_scan_run(prepared, request.cancellation.clone(), on_event).await
+        }
+        InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(recovery_plan) => {
+            let installed_yaml_data = contract::InstalledYamlDataRunData::from_recovery_plan(
+                &recovery_plan,
+            )
+            .ok_or_else(|| {
+                CrashLogScanRunServiceError::new(
+                    contract::InfrastructureErrorStage::InternalInvariant,
+                    Some(installed_yaml_data_path),
+                    ScanLogError::ConfigError(
+                        "Local Ignore recovery contained unsupported scan metadata".to_string(),
+                    ),
+                )
+            })?;
+            let ready = CrashLogScanIntake::from_recovery_snapshot(
+                recovery_plan.snapshot_for_scan_preparation(),
+                request.installation_root.clone(),
+                request.game_version.clone(),
+                request.options,
+            )
+            .with_scan_facts(scan_facts)
+            .prepare()
+            .await
+            .map_err(|error| {
+                CrashLogScanRunServiceError::new(
+                    contract::InfrastructureErrorStage::Intake,
+                    intake_path,
+                    error,
+                )
+            })?;
+            let prepared = prepare_scan_run_execution(
+                &request,
+                discovery,
+                setup,
+                ready,
+                installed_yaml_data,
+                targeted_mode,
+            );
+            let result_discovery = prepared.discovery.clone();
+            let result_setup = prepared.setup.as_deref().cloned();
+            let result_installed_yaml_data = prepared.installed_yaml_data.clone();
+            let continuation =
+                contract::CrashLogScanRunContinuation::new(PreparedCrashLogScanRunContinuation {
+                    recovery_plan,
+                    prepared,
+                });
+            Ok(CrashLogScanRunResult::local_ignore_recovery_required(
+                result_discovery,
+                result_setup,
+                result_installed_yaml_data,
+                continuation,
+            ))
+        }
     }
+}
+
+/// Prepared execution state shared by initial Ready runs and recovery continuations.
+pub(super) struct PreparedCrashLogScanRun {
+    ready: ScanReadyAnalysis,
+    discovery: CrashLogScanDiscoveryResult,
+    setup: Option<Arc<CrashLogScanSetupResult>>,
+    installed_yaml_data: contract::InstalledYamlDataRunData,
+    intent: CrashLogScanRunIntent,
+    max_concurrent: Option<usize>,
+    preserve_order: bool,
     #[cfg(test)]
-    if let Some(error) = request
-        .test_hooks
-        .infrastructure_failure(InfrastructureFault::Initialization)
-    {
-        return Err(service_execution_error(error, database_path));
-    }
+    test_hooks: ScanRunTestHooks,
+}
 
-    let effective_concurrency = resolve_batch_concurrency(
-        discovery.accepted_logs.len(),
-        normalize_scan_run_concurrency(request.max_concurrent),
-    )
-    .min(discovery.accepted_logs.len());
-    on_event(CrashLogScanRunServiceEvent::EffectiveConcurrencySelected(
-        effective_concurrency,
-    ));
+/// Private state retained behind one opaque, process-local continuation.
+pub(super) struct PreparedCrashLogScanRunContinuation {
+    recovery_plan: LocalIgnoreRecoveryPlan,
+    prepared: PreparedCrashLogScanRun,
+}
 
+/// Finishes request-specific preparation without starting database access or analysis.
+fn prepare_scan_run_execution(
+    request: &CrashLogScanRunServiceRequest,
+    discovery: CrashLogScanDiscoveryResult,
+    setup: Option<CrashLogScanSetupResult>,
+    ready: ScanReadyAnalysis,
+    installed_yaml_data: contract::InstalledYamlDataRunData,
+    targeted_mode: bool,
+) -> PreparedCrashLogScanRun {
     let configured_unsolved_logs_destination = ready
         .unsolved_logs_destination()
         .map(std::path::Path::to_path_buf);
@@ -253,27 +314,108 @@ where
         request.move_unsolved_logs,
         configured_unsolved_logs_destination,
     );
-    let setup_snapshot = setup.map(Arc::new);
+    PreparedCrashLogScanRun {
+        ready,
+        discovery,
+        setup: setup.map(Arc::new),
+        installed_yaml_data,
+        intent,
+        max_concurrent: request.max_concurrent,
+        preserve_order: request.preserve_order,
+        #[cfg(test)]
+        test_hooks: request.test_hooks.clone(),
+    }
+}
+
+/// Consumes the retained recovery decision and resumes the already prepared run.
+pub(super) async fn resume_prepared_scan_run<F>(
+    continuation: PreparedCrashLogScanRunContinuation,
+    cancellation: Arc<AtomicBool>,
+    on_event: F,
+) -> std::result::Result<CrashLogScanRunResult, CrashLogScanRunServiceError>
+where
+    F: FnMut(CrashLogScanRunServiceEvent),
+{
+    let PreparedCrashLogScanRunContinuation {
+        recovery_plan,
+        mut prepared,
+    } = continuation;
+    let snapshot = Arc::new(recovery_plan.proceed_without_ignore());
+    prepared
+        .ready
+        .retain_installed_yaml_data_snapshot(Arc::clone(&snapshot));
+    prepared.installed_yaml_data = contract::InstalledYamlDataRunData::from_snapshot(&snapshot)
+        .ok_or_else(|| {
+            CrashLogScanRunServiceError::new(
+                contract::InfrastructureErrorStage::InternalInvariant,
+                None,
+                ScanLogError::ConfigError(
+                    "Proceed Without Ignore produced unsupported scan metadata".to_string(),
+                ),
+            )
+        })?;
+    execute_prepared_scan_run(prepared, Some(cancellation), on_event).await
+}
+
+/// Runs database access, scheduling, analysis, and durable finalization from prepared intake.
+async fn execute_prepared_scan_run<F>(
+    prepared: PreparedCrashLogScanRun,
+    cancellation: Option<Arc<AtomicBool>>,
+    mut on_event: F,
+) -> std::result::Result<CrashLogScanRunResult, CrashLogScanRunServiceError>
+where
+    F: FnMut(CrashLogScanRunServiceEvent),
+{
+    let PreparedCrashLogScanRun {
+        ready,
+        discovery,
+        setup,
+        installed_yaml_data,
+        intent,
+        max_concurrent,
+        preserve_order,
+        #[cfg(test)]
+        test_hooks,
+    } = prepared;
+    let database_path = ready.formid_readiness().database_paths().first().cloned();
+    #[cfg(test)]
+    if let Some(error) =
+        test_hooks.infrastructure_failure(InfrastructureFault::FormIdDatabaseAccess)
+    {
+        return Err(service_execution_error(error, database_path));
+    }
+    #[cfg(test)]
+    if let Some(error) = test_hooks.infrastructure_failure(InfrastructureFault::Initialization) {
+        return Err(service_execution_error(error, database_path));
+    }
+
+    let effective_concurrency = resolve_batch_concurrency(
+        discovery.accepted_logs.len(),
+        normalize_scan_run_concurrency(max_concurrent),
+    )
+    .min(discovery.accepted_logs.len());
+    on_event(CrashLogScanRunServiceEvent::EffectiveConcurrencySelected(
+        effective_concurrency,
+    ));
+
+    let setup_snapshot = setup;
     let run = CrashLogScanRun::with_setup(ready, setup_snapshot.clone());
     #[cfg(test)]
-    let run = run.with_test_hooks(request.test_hooks.clone());
+    let run = run.with_test_hooks(test_hooks.clone());
     let mut result = run
         .run_scheduled(
             discovery.accepted_logs.clone(),
             intent,
             effective_concurrency,
-            request.cancellation.clone(),
-            request.preserve_order,
+            cancellation,
+            preserve_order,
             |event| on_event(CrashLogScanRunServiceEvent::Log(event)),
         )
         .await
         .map_err(|error| service_execution_error(error, database_path.clone()))?;
 
     #[cfg(test)]
-    if let Some(error) = request
-        .test_hooks
-        .infrastructure_failure(InfrastructureFault::InternalInvariant)
-    {
+    if let Some(error) = test_hooks.infrastructure_failure(InfrastructureFault::InternalInvariant) {
         return Err(service_execution_error(error, database_path));
     }
     result.discovery = Some(discovery);
@@ -415,6 +557,8 @@ pub enum CrashLogScanRunStatus {
     NoCrashLogsFound,
     /// FCX setup validation required caller action before analysis could start.
     SetupFailed,
+    /// Malformed Local Ignore YAML Data requires an explicit caller decision.
+    LocalIgnoreRecoveryRequired,
     /// Cancellation was requested before discovery began.
     CancelledBeforeDiscovery,
     /// Cancellation was requested after accepted Crash Logs were known.
@@ -429,6 +573,7 @@ impl CrashLogScanRunStatus {
             Self::Completed => "completed",
             Self::NoCrashLogsFound => "no_crash_logs_found",
             Self::SetupFailed => "setup_failed",
+            Self::LocalIgnoreRecoveryRequired => "local_ignore_recovery_required",
             Self::CancelledBeforeDiscovery => "cancelled_before_discovery",
             Self::Cancelled => "cancelled",
         }
@@ -878,6 +1023,8 @@ pub(crate) struct CrashLogScanRunResult {
     pub setup: Option<CrashLogScanSetupResult>,
     /// Installed YAML Data selected for analysis after discovery and setup.
     pub installed_yaml_data: Option<contract::InstalledYamlDataRunData>,
+    /// Opaque one-shot continuation when Local Ignore recovery pauses this run.
+    pub continuation: Option<contract::CrashLogScanRunContinuation>,
     /// Optional concise run-level message.
     pub message: Option<String>,
     /// Total selected Crash Logs.
@@ -899,6 +1046,7 @@ impl CrashLogScanRunResult {
             discovery: None,
             setup: None,
             installed_yaml_data: None,
+            continuation: None,
             message: Some("No crash logs found".to_string()),
             total: 0,
             succeeded: 0,
@@ -929,6 +1077,7 @@ impl CrashLogScanRunResult {
             discovery: None,
             setup: None,
             installed_yaml_data: None,
+            continuation: None,
             message: None,
             total,
             succeeded,
@@ -944,6 +1093,7 @@ impl CrashLogScanRunResult {
             discovery: None,
             setup: None,
             installed_yaml_data: None,
+            continuation: None,
             message: Some("Cancelled before crash log discovery".to_string()),
             total: 0,
             succeeded: 0,
@@ -984,6 +1134,7 @@ impl CrashLogScanRunResult {
             discovery: Some(discovery),
             setup: None,
             installed_yaml_data: None,
+            continuation: None,
             message: Some("Cancelled after crash log discovery".to_string()),
             total,
             succeeded: 0,
@@ -999,6 +1150,7 @@ impl CrashLogScanRunResult {
             discovery: Some(discovery),
             setup: None,
             installed_yaml_data: None,
+            continuation: None,
             message: Some("No crash logs found".to_string()),
             total: 0,
             succeeded: 0,
@@ -1019,7 +1171,31 @@ impl CrashLogScanRunResult {
             discovery: Some(discovery),
             setup,
             installed_yaml_data: None,
+            continuation: None,
             message: Some(message),
+            total,
+            succeeded: 0,
+            failed: 0,
+            cancelled: 0,
+            logs: Vec::new(),
+        }
+    }
+
+    /// Builds the expected pause result after discovery and prepared intake are retained.
+    fn local_ignore_recovery_required(
+        discovery: CrashLogScanDiscoveryResult,
+        setup: Option<CrashLogScanSetupResult>,
+        installed_yaml_data: contract::InstalledYamlDataRunData,
+        continuation: contract::CrashLogScanRunContinuation,
+    ) -> Self {
+        let total = discovery.accepted_logs.len();
+        Self {
+            status: CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+            discovery: Some(discovery),
+            setup,
+            installed_yaml_data: Some(installed_yaml_data),
+            continuation: Some(continuation),
+            message: Some("Local Ignore recovery is required".to_string()),
             total,
             succeeded: 0,
             failed: 0,

@@ -202,7 +202,8 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
     const auto request = build_cli_scan_run_request(args, *prepared, dirs.root, base_dir);
     CliScanRunCancellation cancellation;
     CliScanRunObserver observer(prepared->game, cancellation);
-    const auto execution = classic::scanner::scan_run_contract_execute(*request, cancellation.token(), &observer);
+    auto operation = classic::scanner::scan_run_contract_execute(*request, cancellation.token(), &observer);
+    const auto execution = classic::scanner::scan_run_contract_execution_take_result(*operation);
     observer.finish();
 
     if (observer.delivery_failed()) {

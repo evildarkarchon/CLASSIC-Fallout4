@@ -12,6 +12,14 @@ namespace {
 
 namespace scanner = classic::scanner;
 
+/// Executes an opaque bridge operation and moves out its typed terminal envelope.
+scanner::ScanRunContractExecutionResult execute_result(
+    const scanner::ScanRunRequest& request, const scanner::ScanRunCancellation& cancellation,
+    const scanner::ScanRunObserver* observer) {
+    auto operation = scanner::scan_run_contract_execute(request, cancellation, observer);
+    return scanner::scan_run_contract_execution_take_result(*operation);
+}
+
 std::vector<std::string> message_text(const std::vector<CliScanRunMessage>& messages) {
     std::vector<std::string> lines;
     lines.reserve(messages.size());
@@ -52,7 +60,7 @@ TEST_CASE("CLI scan adapter submits Standard intent to the single execution oper
     const auto cancellation = scanner::scan_run_cancellation_new();
     scanner::scan_run_cancellation_cancel(*cancellation);
 
-    const auto execution = scanner::scan_run_contract_execute(*request, *cancellation, nullptr);
+    const auto execution = execute_result(*request, *cancellation, nullptr);
 
     REQUIRE(execution.has_result);
     REQUIRE_FALSE(execution.has_error);
@@ -67,7 +75,7 @@ TEST_CASE("CLI scan adapter submits raw Targeted inputs to Rust discovery", "[sc
     const auto request = build_cli_scan_run_request(args, settings, ".", ".");
     const auto cancellation = scanner::scan_run_cancellation_new();
 
-    const auto execution = scanner::scan_run_contract_execute(*request, *cancellation, nullptr);
+    const auto execution = execute_result(*request, *cancellation, nullptr);
 
     REQUIRE(execution.has_result);
     REQUIRE_FALSE(execution.has_error);
@@ -88,7 +96,7 @@ TEST_CASE("CLI scan request builder maps every supported game to the scanner-loc
         const auto request = build_cli_scan_run_request(args, settings, ".", ".");
         const auto cancellation = scanner::scan_run_cancellation_new();
         scanner::scan_run_cancellation_cancel(*cancellation);
-        const auto execution = scanner::scan_run_contract_execute(*request, *cancellation, nullptr);
+        const auto execution = execute_result(*request, *cancellation, nullptr);
         REQUIRE(execution.has_result);
         REQUIRE(execution.result.status == scanner::ScanRunContractStatus::CancelledBeforeDiscovery);
     }
@@ -229,6 +237,39 @@ TEST_CASE("CLI scan presentation acknowledges generated Local Ignore metadata an
     REQUIRE(lines[3].find("Local Ignore: generated") != std::string::npos);
     REQUIRE(lines[4].find("local ignore generated") != std::string::npos);
     REQUIRE(lines[4].find("CLASSIC Ignore.yaml") != std::string::npos);
+}
+
+TEST_CASE("CLI scan presentation keeps Local Ignore recovery distinct from setup and infrastructure failures",
+          "[scanner][scan-run]") {
+    auto execution = execution_with_result(scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+    execution.result.has_message = true;
+    execution.result.message = "Local Ignore recovery is required";
+    execution.result.has_installed_yaml_data = true;
+    execution.result.installed_yaml_data.local_ignore_state =
+        scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired;
+
+    const auto presentation = present_cli_scan_run_execution(execution, 0.5);
+
+    REQUIRE(presentation.exit_code == 1);
+    REQUIRE(presentation.messages.back().error);
+    REQUIRE(presentation.messages.back().text == "Local Ignore recovery is required");
+}
+
+TEST_CASE("CLI scan presentation preserves consumed continuation replay details", "[scanner][scan-run]") {
+    scanner::ScanRunContractExecutionResult execution{};
+    execution.has_resume_error = true;
+    execution.resume_error.kind = scanner::ScanRunContractResumeErrorKind::ContinuationConsumed;
+    execution.resume_error.code = "scan_run_continuation_consumed";
+    execution.resume_error.message = "Crash Log Scan Run continuation was already consumed";
+
+    const auto presentation = present_cli_scan_run_execution(execution, 0.5);
+
+    REQUIRE(presentation.exit_code == 2);
+    REQUIRE(presentation.messages.size() == 1);
+    REQUIRE(presentation.messages[0].error);
+    REQUIRE(presentation.messages[0].text ==
+            "Fatal: Crash Log Scan recovery failed (scan_run_continuation_consumed): Crash Log Scan Run continuation "
+            "was already consumed");
 }
 
 TEST_CASE("CLI scan presentation distinguishes mixed per-log outcomes", "[scanner][scan-run]") {

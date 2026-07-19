@@ -255,6 +255,56 @@ fn observer_scenario(delay: Option<Duration>) -> (contract::RunResult, Vec<contr
     (result, events)
 }
 
+/// Creates one malformed-Ignore targeted run paused at the public continuation seam.
+fn paused_recovery_fixture(
+    log_names: &[&str],
+) -> (
+    tempfile::TempDir,
+    Vec<PathBuf>,
+    PathBuf,
+    Vec<u8>,
+    contract::RunResult,
+) {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated".to_vec();
+    std::fs::write(&ignore_path, &malformed_ignore)
+        .expect("malformed Local Ignore fixture should be written");
+    let logs = log_names
+        .iter()
+        .map(|name| write_fixture_log(&temp, name))
+        .collect::<Vec<_>>();
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(logs.len().max(1)),
+        },
+        TargetedCrashLogScanSource {
+            inputs: logs.clone(),
+        },
+    );
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            ScanRunTestHooks::default().with_yaml_cache_root(root.join("isolated-cache")),
+        ))
+        .expect("malformed Local Ignore should pause with expected result data");
+    assert_eq!(
+        result.status,
+        contract::RunStatus::LocalIgnoreRecoveryRequired
+    );
+    (temp, logs, ignore_path, malformed_ignore, result)
+}
+
 #[test]
 fn sequential_fcx_runs_return_and_render_only_their_own_setup_facts() {
     let first_temp = tempdir().expect("first tempdir should succeed");
@@ -469,6 +519,243 @@ fn targeted_run_generates_missing_local_ignore_and_keeps_diagnostic_out_of_repor
         .expect("Autoscan Report should be readable");
     assert!(!report.contains(generated.message()));
     assert!(!report.contains("Local Ignore"));
+}
+
+/// Malformed Local Ignore pauses after prepared intake and resumes the retained run exactly once.
+#[test]
+fn targeted_run_resumes_without_ignore_from_retained_discovery_and_snapshot() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated";
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    std::fs::write(&ignore_path, malformed_ignore)
+        .expect("malformed Local Ignore fixture should be written");
+    let first_log = write_fixture_log(&temp, "crash-recovery-first.log");
+    let second_log = write_fixture_log(&temp, "crash-recovery-second.log");
+    let undiscovered_log = root.join("crash-recovery-undiscovered.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(2),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![
+                first_log.clone(),
+                undiscovered_log.clone(),
+                second_log.clone(),
+            ],
+        },
+    );
+
+    let mut initial = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            ScanRunTestHooks::default().with_yaml_cache_root(root.join("isolated-cache")),
+        ))
+        .expect("malformed Local Ignore should be expected run result data");
+
+    assert_eq!(
+        initial.status,
+        contract::RunStatus::LocalIgnoreRecoveryRequired
+    );
+    let discovery = initial
+        .discovery
+        .as_ref()
+        .expect("recovery-required result should retain completed discovery");
+    assert_eq!(
+        discovery.accepted_logs,
+        [first_log.clone(), second_log.clone()]
+    );
+    assert!(
+        discovery
+            .rejected_inputs
+            .iter()
+            .any(|input| input.path == undiscovered_log)
+    );
+    let initial_installed = initial
+        .installed_yaml_data
+        .as_ref()
+        .expect("recovery-required result should expose structured Installed YAML Data facts");
+    assert_eq!(
+        initial_installed.local_ignore_state,
+        contract::LocalIgnoreRunState::RecoveryRequired
+    );
+    assert_eq!(
+        initial_installed.local_ignore_identity.byte_len(),
+        malformed_ignore.len() as u64
+    );
+    assert!(initial_installed.diagnostics.iter().any(|diagnostic| {
+        diagnostic.kind() == contract::InstalledYamlDataRunDiagnosticKind::Parse
+            && diagnostic.path() == Some(ignore_path.as_path())
+    }));
+    let selected_main = initial_installed.main.clone();
+    let selected_game = initial_installed.game_file.clone();
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry an opaque continuation");
+
+    std::fs::write(
+        data.join("databases/CLASSIC Main.yaml"),
+        b"schema_version: \"2.0\"\ninvalid: changed\n",
+    )
+    .expect("selected Main path should be replaced after recovery paused");
+    std::fs::write(
+        data.join("databases/CLASSIC Fallout4.yaml"),
+        b"schema_version: \"1.0\"\ninvalid: changed\n",
+    )
+    .expect("selected game path should be replaced after recovery paused");
+    let created_after_pause = write_fixture_log(&temp, "crash-recovery-undiscovered.log");
+    assert_eq!(created_after_pause, undiscovered_log);
+
+    let resumed = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("Proceed Without Ignore should resume retained prepared intake");
+
+    assert_eq!(resumed.status, contract::RunStatus::Completed);
+    assert_eq!(
+        resumed
+            .discovery
+            .as_ref()
+            .expect("resumed result should retain the same discovery")
+            .accepted_logs,
+        [first_log.clone(), second_log.clone()]
+    );
+    assert_eq!(
+        resumed
+            .logs
+            .iter()
+            .map(|log| (log.discovery_index, log.crash_log.clone()))
+            .collect::<Vec<_>>(),
+        vec![(0, first_log.clone()), (1, second_log.clone())]
+    );
+    let resumed_installed = resumed
+        .installed_yaml_data
+        .as_ref()
+        .expect("resumed result should expose the retained Installed YAML Data facts");
+    assert_eq!(resumed_installed.main, selected_main);
+    assert_eq!(resumed_installed.game_file, selected_game);
+    assert_eq!(
+        resumed_installed.local_ignore_state,
+        contract::LocalIgnoreRunState::ProceedWithoutIgnore
+    );
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
+    assert!(crate::report::autoscan_report_path(&first_log).is_file());
+    assert!(crate::report::autoscan_report_path(&second_log).is_file());
+    assert!(!crate::report::autoscan_report_path(&undiscovered_log).exists());
+}
+
+/// Sequential and concurrent replay both return the same typed consumed-continuation failure.
+#[test]
+fn proceed_without_ignore_continuation_rejects_every_replay() {
+    let (_temp, _logs, _ignore_path, _malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-continuation-replay.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry a continuation");
+
+    get_runtime().block_on(async {
+        let first_cancellation = contract::Cancellation::new();
+        let second_cancellation = contract::Cancellation::new();
+        let (first, second) = tokio::join!(
+            continuation.resume(
+                contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                &first_cancellation,
+                None,
+            ),
+            continuation.resume(
+                contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                &second_cancellation,
+                None,
+            )
+        );
+        assert_eq!(usize::from(first.is_ok()) + usize::from(second.is_ok()), 1);
+        let error = first
+            .err()
+            .or_else(|| second.err())
+            .expect("one racing resume should fail");
+        assert_eq!(error, contract::ResumeError::ContinuationConsumed);
+        assert_eq!(error.kind().as_str(), "scan_run_continuation_consumed");
+
+        let replay = continuation
+            .resume(
+                contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                &contract::Cancellation::new(),
+                None,
+            )
+            .await
+            .expect_err("every later resume should reject replay");
+        assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+    });
+}
+
+/// Pre-resume cancellation consumes the continuation before recovery or analysis can begin.
+#[test]
+fn cancellation_before_recovery_resume_returns_normal_cancelled_after_discovery_result() {
+    let (_temp, logs, ignore_path, malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-continuation-cancelled.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry a continuation");
+    let cancellation = contract::Cancellation::new();
+    cancellation.cancel();
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let cancelled = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &cancellation,
+            Some(&mut observer),
+        ))
+        .expect("pre-resume cancellation should remain expected result data");
+
+    assert_eq!(cancelled.status, contract::RunStatus::Cancelled);
+    assert_eq!(cancelled.cancelled, logs.len());
+    assert_eq!(
+        cancelled
+            .discovery
+            .as_ref()
+            .expect("cancelled-after-discovery should retain discovery")
+            .accepted_logs,
+        logs
+    );
+    assert!(cancelled.installed_yaml_data.is_none());
+    assert!(cancelled.effective_concurrency.is_none());
+    assert!(events.is_empty());
+    assert!(
+        logs.iter()
+            .all(|log| !crate::report::autoscan_report_path(log).exists())
+    );
+    assert_eq!(
+        std::fs::read(ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
+    let replay = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("cancelled resume should still consume the continuation");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
 }
 
 #[test]
@@ -1176,6 +1463,27 @@ fn standard_cancellation_immediately_after_discovery_retains_configured_sources(
 
 #[test]
 fn final_contract_exposes_all_stable_variant_identifiers() {
+    assert_eq!(
+        contract::RunStatus::LocalIgnoreRecoveryRequired.as_str(),
+        "local_ignore_recovery_required"
+    );
+    assert_eq!(
+        contract::LocalIgnoreRunState::RecoveryRequired.as_str(),
+        "recovery_required"
+    );
+    assert_eq!(
+        contract::LocalIgnoreRunState::ProceedWithoutIgnore.as_str(),
+        "proceed_without_ignore"
+    );
+    assert_eq!(
+        contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore.as_str(),
+        "proceed_without_ignore"
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::ContinuationConsumed.as_str(),
+        "scan_run_continuation_consumed"
+    );
+
     assert_eq!(
         contract::InfrastructureErrorStage::RequestValidation.as_str(),
         "request_validation"

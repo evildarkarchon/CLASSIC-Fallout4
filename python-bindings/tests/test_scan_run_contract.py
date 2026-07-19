@@ -574,6 +574,113 @@ def test_missing_local_ignore_is_generated_and_reported_as_run_data(
     assert generated[0].path == local_ignore_path
 
 
+def test_shared_local_ignore_recovery_continuation_retains_snapshot_and_rejects_replay(
+    tmp_path: Path,
+) -> None:
+    """Proceed Without Ignore reuses exact retained discovery and YAML Data once."""
+
+    import classic_scanlog
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["installedYamlData"]
+    _copy_shared_scan_run_data_root(tmp_path)
+    crash_log = _write_shared_scan_run_logs(tmp_path, [fixture["input"]])[0]
+    ignore_path = tmp_path / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    request = classic_scanlog.ScanRunRequest.targeted(
+        _configuration(classic_scanlog, tmp_path),
+        classic_scanlog.ScanRunTargetedSource(inputs=[str(crash_log)]),
+    )
+    baseline = classic_scanlog.scan_run_execute(
+        request,
+        classic_scanlog.ScanRunCancellation(),
+    ).result
+    baseline_report = Path(baseline.logs[0].autoscan_report).read_bytes()
+    ignore_path.write_text(fixture["malformedLocalIgnore"], encoding="utf-8")
+    initial_events: list[object] = []
+    initial = classic_scanlog.scan_run_execute(
+        request,
+        classic_scanlog.ScanRunCancellation(),
+        initial_events.append,
+    ).result
+
+    assert initial.status == "local_ignore_recovery_required"
+    assert initial.installed_yaml_data.local_ignore_state == "recovery_required"
+    assert "parse" in {
+        diagnostic.kind for diagnostic in initial.installed_yaml_data.diagnostics
+    }
+    assert [event.kind for event in initial_events] == ["discovery_completed"]
+    continuation = initial.continuation
+    assert isinstance(continuation, classic_scanlog.ScanRunContinuation)
+
+    (tmp_path / "CLASSIC Data" / "databases" / "CLASSIC Main.yaml").write_text(
+        "invalid: [unterminated",
+        encoding="utf-8",
+    )
+    resumed_events: list[object] = []
+    resumed = classic_scanlog.scan_run_resume(
+        continuation,
+        classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+        classic_scanlog.ScanRunCancellation(),
+        resumed_events.append,
+    ).result
+
+    assert resumed.status == "completed"
+    assert resumed.discovery.accepted_logs == initial.discovery.accepted_logs
+    assert resumed.installed_yaml_data.main.sha256 == initial.installed_yaml_data.main.sha256
+    assert (
+        resumed.installed_yaml_data.game_file.sha256
+        == initial.installed_yaml_data.game_file.sha256
+    )
+    assert resumed.installed_yaml_data.local_ignore_state == "proceed_without_ignore"
+    assert all(event.kind != "discovery_completed" for event in resumed_events)
+    assert Path(resumed.logs[0].autoscan_report).read_bytes() == baseline_report
+    assert ignore_path.read_text(encoding="utf-8") == fixture["malformedLocalIgnore"]
+
+    with pytest.raises(classic_scanlog.ScanRunContinuationConsumedError) as replay:
+        classic_scanlog.scan_run_resume(
+            continuation,
+            classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+            classic_scanlog.ScanRunCancellation(),
+        )
+    assert replay.value.code == "scan_run_continuation_consumed"
+
+
+def test_pre_resume_cancellation_wins_without_mutating_local_ignore(
+    tmp_path: Path,
+) -> None:
+    """Cancellation at resume returns a normal post-discovery cancelled result."""
+
+    import classic_scanlog
+
+    fixture = SHARED_SCAN_RUN_MANIFEST["fixtures"]["installedYamlData"]
+    _copy_shared_scan_run_data_root(tmp_path)
+    crash_log = _write_shared_scan_run_logs(tmp_path, [fixture["input"]])[0]
+    ignore_path = tmp_path / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    ignore_path.write_text(fixture["malformedLocalIgnore"], encoding="utf-8")
+    initial = classic_scanlog.scan_run_execute(
+        classic_scanlog.ScanRunRequest.targeted(
+            _configuration(classic_scanlog, tmp_path),
+            classic_scanlog.ScanRunTargetedSource(inputs=[str(crash_log)]),
+        ),
+        classic_scanlog.ScanRunCancellation(),
+    ).result
+    cancellation = classic_scanlog.ScanRunCancellation()
+    cancellation.cancel()
+    events: list[object] = []
+
+    resumed = classic_scanlog.scan_run_resume(
+        initial.continuation,
+        classic_scanlog.ScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+        cancellation,
+        events.append,
+    ).result
+
+    assert resumed.status == "cancelled"
+    assert resumed.cancelled == resumed.total
+    assert all(log.disposition == "cancelled_before_start" for log in resumed.logs)
+    assert events == []
+    assert ignore_path.read_text(encoding="utf-8") == fixture["malformedLocalIgnore"]
+
+
 def test_targeted_scan_run_preserves_input_order_and_never_moves(
     tmp_path: Path,
 ) -> None:

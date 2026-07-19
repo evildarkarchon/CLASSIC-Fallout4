@@ -205,6 +205,15 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
         return presentation;
     }
 
+    if (execution.has_resume_error) {
+        presentation.kind = ScanRunTerminalKind::InfrastructureError;
+        presentation.message =
+            QStringLiteral("Crash Log Scan recovery failed (%1): %2")
+                .arg(classic::toQString(execution.resume_error.code),
+                     classic::toQString(execution.resume_error.message));
+        return presentation;
+    }
+
     if (!execution.has_result) {
         presentation.kind = ScanRunTerminalKind::InfrastructureError;
         presentation.message =
@@ -251,6 +260,12 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
         if (!presentation.setupDetails.isEmpty()) {
             presentation.message.append(QStringLiteral("\n") + presentation.setupDetails);
         }
+        break;
+    case Status::LocalIgnoreRecoveryRequired:
+        presentation.kind = ScanRunTerminalKind::LocalIgnoreRecoveryRequired;
+        presentation.message = result.has_message
+                                   ? classic::toQString(result.message)
+                                   : QStringLiteral("Local Ignore recovery is required before scanning can continue.");
         break;
     case Status::CancelledBeforeDiscovery:
         presentation.kind = ScanRunTerminalKind::CancelledBeforeDiscovery;

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T05:03:44.423897+00:00",
+  "generated_at_utc": "2026-07-19T08:45:18.725935+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,8 +7,8 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1059,
-    "runtime_verified_total": 1059,
+    "tracked_surface_total": 1062,
+    "runtime_verified_total": 1062,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 913,
@@ -54,8 +54,8 @@
       "total": 77
     },
     "scanlog": {
-      "runtime_verified": 187,
-      "total": 187
+      "runtime_verified": 190,
+      "total": 190
     },
     "settings": {
       "runtime_verified": 45,
@@ -19576,6 +19576,72 @@
       "owner": null,
       "deferReason": null,
       "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
+    },
+    {
+      "trackedId": "binding:JsScanRunLocalIgnoreRecoveryDecision",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsScanRunLocalIgnoreRecoveryDecision",
+      "coverageId": "node-tier2-scanlog-local-ignore-recovery-runtime",
+      "verificationMode": "contract_test",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "shared Local Ignore recovery continuation retains snapshots and rejects replay",
+      "fixtureRefs": [
+        "MAIN_YAML",
+        "GAME_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises the opaque Local Ignore recovery continuation, explicit Proceed Without Ignore decision, retained discovery and Installed YAML Data snapshot, stable consumed-error code, cancellation precedence, unchanged malformed bytes, and byte-identical report output."
+    },
+    {
+      "trackedId": "binding:ScanRunContinuation",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "ScanRunContinuation",
+      "coverageId": "node-tier2-scanlog-local-ignore-recovery-runtime",
+      "verificationMode": "contract_test",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "shared Local Ignore recovery continuation retains snapshots and rejects replay",
+      "fixtureRefs": [
+        "MAIN_YAML",
+        "GAME_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises the opaque Local Ignore recovery continuation, explicit Proceed Without Ignore decision, retained discovery and Installed YAML Data snapshot, stable consumed-error code, cancellation precedence, unchanged malformed bytes, and byte-identical report output."
+    },
+    {
+      "trackedId": "binding:scanRunResume",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "scanRunResume",
+      "coverageId": "node-tier2-scanlog-local-ignore-recovery-runtime",
+      "verificationMode": "contract_test",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "shared Local Ignore recovery continuation retains snapshots and rejects replay",
+      "fixtureRefs": [
+        "MAIN_YAML",
+        "GAME_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises the opaque Local Ignore recovery continuation, explicit Proceed Without Ignore decision, retained discovery and Installed YAML Data snapshot, stable consumed-error code, cancellation precedence, unchanged malformed bytes, and byte-identical report output."
     }
   ]
 }

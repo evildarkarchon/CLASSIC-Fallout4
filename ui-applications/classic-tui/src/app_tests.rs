@@ -205,6 +205,7 @@ fn scan_complete_with_errors_updates_status_message() {
         failed: 1,
         cancelled: 0,
         logs: Vec::new(),
+        continuation: None,
     }))));
 
     assert_eq!(app.scan_status, "Scanned 3 logs (1 errors, 0 cancelled)");
@@ -288,6 +289,7 @@ fn scan_complete_switches_to_results_when_enabled() {
         failed: 0,
         cancelled: 0,
         logs: Vec::new(),
+        continuation: None,
     }))));
 
     assert!(matches!(app.active_tab, TabIndex::Results));
