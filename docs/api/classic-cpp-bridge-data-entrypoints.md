@@ -81,13 +81,15 @@ First-party update tooling uses the separate Installed YAML Data inspection flow
 
 Inspection is read-only: it does not create the update cache, promote a `.prev` sibling, mutate a rejected candidate, or read or modify Local Ignore YAML Data.
 
-Runtime callers use the Installed YAML Data load flow for valid existing or missing Local Ignore YAML Data:
+Runtime callers use the Installed YAML Data load flow for valid, missing, or malformed Local Ignore YAML Data:
 
 1. `installed_yaml_data_load(installation_root, ExplicitYamlDataGameId, selected_game_version)` delegates Main/game selection, existing Local Ignore validation, and missing Local Ignore generation to config core.
-2. `installed_yaml_data_load_status(...)` reports Ready or `InstalledYamlDataLoadErrorDto`. Its load-specific role is Main or game for `NoUsableSource` and Local Ignore for Local Ignore default-validation, create, read, UTF-8, parse, or role-validation failures; the DTO also preserves the optional path, structured no-usable-source diagnostics, and core message.
-3. `installed_yaml_data_load_take_snapshot(...)` consumes Ready. Snapshot getters expose parsed `YamlData`, requested game and registered role, Main/game provenance/schema/exact-byte identity, `LocalIgnoreYamlDataState::{Existing, Generated}` and authoritative Local Ignore identity, plus selection and `LocalIgnoreGenerated` diagnostics.
+2. `installed_yaml_data_load_status(...)` uses exactly one of `has_snapshot`, `has_recovery_plan`, or `has_error` to report Ready, Local Ignore Recovery Required, or fatal failure. Fatal `InstalledYamlDataLoadErrorDto` roles cover Main/game `NoUsableSource`, Local Ignore read/creation failures, and default validation when a missing Local Ignore must be generated; the DTO also preserves the optional path, structured no-usable-source diagnostics, and core message.
+3. `installed_yaml_data_load_take_snapshot(...)` consumes Ready. Snapshot getters expose parsed `YamlData`, requested game and registered role, Main/game provenance/schema/exact-byte identity, Local Ignore state/identity, and structured diagnostics.
+4. `installed_yaml_data_load_take_recovery_plan(...)` consumes Recovery Required into an opaque Rust-owned `LocalIgnoreRecoveryPlan`. Its getters expose retained Main/game metadata, malformed identity, malformed path, selected-game-version mode, and diagnostics without raw bytes or YAML documents. `local_ignore_recovery_plan_has_default_local_ignore_identity(...)` reports whether selected-Main defaults were usable; callers inspect it before the identity getter because CXX projects an unavailable optional identity as an empty DTO.
+5. `local_ignore_recovery_plan_proceed_without_ignore(...)` consumes that plan and returns the retained snapshot with `LocalIgnoreYamlDataState::ProceedWithoutIgnore` and an empty ignore list for this operation. It performs no selection or filesystem operation, so the malformed file remains authoritative and a later load requires recovery again.
 
-The adapter owns no source-selection, validation, generation, repair, or fallback policy. Existing Local Ignore bytes are never replaced; the bridge exposes neither raw bytes nor parsed YAML documents.
+The adapter owns no source-selection, validation, generation, recovery, repair, or fallback policy. Existing Local Ignore bytes are never replaced implicitly; the bridge exposes neither raw bytes nor parsed YAML documents.
 
 The namespace also exposes selected cache controls and generic config helpers.
 These are data-access APIs; they are not partial Crash Log Scan Run entry

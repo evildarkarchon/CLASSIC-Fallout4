@@ -270,57 +270,182 @@ def test_installed_load_projects_selection_failures(
     assert unavailable.value.diagnostics[0].kind == "missing"
 
 
-@pytest.mark.parametrize(
-    ("ignore_bytes", "exception_name", "code"),
-    [
-        (
-            None,
-            "InstalledYamlDataLoadLocalIgnoreDefaultInvalidError",
-            "local_ignore_default_invalid",
-        ),
-        (
-            b"\xff",
-            "InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
-            "local_ignore_invalid_utf8",
-        ),
-        (
-            b"CLASSIC_Ignore_Fallout4: [unterminated",
-            "InstalledYamlDataLoadLocalIgnoreParseError",
-            "local_ignore_parse",
-        ),
-        (
-            b"CLASSIC_Ignore_Fallout4: not-a-sequence\n",
-            "InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
-            "local_ignore_invalid_role_data",
-        ),
-    ],
-)
-def test_installed_load_projects_local_ignore_failures(
+def test_installed_load_keeps_invalid_defaults_fatal_only_while_ignore_is_missing(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-    ignore_bytes: bytes | None,
-    exception_name: str,
-    code: str,
 ) -> None:
-    """Every Local Ignore fatal result is separately catchable with path metadata."""
+    """Invalid defaults do not block recovery from malformed installed Local Ignore."""
     installation = tmp_path / "install"
     write_install(installation)
     isolate_cache(monkeypatch, tmp_path / "cache-root")
     ignore_path = installation / "CLASSIC Data" / "CLASSIC Ignore.yaml"
-    if ignore_bytes is not None:
-        ignore_path.write_bytes(ignore_bytes)
 
-    exception_type = getattr(classic_config, exception_name)
-    with pytest.raises(exception_type) as exc_info:
+    with pytest.raises(
+        classic_config.InstalledYamlDataLoadLocalIgnoreDefaultInvalidError
+    ) as exc_info:
         classic_config.load_installed_yaml_data(
             installation,
             classic_config.ExplicitYamlDataGame.FALLOUT4,
             "Original",
         )
-    assert exc_info.value.code == code
+    assert exc_info.value.code == "local_ignore_default_invalid"
     assert exc_info.value.yaml_role == "local_ignore"
     assert exc_info.value.path == str(ignore_path)
     assert exc_info.value.diagnostics == []
+
+    malformed_ignore = b"CLASSIC_Ignore_Fallout4: not-a-sequence\n"
+    ignore_path.write_bytes(malformed_ignore)
+    databases = installation / "CLASSIC Data" / "databases"
+    main_path = databases / "CLASSIC Main.yaml"
+    game_path = databases / "CLASSIC Fallout4.yaml"
+    original_files = {
+        path: path.read_bytes() for path in (main_path, game_path, ignore_path)
+    }
+
+    outcome = classic_config.load_installed_yaml_data(
+        installation,
+        classic_config.ExplicitYamlDataGame.FALLOUT4,
+        "Original",
+    )
+    assert isinstance(
+        outcome,
+        classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome,
+    )
+    plan = outcome.recovery_plan
+    assert plan.default_local_ignore_identity is None
+
+    snapshot = plan.proceed_without_ignore()
+    assert snapshot.local_ignore_state == "proceed_without_ignore"
+    assert snapshot.yaml_data.ignore_list == []
+    assert {path: path.read_bytes() for path in original_files} == original_files
+
+    later_outcome = classic_config.load_installed_yaml_data(
+        installation,
+        classic_config.ExplicitYamlDataGame.FALLOUT4,
+        "Original",
+    )
+    assert isinstance(
+        later_outcome,
+        classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome,
+    )
+    assert later_outcome.recovery_plan.default_local_ignore_identity is None
+    assert {path: path.read_bytes() for path in original_files} == original_files
+
+
+@pytest.mark.parametrize(
+    ("ignore_bytes", "diagnostic_kind"),
+    [
+        (b"\xff", "invalid_utf8"),
+        (b"CLASSIC_Ignore_Fallout4: [unterminated", "parse"),
+        (b"CLASSIC_Ignore_Fallout4: not-a-sequence\n", "invalid_role_data"),
+    ],
+)
+def test_installed_load_projects_consumable_local_ignore_recovery_without_writes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    ignore_bytes: bytes,
+    diagnostic_kind: str,
+) -> None:
+    """Malformed Local Ignore data can be ignored once without mutating installed files."""
+    installation = tmp_path / "install"
+    write_install(installation, main_bytes=MAIN_WITH_DEFAULT_BYTES)
+    isolate_cache(monkeypatch, tmp_path / "cache-root")
+    databases = installation / "CLASSIC Data" / "databases"
+    main_path = databases / "CLASSIC Main.yaml"
+    game_path = databases / "CLASSIC Fallout4.yaml"
+    ignore_path = installation / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    ignore_path.write_bytes(ignore_bytes)
+    original_files = {
+        path: path.read_bytes() for path in (main_path, game_path, ignore_path)
+    }
+
+    outcome = classic_config.load_installed_yaml_data(
+        installation,
+        classic_config.ExplicitYamlDataGame.FALLOUT4,
+        "Original",
+    )
+    assert {path: path.read_bytes() for path in original_files} == original_files
+
+    assert isinstance(
+        outcome,
+        classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome,
+    )
+    assert outcome.status == "local_ignore_recovery_required"
+    plan = outcome.recovery_plan
+    assert plan.game == classic_config.ExplicitYamlDataGame.FALLOUT4
+    assert plan.game_data_role == "Fallout4"
+    assert plan.main.sha256 == hashlib.sha256(MAIN_WITH_DEFAULT_BYTES).hexdigest()
+    assert plan.game_file.sha256 == hashlib.sha256(GAME_BYTES).hexdigest()
+    assert plan.local_ignore_path == ignore_path
+    assert plan.malformed_local_ignore_identity.sha256 == hashlib.sha256(
+        ignore_bytes
+    ).hexdigest()
+    assert plan.malformed_local_ignore_identity.byte_len == len(ignore_bytes)
+    default_identity = plan.default_local_ignore_identity
+    assert default_identity is not None
+    assert default_identity.sha256 == hashlib.sha256(DEFAULT_IGNORE_BYTES).hexdigest()
+    assert default_identity.byte_len == len(DEFAULT_IGNORE_BYTES)
+    assert plan.selected_game_version == "Original"
+    malformed_diagnostic = plan.diagnostics[-1]
+    assert malformed_diagnostic.role is None
+    assert malformed_diagnostic.candidate is None
+    assert malformed_diagnostic.path == ignore_path
+    assert malformed_diagnostic.kind == diagnostic_kind
+    retained_main_sha256 = plan.main.sha256
+    retained_game_sha256 = plan.game_file.sha256
+    malformed_sha256 = plan.malformed_local_ignore_identity.sha256
+    replacement_main = MAIN_WITH_DEFAULT_BYTES.replace(b'"9.1.0"', b'"9.2.0"')
+    replacement_game = GAME_BYTES.replace(b'"Fallout 4"', b'"Fallout4"')
+    main_path.write_bytes(replacement_main)
+    game_path.write_bytes(replacement_game)
+    files_before_proceed = {
+        path: path.read_bytes() for path in (main_path, game_path, ignore_path)
+    }
+
+    snapshot = plan.proceed_without_ignore()
+
+    assert snapshot.local_ignore_state == "proceed_without_ignore"
+    assert snapshot.yaml_data.ignore_list == []
+    assert snapshot.yaml_data.classic_version == "9.1.0"
+    assert snapshot.yaml_data.game_root_name == "Fallout 4"
+    assert snapshot.main.sha256 == retained_main_sha256
+    assert snapshot.game_file.sha256 == retained_game_sha256
+    assert snapshot.local_ignore_identity.sha256 == malformed_sha256
+    assert {
+        path: path.read_bytes() for path in files_before_proceed
+    } == files_before_proceed
+
+    with pytest.raises(
+        RuntimeError, match="Local Ignore recovery plan has already been consumed"
+    ):
+        plan.proceed_without_ignore()
+    with pytest.raises(
+        RuntimeError, match="Local Ignore recovery plan has already been consumed"
+    ):
+        _ = plan.game
+
+    later_outcome = classic_config.load_installed_yaml_data(
+        installation,
+        classic_config.ExplicitYamlDataGame.FALLOUT4,
+        "Original",
+    )
+    assert isinstance(
+        later_outcome,
+        classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome,
+    )
+    assert (
+        later_outcome.recovery_plan.malformed_local_ignore_identity.sha256
+        == snapshot.local_ignore_identity.sha256
+    )
+    assert later_outcome.recovery_plan.main.sha256 == hashlib.sha256(
+        replacement_main
+    ).hexdigest()
+    assert later_outcome.recovery_plan.game_file.sha256 == hashlib.sha256(
+        replacement_game
+    ).hexdigest()
+    assert {
+        path: path.read_bytes() for path in files_before_proceed
+    } == files_before_proceed
 
 
 def test_installed_load_exports_local_ignore_create_failure_type() -> None:

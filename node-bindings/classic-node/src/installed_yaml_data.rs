@@ -16,6 +16,7 @@ use classic_config_core::{
     InstalledYamlDataProvenance as CoreInstalledYamlDataProvenance,
     InstalledYamlDataRole as CoreInstalledYamlDataRole,
     InstalledYamlDataSnapshot as CoreInstalledYamlDataSnapshot,
+    LocalIgnoreRecoveryPlan as CoreLocalIgnoreRecoveryPlan,
     LocalIgnoreYamlDataState as CoreLocalIgnoreYamlDataState,
     inspect_installed_yaml_data as core_inspect_installed_yaml_data,
     load_installed_yaml_data as core_load_installed_yaml_data,
@@ -98,6 +99,9 @@ pub enum JsInstalledYamlDataGameRole {
 pub enum JsInstalledYamlDataLoadStatus {
     /// Main, game, and valid Local Ignore data are ready for use.
     Ready,
+    /// Existing Local Ignore data is malformed and requires an explicit caller decision.
+    #[napi(value = "localIgnoreRecoveryRequired")]
+    LocalIgnoreRecoveryRequired,
 }
 
 /// How Local Ignore YAML Data entered an installed snapshot.
@@ -107,6 +111,8 @@ pub enum JsLocalIgnoreYamlDataState {
     Existing,
     /// Missing Local Ignore YAML Data was generated from selected Main defaults.
     Generated,
+    /// The current operation explicitly proceeded with no Local Ignore entries.
+    ProceedWithoutIgnore,
 }
 
 /// Structured attribution for one selection, rejection, or local generation event.
@@ -200,6 +206,9 @@ impl InstalledYamlDataSnapshot {
         match self.inner.local_ignore_state() {
             CoreLocalIgnoreYamlDataState::Existing => JsLocalIgnoreYamlDataState::Existing,
             CoreLocalIgnoreYamlDataState::Generated => JsLocalIgnoreYamlDataState::Generated,
+            CoreLocalIgnoreYamlDataState::ProceedWithoutIgnore => {
+                JsLocalIgnoreYamlDataState::ProceedWithoutIgnore
+            }
         }
     }
 
@@ -220,13 +229,125 @@ impl InstalledYamlDataSnapshot {
     }
 }
 
-/// Typed Ready outcome from Installed YAML Data loading.
+/// Opaque single-use recovery proposal for malformed existing Local Ignore YAML Data.
+#[napi]
+pub struct LocalIgnoreRecoveryPlan {
+    inner: Option<CoreLocalIgnoreRecoveryPlan>,
+}
+
+#[napi]
+impl LocalIgnoreRecoveryPlan {
+    /// Returns the typed game retained by the already selected snapshot.
+    #[napi(getter)]
+    pub fn game(&self) -> Result<JsGameId> {
+        Ok(core_to_js_game_id(&self.inner()?.game()))
+    }
+
+    /// Returns the registered game-data role retained by the already selected snapshot.
+    #[napi(getter)]
+    pub fn game_data_role(&self) -> Result<JsInstalledYamlDataGameRole> {
+        Ok(game_role_to_js(self.inner()?.game_data_role()))
+    }
+
+    /// Returns metadata for the retained independently selected Main YAML Data.
+    #[napi(getter)]
+    pub fn main(&self) -> Result<JsInspectedYamlDataFile> {
+        Ok(inspected_file_to_js(self.inner()?.main()))
+    }
+
+    /// Returns metadata for the retained independently selected game YAML Data.
+    #[napi(getter)]
+    pub fn game_file(&self) -> Result<JsInspectedYamlDataFile> {
+        Ok(inspected_file_to_js(self.inner()?.game_file()))
+    }
+
+    /// Returns the canonical malformed Local Ignore path observed by this plan.
+    #[napi(getter)]
+    pub fn local_ignore_path(&self) -> Result<String> {
+        Ok(self
+            .inner()?
+            .local_ignore_path()
+            .to_string_lossy()
+            .into_owned())
+    }
+
+    /// Returns the identity of the exact malformed Local Ignore bytes observed by this plan.
+    #[napi(getter)]
+    pub fn malformed_local_ignore_identity(&self) -> Result<JsYamlDataContentIdentity> {
+        Ok(content_identity_to_js(
+            self.inner()?.malformed_local_ignore_identity(),
+        ))
+    }
+
+    /// Returns the identity of validated selected-Main defaults, or `null` when unavailable.
+    ///
+    /// Missing or invalid defaults do not block proceeding because malformed installed Local
+    /// Ignore bytes are never replaced during this recovery operation.
+    #[napi(getter)]
+    pub fn default_local_ignore_identity(&self) -> Result<Option<JsYamlDataContentIdentity>> {
+        Ok(self
+            .inner()?
+            .default_local_ignore_identity()
+            .map(content_identity_to_js))
+    }
+
+    /// Returns the Version Registry selection mode retained for the interrupted operation.
+    #[napi(getter)]
+    pub fn selected_game_version(&self) -> Result<String> {
+        Ok(self.inner()?.selected_game_version().to_string())
+    }
+
+    /// Returns retained selection and malformed Local Ignore diagnostics.
+    #[napi(getter)]
+    pub fn diagnostics(&self) -> Result<Vec<JsInstalledYamlDataDiagnostic>> {
+        Ok(self
+            .inner()?
+            .diagnostics()
+            .iter()
+            .map(diagnostic_to_js)
+            .collect())
+    }
+
+    /// Completes the retained operation with no Local Ignore entries and no filesystem writes.
+    ///
+    /// This decision consumes the plan. Reusing the same JavaScript plan rejects with the stable
+    /// `local_ignore_recovery_plan_consumed` error code instead of re-running the operation.
+    #[napi]
+    pub fn proceed_without_ignore(&mut self, env: Env) -> Result<InstalledYamlDataSnapshot> {
+        let plan = self.inner.take().ok_or_else(|| {
+            base_inspection_error(
+                env,
+                "local_ignore_recovery_plan_consumed",
+                "Local Ignore recovery plan has already been consumed".to_string(),
+            )
+        })?;
+        Ok(InstalledYamlDataSnapshot {
+            inner: plan.proceed_without_ignore(),
+        })
+    }
+}
+
+impl LocalIgnoreRecoveryPlan {
+    /// Returns the retained core plan or a stable error after the plan has been consumed.
+    fn inner(&self) -> Result<&CoreLocalIgnoreRecoveryPlan> {
+        self.inner.as_ref().ok_or_else(|| {
+            napi::Error::new(
+                Status::GenericFailure,
+                "Local Ignore recovery plan has already been consumed",
+            )
+        })
+    }
+}
+
+/// Typed Installed YAML Data loading outcome with one status-selected payload.
 #[napi(object, object_from_js = false)]
 pub struct JsInstalledYamlDataLoadOutcome {
     /// Stable expected-outcome discriminator.
     pub status: JsInstalledYamlDataLoadStatus,
-    /// Immutable snapshot retained by the Ready outcome.
-    pub snapshot: InstalledYamlDataSnapshot,
+    /// Immutable snapshot populated only for the Ready outcome.
+    pub snapshot: Option<InstalledYamlDataSnapshot>,
+    /// Opaque plan populated only when Local Ignore recovery is required.
+    pub recovery_plan: Option<LocalIgnoreRecoveryPlan>,
 }
 
 /// Inspect update-eligible Main and game YAML Data for one CLASSIC installation.
@@ -249,10 +370,11 @@ pub fn inspect_installed_yaml_data(
     })
 }
 
-/// Load one immutable Installed YAML Data snapshot with valid existing-or-generated Local Ignore content.
+/// Load one immutable Installed YAML Data outcome with Ready or recovery-required content.
 ///
 /// Config core owns selection, compatibility, parsing, and filesystem policy. This adapter
 /// performs only request/result projection and runs blocking file I/O on N-API's worker pool.
+/// Malformed existing Local Ignore data resolves a recovery plan instead of rejecting.
 ///
 /// @param request - Installation root, typed game identity, and game-version mode.
 /// @throws an error with stable `code` plus role, path, or diagnostics metadata when applicable.
@@ -298,14 +420,22 @@ impl Task for InstalledYamlDataLoadTask {
         })
     }
 
-    /// Resolves a typed Ready snapshot or rejects with stable error metadata.
+    /// Resolves a status-discriminated snapshot or recovery plan, or rejects a fatal error.
     fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
         match output {
             InstalledYamlDataLoadTaskOutput::Success(outcome) => match *outcome {
                 CoreInstalledYamlDataLoadOutcome::Ready(snapshot) => {
                     Ok(JsInstalledYamlDataLoadOutcome {
                         status: JsInstalledYamlDataLoadStatus::Ready,
-                        snapshot: InstalledYamlDataSnapshot { inner: snapshot },
+                        snapshot: Some(InstalledYamlDataSnapshot { inner: snapshot }),
+                        recovery_plan: None,
+                    })
+                }
+                CoreInstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(plan) => {
+                    Ok(JsInstalledYamlDataLoadOutcome {
+                        status: JsInstalledYamlDataLoadStatus::LocalIgnoreRecoveryRequired,
+                        snapshot: None,
+                        recovery_plan: Some(LocalIgnoreRecoveryPlan { inner: Some(plan) }),
                     })
                 }
             },
@@ -498,24 +628,6 @@ fn load_error_to_napi(env: Env, error: CoreInstalledYamlDataLoadError) -> napi::
         ),
         CoreInstalledYamlDataLoadError::LocalIgnoreRead { path, .. } => (
             "local_ignore_read",
-            Some("local_ignore"),
-            Some(path.clone()),
-            Vec::new(),
-        ),
-        CoreInstalledYamlDataLoadError::LocalIgnoreInvalidUtf8 { path, .. } => (
-            "local_ignore_invalid_utf8",
-            Some("local_ignore"),
-            Some(path.clone()),
-            Vec::new(),
-        ),
-        CoreInstalledYamlDataLoadError::LocalIgnoreParse { path, .. } => (
-            "local_ignore_parse",
-            Some("local_ignore"),
-            Some(path.clone()),
-            Vec::new(),
-        ),
-        CoreInstalledYamlDataLoadError::LocalIgnoreInvalidRoleData { path, .. } => (
-            "local_ignore_invalid_role_data",
             Some("local_ignore"),
             Some(path.clone()),
             Vec::new(),

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-18T08:57:37.031142+00:00",
+  "generated_at_utc": "2026-07-19T01:49:13.826732+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,8 +7,8 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1044,
-    "runtime_verified_total": 1044,
+    "tracked_surface_total": 1045,
+    "runtime_verified_total": 1045,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 908,
@@ -22,8 +22,8 @@
       "total": 166
     },
     "config": {
-      "runtime_verified": 110,
-      "total": 110
+      "runtime_verified": 111,
+      "total": 111
     },
     "database": {
       "runtime_verified": 23,
@@ -18386,7 +18386,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the typed Ready snapshot, parsed YAML Data, exact-byte identities, Main/game metadata, existing Local Ignore state, immutable retained data, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsInstalledYamlDataLoadOutcome",
@@ -18405,7 +18405,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the typed Ready snapshot, parsed YAML Data, exact-byte identities, Main/game metadata, existing Local Ignore state, immutable retained data, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsInstalledYamlDataLoadRequest",
@@ -18424,7 +18424,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the typed Ready snapshot, parsed YAML Data, exact-byte identities, Main/game metadata, existing Local Ignore state, immutable retained data, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsInstalledYamlDataLoadStatus",
@@ -18443,7 +18443,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the typed Ready snapshot, parsed YAML Data, exact-byte identities, Main/game metadata, existing Local Ignore state, immutable retained data, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsLocalIgnoreYamlDataState",
@@ -18462,7 +18462,26 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the typed Ready snapshot, parsed YAML Data, exact-byte identities, Main/game metadata, existing Local Ignore state, immutable retained data, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:LocalIgnoreRecoveryPlan",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "LocalIgnoreRecoveryPlan",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:loadInstalledYamlData",
@@ -18481,7 +18500,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises the typed Ready snapshot, parsed YAML Data, exact-byte identities, Main/game metadata, existing Local Ignore state, immutable retained data, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:persistGameLocalPaths",

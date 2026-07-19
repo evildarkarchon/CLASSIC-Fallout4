@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-18T08:57:37.010028+00:00",
+  "generated_at_utc": "2026-07-19T01:49:13.810600+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -394,7 +394,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::InspectedYamlDataFile",
       "tier": "tier1"
     },
@@ -413,7 +413,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::InstalledYamlDataDiagnostic",
       "tier": "tier1"
     },
@@ -441,7 +441,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::InstalledYamlDataDiagnosticKind",
       "tier": "tier1"
     },
@@ -451,7 +451,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::InstalledYamlDataInspection",
       "tier": "tier1"
     },
@@ -479,7 +479,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::InstalledYamlDataInspectionError",
       "tier": "tier1"
     },
@@ -489,7 +489,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::InstalledYamlDataInspectionRequest",
       "tier": "tier1"
     },
@@ -517,7 +517,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::InstalledYamlDataLoadError",
       "tier": "tier1"
     },
@@ -536,7 +536,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::InstalledYamlDataLoadOutcome",
       "tier": "tier1"
     },
@@ -546,7 +546,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::InstalledYamlDataLoadRequest",
       "tier": "tier1"
     },
@@ -574,7 +574,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::InstalledYamlDataProvenance",
       "tier": "tier1"
     },
@@ -593,7 +593,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::InstalledYamlDataRole",
       "tier": "tier1"
     },
@@ -603,7 +603,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::InstalledYamlDataSnapshot",
       "tier": "tier1"
     },
@@ -675,6 +675,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "LocalIgnoreRecoveryPlan",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::LocalIgnoreRecoveryPlan",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreRecoveryPlan",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub struct LocalIgnoreRecoveryPlan",
+      "tier": "tier1"
+    },
+    {
       "symbol": "LocalIgnoreYamlDataState",
       "kind": "enum",
       "crate": "classic-config-core",
@@ -689,7 +708,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::LocalIgnoreYamlDataState",
       "tier": "tier1"
     },
@@ -1107,6 +1126,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "default_local_ignore_identity",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn default_local_ignore_identity(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "diagnostics",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn diagnostics(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "diagnostics",
       "kind": "function",
       "arity": 1,
@@ -1225,6 +1264,51 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
       "source_decl": "pub const fn",
       "tier": "tier1"
     },
@@ -1524,7 +1608,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::inspect_installed_yaml_data",
       "tier": "tier1"
     },
@@ -1534,7 +1618,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::inspect_installed_yaml_data_with_env",
       "tier": "tier1"
     },
@@ -1583,7 +1667,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::load_installed_yaml_data",
       "tier": "tier1"
     },
@@ -1593,7 +1677,7 @@
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/lib.rs",
-      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
       "source_expr": "installed_yaml_data::load_installed_yaml_data_with_env",
       "tier": "tier1"
     },
@@ -1695,6 +1779,16 @@
       "source_file": "business-logic/classic-config-core/src/shippable.rs",
       "source_decl": "pub use loader::{ CandidateRejection, LoadSource, LoadedShippable, ShippableFile, YamlLoadError, load_shippable_yaml, load_shippable_yaml_with_env, };",
       "source_expr": "loader::load_shippable_yaml_with_env",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "local_ignore_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn local_ignore_path(&self)",
       "tier": "tier1"
     },
     {
@@ -1828,6 +1922,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "proceed_without_ignore",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn proceed_without_ignore(self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "resolve_registry_version_info",
       "kind": "function",
       "arity": 2,
@@ -1845,6 +1949,16 @@
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use yamldata::{ ConfigError, CoreModEntry, CoreModExclude, CrashgenEntryRaw, ModConflictEntry, ModSolutionCriteria, ModSolutionEntry, SuspectErrorRule, SuspectStackCountRule, SuspectStackRule, YamlDataCore, format_registry_game_version, resolve_registry_version_info, };",
       "source_expr": "yamldata::resolve_registry_version_info",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "selected_game_version",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn selected_game_version(&self)",
       "tier": "tier1"
     },
     {

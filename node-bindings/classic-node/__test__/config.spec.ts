@@ -493,6 +493,7 @@ describe("Installed YAML Data loading", () => {
       );
 
       expect(outcome.status).toBe(JsInstalledYamlDataLoadStatus.Ready);
+      expect(outcome.recoveryPlan).toBeUndefined();
       expect(outcome.snapshot.game).toBe(JsGameId.Fallout4Vr);
       expect(outcome.snapshot.gameDataRole).toBe("Fallout4");
       expect(outcome.snapshot.localIgnoreState).toBe(
@@ -623,16 +624,21 @@ describe("Installed YAML Data loading", () => {
     }
   });
 
-  test("projects existing Local Ignore content failures with stable role and path metadata", async () => {
-    const root = mkdtempSync(join(tmpdir(), "classic-node-installed-yaml-ignore-errors-"));
+  test("proceeds without malformed Local Ignore content for one operation without changing installed bytes", async () => {
+    const root = mkdtempSync(
+      join(tmpdir(), "classic-node-installed-yaml-ignore-recovery-"),
+    );
     const cacheRoot = join(root, "platform-cache");
     const installationRoot = join(root, "installation");
     const bundledDir = join(installationRoot, "CLASSIC Data", "databases");
+    const mainPath = join(bundledDir, "CLASSIC Main.yaml");
+    const gamePath = join(bundledDir, "CLASSIC Fallout4.yaml");
     const ignorePath = join(
       installationRoot,
       "CLASSIC Data",
       "CLASSIC Ignore.yaml",
     );
+    const malformedIgnore = Buffer.from("CLASSIC_Ignore_Fallout4: [unterminated\n");
     const request = {
       installationRoot,
       game: JsGameId.Fallout4,
@@ -640,40 +646,86 @@ describe("Installed YAML Data loading", () => {
     };
     try {
       mkdirSync(bundledDir, { recursive: true });
-      writeFileSync(join(bundledDir, "CLASSIC Main.yaml"), EXPLICIT_MAIN_YAML);
-      writeFileSync(join(bundledDir, "CLASSIC Fallout4.yaml"), EXPLICIT_GAME_YAML);
+      writeFileSync(mainPath, INSTALLED_MAIN_WITH_DEFAULT_YAML);
+      writeFileSync(gamePath, EXPLICIT_GAME_YAML);
+      writeFileSync(ignorePath, malformedIgnore);
+      const installedBytes = new Map([
+        [mainPath, readFileSync(mainPath)],
+        [gamePath, readFileSync(gamePath)],
+        [ignorePath, readFileSync(ignorePath)],
+      ]);
 
-      const expectIgnoreFailure = async (
-        code: string,
-        content?: string | Uint8Array,
-      ): Promise<void> => {
-        if (content !== undefined) {
-          writeFileSync(ignorePath, content);
-        }
-        await expect(
-          withIsolatedYamlCache(cacheRoot, () => loadInstalledYamlData(request)),
-        ).rejects.toMatchObject({
-          code,
-          yamlRole: "local_ignore",
+      const outcome = await withIsolatedYamlCache(cacheRoot, () =>
+        loadInstalledYamlData(request),
+      );
+
+      expect(outcome.status).toBe(
+        JsInstalledYamlDataLoadStatus.LocalIgnoreRecoveryRequired,
+      );
+      expect(outcome.snapshot).toBeUndefined();
+      expect(outcome.recoveryPlan).toBeDefined();
+      const recoveryPlan = outcome.recoveryPlan!;
+      expect(recoveryPlan.game).toBe(JsGameId.Fallout4);
+      expect(recoveryPlan.gameDataRole).toBe("Fallout4");
+      expect(recoveryPlan.localIgnorePath).toBe(ignorePath);
+      expect(recoveryPlan.selectedGameVersion).toBe("Original");
+      expect(recoveryPlan.malformedLocalIgnoreIdentity).toEqual({
+        sha256: createHash("sha256").update(malformedIgnore).digest("hex"),
+        byteLen: malformedIgnore.byteLength,
+      });
+      expect(recoveryPlan.defaultLocalIgnoreIdentity).toEqual({
+        sha256: createHash("sha256").update(GENERATED_IGNORE_YAML).digest("hex"),
+        byteLen: Buffer.byteLength(GENERATED_IGNORE_YAML),
+      });
+      expect(recoveryPlan.diagnostics).toEqual([
+        expect.objectContaining({
           path: ignorePath,
-        });
-      };
+          kind: JsInstalledYamlDataDiagnosticKind.Parse,
+        }),
+      ]);
+      const retainedMain = recoveryPlan.main;
+      const retainedGame = recoveryPlan.gameFile;
+      const malformedIdentity = recoveryPlan.malformedLocalIgnoreIdentity;
 
-      await expectIgnoreFailure(
-        "local_ignore_invalid_utf8",
-        Uint8Array.from([0xff]),
+      const snapshot = recoveryPlan.proceedWithoutIgnore();
+      expect(snapshot.localIgnoreState).toBe(
+        JsLocalIgnoreYamlDataState.ProceedWithoutIgnore,
       );
-      await expectIgnoreFailure("local_ignore_parse", "unterminated: [\n");
-      await expectIgnoreFailure(
-        "local_ignore_invalid_role_data",
-        "CLASSIC_Ignore_Fallout4: not-a-sequence\n",
+      expect(snapshot.yamlData.ignoreList).toEqual([]);
+      expect(snapshot.main).toEqual(retainedMain);
+      expect(snapshot.gameFile).toEqual(retainedGame);
+      expect(snapshot.localIgnoreIdentity).toEqual(malformedIdentity);
+      for (const [path, bytes] of installedBytes) {
+        expect(readFileSync(path)).toEqual(bytes);
+      }
+
+      let replayError: unknown;
+      try {
+        recoveryPlan.proceedWithoutIgnore();
+      } catch (error) {
+        replayError = error;
+      }
+      expect(replayError).toMatchObject({
+        code: "local_ignore_recovery_plan_consumed",
+      });
+
+      const repeatedOutcome = await withIsolatedYamlCache(cacheRoot, () =>
+        loadInstalledYamlData(request),
       );
+      expect(repeatedOutcome.status).toBe(
+        JsInstalledYamlDataLoadStatus.LocalIgnoreRecoveryRequired,
+      );
+      expect(repeatedOutcome.snapshot).toBeUndefined();
+      expect(repeatedOutcome.recoveryPlan).toBeDefined();
+      for (const [path, bytes] of installedBytes) {
+        expect(readFileSync(path)).toEqual(bytes);
+      }
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
 
-  test("projects invalid selected Main defaults as a typed Local Ignore load error", async () => {
+  test("keeps invalid selected Main defaults fatal only while Local Ignore is missing", async () => {
     const root = mkdtempSync(join(tmpdir(), "classic-node-installed-yaml-default-error-"));
     const cacheRoot = join(root, "platform-cache");
     const installationRoot = join(root, "installation");
@@ -702,6 +754,57 @@ describe("Installed YAML Data loading", () => {
         path: ignorePath,
       });
       expect(existsSync(ignorePath)).toBe(false);
+
+      const malformedIgnore = Buffer.from(
+        "CLASSIC_Ignore_Fallout4: not-a-sequence\n",
+      );
+      writeFileSync(ignorePath, malformedIgnore);
+      const mainPath = join(bundledDir, "CLASSIC Main.yaml");
+      const gamePath = join(bundledDir, "CLASSIC Fallout4.yaml");
+      const installedBytes = new Map([
+        [mainPath, readFileSync(mainPath)],
+        [gamePath, readFileSync(gamePath)],
+        [ignorePath, readFileSync(ignorePath)],
+      ]);
+
+      const outcome = await withIsolatedYamlCache(cacheRoot, () =>
+        loadInstalledYamlData({
+          installationRoot,
+          game: JsGameId.Fallout4,
+          selectedGameVersion: "Original",
+        }),
+      );
+      expect(outcome.status).toBe(
+        JsInstalledYamlDataLoadStatus.LocalIgnoreRecoveryRequired,
+      );
+      expect(outcome.snapshot).toBeUndefined();
+      expect(outcome.recoveryPlan).toBeDefined();
+      const recoveryPlan = outcome.recoveryPlan!;
+      expect(recoveryPlan.defaultLocalIgnoreIdentity).toBeNull();
+
+      const snapshot = recoveryPlan.proceedWithoutIgnore();
+      expect(snapshot.localIgnoreState).toBe(
+        JsLocalIgnoreYamlDataState.ProceedWithoutIgnore,
+      );
+      expect(snapshot.yamlData.ignoreList).toEqual([]);
+      for (const [path, bytes] of installedBytes) {
+        expect(readFileSync(path)).toEqual(bytes);
+      }
+
+      const repeatedOutcome = await withIsolatedYamlCache(cacheRoot, () =>
+        loadInstalledYamlData({
+          installationRoot,
+          game: JsGameId.Fallout4,
+          selectedGameVersion: "Original",
+        }),
+      );
+      expect(repeatedOutcome.status).toBe(
+        JsInstalledYamlDataLoadStatus.LocalIgnoreRecoveryRequired,
+      );
+      expect(repeatedOutcome.recoveryPlan?.defaultLocalIgnoreIdentity).toBeNull();
+      for (const [path, bytes] of installedBytes) {
+        expect(readFileSync(path)).toEqual(bytes);
+      }
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -719,6 +822,7 @@ describe("runtime coverage metadata", () => {
     expect(bindingIdentifiers.has("getApplicationDir")).toBe(true);
     expect(bindingIdentifiers.has("setApplicationDir")).toBe(true);
     expect(bindingIdentifiers.has("persistGameLocalPaths")).toBe(true);
+    expect(bindingIdentifiers.has("LocalIgnoreRecoveryPlan")).toBe(true);
     expect(bindingIdentifiers.has("loadInstalledYamlData")).toBe(true);
   });
 });

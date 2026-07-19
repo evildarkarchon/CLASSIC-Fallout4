@@ -12,15 +12,19 @@ use classic_config_core::{
     InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError as CoreLoadError,
     InstalledYamlDataLoadOutcome as CoreLoadOutcome, InstalledYamlDataLoadRequest,
     InstalledYamlDataProvenance as CoreProvenance, InstalledYamlDataRole as CoreRole,
-    InstalledYamlDataSnapshot as CoreSnapshot, LocalIgnoreYamlDataState as CoreLocalIgnoreState,
+    InstalledYamlDataSnapshot as CoreSnapshot, LocalIgnoreRecoveryPlan as CoreRecoveryPlan,
+    LocalIgnoreYamlDataState as CoreLocalIgnoreState,
     inspect_installed_yaml_data as core_inspect_installed_yaml_data,
     load_installed_yaml_data as core_load_installed_yaml_data,
 };
 use classic_shared::without_gil;
 use pyo3::create_exception;
-use pyo3::exceptions::PyException;
+use pyo3::exceptions::{PyException, PyRuntimeError};
 use pyo3::prelude::*;
 use std::path::PathBuf;
+
+const LOCAL_IGNORE_RECOVERY_PLAN_CONSUMED: &str =
+    "Local Ignore recovery plan has already been consumed";
 
 create_exception!(
     classic_config,
@@ -63,24 +67,6 @@ create_exception!(
     InstalledYamlDataLoadLocalIgnoreReadError,
     InstalledYamlDataLoadError,
     "Raised when authoritative Local Ignore YAML Data cannot be read."
-);
-create_exception!(
-    classic_config,
-    InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error,
-    InstalledYamlDataLoadError,
-    "Raised when authoritative Local Ignore YAML Data is not UTF-8."
-);
-create_exception!(
-    classic_config,
-    InstalledYamlDataLoadLocalIgnoreParseError,
-    InstalledYamlDataLoadError,
-    "Raised when authoritative Local Ignore YAML Data is malformed YAML."
-);
-create_exception!(
-    classic_config,
-    InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError,
-    InstalledYamlDataLoadError,
-    "Raised when authoritative Local Ignore YAML Data violates its role contract."
 );
 create_exception!(
     classic_config,
@@ -172,10 +158,26 @@ pub struct PyInstalledYamlDataSnapshot {
     inner: CoreSnapshot,
 }
 
+/// Opaque, consumable recovery plan retained by Rust core.
+#[pyclass(name = "LocalIgnoreRecoveryPlan", skip_from_py_object)]
+pub struct PyLocalIgnoreRecoveryPlan {
+    inner: Option<CoreRecoveryPlan>,
+}
+
 /// Typed Ready outcome containing one immutable Installed YAML Data snapshot.
 #[pyclass(name = "InstalledYamlDataLoadOutcome", frozen, skip_from_py_object)]
 pub struct PyInstalledYamlDataLoadOutcome {
     snapshot: Py<PyInstalledYamlDataSnapshot>,
+}
+
+/// Typed recovery-required outcome containing one opaque Local Ignore plan.
+#[pyclass(
+    name = "InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome",
+    frozen,
+    skip_from_py_object
+)]
+pub struct PyInstalledYamlDataLocalIgnoreRecoveryRequiredOutcome {
+    recovery_plan: Py<PyLocalIgnoreRecoveryPlan>,
 }
 
 #[pymethods]
@@ -190,6 +192,156 @@ impl PyInstalledYamlDataLoadOutcome {
     #[getter]
     fn snapshot(&self, py: Python<'_>) -> Py<PyInstalledYamlDataSnapshot> {
         self.snapshot.clone_ref(py)
+    }
+}
+
+#[pymethods]
+impl PyInstalledYamlDataLocalIgnoreRecoveryRequiredOutcome {
+    /// Return the stable expected-outcome discriminator.
+    #[getter]
+    fn status(&self) -> &'static str {
+        "local_ignore_recovery_required"
+    }
+
+    /// Return the opaque recovery plan owned by this outcome.
+    #[getter]
+    fn recovery_plan(&self, py: Python<'_>) -> Py<PyLocalIgnoreRecoveryPlan> {
+        self.recovery_plan.clone_ref(py)
+    }
+}
+
+impl PyLocalIgnoreRecoveryPlan {
+    /// Borrows the Rust-owned plan or reports that its one decision was already consumed.
+    fn retained(&self) -> PyResult<&CoreRecoveryPlan> {
+        self.inner
+            .as_ref()
+            .ok_or_else(|| PyRuntimeError::new_err(LOCAL_IGNORE_RECOVERY_PLAN_CONSUMED))
+    }
+}
+
+#[pymethods]
+impl PyLocalIgnoreRecoveryPlan {
+    /// Return the typed game retained by the already selected snapshot.
+    ///
+    /// # Errors
+    ///
+    /// Raises `RuntimeError` when this plan was already consumed.
+    #[getter]
+    fn game(&self) -> PyResult<PyExplicitYamlDataGame> {
+        Ok(PyExplicitYamlDataGame::from_core(self.retained()?.game()))
+    }
+
+    /// Return the registered data role retained by the selected game file.
+    ///
+    /// # Errors
+    ///
+    /// Raises `RuntimeError` when this plan was already consumed.
+    #[getter]
+    fn game_data_role(&self) -> PyResult<&'static str> {
+        Ok(match self.retained()?.game_data_role() {
+            classic_config_core::GameDataRole::Fallout4 => "Fallout4",
+        })
+    }
+
+    /// Return retained selected Main provenance, schema, and exact-byte identity.
+    ///
+    /// # Errors
+    ///
+    /// Raises `RuntimeError` when this plan was already consumed.
+    #[getter]
+    fn main(&self) -> PyResult<PyInspectedYamlDataFile> {
+        Ok(inspected_file_to_py(self.retained()?.main()))
+    }
+
+    /// Return retained selected game provenance, schema, and exact-byte identity.
+    ///
+    /// # Errors
+    ///
+    /// Raises `RuntimeError` when this plan was already consumed.
+    #[getter]
+    fn game_file(&self) -> PyResult<PyInspectedYamlDataFile> {
+        Ok(inspected_file_to_py(self.retained()?.game_file()))
+    }
+
+    /// Return the canonical malformed Local Ignore path observed by this plan.
+    ///
+    /// # Errors
+    ///
+    /// Raises `RuntimeError` when this plan was already consumed.
+    #[getter]
+    fn local_ignore_path(&self) -> PyResult<PathBuf> {
+        Ok(self.retained()?.local_ignore_path().to_path_buf())
+    }
+
+    /// Return the identity of the exact malformed Local Ignore bytes.
+    ///
+    /// # Errors
+    ///
+    /// Raises `RuntimeError` when this plan was already consumed.
+    #[getter]
+    fn malformed_local_ignore_identity(&self) -> PyResult<PyYamlDataContentIdentity> {
+        Ok(content_identity_to_py(
+            self.retained()?.malformed_local_ignore_identity(),
+        ))
+    }
+
+    /// Return the identity of validated selected-Main defaults, or `None` when unavailable.
+    ///
+    /// Missing or invalid defaults do not block proceeding because malformed installed Local
+    /// Ignore bytes are never replaced during this recovery operation.
+    ///
+    /// # Errors
+    ///
+    /// Raises `RuntimeError` when this plan was already consumed.
+    #[getter]
+    fn default_local_ignore_identity(&self) -> PyResult<Option<PyYamlDataContentIdentity>> {
+        Ok(self
+            .retained()?
+            .default_local_ignore_identity()
+            .map(content_identity_to_py))
+    }
+
+    /// Return the retained game-version mode for the interrupted operation.
+    ///
+    /// # Errors
+    ///
+    /// Raises `RuntimeError` when this plan was already consumed.
+    #[getter]
+    fn selected_game_version(&self) -> PyResult<String> {
+        Ok(self.retained()?.selected_game_version().to_string())
+    }
+
+    /// Return retained selection and malformed Local Ignore diagnostics.
+    ///
+    /// # Errors
+    ///
+    /// Raises `RuntimeError` when this plan was already consumed.
+    #[getter]
+    fn diagnostics(&self) -> PyResult<Vec<PyInstalledYamlDataDiagnostic>> {
+        Ok(self
+            .retained()?
+            .diagnostics()
+            .iter()
+            .map(diagnostic_to_py)
+            .collect())
+    }
+
+    /// Complete this retained operation with an empty, operation-scoped ignore list.
+    ///
+    /// The plan can be consumed only once. Proceeding performs no filesystem access or writes;
+    /// a later installed load encounters the unchanged malformed file again.
+    ///
+    /// # Errors
+    ///
+    /// Raises `RuntimeError` when this plan was already consumed.
+    fn proceed_without_ignore(&mut self) -> PyResult<PyInstalledYamlDataSnapshot> {
+        let plan = self
+            .inner
+            .take()
+            .ok_or_else(|| PyRuntimeError::new_err(LOCAL_IGNORE_RECOVERY_PLAN_CONSUMED))?;
+        Ok(PyInstalledYamlDataSnapshot {
+            inner: plan.proceed_without_ignore(),
+        })
     }
 }
 
@@ -233,6 +385,7 @@ impl PyInstalledYamlDataSnapshot {
         match self.inner.local_ignore_state() {
             CoreLocalIgnoreState::Existing => "existing",
             CoreLocalIgnoreState::Generated => "generated",
+            CoreLocalIgnoreState::ProceedWithoutIgnore => "proceed_without_ignore",
         }
     }
 
@@ -292,11 +445,12 @@ fn inspect_installed_yaml_data(
     })
 }
 
-/// Load one immutable Ready Installed YAML Data snapshot.
+/// Load one immutable Installed YAML Data snapshot or retained recovery proposal.
 ///
 /// The operation releases the GIL while Rust core independently selects Main and game,
 /// preserves existing Local Ignore or atomically generates it when missing, and builds the
-/// parsed view. Existing Local Ignore is never replaced during ordinary loading.
+/// parsed view. Malformed existing Local Ignore returns an expected recovery-required outcome;
+/// it is never replaced during ordinary loading.
 ///
 /// # Errors
 ///
@@ -307,7 +461,7 @@ fn load_installed_yaml_data(
     installation_root: PathBuf,
     game: PyExplicitYamlDataGame,
     selected_game_version: String,
-) -> PyResult<PyInstalledYamlDataLoadOutcome> {
+) -> PyResult<Py<PyAny>> {
     let request = InstalledYamlDataLoadRequest {
         installation_root,
         game: game.into_core(),
@@ -315,9 +469,20 @@ fn load_installed_yaml_data(
     };
     let outcome = without_gil(py, || core_load_installed_yaml_data(request))
         .map_err(installed_yaml_data_load_error_to_py)?;
-    let CoreLoadOutcome::Ready(inner) = outcome;
-    let snapshot = Py::new(py, PyInstalledYamlDataSnapshot { inner })?;
-    Ok(PyInstalledYamlDataLoadOutcome { snapshot })
+    match outcome {
+        CoreLoadOutcome::Ready(inner) => {
+            let snapshot = Py::new(py, PyInstalledYamlDataSnapshot { inner })?;
+            Ok(Py::new(py, PyInstalledYamlDataLoadOutcome { snapshot })?.into_any())
+        }
+        CoreLoadOutcome::LocalIgnoreRecoveryRequired(inner) => {
+            let recovery_plan = Py::new(py, PyLocalIgnoreRecoveryPlan { inner: Some(inner) })?;
+            Ok(Py::new(
+                py,
+                PyInstalledYamlDataLocalIgnoreRecoveryRequiredOutcome { recovery_plan },
+            )?
+            .into_any())
+        }
+    }
 }
 
 /// Projects one selected file without retaining an independent path or byte cache.
@@ -400,27 +565,6 @@ fn installed_yaml_data_load_error_to_py(error: CoreLoadError) -> PyErr {
             Vec::new(),
             InstalledYamlDataLoadLocalIgnoreReadError::new_err(message),
         ),
-        CoreLoadError::LocalIgnoreInvalidUtf8 { path, .. } => (
-            "local_ignore_invalid_utf8",
-            Some("local_ignore"),
-            Some(path.to_string_lossy().into_owned()),
-            Vec::new(),
-            InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error::new_err(message),
-        ),
-        CoreLoadError::LocalIgnoreParse { path, .. } => (
-            "local_ignore_parse",
-            Some("local_ignore"),
-            Some(path.to_string_lossy().into_owned()),
-            Vec::new(),
-            InstalledYamlDataLoadLocalIgnoreParseError::new_err(message),
-        ),
-        CoreLoadError::LocalIgnoreInvalidRoleData { path, .. } => (
-            "local_ignore_invalid_role_data",
-            Some("local_ignore"),
-            Some(path.to_string_lossy().into_owned()),
-            Vec::new(),
-            InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError::new_err(message),
-        ),
         CoreLoadError::LocalIgnoreDefaultInvalid { path, .. } => (
             "local_ignore_default_invalid",
             Some("local_ignore"),
@@ -493,7 +637,9 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyInspectedYamlDataFile>()?;
     module.add_class::<PyInstalledYamlDataInspection>()?;
     module.add_class::<PyInstalledYamlDataSnapshot>()?;
+    module.add_class::<PyLocalIgnoreRecoveryPlan>()?;
     module.add_class::<PyInstalledYamlDataLoadOutcome>()?;
+    module.add_class::<PyInstalledYamlDataLocalIgnoreRecoveryRequiredOutcome>()?;
     module.add_function(wrap_pyfunction!(inspect_installed_yaml_data, module)?)?;
     module.add_function(wrap_pyfunction!(load_installed_yaml_data, module)?)?;
     let py = module.py();
@@ -524,18 +670,6 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add(
         "InstalledYamlDataLoadLocalIgnoreReadError",
         py.get_type::<InstalledYamlDataLoadLocalIgnoreReadError>(),
-    )?;
-    module.add(
-        "InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
-        py.get_type::<InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error>(),
-    )?;
-    module.add(
-        "InstalledYamlDataLoadLocalIgnoreParseError",
-        py.get_type::<InstalledYamlDataLoadLocalIgnoreParseError>(),
-    )?;
-    module.add(
-        "InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
-        py.get_type::<InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError>(),
     )?;
     module.add(
         "InstalledYamlDataLoadLocalIgnoreDefaultInvalidError",

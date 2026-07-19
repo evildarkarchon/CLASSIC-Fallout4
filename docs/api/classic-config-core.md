@@ -82,14 +82,16 @@ Config-owned selection and immutable loading of Installed YAML Data.
 
 - `InstalledYamlDataInspectionRequest` - one installation root plus typed game identity
 - `InstalledYamlDataInspection` / `InspectedYamlDataFile` - independently selected Main/game provenance, schema, and exact-byte identity
-- `InstalledYamlDataDiagnostic` / `InstalledYamlDataDiagnosticKind` - structured cache, rejected-candidate, and Local Ignore generation attribution
+- `InstalledYamlDataDiagnostic` / `InstalledYamlDataDiagnosticKind` - structured cache, rejected-candidate, and Local Ignore generation/recovery attribution
 - `InstalledYamlDataInspectionError` - typed unsupported-game or no-usable-source terminal failure
 - `inspect_installed_yaml_data()` - production inspection entry point used by first-party update freshness
 - `inspect_installed_yaml_data_with_env()` - deterministic Rust tooling seam for cache-environment injection
 - `InstalledYamlDataLoadRequest` - one installation root, typed game identity, and separate game-version mode
-- `InstalledYamlDataLoadOutcome::Ready` / `InstalledYamlDataSnapshot` - parsed Main, game, and valid existing-or-generated Local Ignore data backed by retained exact bytes
-- `LocalIgnoreYamlDataState::{Existing, Generated}` - distinguishes preserved user content from successful initialization using selected Main defaults
-- `InstalledYamlDataLoadError` - typed selection, Local Ignore, and parsed-data failures
+- `InstalledYamlDataLoadOutcome::{Ready, LocalIgnoreRecoveryRequired}` - separates usable snapshots and expected malformed-Local-Ignore decisions from fatal failures
+- `InstalledYamlDataSnapshot` - parsed Main/game data plus existing, generated, or operation-scoped-empty Local Ignore behavior backed by retained exact bytes
+- `LocalIgnoreRecoveryPlan` - immutable retained selection/default/malformed-file proposal with a consuming, mutation-free `proceed_without_ignore()` decision
+- `LocalIgnoreYamlDataState::{Existing, Generated, ProceedWithoutIgnore}` - distinguishes preserved user content, successful initialization, and operation-scoped empty ignores
+- `InstalledYamlDataLoadError` - typed fatal selection, I/O, default, publication, and parsed-data failures
 - `load_installed_yaml_data()` - production installed snapshot entry point
 - `load_installed_yaml_data_with_env()` - deterministic Rust test/tooling seam for cache-environment injection
 
@@ -220,7 +222,7 @@ Each `InspectedYamlDataFile` exposes its `InstalledYamlDataRole`, `InstalledYaml
 
 `load_installed_yaml_data(InstalledYamlDataLoadRequest { installation_root, game, selected_game_version })` loads an immutable runtime snapshot and initializes missing user-owned `CLASSIC Data/CLASSIC Ignore.yaml` when necessary. `game` selects the registered YAML Data role; the separate `selected_game_version` string retains its existing Version Registry metadata interpretation and does not affect file selection.
 
-Main and game use the same private selector as [`inspect_installed_yaml_data`](#installed-yaml-data-inspection), including independent updated/previous/bundled precedence, config-owned compatibility, strict role validation, and structured fallback diagnostics. The selected bytes and parsed YAML documents are retained privately. Existing Local Ignore is read, strictly validated for the selected game-data role, retained byte-for-byte, and never rewritten.
+Main and game use the same private selector as [`inspect_installed_yaml_data`](#installed-yaml-data-inspection), including independent updated/previous/bundled precedence, config-owned compatibility, strict role validation, and structured fallback diagnostics. The selected bytes and parsed YAML documents are retained privately. Existing Local Ignore is read and retained byte-for-byte; valid content is used directly, while malformed content becomes expected recovery result data and is never rewritten automatically.
 
 When Local Ignore is absent, config core extracts `CLASSIC_Info.default_ignorefile` from the already retained selected Main document. The scalar must be a non-empty string whose embedded YAML parses and satisfies the selected Local Ignore role contract; this validation finishes before any staging file is created. Config core then writes and syncs a same-directory temporary file and atomically publishes the complete bytes with no-clobber semantics. If another caller wins the publication race, its canonical file is preserved. Every caller rereads `CLASSIC Ignore.yaml` after the publish attempt, so parsing, identity, and the returned snapshot use the authoritative winner rather than a losing caller's default.
 
@@ -236,7 +238,11 @@ A valid installation returns `InstalledYamlDataLoadOutcome::Ready(InstalledYamlD
 
 Raw retained bytes and parsed YAML documents are not public APIs, and the snapshot's custom `Debug` output includes metadata only. Replacing any selected path after loading cannot change the snapshot's parsed data or identities.
 
-`InstalledYamlDataLoadError::UnsupportedGame` is returned before cache or installation file access. `NoUsableSource { role, diagnostics }` identifies a required Main or game role after every allowed candidate is exhausted. Existing or authoritative-reread Local Ignore failures remain separately typed for read, UTF-8, parse, and role validation. `LocalIgnoreDefaultInvalid` rejects an unusable selected-Main template before mutation, `LocalIgnoreCreate` reports staging or no-clobber publication failure, and `InvalidSelectedData` covers an invalid final projection into `YamlDataCore`. No failure publishes a partial snapshot.
+If retained Local Ignore bytes are invalid UTF-8, malformed YAML, or invalid for the selected game-data role, loading instead returns `InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(LocalIgnoreRecoveryPlan)`. The immutable plan retains the selected Main/game bytes and metadata, selected game-version mode, selected-Main default state, malformed path and exact-byte identity, and all selection plus malformed-content diagnostics. Valid defaults expose an identity; invalid or unavailable defaults remain explicitly unavailable for a future reset decision but never block the non-mutating Proceed Without Ignore path. Its custom `Debug` output exposes metadata only.
+
+`LocalIgnoreRecoveryPlan::proceed_without_ignore()` consumes the plan and returns the already prepared snapshot without selection, rereads, generation, backup, or writes. The snapshot uses `LocalIgnoreYamlDataState::ProceedWithoutIgnore`, exposes the malformed installed identity for attribution, and supplies an empty `ignore_list` only to that in-memory operation. Main and game still come from the retained selection even if their paths changed while the caller decided. Because the malformed file is unchanged, a later installed load returns recovery required again.
+
+`InstalledYamlDataLoadError::UnsupportedGame` is returned before cache or installation file access. `NoUsableSource { role, diagnostics }` identifies a required Main or game role after every allowed candidate is exhausted. Unrecoverable Local Ignore reads remain `LocalIgnoreRead`; malformed content is not a fatal error. `LocalIgnoreDefaultInvalid` rejects an unusable selected-Main template only when a missing Local Ignore must be generated; it does not replace a recovery-required outcome for an existing malformed file. `LocalIgnoreCreate` reports staging or no-clobber publication failure, and `InvalidSelectedData` covers an invalid final projection into `YamlDataCore`. No failure publishes a partial snapshot.
 
 `load_installed_yaml_data_with_env` injects only cache-environment lookup for isolated tests and tooling. It never consults the developer's process cache when the caller supplies an isolated environment callback; bundled and Local Ignore paths always derive from the request's one installation root.
 

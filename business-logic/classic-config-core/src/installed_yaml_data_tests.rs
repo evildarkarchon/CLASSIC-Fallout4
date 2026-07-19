@@ -208,7 +208,9 @@ fn missing_local_ignore_is_generated_from_the_selected_main_snapshot() {
         isolated_cache_env(cache_root.path()),
     )
     .expect("a missing Local Ignore should be generated from selected Main defaults");
-    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {
+        panic!("generated Local Ignore should return a Ready snapshot");
+    };
 
     assert_eq!(
         snapshot.local_ignore_state(),
@@ -335,7 +337,9 @@ fn deleting_local_ignore_regenerates_it_from_the_new_selected_snapshot() {
     let first =
         load_installed_yaml_data_with_env(request.clone(), isolated_cache_env(cache_root.path()))
             .expect("first run should generate Local Ignore");
-    let InstalledYamlDataLoadOutcome::Ready(first) = first;
+    let InstalledYamlDataLoadOutcome::Ready(first) = first else {
+        panic!("the initial generated Local Ignore should return Ready");
+    };
     assert_eq!(first.yaml_data().ignore_list, ["FirstDefault.dll"]);
 
     std::fs::remove_file(&ignore_path).expect("generated Local Ignore should be deletable");
@@ -347,7 +351,9 @@ fn deleting_local_ignore_regenerates_it_from_the_new_selected_snapshot() {
 
     let second = load_installed_yaml_data_with_env(request, isolated_cache_env(cache_root.path()))
         .expect("accidental deletion should use the successful generation path");
-    let InstalledYamlDataLoadOutcome::Ready(second) = second;
+    let InstalledYamlDataLoadOutcome::Ready(second) = second else {
+        panic!("the valid generated Local Ignore should return Ready on reload");
+    };
 
     assert_eq!(
         second.local_ignore_state(),
@@ -397,7 +403,9 @@ fn concurrent_generation_preserves_one_winner_and_every_loader_rereads_it() {
                 &local_ignore_io,
             )
             .expect("each concurrent loader should become Ready");
-            let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+            let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {
+                panic!("a valid concurrent Local Ignore winner should return Ready");
+            };
             (expected_default, snapshot)
         })
     };
@@ -601,7 +609,9 @@ fn generation_uses_retained_main_when_selected_path_changes_before_publication()
         &local_ignore_io,
     )
     .expect("generation should remain bound to the retained selected Main bytes");
-    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {
+        panic!("a generated Local Ignore from retained Main should return Ready");
+    };
 
     assert_eq!(
         std::fs::read(&main_path).expect("replacement Main should be readable"),
@@ -640,7 +650,9 @@ fn installed_loading_returns_ready_snapshot_with_valid_existing_local_ignore() {
         isolated_cache_env(cache_root.path()),
     )
     .expect("a valid installation should load");
-    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {
+        panic!("valid existing Local Ignore should return Ready");
+    };
 
     assert_eq!(snapshot.game(), GameId::Fallout4);
     assert_eq!(snapshot.game_data_role(), crate::GameDataRole::Fallout4);
@@ -686,7 +698,9 @@ fn installed_snapshot_debug_does_not_expose_retained_content() {
         isolated_cache_env(cache_root.path()),
     )
     .expect("a valid installation should load");
-    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {
+        panic!("valid existing Local Ignore should return Ready");
+    };
     let debug = format!("{snapshot:?}");
 
     assert!(!debug.contains("Bundled autoscan"));
@@ -722,7 +736,9 @@ fn installed_loading_selects_main_and_game_independently() {
         isolated_cache_env(cache_root.path()),
     )
     .expect("independently selectable candidates should load");
-    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {
+        panic!("independently selected valid data should return Ready");
+    };
 
     assert_eq!(
         snapshot.main().provenance(),
@@ -761,7 +777,9 @@ fn installed_snapshot_remains_stable_after_selected_files_change() {
         isolated_cache_env(cache_root.path()),
     )
     .expect("valid selected files should load");
-    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome;
+    let InstalledYamlDataLoadOutcome::Ready(snapshot) = outcome else {
+        panic!("valid selected files should return Ready");
+    };
 
     let databases = bundled_dir(installation.path());
     std::fs::write(databases.join("CLASSIC Main.yaml"), "changed after loading")
@@ -780,6 +798,246 @@ fn installed_snapshot_remains_stable_after_selected_files_change() {
     assert_eq!(snapshot.main().identity().sha256_hex(), MAIN_SHA256);
     assert_eq!(snapshot.game_file().identity().sha256_hex(), GAME_SHA256);
     assert_eq!(snapshot.local_ignore_identity().sha256_hex(), IGNORE_SHA256);
+}
+
+#[test]
+/// Proceed Without Ignore uses retained data and leaves every installation file untouched.
+fn malformed_local_ignore_can_proceed_without_ignore_from_retained_snapshot_without_writes() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    write_bundled_install_with_main(installation.path(), MAIN_WITH_DEFAULT_YAML);
+    let ignore_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated";
+    std::fs::write(&ignore_path, malformed_ignore)
+        .expect("malformed Local Ignore should be written");
+
+    let outcome = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+    )
+    .expect("malformed Local Ignore should require an expected recovery decision");
+    let InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(plan) = outcome else {
+        panic!("malformed Local Ignore should return a recovery plan");
+    };
+
+    assert_eq!(plan.local_ignore_path(), ignore_path);
+    assert_eq!(
+        plan.malformed_local_ignore_identity().sha256_hex(),
+        Sha256::digest(malformed_ignore)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>()
+    );
+    assert_eq!(
+        plan.default_local_ignore_identity()
+            .expect("valid selected-Main defaults should retain an identity")
+            .sha256_hex(),
+        Sha256::digest(DEFAULT_IGNORE_YAML.as_bytes())
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>()
+    );
+    assert!(plan.diagnostics().iter().any(|diagnostic| {
+        diagnostic.role().is_none()
+            && diagnostic.candidate().is_none()
+            && diagnostic.path() == Some(ignore_path.as_path())
+            && diagnostic.kind() == InstalledYamlDataDiagnosticKind::Parse
+    }));
+
+    let databases = bundled_dir(installation.path());
+    let main_path = databases.join("CLASSIC Main.yaml");
+    let game_path = databases.join("CLASSIC Fallout4.yaml");
+    std::fs::write(&main_path, "changed after recovery was requested")
+        .expect("selected Main path should be replaceable");
+    std::fs::write(&game_path, "changed after recovery was requested")
+        .expect("selected game path should be replaceable");
+    let before_proceed = [
+        std::fs::read(&main_path).expect("changed Main should remain readable"),
+        std::fs::read(&game_path).expect("changed game should remain readable"),
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
+    ];
+
+    let snapshot = plan.proceed_without_ignore();
+
+    assert_eq!(snapshot.yaml_data().autoscan_text, "Bundled autoscan");
+    assert_eq!(snapshot.yaml_data().game_root_name, "Fallout 4");
+    assert!(snapshot.yaml_data().ignore_list.is_empty());
+    assert_eq!(
+        snapshot.local_ignore_state(),
+        LocalIgnoreYamlDataState::ProceedWithoutIgnore
+    );
+    assert_eq!(
+        snapshot.local_ignore_identity().sha256_hex(),
+        Sha256::digest(malformed_ignore)
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>()
+    );
+    assert_eq!(
+        [
+            std::fs::read(&main_path).expect("Main should remain readable after proceeding"),
+            std::fs::read(&game_path).expect("game should remain readable after proceeding"),
+            std::fs::read(&ignore_path)
+                .expect("Local Ignore should remain readable after proceeding"),
+        ],
+        before_proceed
+    );
+}
+
+#[test]
+/// Invalid selected-Main defaults do not block the non-mutating proceed recovery decision.
+fn malformed_local_ignore_can_proceed_when_selected_main_defaults_are_unavailable() {
+    let installation = tempdir().expect("installation root should be created");
+    let cache_root = tempdir().expect("cache root should be created");
+    write_bundled_install_with_main(installation.path(), MAIN_YAML);
+    let databases = bundled_dir(installation.path());
+    let main_path = databases.join("CLASSIC Main.yaml");
+    let game_path = databases.join("CLASSIC Fallout4.yaml");
+    let ignore_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated";
+    std::fs::write(&ignore_path, malformed_ignore)
+        .expect("malformed Local Ignore should be written");
+    let original_files = [
+        std::fs::read(&main_path).expect("Main should remain readable"),
+        std::fs::read(&game_path).expect("game should remain readable"),
+        std::fs::read(&ignore_path).expect("Local Ignore should remain readable"),
+    ];
+
+    let outcome = load_installed_yaml_data_with_env(
+        InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        },
+        isolated_cache_env(cache_root.path()),
+    )
+    .expect("malformed Local Ignore should remain recoverable without usable defaults");
+    let InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(plan) = outcome else {
+        panic!("malformed Local Ignore should return a recovery plan");
+    };
+    assert!(plan.default_local_ignore_identity().is_none());
+
+    let snapshot = plan.proceed_without_ignore();
+
+    assert!(snapshot.yaml_data().ignore_list.is_empty());
+    assert_eq!(
+        [
+            std::fs::read(&main_path).expect("Main should remain readable after proceed"),
+            std::fs::read(&game_path).expect("game should remain readable after proceed"),
+            std::fs::read(&ignore_path).expect("Local Ignore should remain readable after proceed"),
+        ],
+        original_files
+    );
+}
+
+#[test]
+/// Every malformed Local Ignore shape requires recovery again after operation-scoped proceed.
+fn malformed_local_ignore_recovery_is_operation_scoped_and_never_mutates_files() {
+    let cases = [
+        (
+            "invalid-utf8",
+            vec![0xff],
+            InstalledYamlDataDiagnosticKind::InvalidUtf8,
+        ),
+        (
+            "malformed-yaml",
+            b"CLASSIC_Ignore_Fallout4: [unterminated".to_vec(),
+            InstalledYamlDataDiagnosticKind::Parse,
+        ),
+        (
+            "invalid-role-data",
+            b"CLASSIC_Ignore_Fallout4: not-a-sequence\n".to_vec(),
+            InstalledYamlDataDiagnosticKind::InvalidRoleData,
+        ),
+    ];
+
+    for (case, malformed_ignore, expected_kind) in cases {
+        let installation = tempdir().expect("installation root should be created");
+        let cache_root = tempdir().expect("cache root should be created");
+        write_bundled_install_with_main(installation.path(), MAIN_WITH_DEFAULT_YAML);
+        let databases = bundled_dir(installation.path());
+        let main_path = databases.join("CLASSIC Main.yaml");
+        let game_path = databases.join("CLASSIC Fallout4.yaml");
+        let ignore_path = installation
+            .path()
+            .join("CLASSIC Data")
+            .join("CLASSIC Ignore.yaml");
+        std::fs::write(&ignore_path, &malformed_ignore)
+            .expect("malformed Local Ignore should be written");
+        let original_files = [
+            std::fs::read(&main_path).expect("Main should remain readable"),
+            std::fs::read(&game_path).expect("game should remain readable"),
+            std::fs::read(&ignore_path).expect("Local Ignore should remain readable"),
+        ];
+        let request = InstalledYamlDataLoadRequest {
+            installation_root: installation.path().to_path_buf(),
+            game: GameId::Fallout4,
+            selected_game_version: "Original".to_string(),
+        };
+
+        let first = load_installed_yaml_data_with_env(
+            request.clone(),
+            isolated_cache_env(cache_root.path()),
+        )
+        .unwrap_or_else(|error| panic!("{case} should require recovery, got {error}"));
+        let InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(plan) = first else {
+            panic!("{case} should return Local Ignore recovery required");
+        };
+        assert_eq!(
+            plan.malformed_local_ignore_identity().byte_len(),
+            malformed_ignore.len() as u64,
+            "{case}"
+        );
+        assert!(
+            plan.diagnostics()
+                .iter()
+                .any(|diagnostic| diagnostic.kind() == expected_kind),
+            "{case}"
+        );
+
+        let snapshot = plan.proceed_without_ignore();
+        assert!(snapshot.yaml_data().ignore_list.is_empty(), "{case}");
+        assert_eq!(
+            [
+                std::fs::read(&main_path).expect("Main should remain readable after proceed"),
+                std::fs::read(&game_path).expect("game should remain readable after proceed"),
+                std::fs::read(&ignore_path)
+                    .expect("Local Ignore should remain readable after proceed"),
+            ],
+            original_files,
+            "{case}"
+        );
+
+        let second =
+            load_installed_yaml_data_with_env(request, isolated_cache_env(cache_root.path()))
+                .unwrap_or_else(|error| {
+                    panic!("{case} should require recovery again, got {error}")
+                });
+        let InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(second_plan) = second else {
+            panic!("{case} should require a new recovery decision on the next operation");
+        };
+        assert_eq!(
+            second_plan.malformed_local_ignore_identity(),
+            snapshot.local_ignore_identity(),
+            "{case}"
+        );
+        assert_eq!(
+            std::fs::read(&ignore_path)
+                .expect("malformed Local Ignore should remain readable after reload"),
+            malformed_ignore,
+            "{case}"
+        );
+    }
 }
 
 #[test]

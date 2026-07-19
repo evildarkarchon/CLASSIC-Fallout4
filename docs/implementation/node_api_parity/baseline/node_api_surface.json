@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-18T08:57:37.023478+00:00",
+  "generated_at_utc": "2026-07-19T01:49:13.815009+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -1923,6 +1923,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsYamlUpdateStatus {"
+    },
+    {
+      "export": "LocalIgnoreRecoveryPlan",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class LocalIgnoreRecoveryPlan {"
     },
     {
       "export": "MAX_CACHE_TTL",

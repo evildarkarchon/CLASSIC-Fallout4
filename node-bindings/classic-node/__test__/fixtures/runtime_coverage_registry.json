@@ -295,13 +295,14 @@
         "JsInstalledYamlDataLoadRequest",
         "JsInstalledYamlDataLoadStatus",
         "JsLocalIgnoreYamlDataState",
+        "LocalIgnoreRecoveryPlan",
         "loadInstalledYamlData"
       ],
       "verificationMode": "direct_call",
       "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
       "testCaseId": "installed-yaml-data-loading-runtime",
       "fixtureRefs": [],
-      "notes": "Exercises the typed Ready snapshot, parsed YAML Data, exact-byte identities, Main/game metadata, existing Local Ignore state, immutable retained data, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, the opaque single-use recovery plan, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "coverageId": "node-tier2-config-game-local-runtime",

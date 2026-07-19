@@ -486,7 +486,9 @@ class InstalledYamlDataSnapshot:
     @property
     def game_file(self) -> InspectedYamlDataFile: ...
     @property
-    def local_ignore_state(self) -> Literal["existing", "generated"]: ...
+    def local_ignore_state(
+        self,
+    ) -> Literal["existing", "generated", "proceed_without_ignore"]: ...
     @property
     def local_ignore_identity(self) -> YamlDataContentIdentity: ...
     @property
@@ -499,6 +501,47 @@ class InstalledYamlDataLoadOutcome:
     def status(self) -> Literal["ready"]: ...
     @property
     def snapshot(self) -> InstalledYamlDataSnapshot: ...
+
+class LocalIgnoreRecoveryPlan:
+    """Opaque, read-only recovery proposal that owns one consumable Rust plan.
+
+    Every property and ``proceed_without_ignore`` raises ``RuntimeError`` after
+    the plan has been consumed by a successful proceed decision.
+    """
+
+    @property
+    def game(self) -> ExplicitYamlDataGame: ...
+    @property
+    def game_data_role(self) -> Literal["Fallout4"]: ...
+    @property
+    def main(self) -> InspectedYamlDataFile: ...
+    @property
+    def game_file(self) -> InspectedYamlDataFile: ...
+    @property
+    def local_ignore_path(self) -> Path: ...
+    @property
+    def malformed_local_ignore_identity(self) -> YamlDataContentIdentity: ...
+    @property
+    def default_local_ignore_identity(self) -> YamlDataContentIdentity | None: ...
+    @property
+    def selected_game_version(self) -> str: ...
+    @property
+    def diagnostics(self) -> list[InstalledYamlDataDiagnostic]: ...
+
+    def proceed_without_ignore(self) -> InstalledYamlDataSnapshot:
+        """Consume the plan and return its retained snapshot with no ignore entries.
+
+        Raises:
+            RuntimeError: This plan was already consumed by an earlier proceed decision.
+        """
+
+class InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome:
+    """Typed expected outcome containing one Local Ignore recovery plan."""
+
+    @property
+    def status(self) -> Literal["local_ignore_recovery_required"]: ...
+    @property
+    def recovery_plan(self) -> LocalIgnoreRecoveryPlan: ...
 
 class InstalledYamlDataInspectionError(Exception):
     """Base class for Installed YAML Data inspection failures."""
@@ -521,13 +564,6 @@ class InstalledYamlDataLoadError(Exception):
 class InstalledYamlDataLoadUnsupportedGameError(InstalledYamlDataLoadError): ...
 class InstalledYamlDataLoadNoUsableSourceError(InstalledYamlDataLoadError): ...
 class InstalledYamlDataLoadLocalIgnoreReadError(InstalledYamlDataLoadError): ...
-class InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error(
-    InstalledYamlDataLoadError
-): ...
-class InstalledYamlDataLoadLocalIgnoreParseError(InstalledYamlDataLoadError): ...
-class InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError(
-    InstalledYamlDataLoadError
-): ...
 class InstalledYamlDataLoadLocalIgnoreDefaultInvalidError(
     InstalledYamlDataLoadError
 ): ...
@@ -553,22 +589,22 @@ def load_installed_yaml_data(
     installation_root: str | Path,
     game: ExplicitYamlDataGame,
     selected_game_version: str,
-) -> InstalledYamlDataLoadOutcome:
-    """Load a Ready immutable snapshot, generating Local Ignore when missing.
+) -> (
+    InstalledYamlDataLoadOutcome
+    | InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome
+):
+    """Load a Ready immutable snapshot or a Local Ignore recovery proposal.
 
     Main and game are independently selected by Rust core. The returned snapshot owns
     the exact selected bytes and remains stable if any selected path later changes.
     Existing Local Ignore data is preserved; a missing file is initialized atomically
-    from the selected Main snapshot's strictly validated defaults.
+    from the selected Main snapshot's strictly validated defaults. Malformed existing
+    Local Ignore returns a recovery-required outcome instead of raising or changing disk.
 
     Raises:
         InstalledYamlDataLoadUnsupportedGameError: The game has no registered data role.
         InstalledYamlDataLoadNoUsableSourceError: No usable Main or game source exists.
         InstalledYamlDataLoadLocalIgnoreReadError: Local Ignore cannot be read.
-        InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error: Local Ignore is not UTF-8.
-        InstalledYamlDataLoadLocalIgnoreParseError: Local Ignore is malformed YAML.
-        InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError: Local Ignore violates its
-            role contract.
         InstalledYamlDataLoadLocalIgnoreDefaultInvalidError: Selected Main defaults
             cannot safely initialize Local Ignore.
         InstalledYamlDataLoadLocalIgnoreCreateError: Missing Local Ignore cannot be

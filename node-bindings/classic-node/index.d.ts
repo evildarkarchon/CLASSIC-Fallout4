@@ -1238,6 +1238,40 @@ export declare class JsXseChecker {
   validate(): string
 }
 
+/** Opaque single-use recovery proposal for malformed existing Local Ignore YAML Data. */
+export declare class LocalIgnoreRecoveryPlan {
+  /** Returns the typed game retained by the already selected snapshot. */
+  get game(): JsGameId
+  /** Returns the registered game-data role retained by the already selected snapshot. */
+  get gameDataRole(): JsInstalledYamlDataGameRole
+  /** Returns metadata for the retained independently selected Main YAML Data. */
+  get main(): JsInspectedYamlDataFile
+  /** Returns metadata for the retained independently selected game YAML Data. */
+  get gameFile(): JsInspectedYamlDataFile
+  /** Returns the canonical malformed Local Ignore path observed by this plan. */
+  get localIgnorePath(): string
+  /** Returns the identity of the exact malformed Local Ignore bytes observed by this plan. */
+  get malformedLocalIgnoreIdentity(): JsYamlDataContentIdentity
+  /**
+   * Returns the identity of validated selected-Main defaults, or `null` when unavailable.
+   *
+   * Missing or invalid defaults do not block proceeding because malformed installed Local
+   * Ignore bytes are never replaced during this recovery operation.
+   */
+  get defaultLocalIgnoreIdentity(): JsYamlDataContentIdentity | null
+  /** Returns the Version Registry selection mode retained for the interrupted operation. */
+  get selectedGameVersion(): string
+  /** Returns retained selection and malformed Local Ignore diagnostics. */
+  get diagnostics(): Array<JsInstalledYamlDataDiagnostic>
+  /**
+   * Completes the retained operation with no Local Ignore entries and no filesystem writes.
+   *
+   * This decision consumes the plan. Reusing the same JavaScript plan rejects with the stable
+   * `local_ignore_recovery_plan_consumed` error code instead of re-running the operation.
+   */
+  proceedWithoutIgnore(): InstalledYamlDataSnapshot
+}
+
 /** Immutable Node handle over validated aggregate Mod Guidance configuration. */
 export declare class ModGuidanceAnalyzer {
   /**
@@ -3723,12 +3757,14 @@ export interface JsInstalledYamlDataInspectionRequest {
   game: JsGameId
 }
 
-/** Typed Ready outcome from Installed YAML Data loading. */
+/** Typed Installed YAML Data loading outcome with one status-selected payload. */
 export interface JsInstalledYamlDataLoadOutcome {
   /** Stable expected-outcome discriminator. */
   status: JsInstalledYamlDataLoadStatus
-  /** Immutable snapshot retained by the Ready outcome. */
-  snapshot: InstalledYamlDataSnapshot
+  /** Immutable snapshot populated only for the Ready outcome. */
+  snapshot?: InstalledYamlDataSnapshot
+  /** Opaque plan populated only when Local Ignore recovery is required. */
+  recoveryPlan?: LocalIgnoreRecoveryPlan
 }
 
 /** One installation root, typed game, and Version Registry selection mode to load. */
@@ -3744,7 +3780,9 @@ export interface JsInstalledYamlDataLoadRequest {
 /** Expected Installed YAML Data loading outcome. */
 export declare const enum JsInstalledYamlDataLoadStatus {
   /** Main, game, and valid Local Ignore data are ready for use. */
-  Ready = 'Ready'
+  Ready = 'Ready',
+  /** Existing Local Ignore data is malformed and requires an explicit caller decision. */
+  LocalIgnoreRecoveryRequired = 'localIgnoreRecoveryRequired'
 }
 
 /** Candidate that supplied one selected Installed YAML Data file. */
@@ -3844,7 +3882,9 @@ export declare const enum JsLocalIgnoreYamlDataState {
   /** A valid user-owned Local Ignore file already existed. */
   Existing = 'Existing',
   /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
-  Generated = 'Generated'
+  Generated = 'Generated',
+  /** The current operation explicitly proceeded with no Local Ignore entries. */
+  ProceedWithoutIgnore = 'ProceedWithoutIgnore'
 }
 
 /** Log error entry detected during scanning. */
@@ -5182,10 +5222,11 @@ export declare function loadBatchSync(paths: Array<string>): number
 export declare function loadExplicitYamlData(paths: JsExplicitYamlDataPaths, game: JsGameId, selectedGameVersion: string): Promise<ExplicitYamlDataSnapshot>
 
 /**
- * Load one immutable Installed YAML Data snapshot with valid existing-or-generated Local Ignore content.
+ * Load one immutable Installed YAML Data outcome with Ready or recovery-required content.
  *
  * Config core owns selection, compatibility, parsing, and filesystem policy. This adapter
  * performs only request/result projection and runs blocking file I/O on N-API's worker pool.
+ * Malformed existing Local Ignore data resolves a recovery plan instead of rejecting.
  *
  * @param request - Installation root, typed game identity, and game-version mode.
  * @throws an error with stable `code` plus role, path, or diagnostics metadata when applicable.

@@ -55,15 +55,15 @@ pub enum InstalledYamlDataDiagnosticKind {
     Missing,
     /// A present candidate could not be read.
     Read,
-    /// Candidate bytes were not valid UTF-8.
+    /// Candidate or Local Ignore bytes were not valid UTF-8.
     InvalidUtf8,
-    /// Candidate text was not valid YAML Data.
+    /// Candidate or Local Ignore text was not valid YAML Data.
     Parse,
     /// A parsed candidate omitted or malformed its schema version.
     InvalidSchema,
     /// A candidate schema was outside the client-owned compatibility range.
     IncompatibleSchema,
-    /// A candidate failed role-specific semantic validation.
+    /// A candidate or Local Ignore document failed role-specific semantic validation.
     InvalidRoleData,
     /// Missing Local Ignore YAML Data was generated from selected Main defaults.
     LocalIgnoreGenerated,
@@ -173,6 +173,8 @@ pub enum LocalIgnoreYamlDataState {
     Existing,
     /// Missing Local Ignore YAML Data was generated from selected Main defaults.
     Generated,
+    /// Malformed Local Ignore bytes were retained but ignored for this operation only.
+    ProceedWithoutIgnore,
 }
 
 /// Selected update-eligible YAML Data facts from one inspection.
@@ -205,6 +207,16 @@ struct SelectedInstalledYamlData {
 struct OwnedLocalIgnoreYamlData {
     bytes: Box<[u8]>,
     identity: YamlDataContentIdentity,
+}
+
+enum OwnedLocalIgnoreDefaults {
+    Valid {
+        bytes: Box<[u8]>,
+        identity: YamlDataContentIdentity,
+    },
+    Unavailable {
+        reason: String,
+    },
 }
 
 /// Private filesystem seam for deterministic Local Ignore publication and reread tests.
@@ -247,6 +259,17 @@ pub struct InstalledYamlDataSnapshot {
     local_ignore: OwnedLocalIgnoreYamlData,
     local_ignore_state: LocalIgnoreYamlDataState,
     diagnostics: Vec<InstalledYamlDataDiagnostic>,
+}
+
+/// Immutable recovery proposal for malformed existing Local Ignore YAML Data.
+///
+/// The plan owns the already selected Main and game snapshot, the exact malformed bytes,
+/// and the selected-Main default state. Accepting a decision never reselects files.
+pub struct LocalIgnoreRecoveryPlan {
+    proceed_without_ignore_snapshot: InstalledYamlDataSnapshot,
+    local_ignore_path: PathBuf,
+    default_local_ignore: OwnedLocalIgnoreDefaults,
+    selected_game_version: String,
 }
 
 // A custom formatter prevents private retained bytes and parsed YAML documents from becoming
@@ -304,6 +327,9 @@ impl InstalledYamlDataSnapshot {
     }
 
     /// Return the identity derived from the exact retained Local Ignore bytes.
+    ///
+    /// For [`LocalIgnoreYamlDataState::ProceedWithoutIgnore`], this identifies the malformed
+    /// installed bytes retained for recovery attribution; the current operation uses no entries.
     #[must_use]
     pub const fn local_ignore_identity(&self) -> &YamlDataContentIdentity {
         &self.local_ignore.identity
@@ -316,11 +342,124 @@ impl InstalledYamlDataSnapshot {
     }
 }
 
+// A custom formatter keeps retained malformed/default bytes and parsed YAML documents private.
+impl std::fmt::Debug for LocalIgnoreRecoveryPlan {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("LocalIgnoreRecoveryPlan")
+            .field("game", &self.proceed_without_ignore_snapshot.game())
+            .field("main", &self.proceed_without_ignore_snapshot.main())
+            .field(
+                "game_file",
+                &self.proceed_without_ignore_snapshot.game_file(),
+            )
+            .field("local_ignore_path", &self.local_ignore_path)
+            .field(
+                "malformed_local_ignore_identity",
+                &self.proceed_without_ignore_snapshot.local_ignore_identity(),
+            )
+            .field(
+                "default_local_ignore_identity",
+                &self.default_local_ignore_identity(),
+            )
+            .field(
+                "default_local_ignore_unavailable_reason",
+                &match &self.default_local_ignore {
+                    OwnedLocalIgnoreDefaults::Valid { .. } => None,
+                    OwnedLocalIgnoreDefaults::Unavailable { reason } => Some(reason),
+                },
+            )
+            .field("selected_game_version", &self.selected_game_version)
+            .field(
+                "diagnostics",
+                &self.proceed_without_ignore_snapshot.diagnostics(),
+            )
+            .finish_non_exhaustive()
+    }
+}
+
+impl LocalIgnoreRecoveryPlan {
+    /// Return the typed game retained by the already selected snapshot.
+    #[must_use]
+    pub const fn game(&self) -> GameId {
+        self.proceed_without_ignore_snapshot.game()
+    }
+
+    /// Return the registered game-data role retained by the already selected snapshot.
+    #[must_use]
+    pub const fn game_data_role(&self) -> GameDataRole {
+        self.proceed_without_ignore_snapshot.game_data_role()
+    }
+
+    /// Return the retained independently selected Main file facts.
+    #[must_use]
+    pub const fn main(&self) -> &InspectedYamlDataFile {
+        self.proceed_without_ignore_snapshot.main()
+    }
+
+    /// Return the retained independently selected game file facts.
+    #[must_use]
+    pub const fn game_file(&self) -> &InspectedYamlDataFile {
+        self.proceed_without_ignore_snapshot.game_file()
+    }
+
+    /// Return the canonical malformed Local Ignore path observed by this plan.
+    #[must_use]
+    pub fn local_ignore_path(&self) -> &Path {
+        &self.local_ignore_path
+    }
+
+    /// Return the identity of the exact malformed Local Ignore bytes observed by this plan.
+    #[must_use]
+    pub const fn malformed_local_ignore_identity(&self) -> &YamlDataContentIdentity {
+        self.proceed_without_ignore_snapshot.local_ignore_identity()
+    }
+
+    /// Return the identity of validated selected-Main defaults retained for recovery, if usable.
+    ///
+    /// Invalid or unavailable defaults do not prevent Proceed Without Ignore because that
+    /// decision does not read or publish them.
+    #[must_use]
+    pub fn default_local_ignore_identity(&self) -> Option<&YamlDataContentIdentity> {
+        match &self.default_local_ignore {
+            OwnedLocalIgnoreDefaults::Valid { bytes, identity } => {
+                debug_assert_eq!(bytes.len() as u64, identity.byte_len());
+                Some(identity)
+            }
+            OwnedLocalIgnoreDefaults::Unavailable { .. } => None,
+        }
+    }
+
+    /// Return the retained Version Registry selection mode for the interrupted operation.
+    #[must_use]
+    pub fn selected_game_version(&self) -> &str {
+        &self.selected_game_version
+    }
+
+    /// Return retained selection and malformed Local Ignore diagnostics.
+    #[must_use]
+    pub fn diagnostics(&self) -> &[InstalledYamlDataDiagnostic] {
+        self.proceed_without_ignore_snapshot.diagnostics()
+    }
+
+    /// Complete the retained operation with no Local Ignore entries and no filesystem writes.
+    ///
+    /// The returned snapshot owns the same selected Main/game bytes and malformed-file identity
+    /// captured when recovery became necessary. The empty ignore list applies only to this
+    /// snapshot; a later installed load will encounter the malformed file again.
+    #[must_use]
+    pub fn proceed_without_ignore(self) -> InstalledYamlDataSnapshot {
+        self.proceed_without_ignore_snapshot
+    }
+}
+
 /// Expected outcomes from loading Installed YAML Data.
 #[derive(Debug)]
 pub enum InstalledYamlDataLoadOutcome {
     /// Main, game, and valid Local Ignore data were loaded into one immutable snapshot.
     Ready(InstalledYamlDataSnapshot),
+    /// Existing Local Ignore data is malformed and requires an explicit caller decision.
+    LocalIgnoreRecoveryRequired(LocalIgnoreRecoveryPlan),
 }
 
 impl InstalledYamlDataInspection {
@@ -399,31 +538,6 @@ pub enum InstalledYamlDataLoadError {
         /// Underlying filesystem failure.
         #[source]
         source: std::io::Error,
-    },
-    /// Existing Local Ignore bytes were not valid UTF-8.
-    #[error("Local Ignore YAML Data `{}` is not UTF-8: {source}", path.display())]
-    LocalIgnoreInvalidUtf8 {
-        /// Existing Local Ignore path.
-        path: PathBuf,
-        /// Underlying UTF-8 failure.
-        #[source]
-        source: std::str::Utf8Error,
-    },
-    /// Existing Local Ignore content could not be parsed as YAML.
-    #[error("failed to parse Local Ignore YAML Data `{}`: {message}", path.display())]
-    LocalIgnoreParse {
-        /// Existing Local Ignore path.
-        path: PathBuf,
-        /// Parser failure details.
-        message: String,
-    },
-    /// Existing Local Ignore content did not satisfy its role contract.
-    #[error("Local Ignore YAML Data `{}` is invalid: {reason}", path.display())]
-    LocalIgnoreInvalidRoleData {
-        /// Existing Local Ignore path.
-        path: PathBuf,
-        /// Stable validation details.
-        reason: String,
     },
     /// Selected Main defaults could not safely initialize missing Local Ignore YAML Data.
     #[error("selected Main default for Local Ignore YAML Data `{}` is invalid: {reason}", path.display())]
@@ -572,24 +686,71 @@ where
         identity: YamlDataContentIdentity::from_bytes(&ignore_bytes),
         bytes: ignore_bytes.into_boxed_slice(),
     };
-    let ignore_content = std::str::from_utf8(&local_ignore.bytes).map_err(|source| {
-        InstalledYamlDataLoadError::LocalIgnoreInvalidUtf8 {
-            path: ignore_path.clone(),
-            source,
+    let ignore_content = match std::str::from_utf8(&local_ignore.bytes) {
+        Ok(content) => content,
+        Err(source) => {
+            return local_ignore_recovery_required(
+                selected,
+                local_ignore,
+                ignore_path,
+                request.selected_game_version,
+                InstalledYamlDataDiagnosticKind::InvalidUtf8,
+                format!("existing Local Ignore YAML Data is not UTF-8: {source}"),
+            );
         }
-    })?;
-    let ignore_yaml =
-        parse_and_merge_yaml_content("Local Ignore YAML", "Local Ignore YAML", ignore_content)
-            .map_err(|source| InstalledYamlDataLoadError::LocalIgnoreParse {
-                path: ignore_path.clone(),
-                message: source.to_string(),
-            })?;
-    validate_ignore(&ignore_yaml, selected.game_data_role, &ignore_path).map_err(|source| {
-        InstalledYamlDataLoadError::LocalIgnoreInvalidRoleData {
-            path: ignore_path,
-            reason: explicit_validation_reason(source),
+    };
+    let ignore_yaml = match parse_and_merge_yaml_content(
+        "Local Ignore YAML",
+        "Local Ignore YAML",
+        ignore_content,
+    ) {
+        Ok(yaml) => yaml,
+        Err(source) => {
+            return local_ignore_recovery_required(
+                selected,
+                local_ignore,
+                ignore_path,
+                request.selected_game_version,
+                InstalledYamlDataDiagnosticKind::Parse,
+                format!("existing Local Ignore YAML Data could not be parsed: {source}"),
+            );
         }
-    })?;
+    };
+    if let Err(source) = validate_ignore(&ignore_yaml, selected.game_data_role, &ignore_path) {
+        return local_ignore_recovery_required(
+            selected,
+            local_ignore,
+            ignore_path,
+            request.selected_game_version,
+            InstalledYamlDataDiagnosticKind::InvalidRoleData,
+            format!(
+                "existing Local Ignore YAML Data is invalid: {}",
+                explicit_validation_reason(source)
+            ),
+        );
+    }
+    let snapshot = build_installed_yaml_data_snapshot(
+        selected,
+        local_ignore,
+        local_ignore_state,
+        &ignore_yaml,
+        &request.selected_game_version,
+    )?;
+
+    Ok(InstalledYamlDataLoadOutcome::Ready(snapshot))
+}
+
+/// Build the immutable operation snapshot from already retained selected data.
+///
+/// Callers supply the operation's Local Ignore document explicitly, which lets recovery use an
+/// in-memory empty document without reopening or changing any installation path.
+fn build_installed_yaml_data_snapshot(
+    selected: SelectedInstalledYamlData,
+    local_ignore: OwnedLocalIgnoreYamlData,
+    local_ignore_state: LocalIgnoreYamlDataState,
+    ignore_yaml: &Yaml,
+    selected_game_version: &str,
+) -> Result<InstalledYamlDataSnapshot, InstalledYamlDataLoadError> {
     // Keep the retained byte buffers tied to the public identities even after parsing.
     debug_assert_eq!(
         selected.main.bytes.len() as u64,
@@ -599,27 +760,83 @@ where
         selected.game_file.bytes.len() as u64,
         selected.game_file.inspected.identity().byte_len()
     );
+    debug_assert_eq!(
+        local_ignore.bytes.len() as u64,
+        local_ignore.identity.byte_len()
+    );
     let yaml_data = YamlDataCore::build_from_yaml_documents(
         &selected.main.yaml,
         &selected.game_file.yaml,
-        &ignore_yaml,
+        ignore_yaml,
         game_data_key(selected.game_data_role),
-        &request.selected_game_version,
+        selected_game_version,
     )
     .map_err(|source| InstalledYamlDataLoadError::InvalidSelectedData {
         message: source.to_string(),
     })?;
 
-    Ok(InstalledYamlDataLoadOutcome::Ready(
-        InstalledYamlDataSnapshot {
-            yaml_data,
-            requested_game: selected.requested_game,
-            game_data_role: selected.game_data_role,
-            main: selected.main,
-            game_file: selected.game_file,
-            local_ignore,
-            local_ignore_state,
-            diagnostics: selected.diagnostics,
+    Ok(InstalledYamlDataSnapshot {
+        yaml_data,
+        requested_game: selected.requested_game,
+        game_data_role: selected.game_data_role,
+        main: selected.main,
+        game_file: selected.game_file,
+        local_ignore,
+        local_ignore_state,
+        diagnostics: selected.diagnostics,
+    })
+}
+
+/// Return an immutable recovery plan without re-reading or rewriting malformed Local Ignore data.
+fn local_ignore_recovery_required(
+    mut selected: SelectedInstalledYamlData,
+    malformed_local_ignore: OwnedLocalIgnoreYamlData,
+    local_ignore_path: PathBuf,
+    selected_game_version: String,
+    kind: InstalledYamlDataDiagnosticKind,
+    message: String,
+) -> Result<InstalledYamlDataLoadOutcome, InstalledYamlDataLoadError> {
+    // Proceed Without Ignore never reads or publishes defaults. Preserve their validity state for
+    // a later reset decision without turning this non-mutating recovery choice into a fatal load.
+    let default_local_ignore = match validate_local_ignore_defaults(&selected, &local_ignore_path) {
+        Ok(defaults) => {
+            let bytes = defaults.as_bytes().to_vec().into_boxed_slice();
+            OwnedLocalIgnoreDefaults::Valid {
+                identity: YamlDataContentIdentity::from_bytes(&bytes),
+                bytes,
+            }
+        }
+        Err(reason) => OwnedLocalIgnoreDefaults::Unavailable { reason },
+    };
+    selected.diagnostics.push(InstalledYamlDataDiagnostic {
+        role: None,
+        candidate: None,
+        path: Some(local_ignore_path.clone()),
+        kind,
+        message,
+    });
+    let mut empty_ignore_mapping = yaml_rust2::yaml::Hash::new();
+    empty_ignore_mapping.insert(
+        Yaml::String(format!(
+            "CLASSIC_Ignore_{}",
+            game_data_key(selected.game_data_role)
+        )),
+        Yaml::Array(Vec::new()),
+    );
+    let proceed_without_ignore_snapshot = build_installed_yaml_data_snapshot(
+        selected,
+        malformed_local_ignore,
+        LocalIgnoreYamlDataState::ProceedWithoutIgnore,
+        &Yaml::Hash(empty_ignore_mapping),
+        &selected_game_version,
+    )?;
+
+    Ok(InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(
+        LocalIgnoreRecoveryPlan {
+            proceed_without_ignore_snapshot,
+            local_ignore_path,
+            default_local_ignore,
+            selected_game_version,
         },
     ))
 }
@@ -632,6 +849,19 @@ fn validated_local_ignore_defaults<'a>(
     selected: &'a SelectedInstalledYamlData,
     ignore_path: &Path,
 ) -> Result<&'a str, InstalledYamlDataLoadError> {
+    validate_local_ignore_defaults(selected, ignore_path).map_err(|reason| {
+        InstalledYamlDataLoadError::LocalIgnoreDefaultInvalid {
+            path: ignore_path.to_path_buf(),
+            reason,
+        }
+    })
+}
+
+/// Validate selected-Main Local Ignore defaults without deciding how a caller classifies failure.
+fn validate_local_ignore_defaults<'a>(
+    selected: &'a SelectedInstalledYamlData,
+    ignore_path: &Path,
+) -> Result<&'a str, String> {
     let defaults = selected
         .main
         .yaml
@@ -651,28 +881,18 @@ fn validated_local_ignore_defaults<'a>(
             })
         })
         .filter(|defaults| !defaults.trim().is_empty())
-        .ok_or_else(|| InstalledYamlDataLoadError::LocalIgnoreDefaultInvalid {
-            path: ignore_path.to_path_buf(),
-            reason: "required `CLASSIC_Info.default_ignorefile` non-empty string is missing or malformed"
-                .to_string(),
+        .ok_or_else(|| {
+            "required `CLASSIC_Info.default_ignorefile` non-empty string is missing or malformed"
+                .to_string()
         })?;
     let yaml = parse_and_merge_yaml_content(
         "selected Main Local Ignore default",
         "Selected Main Local Ignore Default",
         defaults,
     )
-    .map_err(
-        |source| InstalledYamlDataLoadError::LocalIgnoreDefaultInvalid {
-            path: ignore_path.to_path_buf(),
-            reason: source.to_string(),
-        },
-    )?;
-    validate_ignore(&yaml, selected.game_data_role, ignore_path).map_err(|source| {
-        InstalledYamlDataLoadError::LocalIgnoreDefaultInvalid {
-            path: ignore_path.to_path_buf(),
-            reason: explicit_validation_reason(source),
-        }
-    })?;
+    .map_err(|source| source.to_string())?;
+    validate_ignore(&yaml, selected.game_data_role, ignore_path)
+        .map_err(explicit_validation_reason)?;
     Ok(defaults)
 }
 

@@ -143,15 +143,17 @@ All three surfaces delegate role selection, validation, and error classification
 
 Rejected candidates are diagnostic evidence only: adapters do not promote, repair, rewrite, or remove them.
 
-### Installed YAML Data loading errors
+### Installed YAML Data loading outcomes and errors
 
-`classic_config_core::load_installed_yaml_data` returns `InstalledYamlDataLoadOutcome::Ready` for a valid installation with existing Local Ignore YAML Data or after atomic generation from strictly validated selected-Main defaults. Fatal Rust errors preserve `UnsupportedGame` and `NoUsableSource { role, diagnostics }` as direct typed variants rather than wrapping inspection errors. Local Ignore failures are attributed by `LocalIgnoreRead`, `LocalIgnoreInvalidUtf8`, `LocalIgnoreParse`, or `LocalIgnoreInvalidRoleData`; `LocalIgnoreDefaultInvalid` fails before staging, `LocalIgnoreCreate` covers staging/sync/no-clobber publication, and `InvalidSelectedData` covers failure to build the final parsed view after role validation.
+`classic_config_core::load_installed_yaml_data` returns `InstalledYamlDataLoadOutcome::Ready` for a valid installation with existing Local Ignore YAML Data or after atomic generation from strictly validated selected-Main defaults. Existing Local Ignore bytes that are invalid UTF-8, malformed YAML, or invalid for the selected role return `InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired`; this is expected result data, not an error. The retained plan's `proceed_without_ignore()` path returns an operation-scoped empty ignore list without filesystem mutation.
+
+Fatal Rust errors preserve `UnsupportedGame` and `NoUsableSource { role, diagnostics }` as direct typed variants rather than wrapping inspection errors. `LocalIgnoreRead` identifies unrecoverable filesystem access, `LocalIgnoreDefaultInvalid` fails before generation when a missing Local Ignore has unusable selected-Main defaults, `LocalIgnoreCreate` covers staging/sync/no-clobber publication, and `InvalidSelectedData` covers failure to build the final parsed view. Invalid defaults never turn an existing malformed Local Ignore into a fatal result because Proceed Without Ignore does not use them.
 
 | Binding | Failure shape |
 | --- | --- |
-| C++ (CXX) | `installed_yaml_data_load_status()` returns `InstalledYamlDataLoadErrorDto` with an exhaustive typed kind, optional load-specific Main/game/Local Ignore role, optional path, no-usable-source diagnostics, and message before a Ready snapshot can be consumed. |
-| Node (NAPI-RS) | `loadInstalledYamlData(...)` rejects with stable `code`: `unsupported_game`, `no_usable_source`, `local_ignore_read`, `local_ignore_invalid_utf8`, `local_ignore_parse`, `local_ignore_invalid_role_data`, `local_ignore_default_invalid`, `local_ignore_create`, or `invalid_selected_data`. Applicable errors also carry `yamlRole`, `path`, and `diagnostics`. |
-| Python (PyO3) | `classic_config.load_installed_yaml_data(...)` raises the matching dedicated subclass of `InstalledYamlDataLoadError`, including `InstalledYamlDataLoadLocalIgnoreDefaultInvalidError` and `InstalledYamlDataLoadLocalIgnoreCreateError`. Every instance exposes the same lowercase `code` and applicable `yaml_role`, `path`, and `diagnostics` attributes. |
+| C++ (CXX) | `installed_yaml_data_load_status()` distinguishes Ready, Local Ignore Recovery Required, and fatal error before the operation is consumed. Fatal `InstalledYamlDataLoadErrorDto` values retain an exhaustive kind, optional load-specific Main/game/Local Ignore role, optional path, no-usable-source diagnostics, and message. |
+| Node (NAPI-RS) | `loadInstalledYamlData(...)` resolves malformed content as a typed recovery-required outcome. Fatal rejections use `unsupported_game`, `no_usable_source`, `local_ignore_read`, `local_ignore_default_invalid`, `local_ignore_create`, or `invalid_selected_data`, plus applicable `yamlRole`, `path`, and `diagnostics`. |
+| Python (PyO3) | `classic_config.load_installed_yaml_data(...)` returns a typed recovery-required outcome for malformed content. Fatal failures raise the matching dedicated `InstalledYamlDataLoadError` subclass; every instance exposes the same lowercase `code` and applicable `yaml_role`, `path`, and `diagnostics` attributes. |
 
 ---
 

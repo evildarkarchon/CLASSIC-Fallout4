@@ -20,6 +20,7 @@ use classic_config_core::{
     InstalledYamlDataProvenance as CoreInstalledYamlDataProvenance,
     InstalledYamlDataRole as CoreInstalledYamlDataRole,
     InstalledYamlDataSnapshot as CoreInstalledYamlDataSnapshot,
+    LocalIgnoreRecoveryPlan as CoreLocalIgnoreRecoveryPlan,
     LocalIgnoreYamlDataState as CoreLocalIgnoreYamlDataState, MainYamlVersionError,
     ModSolutionCriteria, SuspectErrorRule as CoreSuspectErrorRule,
     SuspectStackCountRule as CoreSuspectStackCountRule, SuspectStackRule as CoreSuspectStackRule,
@@ -71,12 +72,17 @@ pub struct InstalledYamlDataInspection {
 
 /// Opaque result holder for one Installed YAML Data load operation.
 pub struct InstalledYamlDataLoadOperation {
-    result: Result<CoreInstalledYamlDataSnapshot, CoreInstalledYamlDataLoadError>,
+    result: Result<CoreInstalledYamlDataLoadOutcome, CoreInstalledYamlDataLoadError>,
 }
 
 /// Opaque immutable snapshot returned by Installed YAML Data loading.
 pub struct InstalledYamlDataSnapshot {
     inner: CoreInstalledYamlDataSnapshot,
+}
+
+/// Opaque immutable recovery proposal for malformed Local Ignore YAML Data.
+pub struct LocalIgnoreRecoveryPlan {
+    inner: CoreLocalIgnoreRecoveryPlan,
 }
 
 // ── Construction ────────────────────────────────────────────────────
@@ -239,24 +245,31 @@ fn installed_yaml_data_load(
 fn installed_yaml_data_load_operation_from_result(
     result: Result<CoreInstalledYamlDataLoadOutcome, CoreInstalledYamlDataLoadError>,
 ) -> Box<InstalledYamlDataLoadOperation> {
-    let result = result.map(|outcome| match outcome {
-        CoreInstalledYamlDataLoadOutcome::Ready(snapshot) => snapshot,
-    });
     Box::new(InstalledYamlDataLoadOperation { result })
 }
 
-/// Return the Ready/error status captured by an Installed YAML Data load.
+/// Return the Ready/recovery-required/error status captured by an Installed YAML Data load.
 fn installed_yaml_data_load_status(
     operation: &InstalledYamlDataLoadOperation,
 ) -> ffi::InstalledYamlDataLoadStatusDto {
     match &operation.result {
-        Ok(_) => ffi::InstalledYamlDataLoadStatusDto {
+        Ok(CoreInstalledYamlDataLoadOutcome::Ready(_)) => ffi::InstalledYamlDataLoadStatusDto {
             has_snapshot: true,
+            has_recovery_plan: false,
             has_error: false,
             error: empty_installed_yaml_data_load_error(),
         },
+        Ok(CoreInstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(_)) => {
+            ffi::InstalledYamlDataLoadStatusDto {
+                has_snapshot: false,
+                has_recovery_plan: true,
+                has_error: false,
+                error: empty_installed_yaml_data_load_error(),
+            }
+        }
         Err(error) => ffi::InstalledYamlDataLoadStatusDto {
             has_snapshot: false,
+            has_recovery_plan: false,
             has_error: true,
             error: installed_yaml_data_load_error_to_dto(error),
         },
@@ -273,9 +286,131 @@ fn installed_yaml_data_load_take_snapshot(
     operation: Box<InstalledYamlDataLoadOperation>,
 ) -> Result<Box<InstalledYamlDataSnapshot>, String> {
     match operation.result {
-        Ok(inner) => Ok(Box::new(InstalledYamlDataSnapshot { inner })),
+        Ok(CoreInstalledYamlDataLoadOutcome::Ready(inner)) => {
+            Ok(Box::new(InstalledYamlDataSnapshot { inner }))
+        }
+        Ok(CoreInstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(_)) => {
+            Err("Installed YAML Data load requires Local Ignore recovery".to_string())
+        }
         Err(error) => Err(error.to_string()),
     }
+}
+
+/// Consume a recovery-required operation and return its immutable recovery plan.
+///
+/// Callers inspect [`installed_yaml_data_load_status`] first. This `Result`
+/// prevents Ready or failed operations from being consumed as recovery plans.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn installed_yaml_data_load_take_recovery_plan(
+    operation: Box<InstalledYamlDataLoadOperation>,
+) -> Result<Box<LocalIgnoreRecoveryPlan>, String> {
+    match operation.result {
+        Ok(CoreInstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(inner)) => {
+            Ok(Box::new(LocalIgnoreRecoveryPlan { inner }))
+        }
+        Ok(CoreInstalledYamlDataLoadOutcome::Ready(_)) => {
+            Err("Installed YAML Data load is already ready".to_string())
+        }
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Return the typed game retained by a Local Ignore recovery plan.
+fn local_ignore_recovery_plan_game(plan: &LocalIgnoreRecoveryPlan) -> ffi::ExplicitYamlDataGameId {
+    explicit_game_id_to_ffi(plan.inner.game())
+}
+
+/// Return the registered game-data role retained by a Local Ignore recovery plan.
+fn local_ignore_recovery_plan_game_role(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> ffi::InstalledYamlDataGameRole {
+    match plan.inner.game_data_role() {
+        CoreGameDataRole::Fallout4 => ffi::InstalledYamlDataGameRole::Fallout4,
+    }
+}
+
+/// Return retained Main provenance, schema, and exact-byte content identity.
+fn local_ignore_recovery_plan_main(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> ffi::InspectedYamlDataFileDto {
+    inspected_yaml_data_file_to_dto(plan.inner.main())
+}
+
+/// Return retained game provenance, schema, and exact-byte content identity.
+fn local_ignore_recovery_plan_game_file(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> ffi::InspectedYamlDataFileDto {
+    inspected_yaml_data_file_to_dto(plan.inner.game_file())
+}
+
+/// Return the canonical malformed Local Ignore path observed by the recovery plan.
+fn local_ignore_recovery_plan_local_ignore_path(plan: &LocalIgnoreRecoveryPlan) -> String {
+    plan.inner
+        .local_ignore_path()
+        .to_string_lossy()
+        .into_owned()
+}
+
+/// Return the identity of the exact malformed Local Ignore bytes retained by the plan.
+fn local_ignore_recovery_plan_malformed_local_ignore_identity(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(plan.inner.malformed_local_ignore_identity())
+}
+
+/// Report whether validated selected-Main defaults were available when recovery began.
+fn local_ignore_recovery_plan_has_default_local_ignore_identity(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> bool {
+    plan.inner.default_local_ignore_identity().is_some()
+}
+
+/// Return the identity of validated selected-Main defaults retained by the plan.
+///
+/// CXX does not bridge `Option<YamlDataContentIdentityDto>`, so callers inspect
+/// [`local_ignore_recovery_plan_has_default_local_ignore_identity`] first. An unavailable
+/// identity projects as an empty DTO rather than panicking or blocking recovery.
+fn local_ignore_recovery_plan_default_local_ignore_identity(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> ffi::YamlDataContentIdentityDto {
+    plan.inner
+        .default_local_ignore_identity()
+        .map(content_identity_to_dto)
+        .unwrap_or_else(|| ffi::YamlDataContentIdentityDto {
+            sha256: String::new(),
+            byte_len: 0,
+        })
+}
+
+/// Return the retained Version Registry selection mode for the interrupted operation.
+fn local_ignore_recovery_plan_selected_game_version(plan: &LocalIgnoreRecoveryPlan) -> String {
+    plan.inner.selected_game_version().to_string()
+}
+
+/// Return retained selection and malformed Local Ignore diagnostics.
+fn local_ignore_recovery_plan_diagnostics(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> Vec<ffi::InstalledYamlDataDiagnosticDto> {
+    plan.inner
+        .diagnostics()
+        .iter()
+        .map(installed_yaml_data_diagnostic_to_dto)
+        .collect()
+}
+
+/// Consume a recovery plan and complete the retained operation with no ignore entries.
+///
+/// The returned snapshot retains the plan's exact Main, game, and malformed Local Ignore
+/// identities. This decision is operation-scoped and performs no filesystem writes.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn local_ignore_recovery_plan_proceed_without_ignore(
+    plan: Box<LocalIgnoreRecoveryPlan>,
+) -> Box<InstalledYamlDataSnapshot> {
+    Box::new(InstalledYamlDataSnapshot {
+        inner: plan.inner.proceed_without_ignore(),
+    })
 }
 
 /// Clone the parsed configuration view retained by an Installed YAML Data snapshot.
@@ -322,6 +457,9 @@ fn installed_yaml_data_snapshot_local_ignore_state(
     match snapshot.inner.local_ignore_state() {
         CoreLocalIgnoreYamlDataState::Existing => ffi::LocalIgnoreYamlDataState::Existing,
         CoreLocalIgnoreYamlDataState::Generated => ffi::LocalIgnoreYamlDataState::Generated,
+        CoreLocalIgnoreYamlDataState::ProceedWithoutIgnore => {
+            ffi::LocalIgnoreYamlDataState::ProceedWithoutIgnore
+        }
     }
 }
 
@@ -671,24 +809,6 @@ fn installed_yaml_data_load_error_to_dto(
         ),
         CoreInstalledYamlDataLoadError::LocalIgnoreRead { path, .. } => (
             ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreRead,
-            Some(ffi::InstalledYamlDataLoadRole::LocalIgnore),
-            Some(path),
-            Vec::new(),
-        ),
-        CoreInstalledYamlDataLoadError::LocalIgnoreInvalidUtf8 { path, .. } => (
-            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreInvalidUtf8,
-            Some(ffi::InstalledYamlDataLoadRole::LocalIgnore),
-            Some(path),
-            Vec::new(),
-        ),
-        CoreInstalledYamlDataLoadError::LocalIgnoreParse { path, .. } => (
-            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreParse,
-            Some(ffi::InstalledYamlDataLoadRole::LocalIgnore),
-            Some(path),
-            Vec::new(),
-        ),
-        CoreInstalledYamlDataLoadError::LocalIgnoreInvalidRoleData { path, .. } => (
-            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreInvalidRoleData,
             Some(ffi::InstalledYamlDataLoadRole::LocalIgnore),
             Some(path),
             Vec::new(),
@@ -1282,9 +1402,6 @@ mod ffi {
         UnsupportedGame = 0,
         NoUsableSource = 1,
         LocalIgnoreRead = 2,
-        LocalIgnoreInvalidUtf8 = 3,
-        LocalIgnoreParse = 4,
-        LocalIgnoreInvalidRoleData = 5,
         InvalidSelectedData = 6,
         /// Selected Main defaults could not safely initialize Local Ignore YAML Data.
         LocalIgnoreDefaultInvalid = 7,
@@ -1308,6 +1425,8 @@ mod ffi {
         Existing = 0,
         /// Missing Local Ignore YAML Data was generated from selected Main defaults.
         Generated = 1,
+        /// Malformed Local Ignore bytes were ignored for this operation without changing them.
+        ProceedWithoutIgnore = 2,
     }
 
     /// Exact caller-selected paths for deterministic YAML Data loading.
@@ -1388,9 +1507,10 @@ mod ffi {
         message: String,
     }
 
-    /// Exactly one of `has_snapshot` and `has_error` is true.
+    /// Exactly one of `has_snapshot`, `has_recovery_plan`, and `has_error` is true.
     struct InstalledYamlDataLoadStatusDto {
         has_snapshot: bool,
+        has_recovery_plan: bool,
         has_error: bool,
         error: InstalledYamlDataLoadErrorDto,
     }
@@ -1479,6 +1599,7 @@ mod ffi {
         type InstalledYamlDataInspection;
         type InstalledYamlDataLoadOperation;
         type InstalledYamlDataSnapshot;
+        type LocalIgnoreRecoveryPlan;
 
         // Construction (async, block_on)
         fn yaml_data_load(
@@ -1560,7 +1681,7 @@ mod ffi {
             game: ExplicitYamlDataGameId,
             selected_game_version: &str,
         ) -> Box<InstalledYamlDataLoadOperation>;
-        /// Inspect typed Ready or error state before consuming the operation.
+        /// Inspect typed Ready, recovery-required, or error state before consuming the operation.
         fn installed_yaml_data_load_status(
             operation: &InstalledYamlDataLoadOperation,
         ) -> InstalledYamlDataLoadStatusDto;
@@ -1568,6 +1689,42 @@ mod ffi {
         fn installed_yaml_data_load_take_snapshot(
             operation: Box<InstalledYamlDataLoadOperation>,
         ) -> Result<Box<InstalledYamlDataSnapshot>>;
+        /// Consume a recovery-required operation and return its immutable recovery plan.
+        fn installed_yaml_data_load_take_recovery_plan(
+            operation: Box<InstalledYamlDataLoadOperation>,
+        ) -> Result<Box<LocalIgnoreRecoveryPlan>>;
+        fn local_ignore_recovery_plan_game(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> ExplicitYamlDataGameId;
+        fn local_ignore_recovery_plan_game_role(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> InstalledYamlDataGameRole;
+        fn local_ignore_recovery_plan_main(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> InspectedYamlDataFileDto;
+        fn local_ignore_recovery_plan_game_file(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> InspectedYamlDataFileDto;
+        fn local_ignore_recovery_plan_local_ignore_path(plan: &LocalIgnoreRecoveryPlan) -> String;
+        fn local_ignore_recovery_plan_malformed_local_ignore_identity(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> YamlDataContentIdentityDto;
+        fn local_ignore_recovery_plan_has_default_local_ignore_identity(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> bool;
+        fn local_ignore_recovery_plan_default_local_ignore_identity(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> YamlDataContentIdentityDto;
+        fn local_ignore_recovery_plan_selected_game_version(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> String;
+        fn local_ignore_recovery_plan_diagnostics(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> Vec<InstalledYamlDataDiagnosticDto>;
+        /// Complete the retained operation with no ignore entries and no filesystem writes.
+        fn local_ignore_recovery_plan_proceed_without_ignore(
+            plan: Box<LocalIgnoreRecoveryPlan>,
+        ) -> Box<InstalledYamlDataSnapshot>;
         /// Clone the parsed configuration view retained by the snapshot.
         fn installed_yaml_data_snapshot_yaml_data(
             snapshot: &InstalledYamlDataSnapshot,

@@ -277,6 +277,7 @@ fn installed_yaml_data_load_bridge_projects_ready_snapshot() {
     );
     let status = installed_yaml_data_load_status(&operation);
     assert!(status.has_snapshot);
+    assert!(!status.has_recovery_plan);
     assert!(!status.has_error);
 
     let snapshot =
@@ -357,6 +358,7 @@ fn installed_yaml_data_load_bridge_projects_generated_local_ignore_state_and_dia
     );
     let status = installed_yaml_data_load_status(&operation);
     assert!(status.has_snapshot);
+    assert!(!status.has_recovery_plan);
     assert!(!status.has_error);
 
     let snapshot =
@@ -384,6 +386,187 @@ fn installed_yaml_data_load_bridge_projects_generated_local_ignore_state_and_dia
 }
 
 #[test]
+fn installed_yaml_data_load_bridge_projects_and_consumes_local_ignore_recovery_plan_without_writes()
+{
+    let installation = tempdir().expect("create recovery bridge fixture directory");
+    write_installed_bridge_fixtures(installation.path());
+    let databases = installation.path().join("CLASSIC Data").join("databases");
+    let main_path = databases.join("CLASSIC Main.yaml");
+    let game_path = databases.join("CLASSIC Fallout4.yaml");
+    let ignore_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: not-a-sequence\r\n";
+    std::fs::write(&main_path, INSTALLED_GENERATING_MAIN_YAML)
+        .expect("write Main fixture with retained Local Ignore defaults");
+    std::fs::write(&ignore_path, malformed_ignore).expect("write malformed Local Ignore fixture");
+    let before_main = std::fs::read(&main_path).expect("read Main before recovery operation");
+    let before_game = std::fs::read(&game_path).expect("read game before recovery operation");
+    let before_ignore =
+        std::fs::read(&ignore_path).expect("read Local Ignore before recovery operation");
+
+    let operation = load_installed_without_cache(
+        installation.path(),
+        ffi::ExplicitYamlDataGameId::Fallout4,
+        "Original",
+    );
+    let status = installed_yaml_data_load_status(&operation);
+    assert!(!status.has_snapshot);
+    assert!(status.has_recovery_plan);
+    assert!(!status.has_error);
+
+    let plan = installed_yaml_data_load_take_recovery_plan(operation)
+        .expect("take retained Local Ignore recovery plan");
+    assert_eq!(
+        local_ignore_recovery_plan_game(&plan),
+        ffi::ExplicitYamlDataGameId::Fallout4
+    );
+    assert_eq!(
+        local_ignore_recovery_plan_game_role(&plan),
+        ffi::InstalledYamlDataGameRole::Fallout4
+    );
+    let retained_main = local_ignore_recovery_plan_main(&plan);
+    assert_eq!(
+        retained_main.byte_len,
+        INSTALLED_GENERATING_MAIN_YAML.len() as u64
+    );
+    let retained_game = local_ignore_recovery_plan_game_file(&plan);
+    assert_eq!(retained_game.byte_len, EXPLICIT_GAME_YAML.len() as u64);
+    assert_eq!(
+        local_ignore_recovery_plan_local_ignore_path(&plan),
+        ignore_path.to_string_lossy()
+    );
+    let malformed_identity = local_ignore_recovery_plan_malformed_local_ignore_identity(&plan);
+    assert_eq!(malformed_identity.byte_len, malformed_ignore.len() as u64);
+    assert_eq!(malformed_identity.sha256.len(), 64);
+    assert!(local_ignore_recovery_plan_has_default_local_ignore_identity(&plan));
+    let default_identity = local_ignore_recovery_plan_default_local_ignore_identity(&plan);
+    assert_eq!(
+        default_identity.byte_len,
+        "CLASSIC_Ignore_Fallout4:\n  - GeneratedBridgeEntry.dll\n".len() as u64
+    );
+    assert_eq!(default_identity.sha256.len(), 64);
+    assert_eq!(
+        local_ignore_recovery_plan_selected_game_version(&plan),
+        "Original"
+    );
+    assert!(
+        local_ignore_recovery_plan_diagnostics(&plan)
+            .iter()
+            .any(|diagnostic| {
+                diagnostic.kind == ffi::InstalledYamlDataDiagnosticKind::InvalidRoleData
+                    && diagnostic.has_path
+                    && diagnostic.path == ignore_path.to_string_lossy()
+            })
+    );
+
+    let snapshot = local_ignore_recovery_plan_proceed_without_ignore(plan);
+    assert_eq!(
+        installed_yaml_data_snapshot_local_ignore_state(&snapshot),
+        ffi::LocalIgnoreYamlDataState::ProceedWithoutIgnore
+    );
+    let snapshot_identity = installed_yaml_data_snapshot_local_ignore_identity(&snapshot);
+    assert_eq!(snapshot_identity.sha256, malformed_identity.sha256);
+    assert_eq!(snapshot_identity.byte_len, malformed_identity.byte_len);
+    let snapshot_main = installed_yaml_data_snapshot_main(&snapshot);
+    assert_eq!(snapshot_main.sha256, retained_main.sha256);
+    assert_eq!(snapshot_main.byte_len, retained_main.byte_len);
+    let snapshot_game = installed_yaml_data_snapshot_game_file(&snapshot);
+    assert_eq!(snapshot_game.sha256, retained_game.sha256);
+    assert_eq!(snapshot_game.byte_len, retained_game.byte_len);
+    assert!(yaml_data_ignore_list(&installed_yaml_data_snapshot_yaml_data(&snapshot)).is_empty());
+
+    assert_eq!(
+        std::fs::read(&main_path).expect("read Main after recovery operation"),
+        before_main
+    );
+    assert_eq!(
+        std::fs::read(&game_path).expect("read game after recovery operation"),
+        before_game
+    );
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("read Local Ignore after recovery operation"),
+        before_ignore
+    );
+
+    let later_operation = load_installed_without_cache(
+        installation.path(),
+        ffi::ExplicitYamlDataGameId::Fallout4,
+        "Original",
+    );
+    let later_status = installed_yaml_data_load_status(&later_operation);
+    assert!(!later_status.has_snapshot);
+    assert!(later_status.has_recovery_plan);
+    assert!(!later_status.has_error);
+}
+
+#[test]
+fn installed_yaml_data_load_bridge_recovers_from_malformed_ignore_without_valid_defaults() {
+    let installation = tempdir().expect("create recovery bridge fixture directory");
+    write_installed_bridge_fixtures(installation.path());
+    let databases = installation.path().join("CLASSIC Data").join("databases");
+    let main_path = databases.join("CLASSIC Main.yaml");
+    let game_path = databases.join("CLASSIC Fallout4.yaml");
+    let ignore_path = installation
+        .path()
+        .join("CLASSIC Data")
+        .join("CLASSIC Ignore.yaml");
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: not-a-sequence\r\n";
+    std::fs::write(&ignore_path, malformed_ignore).expect("write malformed Local Ignore fixture");
+    let before_main = std::fs::read(&main_path).expect("read Main before recovery operation");
+    let before_game = std::fs::read(&game_path).expect("read game before recovery operation");
+    let before_ignore =
+        std::fs::read(&ignore_path).expect("read Local Ignore before recovery operation");
+
+    let operation = load_installed_without_cache(
+        installation.path(),
+        ffi::ExplicitYamlDataGameId::Fallout4,
+        "Original",
+    );
+    let status = installed_yaml_data_load_status(&operation);
+    assert!(!status.has_snapshot);
+    assert!(status.has_recovery_plan);
+    assert!(!status.has_error);
+
+    let plan = installed_yaml_data_load_take_recovery_plan(operation)
+        .expect("take recovery plan without selected-Main defaults");
+    assert!(!local_ignore_recovery_plan_has_default_local_ignore_identity(&plan));
+    let unavailable_identity = local_ignore_recovery_plan_default_local_ignore_identity(&plan);
+    assert!(unavailable_identity.sha256.is_empty());
+    assert_eq!(unavailable_identity.byte_len, 0);
+
+    let snapshot = local_ignore_recovery_plan_proceed_without_ignore(plan);
+    assert_eq!(
+        installed_yaml_data_snapshot_local_ignore_state(&snapshot),
+        ffi::LocalIgnoreYamlDataState::ProceedWithoutIgnore
+    );
+    assert!(yaml_data_ignore_list(&installed_yaml_data_snapshot_yaml_data(&snapshot)).is_empty());
+    assert_eq!(
+        std::fs::read(&main_path).expect("read Main after recovery operation"),
+        before_main
+    );
+    assert_eq!(
+        std::fs::read(&game_path).expect("read game after recovery operation"),
+        before_game
+    );
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("read Local Ignore after recovery operation"),
+        before_ignore
+    );
+
+    let later_operation = load_installed_without_cache(
+        installation.path(),
+        ffi::ExplicitYamlDataGameId::Fallout4,
+        "Original",
+    );
+    let later_status = installed_yaml_data_load_status(&later_operation);
+    assert!(!later_status.has_snapshot);
+    assert!(later_status.has_recovery_plan);
+    assert!(!later_status.has_error);
+}
+
+#[test]
 fn installed_yaml_data_load_bridge_preserves_typed_terminal_context() {
     let unsupported_root = tempdir().expect("create unsupported-game load root");
     let unsupported = load_installed_without_cache(
@@ -392,6 +575,8 @@ fn installed_yaml_data_load_bridge_preserves_typed_terminal_context() {
         "AnniversaryEdition",
     );
     let unsupported_status = installed_yaml_data_load_status(&unsupported);
+    assert!(!unsupported_status.has_snapshot);
+    assert!(!unsupported_status.has_recovery_plan);
     assert!(unsupported_status.has_error);
     assert_eq!(
         unsupported_status.error.kind,
@@ -407,6 +592,9 @@ fn installed_yaml_data_load_bridge_preserves_typed_terminal_context() {
         "Original",
     );
     let missing_status = installed_yaml_data_load_status(&missing);
+    assert!(!missing_status.has_snapshot);
+    assert!(!missing_status.has_recovery_plan);
+    assert!(missing_status.has_error);
     assert_eq!(
         missing_status.error.kind,
         ffi::InstalledYamlDataLoadErrorKind::NoUsableSource
@@ -424,9 +612,6 @@ fn installed_yaml_data_load_bridge_preserves_typed_terminal_context() {
 #[test]
 fn installed_yaml_data_load_bridge_maps_every_core_error_kind() {
     let path = std::path::PathBuf::from("isolated/CLASSIC Ignore.yaml");
-    let invalid_bytes = vec![0xff];
-    let invalid_utf8 =
-        std::str::from_utf8(&invalid_bytes).expect_err("fixture must be invalid UTF-8");
     let errors = [
         CoreInstalledYamlDataLoadError::UnsupportedGame {
             game: CoreGameId::Skyrim,
@@ -438,18 +623,6 @@ fn installed_yaml_data_load_bridge_maps_every_core_error_kind() {
         CoreInstalledYamlDataLoadError::LocalIgnoreRead {
             path: path.clone(),
             source: std::io::Error::new(std::io::ErrorKind::NotFound, "missing fixture"),
-        },
-        CoreInstalledYamlDataLoadError::LocalIgnoreInvalidUtf8 {
-            path: path.clone(),
-            source: invalid_utf8,
-        },
-        CoreInstalledYamlDataLoadError::LocalIgnoreParse {
-            path: path.clone(),
-            message: "parse fixture".to_string(),
-        },
-        CoreInstalledYamlDataLoadError::LocalIgnoreInvalidRoleData {
-            path: path.clone(),
-            reason: "role fixture".to_string(),
         },
         CoreInstalledYamlDataLoadError::LocalIgnoreDefaultInvalid {
             path: path.clone(),
@@ -477,9 +650,6 @@ fn installed_yaml_data_load_bridge_maps_every_core_error_kind() {
             ffi::InstalledYamlDataLoadErrorKind::UnsupportedGame,
             ffi::InstalledYamlDataLoadErrorKind::NoUsableSource,
             ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreRead,
-            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreInvalidUtf8,
-            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreParse,
-            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreInvalidRoleData,
             ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreDefaultInvalid,
             ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreCreate,
             ffi::InstalledYamlDataLoadErrorKind::InvalidSelectedData,
@@ -488,12 +658,12 @@ fn installed_yaml_data_load_bridge_maps_every_core_error_kind() {
     assert!(!error_dtos[0].has_role);
     assert!(error_dtos[1].has_role);
     assert_eq!(error_dtos[1].role, ffi::InstalledYamlDataLoadRole::Game);
-    for error in &error_dtos[2..=7] {
+    for error in &error_dtos[2..=4] {
         assert!(error.has_role);
         assert_eq!(error.role, ffi::InstalledYamlDataLoadRole::LocalIgnore);
         assert!(error.has_path);
     }
-    assert!(!error_dtos[8].has_role);
+    assert!(!error_dtos[5].has_role);
 }
 
 #[test]

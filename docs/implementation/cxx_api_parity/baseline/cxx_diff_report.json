@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 572,
-    "current_total": 572,
-    "matched": 572,
+    "contract_total": 585,
+    "current_total": 585,
+    "matched": 585,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -265,6 +265,14 @@
       "reason": "-"
     },
     {
+      "id": "88b627b389e2f391",
+      "rustSymbol": "installed_yaml_data_load_take_recovery_plan",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "df6e0230342a3d0b",
       "rustSymbol": "installed_yaml_data_load_take_snapshot",
       "kind": "function",
@@ -339,6 +347,94 @@
     {
       "id": "b0d609f9ed78e468",
       "rustSymbol": "load_main_yaml_version",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "95a16a804c4e2d18",
+      "rustSymbol": "local_ignore_recovery_plan_default_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "042ea4bfbf165c0c",
+      "rustSymbol": "local_ignore_recovery_plan_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6590701d939cbab8",
+      "rustSymbol": "local_ignore_recovery_plan_game",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "80e5b767c9ce0968",
+      "rustSymbol": "local_ignore_recovery_plan_game_file",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "60f29c15d9dab027",
+      "rustSymbol": "local_ignore_recovery_plan_game_role",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "42b6d46433453bfc",
+      "rustSymbol": "local_ignore_recovery_plan_has_default_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1a660dba5feab46c",
+      "rustSymbol": "local_ignore_recovery_plan_local_ignore_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "16afc4754fba2126",
+      "rustSymbol": "local_ignore_recovery_plan_main",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a6c74bbe8859ecc6",
+      "rustSymbol": "local_ignore_recovery_plan_malformed_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e6b3bc86b5f014f4",
+      "rustSymbol": "local_ignore_recovery_plan_proceed_without_ignore",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0652d87cbbbad64b",
+      "rustSymbol": "local_ignore_recovery_plan_selected_game_version",
       "kind": "function",
       "bridgeModule": "config",
       "status": "matched",
@@ -755,6 +851,14 @@
     {
       "id": "dbe40950823ca347",
       "rustSymbol": "InstalledYamlDataSnapshot",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fd696b0479788803",
+      "rustSymbol": "LocalIgnoreRecoveryPlan",
       "kind": "opaque",
       "bridgeModule": "config",
       "status": "matched",

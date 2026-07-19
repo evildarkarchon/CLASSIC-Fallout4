@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-18T08:57:56.875461+00:00",
+  "generated_at_utc": "2026-07-19T01:51:06.508352+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -335,36 +335,6 @@
     },
     {
       "module": "classic_config",
-      "export": "InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
-      "export_path": "InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
-      "kind": "class",
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "class InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError("
-    },
-    {
-      "module": "classic_config",
-      "export": "InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
-      "export_path": "InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
-      "kind": "class",
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "class InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error("
-    },
-    {
-      "module": "classic_config",
-      "export": "InstalledYamlDataLoadLocalIgnoreParseError",
-      "export_path": "InstalledYamlDataLoadLocalIgnoreParseError",
-      "kind": "class",
-      "owner_module": "config",
-      "tier": "tier1",
-      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "class InstalledYamlDataLoadLocalIgnoreParseError(InstalledYamlDataLoadError): ..."
-    },
-    {
-      "module": "classic_config",
       "export": "InstalledYamlDataLoadLocalIgnoreReadError",
       "export_path": "InstalledYamlDataLoadLocalIgnoreReadError",
       "kind": "class",
@@ -405,6 +375,16 @@
     },
     {
       "module": "classic_config",
+      "export": "InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome",
+      "export_path": "InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome:"
+    },
+    {
+      "module": "classic_config",
       "export": "InstalledYamlDataNoUsableSourceError",
       "export_path": "InstalledYamlDataNoUsableSourceError",
       "kind": "class",
@@ -432,6 +412,28 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
       "signature": "class InstalledYamlDataUnsupportedGameError(InstalledYamlDataInspectionError): ..."
+    },
+    {
+      "module": "classic_config",
+      "export": "LocalIgnoreRecoveryPlan",
+      "export_path": "LocalIgnoreRecoveryPlan",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "class LocalIgnoreRecoveryPlan:"
+    },
+    {
+      "module": "classic_config",
+      "export": "proceed_without_ignore",
+      "export_path": "LocalIgnoreRecoveryPlan.proceed_without_ignore",
+      "parent_class": "LocalIgnoreRecoveryPlan",
+      "kind": "method",
+      "arity": 0,
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-config-py/classic_config.pyi",
+      "signature": "def proceed_without_ignore(self) -> InstalledYamlDataSnapshot:"
     },
     {
       "module": "classic_config",
@@ -643,11 +645,11 @@
       "export": "load_installed_yaml_data",
       "export_path": "load_installed_yaml_data",
       "kind": "function",
-      "arity": 3,
+      "arity": 4,
       "owner_module": "config",
       "tier": "tier1",
       "source_file": "python-bindings/classic-config-py/classic_config.pyi",
-      "signature": "def load_installed_yaml_data( installation_root: str | Path, game: ExplicitYamlDataGame, selected_game_version: str, ) -> InstalledYamlDataLoadOutcome:"
+      "signature": "def load_installed_yaml_data( installation_root: str | Path, game: ExplicitYamlDataGame, selected_game_version: str, ) -> ( InstalledYamlDataLoadOutcome | InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome ):"
     },
     {
       "module": "classic_config",

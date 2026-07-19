@@ -1,13 +1,13 @@
 {
-  "generated_at_utc": "2026-07-18T08:57:56.884691+00:00",
+  "generated_at_utc": "2026-07-19T01:25:15.087712+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1594,
-    "runtime_verified_total": 1594,
+    "tracked_surface_total": 1605,
+    "runtime_verified_total": 1605,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 1236,
@@ -17,8 +17,8 @@
   "registryMismatches": [],
   "perOwnerModule": {
     "config": {
-      "runtime_verified": 65,
-      "total": 65
+      "runtime_verified": 76,
+      "total": 76
     },
     "database": {
       "runtime_verified": 56,
@@ -23885,7 +23885,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadOutcome",
@@ -23904,7 +23904,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadOutcome.status",
@@ -23923,7 +23923,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadOutcome.snapshot",
@@ -23942,7 +23942,273 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome.status",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome.status",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome.recovery_plan",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.InstalledYamlDataLocalIgnoreRecoveryRequiredOutcome.recovery_plan",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.LocalIgnoreRecoveryPlan",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.LocalIgnoreRecoveryPlan",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.LocalIgnoreRecoveryPlan.game",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.LocalIgnoreRecoveryPlan.game",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.LocalIgnoreRecoveryPlan.game_data_role",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.LocalIgnoreRecoveryPlan.game_data_role",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.LocalIgnoreRecoveryPlan.main",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.LocalIgnoreRecoveryPlan.main",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.LocalIgnoreRecoveryPlan.game_file",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.LocalIgnoreRecoveryPlan.game_file",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.LocalIgnoreRecoveryPlan.local_ignore_path",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.LocalIgnoreRecoveryPlan.local_ignore_path",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.LocalIgnoreRecoveryPlan.malformed_local_ignore_identity",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.LocalIgnoreRecoveryPlan.malformed_local_ignore_identity",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.LocalIgnoreRecoveryPlan.default_local_ignore_identity",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.LocalIgnoreRecoveryPlan.default_local_ignore_identity",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.LocalIgnoreRecoveryPlan.selected_game_version",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.LocalIgnoreRecoveryPlan.selected_game_version",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.LocalIgnoreRecoveryPlan.diagnostics",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.LocalIgnoreRecoveryPlan.diagnostics",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
+      "trackedId": "binding:classic_config.LocalIgnoreRecoveryPlan.proceed_without_ignore",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.LocalIgnoreRecoveryPlan.proceed_without_ignore",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot",
@@ -23961,7 +24227,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.game",
@@ -23980,7 +24246,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.game_data_role",
@@ -23999,7 +24265,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.yaml_data",
@@ -24018,7 +24284,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.main",
@@ -24037,7 +24303,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.game_file",
@@ -24056,7 +24322,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.local_ignore_state",
@@ -24075,7 +24341,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.local_ignore_identity",
@@ -24094,7 +24360,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.diagnostics",
@@ -24113,7 +24379,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadError",
@@ -24132,7 +24398,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadUnsupportedGameError",
@@ -24151,7 +24417,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadNoUsableSourceError",
@@ -24170,7 +24436,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadLocalIgnoreReadError",
@@ -24189,64 +24455,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
-    },
-    {
-      "trackedId": "binding:classic_config.InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
-      "trackedType": "registry_only",
-      "ownerModule": "config",
-      "tier": "tier1",
-      "gapType": "registry_only",
-      "classification": "runtime_verified",
-      "rustSymbol": null,
-      "bindingIdentifier": "classic_config.InstalledYamlDataLoadLocalIgnoreInvalidUtf8Error",
-      "coverageId": "python-tier1-config-installed-yaml-data-load",
-      "verificationMode": "contract_test",
-      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
-      "testCaseId": "installed-yaml-data-load-contract",
-      "fixtureRefs": [],
-      "wave": null,
-      "owner": null,
-      "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
-    },
-    {
-      "trackedId": "binding:classic_config.InstalledYamlDataLoadLocalIgnoreParseError",
-      "trackedType": "registry_only",
-      "ownerModule": "config",
-      "tier": "tier1",
-      "gapType": "registry_only",
-      "classification": "runtime_verified",
-      "rustSymbol": null,
-      "bindingIdentifier": "classic_config.InstalledYamlDataLoadLocalIgnoreParseError",
-      "coverageId": "python-tier1-config-installed-yaml-data-load",
-      "verificationMode": "contract_test",
-      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
-      "testCaseId": "installed-yaml-data-load-contract",
-      "fixtureRefs": [],
-      "wave": null,
-      "owner": null,
-      "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
-    },
-    {
-      "trackedId": "binding:classic_config.InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
-      "trackedType": "registry_only",
-      "ownerModule": "config",
-      "tier": "tier1",
-      "gapType": "registry_only",
-      "classification": "runtime_verified",
-      "rustSymbol": null,
-      "bindingIdentifier": "classic_config.InstalledYamlDataLoadLocalIgnoreInvalidRoleDataError",
-      "coverageId": "python-tier1-config-installed-yaml-data-load",
-      "verificationMode": "contract_test",
-      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
-      "testCaseId": "installed-yaml-data-load-contract",
-      "fixtureRefs": [],
-      "wave": null,
-      "owner": null,
-      "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadLocalIgnoreDefaultInvalidError",
@@ -24265,7 +24474,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadLocalIgnoreCreateError",
@@ -24284,7 +24493,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_config.InstalledYamlDataLoadInvalidSelectedDataError",
@@ -24303,7 +24512,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, every directly reachable Local Ignore fatal projection, and the defensive create/invalid-selected-data exception inventory."
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata and one-shot mutation-free proceed behavior for every malformed shape, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
       "trackedId": "binding:classic_scanlog.AnalyzerKind",
