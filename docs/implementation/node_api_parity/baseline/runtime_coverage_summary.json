@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T02:48:53.699555+00:00",
+  "generated_at_utc": "2026-07-19T05:03:44.423897+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,8 +7,8 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1055,
-    "runtime_verified_total": 1055,
+    "tracked_surface_total": 1059,
+    "runtime_verified_total": 1059,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 913,
@@ -54,8 +54,8 @@
       "total": 77
     },
     "scanlog": {
-      "runtime_verified": 183,
-      "total": 183
+      "runtime_verified": 187,
+      "total": 187
     },
     "settings": {
       "runtime_verified": 45,
@@ -18481,7 +18481,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsInstalledYamlDataLoadOutcome",
@@ -18500,7 +18500,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsInstalledYamlDataLoadRequest",
@@ -18519,7 +18519,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsInstalledYamlDataLoadStatus",
@@ -18538,7 +18538,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsLocalIgnoreResetConflict",
@@ -18557,7 +18557,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsLocalIgnoreResetOutcome",
@@ -18576,7 +18576,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsLocalIgnoreResetPublicationStage",
@@ -18595,7 +18595,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsLocalIgnoreResetResult",
@@ -18614,7 +18614,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsLocalIgnoreResetStatus",
@@ -18633,7 +18633,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:JsLocalIgnoreYamlDataState",
@@ -18652,7 +18652,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:LocalIgnoreRecoveryPlan",
@@ -18671,7 +18671,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:loadInstalledYamlData",
@@ -18690,7 +18690,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:persistGameLocalPaths",
@@ -18978,6 +18978,30 @@
       "notes": "Covers the canonical hash cache stats DTO plus clear/reset helpers through direct hash cache lifecycle assertions."
     },
     {
+      "trackedId": "binding:JsInstalledYamlDataRunData",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsInstalledYamlDataRunData",
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "verificationMode": "cli_workflow",
+      "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
+    },
+    {
       "trackedId": "binding:JsScanRunConfiguration",
       "trackedType": "registry_only",
       "ownerModule": "scanlog",
@@ -18999,7 +19023,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunDiscoveryResult",
@@ -19023,7 +19047,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunEvent",
@@ -19047,7 +19071,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunSuccess",
@@ -19071,7 +19095,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunFailure",
@@ -19095,7 +19119,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunInfrastructureError",
@@ -19119,7 +19143,55 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
+    },
+    {
+      "trackedId": "binding:JsScanRunInstalledYamlDataDiagnostic",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsScanRunInstalledYamlDataDiagnostic",
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "verificationMode": "cli_workflow",
+      "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
+    },
+    {
+      "trackedId": "binding:JsScanRunInstalledYamlDataDiagnosticKind",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsScanRunInstalledYamlDataDiagnosticKind",
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "verificationMode": "cli_workflow",
+      "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunLogEvent",
@@ -19143,7 +19215,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunLogFailure",
@@ -19167,7 +19239,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunLogResult",
@@ -19191,7 +19263,31 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
+    },
+    {
+      "trackedId": "binding:JsScanRunLocalIgnoreState",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsScanRunLocalIgnoreState",
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "verificationMode": "cli_workflow",
+      "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunRejectedInput",
@@ -19215,7 +19311,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunResult",
@@ -19239,7 +19335,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunSetupCheck",
@@ -19263,7 +19359,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunSetupContext",
@@ -19287,7 +19383,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunSetupPathUpdate",
@@ -19311,7 +19407,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunSetupResult",
@@ -19335,7 +19431,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunStandardSource",
@@ -19359,7 +19455,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunTargetedSource",
@@ -19383,7 +19479,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:ScanRunCancellation",
@@ -19407,7 +19503,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:ScanRunRequest",
@@ -19431,7 +19527,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:ScanRunUnsolvedLogs",
@@ -19455,7 +19551,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:scanRunExecute",
@@ -19479,7 +19575,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     }
   ]
 }

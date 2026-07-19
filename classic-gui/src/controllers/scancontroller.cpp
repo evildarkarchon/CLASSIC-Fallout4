@@ -5,6 +5,7 @@
 
 #include <QCoreApplication>
 #include <QDir>
+#include <QMetaType>
 #include <QThread>
 
 ScanController::ScanController(SignalHub* signalHub, ThreadManager* threadManager, QObject* parent)
@@ -12,9 +13,11 @@ ScanController::ScanController(SignalHub* signalHub, ThreadManager* threadManage
     , m_signalHub(signalHub)
     , m_threadManager(threadManager)
 {
+    qRegisterMetaType<classic::gui::ScanRunInstalledYamlDataPresentation>(
+        "classic::gui::ScanRunInstalledYamlDataPresentation");
 }
 
-void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
+void ScanController::startScan(const QString& installationRoot,
                                const classic::gui::CrashLogScanLaunchSettings& settings, const QString& setupXseLogPath,
                                const QStringList& targetedInputs)
 {
@@ -49,6 +52,7 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
         Qt::BlockingQueuedConnection);
     connect(worker, &ScanWorker::effectiveConcurrencySelected, this, &ScanController::scanConcurrencySelected);
     connect(worker, &ScanWorker::reportDirectoriesResolved, this, &ScanController::scanReportDirectoriesResolved);
+    connect(worker, &ScanWorker::installedYamlDataResolved, this, &ScanController::scanInstalledYamlDataResolved);
     connect(worker, &ScanWorker::logScanned, this, &ScanController::scanLogScanned);
     connect(worker, &ScanWorker::finished, this, &ScanController::onWorkerFinished);
     connect(worker, &ScanWorker::noLogsFound, this, &ScanController::onWorkerNoLogsFound);
@@ -62,8 +66,8 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
 
     // Start the worker thread and invoke doScan once the thread is running
     connect(thread, &QThread::started, worker,
-            [worker, yamlRoot, yamlData, settings, baseDir, setupXseLogPath, targetedInputs]() {
-                worker->doScan(yamlRoot, yamlData, settings, baseDir, setupXseLogPath, targetedInputs);
+            [worker, installationRoot, settings, baseDir, setupXseLogPath, targetedInputs]() {
+                worker->doScan(installationRoot, settings, baseDir, setupXseLogPath, targetedInputs);
             });
 
     m_threadManager->startWorker(QStringLiteral("crash_scan"), thread, worker);

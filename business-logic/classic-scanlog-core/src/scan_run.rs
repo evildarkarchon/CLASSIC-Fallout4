@@ -13,6 +13,11 @@ use crate::{
     AnalysisResult, ConfigIssue, CrashLogScanFacts, CrashLogScanIntake, CrashLogScanOptions,
     OrchestratorCore, ScanProgressPhase, ScanReadyAnalysis,
 };
+#[cfg(test)]
+use classic_config_core::{InstalledYamlDataLoadError, load_installed_yaml_data_with_env};
+use classic_config_core::{
+    InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, load_installed_yaml_data,
+};
 use classic_database_core::DatabasePool;
 use classic_file_io_core::{LogCollector, RejectedInput, resolve_targeted_inputs};
 use classic_operation_context::scope_cancellation;
@@ -122,7 +127,7 @@ where
         .setup_context
         .as_ref()
         .and_then(|context| context.game_root.clone())
-        .or_else(|| Some(request.yaml_dir_data.clone()));
+        .or_else(|| Some(request.installation_root.join("CLASSIC Data")));
     #[cfg(test)]
     if let Some(error) = request
         .test_hooks
@@ -159,10 +164,48 @@ where
         scan_facts.unsolved_logs_destination = None;
     }
 
-    let ready = CrashLogScanIntake::from_yaml_paths(
-        request.yaml_dir_root.clone(),
-        request.yaml_dir_data.clone(),
-        request.game.clone(),
+    let load_request = InstalledYamlDataLoadRequest {
+        installation_root: request.installation_root.clone(),
+        game: request.game,
+        selected_game_version: request.game_version.clone(),
+    };
+    let installed_yaml_data_path = request.installation_root.join("CLASSIC Data");
+    #[cfg(test)]
+    let installed_outcome = load_installed_yaml_data_for_run(load_request, &request.test_hooks);
+    #[cfg(not(test))]
+    let installed_outcome = load_installed_yaml_data(load_request);
+    let snapshot = match installed_outcome.map_err(|error| {
+        CrashLogScanRunServiceError::new(
+            contract::InfrastructureErrorStage::Intake,
+            Some(installed_yaml_data_path.clone()),
+            ScanLogError::ConfigError(error.to_string()),
+        )
+    })? {
+        InstalledYamlDataLoadOutcome::Ready(snapshot) => Arc::new(snapshot),
+        InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(_) => {
+            return Err(CrashLogScanRunServiceError::new(
+                contract::InfrastructureErrorStage::Intake,
+                Some(installed_yaml_data_path),
+                ScanLogError::ConfigError(
+                    "Local Ignore recovery is required before Crash Log Scan Intake".to_string(),
+                ),
+            ));
+        }
+    };
+    let installed_yaml_data = contract::InstalledYamlDataRunData::from_ready_snapshot(&snapshot)
+        .ok_or_else(|| {
+            // Ready loading cannot yield recovery-only metadata; keep #147 states out of this contract.
+            CrashLogScanRunServiceError::new(
+                contract::InfrastructureErrorStage::InternalInvariant,
+                Some(installed_yaml_data_path.clone()),
+                ScanLogError::ConfigError(
+                    "Ready Installed YAML Data contained recovery-only scan metadata".to_string(),
+                ),
+            )
+        })?;
+    let ready = CrashLogScanIntake::from_installed_yaml_data(
+        Arc::clone(&snapshot),
+        request.installation_root.clone(),
         request.game_version.clone(),
         request.options,
     )
@@ -235,7 +278,27 @@ where
     }
     result.discovery = Some(discovery);
     result.setup = setup_snapshot.as_deref().cloned();
+    result.installed_yaml_data = Some(installed_yaml_data);
     Ok(result)
+}
+
+/// Loads Installed YAML Data with a request-scoped cache environment for deterministic tests.
+#[cfg(test)]
+fn load_installed_yaml_data_for_run(
+    request: InstalledYamlDataLoadRequest,
+    hooks: &ScanRunTestHooks,
+) -> std::result::Result<InstalledYamlDataLoadOutcome, InstalledYamlDataLoadError> {
+    let Some(cache_root) = hooks.yaml_cache_root() else {
+        return load_installed_yaml_data(request);
+    };
+    let cache_root = cache_root.to_string_lossy().into_owned();
+    load_installed_yaml_data_with_env(request, move |name| match name {
+        #[cfg(target_os = "windows")]
+        "LOCALAPPDATA" => Some(cache_root.clone()),
+        #[cfg(not(target_os = "windows"))]
+        "XDG_CACHE_HOME" => Some(cache_root.clone()),
+        _ => None,
+    })
 }
 
 /// Returns the most useful path for a failure while discovering the requested source.
@@ -276,12 +339,10 @@ fn service_execution_error(
 
 /// Internal request consumed by the final contract's execution engine.
 pub(crate) struct CrashLogScanRunServiceRequest {
-    /// Root directory containing settings and ignore YAML.
-    pub yaml_dir_root: PathBuf,
-    /// `CLASSIC Data` directory containing shippable YAML databases.
-    pub yaml_dir_data: PathBuf,
-    /// Game identifier, e.g. `Fallout4`.
-    pub game: String,
+    /// Root of the installation whose Installed YAML Data should be selected.
+    pub installation_root: PathBuf,
+    /// Typed game identity used by Installed YAML Data selection.
+    pub game: GameId,
     /// Selected game-version mode.
     pub game_version: String,
     /// Scan options used by Crash Log Scan Intake.
@@ -815,6 +876,8 @@ pub(crate) struct CrashLogScanRunResult {
     pub discovery: Option<CrashLogScanDiscoveryResult>,
     /// Setup details when FCX setup validation was requested.
     pub setup: Option<CrashLogScanSetupResult>,
+    /// Installed YAML Data selected for analysis after discovery and setup.
+    pub installed_yaml_data: Option<contract::InstalledYamlDataRunData>,
     /// Optional concise run-level message.
     pub message: Option<String>,
     /// Total selected Crash Logs.
@@ -835,6 +898,7 @@ impl CrashLogScanRunResult {
             status: CrashLogScanRunStatus::NoCrashLogsFound,
             discovery: None,
             setup: None,
+            installed_yaml_data: None,
             message: Some("No crash logs found".to_string()),
             total: 0,
             succeeded: 0,
@@ -864,6 +928,7 @@ impl CrashLogScanRunResult {
             },
             discovery: None,
             setup: None,
+            installed_yaml_data: None,
             message: None,
             total,
             succeeded,
@@ -878,6 +943,7 @@ impl CrashLogScanRunResult {
             status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
             discovery: None,
             setup: None,
+            installed_yaml_data: None,
             message: Some("Cancelled before crash log discovery".to_string()),
             total: 0,
             succeeded: 0,
@@ -917,6 +983,7 @@ impl CrashLogScanRunResult {
             status: CrashLogScanRunStatus::Cancelled,
             discovery: Some(discovery),
             setup: None,
+            installed_yaml_data: None,
             message: Some("Cancelled after crash log discovery".to_string()),
             total,
             succeeded: 0,
@@ -931,6 +998,7 @@ impl CrashLogScanRunResult {
             status: CrashLogScanRunStatus::NoCrashLogsFound,
             discovery: Some(discovery),
             setup: None,
+            installed_yaml_data: None,
             message: Some("No crash logs found".to_string()),
             total: 0,
             succeeded: 0,
@@ -950,6 +1018,7 @@ impl CrashLogScanRunResult {
             status: CrashLogScanRunStatus::SetupFailed,
             discovery: Some(discovery),
             setup,
+            installed_yaml_data: None,
             message: Some(message),
             total,
             succeeded: 0,
@@ -1206,10 +1275,11 @@ async fn discover_scan_source(
 ) -> Result<Option<CrashLogScanDiscoveryResult>> {
     match &request.source {
         CrashLogScanSource::Standard(source) => {
+            let yaml_dir_data = request.installation_root.join("CLASSIC Data");
             let collector = LogCollector::new_for_scan(
                 source.base_directory.clone(),
-                &request.yaml_dir_data,
-                &request.game,
+                &yaml_dir_data,
+                request.game.as_str(),
                 &request.game_version,
                 source.configured_documents_root.as_deref(),
                 source.custom_scan_directory.clone(),
@@ -1271,15 +1341,7 @@ fn evaluate_setup_for_scan(
         return Ok((Some(setup), true));
     };
 
-    let game_id = match request.game.parse::<GameId>() {
-        Ok(game_id) => game_id,
-        Err(error) => {
-            let setup = CrashLogScanSetupResult::fatal(error);
-            return Ok((Some(setup), true));
-        }
-    };
-
-    let mut intake = GameSetupIntake::new(game_id, &request.game_version);
+    let mut intake = GameSetupIntake::new(request.game, &request.game_version);
     if let Some(path) = &context.game_root {
         intake = intake.with_game_root(path);
     }
@@ -1297,7 +1359,7 @@ fn evaluate_setup_for_scan(
     let configuration_issues = detect_setup_configuration_issues(
         game_setup.paths.game_root.as_deref(),
         context.game_root.as_deref(),
-        game_id.as_str(),
+        request.game.as_str(),
     )?;
     let setup = CrashLogScanSetupResult::from_game_setup(game_setup, configuration_issues);
     let setup_failed = setup
@@ -1361,20 +1423,6 @@ impl CrashLogScanSetupResult {
             configuration_issues: Vec::new(),
             actions: vec!["provide_setup_context".to_string()],
             fatal_errors: Vec::new(),
-            message: Some(message.clone()),
-            rendered_report: message,
-        }
-    }
-
-    fn fatal(message: impl Into<String>) -> Self {
-        let message = message.into();
-        Self {
-            status: "fatal_error".to_string(),
-            checks: Vec::new(),
-            path_updates: Vec::new(),
-            configuration_issues: Vec::new(),
-            actions: Vec::new(),
-            fatal_errors: vec![message.clone()],
             message: Some(message.clone()),
             rendered_report: message,
         }

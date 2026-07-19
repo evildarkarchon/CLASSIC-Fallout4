@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T02:48:53.690441+00:00",
+  "generated_at_utc": "2026-07-19T05:03:44.414130+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -997,6 +997,14 @@
       "signature": "export declare const enum JsInstalledYamlDataRole {"
     },
     {
+      "export": "JsInstalledYamlDataRunData",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInstalledYamlDataRunData {"
+    },
+    {
       "export": "JsIntegrityCheckResult",
       "kind": "interface",
       "owner_module": "aux",
@@ -1459,6 +1467,30 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunInfrastructureError {"
+    },
+    {
+      "export": "JsScanRunInstalledYamlDataDiagnostic",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunInstalledYamlDataDiagnostic {"
+    },
+    {
+      "export": "JsScanRunInstalledYamlDataDiagnosticKind",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {"
+    },
+    {
+      "export": "JsScanRunLocalIgnoreState",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsScanRunLocalIgnoreState {"
     },
     {
       "export": "JsScanRunLogEvent",

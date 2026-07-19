@@ -193,10 +193,11 @@ CLASSIC_Settings:
 #[test]
 fn scan_complete_with_errors_updates_status_message() {
     let mut app = App::new_for_testing();
-    app.handle_async_message(AsyncMessage::ScanFinished(Ok(RunResult {
+    app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(RunResult {
         status: CrashLogScanRunStatus::Completed,
         discovery: None,
         setup: None,
+        installed_yaml_data: None,
         effective_concurrency: Some(2),
         message: None,
         total: 3,
@@ -204,7 +205,7 @@ fn scan_complete_with_errors_updates_status_message() {
         failed: 1,
         cancelled: 0,
         logs: Vec::new(),
-    })));
+    }))));
 
     assert_eq!(app.scan_status, "Scanned 3 logs (1 errors, 0 cancelled)");
     assert_eq!(app.scan_progress, 100.0);
@@ -275,10 +276,11 @@ fn scan_complete_switches_to_results_when_enabled() {
     );
     app.active_tab = TabIndex::MainOptions;
 
-    app.handle_async_message(AsyncMessage::ScanFinished(Ok(RunResult {
+    app.handle_async_message(AsyncMessage::ScanFinished(Box::new(Ok(RunResult {
         status: CrashLogScanRunStatus::Completed,
         discovery: None,
         setup: None,
+        installed_yaml_data: None,
         effective_concurrency: Some(1),
         message: None,
         total: 1,
@@ -286,7 +288,7 @@ fn scan_complete_switches_to_results_when_enabled() {
         failed: 0,
         cancelled: 0,
         logs: Vec::new(),
-    })));
+    }))));
 
     assert!(matches!(app.active_tab, TabIndex::Results));
 }

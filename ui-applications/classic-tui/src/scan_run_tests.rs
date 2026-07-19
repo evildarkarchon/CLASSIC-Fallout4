@@ -18,8 +18,7 @@ const VALID_CRASH_LOG: &str =
 
 fn configuration() -> Configuration {
     Configuration {
-        yaml_dir_root: PathBuf::from("C:/CLASSIC"),
-        yaml_dir_data: PathBuf::from("C:/CLASSIC/CLASSIC Data"),
+        installation_root: PathBuf::from("C:/CLASSIC"),
         game: GameId::Fallout4,
         game_version: "Regular".to_string(),
         options: Options::new(true, false),
@@ -36,8 +35,7 @@ fn executable_configuration(max_concurrent: usize) -> Configuration {
         .expect("scan-run fixture root should resolve");
 
     Configuration {
-        yaml_dir_root: fixture_root.clone(),
-        yaml_dir_data: fixture_root.join("CLASSIC Data"),
+        installation_root: fixture_root,
         game: GameId::Fallout4,
         game_version: "Original".to_string(),
         options: Options::new(false, false),
@@ -213,6 +211,7 @@ fn terminal_presentation_distinguishes_cancellation_around_discovery_and_admissi
         status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
         discovery: None,
         setup: None,
+        installed_yaml_data: None,
         effective_concurrency: None,
         message: None,
         total: 0,
@@ -255,6 +254,7 @@ fn terminal_presentation_distinguishes_cancellation_around_discovery_and_admissi
             message: None,
             rendered_report: String::new(),
         }),
+        installed_yaml_data: None,
         effective_concurrency: Some(1),
         message: None,
         total: 2,
@@ -329,6 +329,7 @@ fn terminal_presentation_lists_mixed_outcomes_in_discovery_order() {
             searched_locations: vec![PathBuf::from("C:/Selected")],
         }),
         setup: None,
+        installed_yaml_data: None,
         effective_concurrency: Some(2),
         message: None,
         total: 3,

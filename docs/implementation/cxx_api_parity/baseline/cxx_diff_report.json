@@ -1,8 +1,8 @@
 {
   "summary": {
-    "contract_total": 608,
-    "current_total": 608,
-    "matched": 608,
+    "contract_total": 619,
+    "current_total": 619,
+    "matched": 619,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
@@ -347,6 +347,14 @@
     {
       "id": "94c44bd78fe1d419",
       "rustSymbol": "installed_yaml_data_snapshot_main",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "86746f77e4a76a74",
+      "rustSymbol": "installed_yaml_data_snapshot_simplify_remove_list",
       "kind": "function",
       "bridgeModule": "config",
       "status": "matched",
@@ -2657,6 +2665,54 @@
       "reason": "-"
     },
     {
+      "id": "17a9ae976a21c5f7",
+      "rustSymbol": "ScanRunGameId",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "db9a2cfb2c4ea16e",
+      "rustSymbol": "ScanRunInstalledYamlDataDiagnosticKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "785fc3aab2cb7556",
+      "rustSymbol": "ScanRunInstalledYamlDataProvenance",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "48e45574328d0baf",
+      "rustSymbol": "ScanRunInstalledYamlDataRole",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1ad54c3b19d79960",
+      "rustSymbol": "ScanRunLocalIgnoreYamlDataState",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1341fc11b331a2a8",
+      "rustSymbol": "definitions",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "768db92e85831061",
       "rustSymbol": "crash_suspect_analyze",
       "kind": "function",
@@ -3553,6 +3609,30 @@
       "reason": "-"
     },
     {
+      "id": "bed961986b7dfb6e",
+      "rustSymbol": "ScanRunInspectedYamlDataFileDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "bf911e575ada1446",
+      "rustSymbol": "ScanRunInstalledYamlDataDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "453cd25252d2362f",
+      "rustSymbol": "ScanRunInstalledYamlDataRunDataDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "9b28bab3cd0970b5",
       "rustSymbol": "ScanRunSetupCheckDto",
       "kind": "struct",
@@ -3587,6 +3667,14 @@
     {
       "id": "596a3783149095bf",
       "rustSymbol": "ScanRunTargetedSourceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "cce056c122024147",
+      "rustSymbol": "ScanRunYamlDataContentIdentityDto",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

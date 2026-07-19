@@ -22,7 +22,17 @@ def _install_user_settings_fake(
     *,
     fcx_mode: bool = False,
 ) -> None:
-    """Install a typed User Settings projection for scan CLI tests."""
+    """Install typed shared-game and User Settings projections for scan CLI tests."""
+
+    class GameId:
+        Fallout4 = object()
+        Fallout4VR = object()
+        Skyrim = object()
+        Starfield = object()
+
+    shared = types.ModuleType("classic_shared")
+    shared.GameId = GameId
+    monkeypatch.setitem(sys.modules, "classic_shared", shared)
 
     scan = types.SimpleNamespace(
         fcx_mode=fcx_mode,
@@ -272,8 +282,8 @@ def test_scan_logs_reports_fail_soft_result_counts(monkeypatch: pytest.MonkeyPat
         configuration: dict[str, object],
         paths: list[str],
     ) -> list[types.SimpleNamespace]:
-        assert configuration["yaml_dir_root"] == str(REPO_ROOT)
-        assert configuration["yaml_dir_data"] == str(REPO_ROOT / "CLASSIC Data")
+        assert configuration["installation_root"] == str(REPO_ROOT)
+        assert configuration["game"] is sys.modules["classic_shared"].GameId.Fallout4
         assert paths == [str(scan_dir)]
         return [
             types.SimpleNamespace(
@@ -345,6 +355,8 @@ def test_scan_logs_reports_unsuccessful_terminal_statuses(
         "status": status,
         "message": f"terminal {status}",
     }
+    assert payload["data"]["result"]["status"] == status
+    assert payload["data"]["result"]["installedYamlData"] is None
 
 
 def test_scan_logs_consumes_final_result_and_event_contract(
@@ -431,7 +443,47 @@ def test_scan_logs_consumes_final_result_and_event_contract(
         )
         result = types.SimpleNamespace(
             status="completed",
+            discovery=types.SimpleNamespace(
+                source="targeted",
+                accepted_logs=[str(crash_log)],
+                rejected_inputs=[],
+                searched_locations=[str(tmp_path)],
+            ),
+            setup=None,
+            installed_yaml_data=types.SimpleNamespace(
+                main=types.SimpleNamespace(
+                    role="main",
+                    provenance="updated",
+                    schema_major=2,
+                    schema_minor=0,
+                    sha256="a" * 64,
+                    byte_length=123,
+                ),
+                game_file=types.SimpleNamespace(
+                    role="game",
+                    provenance="bundled",
+                    schema_major=1,
+                    schema_minor=0,
+                    sha256="b" * 64,
+                    byte_length=456,
+                ),
+                local_ignore_state="generated",
+                local_ignore_identity=types.SimpleNamespace(
+                    sha256="c" * 64,
+                    byte_len=78,
+                ),
+                diagnostics=[
+                    types.SimpleNamespace(
+                        role=None,
+                        candidate=None,
+                        path=tmp_path / "CLASSIC Data" / "CLASSIC Ignore.yaml",
+                        kind="local_ignore_generated",
+                        message="Generated Local Ignore from selected Main defaults",
+                    )
+                ],
+            ),
             effective_concurrency=1,
+            message=None,
             total=1,
             succeeded=1,
             failed=0,
@@ -468,9 +520,8 @@ def test_scan_logs_consumes_final_result_and_event_contract(
     assert code == 0
     assert observed["targetedInputs"] == [str(crash_log)]
     assert observed["configuration"] == {
-        "yaml_dir_root": str(REPO_ROOT),
-        "yaml_dir_data": str(REPO_ROOT / "CLASSIC Data"),
-        "game": "Fallout4",
+        "installation_root": str(REPO_ROOT),
+        "game": sys.modules["classic_shared"].GameId.Fallout4,
         "game_version": "1.10.984",
         "show_formid_values": True,
         "simplify_logs": True,
@@ -485,6 +536,44 @@ def test_scan_logs_consumes_final_result_and_event_contract(
     }
     assert payload["data"]["status"] == "completed"
     assert payload["data"]["effectiveConcurrency"] == 1
+    assert payload["data"]["result"]["installedYamlData"] == {
+        "main": {
+            "role": "main",
+            "provenance": "updated",
+            "schemaMajor": 2,
+            "schemaMinor": 0,
+            "sha256": "a" * 64,
+            "byteLength": 123,
+        },
+        "gameFile": {
+            "role": "game",
+            "provenance": "bundled",
+            "schemaMajor": 1,
+            "schemaMinor": 0,
+            "sha256": "b" * 64,
+            "byteLength": 456,
+        },
+        "localIgnoreState": "generated",
+        "localIgnoreIdentity": {
+            "sha256": "c" * 64,
+            "byteLen": 78,
+        },
+        "diagnostics": [
+            {
+                "role": None,
+                "candidate": None,
+                "path": str(tmp_path / "CLASSIC Data" / "CLASSIC Ignore.yaml"),
+                "kind": "local_ignore_generated",
+                "message": "Generated Local Ignore from selected Main defaults",
+            }
+        ],
+    }
+    assert payload["data"]["result"]["discovery"] == {
+        "source": "targeted",
+        "acceptedLogs": [str(crash_log)],
+        "rejectedInputs": [],
+        "searchedLocations": [str(tmp_path)],
+    }
     assert payload["data"]["events"] == [
         {
             "kind": "discovery_completed",
@@ -543,8 +632,8 @@ def test_smoke_report_generation_with_fake_bindings(monkeypatch: pytest.MonkeyPa
         configuration: dict[str, object],
         paths: list[str],
     ) -> list[types.SimpleNamespace]:
-        assert configuration["yaml_dir_root"] == str(fixture_root)
-        assert configuration["yaml_dir_data"] == str(fixture_root / "CLASSIC Data")
+        assert configuration["installation_root"] == str(fixture_root)
+        assert configuration["game"] is sys.modules["classic_shared"].GameId.Fallout4
         assert paths == [str(scan_fixture)]
         assert "Addictol v1.3.1" in scan_fixture.read_text(encoding="utf-8")
         report_path = tmp_path / "addictol-AUTOSCAN.md"

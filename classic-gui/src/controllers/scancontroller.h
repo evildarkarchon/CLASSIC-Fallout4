@@ -5,6 +5,7 @@
 #include <QStringList>
 
 #include "core/guiusersettings.h"
+#include "workers/scanrunpresentation.h"
 
 class SignalHub;
 class ThreadManager;
@@ -21,9 +22,8 @@ public:
     /// `setupXseLogPath` and `targetedInputs` are runtime-only hints. The value object is copied
     /// into the worker-thread callback, where Rust owns discovery and the remaining lifecycle, so
     /// no User Settings read or GUI-side source resolution occurs after launch begins.
-    void startScan(const QString& yamlRoot, const QString& yamlData,
-                   const classic::gui::CrashLogScanLaunchSettings& settings, const QString& setupXseLogPath = {},
-                   const QStringList& targetedInputs = {});
+    void startScan(const QString& installationRoot, const classic::gui::CrashLogScanLaunchSettings& settings,
+                   const QString& setupXseLogPath = {}, const QStringList& targetedInputs = {});
     void cancelScan();
     bool isScanning() const;
 
@@ -39,6 +39,8 @@ signals:
     void scanWarning(const QString& message);
     void scanProgress(float percent, const QString& status, int completed, int total);
     void scanReportDirectoriesResolved(const QStringList& reportDirs);
+    /// Relays the immutable Installed YAML Data selected for the active run to GUI consumers.
+    void scanInstalledYamlDataResolved(const classic::gui::ScanRunInstalledYamlDataPresentation& installedYamlData);
 
 private slots:
     void onWorkerFinished(int total, int success, int errors);

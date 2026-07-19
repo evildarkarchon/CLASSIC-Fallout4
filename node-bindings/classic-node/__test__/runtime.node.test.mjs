@@ -19,9 +19,13 @@ const activeTier1Owners = new Set(
 );
 
 const MAIN_YAML = `
+schema_version: "2.0"
 CLASSIC_Info:
   version: "9.0.0"
   version_date: "2026-02-25"
+  default_ignorefile: |
+    CLASSIC_Ignore_Fallout4:
+      - "IgnoreItem1"
 catch_log_records:
   - "LAND"
 `;
@@ -94,6 +98,7 @@ Game_Info:
   Docs_Folder_XSE: "DOCS_XSE_PLACEHOLDER"
 `;
   const gameYaml = `
+schema_version: "1.0"
 Game_Info:
   XSE_Acronym: "F4SE"
   GameVersion: "1.10.163"
@@ -121,7 +126,7 @@ Mods_SOLU: []
 
   writeFileSync(join(databaseDir, "CLASSIC Main.yaml"), MAIN_YAML, "utf8");
   writeFileSync(join(databaseDir, "CLASSIC Fallout4.yaml"), replaceDocsPlaceholder(gameYaml, docsDir), "utf8");
-  writeFileSync(join(workspace, "CLASSIC Ignore.yaml"), IGNORE_YAML, "utf8");
+  writeFileSync(join(classicDataDir, "CLASSIC Ignore.yaml"), IGNORE_YAML, "utf8");
   writeFileSync(
     join(classicDataDir, "CLASSIC Fallout4 Local.yaml"),
     replaceDocsPlaceholder(localYaml, docsDir),
@@ -458,9 +463,8 @@ if (activeTier1Owners.has("scanlog")) {
   test("runs final Standard and Targeted scan contracts in Node runtime", async () => {
     const { workspace } = createCliWorkspace();
     const configuration = {
-      yamlDirRoot: workspace,
-      yamlDirData: join(workspace, "CLASSIC Data"),
-      game: "Fallout4",
+      installationRoot: workspace,
+      game: classic.JsGameId.Fallout4,
       gameVersion: "auto",
       showFormidValues: false,
       simplifyLogs: false,
@@ -485,6 +489,17 @@ if (activeTier1Owners.has("scanlog")) {
 
       assert.equal(standardExecution.error, undefined);
       assert.equal(standardExecution.result.status, "completed");
+      assert.equal(standardExecution.result.installedYamlData.main.role, "Main");
+      assert.equal(standardExecution.result.installedYamlData.gameFile.role, "Game");
+      assert.equal(standardExecution.result.installedYamlData.localIgnoreState, "Existing");
+      assert.equal(
+        typeof standardExecution.result.installedYamlData.localIgnoreIdentity.sha256,
+        "string",
+      );
+      assert.equal(
+        Array.isArray(standardExecution.result.installedYamlData.diagnostics),
+        true,
+      );
       const discoveredLogPath = standardExecution.result.logs[0].crashLog;
       assert.equal(discoveredLogPath.endsWith("crash-2026-03-06-12-00-00.log"), true);
       assert.equal(standardEvents.includes("discovery_completed"), true);

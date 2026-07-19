@@ -156,6 +156,8 @@ const EXPLICIT_MAIN_YAML = [
   '  version: "9.1.0"',
   "CLASSIC_Interface:",
   '  autoscan_text_Fallout4: "explicit node"',
+  "exclude_log_records:",
+  "  - NodeSimplify.dll",
   "",
 ].join("\r\n");
 
@@ -502,6 +504,7 @@ describe("Installed YAML Data loading", () => {
         JsLocalIgnoreYamlDataState.Existing,
       );
       expect(outcome.snapshot.yamlData.classicVersion).toBe("9.1.0");
+      expect(outcome.snapshot.simplifyRemoveList).toEqual(["NodeSimplify.dll"]);
       expect(outcome.snapshot.yamlData.ignoreList).toEqual([
         "IgnoreItem1",
         "IgnoreItem2",

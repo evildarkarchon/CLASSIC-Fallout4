@@ -8,7 +8,8 @@ use crate::explicit_yaml_data::{
 use crate::yamldata::{YamlDataCore, parse_and_merge_yaml_content};
 use classic_path_core::yaml_cache_dir_with_env;
 use classic_settings_core::{
-    Compatibility, SchemaCompat, SchemaVersion, extract_schema_version, schema_compat_check,
+    Compatibility, SchemaCompat, SchemaVersion, YamlOperations, extract_schema_version,
+    schema_compat_check,
 };
 use classic_shared_core::GameId;
 use fs4::fs_std::FileExt;
@@ -496,6 +497,7 @@ fn sync_replacement_parent_best_effort(_parent: &Path) {}
 /// Immutable parsed Installed YAML Data backed by the exact selected file bytes.
 pub struct InstalledYamlDataSnapshot {
     yaml_data: YamlDataCore,
+    simplify_remove_list: Vec<String>,
     requested_game: GameId,
     game_data_role: GameDataRole,
     main: OwnedInstalledYamlDataFile,
@@ -722,6 +724,15 @@ impl InstalledYamlDataSnapshot {
     #[must_use]
     pub const fn yaml_data(&self) -> &YamlDataCore {
         &self.yaml_data
+    }
+
+    /// Return simplify-log removal entries parsed from the retained selected Main bytes.
+    ///
+    /// Keeping this data on the snapshot lets operation consumers preserve simplify behavior
+    /// without reopening a mutable installed Main path after selection.
+    #[must_use]
+    pub fn simplify_remove_list(&self) -> &[String] {
+        &self.simplify_remove_list
     }
 
     /// Return the typed game requested by the caller.
@@ -1413,6 +1424,8 @@ fn build_installed_yaml_data_snapshot(
         local_ignore.bytes.len() as u64,
         local_ignore.identity.byte_len()
     );
+    let simplify_remove_list =
+        YamlOperations::new().get_vec_value(&selected.main.yaml, "exclude_log_records");
     let yaml_data = YamlDataCore::build_from_yaml_documents(
         &selected.main.yaml,
         &selected.game_file.yaml,
@@ -1426,6 +1439,7 @@ fn build_installed_yaml_data_snapshot(
 
     Ok(InstalledYamlDataSnapshot {
         yaml_data,
+        simplify_remove_list,
         requested_game: selected.requested_game,
         game_data_role: selected.game_data_role,
         main: selected.main,

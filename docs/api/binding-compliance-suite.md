@@ -34,7 +34,7 @@ The suite does not replace lower-level parsers. It owns the top-level pass/fail 
 - Node: `python tools/node_api_parity/check_parity_gate.py --repo-root .` plus `bun run dts:freshness:check` in the Node CI slice.
 - Python: `python tools/python_api_parity/check_parity_gate.py --repo-root .` plus `validate_stubs.py`.
 - User Settings ownership: `python tools/user_settings_ownership/check.py --repo-root .` rejects first-party production references that reintroduce flat models, generic User Settings variants/key policies, raw `CLASSIC_Settings` interpretation outside `classic-user-settings-core`, or runtime use of the generated default mirror.
-- Crash Log Scan Run parity and contraction: `python tools/binding_compliance/scan_run_contract.py --repo-root .` validates the shared corpus under `tests/fixtures/crash_log_scan_run/`, compares its variant inventory with the Rust enums, and fails unless Rust, CXX, Node, and Python acknowledge every variant. The same manifest carries a per-surface forbidden-export inventory; the check fails if a removed orchestration, analysis-only execution, batch lifecycle, direct report-writing, resettable cancellation, or global-FCX name remains in public source, CXX parity data, Node declarations/parity/runtime coverage, or Python stubs/parity/runtime coverage. It also requires executable Standard, Targeted, cancellation, and structured-failure evidence plus CLI, GUI, and TUI presentation evidence.
+- Crash Log Scan Run parity and contraction: `python tools/binding_compliance/scan_run_contract.py --repo-root .` validates the shared corpus under `tests/fixtures/crash_log_scan_run/`, compares its variant inventory with the Rust enums, and fails unless Rust, CXX, Node, and Python acknowledge every variant. The inventory includes Installed YAML Data roles, provenance, diagnostic kinds, and Local Ignore states in addition to lifecycle variants. The same manifest carries a per-surface forbidden-export inventory; the check fails if a removed orchestration, analysis-only execution, batch lifecycle, direct report-writing, resettable cancellation, or global-FCX name remains in public source, CXX parity data, Node declarations/parity/runtime coverage, or Python stubs/parity/runtime coverage. It also requires executable Standard, Targeted, existing/generated Installed YAML Data, cancellation, and structured-failure evidence plus CLI, GUI, and TUI presentation evidence.
 
 Existing C++, Node, and Python parity gates remain available as focused debugging commands. Do not remove or weaken them unless the compliance suite demonstrably covers the same check and the replacement is documented in the same change.
 
@@ -48,7 +48,7 @@ Treat new drift, stale generated artifacts, stale baselines, missing runtime cov
 
 ## Crash Log Scan Run Contract Changes
 
-`tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, and durable artifact presence remain contractual.
+`tests/fixtures/crash_log_scan_run/manifest.json` is the machine-readable owner for normalized cross-interface expectations. Paths are compared relative to each runner's temporary root; processing timings and exact concurrent event interleavings are deliberately excluded. Discovery, Rust-selected effective concurrency, serialized event variants, discovery-order outcomes, structured failures, Installed YAML Data metadata, valid/generated Local Ignore behavior, durable artifact presence, and report-byte stability remain contractual.
 
 The manifest's `forbiddenExports` section is negative evidence for the completed
 contract step. Identifier-shaped markers use identifier boundaries, so removing
@@ -59,7 +59,7 @@ Do not weaken the list when a generated artifact is inconvenient to refresh:
 remove the source export, regenerate the declaration/stub and parity artifacts,
 and remove its runtime-coverage registration together.
 
-When a Rust request, event, status, discovery source, disposition, failure stage, infrastructure stage, movement intent, or progress phase changes, update the manifest acknowledgements and the affected adapter tests in the same change. The validator derives those enum variants directly from Rust, so adding a variant only to Rust fails the canonical compliance profile.
+When a Rust request, event, status, discovery source, disposition, failure stage, infrastructure stage, movement intent, progress phase, scan-run Installed YAML Data role/provenance/diagnostic kind, or scan-run Local Ignore state changes, update the manifest acknowledgements and the affected adapter tests in the same change. The validator derives those final-operation enum variants directly from Rust, so adding a variant only to Rust fails the canonical compliance profile. Config-owned recovery enums are intentionally outside this #146 inventory.
 
 When intentionally contracting a scan-execution symbol, add it to every
 applicable `forbiddenExports` surface before removing it. This keeps a later

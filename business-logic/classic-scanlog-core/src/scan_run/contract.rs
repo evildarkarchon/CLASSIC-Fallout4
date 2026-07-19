@@ -17,6 +17,11 @@ use super::{
     StandardUnsolvedLogsIntent, TargetedCrashLogScanSource, execute_service,
 };
 use crate::{CrashLogScanFacts, CrashLogScanOptions, ScanProgressPhase};
+use classic_config_core::{
+    InspectedYamlDataFile, InstalledYamlDataDiagnosticKind, InstalledYamlDataProvenance,
+    InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreYamlDataState,
+    YamlDataContentIdentity,
+};
 use classic_shared_core::GameId;
 use std::fmt;
 use std::path::PathBuf;
@@ -52,10 +57,8 @@ impl Options {
 /// Configuration shared by Standard and Targeted Crash Log Scan Runs.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Configuration {
-    /// Root directory containing settings and ignore YAML.
-    pub yaml_dir_root: PathBuf,
-    /// `CLASSIC Data` directory containing shippable YAML databases.
-    pub yaml_dir_data: PathBuf,
+    /// Root of the CLASSIC installation whose Installed YAML Data should be selected.
+    pub installation_root: PathBuf,
     /// Supported game identifier.
     pub game: GameId,
     /// Selected game-version mode.
@@ -326,9 +329,8 @@ impl Request {
         }
 
         CrashLogScanRunServiceRequest {
-            yaml_dir_root: configuration.yaml_dir_root,
-            yaml_dir_data: configuration.yaml_dir_data,
-            game: configuration.game.as_str().to_string(),
+            installation_root: configuration.installation_root,
+            game: configuration.game,
             game_version: configuration.game_version,
             options: CrashLogScanOptions::new(
                 configuration.options.show_formid_values,
@@ -591,6 +593,161 @@ impl From<EngineLogOutcome> for LogResult {
 /// Stable lifecycle status used by [`RunResult`].
 pub use super::CrashLogScanRunStatus as RunStatus;
 
+/// Local Ignore origins that the valid-or-generated final operation can return.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum LocalIgnoreRunState {
+    /// A valid user-owned Local Ignore file already existed in the installation.
+    Existing,
+    /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+    Generated,
+}
+
+/// Stable diagnostic categories emitted by valid-or-generated scan-run intake.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum InstalledYamlDataRunDiagnosticKind {
+    /// The per-user update cache could not be resolved.
+    CacheUnavailable,
+    /// A required final fallback candidate was absent.
+    Missing,
+    /// A present candidate could not be read.
+    Read,
+    /// Candidate bytes were not valid UTF-8.
+    InvalidUtf8,
+    /// Candidate text was not valid YAML Data.
+    Parse,
+    /// A candidate omitted or malformed its schema version.
+    InvalidSchema,
+    /// A candidate schema was outside the client-owned compatibility range.
+    IncompatibleSchema,
+    /// A candidate failed role-specific semantic validation.
+    InvalidRoleData,
+    /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+    LocalIgnoreGenerated,
+}
+
+/// Structured attribution for one scan-run selection, fallback, or generation event.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct InstalledYamlDataRunDiagnostic {
+    role: Option<InstalledYamlDataRole>,
+    candidate: Option<InstalledYamlDataProvenance>,
+    path: Option<PathBuf>,
+    kind: InstalledYamlDataRunDiagnosticKind,
+    message: String,
+}
+
+impl InstalledYamlDataRunDiagnostic {
+    /// Returns the affected update-eligible role, when the event is role-specific.
+    #[must_use]
+    pub const fn role(&self) -> Option<InstalledYamlDataRole> {
+        self.role
+    }
+
+    /// Returns the rejected candidate provenance, when the event is candidate-specific.
+    #[must_use]
+    pub const fn candidate(&self) -> Option<InstalledYamlDataProvenance> {
+        self.candidate
+    }
+
+    /// Returns the affected path when the diagnostic is path-attributable.
+    #[must_use]
+    pub fn path(&self) -> Option<&std::path::Path> {
+        self.path.as_deref()
+    }
+
+    /// Returns the stable scan-run diagnostic category.
+    #[must_use]
+    pub const fn kind(&self) -> InstalledYamlDataRunDiagnosticKind {
+        self.kind
+    }
+
+    /// Returns the actionable human-readable explanation.
+    #[must_use]
+    pub fn message(&self) -> &str {
+        &self.message
+    }
+}
+
+/// Installed YAML Data facts selected once and retained for a complete Crash Log Scan Run.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct InstalledYamlDataRunData {
+    /// Selected Main file schema, identity, and provenance.
+    pub main: InspectedYamlDataFile,
+    /// Selected game file schema, identity, and provenance.
+    pub game_file: InspectedYamlDataFile,
+    /// How Local Ignore YAML Data entered the immutable run snapshot.
+    pub local_ignore_state: LocalIgnoreRunState,
+    /// Identity derived from the exact Local Ignore bytes retained by the run.
+    pub local_ignore_identity: YamlDataContentIdentity,
+    /// Structured fallback, validation, and generation diagnostics.
+    pub diagnostics: Vec<InstalledYamlDataRunDiagnostic>,
+}
+
+impl InstalledYamlDataRunData {
+    /// Copies #146 metadata from a Ready snapshot.
+    ///
+    /// Returns `None` for recovery-only Local Ignore state or diagnostics reserved for #147.
+    #[must_use]
+    pub(super) fn from_ready_snapshot(snapshot: &InstalledYamlDataSnapshot) -> Option<Self> {
+        let local_ignore_state = match snapshot.local_ignore_state() {
+            LocalIgnoreYamlDataState::Existing => LocalIgnoreRunState::Existing,
+            LocalIgnoreYamlDataState::Generated => LocalIgnoreRunState::Generated,
+            LocalIgnoreYamlDataState::ProceedWithoutIgnore
+            | LocalIgnoreYamlDataState::ResetToDefault => return None,
+        };
+        let diagnostics = snapshot
+            .diagnostics()
+            .iter()
+            .map(|diagnostic| {
+                let kind = match diagnostic.kind() {
+                    InstalledYamlDataDiagnosticKind::CacheUnavailable => {
+                        InstalledYamlDataRunDiagnosticKind::CacheUnavailable
+                    }
+                    InstalledYamlDataDiagnosticKind::Missing => {
+                        InstalledYamlDataRunDiagnosticKind::Missing
+                    }
+                    InstalledYamlDataDiagnosticKind::Read => {
+                        InstalledYamlDataRunDiagnosticKind::Read
+                    }
+                    InstalledYamlDataDiagnosticKind::InvalidUtf8 => {
+                        InstalledYamlDataRunDiagnosticKind::InvalidUtf8
+                    }
+                    InstalledYamlDataDiagnosticKind::Parse => {
+                        InstalledYamlDataRunDiagnosticKind::Parse
+                    }
+                    InstalledYamlDataDiagnosticKind::InvalidSchema => {
+                        InstalledYamlDataRunDiagnosticKind::InvalidSchema
+                    }
+                    InstalledYamlDataDiagnosticKind::IncompatibleSchema => {
+                        InstalledYamlDataRunDiagnosticKind::IncompatibleSchema
+                    }
+                    InstalledYamlDataDiagnosticKind::InvalidRoleData => {
+                        InstalledYamlDataRunDiagnosticKind::InvalidRoleData
+                    }
+                    InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated => {
+                        InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated
+                    }
+                    InstalledYamlDataDiagnosticKind::LocalIgnoreReset => return None,
+                };
+                Some(InstalledYamlDataRunDiagnostic {
+                    role: diagnostic.role(),
+                    candidate: diagnostic.candidate(),
+                    path: diagnostic.path().map(std::path::Path::to_path_buf),
+                    kind,
+                    message: diagnostic.message().to_string(),
+                })
+            })
+            .collect::<Option<Vec<_>>>()?;
+
+        Some(Self {
+            main: snapshot.main().clone(),
+            game_file: snapshot.game_file().clone(),
+            local_ignore_state,
+            local_ignore_identity: snapshot.local_ignore_identity().clone(),
+            diagnostics,
+        })
+    }
+}
+
 /// Terminal result of the final Crash Log Scan Run operation.
 #[derive(Clone, Debug)]
 pub struct RunResult {
@@ -600,6 +757,8 @@ pub struct RunResult {
     pub discovery: Option<CrashLogScanDiscoveryResult>,
     /// FCX setup data when FCX Mode was enabled.
     pub setup: Option<CrashLogScanSetupResult>,
+    /// Installed YAML Data selected after discovery, absent when intake was not reached.
+    pub installed_yaml_data: Option<InstalledYamlDataRunData>,
     /// Rust-selected concurrency, once scheduling was reached.
     pub effective_concurrency: Option<usize>,
     /// Optional concise run-level message.
@@ -786,6 +945,7 @@ async fn execute_inner(
         status,
         discovery,
         setup,
+        installed_yaml_data,
         message,
         total,
         succeeded,
@@ -799,6 +959,7 @@ async fn execute_inner(
         status,
         discovery,
         setup,
+        installed_yaml_data,
         effective_concurrency,
         message,
         total,

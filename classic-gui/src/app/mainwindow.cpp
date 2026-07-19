@@ -5,6 +5,7 @@
 #include <limits>
 #include <QApplication>
 #include <QCoreApplication>
+#include <QDebug>
 #include <QDir>
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
@@ -76,6 +77,61 @@ QString format_elapsed_seconds(const QElapsedTimer& timer)
     return QString::number(static_cast<double>(elapsedMs) / 1000.0, 'f', 1);
 }
 
+/// Returns the stable GUI label for the #146 scan-run Local Ignore state inventory.
+QString localIgnoreStateLabel(classic::scanner::ScanRunLocalIgnoreYamlDataState state)
+{
+    using State = classic::scanner::ScanRunLocalIgnoreYamlDataState;
+    switch (state) {
+    case State::Existing:
+        return QStringLiteral("existing");
+    case State::Generated:
+        return QStringLiteral("generated");
+    }
+    return QStringLiteral("unknown");
+}
+
+/// Returns the stable GUI label for every selected YAML Data provenance.
+QString installedYamlDataProvenanceLabel(classic::scanner::ScanRunInstalledYamlDataProvenance provenance)
+{
+    using Provenance = classic::scanner::ScanRunInstalledYamlDataProvenance;
+    switch (provenance) {
+    case Provenance::Updated:
+        return QStringLiteral("updated");
+    case Provenance::Previous:
+        return QStringLiteral("previous");
+    case Provenance::Bundled:
+        return QStringLiteral("bundled");
+    }
+    return QStringLiteral("unknown");
+}
+
+/// Returns the stable GUI label for the #146 scan-run Installed YAML Data diagnostic inventory.
+QString installedYamlDataDiagnosticKindLabel(classic::scanner::ScanRunInstalledYamlDataDiagnosticKind kind)
+{
+    using Kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind;
+    switch (kind) {
+    case Kind::CacheUnavailable:
+        return QStringLiteral("cache unavailable");
+    case Kind::Missing:
+        return QStringLiteral("missing");
+    case Kind::Read:
+        return QStringLiteral("read");
+    case Kind::InvalidUtf8:
+        return QStringLiteral("invalid UTF-8");
+    case Kind::Parse:
+        return QStringLiteral("parse");
+    case Kind::InvalidSchema:
+        return QStringLiteral("invalid schema");
+    case Kind::IncompatibleSchema:
+        return QStringLiteral("incompatible schema");
+    case Kind::InvalidRoleData:
+        return QStringLiteral("invalid role data");
+    case Kind::LocalIgnoreGenerated:
+        return QStringLiteral("local ignore generated");
+    }
+    return QStringLiteral("unknown");
+}
+
 /// Resolve an existing Fallout 4 script-extender log to use as a setup detection hint.
 /// The selected version controls preference, while checking both names keeps auto-detected VR installs working.
 QString resolveExistingXseLogPath(const QString& yamlData, const QString& game, const QString& selectedGameVersion,
@@ -109,87 +165,9 @@ void logUpdateCheckFailure(const QString& errorMessage)
     classic::message::log_warning(message);
 }
 
-QString ignoreFilePath(const QString& dataRoot)
-{
-    return dataRoot + QStringLiteral("/CLASSIC Ignore.yaml");
-}
-
 QString localYamlFilePath(const QString& dataDir, const QString& game)
 {
     return dataDir + QStringLiteral("/CLASSIC %1 Local.yaml").arg(game);
-}
-
-bool ensureIgnoreFileExists(const QString& dataRoot, const QString& dataDir, QString* errorOut)
-{
-    if (dataRoot.isEmpty()) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("CLASSIC root directory path is empty.");
-        }
-        return false;
-    }
-    if (dataDir.isEmpty()) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("CLASSIC Data directory path is empty.");
-        }
-        return false;
-    }
-
-    const QString ignorePath = ignoreFilePath(dataRoot);
-    if (QFile::exists(ignorePath)) {
-        return true;
-    }
-
-    const QString mainYamlPath = dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
-    if (!QFile::exists(mainYamlPath)) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("Missing template file: ") + mainYamlPath;
-        }
-        return false;
-    }
-
-    try {
-        auto mainOps = classic::settings::yaml_ops_new();
-        classic::settings::yaml_ops_load_file(*mainOps, std::string(mainYamlPath.toUtf8().constData()));
-
-        auto defaultIgnore = classic::settings::yaml_ops_get_string(*mainOps, "CLASSIC_Info.default_ignorefile", "");
-        if (defaultIgnore.empty()) {
-            if (errorOut) {
-                *errorOut = QStringLiteral("CLASSIC_Info.default_ignorefile is missing in CLASSIC Main.yaml.");
-            }
-            return false;
-        }
-
-        QFile outFile(ignorePath);
-        if (!outFile.open(QFile::WriteOnly | QFile::Text | QFile::Truncate)) {
-            if (errorOut) {
-                *errorOut = QStringLiteral("Cannot create file: ") + ignorePath + QStringLiteral(" (") +
-                            outFile.errorString() + QStringLiteral(")");
-            }
-            return false;
-        }
-
-        const auto content = classic::toQString(defaultIgnore).toUtf8();
-        if (outFile.write(content) == -1) {
-            if (errorOut) {
-                *errorOut = QStringLiteral("Failed writing file: ") + ignorePath + QStringLiteral(" (") +
-                            outFile.errorString() + QStringLiteral(")");
-            }
-            return false;
-        }
-
-        return true;
-
-    } catch (const std::exception& e) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("Ignore template parse failed: ") + QString::fromUtf8(e.what());
-        }
-        return false;
-    } catch (...) {
-        if (errorOut) {
-            *errorOut = QStringLiteral("Unknown error creating default ignore file.");
-        }
-        return false;
-    }
 }
 
 bool saveLocalYamlPaths(const QString& dataDir, const QString& game, const QString& gamePath, const QString& docsPath,
@@ -788,6 +766,8 @@ void MainWindow::connectSignals()
     connect(m_scanController, &ScanController::scanWarning, this, &MainWindow::onScanWarning);
     connect(m_scanController, &ScanController::scanReportDirectoriesResolved, this,
             &MainWindow::onScanReportDirectoriesResolved);
+    connect(m_scanController, &ScanController::scanInstalledYamlDataResolved, this,
+            &MainWindow::onScanInstalledYamlDataResolved);
 
     // Settings button
     connect(m_btnSettings, &QPushButton::clicked, this, &MainWindow::onShowSettings);
@@ -900,11 +880,6 @@ void MainWindow::loadSettings()
         setup = classic::gui::GameSetupUserSettings::open(m_dataRoot);
     }
     presentDegradedUserSettings(this, setup);
-
-    QString bootstrapError;
-    if (!ensureIgnoreFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
-        setStatusMessage(QStringLiteral("Ignore file bootstrap failed: ") + bootstrapError);
-    }
 
     try {
         m_guiSettings = classic::gui::GuiUserSettings::open(m_dataRoot);
@@ -1418,13 +1393,6 @@ void MainWindow::onScanCrashLogs()
         return;
     }
 
-    QString bootstrapError;
-    if (!ensureIgnoreFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
-        QMessageBox::warning(this, QStringLiteral("Error"),
-                             QStringLiteral("Failed to initialize CLASSIC Ignore.yaml:\n") + bootstrapError);
-        return;
-    }
-
     auto launchSettings = m_guiSettings.scanLaunchSettings(m_guiSettings.gameSetup.managedGame);
     QString setupGameRoot;
     QString setupDocsPath;
@@ -1456,11 +1424,13 @@ void MainWindow::onScanCrashLogs()
     m_crashScanLogsCompleted = 0;
     m_crashScanInProgress = true;
     m_lastScanReportDirs.clear();
+    m_hasLastInstalledYamlData = false;
+    m_lastInstalledYamlData = {};
     m_crashScanTimer.start();
     setStatusMessage(QStringLiteral("Scanning crash logs... 0 logs scanned | elapsed %1s")
                          .arg(format_elapsed_seconds(m_crashScanTimer)));
 
-    m_scanController->startScan(m_dataRoot, m_dataDir, launchSettings, setupXseLogPath, m_targetedInputPaths);
+    m_scanController->startScan(m_dataRoot, launchSettings, setupXseLogPath, m_targetedInputPaths);
 }
 
 void MainWindow::onScanGameFiles()
@@ -1590,7 +1560,8 @@ void MainWindow::onScanCompleted(int total, int success, int errors)
                          .arg(total)
                          .arg(format_elapsed_seconds(m_crashScanTimer))
                          .arg(success)
-                         .arg(errors));
+                         .arg(errors) +
+                     installedYamlDataStatusSuffix());
 
     // Auto-switch to Results tab is handled by ResultsController::onScanCompleted()
 }
@@ -1603,7 +1574,8 @@ void MainWindow::onScanCancelled(const QString& message)
     m_progressBar->setValue(0);
     m_crashScanInProgress = false;
     initResultsReportDir();
-    setStatusMessage(QStringLiteral("%1 (%2s)").arg(message).arg(format_elapsed_seconds(m_crashScanTimer)));
+    setStatusMessage(QStringLiteral("%1 (%2s)").arg(message).arg(format_elapsed_seconds(m_crashScanTimer)) +
+                     installedYamlDataStatusSuffix());
 }
 
 void MainWindow::onScanNoLogsFound(const QString& message)
@@ -1614,7 +1586,7 @@ void MainWindow::onScanNoLogsFound(const QString& message)
     m_progressBar->setValue(0);
     m_crashScanInProgress = false;
     initResultsReportDir();
-    setStatusMessage(message);
+    setStatusMessage(message + installedYamlDataStatusSuffix());
 }
 
 void MainWindow::onScanError(const QString& message)
@@ -1626,7 +1598,8 @@ void MainWindow::onScanError(const QString& message)
     m_crashScanInProgress = false;
     initResultsReportDir();
     setStatusMessage(
-        QStringLiteral("Scan failed after %1s: %2").arg(format_elapsed_seconds(m_crashScanTimer)).arg(message));
+        QStringLiteral("Scan failed after %1s: %2").arg(format_elapsed_seconds(m_crashScanTimer)).arg(message) +
+        installedYamlDataStatusSuffix());
 
     QMessageBox::critical(this, QStringLiteral("Scan Error"), message);
 }
@@ -1640,6 +1613,59 @@ void MainWindow::onScanReportDirectoriesResolved(const QStringList& reportDirs)
 {
     m_lastScanReportDirs = reportDirs;
     initResultsReportDir();
+}
+
+void MainWindow::onScanInstalledYamlDataResolved(
+    const classic::gui::ScanRunInstalledYamlDataPresentation& installedYamlData)
+{
+    m_lastInstalledYamlData = installedYamlData;
+    m_hasLastInstalledYamlData = true;
+
+    qInfo().noquote() << QStringLiteral(
+                             "Installed YAML Data: Main %1 schema %2 (%3 bytes, sha256 %4); "
+                             "Game %5 schema %6 (%7 bytes, sha256 %8); Local Ignore %9 (%10 bytes, sha256 %11)")
+                             .arg(installedYamlDataProvenanceLabel(installedYamlData.main.provenance))
+                             .arg(installedYamlData.main.schemaVersion)
+                             .arg(installedYamlData.main.byteLength)
+                             .arg(installedYamlData.main.sha256)
+                             .arg(installedYamlDataProvenanceLabel(installedYamlData.gameFile.provenance))
+                             .arg(installedYamlData.gameFile.schemaVersion)
+                             .arg(installedYamlData.gameFile.byteLength)
+                             .arg(installedYamlData.gameFile.sha256)
+                             .arg(localIgnoreStateLabel(installedYamlData.localIgnoreState))
+                             .arg(installedYamlData.localIgnoreIdentity.byteLength)
+                             .arg(installedYamlData.localIgnoreIdentity.sha256);
+    for (const auto& diagnostic : installedYamlData.diagnostics) {
+        QStringList context;
+        if (diagnostic.hasRole) {
+            context.append(diagnostic.role == classic::scanner::ScanRunInstalledYamlDataRole::Main
+                               ? QStringLiteral("Main")
+                               : QStringLiteral("Game"));
+        }
+        if (diagnostic.hasCandidate) {
+            context.append(installedYamlDataProvenanceLabel(diagnostic.candidate));
+        }
+        if (diagnostic.hasPath) {
+            context.append(diagnostic.path);
+        }
+        const QString suffix = context.isEmpty() ? QString{} : QStringLiteral(" [%1]").arg(context.join(", "));
+        qInfo().noquote() << QStringLiteral("Installed YAML Data diagnostic (%1): %2%3")
+                                 .arg(installedYamlDataDiagnosticKindLabel(diagnostic.kind), diagnostic.message,
+                                      suffix);
+    }
+}
+
+QString MainWindow::installedYamlDataStatusSuffix() const
+{
+    if (!m_hasLastInstalledYamlData) {
+        return {};
+    }
+    return QStringLiteral(" | YAML Data: Main %1 schema %2, Game %3 schema %4, Local Ignore %5")
+        .arg(installedYamlDataProvenanceLabel(m_lastInstalledYamlData.main.provenance),
+             m_lastInstalledYamlData.main.schemaVersion,
+             installedYamlDataProvenanceLabel(m_lastInstalledYamlData.gameFile.provenance),
+             m_lastInstalledYamlData.gameFile.schemaVersion,
+             localIgnoreStateLabel(m_lastInstalledYamlData.localIgnoreState));
 }
 
 void MainWindow::onShowSettings()

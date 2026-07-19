@@ -575,6 +575,12 @@ impl PyInstalledYamlDataSnapshot {
         PyYamlData::_from_core(self.inner.yaml_data().clone())
     }
 
+    /// Return the validated simplify-log removal list retained from selected Main bytes.
+    #[getter]
+    fn simplify_remove_list(&self) -> Vec<String> {
+        self.inner.simplify_remove_list().to_vec()
+    }
+
     /// Return selected Main provenance, schema, and exact-byte identity.
     #[getter]
     fn main(&self) -> PyInspectedYamlDataFile {

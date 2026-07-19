@@ -1,13 +1,13 @@
 {
-  "generated_at_utc": "2026-07-19T02:34:59.680287+00:00",
+  "generated_at_utc": "2026-07-19T04:02:57.909157+00:00",
   "binding": "python",
   "sources": {
     "contract": "docs/implementation/python_api_parity/baseline/parity_contract.json",
     "runtime_registry": "python-bindings/tests/fixtures/runtime_coverage_registry.json"
   },
   "summary": {
-    "tracked_surface_total": 1628,
-    "runtime_verified_total": 1628,
+    "tracked_surface_total": 1652,
+    "runtime_verified_total": 1652,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
     "tier1_contract_total": 1236,
@@ -17,8 +17,8 @@
   "registryMismatches": [],
   "perOwnerModule": {
     "config": {
-      "runtime_verified": 99,
-      "total": 99
+      "runtime_verified": 100,
+      "total": 100
     },
     "database": {
       "runtime_verified": 56,
@@ -53,8 +53,8 @@
       "total": 169
     },
     "scanlog": {
-      "runtime_verified": 477,
-      "total": 477
+      "runtime_verified": 500,
+      "total": 500
     },
     "settings": {
       "runtime_verified": 65,
@@ -24572,6 +24572,25 @@
       "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata, one-shot mutation-free proceed behavior for every malformed shape, durable Reset To Default success metadata, typed conflict without overwrite, the complete reset error hierarchy, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
     },
     {
+      "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.simplify_remove_list",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_config.InstalledYamlDataSnapshot.simplify_remove_list",
+      "coverageId": "python-tier1-config-installed-yaml-data-load",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_installed_yaml_data_inspection.py",
+      "testCaseId": "installed-yaml-data-load-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover immutable Ready snapshots, independent Main/game selection, existing and generated Local Ignore identity and diagnostics, typed selection failures, Local Ignore recovery metadata, one-shot mutation-free proceed behavior for every malformed shape, durable Reset To Default success metadata, typed conflict without overwrite, the complete reset error hierarchy, remaining reachable fatal projections, and the defensive create/invalid-selected-data exception inventory."
+    },
+    {
       "trackedId": "binding:classic_config.InstalledYamlDataSnapshot.main",
       "trackedType": "registry_only",
       "ownerModule": "config",
@@ -28863,7 +28882,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunConfiguration.__init__",
@@ -28882,7 +28901,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunStandardSource",
@@ -28901,7 +28920,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunStandardSource.__init__",
@@ -28920,7 +28939,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunTargetedSource",
@@ -28939,7 +28958,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunTargetedSource.__init__",
@@ -28958,7 +28977,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunSetupContext",
@@ -28977,7 +28996,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunSetupContext.__init__",
@@ -28996,7 +29015,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunUnsolvedLogs",
@@ -29015,7 +29034,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunUnsolvedLogs.leave_in_place",
@@ -29034,7 +29053,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunUnsolvedLogs.move_to_configured_or_default",
@@ -29053,7 +29072,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunUnsolvedLogs.move_to_custom",
@@ -29072,7 +29091,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunRequest",
@@ -29091,7 +29110,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunRequest.standard",
@@ -29110,7 +29129,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunRequest.standard_with_fcx",
@@ -29129,7 +29148,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunRequest.targeted",
@@ -29148,7 +29167,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunRequest.targeted_with_fcx",
@@ -29167,7 +29186,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunCancellation",
@@ -29186,7 +29205,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunCancellation.__init__",
@@ -29205,7 +29224,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunCancellation.cancel",
@@ -29224,7 +29243,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunCancellation.is_cancelled",
@@ -29243,7 +29262,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunRejectedInput",
@@ -29262,7 +29281,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunDiscoveryResult",
@@ -29281,7 +29300,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunSetupCheck",
@@ -29300,7 +29319,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunSetupPathUpdate",
@@ -29319,7 +29338,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunSetupResult",
@@ -29338,7 +29357,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunLogFailure",
@@ -29357,7 +29376,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunLogResult",
@@ -29376,7 +29395,425 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunYamlDataContentIdentity",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunYamlDataContentIdentity",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunYamlDataContentIdentity.sha256",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunYamlDataContentIdentity.sha256",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunYamlDataContentIdentity.byte_len",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunYamlDataContentIdentity.byte_len",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInspectedYamlDataFile",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile.role",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInspectedYamlDataFile.role",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile.provenance",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInspectedYamlDataFile.provenance",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile.schema_major",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInspectedYamlDataFile.schema_major",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile.schema_minor",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInspectedYamlDataFile.schema_minor",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile.sha256",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInspectedYamlDataFile.sha256",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInspectedYamlDataFile.byte_length",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInspectedYamlDataFile.byte_length",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataDiagnostic",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataDiagnostic",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataDiagnostic.role",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataDiagnostic.role",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataDiagnostic.candidate",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataDiagnostic.candidate",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataDiagnostic.path",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataDiagnostic.path",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataDiagnostic.kind",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataDiagnostic.kind",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataDiagnostic.message",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataDiagnostic.message",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataRunData",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData.main",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataRunData.main",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData.game_file",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataRunData.game_file",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData.local_ignore_state",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataRunData.local_ignore_state",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData.local_ignore_identity",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataRunData.local_ignore_identity",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunInstalledYamlDataRunData.diagnostics",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunInstalledYamlDataRunData.diagnostics",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunResult",
@@ -29395,7 +29832,26 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+    },
+    {
+      "trackedId": "binding:classic_scanlog.ScanRunResult.installed_yaml_data",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "classic_scanlog.ScanRunResult.installed_yaml_data",
+      "coverageId": "python-tier1-scanlog-final-run-contract",
+      "verificationMode": "contract_test",
+      "testSuite": "python-bindings/tests/test_scan_run_contract.py",
+      "testCaseId": "scanlog-final-run-contract",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunInfrastructureError",
@@ -29414,7 +29870,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunLogEvent",
@@ -29433,7 +29889,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunEvent",
@@ -29452,7 +29908,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.ScanRunExecution",
@@ -29471,7 +29927,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_scanlog.scan_run_execute",
@@ -29490,7 +29946,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Public-seam tests cover every request and movement factory, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
+      "notes": "Public-seam tests cover every request and movement factory, typed shared GameId construction, monotonic cancellation, typed setup/check/path-update and per-log failure DTOs, exhaustive immutable Installed YAML Data run metadata including generated Local Ignore diagnostics, typed infrastructure errors, all serialized observer variants, adapter-only callback failures with safe cancellation, durable Standard and Targeted reports, and discovery-ordered terminal outcomes."
     },
     {
       "trackedId": "binding:classic_config.YamlData.classic_version",

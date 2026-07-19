@@ -119,9 +119,14 @@ may receive a corresponding finished event, but never a started event.
 one of `has_result` and `has_error` is true.
 
 The result retains lifecycle status, optional discovery and setup data,
-optional effective concurrency, aggregate counts, and discovery-ordered log
-results. Per-log failures preserve `Analysis`, `ReportWrite`, and
-`UnsolvedLogsFinalization` as structured data.
+optional Installed YAML Data metadata, optional effective concurrency,
+aggregate counts, and discovery-ordered log results. Installed metadata records
+the independently selected Main/game provenance and identity, Local Ignore
+state and identity, and structured fallback/generation diagnostics from the
+single immutable run snapshot. The #146 run projection is limited to valid
+`Existing`/`Generated` Local Ignore states; recovery continuation belongs to
+#147. Per-log failures preserve `Analysis`,
+`ReportWrite`, and `UnsolvedLogsFinalization` as structured data.
 
 The error side is reserved for run-wide infrastructure failures and preserves
 the stable stage, message, and optional path. Expected no-logs, setup,

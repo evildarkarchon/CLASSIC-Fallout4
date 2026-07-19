@@ -307,7 +307,7 @@
       "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
       "testCaseId": "installed-yaml-data-loading-runtime",
       "fixtureRefs": [],
-      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "coverageId": "node-tier2-config-game-local-runtime",
@@ -376,15 +376,19 @@
       "tier": "tier2",
       "bindingIdentifiers": [
         "JsLogCollector",
+        "JsInstalledYamlDataRunData",
         "JsScanRunConfiguration",
         "JsScanRunDiscoveryResult",
         "JsScanRunEvent",
         "JsScanRunSuccess",
         "JsScanRunFailure",
         "JsScanRunInfrastructureError",
+        "JsScanRunInstalledYamlDataDiagnostic",
+        "JsScanRunInstalledYamlDataDiagnosticKind",
         "JsScanRunLogEvent",
         "JsScanRunLogFailure",
         "JsScanRunLogResult",
+        "JsScanRunLocalIgnoreState",
         "JsScanRunRejectedInput",
         "JsScanRunResult",
         "JsScanRunSetupCheck",
@@ -407,7 +411,7 @@
         "GAME_YAML",
         "IGNORE_YAML"
       ],
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "coverageId": "node-tier1-database",

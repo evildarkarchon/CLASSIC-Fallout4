@@ -8,14 +8,19 @@
 #[path = "scan_run_tests.rs"]
 mod tests;
 
+use crate::explicit_yaml_data::{JsYamlDataContentIdentity, content_identity_to_js};
+use crate::installed_yaml_data::{
+    JsInspectedYamlDataFile, JsInstalledYamlDataProvenance, JsInstalledYamlDataRole,
+    inspected_file_to_js,
+};
 use crate::scanlog::JsFcxConfigIssue;
+use crate::shared::{JsGameId, js_to_core_game_id};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
     CrashLogScanRunStatus, CrashLogScanSetupContext, CrashLogScanSetupResult, ScanProgressPhase,
     StandardCrashLogScanSource, StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
-use classic_shared_core::GameId;
 use napi::bindgen_prelude::{AsyncTask, Either, FnArgs, Function};
 use napi::threadsafe_function::{
     ThreadsafeFunction, ThreadsafeFunctionCallMode, UnknownReturnValue,
@@ -26,14 +31,11 @@ use std::sync::{Arc, Mutex, mpsc};
 
 /// JavaScript configuration shared by Standard and Targeted requests.
 #[napi(object)]
-#[derive(Clone)]
 pub struct JsScanRunConfiguration {
-    /// Root directory containing settings and the ignore YAML document.
-    pub yaml_dir_root: String,
-    /// `CLASSIC Data` directory containing shippable YAML databases.
-    pub yaml_dir_data: String,
-    /// Supported game identifier.
-    pub game: String,
+    /// CLASSIC installation root whose Installed YAML Data is selected once for the run.
+    pub installation_root: String,
+    /// Typed supported game identity.
+    pub game: JsGameId,
     /// Selected game-version mode.
     pub game_version: String,
     /// Whether FormID values should be resolved through configured databases.
@@ -294,6 +296,68 @@ pub struct JsScanRunLogResult {
     pub suspect_count: u32,
 }
 
+/// Local Ignore origins possible for the valid-or-generated scan-run intake contract.
+#[napi(string_enum)]
+pub enum JsScanRunLocalIgnoreState {
+    /// A valid user-owned Local Ignore file already existed in the installation.
+    Existing,
+    /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+    Generated,
+}
+
+/// Stable diagnostic categories emitted by valid-or-generated scan-run intake.
+#[napi(string_enum)]
+pub enum JsScanRunInstalledYamlDataDiagnosticKind {
+    /// The per-user update cache could not be resolved.
+    CacheUnavailable,
+    /// A required final fallback candidate was absent.
+    Missing,
+    /// A present candidate could not be read.
+    Read,
+    /// Candidate bytes were not valid UTF-8.
+    InvalidUtf8,
+    /// Candidate text was not valid YAML Data.
+    Parse,
+    /// A candidate omitted or malformed its schema version.
+    InvalidSchema,
+    /// A candidate schema was outside the client-owned compatibility range.
+    IncompatibleSchema,
+    /// A candidate failed role-specific semantic validation.
+    InvalidRoleData,
+    /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+    LocalIgnoreGenerated,
+}
+
+/// Structured attribution for one scan-run selection, fallback, or generation event.
+#[napi(object)]
+pub struct JsScanRunInstalledYamlDataDiagnostic {
+    /// Affected update-eligible role, absent for installation-wide or Local Ignore events.
+    pub role: Option<JsInstalledYamlDataRole>,
+    /// Rejected candidate provenance, absent when no update-eligible candidate applies.
+    pub candidate: Option<JsInstalledYamlDataProvenance>,
+    /// Affected path when the diagnostic is path-attributable.
+    pub path: Option<String>,
+    /// Stable machine-readable scan-run diagnostic category.
+    pub kind: JsScanRunInstalledYamlDataDiagnosticKind,
+    /// Actionable human-readable explanation.
+    pub message: String,
+}
+
+/// Installed YAML Data metadata retained from the immutable run snapshot.
+#[napi(object)]
+pub struct JsInstalledYamlDataRunData {
+    /// Selected Main YAML Data schema, identity, and provenance.
+    pub main: JsInspectedYamlDataFile,
+    /// Selected game YAML Data schema, identity, and provenance.
+    pub game_file: JsInspectedYamlDataFile,
+    /// How Local Ignore YAML Data entered the immutable run snapshot.
+    pub local_ignore_state: JsScanRunLocalIgnoreState,
+    /// Identity of the exact Local Ignore bytes retained by the run.
+    pub local_ignore_identity: JsYamlDataContentIdentity,
+    /// Structured fallback, validation, and generation diagnostics.
+    pub diagnostics: Vec<JsScanRunInstalledYamlDataDiagnostic>,
+}
+
 /// Complete terminal Crash Log Scan Run result.
 #[napi(object)]
 pub struct JsScanRunResult {
@@ -303,6 +367,8 @@ pub struct JsScanRunResult {
     pub status: String,
     pub discovery: Option<JsScanRunDiscoveryResult>,
     pub setup: Option<JsScanRunSetupResult>,
+    /// Installed YAML Data selected after discovery, absent when intake was not reached.
+    pub installed_yaml_data: Option<JsInstalledYamlDataRunData>,
     pub effective_concurrency: Option<u32>,
     pub message: Option<String>,
     pub total: u32,
@@ -523,15 +589,9 @@ impl contract::Observer for JsObserverAdapter {
 
 /// Converts shared JavaScript configuration into the final core configuration.
 fn configuration_to_core(value: JsScanRunConfiguration) -> napi::Result<contract::Configuration> {
-    let game = value
-        .game
-        .parse::<GameId>()
-        .map_err(|error| napi::Error::new(Status::InvalidArg, error.to_string()))?;
-
     Ok(contract::Configuration {
-        yaml_dir_root: required_path(value.yaml_dir_root, "yamlDirRoot")?,
-        yaml_dir_data: required_path(value.yaml_dir_data, "yamlDirData")?,
-        game,
+        installation_root: required_path(value.installation_root, "installationRoot")?,
+        game: js_to_core_game_id(&value.game),
         game_version: value.game_version,
         options: contract::Options::new(value.show_formid_values, value.simplify_logs),
         scan_facts: CrashLogScanFacts {
@@ -544,6 +604,79 @@ fn configuration_to_core(value: JsScanRunConfiguration) -> napi::Result<contract
         },
         max_concurrent: value.max_concurrent.map(|value| value as usize),
     })
+}
+
+/// Maps stable Installed YAML Data metadata from the immutable run snapshot.
+fn installed_yaml_data_run_to_js(
+    value: contract::InstalledYamlDataRunData,
+) -> JsInstalledYamlDataRunData {
+    JsInstalledYamlDataRunData {
+        main: inspected_file_to_js(&value.main),
+        game_file: inspected_file_to_js(&value.game_file),
+        local_ignore_state: local_ignore_run_state_to_js(value.local_ignore_state),
+        local_ignore_identity: content_identity_to_js(&value.local_ignore_identity),
+        diagnostics: value
+            .diagnostics
+            .iter()
+            .map(installed_yaml_data_run_diagnostic_to_js)
+            .collect(),
+    }
+}
+
+/// Projects the scanner-local Local Ignore origin without exposing recovery-only states.
+const fn local_ignore_run_state_to_js(
+    value: contract::LocalIgnoreRunState,
+) -> JsScanRunLocalIgnoreState {
+    match value {
+        contract::LocalIgnoreRunState::Existing => JsScanRunLocalIgnoreState::Existing,
+        contract::LocalIgnoreRunState::Generated => JsScanRunLocalIgnoreState::Generated,
+    }
+}
+
+/// Projects one scanner-local diagnostic without widening it to recovery-only categories.
+fn installed_yaml_data_run_diagnostic_to_js(
+    value: &contract::InstalledYamlDataRunDiagnostic,
+) -> JsScanRunInstalledYamlDataDiagnostic {
+    JsScanRunInstalledYamlDataDiagnostic {
+        role: value.role().map(|role| match role {
+            classic_config_core::InstalledYamlDataRole::Main => JsInstalledYamlDataRole::Main,
+            classic_config_core::InstalledYamlDataRole::Game => JsInstalledYamlDataRole::Game,
+        }),
+        candidate: value.candidate().map(|candidate| match candidate {
+            classic_config_core::InstalledYamlDataProvenance::Updated => {
+                JsInstalledYamlDataProvenance::Updated
+            }
+            classic_config_core::InstalledYamlDataProvenance::Previous => {
+                JsInstalledYamlDataProvenance::Previous
+            }
+            classic_config_core::InstalledYamlDataProvenance::Bundled => {
+                JsInstalledYamlDataProvenance::Bundled
+            }
+        }),
+        path: value.path().map(|path| path.to_string_lossy().into_owned()),
+        kind: installed_yaml_data_run_diagnostic_kind_to_js(value.kind()),
+        message: value.message().to_string(),
+    }
+}
+
+/// Maps every valid-or-generated scan-run diagnostic category exhaustively.
+const fn installed_yaml_data_run_diagnostic_kind_to_js(
+    value: contract::InstalledYamlDataRunDiagnosticKind,
+) -> JsScanRunInstalledYamlDataDiagnosticKind {
+    use contract::InstalledYamlDataRunDiagnosticKind as Kind;
+    match value {
+        Kind::CacheUnavailable => JsScanRunInstalledYamlDataDiagnosticKind::CacheUnavailable,
+        Kind::Missing => JsScanRunInstalledYamlDataDiagnosticKind::Missing,
+        Kind::Read => JsScanRunInstalledYamlDataDiagnosticKind::Read,
+        Kind::InvalidUtf8 => JsScanRunInstalledYamlDataDiagnosticKind::InvalidUtf8,
+        Kind::Parse => JsScanRunInstalledYamlDataDiagnosticKind::Parse,
+        Kind::InvalidSchema => JsScanRunInstalledYamlDataDiagnosticKind::InvalidSchema,
+        Kind::IncompatibleSchema => JsScanRunInstalledYamlDataDiagnosticKind::IncompatibleSchema,
+        Kind::InvalidRoleData => JsScanRunInstalledYamlDataDiagnosticKind::InvalidRoleData,
+        Kind::LocalIgnoreGenerated => {
+            JsScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
+        }
+    }
 }
 
 /// Converts Standard discovery inputs without adding policy.
@@ -704,6 +837,7 @@ fn run_result_to_js(value: contract::RunResult) -> JsScanRunResult {
         .to_string(),
         discovery: value.discovery.map(discovery_to_js),
         setup: value.setup.map(setup_to_js),
+        installed_yaml_data: value.installed_yaml_data.map(installed_yaml_data_run_to_js),
         effective_concurrency: value.effective_concurrency.map(usize_to_u32),
         message: value.message,
         total: usize_to_u32(value.total),

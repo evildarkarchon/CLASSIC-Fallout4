@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-19T03:10:05.859118+00:00",
+  "generated_at_utc": "2026-07-19T05:03:53.795125+00:00",
   "scope": {
     "target_modules": [
       "classic_scanlog",
@@ -6916,11 +6916,11 @@
       "export_path": "ScanRunConfiguration.__init__",
       "parent_class": "ScanRunConfiguration",
       "kind": "method",
-      "arity": 9,
+      "arity": 8,
       "owner_module": "scanlog",
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
-      "signature": "def __init__( self, yaml_dir_root: str, yaml_dir_data: str, game: str, game_version: str, show_formid_values: bool, simplify_logs: bool, formid_database_paths: list[str], unsolved_logs_destination: str | None = None, max_concurrent: int | None = None, ) -> None: ..."
+      "signature": "def __init__( self, installation_root: str, game: GameId, game_version: str, show_formid_values: bool, simplify_logs: bool, formid_database_paths: list[str], unsolved_logs_destination: str | None = None, max_concurrent: int | None = None, ) -> None:"
     },
     {
       "module": "classic_scanlog",
@@ -6961,6 +6961,36 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "class ScanRunInfrastructureError:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunInspectedYamlDataFile",
+      "export_path": "ScanRunInspectedYamlDataFile",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunInspectedYamlDataFile:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunInstalledYamlDataDiagnostic",
+      "export_path": "ScanRunInstalledYamlDataDiagnostic",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunInstalledYamlDataDiagnostic:"
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunInstalledYamlDataRunData",
+      "export_path": "ScanRunInstalledYamlDataRunData",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunInstalledYamlDataRunData:"
     },
     {
       "module": "classic_scanlog",
@@ -7211,6 +7241,16 @@
       "tier": "tier1",
       "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
       "signature": "def move_to_custom(destination: str) -> ScanRunUnsolvedLogs: ..."
+    },
+    {
+      "module": "classic_scanlog",
+      "export": "ScanRunYamlDataContentIdentity",
+      "export_path": "ScanRunYamlDataContentIdentity",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "python-bindings/classic-scanlog-py/classic_scanlog.pyi",
+      "signature": "class ScanRunYamlDataContentIdentity:"
     },
     {
       "module": "classic_scanlog",

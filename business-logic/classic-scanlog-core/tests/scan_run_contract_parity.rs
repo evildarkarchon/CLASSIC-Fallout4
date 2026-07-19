@@ -26,9 +26,29 @@ struct Manifest {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct Fixtures {
     standard: FixtureCase,
     targeted: FixtureCase,
+    installed_yaml_data: InstalledYamlDataFixture,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct InstalledYamlDataFixture {
+    log_template: String,
+    input: String,
+    expected_existing: InstalledYamlDataExpected,
+    expected_generated: InstalledYamlDataExpected,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct InstalledYamlDataExpected {
+    main_provenance: String,
+    game_provenance: String,
+    local_ignore_state: String,
+    diagnostic_kinds: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -69,7 +89,7 @@ fn copy_yaml_tree(destination: &Path) {
     std::fs::create_dir_all(&database_destination)
         .expect("shared fixture database directory should be created");
     for relative in [
-        Path::new("CLASSIC Ignore.yaml"),
+        Path::new("CLASSIC Data/CLASSIC Ignore.yaml"),
         Path::new("CLASSIC Data/databases/CLASSIC Main.yaml"),
         Path::new("CLASSIC Data/databases/CLASSIC Fallout4.yaml"),
     ] {
@@ -99,8 +119,7 @@ fn copy_logs(destination: &Path, template: &str, logs: &[String]) -> Vec<PathBuf
 /// Builds the shared configuration while leaving intent-specific facts to the request.
 fn configuration(root: &Path, max_concurrent: usize) -> contract::Configuration {
     contract::Configuration {
-        yaml_dir_root: root.to_path_buf(),
-        yaml_dir_data: root.join("CLASSIC Data"),
+        installation_root: root.to_path_buf(),
         game: GameId::Fallout4,
         game_version: "auto".to_string(),
         options: contract::Options::new(false, false),
@@ -129,6 +148,67 @@ fn event_kind(event: &contract::Event) -> &'static str {
         contract::Event::LogPhase { .. } => "event.log_phase",
         contract::Event::LogFinished { .. } => "event.log_finished",
     }
+}
+
+/// Returns the manifest token for Installed YAML Data provenance.
+fn provenance_token(provenance: classic_config_core::InstalledYamlDataProvenance) -> &'static str {
+    match provenance {
+        classic_config_core::InstalledYamlDataProvenance::Updated => "updated",
+        classic_config_core::InstalledYamlDataProvenance::Previous => "previous",
+        classic_config_core::InstalledYamlDataProvenance::Bundled => "bundled",
+    }
+}
+
+/// Returns the manifest token for Local Ignore snapshot state.
+fn local_ignore_state_token(state: contract::LocalIgnoreRunState) -> &'static str {
+    match state {
+        contract::LocalIgnoreRunState::Existing => "existing",
+        contract::LocalIgnoreRunState::Generated => "generated",
+    }
+}
+
+/// Returns the manifest token for one Installed YAML Data diagnostic kind.
+fn diagnostic_kind_token(kind: contract::InstalledYamlDataRunDiagnosticKind) -> &'static str {
+    use contract::InstalledYamlDataRunDiagnosticKind as Kind;
+    match kind {
+        Kind::CacheUnavailable => "cache_unavailable",
+        Kind::Missing => "missing",
+        Kind::Read => "read",
+        Kind::InvalidUtf8 => "invalid_utf8",
+        Kind::Parse => "parse",
+        Kind::InvalidSchema => "invalid_schema",
+        Kind::IncompatibleSchema => "incompatible_schema",
+        Kind::InvalidRoleData => "invalid_role_data",
+        Kind::LocalIgnoreGenerated => "local_ignore_generated",
+    }
+}
+
+/// Compares stable Installed YAML Data metadata exposed by the final operation.
+fn assert_installed_yaml_data(result: &contract::RunResult, expected: &InstalledYamlDataExpected) {
+    let installed = result
+        .installed_yaml_data
+        .as_ref()
+        .expect("completed intake should expose Installed YAML Data metadata");
+    assert_eq!(
+        provenance_token(installed.main.provenance()),
+        expected.main_provenance
+    );
+    assert_eq!(
+        provenance_token(installed.game_file.provenance()),
+        expected.game_provenance
+    );
+    assert_eq!(
+        local_ignore_state_token(installed.local_ignore_state),
+        expected.local_ignore_state
+    );
+    assert_eq!(
+        installed
+            .diagnostics
+            .iter()
+            .map(|diagnostic| diagnostic_kind_token(diagnostic.kind()).to_string())
+            .collect::<Vec<_>>(),
+        expected.diagnostic_kinds
+    );
 }
 
 /// Compares one public terminal result with the path-normalized shared expectations.
@@ -189,7 +269,20 @@ fn assert_result(root: &Path, result: &contract::RunResult, expected: &FixtureEx
 }
 
 #[test]
+#[serial_test::serial]
 fn shared_standard_and_targeted_fixtures_match_normalized_contract() {
+    let cache_root = tempdir().expect("isolated cache root should be created");
+    temp_env::with_vars(
+        [
+            ("LOCALAPPDATA", Some(cache_root.path())),
+            ("XDG_CACHE_HOME", Some(cache_root.path())),
+        ],
+        shared_standard_and_targeted_fixtures_match_normalized_contract_with_isolated_cache,
+    );
+}
+
+/// Executes the shared public contract after its process cache environment is isolated.
+fn shared_standard_and_targeted_fixtures_match_normalized_contract_with_isolated_cache() {
     let manifest = manifest();
     let expected_event_variants = manifest
         .contract_variants
@@ -288,4 +381,76 @@ fn shared_standard_and_targeted_fixtures_match_normalized_contract() {
         Vec::<String>::new()
     );
     assert!(!targeted_temp.path().join("Unsolved Logs").exists());
+}
+
+#[test]
+#[serial_test::serial]
+fn shared_installed_yaml_data_fixture_preserves_report_bytes_when_ignore_is_generated() {
+    let cache_root = tempdir().expect("isolated cache root should be created");
+    temp_env::with_vars(
+        [
+            ("LOCALAPPDATA", Some(cache_root.path())),
+            ("XDG_CACHE_HOME", Some(cache_root.path())),
+        ],
+        shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache,
+    );
+}
+
+/// Executes equivalent existing/generated Ignore runs against the shared final-operation fixture.
+fn shared_installed_yaml_data_fixture_preserves_report_bytes_with_isolated_cache() {
+    let manifest = manifest();
+    let fixture = &manifest.fixtures.installed_yaml_data;
+    let temp = tempdir().expect("Installed YAML Data fixture tempdir should be created");
+    copy_yaml_tree(temp.path());
+    let log = copy_logs(
+        temp.path(),
+        &fixture.log_template,
+        std::slice::from_ref(&fixture.input),
+    )
+    .pop()
+    .expect("shared Installed YAML Data fixture should contain one log");
+    let request = contract::Request::targeted(
+        configuration(temp.path(), 1),
+        TargetedCrashLogScanSource {
+            inputs: vec![log.clone()],
+        },
+    );
+
+    let existing = get_runtime()
+        .block_on(contract::execute(
+            request.clone(),
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("existing Local Ignore fixture should complete");
+    assert_installed_yaml_data(&existing, &fixture.expected_existing);
+    let report_path = existing.logs[0]
+        .autoscan_report
+        .as_ref()
+        .expect("existing Local Ignore run should write an Autoscan Report");
+    let existing_report = std::fs::read(report_path)
+        .expect("existing Local Ignore Autoscan Report should be readable");
+
+    std::fs::remove_file(temp.path().join("CLASSIC Data/CLASSIC Ignore.yaml"))
+        .expect("Local Ignore should be removed before generation coverage");
+    let generated = get_runtime()
+        .block_on(contract::execute(
+            request,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("generated Local Ignore fixture should complete");
+    assert_installed_yaml_data(&generated, &fixture.expected_generated);
+    let generated_report = std::fs::read(
+        generated.logs[0]
+            .autoscan_report
+            .as_ref()
+            .expect("generated Local Ignore run should write an Autoscan Report"),
+    )
+    .expect("generated Local Ignore Autoscan Report should be readable");
+
+    assert_eq!(
+        generated_report, existing_report,
+        "Installed YAML Data diagnostics must remain outside report text"
+    );
 }

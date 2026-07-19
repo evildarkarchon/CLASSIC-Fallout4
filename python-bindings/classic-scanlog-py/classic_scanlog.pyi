@@ -9,7 +9,10 @@ This standalone module provides high-performance crash log analysis with:
 """
 
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any, Literal
+
+from classic_shared import GameId
 
 __version__: str
 
@@ -440,16 +443,23 @@ class ScanRunConfiguration:
 
     def __init__(
         self,
-        yaml_dir_root: str,
-        yaml_dir_data: str,
-        game: str,
+        installation_root: str,
+        game: GameId,
         game_version: str,
         show_formid_values: bool,
         simplify_logs: bool,
         formid_database_paths: list[str],
         unsolved_logs_destination: str | None = None,
         max_concurrent: int | None = None,
-    ) -> None: ...
+    ) -> None:
+        """Create scan facts with a typed ``classic_shared.GameId``.
+
+        Raises:
+            TypeError: If ``game`` is not a shared typed game identifier.
+            ValueError: If ``game`` is an unrecognized typed identifier value.
+            ImportError: If ``classic_shared`` cannot be imported.
+
+        """
 
 class ScanRunStandardSource:
     """Explicit Standard discovery inputs."""
@@ -592,6 +602,53 @@ class ScanRunLogResult:
     plugin_count: int
     suspect_count: int
 
+class ScanRunYamlDataContentIdentity:
+    """Exact-byte identity retained for one Installed YAML Data file."""
+
+    sha256: str
+    byte_len: int
+
+class ScanRunInspectedYamlDataFile:
+    """Selected metadata for one update-eligible Main or game file."""
+
+    role: Literal["main", "game"]
+    provenance: Literal["updated", "previous", "bundled"]
+    schema_major: int
+    schema_minor: int
+    sha256: str
+    byte_length: int
+
+class ScanRunInstalledYamlDataDiagnostic:
+    """One structured selection, fallback, validation, or generation diagnostic."""
+
+    role: Literal["main", "game"] | None
+    candidate: Literal["updated", "previous", "bundled"] | None
+    path: Path | None
+    kind: Literal[
+        "cache_unavailable",
+        "missing",
+        "read",
+        "invalid_utf8",
+        "parse",
+        "invalid_schema",
+        "incompatible_schema",
+        "invalid_role_data",
+        "local_ignore_generated",
+    ]
+    message: str
+
+class ScanRunInstalledYamlDataRunData:
+    """Installed YAML Data metadata retained from one immutable run snapshot."""
+
+    main: ScanRunInspectedYamlDataFile
+    game_file: ScanRunInspectedYamlDataFile
+    local_ignore_state: Literal[
+        "existing",
+        "generated",
+    ]
+    local_ignore_identity: ScanRunYamlDataContentIdentity
+    diagnostics: list[ScanRunInstalledYamlDataDiagnostic]
+
 class ScanRunResult:
     """Complete terminal Crash Log Scan Run result."""
 
@@ -604,6 +661,7 @@ class ScanRunResult:
     ]
     discovery: ScanRunDiscoveryResult | None
     setup: ScanRunSetupResult | None
+    installed_yaml_data: ScanRunInstalledYamlDataRunData | None
     effective_concurrency: int | None
     message: str | None
     total: int

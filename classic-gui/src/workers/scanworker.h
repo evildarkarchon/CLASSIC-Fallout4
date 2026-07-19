@@ -7,6 +7,7 @@
 #include "classic_cxx_bridge/scanner.h"
 #include "core/guiusersettings.h"
 #include "rust/cxx.h"
+#include "workers/scanrunpresentation.h"
 
 class ScanWorker : public QObject {
     Q_OBJECT
@@ -18,9 +19,8 @@ public:
     ///
     /// Discovery, scheduling, durable finalization, and terminal ordering remain inside Rust. This
     /// synchronous worker-thread call only projects the tagged request and presents events/results.
-    void doScan(const QString& yamlRoot, const QString& yamlData,
-                const classic::gui::CrashLogScanLaunchSettings& settings, const QString& baseDirectory,
-                const QString& setupXseLogPath, const QStringList& targetedInputs);
+    void doScan(const QString& installationRoot, const classic::gui::CrashLogScanLaunchSettings& settings,
+                const QString& baseDirectory, const QString& setupXseLogPath, const QStringList& targetedInputs);
 
 public slots:
     void requestCancel();
@@ -31,6 +31,8 @@ signals:
     void discoveryCompleted(int totalLogs, const QString& rejectionWarning, const QStringList& reportDirectories);
     void effectiveConcurrencySelected(int concurrency);
     void reportDirectoriesResolved(const QStringList& reportDirectories);
+    /// Publishes the exact Qt-owned YAML Data selection before terminal lifecycle signals destroy the worker.
+    void installedYamlDataResolved(const classic::gui::ScanRunInstalledYamlDataPresentation& installedYamlData);
     void logScanned(int index, bool success, const QString& logPath);
     void finished(int totalLogs, int successCount, int errorCount);
     void noLogsFound(const QString& message);

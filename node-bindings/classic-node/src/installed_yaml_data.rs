@@ -262,6 +262,12 @@ impl InstalledYamlDataSnapshot {
         YamlData::from_core(self.inner.yaml_data().clone())
     }
 
+    /// Returns the Main-derived simplify removal list retained by this immutable snapshot.
+    #[napi(getter)]
+    pub fn simplify_remove_list(&self) -> Vec<String> {
+        self.inner.simplify_remove_list().to_vec()
+    }
+
     /// Returns metadata for the independently selected Main YAML Data.
     #[napi(getter)]
     pub fn main(&self) -> JsInspectedYamlDataFile {
@@ -277,16 +283,7 @@ impl InstalledYamlDataSnapshot {
     /// Returns how Local Ignore YAML Data entered this snapshot.
     #[napi(getter)]
     pub fn local_ignore_state(&self) -> JsLocalIgnoreYamlDataState {
-        match self.inner.local_ignore_state() {
-            CoreLocalIgnoreYamlDataState::Existing => JsLocalIgnoreYamlDataState::Existing,
-            CoreLocalIgnoreYamlDataState::Generated => JsLocalIgnoreYamlDataState::Generated,
-            CoreLocalIgnoreYamlDataState::ProceedWithoutIgnore => {
-                JsLocalIgnoreYamlDataState::ProceedWithoutIgnore
-            }
-            CoreLocalIgnoreYamlDataState::ResetToDefault => {
-                JsLocalIgnoreYamlDataState::ResetToDefault
-            }
-        }
+        local_ignore_state_to_js(self.inner.local_ignore_state())
     }
 
     /// Returns the SHA-256 identity and byte length of exact Local Ignore bytes.
@@ -639,7 +636,8 @@ fn inspection_to_js(inspection: &CoreInstalledYamlDataInspection) -> JsInstalled
     }
 }
 
-fn inspected_file_to_js(file: &CoreInspectedYamlDataFile) -> JsInspectedYamlDataFile {
+/// Project selected file metadata without exposing the snapshot's retained bytes.
+pub(crate) fn inspected_file_to_js(file: &CoreInspectedYamlDataFile) -> JsInspectedYamlDataFile {
     let schema = file.schema_version();
     JsInspectedYamlDataFile {
         role: role_to_js(file.role()),
@@ -651,7 +649,10 @@ fn inspected_file_to_js(file: &CoreInspectedYamlDataFile) -> JsInspectedYamlData
     }
 }
 
-fn diagnostic_to_js(diagnostic: &CoreInstalledYamlDataDiagnostic) -> JsInstalledYamlDataDiagnostic {
+/// Project one structured diagnostic without parsing its human-readable message.
+pub(crate) fn diagnostic_to_js(
+    diagnostic: &CoreInstalledYamlDataDiagnostic,
+) -> JsInstalledYamlDataDiagnostic {
     JsInstalledYamlDataDiagnostic {
         role: diagnostic.role().map(role_to_js),
         candidate: diagnostic.candidate().map(provenance_to_js),
@@ -761,6 +762,20 @@ const fn diagnostic_kind_to_js(
         CoreInstalledYamlDataDiagnosticKind::LocalIgnoreReset => {
             JsInstalledYamlDataDiagnosticKind::LocalIgnoreReset
         }
+    }
+}
+
+/// Project the core Local Ignore origin without recreating recovery policy.
+pub(crate) const fn local_ignore_state_to_js(
+    state: CoreLocalIgnoreYamlDataState,
+) -> JsLocalIgnoreYamlDataState {
+    match state {
+        CoreLocalIgnoreYamlDataState::Existing => JsLocalIgnoreYamlDataState::Existing,
+        CoreLocalIgnoreYamlDataState::Generated => JsLocalIgnoreYamlDataState::Generated,
+        CoreLocalIgnoreYamlDataState::ProceedWithoutIgnore => {
+            JsLocalIgnoreYamlDataState::ProceedWithoutIgnore
+        }
+        CoreLocalIgnoreYamlDataState::ResetToDefault => JsLocalIgnoreYamlDataState::ResetToDefault,
     }
 }
 

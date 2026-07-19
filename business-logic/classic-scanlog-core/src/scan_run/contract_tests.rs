@@ -81,8 +81,7 @@ fn shared_failure_fixtures() -> SharedFailureFixtures {
 
 fn final_run_configuration() -> contract::Configuration {
     contract::Configuration {
-        yaml_dir_root: std::path::PathBuf::from("C:/CLASSIC"),
-        yaml_dir_data: std::path::PathBuf::from("C:/CLASSIC/CLASSIC Data"),
+        installation_root: std::path::PathBuf::from("C:/CLASSIC"),
         game: GameId::Fallout4,
         game_version: "auto".to_string(),
         options: contract::Options::new(true, true),
@@ -136,8 +135,7 @@ fn executable_fcx_request(
     let log_path = write_fixture_log(temp, log_name);
     let request = contract::Request::targeted_with_fcx(
         contract::Configuration {
-            yaml_dir_root: root.to_path_buf(),
-            yaml_dir_data: data,
+            installation_root: root.to_path_buf(),
             game: GameId::Fallout4,
             game_version: "Original".to_string(),
             options: contract::Options::new(false, false),
@@ -233,8 +231,7 @@ fn observer_scenario(delay: Option<Duration>) -> (contract::RunResult, Vec<contr
         write_fixture_log(&temp, "crash-observer-second.log"),
     ];
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(2);
     let request =
         contract::Request::targeted(configuration, TargetedCrashLogScanSource { inputs: logs });
@@ -338,8 +335,7 @@ fn fcx_disabled_run_has_no_setup_result_or_fcx_report_content() {
     let log_path = write_fixture_log(&temp, "crash-fcx-disabled.log");
     let request = contract::Request::targeted(
         contract::Configuration {
-            yaml_dir_root: root.to_path_buf(),
-            yaml_dir_data: data,
+            installation_root: root.to_path_buf(),
             game: GameId::Fallout4,
             game_version: "Original".to_string(),
             options: contract::Options::new(false, false),
@@ -364,6 +360,348 @@ fn fcx_disabled_run_has_no_setup_result_or_fcx_report_content() {
         .expect("FCX-disabled Autoscan Report should be readable");
     assert!(!report.contains("FCX LOCAL FILE CHECKS"));
     assert!(!report.contains("FCX SETUP VALIDATION"));
+}
+
+#[test]
+fn targeted_run_uses_one_ready_installed_yaml_data_snapshot() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let log_path = write_fixture_log(&temp, "crash-installed-snapshot.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path.clone()],
+        },
+    );
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            ScanRunTestHooks::default().with_yaml_cache_root(root.join("isolated-cache")),
+        ))
+        .expect("a valid installed snapshot should complete the run");
+
+    assert_eq!(result.status, contract::RunStatus::Completed);
+    let installed = result
+        .installed_yaml_data
+        .as_ref()
+        .expect("completed intake should expose selected Installed YAML Data");
+    assert_eq!(
+        installed.main.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(
+        installed.game_file.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(
+        installed.local_ignore_state,
+        contract::LocalIgnoreRunState::Existing
+    );
+    assert!(installed.diagnostics.is_empty());
+    assert!(crate::report::autoscan_report_path(&log_path).is_file());
+}
+
+#[test]
+fn targeted_run_generates_missing_local_ignore_and_keeps_diagnostic_out_of_report() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    std::fs::remove_file(&ignore_path).expect("Local Ignore should be absent before the run");
+    let log_path = write_fixture_log(&temp, "crash-generated-ignore.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path.clone()],
+        },
+    );
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            ScanRunTestHooks::default().with_yaml_cache_root(root.join("isolated-cache")),
+        ))
+        .expect("generated Local Ignore should remain a successful Ready run");
+
+    let installed = result
+        .installed_yaml_data
+        .as_ref()
+        .expect("completed intake should expose selected Installed YAML Data");
+    assert_eq!(
+        installed.local_ignore_state,
+        contract::LocalIgnoreRunState::Generated
+    );
+    let generated = installed
+        .diagnostics
+        .iter()
+        .find(|diagnostic| {
+            diagnostic.kind() == contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated
+        })
+        .expect("generation should be exposed as structured run-level data");
+    assert_eq!(generated.path(), Some(ignore_path.as_path()));
+    assert_eq!(
+        std::fs::read_to_string(&ignore_path).expect("generated Local Ignore should be readable"),
+        "CLASSIC_Ignore_Fallout4:\n  - IgnoreThis.dll\n"
+    );
+    let report = std::fs::read_to_string(crate::report::autoscan_report_path(&log_path))
+        .expect("Autoscan Report should be readable");
+    assert!(!report.contains(generated.message()));
+    assert!(!report.contains("Local Ignore"));
+}
+
+#[test]
+fn targeted_run_keeps_the_accepted_updated_snapshot_when_installation_files_change() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let cache_root = root.join("isolated-cache");
+    let cache = cache_root.join("CLASSIC").join("yaml-cache");
+    std::fs::create_dir_all(&cache).expect("isolated cache should be created");
+    let updated_game = cache.join("CLASSIC Fallout4.yaml");
+    std::fs::write(
+        &updated_game,
+        concat!(
+            "schema_version: \"1.0\"\n",
+            "Game_Info:\n",
+            "  XSE_Acronym: \"F4SE\"\n",
+            "  GameVersion: \"1.10.163\"\n",
+            "  CRASHGEN_LatestVer: \"1.28.6\"\n",
+            "  CRASHGEN_LogName: \"Buffout 4\"\n",
+            "  Main_Root_Name: \"Fallout4\"\n",
+            "Crashlog_Plugins_Exclude: []\n",
+            "Crashlog_Records_Exclude: []\n",
+            "Crashlog_Error_Check:\n",
+            "  - id: updated-snapshot-rule\n",
+            "    name: Updated Snapshot Rule\n",
+            "    severity: 5\n",
+            "    main_error_contains_any: [EXCEPTION_ACCESS_VIOLATION]\n",
+            "Crashlog_Stack_Check: []\n",
+            "Mods_CONF: []\n",
+            "Mods_CORE: []\n",
+            "Mods_FREQ: []\n",
+            "Mods_SOLU: []\n",
+            "Crashgen_Registry:\n",
+            "  default:\n",
+            "    display_section: \"\"\n",
+            "    ignore_keys: []\n",
+            "    checks: []\n",
+        ),
+    )
+    .expect("updated game YAML Data should be written");
+    let log_path = write_fixture_log(&temp, "crash-updated-snapshot.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, true),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path.clone()],
+        },
+    );
+    let bundled_main = data.join("databases").join("CLASSIC Main.yaml");
+    let local_ignore = data.join("CLASSIC Ignore.yaml");
+    let mut changed = false;
+    let mut observer = |event| {
+        if !changed && matches!(event, contract::Event::EffectiveConcurrencySelected { .. }) {
+            changed = true;
+            std::fs::write(
+                &updated_game,
+                b"schema_version: \"1.0\"\ninvalid: changed\n",
+            )
+            .expect("selected game path should be replaced after intake");
+            std::fs::write(
+                &bundled_main,
+                b"schema_version: \"2.0\"\ninvalid: changed\n",
+            )
+            .expect("selected Main path should be replaced after intake");
+            std::fs::write(&local_ignore, b"not: [valid")
+                .expect("selected Local Ignore path should be replaced after intake");
+        }
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            Some(&mut observer),
+            ScanRunTestHooks::default().with_yaml_cache_root(cache_root),
+        ))
+        .expect("the retained snapshot should complete after installation changes");
+
+    assert!(
+        changed,
+        "the fixture should replace files only after intake"
+    );
+    let installed = result
+        .installed_yaml_data
+        .as_ref()
+        .expect("completed intake should expose selected Installed YAML Data");
+    assert_eq!(
+        installed.main.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(
+        installed.game_file.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Updated
+    );
+    let report = std::fs::read_to_string(crate::report::autoscan_report_path(&log_path))
+        .expect("Autoscan Report should be readable");
+    assert!(report.contains("Updated Snapshot Rule"));
+    assert!(!report.contains("invalid: changed"));
+}
+
+#[test]
+fn targeted_run_exposes_independent_updated_candidate_fallback_diagnostics() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let cache_root = root.join("isolated-cache");
+    let cache = cache_root.join("CLASSIC").join("yaml-cache");
+    std::fs::create_dir_all(&cache).expect("isolated cache should be created");
+    let bundled_main = std::fs::read_to_string(data.join("databases/CLASSIC Main.yaml"))
+        .expect("bundled Main should be readable");
+    let bundled_game = std::fs::read_to_string(data.join("databases/CLASSIC Fallout4.yaml"))
+        .expect("bundled game should be readable");
+    std::fs::write(
+        cache.join("CLASSIC Main.yaml"),
+        bundled_main.replace("schema_version: \"2.0\"", "schema_version: \"3.0\""),
+    )
+    .expect("incompatible updated Main should be written");
+    std::fs::write(
+        cache.join("CLASSIC Fallout4.yaml"),
+        bundled_game.replace("Main_Root_Name: \"Fallout4\"", "Main_Root_Name: \"Skyrim\""),
+    )
+    .expect("semantically invalid updated game should be written");
+    let log_path = write_fixture_log(&temp, "crash-fallback-diagnostics.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path],
+        },
+    );
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            ScanRunTestHooks::default().with_yaml_cache_root(cache_root),
+        ))
+        .expect("rejected update candidates should fall back independently");
+
+    let installed = result
+        .installed_yaml_data
+        .as_ref()
+        .expect("completed intake should expose Installed YAML Data metadata");
+    assert_eq!(
+        installed.main.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(
+        installed.game_file.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Bundled
+    );
+    assert!(installed.diagnostics.iter().any(|diagnostic| {
+        diagnostic.role() == Some(classic_config_core::InstalledYamlDataRole::Main)
+            && diagnostic.candidate()
+                == Some(classic_config_core::InstalledYamlDataProvenance::Updated)
+            && diagnostic.kind() == contract::InstalledYamlDataRunDiagnosticKind::IncompatibleSchema
+    }));
+    assert!(installed.diagnostics.iter().any(|diagnostic| {
+        diagnostic.role() == Some(classic_config_core::InstalledYamlDataRole::Game)
+            && diagnostic.candidate()
+                == Some(classic_config_core::InstalledYamlDataProvenance::Updated)
+            && diagnostic.kind() == contract::InstalledYamlDataRunDiagnosticKind::InvalidRoleData
+    }));
+}
+
+#[test]
+fn targeted_run_selects_missing_canonical_main_previous_sibling_read_only() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let cache_root = root.join("isolated-cache");
+    let cache = cache_root.join("CLASSIC").join("yaml-cache");
+    std::fs::create_dir_all(&cache).expect("isolated cache should be created");
+    let previous = cache.join("CLASSIC Main.yaml.prev");
+    std::fs::copy(data.join("databases/CLASSIC Main.yaml"), &previous)
+        .expect("valid previous Main should be written");
+    let log_path = write_fixture_log(&temp, "crash-previous-main.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path],
+        },
+    );
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            ScanRunTestHooks::default().with_yaml_cache_root(cache_root),
+        ))
+        .expect("a valid previous Main should complete the run");
+
+    let installed = result
+        .installed_yaml_data
+        .as_ref()
+        .expect("completed intake should expose Installed YAML Data metadata");
+    assert_eq!(
+        installed.main.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Previous
+    );
+    assert!(
+        previous.exists(),
+        "the previous sibling must remain in place"
+    );
+    assert!(
+        !cache.join("CLASSIC Main.yaml").exists(),
+        "the run must not promote the previous sibling"
+    );
 }
 
 #[test]
@@ -482,8 +820,7 @@ fn cancellation_control_is_opaque_cloneable_and_separate_from_the_request() {
 fn targeted_cancellation_before_discovery_has_no_discovery_result() {
     let temp = tempdir().expect("tempdir should succeed");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = temp.path().to_path_buf();
-    configuration.yaml_dir_data = temp.path().join("CLASSIC Data");
+    configuration.installation_root = temp.path().to_path_buf();
     let request = contract::Request::targeted(
         configuration,
         TargetedCrashLogScanSource {
@@ -512,8 +849,7 @@ fn targeted_cancellation_before_discovery_has_no_discovery_result() {
 fn standard_cancellation_before_discovery_has_no_discovery_result_or_side_effects() {
     let temp = tempdir().expect("tempdir should succeed");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = temp.path().to_path_buf();
-    configuration.yaml_dir_data = temp.path().join("CLASSIC Data");
+    configuration.installation_root = temp.path().to_path_buf();
     let request = contract::Request::standard(
         configuration,
         StandardCrashLogScanSource {
@@ -558,8 +894,7 @@ fn targeted_cancellation_during_discovery_discards_partial_results() {
         .expect("targeted discovery fixture should be written");
     }
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     let request = contract::Request::targeted(
         configuration,
         TargetedCrashLogScanSource {
@@ -605,8 +940,7 @@ fn standard_cancellation_during_discovery_discards_partial_results() {
         .join("Crash Logs")
         .join("crash-standard-discovery-cancel-0000.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     let request = contract::Request::standard(
         configuration,
         StandardCrashLogScanSource {
@@ -682,8 +1016,7 @@ fn targeted_cancellation_immediately_after_discovery_retains_the_complete_result
         missing.clone(),
     ];
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     let request = contract::Request::targeted(
         configuration,
         TargetedCrashLogScanSource {
@@ -782,8 +1115,7 @@ fn standard_cancellation_immediately_after_discovery_retains_configured_sources(
         documents.clone(),
     ];
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     let request = contract::Request::standard(
         configuration,
         StandardCrashLogScanSource {
@@ -890,8 +1222,7 @@ fn final_contract_exposes_all_stable_variant_identifiers() {
 fn final_operation_accepts_optional_observer_and_retains_completed_discovery() {
     let temp = tempdir().expect("tempdir should succeed");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = temp.path().to_path_buf();
-    configuration.yaml_dir_data = temp.path().join("CLASSIC Data");
+    configuration.installation_root = temp.path().to_path_buf();
     let request = contract::Request::targeted(
         configuration,
         TargetedCrashLogScanSource { inputs: Vec::new() },
@@ -1008,8 +1339,7 @@ fn final_operation_reports_effective_concurrency_and_stable_log_events() {
     write_minimal_yaml_tree(root, &data);
     let log_path = write_fixture_log(&temp, "crash-final-contract.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(4);
     let request = contract::Request::targeted(
         configuration,
@@ -1080,8 +1410,7 @@ fn adaptive_low_volume_run_selects_and_retains_one_worker() {
     write_minimal_yaml_tree(root, &data);
     let log = write_fixture_log(&temp, "crash-adaptive-low-volume.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = None;
     let request = contract::Request::targeted(
         configuration,
@@ -1143,8 +1472,7 @@ fn serial_scheduler_finishes_one_log_before_starting_the_next() {
     let first = write_fixture_log(&temp, "crash-serial-first.log");
     let second = write_fixture_log(&temp, "crash-serial-second.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::targeted(
         configuration,
@@ -1196,8 +1524,7 @@ fn cancellation_while_queued_never_emits_started() {
         write_fixture_log(&temp, "crash-queued-second.log"),
     ];
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::targeted(
         configuration,
@@ -1253,8 +1580,7 @@ fn cancellation_with_multiple_admitted_logs_preserves_their_durable_boundary() {
         .map(|index| write_fixture_log(&temp, &format!("crash-admitted-{index}.log")))
         .collect::<Vec<_>>();
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(2);
     let request = contract::Request::targeted(
         configuration,
@@ -1320,8 +1646,7 @@ fn observer_can_request_cancellation_before_discovered_logs_are_admitted() {
     let first = write_fixture_log(&temp, "crash-cancel-first.log");
     let second = write_fixture_log(&temp, "crash-cancel-second.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     let request = contract::Request::targeted(
         configuration,
         TargetedCrashLogScanSource {
@@ -1370,8 +1695,7 @@ fn terminal_outcomes_remain_in_discovery_order_when_completion_is_out_of_order()
     let first = write_fixture_log(&temp, "crash-slow-first.log");
     let second = write_fixture_log(&temp, "crash-fast-second.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(2);
     let request = contract::Request::targeted(
         configuration,
@@ -1417,8 +1741,7 @@ fn admitted_analysis_failure_does_not_abort_other_admitted_log() {
     let failed = write_fixture_log(&temp, "crash-failed-analysis.log");
     let succeeded = write_fixture_log(&temp, "crash-successful-analysis.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(2);
     let request = contract::Request::targeted(
         configuration,
@@ -1485,8 +1808,7 @@ fn admitted_standard_log_finishes_report_failure_and_movement_after_cancellation
     );
     let unsolved = root.join("Unsolved Logs");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::standard(
         configuration,
@@ -1557,8 +1879,7 @@ fn partial_unsolved_logs_movement_retains_moved_state_and_failure() {
     let _log = write_fixture_log_at(&root.join("Crash Logs"), "crash-partial-movement.log");
     let unsolved = root.join("Unsolved Logs");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::standard(
         configuration,
@@ -1636,8 +1957,7 @@ fn targeted_report_failure_cannot_trigger_unsolved_logs_movement() {
     std::fs::create_dir(crate::report::autoscan_report_path(&log))
         .expect("a directory should force report persistence failure");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::targeted(
         configuration,
@@ -1679,8 +1999,7 @@ fn standard_unsolved_logs_collision_preserves_existing_destination() {
     let existing = unsolved.join("crash-collision.log");
     std::fs::write(&existing, "existing").expect("existing destination should be written");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::standard(
         configuration,
@@ -1733,8 +2052,7 @@ fn overlapping_standard_runs_never_clobber_same_name_unsolved_logs() {
         std::fs::write(&log, contents).expect("run-unique Crash Log should be written");
         let request = contract::Request::standard(
             contract::Configuration {
-                yaml_dir_root: root.clone(),
-                yaml_dir_data: data,
+                installation_root: root.clone(),
                 game: GameId::Fallout4,
                 game_version: "auto".to_string(),
                 options: contract::Options::new(false, false),
@@ -1797,8 +2115,7 @@ fn standard_unsolved_logs_filesystem_failure_is_structured() {
     std::fs::write(&blocked_destination, "not a directory")
         .expect("blocking destination file should be written");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::standard(
         configuration,
@@ -1882,8 +2199,7 @@ fn injected_infrastructure_failures_preserve_every_stable_contract_field() {
         write_minimal_yaml_tree(root, &data);
         let log = write_fixture_log(&temp, "crash-shared-infrastructure.log");
         let mut configuration = final_run_configuration();
-        configuration.yaml_dir_root = root.to_path_buf();
-        configuration.yaml_dir_data = data.clone();
+        configuration.installation_root = root.to_path_buf();
         configuration.max_concurrent = Some(1);
         let request = contract::Request::targeted(
             configuration,

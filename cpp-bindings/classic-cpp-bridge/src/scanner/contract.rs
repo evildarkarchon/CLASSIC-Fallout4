@@ -1,4 +1,8 @@
 use crate::runtime_support::block_on;
+use classic_config_core::{
+    InspectedYamlDataFile, InstalledYamlDataProvenance, InstalledYamlDataRole,
+    YamlDataContentIdentity,
+};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     ConfigIssue as CoreFcxConfigIssue, CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource,
@@ -339,6 +343,10 @@ fn run_result_to_dto(value: contract::RunResult) -> ffi::ScanRunContractRunResul
         .setup
         .map(|setup| (true, setup_to_dto(setup)))
         .unwrap_or_else(|| (false, empty_setup_dto()));
+    let (has_installed_yaml_data, installed_yaml_data) = value
+        .installed_yaml_data
+        .map(|installed| (true, installed_yaml_data_to_dto(installed)))
+        .unwrap_or_else(|| (false, empty_installed_yaml_data_dto()));
     let (has_effective_concurrency, effective_concurrency) = value
         .effective_concurrency
         .map(|value| (true, value))
@@ -351,6 +359,8 @@ fn run_result_to_dto(value: contract::RunResult) -> ffi::ScanRunContractRunResul
         discovery,
         has_setup,
         setup,
+        has_installed_yaml_data,
+        installed_yaml_data,
         has_effective_concurrency,
         effective_concurrency,
         has_message,
@@ -442,6 +452,8 @@ fn empty_run_result_dto() -> ffi::ScanRunContractRunResult {
         discovery: empty_discovery_dto(),
         has_setup: false,
         setup: empty_setup_dto(),
+        has_installed_yaml_data: false,
+        installed_yaml_data: empty_installed_yaml_data_dto(),
         has_effective_concurrency: false,
         effective_concurrency: 0,
         has_message: false,
@@ -540,6 +552,147 @@ fn fcx_issue_to_dto(issue: &CoreFcxConfigIssue) -> ffi::FcxIssueDto {
     }
 }
 
+/// Supplies ignored nested defaults when Installed YAML Data is absent.
+fn empty_installed_yaml_data_dto() -> ffi::ScanRunInstalledYamlDataRunDataDto {
+    ffi::ScanRunInstalledYamlDataRunDataDto {
+        main: empty_inspected_yaml_data_file_dto(ffi::ScanRunInstalledYamlDataRole::Main),
+        game_file: empty_inspected_yaml_data_file_dto(ffi::ScanRunInstalledYamlDataRole::Game),
+        local_ignore_state: ffi::ScanRunLocalIgnoreYamlDataState::Existing,
+        local_ignore_identity: ffi::ScanRunYamlDataContentIdentityDto {
+            sha256: String::new(),
+            byte_len: 0,
+        },
+        diagnostics: Vec::new(),
+    }
+}
+
+/// Supplies ignored selected-file defaults beside an absent run-level projection.
+fn empty_inspected_yaml_data_file_dto(
+    role: ffi::ScanRunInstalledYamlDataRole,
+) -> ffi::ScanRunInspectedYamlDataFileDto {
+    ffi::ScanRunInspectedYamlDataFileDto {
+        role,
+        provenance: ffi::ScanRunInstalledYamlDataProvenance::Bundled,
+        schema_version: String::new(),
+        sha256: String::new(),
+        byte_len: 0,
+    }
+}
+
+/// Maps exact retained content identity into its scanner-local CXX DTO.
+fn yaml_data_content_identity_to_dto(
+    value: YamlDataContentIdentity,
+) -> ffi::ScanRunYamlDataContentIdentityDto {
+    ffi::ScanRunYamlDataContentIdentityDto {
+        sha256: value.sha256_hex(),
+        byte_len: value.byte_len(),
+    }
+}
+
+/// Maps selected file metadata into its scanner-local CXX DTO.
+fn inspected_yaml_data_file_to_dto(
+    value: InspectedYamlDataFile,
+) -> ffi::ScanRunInspectedYamlDataFileDto {
+    ffi::ScanRunInspectedYamlDataFileDto {
+        role: map_installed_yaml_data_role(value.role()),
+        provenance: map_installed_yaml_data_provenance(value.provenance()),
+        schema_version: value.schema_version().to_string(),
+        sha256: value.identity().sha256_hex(),
+        byte_len: value.identity().byte_len(),
+    }
+}
+
+/// Maps one structured selection or generation diagnostic without dropping optional context.
+fn installed_yaml_data_diagnostic_to_dto(
+    value: contract::InstalledYamlDataRunDiagnostic,
+) -> ffi::ScanRunInstalledYamlDataDiagnosticDto {
+    let role = value.role();
+    let candidate = value.candidate();
+    let path = value.path();
+    ffi::ScanRunInstalledYamlDataDiagnosticDto {
+        has_role: role.is_some(),
+        role: role
+            .map(map_installed_yaml_data_role)
+            .unwrap_or(ffi::ScanRunInstalledYamlDataRole::Main),
+        has_candidate: candidate.is_some(),
+        candidate: candidate
+            .map(map_installed_yaml_data_provenance)
+            .unwrap_or(ffi::ScanRunInstalledYamlDataProvenance::Bundled),
+        has_path: path.is_some(),
+        path: path
+            .map(|path| path_to_string(path.to_path_buf()))
+            .unwrap_or_default(),
+        kind: map_installed_yaml_data_diagnostic_kind(value.kind()),
+        message: value.message().to_string(),
+    }
+}
+
+/// Maps the complete Installed YAML Data run projection into scanner-local DTOs.
+fn installed_yaml_data_to_dto(
+    value: contract::InstalledYamlDataRunData,
+) -> ffi::ScanRunInstalledYamlDataRunDataDto {
+    ffi::ScanRunInstalledYamlDataRunDataDto {
+        main: inspected_yaml_data_file_to_dto(value.main),
+        game_file: inspected_yaml_data_file_to_dto(value.game_file),
+        local_ignore_state: map_local_ignore_yaml_data_state(value.local_ignore_state),
+        local_ignore_identity: yaml_data_content_identity_to_dto(value.local_ignore_identity),
+        diagnostics: value
+            .diagnostics
+            .into_iter()
+            .map(installed_yaml_data_diagnostic_to_dto)
+            .collect(),
+    }
+}
+
+/// Maps every Installed YAML Data file role into the scanner-local CXX inventory.
+fn map_installed_yaml_data_role(value: InstalledYamlDataRole) -> ffi::ScanRunInstalledYamlDataRole {
+    match value {
+        InstalledYamlDataRole::Main => ffi::ScanRunInstalledYamlDataRole::Main,
+        InstalledYamlDataRole::Game => ffi::ScanRunInstalledYamlDataRole::Game,
+    }
+}
+
+/// Maps every selected-file provenance into the scanner-local CXX inventory.
+fn map_installed_yaml_data_provenance(
+    value: InstalledYamlDataProvenance,
+) -> ffi::ScanRunInstalledYamlDataProvenance {
+    match value {
+        InstalledYamlDataProvenance::Updated => ffi::ScanRunInstalledYamlDataProvenance::Updated,
+        InstalledYamlDataProvenance::Previous => ffi::ScanRunInstalledYamlDataProvenance::Previous,
+        InstalledYamlDataProvenance::Bundled => ffi::ScanRunInstalledYamlDataProvenance::Bundled,
+    }
+}
+
+/// Maps every Local Ignore snapshot state into the scanner-local CXX inventory.
+fn map_local_ignore_yaml_data_state(
+    value: contract::LocalIgnoreRunState,
+) -> ffi::ScanRunLocalIgnoreYamlDataState {
+    match value {
+        contract::LocalIgnoreRunState::Existing => ffi::ScanRunLocalIgnoreYamlDataState::Existing,
+        contract::LocalIgnoreRunState::Generated => ffi::ScanRunLocalIgnoreYamlDataState::Generated,
+    }
+}
+
+/// Maps every Installed YAML Data diagnostic kind into the scanner-local CXX inventory.
+fn map_installed_yaml_data_diagnostic_kind(
+    value: contract::InstalledYamlDataRunDiagnosticKind,
+) -> ffi::ScanRunInstalledYamlDataDiagnosticKind {
+    use contract::InstalledYamlDataRunDiagnosticKind as Kind;
+    match value {
+        Kind::CacheUnavailable => ffi::ScanRunInstalledYamlDataDiagnosticKind::CacheUnavailable,
+        Kind::Missing => ffi::ScanRunInstalledYamlDataDiagnosticKind::Missing,
+        Kind::Read => ffi::ScanRunInstalledYamlDataDiagnosticKind::Read,
+        Kind::InvalidUtf8 => ffi::ScanRunInstalledYamlDataDiagnosticKind::InvalidUtf8,
+        Kind::Parse => ffi::ScanRunInstalledYamlDataDiagnosticKind::Parse,
+        Kind::InvalidSchema => ffi::ScanRunInstalledYamlDataDiagnosticKind::InvalidSchema,
+        Kind::IncompatibleSchema => ffi::ScanRunInstalledYamlDataDiagnosticKind::IncompatibleSchema,
+        Kind::InvalidRoleData => ffi::ScanRunInstalledYamlDataDiagnosticKind::InvalidRoleData,
+        Kind::LocalIgnoreGenerated => {
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
+        }
+    }
+}
+
 fn log_event_to_dto(
     kind: ffi::ScanRunContractEventKind,
     log: contract::LogEvent,
@@ -559,12 +712,8 @@ fn log_event_to_dto(
 fn configuration_to_core(
     value: &ffi::ScanRunConfigurationDto,
 ) -> Result<contract::Configuration, String> {
-    let yaml_dir_root = required_path(&value.yaml_dir_root, "yaml_dir_root")?;
-    let yaml_dir_data = required_path(&value.yaml_dir_data, "yaml_dir_data")?;
-    let game = value
-        .game
-        .parse::<GameId>()
-        .map_err(|error| error.to_string())?;
+    let installation_root = required_path(&value.installation_root, "installation_root")?;
+    let game = scan_run_game_id_to_core(value.game)?;
     let max_concurrent = if value.has_max_concurrent {
         Some(value.max_concurrent)
     } else {
@@ -577,8 +726,7 @@ fn configuration_to_core(
     )?;
 
     Ok(contract::Configuration {
-        yaml_dir_root,
-        yaml_dir_data,
+        installation_root,
         game,
         game_version: value.game_version.clone(),
         options: contract::Options::new(value.show_formid_values, value.simplify_logs),
@@ -592,6 +740,22 @@ fn configuration_to_core(
         },
         max_concurrent,
     })
+}
+
+/// Converts the scanner-local CXX game enum to the shared core identity.
+fn scan_run_game_id_to_core(value: ffi::ScanRunGameId) -> Result<GameId, String> {
+    match value {
+        ffi::ScanRunGameId::Fallout4 => Ok(GameId::Fallout4),
+        ffi::ScanRunGameId::Fallout4VR => Ok(GameId::Fallout4VR),
+        ffi::ScanRunGameId::Skyrim => Ok(GameId::Skyrim),
+        ffi::ScanRunGameId::Starfield => Ok(GameId::Starfield),
+        // CXX shared enums can carry an unknown discriminant. Reject it instead
+        // of conflating it with a real game whose support can change over time.
+        _ => Err(format!(
+            "unsupported ScanRunGameId discriminant: {}",
+            value.repr
+        )),
+    }
 }
 
 fn standard_source_to_core(

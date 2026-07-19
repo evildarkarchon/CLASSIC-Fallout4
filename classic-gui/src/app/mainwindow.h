@@ -2,6 +2,7 @@
 
 #include "core/guiusersettings.h"
 #include "widgets/adaptiveprogressbar.h"
+#include "workers/scanrunpresentation.h"
 #include <QElapsedTimer>
 #include <QLabel>
 #include <QLineEdit>
@@ -59,6 +60,9 @@ private:
     void saveRememberedPath(RememberedPath path);
     void initResultsReportDir();
 
+    /// Formats retained run-selected YAML Data metadata for terminal status messages.
+    QString installedYamlDataStatusSuffix() const;
+
     /// Runs typed Game Setup Intake and commits only paths explicitly accepted by the user.
     /// Declined proposals and cancelled manual entry leave User Settings unchanged.
     void checkFirstRunPaths();
@@ -110,6 +114,8 @@ private slots:
     void onCrashScanDiscovered(int totalLogs);
     void onCrashLogScanned(int index, bool success, const QString& logPath);
     void onScanReportDirectoriesResolved(const QStringList& reportDirs);
+    /// Retains the worker-owned run snapshot after the worker thread terminates.
+    void onScanInstalledYamlDataResolved(const classic::gui::ScanRunInstalledYamlDataPresentation& installedYamlData);
     void onShowSettings();
     void onGameFilesScanFinished(const QString& output, bool hasErrors, uint32_t totalChecks);
     void onGameFilesScanError(const QString& message);
@@ -154,6 +160,8 @@ private:
     // Targeted scan input state (ephemeral, not persisted)
     QStringList m_targetedInputPaths;
     QStringList m_lastScanReportDirs;
+    bool m_hasLastInstalledYamlData = false;
+    classic::gui::ScanRunInstalledYamlDataPresentation m_lastInstalledYamlData;
     QWidget* m_targetedInputContainer = nullptr;
     QListWidget* m_targetedInputList = nullptr;
     QLabel* m_targetedInputLabel = nullptr;

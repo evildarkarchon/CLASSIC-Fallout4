@@ -7,8 +7,10 @@ use std::sync::Arc;
 use std::time::Duration;
 use tempfile::NamedTempFile;
 
-/// Creates a real SQLite fixture with one canonical FormID value row.
-async fn create_sqlite_fixture() -> (NamedTempFile, std::path::PathBuf) {
+/// Creates a real SQLite fixture from trusted, static setup statements.
+async fn create_sqlite_fixture_from_statements(
+    statements: &[&str],
+) -> (NamedTempFile, std::path::PathBuf) {
     let file = NamedTempFile::new().expect("temporary SQLite file should be created");
     let path = file.path().to_path_buf();
     let connection = format!("sqlite://{}?mode=rwc", path.display());
@@ -17,39 +19,40 @@ async fn create_sqlite_fixture() -> (NamedTempFile, std::path::PathBuf) {
         .connect(&connection)
         .await
         .expect("SQLite fixture should open");
-    sqlx::query(
-        "CREATE TABLE Fallout4 (formid TEXT NOT NULL, plugin TEXT NOT NULL, entry TEXT NOT NULL)",
-    )
-    .execute(&pool)
-    .await
-    .expect("FormID fixture table should be created");
-    sqlx::query("INSERT INTO Fallout4 (formid, plugin, entry) VALUES (?, ?, ?)")
-        .bind("000804")
-        .bind("SomeMod.esp")
-        .bind("Railway Rifle")
-        .execute(&pool)
-        .await
-        .expect("FormID fixture row should be inserted");
+    for statement in statements {
+        sqlx::query(sqlx::AssertSqlSafe((*statement).to_string()))
+            .execute(&pool)
+            .await
+            .expect("SQLite fixture setup statement should succeed");
+    }
     pool.close().await;
     (file, path)
 }
 
+/// Creates a real SQLite fixture with one canonical FormID value row.
+async fn create_sqlite_fixture() -> (NamedTempFile, std::path::PathBuf) {
+    create_sqlite_fixture_from_statements(&[
+        "CREATE TABLE Fallout4 (formid TEXT NOT NULL, plugin TEXT NOT NULL, entry TEXT NOT NULL)",
+        "INSERT INTO Fallout4 (formid, plugin, entry) \
+         VALUES ('000804', 'SomeMod.esp', 'Railway Rifle')",
+    ])
+    .await
+}
+
 /// Creates a SQLite fixture whose table cannot satisfy a FormID value query.
 async fn create_broken_sqlite_fixture() -> (NamedTempFile, std::path::PathBuf) {
-    let file = NamedTempFile::new().expect("temporary SQLite file should be created");
-    let path = file.path().to_path_buf();
-    let connection = format!("sqlite://{}?mode=rwc", path.display());
-    let pool = SqlitePoolOptions::new()
-        .max_connections(1)
-        .connect(&connection)
-        .await
-        .expect("SQLite fixture should open");
-    sqlx::query("CREATE TABLE Fallout4 (formid TEXT NOT NULL, plugin TEXT NOT NULL)")
-        .execute(&pool)
-        .await
-        .expect("broken fixture table should be created");
-    pool.close().await;
-    (file, path)
+    create_sqlite_fixture_from_statements(&[
+        "CREATE TABLE Fallout4 (formid TEXT NOT NULL, plugin TEXT NOT NULL)",
+    ])
+    .await
+}
+
+/// Creates a SQLite fixture for a different supported game's FormID table.
+async fn create_skyrim_sqlite_fixture() -> (NamedTempFile, std::path::PathBuf) {
+    create_sqlite_fixture_from_statements(&[
+        "CREATE TABLE Skyrim (formid TEXT NOT NULL, plugin TEXT NOT NULL, entry TEXT NOT NULL)",
+    ])
+    .await
 }
 
 #[test]
@@ -146,6 +149,40 @@ fn shared_pool_adapter_returns_sqlite_hits() {
         assert_eq!(
             outcome,
             FormIdValueLookupOutcome::Found("Railway Rifle".to_string())
+        );
+        pool.close().await.expect("shared pool should close");
+    });
+}
+
+#[test]
+fn shared_pool_batch_skips_databases_without_the_active_game_table() {
+    classic_shared_core::get_runtime().block_on(async {
+        let (_fallout_file, fallout_path) = create_sqlite_fixture().await;
+        let (_skyrim_file, skyrim_path) = create_skyrim_sqlite_fixture().await;
+        let pool = Arc::new(DatabasePool::new(
+            Some(2),
+            Duration::from_secs(60),
+            "Fallout4".to_string(),
+        ));
+        pool.initialize(vec![skyrim_path, fallout_path])
+            .await
+            .expect("mixed-game shared pool should initialize");
+        let lookup = FormIdValueLookup::shared_pool(Arc::clone(&pool));
+
+        let outcomes = lookup
+            .lookup_batch(vec![
+                ("000804".to_string(), "SomeMod.esp".to_string()),
+                ("000899".to_string(), "SomeMod.esp".to_string()),
+            ])
+            .await
+            .expect("databases without Fallout4 should not fail a Fallout4 batch lookup");
+
+        assert_eq!(
+            outcomes,
+            vec![
+                FormIdValueLookupOutcome::Found("Railway Rifle".to_string()),
+                FormIdValueLookupOutcome::Missing,
+            ]
         );
         pool.close().await.expect("shared pool should close");
     });

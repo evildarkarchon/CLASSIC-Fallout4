@@ -148,14 +148,13 @@ void ScanWorker::requestCancel()
     scanner::scan_run_cancellation_cancel(*m_cancellation);
 }
 
-void ScanWorker::doScan(const QString& yamlRoot, const QString& yamlData,
-                        const classic::gui::CrashLogScanLaunchSettings& settings, const QString& baseDirectory,
-                        const QString& setupXseLogPath, const QStringList& targetedInputs)
+void ScanWorker::doScan(const QString& installationRoot, const classic::gui::CrashLogScanLaunchSettings& settings,
+                        const QString& baseDirectory, const QString& setupXseLogPath, const QStringList& targetedInputs)
 {
     qDebug() << "ScanWorker: starting" << (targetedInputs.isEmpty() ? "standard" : "targeted") << "scan run";
 
     try {
-        auto request = classic::gui::buildScanRunRequest(yamlRoot, yamlData, baseDirectory, settings, setupXseLogPath,
+        auto request = classic::gui::buildScanRunRequest(installationRoot, baseDirectory, settings, setupXseLogPath,
                                                          targetedInputs);
         GuiScanRunObserver observer(*this, *m_cancellation);
         const auto execution = scanner::scan_run_contract_execute(*request, *m_cancellation, &observer);
@@ -167,6 +166,10 @@ void ScanWorker::doScan(const QString& yamlRoot, const QString& yamlData,
         const auto terminal = classic::gui::presentScanRunExecution(execution);
         if (!terminal.setupDetails.isEmpty()) {
             qInfo().noquote() << terminal.setupDetails;
+        }
+        if (terminal.hasInstalledYamlData) {
+            // Publish the Qt-owned copy before terminal signals allow the worker thread to be torn down.
+            emit installedYamlDataResolved(terminal.installedYamlData);
         }
         const QStringList reportDirectories = terminalReportDirectories(terminal);
         if (!reportDirectories.isEmpty()) {

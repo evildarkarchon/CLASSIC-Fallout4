@@ -6,6 +6,8 @@
 #include <QFileInfo>
 #include <QSet>
 
+#include <utility>
+
 namespace classic::gui {
 namespace {
 
@@ -117,6 +119,45 @@ ScanRunLogPresentation presentLog(const classic::scanner::ScanRunContractLogResu
     return presentation;
 }
 
+/// Projects one exact selected YAML Data file into Qt-owned strings and scalar metadata.
+ScanRunInstalledYamlDataFilePresentation presentInstalledYamlDataFile(
+    const classic::scanner::ScanRunInspectedYamlDataFileDto& file)
+{
+    ScanRunInstalledYamlDataFilePresentation presentation;
+    presentation.role = file.role;
+    presentation.provenance = file.provenance;
+    presentation.schemaVersion = classic::toQString(file.schema_version);
+    presentation.sha256 = classic::toQString(file.sha256);
+    presentation.byteLength = file.byte_len;
+    return presentation;
+}
+
+/// Projects Installed YAML Data run metadata without flattening diagnostic presence flags.
+ScanRunInstalledYamlDataPresentation presentInstalledYamlData(
+    const classic::scanner::ScanRunInstalledYamlDataRunDataDto& installed)
+{
+    ScanRunInstalledYamlDataPresentation presentation;
+    presentation.main = presentInstalledYamlDataFile(installed.main);
+    presentation.gameFile = presentInstalledYamlDataFile(installed.game_file);
+    presentation.localIgnoreState = installed.local_ignore_state;
+    presentation.localIgnoreIdentity.sha256 = classic::toQString(installed.local_ignore_identity.sha256);
+    presentation.localIgnoreIdentity.byteLength = installed.local_ignore_identity.byte_len;
+    presentation.diagnostics.reserve(static_cast<qsizetype>(installed.diagnostics.size()));
+    for (const auto& diagnostic : installed.diagnostics) {
+        ScanRunInstalledYamlDataDiagnosticPresentation mapped;
+        mapped.hasRole = diagnostic.has_role;
+        mapped.role = diagnostic.role;
+        mapped.hasCandidate = diagnostic.has_candidate;
+        mapped.candidate = diagnostic.candidate;
+        mapped.hasPath = diagnostic.has_path;
+        mapped.path = diagnostic.has_path ? classic::toQString(diagnostic.path) : QString{};
+        mapped.kind = diagnostic.kind;
+        mapped.message = classic::toQString(diagnostic.message);
+        presentation.diagnostics.append(std::move(mapped));
+    }
+    return presentation;
+}
+
 } // namespace
 
 QString formatScanRunRejections(const classic::scanner::ScanRunContractDiscoveryResult& discovery)
@@ -177,6 +218,10 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
     presentation.failed = static_cast<int>(result.failed);
     presentation.cancelled = static_cast<int>(result.cancelled);
     presentation.setupDetails = setupDetails(result);
+    presentation.hasInstalledYamlData = result.has_installed_yaml_data;
+    if (result.has_installed_yaml_data) {
+        presentation.installedYamlData = presentInstalledYamlData(result.installed_yaml_data);
+    }
     presentation.logs.reserve(static_cast<qsizetype>(result.logs.size()));
     for (const auto& log : result.logs) {
         presentation.logs.append(presentLog(log));

@@ -54,10 +54,13 @@ factories require `CrashLogScanSetupContext`, so FCX cannot be enabled without
 run-scoped setup facts.
 
 `Configuration` contains the projected, already-accepted facts needed by Rust:
-YAML roots, game and version, analysis options, FormID database paths, an
-optional configured Unsolved Logs destination, and optional explicit
-concurrency. The scan module does not open or persist frontend User Settings.
-Adapters project one accepted settings snapshot into this configuration.
+one CLASSIC installation root, a typed `GameId`, the selected game-version
+mode, analysis options, FormID database paths, an optional configured Unsolved
+Logs destination, and optional explicit concurrency. The scan module derives
+installed YAML Data locations from the root; adapters do not pass separate YAML
+directories or parse a game string. The scan module does not open or persist
+frontend User Settings. Adapters project one accepted settings snapshot into
+this configuration.
 
 Omitting concurrency selects Rust's adaptive value. A present zero is invalid
 and returns `InfrastructureErrorStage::RequestValidation`. The selected value
@@ -108,6 +111,7 @@ control, but observation itself cannot change scheduling or outcomes.
   `CancelledBeforeDiscovery`, or `Cancelled`
 - the complete discovery result when discovery finished
 - the run-scoped FCX setup result when applicable
+- the selected Installed YAML Data metadata when intake was reached
 - Rust-selected effective concurrency when selection occurred
 - aggregate total, succeeded, failed, and cancelled counts
 - one `LogResult` per accepted log, always in discovery order
@@ -119,6 +123,27 @@ analysis, report-write, and movement failures into one message.
 
 `NoCrashLogsFound`, setup failure, cancellation, and per-log failures are
 expected lifecycle data. They are not run-wide exceptions.
+
+### Installed YAML Data intake
+
+After discovery, the final operation loads Installed YAML Data once from the
+configuration's installation root and typed game. Main and game candidates are
+selected independently from updated, read-only previous, or bundled sources;
+missing Local Ignore is generated from the exact selected Main defaults. The
+ready immutable snapshot supplies both parsed analysis data and simplify-log
+rules for the entire run. Scan execution never reopens selected Main, game, or
+Local Ignore paths after accepting that snapshot.
+
+`RunResult::installed_yaml_data` exposes stable run-level metadata: selected
+Main/game schema, provenance and exact-byte identity, Local Ignore state and
+identity, and structured fallback, validation, or generation
+diagnostics. It is absent only when execution did not reach intake. These
+diagnostics are operational metadata and never enter Autoscan Report text;
+equivalent accepted data therefore preserves report bytes.
+
+This valid-or-generated operation exposes only `Existing` and `Generated`
+Local Ignore states and excludes the reset-only diagnostic. Malformed Local
+Ignore recovery status, continuation, and resumed-run states belong to #147.
 
 ### Durable finalization
 
@@ -356,8 +381,7 @@ use std::path::PathBuf;
 # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 let request = Request::standard(
     Configuration {
-        yaml_dir_root: PathBuf::from("C:/CLASSIC"),
-        yaml_dir_data: PathBuf::from("C:/CLASSIC/CLASSIC Data"),
+        installation_root: PathBuf::from("C:/CLASSIC"),
         game: GameId::Fallout4,
         game_version: "auto".to_string(),
         options: Options::new(false, false),

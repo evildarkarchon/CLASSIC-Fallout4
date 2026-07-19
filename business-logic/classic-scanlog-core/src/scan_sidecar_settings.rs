@@ -81,6 +81,34 @@ impl ScanSidecarSettings {
             )?,
         })
     }
+
+    /// Combine snapshot-derived simplify rules with path-derived database locations.
+    ///
+    /// Installed snapshot intake must not reopen Main YAML Data after selection. Paths remain
+    /// necessary only for FormID database location resolution and canonical backup placement.
+    ///
+    /// # Errors
+    ///
+    /// Returns `ScanLogError::InvalidInput` when the typed facts contain a relative Unsolved
+    /// Logs Destination.
+    pub(crate) fn from_installed_snapshot(
+        paths: &CrashLogScanIntakePaths,
+        game: &str,
+        scan_facts: &CrashLogScanFacts,
+        remove_list: &[String],
+    ) -> Result<Self> {
+        Ok(Self {
+            remove_list: remove_list.to_vec(),
+            formid_database_paths: resolve_formid_database_paths(
+                &paths.yaml_dir_data,
+                game,
+                &scan_facts.formid_database_paths,
+            ),
+            unsolved_logs_destination: validate_unsolved_logs_destination(
+                scan_facts.unsolved_logs_destination.clone(),
+            )?,
+        })
+    }
 }
 
 /// Validates and normalizes an optional typed Unsolved Logs Destination.

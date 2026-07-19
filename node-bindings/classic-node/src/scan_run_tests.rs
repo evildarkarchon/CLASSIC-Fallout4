@@ -29,9 +29,8 @@ fn log_event() -> LogEvent {
 #[test]
 fn request_conversion_treats_blank_optional_paths_as_absent() {
     let configuration = configuration_to_core(JsScanRunConfiguration {
-        yaml_dir_root: "C:/CLASSIC".to_string(),
-        yaml_dir_data: "C:/CLASSIC/CLASSIC Data".to_string(),
-        game: "Fallout4".to_string(),
+        installation_root: "C:/CLASSIC".to_string(),
+        game: crate::shared::JsGameId::Fallout4,
         game_version: "auto".to_string(),
         show_formid_values: false,
         simplify_logs: false,
@@ -40,6 +39,8 @@ fn request_conversion_treats_blank_optional_paths_as_absent() {
         max_concurrent: None,
     })
     .expect("configuration should convert");
+    assert_eq!(configuration.installation_root, PathBuf::from("C:/CLASSIC"));
+    assert_eq!(configuration.game, classic_shared_core::GameId::Fallout4);
     assert!(configuration.scan_facts.unsolved_logs_destination.is_none());
 
     let source = standard_source_to_core(JsScanRunStandardSource {
@@ -50,6 +51,63 @@ fn request_conversion_treats_blank_optional_paths_as_absent() {
     .expect("standard source should convert");
     assert!(source.custom_scan_directory.is_none());
     assert!(source.configured_documents_root.is_none());
+}
+
+#[test]
+fn installed_yaml_data_run_enums_exclude_recovery_only_variants() {
+    assert!(matches!(
+        local_ignore_run_state_to_js(contract::LocalIgnoreRunState::Existing),
+        JsScanRunLocalIgnoreState::Existing
+    ));
+    assert!(matches!(
+        local_ignore_run_state_to_js(contract::LocalIgnoreRunState::Generated),
+        JsScanRunLocalIgnoreState::Generated
+    ));
+
+    for (kind, expected) in [
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::CacheUnavailable,
+            JsScanRunInstalledYamlDataDiagnosticKind::CacheUnavailable,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::Missing,
+            JsScanRunInstalledYamlDataDiagnosticKind::Missing,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::Read,
+            JsScanRunInstalledYamlDataDiagnosticKind::Read,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidUtf8,
+            JsScanRunInstalledYamlDataDiagnosticKind::InvalidUtf8,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::Parse,
+            JsScanRunInstalledYamlDataDiagnosticKind::Parse,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidSchema,
+            JsScanRunInstalledYamlDataDiagnosticKind::InvalidSchema,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::IncompatibleSchema,
+            JsScanRunInstalledYamlDataDiagnosticKind::IncompatibleSchema,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidRoleData,
+            JsScanRunInstalledYamlDataDiagnosticKind::InvalidRoleData,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated,
+            JsScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated,
+        ),
+    ] {
+        let actual = installed_yaml_data_run_diagnostic_kind_to_js(kind);
+        assert_eq!(
+            std::mem::discriminant(&actual),
+            std::mem::discriminant(&expected)
+        );
+    }
 }
 
 #[test]
@@ -138,6 +196,7 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
             status,
             discovery: None,
             setup: None,
+            installed_yaml_data: None,
             effective_concurrency: Some(2),
             message: Some("terminal message".to_string()),
             total: 1,

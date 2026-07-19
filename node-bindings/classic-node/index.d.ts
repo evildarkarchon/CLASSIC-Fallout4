@@ -373,6 +373,8 @@ export declare class InstalledYamlDataSnapshot {
   get gameDataRole(): JsInstalledYamlDataGameRole
   /** Returns a cloned immutable view of the parsed YAML Data. */
   get yamlData(): YamlData
+  /** Returns the Main-derived simplify removal list retained by this immutable snapshot. */
+  get simplifyRemoveList(): Array<string>
   /** Returns metadata for the independently selected Main YAML Data. */
   get main(): JsInspectedYamlDataFile
   /** Returns metadata for the independently selected game YAML Data. */
@@ -3817,6 +3819,20 @@ export declare const enum JsInstalledYamlDataRole {
   Game = 'Game'
 }
 
+/** Installed YAML Data metadata retained from the immutable run snapshot. */
+export interface JsInstalledYamlDataRunData {
+  /** Selected Main YAML Data schema, identity, and provenance. */
+  main: JsInspectedYamlDataFile
+  /** Selected game YAML Data schema, identity, and provenance. */
+  gameFile: JsInspectedYamlDataFile
+  /** How Local Ignore YAML Data entered the immutable run snapshot. */
+  localIgnoreState: JsScanRunLocalIgnoreState
+  /** Identity of the exact Local Ignore bytes retained by the run. */
+  localIgnoreIdentity: JsYamlDataContentIdentity
+  /** Structured fallback, validation, and generation diagnostics. */
+  diagnostics: Array<JsScanRunInstalledYamlDataDiagnostic>
+}
+
 /** Result of an integrity check. */
 export interface JsIntegrityCheckResult {
   /** Whether the check passed */
@@ -4424,12 +4440,10 @@ export interface JsRuleTarget {
 
 /** JavaScript configuration shared by Standard and Targeted requests. */
 export interface JsScanRunConfiguration {
-  /** Root directory containing settings and the ignore YAML document. */
-  yamlDirRoot: string
-  /** `CLASSIC Data` directory containing shippable YAML databases. */
-  yamlDirData: string
-  /** Supported game identifier. */
-  game: string
+  /** CLASSIC installation root whose Installed YAML Data is selected once for the run. */
+  installationRoot: string
+  /** Typed supported game identity. */
+  game: JsGameId
   /** Selected game-version mode. */
   gameVersion: string
   /** Whether FormID values should be resolved through configured databases. */
@@ -4475,6 +4489,50 @@ export interface JsScanRunInfrastructureError {
   path?: string
 }
 
+/** Structured attribution for one scan-run selection, fallback, or generation event. */
+export interface JsScanRunInstalledYamlDataDiagnostic {
+  /** Affected update-eligible role, absent for installation-wide or Local Ignore events. */
+  role?: JsInstalledYamlDataRole
+  /** Rejected candidate provenance, absent when no update-eligible candidate applies. */
+  candidate?: JsInstalledYamlDataProvenance
+  /** Affected path when the diagnostic is path-attributable. */
+  path?: string
+  /** Stable machine-readable scan-run diagnostic category. */
+  kind: JsScanRunInstalledYamlDataDiagnosticKind
+  /** Actionable human-readable explanation. */
+  message: string
+}
+
+/** Stable diagnostic categories emitted by valid-or-generated scan-run intake. */
+export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {
+  /** The per-user update cache could not be resolved. */
+  CacheUnavailable = 'CacheUnavailable',
+  /** A required final fallback candidate was absent. */
+  Missing = 'Missing',
+  /** A present candidate could not be read. */
+  Read = 'Read',
+  /** Candidate bytes were not valid UTF-8. */
+  InvalidUtf8 = 'InvalidUtf8',
+  /** Candidate text was not valid YAML Data. */
+  Parse = 'Parse',
+  /** A candidate omitted or malformed its schema version. */
+  InvalidSchema = 'InvalidSchema',
+  /** A candidate schema was outside the client-owned compatibility range. */
+  IncompatibleSchema = 'IncompatibleSchema',
+  /** A candidate failed role-specific semantic validation. */
+  InvalidRoleData = 'InvalidRoleData',
+  /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
+  LocalIgnoreGenerated = 'LocalIgnoreGenerated'
+}
+
+/** Local Ignore origins possible for the valid-or-generated scan-run intake contract. */
+export declare const enum JsScanRunLocalIgnoreState {
+  /** A valid user-owned Local Ignore file already existed in the installation. */
+  Existing = 'Existing',
+  /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
+  Generated = 'Generated'
+}
+
 /** Common log-scoped event payload. */
 export interface JsScanRunLogEvent {
   discoveryIndex: number
@@ -4516,6 +4574,8 @@ export interface JsScanRunResult {
   status: 'completed' | 'no_crash_logs_found' | 'setup_failed' | 'cancelled_before_discovery' | 'cancelled'
   discovery?: JsScanRunDiscoveryResult
   setup?: JsScanRunSetupResult
+  /** Installed YAML Data selected after discovery, absent when intake was not reached. */
+  installedYamlData?: JsInstalledYamlDataRunData
   effectiveConcurrency?: number
   message?: string
   total: number

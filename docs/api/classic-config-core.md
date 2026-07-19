@@ -90,7 +90,7 @@ Config-owned selection and immutable loading of Installed YAML Data.
 - `InstalledYamlDataLoadOutcome::{Ready, LocalIgnoreRecoveryRequired}` - separates usable snapshots and expected malformed-Local-Ignore decisions from fatal failures
 - `InstalledYamlDataSnapshot` - parsed Main/game data plus existing, generated, or operation-scoped-empty Local Ignore behavior backed by retained exact bytes
 - `LocalIgnoreRecoveryPlan` - immutable retained selection/default/malformed-file proposal with a consuming, mutation-free `proceed_without_ignore()` decision
-- `LocalIgnoreYamlDataState::{Existing, Generated, ProceedWithoutIgnore}` - distinguishes preserved user content, successful initialization, and operation-scoped empty ignores
+- `LocalIgnoreYamlDataState::{Existing, Generated, ProceedWithoutIgnore, ResetToDefault}` - distinguishes preserved user content, successful initialization, operation-scoped empty ignores, and accepted reset state
 - `InstalledYamlDataLoadError` - typed fatal selection, I/O, default, publication, and parsed-data failures
 - `load_installed_yaml_data()` - production installed snapshot entry point
 - `load_installed_yaml_data_with_env()` - deterministic Rust test/tooling seam for cache-environment injection
@@ -233,6 +233,7 @@ A valid installation returns `InstalledYamlDataLoadOutcome::Ready(InstalledYamlD
 - the parsed `YamlDataCore` and requested typed game;
 - the registered shared game-data role;
 - Main and game provenance, schema versions, SHA-256 identities, and byte lengths through `main()` and `game_file()`;
+- simplify-log removal entries parsed from the retained selected Main bytes through `simplify_remove_list()`;
 - `LocalIgnoreYamlDataState::{Existing, Generated}` plus the exact authoritative Local Ignore SHA-256 identity and byte length (reset results additionally use `ResetToDefault`);
 - structured cache, rejected-candidate, and Local Ignore generation/reset diagnostics.
 

@@ -42,6 +42,7 @@ private slots:
     void terminal_logs_preserve_discovery_order_and_structured_dispositions();
     void expected_lifecycle_statuses_remain_distinct_from_infrastructure_errors();
     void setup_failure_presents_checks_updates_configuration_issues_actions_and_fatal_errors();
+    void installed_yaml_data_presence_preserves_generated_ignore_metadata_and_diagnostics();
     void infrastructure_error_preserves_typed_stage_message_and_path();
     void invalid_execution_envelope_is_presented_as_an_infrastructure_error();
 };
@@ -65,6 +66,48 @@ void ScanRunPresentationTests::targeted_rejections_preserve_paired_paths_and_rea
              QStringLiteral("Ignored 2 targeted inputs:\n"
                             "- C:/picked/missing.log (path does not exist)\n"
                             "- C:/picked/readme.txt (unsupported Crash Log filename)"));
+}
+
+void ScanRunPresentationTests::installed_yaml_data_presence_preserves_generated_ignore_metadata_and_diagnostics()
+{
+    auto execution = executionWithStatus(classic::scanner::ScanRunContractStatus::Completed);
+    execution.result.has_installed_yaml_data = true;
+    auto& installed = execution.result.installed_yaml_data;
+    installed.main.role = classic::scanner::ScanRunInstalledYamlDataRole::Main;
+    installed.main.provenance = classic::scanner::ScanRunInstalledYamlDataProvenance::Bundled;
+    installed.main.schema_version = "2.0";
+    installed.main.sha256 = "main-hash";
+    installed.main.byte_len = 64;
+    installed.game_file.role = classic::scanner::ScanRunInstalledYamlDataRole::Game;
+    installed.game_file.provenance = classic::scanner::ScanRunInstalledYamlDataProvenance::Updated;
+    installed.game_file.schema_version = "1.0";
+    installed.game_file.sha256 = "game-hash";
+    installed.game_file.byte_len = 48;
+    installed.local_ignore_state = classic::scanner::ScanRunLocalIgnoreYamlDataState::Generated;
+    installed.local_ignore_identity.sha256 = "ignore-hash";
+    installed.local_ignore_identity.byte_len = 32;
+    classic::scanner::ScanRunInstalledYamlDataDiagnosticDto diagnostic{};
+    diagnostic.kind = classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated;
+    diagnostic.has_path = true;
+    diagnostic.path = "C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml";
+    diagnostic.message = "generated missing Local Ignore YAML Data";
+    installed.diagnostics.push_back(std::move(diagnostic));
+
+    const auto presentation = classic::gui::presentScanRunExecution(execution);
+
+    QVERIFY(presentation.hasInstalledYamlData);
+    QCOMPARE(presentation.installedYamlData.main.schemaVersion, QStringLiteral("2.0"));
+    QCOMPARE(presentation.installedYamlData.main.sha256, QStringLiteral("main-hash"));
+    QCOMPARE(presentation.installedYamlData.gameFile.provenance,
+             classic::scanner::ScanRunInstalledYamlDataProvenance::Updated);
+    QCOMPARE(presentation.installedYamlData.localIgnoreState,
+             classic::scanner::ScanRunLocalIgnoreYamlDataState::Generated);
+    QCOMPARE(presentation.installedYamlData.localIgnoreIdentity.byteLength, quint64{32});
+    QCOMPARE(presentation.installedYamlData.diagnostics.size(), 1);
+    QCOMPARE(presentation.installedYamlData.diagnostics[0].kind,
+             classic::scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated);
+    QVERIFY(presentation.installedYamlData.diagnostics[0].hasPath);
+    QVERIFY(presentation.installedYamlData.diagnostics[0].path.endsWith(QStringLiteral("CLASSIC Ignore.yaml")));
 }
 
 void ScanRunPresentationTests::discovery_report_directories_are_deduplicated_case_insensitively()

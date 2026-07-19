@@ -622,6 +622,13 @@ fn installed_yaml_data_snapshot_yaml_data(snapshot: &InstalledYamlDataSnapshot) 
     })
 }
 
+/// Clone simplify-log removal entries parsed from the exact selected Main bytes.
+fn installed_yaml_data_snapshot_simplify_remove_list(
+    snapshot: &InstalledYamlDataSnapshot,
+) -> Vec<String> {
+    snapshot.inner.simplify_remove_list().to_vec()
+}
+
 /// Return the typed game identity retained by an Installed YAML Data snapshot.
 fn installed_yaml_data_snapshot_game(
     snapshot: &InstalledYamlDataSnapshot,
@@ -2128,6 +2135,10 @@ mod ffi {
         fn installed_yaml_data_snapshot_yaml_data(
             snapshot: &InstalledYamlDataSnapshot,
         ) -> Box<YamlData>;
+        /// Clone simplify-log removal entries retained by the snapshot.
+        fn installed_yaml_data_snapshot_simplify_remove_list(
+            snapshot: &InstalledYamlDataSnapshot,
+        ) -> Vec<String>;
         fn installed_yaml_data_snapshot_game(
             snapshot: &InstalledYamlDataSnapshot,
         ) -> ExplicitYamlDataGameId;

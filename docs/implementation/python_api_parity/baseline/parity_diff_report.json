@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-18T08:12:19.325458+00:00",
+  "generated_at_utc": "2026-07-19T03:52:56.431969+00:00",
   "summary": {
     "tier1_contract_total": 1236,
     "tier1_matched": 1236,
@@ -38,7 +38,7 @@
       "expected_python_kind": "method",
       "actual_python_kind": "method",
       "expected_python_arity": null,
-      "actual_python_arity": 9
+      "actual_python_arity": 8
     },
     {
       "id": "scanlog.scan_run.ScanRunStandardSource",

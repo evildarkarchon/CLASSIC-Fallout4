@@ -14,7 +14,7 @@ namespace classic::gui {
 /// An empty Targeted input list constructs Standard intent with Rust-owned discovery and Unsolved
 /// Logs policy. A non-empty list constructs Targeted intent, whose CXX constructor cannot express
 /// Unsolved Logs movement. FCX selection always uses a constructor that requires setup context.
-rust::Box<classic::scanner::ScanRunRequest> buildScanRunRequest(const QString& yamlRoot, const QString& yamlData,
+rust::Box<classic::scanner::ScanRunRequest> buildScanRunRequest(const QString& installationRoot,
                                                                 const QString& baseDirectory,
                                                                 const CrashLogScanLaunchSettings& settings,
                                                                 const QString& setupXseLogPath,

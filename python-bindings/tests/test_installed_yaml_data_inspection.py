@@ -17,6 +17,8 @@ MAIN_BYTES = (
     b'  version: "9.1.0"\r\n'
     b"CLASSIC_Interface:\r\n"
     b'  autoscan_text_Fallout4: "bundled"\r\n'
+    b"exclude_log_records:\r\n"
+    b'  - "(void*)"\r\n'
 )
 GAME_BYTES = (
     b'schema_version: "1.0"\n'
@@ -180,6 +182,7 @@ def test_installed_load_projects_ready_immutable_snapshot(
     assert snapshot.game == classic_config.ExplicitYamlDataGame.FALLOUT4_VR
     assert snapshot.game_data_role == "Fallout4"
     assert snapshot.yaml_data.classic_version == "9.1.0"
+    assert snapshot.simplify_remove_list == ["(void*)"]
     assert snapshot.yaml_data.ignore_list == ["ExistingUserEntry.dll"]
     assert snapshot.main.provenance == "updated"
     assert snapshot.main.sha256 == hashlib.sha256(updated_main).hexdigest()

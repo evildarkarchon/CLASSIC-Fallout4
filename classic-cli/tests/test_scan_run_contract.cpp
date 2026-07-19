@@ -90,9 +90,8 @@ private:
 /// Builds the smallest valid shared configuration needed to reach discovery.
 scanner::ScanRunConfigurationDto make_configuration(const fs::path& root) {
     scanner::ScanRunConfigurationDto configuration{};
-    configuration.yaml_dir_root = root.string();
-    configuration.yaml_dir_data = (root / "CLASSIC Data").string();
-    configuration.game = "Fallout4";
+    configuration.installation_root = root.string();
+    configuration.game = scanner::ScanRunGameId::Fallout4;
     configuration.game_version = "auto";
     return configuration;
 }
@@ -101,7 +100,8 @@ scanner::ScanRunConfigurationDto make_configuration(const fs::path& root) {
 void copy_shared_yaml_tree(const fs::path& root) {
     const auto database = root / "CLASSIC Data" / "databases";
     fs::create_directories(database);
-    fs::copy_file(SHARED_FIXTURE_ROOT / "CLASSIC Ignore.yaml", root / "CLASSIC Ignore.yaml");
+    fs::copy_file(SHARED_FIXTURE_ROOT / "CLASSIC Data" / "CLASSIC Ignore.yaml",
+                  root / "CLASSIC Data" / "CLASSIC Ignore.yaml");
     fs::copy_file(SHARED_FIXTURE_ROOT / "CLASSIC Data" / "databases" / "CLASSIC Main.yaml",
                   database / "CLASSIC Main.yaml");
     fs::copy_file(SHARED_FIXTURE_ROOT / "CLASSIC Data" / "databases" / "CLASSIC Fallout4.yaml",
@@ -276,6 +276,11 @@ TEST_CASE("CXX executes the shared Standard fixture with Rust-owned facts", "[br
     REQUIRE(execution.has_result);
     REQUIRE_FALSE(execution.has_error);
     REQUIRE(execution.result.status == scanner::ScanRunContractStatus::Completed);
+    REQUIRE(execution.result.has_installed_yaml_data);
+    REQUIRE(execution.result.installed_yaml_data.main.role == scanner::ScanRunInstalledYamlDataRole::Main);
+    REQUIRE(execution.result.installed_yaml_data.game_file.role == scanner::ScanRunInstalledYamlDataRole::Game);
+    REQUIRE(execution.result.installed_yaml_data.local_ignore_state ==
+            scanner::ScanRunLocalIgnoreYamlDataState::Existing);
     REQUIRE(source_name(execution.result.discovery.source) == fixture::STANDARD_SOURCE);
     REQUIRE(execution.result.discovery.accepted_logs.size() == fixture::STANDARD_LOGS.size());
     for (std::size_t index = 0; index < fixture::STANDARD_LOGS.size(); ++index) {
@@ -352,6 +357,32 @@ TEST_CASE("CXX executes the shared Targeted fixture without Unsolved Logs moveme
     }
     REQUIRE(fixture::TARGETED_UNSOLVED_ARTIFACT_COUNT == 0);
     REQUIRE_FALSE(fs::exists(temporary.path() / "Unsolved Logs"));
+}
+
+TEST_CASE("CXX final result preserves generated Local Ignore metadata and diagnostics", "[bridge][scan-run][parity]") {
+    TemporaryDirectory temporary;
+    copy_shared_yaml_tree(temporary.path());
+    fs::remove(temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml");
+    const auto crash_log = copy_shared_log(temporary.path(), "crash-generated-ignore.log");
+    scanner::ScanRunTargetedSourceDto source{};
+    source.inputs.push_back(crash_log.string());
+    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+
+    const auto execution = scanner::scan_run_contract_execute(*request, *scanner::scan_run_cancellation_new(), nullptr);
+
+    INFO("scan-run error: " << std::string(execution.error.message));
+    REQUIRE(execution.has_result);
+    REQUIRE_FALSE(execution.has_error);
+    REQUIRE(execution.result.has_installed_yaml_data);
+    REQUIRE(execution.result.installed_yaml_data.local_ignore_state ==
+            scanner::ScanRunLocalIgnoreYamlDataState::Generated);
+    REQUIRE(execution.result.installed_yaml_data.local_ignore_identity.byte_len > 0);
+    bool saw_generation = false;
+    for (const auto& diagnostic : execution.result.installed_yaml_data.diagnostics) {
+        saw_generation = saw_generation ||
+                         diagnostic.kind == scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated;
+    }
+    REQUIRE(saw_generation);
 }
 
 TEST_CASE("CXX shared cancellation fixture distinguishes every safe seam", "[bridge][scan-run][parity]") {

@@ -161,7 +161,7 @@ The directory where a Standard Crash Log Scan Run may move Unsolved Logs when re
 _Avoid_: failed log folder, custom move path
 
 **Crash Log Scan Intake**:
-The preparation of an existing Crash Log for analysis. It resolves the selected game/version, YAML Data, Crashgen metadata, scan options, and FormID readiness into a scan-ready setup; it does not collect Crash Logs or move Unsolved Logs.
+The preparation of an existing Crash Log for analysis. In a complete run it consumes one immutable Installed YAML Data Snapshot selected from the installation root and typed game, then resolves version metadata, scan options, and FormID readiness into a scan-ready setup without reopening selected YAML Data paths; it does not collect Crash Logs or move Unsolved Logs.
 _Avoid_: config loading, scan setup
 
 **Crash Log Scan Run**:
@@ -169,7 +169,7 @@ The execution of a Standard or Targeted Crash Log scan intent. It resolves the C
 _Avoid_: scan transaction, analysis job, scan session
 
 **Crash Log Scan Run Result**:
-The structured outcome of a Crash Log Scan Run, including run status, discovery results, optional setup validation details, and per-log outcomes in discovery order. It represents expected run-level outcomes such as no Crash Logs found, cancellation before discovery, or setup failure as data rather than exceptions.
+The structured outcome of a Crash Log Scan Run, including run status, discovery results, optional setup validation details, optional selected Installed YAML Data metadata and diagnostics, and per-log outcomes in discovery order. It represents expected run-level outcomes such as no Crash Logs found, cancellation before discovery, or setup failure as data rather than exceptions.
 _Avoid_: result list, exception status, scan summary string
 
 **Crash Log Scan Run Continuation**:

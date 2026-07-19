@@ -85,7 +85,7 @@ Runtime callers use the Installed YAML Data load flow for valid, missing, or mal
 
 1. `installed_yaml_data_load(installation_root, ExplicitYamlDataGameId, selected_game_version)` delegates Main/game selection, existing Local Ignore validation, and missing Local Ignore generation to config core.
 2. `installed_yaml_data_load_status(...)` uses exactly one of `has_snapshot`, `has_recovery_plan`, or `has_error` to report Ready, Local Ignore Recovery Required, or fatal failure. Fatal `InstalledYamlDataLoadErrorDto` roles cover Main/game `NoUsableSource`, Local Ignore read/creation failures, and default validation when a missing Local Ignore must be generated; the DTO also preserves the optional path, structured no-usable-source diagnostics, and core message.
-3. `installed_yaml_data_load_take_snapshot(...)` consumes Ready. Snapshot getters expose parsed `YamlData`, requested game and registered role, Main/game provenance/schema/exact-byte identity, Local Ignore state/identity, and structured diagnostics.
+3. `installed_yaml_data_load_take_snapshot(...)` consumes Ready. Snapshot getters expose parsed `YamlData`, simplify-log removal entries retained from selected Main, requested game and registered role, Main/game provenance/schema/exact-byte identity, Local Ignore state/identity, and structured diagnostics.
 4. `installed_yaml_data_load_take_recovery_plan(...)` consumes Recovery Required into an opaque Rust-owned `LocalIgnoreRecoveryPlan`. Its getters expose retained Main/game metadata, malformed identity, malformed path, selected-game-version mode, and diagnostics without raw bytes or YAML documents. `local_ignore_recovery_plan_has_default_local_ignore_identity(...)` reports whether selected-Main defaults were usable; callers inspect it before the identity getter because CXX projects an unavailable optional identity as an empty DTO.
 5. `local_ignore_recovery_plan_proceed_without_ignore(...)` consumes that plan and returns the retained snapshot with `LocalIgnoreYamlDataState::ProceedWithoutIgnore` and an empty ignore list for this operation. It performs no selection or filesystem operation, so the malformed file remains authoritative and a later load requires recovery again.
 6. `local_ignore_recovery_plan_reset_to_default(...)` consumes the plan into a `LocalIgnoreResetOperation`. `local_ignore_reset_status(...)` distinguishes reset, conflict, and typed operational error before consumption. Reset-result getters expose canonical/backup paths, malformed/backup/replacement identities, structured diagnostics, and the retained `ResetToDefault` snapshot; conflict getters expose expected/current identities and an optional already verified backup path. `LocalIgnoreResetErrorDto` retains every core error kind plus optional `Create`, `Write`, `Flush`, `Sync`, or `Publish` stage. The bridge owns none of the conflict, backup, or atomic-replacement policy.
@@ -284,11 +284,14 @@ constructs exactly the valid request matrix:
 Targeted constructors accept no movement policy. FCX constructors require a
 `ScanRunSetupContextDto`, keeping setup facts scoped to one run.
 
-`ScanRunConfigurationDto` contains YAML roots, game/version, non-FCX analysis
-options, configured FormID database paths, an optional configured Unsolved Logs
-destination, and optional explicit concurrency. CXX optionals use `has_*` plus
-the corresponding value. Absent concurrency selects adaptively; present zero
-reaches Rust as a typed `RequestValidation` infrastructure error.
+`ScanRunConfigurationDto` contains one `installation_root`, a typed `GameId`,
+the selected game-version mode, non-FCX analysis options, configured FormID
+database paths, an optional configured Unsolved Logs destination, and optional
+explicit concurrency. Rust derives installed YAML Data paths and performs the
+one snapshot load; C++ does not supply separate YAML directories or parse the
+game token. CXX optionals use `has_*` plus the corresponding value. Absent
+concurrency selects adaptively; present zero reaches Rust as a typed
+`RequestValidation` infrastructure error.
 
 Standard movement uses one opaque value returned by:
 
@@ -332,6 +335,7 @@ The result retains:
 
 - typed lifecycle status
 - optional complete discovery and FCX setup results
+- optional Installed YAML Data metadata when intake was reached
 - optional Rust-selected effective concurrency
 - aggregate counts
 - per-log outcomes in discovery order
@@ -339,6 +343,14 @@ The result retains:
 Each log retains its typed disposition, every applicable `Analysis`,
 `ReportWrite`, and `UnsolvedLogsFinalization` failure, optional report path,
 movement state, timing, and analysis counts.
+
+Installed YAML Data metadata contains the selected Main/game role,
+provenance, schema and exact-byte identity; Local Ignore state and identity;
+and structured role/candidate/path/kind/message diagnostics. The DTO uses
+`has_installed_yaml_data` for intake presence. The bridge maps only Rust-owned
+facts; diagnostics never become Autoscan Report text. This #146 result
+inventory contains only `Existing`/`Generated` Local Ignore states and excludes
+reset diagnostics; the config-owned load/recovery API above remains broader.
 
 The error retains one of the six stable infrastructure stages, its message, and
 an optional relevant path. Expected no-logs, setup, cancellation, and per-log

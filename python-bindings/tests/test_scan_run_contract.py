@@ -7,15 +7,17 @@ from pathlib import Path
 import pytest
 
 
-MAIN_YAML = """
+MAIN_YAML = """schema_version: "2.0"
 CLASSIC_Info:
   version: "9.0.0"
   version_date: "2026-02-25"
+  default_ignorefile: |
+    CLASSIC_Ignore_Fallout4: []
 catch_log_records:
   - "LAND"
 """
 
-GAME_YAML = """
+GAME_YAML = """schema_version: "1.0"
 Game_Info:
   XSE_Acronym: "F4SE"
   GameVersion: "1.10.163"
@@ -67,6 +69,18 @@ SHARED_SCAN_RUN_MANIFEST = json.loads(
 )
 
 
+@pytest.fixture(autouse=True)
+def _isolate_installed_yaml_cache(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Keep installed-data selection independent of the developer's real update cache."""
+
+    cache_root = tmp_path / "isolated-cache"
+    monkeypatch.setenv("LOCALAPPDATA", str(cache_root))
+    monkeypatch.setenv("XDG_CACHE_HOME", str(cache_root))
+
+
 def _write_scan_run_data_root(root: Path) -> None:
     """Write the minimal YAML Data required by a real Crash Log Scan Run."""
 
@@ -77,7 +91,10 @@ def _write_scan_run_data_root(root: Path) -> None:
         GAME_YAML,
         encoding="utf-8",
     )
-    (root / "CLASSIC Ignore.yaml").write_text(IGNORE_YAML, encoding="utf-8")
+    (root / "CLASSIC Data" / "CLASSIC Ignore.yaml").write_text(
+        IGNORE_YAML,
+        encoding="utf-8",
+    )
 
 
 def _write_logs(directory: Path, names: list[str]) -> list[Path]:
@@ -96,10 +113,6 @@ def _copy_shared_scan_run_data_root(root: Path) -> None:
     shutil.copytree(
         SHARED_SCAN_RUN_FIXTURE_ROOT / "CLASSIC Data",
         root / "CLASSIC Data",
-    )
-    shutil.copyfile(
-        SHARED_SCAN_RUN_FIXTURE_ROOT / "CLASSIC Ignore.yaml",
-        root / "CLASSIC Ignore.yaml",
     )
 
 
@@ -128,10 +141,11 @@ def _configuration(
 ) -> object:
     """Create explicit scan facts shared by Standard and Targeted requests."""
 
+    import classic_shared
+
     return classic_scanlog.ScanRunConfiguration(
-        yaml_dir_root=str(root),
-        yaml_dir_data=str(root / "CLASSIC Data"),
-        game="Fallout4",
+        installation_root=str(root),
+        game=classic_shared.GameId.Fallout4,
         game_version="auto",
         show_formid_values=False,
         simplify_logs=False,
@@ -139,6 +153,40 @@ def _configuration(
         unsolved_logs_destination=None,
         max_concurrent=max_concurrent,
     )
+
+
+@pytest.mark.parametrize(
+    "game_attribute",
+    ["Fallout4", "Fallout4VR", "Skyrim", "Starfield"],
+)
+def test_configuration_accepts_every_typed_shared_game_id(
+    tmp_path: Path,
+    game_attribute: str,
+) -> None:
+    """Configuration maps every shared typed game value without parsing strings."""
+
+    import classic_scanlog
+    import classic_shared
+
+    configuration = classic_scanlog.ScanRunConfiguration(
+        installation_root=str(tmp_path),
+        game=getattr(classic_shared.GameId, game_attribute),
+        game_version="auto",
+        show_formid_values=False,
+        simplify_logs=False,
+        formid_database_paths=[],
+    )
+    assert configuration is not None
+
+    with pytest.raises(TypeError, match="classic_shared.GameId"):
+        classic_scanlog.ScanRunConfiguration(
+            installation_root=str(tmp_path),
+            game=game_attribute,
+            game_version="auto",
+            show_formid_values=False,
+            simplify_logs=False,
+            formid_database_paths=[],
+        )
 
 
 def test_request_factories_make_invalid_scan_intents_unrepresentable(
@@ -264,6 +312,7 @@ def test_scan_run_maps_no_logs_and_pre_discovery_cancellation(tmp_path: Path) ->
     assert empty.result.status == "no_crash_logs_found"
     assert empty.result.discovery.source == "targeted"
     assert empty.result.discovery.accepted_logs == []
+    assert empty.result.installed_yaml_data is None
     assert empty.result.effective_concurrency is None
     assert [event.kind for event in events] == ["discovery_completed"]
 
@@ -275,6 +324,7 @@ def test_scan_run_maps_no_logs_and_pre_discovery_cancellation(tmp_path: Path) ->
     assert cancelled.result.status == "cancelled_before_discovery"
     assert cancelled.result.discovery is None
     assert cancelled.result.setup is None
+    assert cancelled.result.installed_yaml_data is None
     assert cancelled.result.logs == []
 
 
@@ -428,6 +478,42 @@ def test_standard_scan_run_persists_reports_in_discovery_order(
     assert execution.observer_error is None
     result = execution.result
     assert result.status == "completed"
+    installed = result.installed_yaml_data
+    assert isinstance(
+        installed,
+        classic_scanlog.ScanRunInstalledYamlDataRunData,
+    )
+    assert isinstance(installed.main, classic_scanlog.ScanRunInspectedYamlDataFile)
+    assert (installed.main.role, installed.main.provenance) == ("main", "bundled")
+    assert (installed.main.schema_major, installed.main.schema_minor) == (2, 0)
+    assert len(installed.main.sha256) == 64
+    assert installed.main.byte_length > 0
+    assert (installed.game_file.role, installed.game_file.provenance) == (
+        "game",
+        "bundled",
+    )
+    assert (installed.game_file.schema_major, installed.game_file.schema_minor) == (
+        1,
+        0,
+    )
+    assert installed.local_ignore_state == "existing"
+    assert isinstance(
+        installed.local_ignore_identity,
+        classic_scanlog.ScanRunYamlDataContentIdentity,
+    )
+    assert len(installed.local_ignore_identity.sha256) == 64
+    assert installed.local_ignore_identity.byte_len == len(
+        (tmp_path / "CLASSIC Data" / "CLASSIC Ignore.yaml").read_bytes()
+    )
+    assert all(
+        isinstance(
+            diagnostic,
+            classic_scanlog.ScanRunInstalledYamlDataDiagnostic,
+        )
+        for diagnostic in installed.diagnostics
+    )
+    with pytest.raises(AttributeError):
+        installed.local_ignore_state = "generated"
     assert result.effective_concurrency == expected["effectiveConcurrency"]
     assert result.discovery.source == "standard"
     assert [
@@ -448,6 +534,44 @@ def test_standard_scan_run_persists_reports_in_discovery_order(
         "log_phase",
         "log_finished",
     }.issubset({event.kind for event in events})
+
+
+def test_missing_local_ignore_is_generated_and_reported_as_run_data(
+    tmp_path: Path,
+) -> None:
+    """A generated Local Ignore is retained as structured run-level snapshot data."""
+
+    import classic_scanlog
+
+    _write_scan_run_data_root(tmp_path)
+    local_ignore_path = tmp_path / "CLASSIC Data" / "CLASSIC Ignore.yaml"
+    local_ignore_path.unlink()
+    crash_log = _write_logs(tmp_path / "selected", ["crash-generated-ignore.log"])[0]
+    request = classic_scanlog.ScanRunRequest.targeted(
+        _configuration(classic_scanlog, tmp_path),
+        classic_scanlog.ScanRunTargetedSource(inputs=[str(crash_log)]),
+    )
+
+    execution = classic_scanlog.scan_run_execute(
+        request,
+        classic_scanlog.ScanRunCancellation(),
+    )
+
+    assert execution.error is None
+    installed = execution.result.installed_yaml_data
+    assert installed.local_ignore_state == "generated"
+    assert installed.local_ignore_identity.byte_len == len(
+        local_ignore_path.read_bytes()
+    )
+    generated = [
+        diagnostic
+        for diagnostic in installed.diagnostics
+        if diagnostic.kind == "local_ignore_generated"
+    ]
+    assert len(generated) == 1
+    assert generated[0].role is None
+    assert generated[0].candidate is None
+    assert generated[0].path == local_ignore_path
 
 
 def test_targeted_scan_run_preserves_input_order_and_never_moves(

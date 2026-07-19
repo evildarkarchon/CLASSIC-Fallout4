@@ -9,6 +9,9 @@ const EXPLICIT_MAIN_YAML: &str = concat!(
     "  version: \"9.1.0\"\r\n",
     "CLASSIC_Interface:\r\n",
     "  autoscan_text_Fallout4: \"explicit bridge\"\r\n",
+    "exclude_log_records:\r\n",
+    "  - '(void*)'\r\n",
+    "  - 'kernel32.dll'\r\n",
 );
 const EXPLICIT_GAME_YAML: &str = concat!(
     "schema_version: \"1.0\"\n",
@@ -311,6 +314,10 @@ fn installed_yaml_data_load_bridge_projects_ready_snapshot() {
     assert_eq!(
         yaml_data_ignore_list(&yaml_data),
         vec!["ExistingBridgeEntry.dll".to_string()]
+    );
+    assert_eq!(
+        installed_yaml_data_snapshot_simplify_remove_list(&snapshot),
+        vec!["(void*)".to_string(), "kernel32.dll".to_string()]
     );
     assert!(
         installed_yaml_data_snapshot_diagnostics(&snapshot)

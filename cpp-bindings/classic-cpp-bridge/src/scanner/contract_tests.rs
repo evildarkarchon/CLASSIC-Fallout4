@@ -18,9 +18,8 @@ fn shared_failure_fixtures() -> serde_json::Value {
 
 fn sample_configuration() -> ffi::ScanRunConfigurationDto {
     ffi::ScanRunConfigurationDto {
-        yaml_dir_root: "root".to_string(),
-        yaml_dir_data: "data".to_string(),
-        game: "Fallout4".to_string(),
+        installation_root: "root".to_string(),
+        game: ffi::ScanRunGameId::Fallout4,
         game_version: "auto".to_string(),
         show_formid_values: false,
         simplify_logs: false,
@@ -61,14 +60,18 @@ fn sample_setup_context() -> ffi::ScanRunSetupContextDto {
     }
 }
 
-fn write_minimal_scan_yaml_tree(root: &std::path::Path, data: &std::path::Path) {
+fn write_minimal_scan_yaml_tree(_root: &std::path::Path, data: &std::path::Path) {
     std::fs::create_dir_all(data.join("databases")).unwrap();
     std::fs::write(
         data.join("databases").join("CLASSIC Main.yaml"),
         concat!(
+            "schema_version: \"2.0\"\n",
             "CLASSIC_Info:\n",
             "  version: \"v9.1.0\"\n",
             "  version_date: \"2026-06-30\"\n",
+            "  default_ignorefile: |\n",
+            "    CLASSIC_Ignore_Fallout4:\n",
+            "      - IgnoreThis.dll\n",
             "CLASSIC_Interface:\n",
             "  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n",
             "exclude_log_records:\n",
@@ -79,6 +82,7 @@ fn write_minimal_scan_yaml_tree(root: &std::path::Path, data: &std::path::Path) 
     std::fs::write(
         data.join("databases").join("CLASSIC Fallout4.yaml"),
         concat!(
+            "schema_version: \"1.0\"\n",
             "Game_Info:\n",
             "  XSE_Acronym: \"F4SE\"\n",
             "  GameVersion: \"1.10.163\"\n",
@@ -89,7 +93,7 @@ fn write_minimal_scan_yaml_tree(root: &std::path::Path, data: &std::path::Path) 
     )
     .unwrap();
     std::fs::write(
-        root.join("CLASSIC Ignore.yaml"),
+        data.join("CLASSIC Ignore.yaml"),
         "CLASSIC_Ignore_Fallout4: []\n",
     )
     .unwrap();
@@ -109,6 +113,8 @@ fn standard_request_constructor_builds_non_fcx_leave_in_place_request() {
         panic!("expected Standard request tag");
     };
     assert!(!request.fcx_enabled());
+    assert_eq!(request.configuration().installation_root, PathBuf::from("root"));
+    assert_eq!(request.configuration().game, GameId::Fallout4);
     assert_eq!(
         request.unsolved_logs(),
         &classic_scanlog_core::StandardUnsolvedLogsIntent::LeaveInPlace
@@ -285,6 +291,89 @@ fn maps_every_core_enum_variant_to_a_typed_cxx_variant() {
         map_phase(ScanProgressPhase::Finalize),
         ffi::ScanRunContractProgressPhase::Finalize
     );
+
+    for (core, cxx) in [
+        (
+            classic_config_core::InstalledYamlDataRole::Main,
+            ffi::ScanRunInstalledYamlDataRole::Main,
+        ),
+        (
+            classic_config_core::InstalledYamlDataRole::Game,
+            ffi::ScanRunInstalledYamlDataRole::Game,
+        ),
+    ] {
+        assert_eq!(map_installed_yaml_data_role(core), cxx);
+    }
+    for (core, cxx) in [
+        (
+            classic_config_core::InstalledYamlDataProvenance::Updated,
+            ffi::ScanRunInstalledYamlDataProvenance::Updated,
+        ),
+        (
+            classic_config_core::InstalledYamlDataProvenance::Previous,
+            ffi::ScanRunInstalledYamlDataProvenance::Previous,
+        ),
+        (
+            classic_config_core::InstalledYamlDataProvenance::Bundled,
+            ffi::ScanRunInstalledYamlDataProvenance::Bundled,
+        ),
+    ] {
+        assert_eq!(map_installed_yaml_data_provenance(core), cxx);
+    }
+    for (core, cxx) in [
+        (
+            contract::LocalIgnoreRunState::Existing,
+            ffi::ScanRunLocalIgnoreYamlDataState::Existing,
+        ),
+        (
+            contract::LocalIgnoreRunState::Generated,
+            ffi::ScanRunLocalIgnoreYamlDataState::Generated,
+        ),
+    ] {
+        assert_eq!(map_local_ignore_yaml_data_state(core), cxx);
+    }
+
+    let diagnostic_pairs = [
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::CacheUnavailable,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::CacheUnavailable,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::Missing,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::Missing,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::Read,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::Read,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidUtf8,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::InvalidUtf8,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::Parse,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::Parse,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidSchema,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::InvalidSchema,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::IncompatibleSchema,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::IncompatibleSchema,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidRoleData,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::InvalidRoleData,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated,
+        ),
+    ];
+    for (core, cxx) in diagnostic_pairs {
+        assert_eq!(map_installed_yaml_data_diagnostic_kind(core), cxx);
+    }
 }
 
 #[test]
@@ -329,6 +418,7 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
         status: CrashLogScanRunStatus::Completed,
         discovery: Some(discovery),
         setup: None,
+        installed_yaml_data: None,
         effective_concurrency: Some(2),
         message: Some("completed with failures".to_string()),
         total: 1,
@@ -348,6 +438,7 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
     assert_eq!(dto.discovery.rejected_inputs[0].path, "rejected.log");
     assert_eq!(dto.discovery.rejected_inputs[0].reason, "unsupported");
     assert!(!dto.has_setup);
+    assert!(!dto.has_installed_yaml_data);
     assert!(dto.has_effective_concurrency);
     assert_eq!(dto.effective_concurrency, 2);
     assert!(dto.has_message);
@@ -579,17 +670,18 @@ fn execute_without_observer_returns_targeted_rejections_as_a_terminal_result() {
     assert!(execution.result.has_discovery);
     assert_eq!(execution.result.discovery.rejected_inputs.len(), 2);
     assert!(execution.result.logs.is_empty());
+    assert!(!execution.result.has_installed_yaml_data);
 }
 
 #[test]
 fn request_construction_rejects_invalid_values_and_preserves_empty_fcx_context() {
-    let mut invalid_game = sample_configuration();
-    invalid_game.game = "UnknownGame".to_string();
-    assert!(
-        scan_run_request_targeted(&invalid_game, &sample_targeted_source()).is_err(),
-        "unknown games must not reach the tagged core request"
-    );
     assert!(scan_run_unsolved_logs_move_to_custom("  ").is_err());
+    let mut invalid_game = sample_configuration();
+    invalid_game.game = ffi::ScanRunGameId { repr: u8::MAX };
+    let error = scan_run_request_targeted(&invalid_game, &sample_targeted_source())
+        .err()
+        .expect("unknown CXX game discriminants must fail request construction");
+    assert!(error.contains("unsupported ScanRunGameId discriminant: 255"));
 
     let empty_setup = ffi::ScanRunSetupContextDto {
         has_game_root: false,
@@ -649,12 +741,7 @@ fn execute_covers_standard_no_logs_and_cancellation_before_discovery() {
     let temp = tempdir().unwrap();
     std::fs::create_dir_all(temp.path().join("Crash Logs").join("Pastebin")).unwrap();
     let mut configuration = sample_configuration();
-    configuration.yaml_dir_root = temp.path().to_string_lossy().into_owned();
-    configuration.yaml_dir_data = temp
-        .path()
-        .join("CLASSIC Data")
-        .to_string_lossy()
-        .into_owned();
+    configuration.installation_root = temp.path().to_string_lossy().into_owned();
     write_minimal_scan_yaml_tree(temp.path(), &temp.path().join("CLASSIC Data"));
     let documents = temp.path().join("Documents");
     std::fs::create_dir_all(&documents).unwrap();
@@ -776,8 +863,7 @@ fn execute_retains_structured_setup_result_data() {
     std::fs::write(&game_exe, b"not a real PE").unwrap();
 
     let mut configuration = sample_configuration();
-    configuration.yaml_dir_root = temp.path().to_string_lossy().into_owned();
-    configuration.yaml_dir_data = data.to_string_lossy().into_owned();
+    configuration.installation_root = temp.path().to_string_lossy().into_owned();
     configuration.game_version = "Original".to_string();
     let source = ffi::ScanRunTargetedSourceDto {
         inputs: vec![log.to_string_lossy().into_owned()],
@@ -807,6 +893,92 @@ fn execute_retains_structured_setup_result_data() {
     );
     assert!(execution.result.has_setup);
     assert!(!execution.result.setup.status.is_empty());
+    assert!(execution.result.has_installed_yaml_data);
+    assert_eq!(
+        execution.result.installed_yaml_data.local_ignore_state,
+        ffi::ScanRunLocalIgnoreYamlDataState::Existing
+    );
+    assert_eq!(
+        execution.result.installed_yaml_data.main.role,
+        ffi::ScanRunInstalledYamlDataRole::Main
+    );
+    assert_eq!(
+        execution.result.installed_yaml_data.main.provenance,
+        ffi::ScanRunInstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(
+        execution.result.installed_yaml_data.main.schema_version,
+        "2.0"
+    );
+    assert!(!execution.result.installed_yaml_data.main.sha256.is_empty());
+    assert!(execution.result.installed_yaml_data.main.byte_len > 0);
+    assert_eq!(
+        execution.result.installed_yaml_data.game_file.role,
+        ffi::ScanRunInstalledYamlDataRole::Game
+    );
+    assert!(!execution
+        .result
+        .installed_yaml_data
+        .local_ignore_identity
+        .sha256
+        .is_empty());
+    assert!(
+        execution
+            .result
+            .installed_yaml_data
+            .local_ignore_identity
+            .byte_len
+            > 0
+    );
+}
+
+#[test]
+fn execute_projects_generated_local_ignore_metadata_and_diagnostic_at_the_final_seam() {
+    let temp = tempdir().expect("create generated Local Ignore fixture root");
+    let data = temp.path().join("CLASSIC Data");
+    write_minimal_scan_yaml_tree(temp.path(), &data);
+    std::fs::remove_file(data.join("CLASSIC Ignore.yaml"))
+        .expect("fixture Local Ignore should be removable");
+    let log = temp.path().join("crash-bridge-generated-ignore.log");
+    std::fs::write(&log, FIXTURE_LOG_SMALL).expect("write accepted Crash Log fixture");
+    let mut configuration = sample_configuration();
+    configuration.installation_root = temp.path().to_string_lossy().into_owned();
+    configuration.game_version = "Original".to_string();
+    let source = ffi::ScanRunTargetedSourceDto {
+        inputs: vec![log.to_string_lossy().into_owned()],
+    };
+    let request = scan_run_request_targeted(&configuration, &source)
+        .expect("valid generated-ignore request should be constructible");
+
+    // SAFETY: null is the documented representation of an omitted observer.
+    let execution = unsafe {
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+    };
+
+    assert!(execution.has_result, "{}", execution.error.message);
+    assert!(!execution.has_error);
+    assert!(execution.result.has_installed_yaml_data);
+    assert_eq!(
+        execution.result.installed_yaml_data.local_ignore_state,
+        ffi::ScanRunLocalIgnoreYamlDataState::Generated
+    );
+    assert!(
+        execution
+            .result
+            .installed_yaml_data
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.kind
+                == ffi::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated)
+    );
+    assert!(
+        execution
+            .result
+            .installed_yaml_data
+            .local_ignore_identity
+            .byte_len
+            > 0
+    );
 }
 
 #[test]
@@ -816,8 +988,7 @@ fn execute_preserves_typed_intake_failure_stage_and_relevant_path() {
     std::fs::write(&log, FIXTURE_LOG_SMALL).unwrap();
     let missing_data = temp.path().join("missing-data");
     let mut configuration = sample_configuration();
-    configuration.yaml_dir_root = temp.path().to_string_lossy().into_owned();
-    configuration.yaml_dir_data = missing_data.to_string_lossy().into_owned();
+    configuration.installation_root = missing_data.to_string_lossy().into_owned();
     let source = ffi::ScanRunTargetedSourceDto {
         inputs: vec![log.to_string_lossy().into_owned()],
     };
@@ -835,5 +1006,8 @@ fn execute_preserves_typed_intake_failure_stage_and_relevant_path() {
         ffi::ScanRunContractInfrastructureErrorStage::Intake
     );
     assert!(execution.error.has_path);
-    assert_eq!(execution.error.path, missing_data.to_string_lossy());
+    assert_eq!(
+        execution.error.path,
+        missing_data.join("CLASSIC Data").to_string_lossy()
+    );
 }

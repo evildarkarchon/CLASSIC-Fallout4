@@ -4,7 +4,7 @@
   "fixtureRoot": "tests/fixtures/crash_log_scan_run",
   "fixtureFiles": [
     "tests/fixtures/crash_log_scan_run/valid-crash.log",
-    "tests/fixtures/crash_log_scan_run/CLASSIC Ignore.yaml",
+    "tests/fixtures/crash_log_scan_run/CLASSIC Data/CLASSIC Ignore.yaml",
     "tests/fixtures/crash_log_scan_run/CLASSIC Data/databases/CLASSIC Main.yaml",
     "tests/fixtures/crash_log_scan_run/CLASSIC Data/databases/CLASSIC Fallout4.yaml"
   ],
@@ -63,6 +63,24 @@
         ],
         "artifactSuffix": "-AUTOSCAN.md",
         "unsolvedLogsArtifacts": []
+      }
+    },
+    "installedYamlData": {
+      "logTemplate": "valid-crash.log",
+      "input": "Targeted/crash-shared-installed-yaml-data.log",
+      "expectedExisting": {
+        "mainProvenance": "bundled",
+        "gameProvenance": "bundled",
+        "localIgnoreState": "existing",
+        "diagnosticKinds": []
+      },
+      "expectedGenerated": {
+        "mainProvenance": "bundled",
+        "gameProvenance": "bundled",
+        "localIgnoreState": "generated",
+        "diagnosticKinds": [
+          "local_ignore_generated"
+        ]
       }
     }
   },
@@ -181,6 +199,26 @@
       "category": "progress_phase",
       "path": "business-logic/classic-scanlog-core/src/orchestrator.rs",
       "name": "ScanProgressPhase"
+    },
+    {
+      "category": "installed_yaml_data_role",
+      "path": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "name": "InstalledYamlDataRole"
+    },
+    {
+      "category": "installed_yaml_data_provenance",
+      "path": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "name": "InstalledYamlDataProvenance"
+    },
+    {
+      "category": "installed_yaml_data_diagnostic_kind",
+      "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "name": "InstalledYamlDataRunDiagnosticKind"
+    },
+    {
+      "category": "local_ignore_yaml_data_state",
+      "path": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "name": "LocalIgnoreRunState"
     }
   ],
   "contractVariants": [
@@ -218,6 +256,22 @@
     "progress_phase.parse",
     "progress_phase.analyze",
     "progress_phase.finalize",
+    "installed_yaml_data_role.main",
+    "installed_yaml_data_role.game",
+    "installed_yaml_data_provenance.updated",
+    "installed_yaml_data_provenance.previous",
+    "installed_yaml_data_provenance.bundled",
+    "installed_yaml_data_diagnostic_kind.cache_unavailable",
+    "installed_yaml_data_diagnostic_kind.missing",
+    "installed_yaml_data_diagnostic_kind.read",
+    "installed_yaml_data_diagnostic_kind.invalid_utf8",
+    "installed_yaml_data_diagnostic_kind.parse",
+    "installed_yaml_data_diagnostic_kind.invalid_schema",
+    "installed_yaml_data_diagnostic_kind.incompatible_schema",
+    "installed_yaml_data_diagnostic_kind.invalid_role_data",
+    "installed_yaml_data_diagnostic_kind.local_ignore_generated",
+    "local_ignore_yaml_data_state.existing",
+    "local_ignore_yaml_data_state.generated",
     "cancellation_seam.pre_discovery",
     "cancellation_seam.post_discovery_queued",
     "cancellation_seam.admitted"
@@ -535,6 +589,22 @@
         "progress_phase.parse",
         "progress_phase.analyze",
         "progress_phase.finalize",
+        "installed_yaml_data_role.main",
+        "installed_yaml_data_role.game",
+        "installed_yaml_data_provenance.updated",
+        "installed_yaml_data_provenance.previous",
+        "installed_yaml_data_provenance.bundled",
+        "installed_yaml_data_diagnostic_kind.cache_unavailable",
+        "installed_yaml_data_diagnostic_kind.missing",
+        "installed_yaml_data_diagnostic_kind.read",
+        "installed_yaml_data_diagnostic_kind.invalid_utf8",
+        "installed_yaml_data_diagnostic_kind.parse",
+        "installed_yaml_data_diagnostic_kind.invalid_schema",
+        "installed_yaml_data_diagnostic_kind.incompatible_schema",
+        "installed_yaml_data_diagnostic_kind.invalid_role_data",
+        "installed_yaml_data_diagnostic_kind.local_ignore_generated",
+        "local_ignore_yaml_data_state.existing",
+        "local_ignore_yaml_data_state.generated",
         "cancellation_seam.pre_discovery",
         "cancellation_seam.post_discovery_queued",
         "cancellation_seam.admitted"
@@ -594,6 +664,22 @@
         "progress_phase.parse",
         "progress_phase.analyze",
         "progress_phase.finalize",
+        "installed_yaml_data_role.main",
+        "installed_yaml_data_role.game",
+        "installed_yaml_data_provenance.updated",
+        "installed_yaml_data_provenance.previous",
+        "installed_yaml_data_provenance.bundled",
+        "installed_yaml_data_diagnostic_kind.cache_unavailable",
+        "installed_yaml_data_diagnostic_kind.missing",
+        "installed_yaml_data_diagnostic_kind.read",
+        "installed_yaml_data_diagnostic_kind.invalid_utf8",
+        "installed_yaml_data_diagnostic_kind.parse",
+        "installed_yaml_data_diagnostic_kind.invalid_schema",
+        "installed_yaml_data_diagnostic_kind.incompatible_schema",
+        "installed_yaml_data_diagnostic_kind.invalid_role_data",
+        "installed_yaml_data_diagnostic_kind.local_ignore_generated",
+        "local_ignore_yaml_data_state.existing",
+        "local_ignore_yaml_data_state.generated",
         "cancellation_seam.pre_discovery",
         "cancellation_seam.post_discovery_queued",
         "cancellation_seam.admitted"
@@ -656,6 +742,22 @@
         "progress_phase.parse",
         "progress_phase.analyze",
         "progress_phase.finalize",
+        "installed_yaml_data_role.main",
+        "installed_yaml_data_role.game",
+        "installed_yaml_data_provenance.updated",
+        "installed_yaml_data_provenance.previous",
+        "installed_yaml_data_provenance.bundled",
+        "installed_yaml_data_diagnostic_kind.cache_unavailable",
+        "installed_yaml_data_diagnostic_kind.missing",
+        "installed_yaml_data_diagnostic_kind.read",
+        "installed_yaml_data_diagnostic_kind.invalid_utf8",
+        "installed_yaml_data_diagnostic_kind.parse",
+        "installed_yaml_data_diagnostic_kind.invalid_schema",
+        "installed_yaml_data_diagnostic_kind.incompatible_schema",
+        "installed_yaml_data_diagnostic_kind.invalid_role_data",
+        "installed_yaml_data_diagnostic_kind.local_ignore_generated",
+        "local_ignore_yaml_data_state.existing",
+        "local_ignore_yaml_data_state.generated",
         "cancellation_seam.pre_discovery",
         "cancellation_seam.post_discovery_queued",
         "cancellation_seam.admitted"
@@ -717,6 +819,22 @@
         "progress_phase.parse",
         "progress_phase.analyze",
         "progress_phase.finalize",
+        "installed_yaml_data_role.main",
+        "installed_yaml_data_role.game",
+        "installed_yaml_data_provenance.updated",
+        "installed_yaml_data_provenance.previous",
+        "installed_yaml_data_provenance.bundled",
+        "installed_yaml_data_diagnostic_kind.cache_unavailable",
+        "installed_yaml_data_diagnostic_kind.missing",
+        "installed_yaml_data_diagnostic_kind.read",
+        "installed_yaml_data_diagnostic_kind.invalid_utf8",
+        "installed_yaml_data_diagnostic_kind.parse",
+        "installed_yaml_data_diagnostic_kind.invalid_schema",
+        "installed_yaml_data_diagnostic_kind.incompatible_schema",
+        "installed_yaml_data_diagnostic_kind.invalid_role_data",
+        "installed_yaml_data_diagnostic_kind.local_ignore_generated",
+        "local_ignore_yaml_data_state.existing",
+        "local_ignore_yaml_data_state.generated",
         "cancellation_seam.pre_discovery",
         "cancellation_seam.post_discovery_queued",
         "cancellation_seam.admitted"
@@ -824,6 +942,51 @@
             "path": "python-bindings/tests/test_scan_run_contract.py",
             "contains": [
               "shared Targeted fixture"
+            ]
+          }
+        ]
+      }
+    },
+    "installed_yaml_data_existing_and_generated": {
+      "requiredOwners": [
+        "rust",
+        "cxx",
+        "node",
+        "python"
+      ],
+      "evidence": {
+        "rust": [
+          {
+            "path": "business-logic/classic-scanlog-core/tests/scan_run_contract_parity.rs",
+            "contains": [
+              "shared_installed_yaml_data_fixture_preserves_report_bytes_when_ignore_is_generated"
+            ]
+          }
+        ],
+        "cxx": [
+          {
+            "path": "classic-cli/tests/test_scan_run_contract.cpp",
+            "contains": [
+              "CXX executes the shared Standard fixture with Rust-owned facts",
+              "CXX final result preserves generated Local Ignore metadata and diagnostics"
+            ]
+          }
+        ],
+        "node": [
+          {
+            "path": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+            "contains": [
+              "shared Standard fixture writes durable reports and exposes every serialized event variant",
+              "returns generated Local Ignore diagnostics as run-level data"
+            ]
+          }
+        ],
+        "python": [
+          {
+            "path": "python-bindings/tests/test_scan_run_contract.py",
+            "contains": [
+              "test_standard_scan_run_persists_reports_in_discovery_order",
+              "test_missing_local_ignore_is_generated_and_reported_as_run_data"
             ]
           }
         ]

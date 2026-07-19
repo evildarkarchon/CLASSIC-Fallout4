@@ -5,6 +5,7 @@
 #include "scan_run_cli.h"
 
 #include <string>
+#include <stdexcept>
 #include <vector>
 
 namespace {
@@ -47,7 +48,7 @@ PreparedScanUserSettings minimal_settings() {
 
 TEST_CASE("CLI scan adapter submits Standard intent to the single execution operation", "[scanner][scan-run]") {
     const CliArgs args{};
-    const auto request = build_cli_scan_run_request(args, minimal_settings(), ".", ".", ".");
+    const auto request = build_cli_scan_run_request(args, minimal_settings(), ".", ".");
     const auto cancellation = scanner::scan_run_cancellation_new();
     scanner::scan_run_cancellation_cancel(*cancellation);
 
@@ -63,7 +64,7 @@ TEST_CASE("CLI scan adapter submits raw Targeted inputs to Rust discovery", "[sc
     args.input_paths.push_back("C:/not-a-crash-log.txt");
     auto settings = minimal_settings();
     settings.move_unsolved_logs = true;
-    const auto request = build_cli_scan_run_request(args, settings, ".", ".", ".");
+    const auto request = build_cli_scan_run_request(args, settings, ".", ".");
     const auto cancellation = scanner::scan_run_cancellation_new();
 
     const auto execution = scanner::scan_run_contract_execute(*request, *cancellation, nullptr);
@@ -76,6 +77,25 @@ TEST_CASE("CLI scan adapter submits raw Targeted inputs to Rust discovery", "[sc
     REQUIRE(execution.result.discovery.accepted_logs.empty());
     REQUIRE(execution.result.discovery.rejected_inputs.size() == 1);
     REQUIRE(std::string(execution.result.discovery.rejected_inputs[0].path) == "C:/not-a-crash-log.txt");
+}
+
+TEST_CASE("CLI scan request builder maps every supported game to the scanner-local typed identity",
+          "[scanner][scan-run]") {
+    const CliArgs args{};
+    for (const std::string game : {"Fallout4", "Fallout4VR", "Skyrim", "Starfield"}) {
+        auto settings = minimal_settings();
+        settings.game = game;
+        const auto request = build_cli_scan_run_request(args, settings, ".", ".");
+        const auto cancellation = scanner::scan_run_cancellation_new();
+        scanner::scan_run_cancellation_cancel(*cancellation);
+        const auto execution = scanner::scan_run_contract_execute(*request, *cancellation, nullptr);
+        REQUIRE(execution.has_result);
+        REQUIRE(execution.result.status == scanner::ScanRunContractStatus::CancelledBeforeDiscovery);
+    }
+
+    auto invalid = minimal_settings();
+    invalid.game = "UnknownGame";
+    REQUIRE_THROWS_AS(build_cli_scan_run_request(args, invalid, ".", "."), std::invalid_argument);
 }
 
 TEST_CASE("CLI scan presentation explains a no-logs terminal result", "[scanner][scan-run]") {
@@ -174,6 +194,41 @@ TEST_CASE("CLI scan presentation explains FCX setup outcomes", "[scanner][scan-r
     REQUIRE(lines[3] == "  [missing] game_executable: Fallout4.exe was not found");
     REQUIRE(lines[4] == "    Expected under the configured game root.");
     REQUIRE(lines[5] == "  Action: Configure the game path and retry.");
+}
+
+TEST_CASE("CLI scan presentation acknowledges generated Local Ignore metadata and diagnostics",
+          "[scanner][scan-run]") {
+    auto execution = execution_with_result(scanner::ScanRunContractStatus::Completed);
+    execution.result.has_installed_yaml_data = true;
+    auto& installed = execution.result.installed_yaml_data;
+    installed.main.role = scanner::ScanRunInstalledYamlDataRole::Main;
+    installed.main.provenance = scanner::ScanRunInstalledYamlDataProvenance::Bundled;
+    installed.main.schema_version = "2.0";
+    installed.main.sha256 = "main-hash";
+    installed.main.byte_len = 64;
+    installed.game_file.role = scanner::ScanRunInstalledYamlDataRole::Game;
+    installed.game_file.provenance = scanner::ScanRunInstalledYamlDataProvenance::Previous;
+    installed.game_file.schema_version = "1.0";
+    installed.game_file.sha256 = "game-hash";
+    installed.game_file.byte_len = 48;
+    installed.local_ignore_state = scanner::ScanRunLocalIgnoreYamlDataState::Generated;
+    installed.local_ignore_identity.sha256 = "ignore-hash";
+    installed.local_ignore_identity.byte_len = 32;
+    scanner::ScanRunInstalledYamlDataDiagnosticDto diagnostic{};
+    diagnostic.kind = scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated;
+    diagnostic.has_path = true;
+    diagnostic.path = "C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml";
+    diagnostic.message = "generated missing Local Ignore YAML Data";
+    installed.diagnostics.push_back(std::move(diagnostic));
+
+    const auto lines = message_text(present_cli_scan_run_execution(execution, 1.0).messages);
+
+    REQUIRE(lines[0] == "Installed YAML Data:");
+    REQUIRE(lines[1].find("Main: bundled schema 2.0") != std::string::npos);
+    REQUIRE(lines[2].find("Game: previous schema 1.0") != std::string::npos);
+    REQUIRE(lines[3].find("Local Ignore: generated") != std::string::npos);
+    REQUIRE(lines[4].find("local ignore generated") != std::string::npos);
+    REQUIRE(lines[4].find("CLASSIC Ignore.yaml") != std::string::npos);
 }
 
 TEST_CASE("CLI scan presentation distinguishes mixed per-log outcomes", "[scanner][scan-run]") {

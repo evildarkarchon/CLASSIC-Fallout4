@@ -15,6 +15,9 @@ import {
   ScanRunCancellation,
   ScanRunRequest,
   ScanRunUnsolvedLogs,
+  JsGameId,
+  JsScanRunInstalledYamlDataDiagnosticKind,
+  JsScanRunLocalIgnoreState,
   scanRunExecute,
   parseLogSegments,
   extractFormIds,
@@ -104,14 +107,18 @@ MemoryManager: false
 `;
 
 const MAIN_YAML = `
+schema_version: "2.0"
 CLASSIC_Info:
   version: "9.0.0"
   version_date: "2026-02-25"
+  default_ignorefile: |
+    CLASSIC_Ignore_Fallout4: []
 catch_log_records:
   - "LAND"
 `;
 
 const GAME_YAML = `
+schema_version: "1.0"
 Game_Info:
   XSE_Acronym: "F4SE"
   GameVersion: "1.10.163"
@@ -187,7 +194,7 @@ const writeScanRunDataRoot = (name: string): string => {
   mkdirSync(databaseDir, { recursive: true });
   writeFileSync(join(databaseDir, "CLASSIC Main.yaml"), MAIN_YAML, "utf8");
   writeFileSync(join(databaseDir, "CLASSIC Fallout4.yaml"), GAME_YAML, "utf8");
-  writeFileSync(join(root, "CLASSIC Ignore.yaml"), IGNORE_YAML, "utf8");
+  writeFileSync(join(dataDir, "CLASSIC Ignore.yaml"), IGNORE_YAML, "utf8");
   return root;
 };
 
@@ -197,8 +204,8 @@ const writeSharedScanRunDataRoot = (name: string): string => {
   const databaseDir = join(root, "CLASSIC Data", "databases");
   mkdirSync(databaseDir, { recursive: true });
   copyFileSync(
-    join(SHARED_SCAN_RUN_FIXTURE_ROOT, "CLASSIC Ignore.yaml"),
-    join(root, "CLASSIC Ignore.yaml"),
+    join(SHARED_SCAN_RUN_FIXTURE_ROOT, "CLASSIC Data", "CLASSIC Ignore.yaml"),
+    join(root, "CLASSIC Data", "CLASSIC Ignore.yaml"),
   );
   for (const name of ["CLASSIC Main.yaml", "CLASSIC Fallout4.yaml"]) {
     copyFileSync(
@@ -256,9 +263,8 @@ describe("final Crash Log Scan Run contract", () => {
     root: string,
     options: Partial<JsScanRunConfiguration> = {},
   ): JsScanRunConfiguration => ({
-    yamlDirRoot: root,
-    yamlDirData: join(root, "CLASSIC Data"),
-    game: "Fallout4",
+    installationRoot: root,
+    game: JsGameId.Fallout4,
     gameVersion: "auto",
     showFormidValues: false,
     simplifyLogs: false,
@@ -414,6 +420,26 @@ describe("final Crash Log Scan Run contract", () => {
         },
       );
       const scanResult = requireScanRunSuccess(execution).result;
+      expect(scanResult.installedYamlData).toMatchObject({
+        main: {
+          role: "Main",
+          provenance: expect.any(String),
+          schemaMajor: 2,
+          schemaMinor: 0,
+        },
+        gameFile: {
+          role: "Game",
+          provenance: expect.any(String),
+          schemaMajor: 1,
+          schemaMinor: 0,
+        },
+        localIgnoreState: JsScanRunLocalIgnoreState.Existing,
+        localIgnoreIdentity: {
+          sha256: expect.any(String),
+          byteLen: expect.any(Number),
+        },
+        diagnostics: expect.any(Array),
+      });
       expect(scanResult.discovery?.acceptedLogs.map((path) => sharedRelativePath(root, path))).toEqual(
         fixture.expected.acceptedLogs,
       );
@@ -445,6 +471,37 @@ describe("final Crash Log Scan Run contract", () => {
         kind: "log_finished",
         disposition: "succeeded",
       });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("returns generated Local Ignore diagnostics as run-level data", async () => {
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-generated-ignore");
+    const crashLog = writeSharedScanRunLog(root, "generated-ignore.log");
+    rmSync(join(root, "CLASSIC Data", "CLASSIC Ignore.yaml"));
+
+    try {
+      const execution = await scanRunExecute(
+        ScanRunRequest.targeted(scanRunConfiguration(root), { inputs: [crashLog] }),
+        new ScanRunCancellation(),
+      );
+      const scanResult = requireScanRunSuccess(execution).result;
+
+      expect(scanResult.status).toBe("completed");
+      expect(scanResult.installedYamlData?.localIgnoreState).toBe(
+        JsScanRunLocalIgnoreState.Generated,
+      );
+      expect(scanResult.installedYamlData?.diagnostics).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: JsScanRunInstalledYamlDataDiagnosticKind.LocalIgnoreGenerated,
+          }),
+        ]),
+      );
+      expect(scanResult.logs[0]?.autoscanReport).toSatisfy(
+        (path: string | undefined) => path !== undefined && existsSync(path),
+      );
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

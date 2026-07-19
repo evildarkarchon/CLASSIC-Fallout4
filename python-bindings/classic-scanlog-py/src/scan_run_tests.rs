@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use classic_config_core::{InstalledYamlDataProvenance, InstalledYamlDataRole};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanRejectedInput,
@@ -9,7 +10,9 @@ use classic_scanlog_core::{
 
 use super::{
     PyScanRunConfiguration, configuration_to_core, disposition_to_string, event_to_py,
-    infrastructure_error_to_py, log_failure_stage_to_string, log_result_to_py, phase_to_string,
+    infrastructure_error_to_py, installed_yaml_data_diagnostic_kind_to_string,
+    installed_yaml_data_provenance_to_string, installed_yaml_data_role_to_string,
+    local_ignore_state_to_string, log_failure_stage_to_string, log_result_to_py, phase_to_string,
     run_result_to_py, run_status_to_string, setup_to_py,
 };
 
@@ -48,19 +51,20 @@ fn log_event() -> contract::LogEvent {
 
 #[test]
 fn configuration_conversion_treats_blank_destination_as_absent() {
-    let configuration = PyScanRunConfiguration::new(
-        "C:/CLASSIC".to_string(),
-        "C:/CLASSIC/CLASSIC Data".to_string(),
-        "Fallout4".to_string(),
-        "auto".to_string(),
-        false,
-        false,
-        Vec::new(),
-        Some(" \t ".to_string()),
-        None,
-    );
+    let configuration = PyScanRunConfiguration {
+        installation_root: "C:/CLASSIC".to_string(),
+        game: classic_shared_core::GameId::Fallout4,
+        game_version: "auto".to_string(),
+        show_formid_values: false,
+        simplify_logs: false,
+        formid_database_paths: Vec::new(),
+        unsolved_logs_destination: Some(" \t ".to_string()),
+        max_concurrent: None,
+    };
 
     let converted = configuration_to_core(&configuration).expect("configuration should convert");
+    assert_eq!(converted.installation_root, PathBuf::from("C:/CLASSIC"));
+    assert_eq!(converted.game, classic_shared_core::GameId::Fallout4);
     assert!(converted.scan_facts.unsolved_logs_destination.is_none());
 }
 
@@ -114,6 +118,54 @@ fn maps_every_stable_enum_identifier() {
     assert_eq!(
         phases.map(phase_to_string),
         ["setup", "parse", "analyze", "finalize"].map(str::to_string),
+    );
+
+    assert_eq!(
+        [InstalledYamlDataRole::Main, InstalledYamlDataRole::Game]
+            .map(installed_yaml_data_role_to_string),
+        ["main", "game"],
+    );
+    assert_eq!(
+        [
+            InstalledYamlDataProvenance::Updated,
+            InstalledYamlDataProvenance::Previous,
+            InstalledYamlDataProvenance::Bundled,
+        ]
+        .map(installed_yaml_data_provenance_to_string),
+        ["updated", "previous", "bundled"],
+    );
+    assert_eq!(
+        [
+            contract::LocalIgnoreRunState::Existing,
+            contract::LocalIgnoreRunState::Generated,
+        ]
+        .map(local_ignore_state_to_string),
+        ["existing", "generated"],
+    );
+    assert_eq!(
+        [
+            contract::InstalledYamlDataRunDiagnosticKind::CacheUnavailable,
+            contract::InstalledYamlDataRunDiagnosticKind::Missing,
+            contract::InstalledYamlDataRunDiagnosticKind::Read,
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidUtf8,
+            contract::InstalledYamlDataRunDiagnosticKind::Parse,
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidSchema,
+            contract::InstalledYamlDataRunDiagnosticKind::IncompatibleSchema,
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidRoleData,
+            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated,
+        ]
+        .map(installed_yaml_data_diagnostic_kind_to_string),
+        [
+            "cache_unavailable",
+            "missing",
+            "read",
+            "invalid_utf8",
+            "parse",
+            "invalid_schema",
+            "incompatible_schema",
+            "invalid_role_data",
+            "local_ignore_generated",
+        ],
     );
 }
 
@@ -397,6 +449,7 @@ fn maps_setup_and_run_optional_fields_without_loss() {
             message: setup.message.clone(),
             rendered_report: setup.rendered_report.clone(),
         }),
+        installed_yaml_data: None,
         effective_concurrency: Some(2),
         message: Some("run message".to_string()),
         total: 4,
@@ -424,6 +477,7 @@ fn maps_setup_and_run_optional_fields_without_loss() {
         status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
         discovery: None,
         setup: None,
+        installed_yaml_data: None,
         effective_concurrency: None,
         message: None,
         total: 0,

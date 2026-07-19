@@ -170,6 +170,7 @@ Cancellation after discovery does not interrupt admitted work. Rust finishes dur
 The presentation layer projects:
 
 - the run-scoped FCX setup status, message, rendered report, checks, proposed path updates, complete configuration-issue severity/file/section/setting/current/recommended/description data, actions, and fatal errors
+- optional Installed YAML Data presence plus selected Main/game role, provenance, schema, SHA-256 and byte length; `Existing`/`Generated` Local Ignore state and exact identity; and diagnostic role/candidate/path/kind/message context
 - per-log `Succeeded`, `Failed`, and `CancelledBeforeStart` dispositions
 - all applicable `Analysis`, `ReportWrite`, and `UnsolvedLogsFinalization` failures
 - Autoscan Report paths and movement state
@@ -177,19 +178,27 @@ The presentation layer projects:
 
 For completed or cancelled work, report directories are also derived from terminal Autoscan Report paths and emitted through `reportDirectoriesResolved(...)` when non-empty.
 
+When intake metadata is present, `ScanWorker` emits the Qt-owned snapshot through
+`installedYamlDataResolved(...)` before terminal lifecycle signals can destroy
+the worker. `ScanController` relays it as `scanInstalledYamlDataResolved(...)`;
+MainWindow clears stale state at scan start, retains the complete snapshot past
+worker lifetime, logs exact identities and diagnostics, and includes selected
+provenance/schema and Local Ignore state in terminal status. Recovery-only scan
+states remain reserved for #147.
+
 ---
 
 ## What Current Tests Assert
 
-[`test_scanrequestbuilder.cpp`](../../classic-gui/tests/test_scanrequestbuilder.cpp) behavior-tests the tagged constructor boundary: empty Targeted input creates Standard discovery, while Targeted input creates Targeted discovery with structured rejections and cannot express Standard movement.
+[`test_scanrequestbuilder.cpp`](../../classic-gui/tests/test_scanrequestbuilder.cpp) behavior-tests the tagged constructor boundary: one installation root and typed game cross the request seam, empty Targeted input creates Standard discovery, while Targeted input creates Targeted discovery with structured rejections and cannot express Standard movement.
 
 [`test_scan_progress_model.cpp`](../../classic-gui/tests/test_scan_progress_model.cpp) uses `ScanRunContractEvent` directly. It verifies discovery/concurrency initialization, monotonic serialized lifecycle progress, interleaved per-log advancement, late-phase suppression, and full work contribution for a failed `LogFinished` event.
 
-[`test_scanrunpresentation.cpp`](../../classic-gui/tests/test_scanrunpresentation.cpp) verifies paired Targeted rejections, report-directory de-duplication, discovery-ordered typed dispositions and failure stages, every expected lifecycle status, complete FCX setup presentation including configuration-issue current/recommended values, infrastructure-stage/path preservation, and invalid-envelope handling.
+[`test_scanrunpresentation.cpp`](../../classic-gui/tests/test_scanrunpresentation.cpp) verifies paired Targeted rejections, report-directory de-duplication, discovery-ordered typed dispositions and failure stages, every expected lifecycle status, complete FCX setup presentation including configuration-issue current/recommended values, Installed YAML Data presence/identity/generated-Ignore diagnostics, infrastructure-stage/path preservation, and invalid-envelope handling.
 
-[`test_scanworker_cancellation.cpp`](../../classic-gui/tests/test_scanworker_cancellation.cpp) verifies monotonic/idempotent cancellation and that cancellation requested before execution reaches Rust's `CancelledBeforeDiscovery` lifecycle rather than a generic error.
+[`test_scanworker_cancellation.cpp`](../../classic-gui/tests/test_scanworker_cancellation.cpp) verifies monotonic/idempotent cancellation, that cancellation requested before execution reaches Rust's `CancelledBeforeDiscovery` lifecycle rather than a generic error, and that a completed shared-fixture run publishes typed Installed YAML Data with exact identities.
 
-Narrow source-wiring checks remain for MainWindow/controller presentation handoffs; the behavior tests above own lifecycle assertions.
+[`test_scan_settings_wiring.cpp`](../../classic-gui/tests/test_scan_settings_wiring.cpp) pins the worker publication, controller relay, and MainWindow retention/user-visible status wiring. The behavior tests above own lifecycle assertions.
 
 ---
 

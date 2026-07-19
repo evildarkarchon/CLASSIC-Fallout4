@@ -535,6 +535,59 @@ mod ffi {
         Finalize = 3,
     }
 
+    /// Typed game identity used to select one Installed YAML Data Snapshot.
+    ///
+    /// CXX bridge modules cannot share enum definitions, so this scanner-local
+    /// type exhaustively mirrors `classic_shared_core::GameId`.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunGameId {
+        Fallout4 = 0,
+        Fallout4VR = 1,
+        Skyrim = 2,
+        Starfield = 3,
+    }
+
+    /// Update-eligible role for one file retained by a scan-run snapshot.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunInstalledYamlDataRole {
+        Main = 0,
+        Game = 1,
+    }
+
+    /// Candidate provenance for one selected scan-run YAML Data file.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunInstalledYamlDataProvenance {
+        Updated = 0,
+        Previous = 1,
+        Bundled = 2,
+    }
+
+    /// Stable category for one scan-run Installed YAML Data diagnostic.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunInstalledYamlDataDiagnosticKind {
+        CacheUnavailable = 0,
+        Missing = 1,
+        Read = 2,
+        InvalidUtf8 = 3,
+        Parse = 4,
+        InvalidSchema = 5,
+        IncompatibleSchema = 6,
+        InvalidRoleData = 7,
+        LocalIgnoreGenerated = 8,
+    }
+
+    /// How Local Ignore YAML Data entered the immutable scan-run snapshot.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLocalIgnoreYamlDataState {
+        Existing = 0,
+        Generated = 1,
+    }
+
     /// One setup check in a Crash Log Scan Setup Result.
     struct ScanRunSetupCheckDto {
         kind: String,
@@ -551,9 +604,8 @@ mod ffi {
 
     /// Shared configuration for the final Crash Log Scan Run contract.
     struct ScanRunConfigurationDto {
-        yaml_dir_root: String,
-        yaml_dir_data: String,
-        game: String,
+        installation_root: String,
+        game: ScanRunGameId,
         game_version: String,
         show_formid_values: bool,
         simplify_logs: bool,
@@ -696,6 +748,42 @@ mod ffi {
         fatal_errors: Vec<String>,
     }
 
+    /// Content identity derived from exact bytes retained by the scan run.
+    struct ScanRunYamlDataContentIdentityDto {
+        sha256: String,
+        byte_len: u64,
+    }
+
+    /// Selected-file metadata derived from exact retained YAML Data bytes.
+    struct ScanRunInspectedYamlDataFileDto {
+        role: ScanRunInstalledYamlDataRole,
+        provenance: ScanRunInstalledYamlDataProvenance,
+        schema_version: String,
+        sha256: String,
+        byte_len: u64,
+    }
+
+    /// Structured attribution for one fallback, validation, or generation event.
+    struct ScanRunInstalledYamlDataDiagnosticDto {
+        has_role: bool,
+        role: ScanRunInstalledYamlDataRole,
+        has_candidate: bool,
+        candidate: ScanRunInstalledYamlDataProvenance,
+        has_path: bool,
+        path: String,
+        kind: ScanRunInstalledYamlDataDiagnosticKind,
+        message: String,
+    }
+
+    /// Installed YAML Data metadata selected once for the complete scan run.
+    struct ScanRunInstalledYamlDataRunDataDto {
+        main: ScanRunInspectedYamlDataFileDto,
+        game_file: ScanRunInspectedYamlDataFileDto,
+        local_ignore_state: ScanRunLocalIgnoreYamlDataState,
+        local_ignore_identity: ScanRunYamlDataContentIdentityDto,
+        diagnostics: Vec<ScanRunInstalledYamlDataDiagnosticDto>,
+    }
+
     /// Complete terminal result from the final Crash Log Scan Run contract.
     struct ScanRunContractRunResult {
         status: ScanRunContractStatus,
@@ -703,6 +791,8 @@ mod ffi {
         discovery: ScanRunContractDiscoveryResult,
         has_setup: bool,
         setup: ScanRunContractSetupResult,
+        has_installed_yaml_data: bool,
+        installed_yaml_data: ScanRunInstalledYamlDataRunDataDto,
         has_effective_concurrency: bool,
         effective_concurrency: usize,
         has_message: bool,
