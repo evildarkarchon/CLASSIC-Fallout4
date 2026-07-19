@@ -44,6 +44,8 @@ private slots:
     void mainwindow_includes_last_scan_report_dirs_in_results_setup();
     void mainwindow_seeds_targeted_report_dirs_before_scan_finishes();
     void mainwindow_deduplicates_report_dirs_before_results_setup();
+    /// Pins the worker continuation, GUI-thread prompt, and explicit three-choice recovery wiring.
+    void local_ignore_recovery_is_prompted_and_resumed_across_gui_layers();
     void installed_yaml_data_propagates_from_worker_to_user_visible_terminal_status();
 };
 
@@ -769,6 +771,38 @@ void ScanSettingsWiringTests::mainwindow_deduplicates_report_dirs_before_results
              "MainWindow should deduplicate report directories before updating ResultsController");
     QVERIFY2(sourceText.contains(QStringLiteral("seenReportDirs.insert(key);")),
              "MainWindow should track report directories case-insensitively before appending them");
+}
+
+void ScanSettingsWiringTests::local_ignore_recovery_is_prompted_and_resumed_across_gui_layers()
+{
+    const QString workerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
+    QFile workerFile(workerPath);
+    QVERIFY2(workerFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(workerPath)));
+    const QString workerText = QString::fromUtf8(workerFile.readAll());
+    QVERIFY2(workerText.contains(QStringLiteral("scan_run_contract_execution_take_continuation")) &&
+                 workerText.contains(QStringLiteral("scan_run_continuation_resume")),
+             "ScanWorker should consume and resume Rust's retained recovery continuation");
+
+    const QString controllerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
+    QFile controllerFile(controllerPath);
+    QVERIFY2(controllerFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(controllerPath)));
+    const QString controllerText = QString::fromUtf8(controllerFile.readAll());
+    QVERIFY2(controllerText.contains(QStringLiteral("Qt::BlockingQueuedConnection")) &&
+                 controllerText.contains(QStringLiteral("requestLocalIgnoreRecoveryChoice")),
+             "ScanController should obtain the recovery decision on the GUI thread while the worker remains paused");
+
+    const QString mainWindowPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile mainWindowFile(mainWindowPath);
+    QVERIFY2(mainWindowFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(mainWindowPath)));
+    const QString mainWindowText = QString::fromUtf8(mainWindowFile.readAll());
+    QVERIFY2(mainWindowText.contains(QStringLiteral("setLocalIgnoreRecoveryPrompt")) &&
+                 mainWindowText.contains(QStringLiteral("Back Up && Reset to Default")) &&
+                 mainWindowText.contains(QStringLiteral("Continue Without Ignore")) &&
+                 mainWindowText.contains(QStringLiteral("QMessageBox::Cancel")),
+             "MainWindow should present reset, non-mutating continuation, and cancellation choices");
 }
 
 void ScanSettingsWiringTests::installed_yaml_data_propagates_from_worker_to_user_visible_terminal_status()

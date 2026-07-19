@@ -17,6 +17,9 @@ class ScanController : public QObject {
 public:
     explicit ScanController(SignalHub* signalHub, ThreadManager* threadManager, QObject* parent = nullptr);
 
+    /// Installs the GUI-thread prompt used to choose how a paused Local Ignore recovery continues.
+    void setLocalIgnoreRecoveryPrompt(classic::gui::ScanRunLocalIgnoreRecoveryPrompt prompt);
+
     /// Starts one scan from an immutable, revision-approved typed settings value object.
     ///
     /// `setupXseLogPath` and `targetedInputs` are runtime-only hints. The value object is copied
@@ -51,8 +54,13 @@ private slots:
     void onWorkerError(const QString& message);
 
 private:
+    /// Runs the configured recovery prompt on the controller's GUI thread, defaulting safely to cancellation.
+    [[nodiscard]] classic::gui::ScanRunLocalIgnoreRecoveryChoice
+    requestLocalIgnoreRecoveryChoice(const QString& message) const;
+
     bool m_scanning = false;
     SignalHub* m_signalHub = nullptr;
     ThreadManager* m_threadManager = nullptr;
     ScanWorker* m_currentWorker = nullptr;
+    classic::gui::ScanRunLocalIgnoreRecoveryPrompt m_localIgnoreRecoveryPrompt;
 };

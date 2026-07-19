@@ -49,6 +49,8 @@ private slots:
     void reset_to_default_preserves_durable_metadata_and_diagnostic();
     /// Verifies continuation replay misuse retains its stable code and message.
     void consumed_resume_error_preserves_typed_context();
+    /// Verifies reset failures retain path, publication stage, identities, and any verified backup.
+    void reset_resume_error_preserves_operational_context();
     void infrastructure_error_preserves_typed_stage_message_and_path();
     void invalid_execution_envelope_is_presented_as_an_infrastructure_error();
 };
@@ -364,6 +366,40 @@ void ScanRunPresentationTests::consumed_resume_error_preserves_typed_context()
     QCOMPARE(presentation.message,
              QStringLiteral("Crash Log Scan recovery failed (scan_run_continuation_consumed): "
                             "Crash Log Scan Run continuation was already consumed"));
+}
+
+void ScanRunPresentationTests::reset_resume_error_preserves_operational_context()
+{
+    classic::scanner::ScanRunContractExecutionResult execution{};
+    execution.has_resume_error = true;
+    execution.resume_error.kind =
+        classic::scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetReplacementFailure;
+    execution.resume_error.code = "local_ignore_reset_replacement_failure";
+    execution.resume_error.message = "could not publish retained defaults";
+    execution.resume_error.has_path = true;
+    execution.resume_error.path = "C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml";
+    execution.resume_error.has_stage = true;
+    execution.resume_error.stage = classic::scanner::ScanRunLocalIgnoreResetFailureStage::Publish;
+    execution.resume_error.has_expected_identity = true;
+    execution.resume_error.expected_identity.sha256 = "expected-hash";
+    execution.resume_error.expected_identity.byte_len = 31;
+    execution.resume_error.has_actual_identity = true;
+    execution.resume_error.actual_identity.sha256 = "actual-hash";
+    execution.resume_error.actual_identity.byte_len = 32;
+    execution.resume_error.has_backup_path = true;
+    execution.resume_error.backup_path = "C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.backup.yaml";
+
+    const auto presentation = classic::gui::presentScanRunExecution(execution);
+
+    QCOMPARE(presentation.kind, classic::gui::ScanRunTerminalKind::InfrastructureError);
+    QCOMPARE(presentation.message,
+             QStringLiteral("Crash Log Scan recovery failed (local_ignore_reset_replacement_failure): "
+                            "could not publish retained defaults\n"
+                            "Path: C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml\n"
+                            "Stage: publish\n"
+                            "Expected identity: sha256 expected-hash, 31 bytes\n"
+                            "Actual identity: sha256 actual-hash, 32 bytes\n"
+                            "Verified backup: C:/CLASSIC/CLASSIC Backup/CLASSIC Ignore.backup.yaml"));
 }
 
 void ScanRunPresentationTests::invalid_execution_envelope_is_presented_as_an_infrastructure_error()

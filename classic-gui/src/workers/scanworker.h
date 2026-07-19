@@ -14,6 +14,8 @@ class ScanWorker : public QObject {
 
 public:
     explicit ScanWorker(QObject* parent = nullptr);
+    /// Creates a worker that can synchronously obtain an explicit GUI recovery choice.
+    ScanWorker(classic::gui::ScanRunLocalIgnoreRecoveryPrompt localIgnoreRecoveryPrompt, QObject* parent = nullptr);
 
     /// Executes one Rust-owned Crash Log Scan Run from immutable, revision-approved GUI settings.
     ///
@@ -41,4 +43,5 @@ signals:
 
 private:
     rust::Box<classic::scanner::ScanRunCancellation> m_cancellation;
+    classic::gui::ScanRunLocalIgnoreRecoveryPrompt m_localIgnoreRecoveryPrompt;
 };

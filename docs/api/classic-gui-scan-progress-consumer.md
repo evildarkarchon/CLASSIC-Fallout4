@@ -51,6 +51,8 @@ auto execution = scan_run_contract_execution_take_result(*operation);
 
 Rust owns discovery, Targeted rejection policy, effective-concurrency selection, scheduling, FCX setup evaluation, Autoscan Report persistence, Unsolved Logs finalization, cancellation admission seams, aggregate counts, and terminal ordering. Qt supplies facts and presents the resulting contract; it does not repeat those decisions.
 
+If that envelope reports `LocalIgnoreRecoveryRequired`, the operation still owns an opaque single-use continuation. `ScanWorker` publishes the retained malformed-file metadata, takes the continuation, and synchronously asks `MainWindow` for one explicit choice through `ScanController`. The blocking controller handoff runs the modal prompt on the GUI thread while the operation, continuation, cancellation control, and original observer remain live on the worker stack. The worker then calls `scan_run_continuation_resume(...)`, takes the resumed envelope, and presents it through the same terminal path.
+
 ---
 
 ## Where Events Enter Qt
@@ -167,7 +169,7 @@ Terminal mapping:
 - `Cancelled` emits `cancelled(...)` with completed and not-started counts
 - `NoCrashLogsFound` emits the dedicated `noLogsFound(...)` signal with searched locations when available; the controller relays `scanNoLogsFound(...)`, and MainWindow restores idle state without presenting an error dialog
 - `SetupFailed` emits `error(...)` with structured setup details
-- `LocalIgnoreRecoveryRequired` remains distinct from setup and infrastructure failure and currently emits `error(...)`; a later frontend interaction change will take the CXX continuation and present its Proceed Without Ignore and Reset To Default decisions
+- `LocalIgnoreRecoveryRequired` opens a warning prompt with Back Up & Reset To Default, Continue Without Ignore, and Cancel choices; the first two resume the retained run, while cancellation is recorded before a non-mutating placeholder decision so Rust returns the ordinary cancelled lifecycle without touching Local Ignore
 - typed continuation replay and Local Ignore reset conflict/backup/replacement errors emit `error(...)` with their stable code, message, and applicable path
 - a typed infrastructure error emits `error(...)` with its stage, message, and optional path
 
@@ -189,9 +191,10 @@ When intake metadata is present, `ScanWorker` emits the Qt-owned snapshot throug
 the worker. `ScanController` relays it as `scanInstalledYamlDataResolved(...)`;
 MainWindow clears stale state at scan start, retains the complete snapshot past
 worker lifetime, logs exact identities and diagnostics, and includes selected
-provenance/schema and Local Ignore state in terminal status. The CXX bridge now
-owns the opaque recovery carrier; wiring the GUI prompt and decision interaction
-remains a separate frontend concern.
+provenance/schema and Local Ignore state in terminal status. Recovery first
+publishes the malformed-file identity, then successful continuation publishes
+the final `ProceedWithoutIgnore` or `ResetToDefault` snapshot and durable reset
+metadata before its terminal lifecycle signal.
 
 ---
 
@@ -201,11 +204,11 @@ remains a separate frontend concern.
 
 [`test_scan_progress_model.cpp`](../../classic-gui/tests/test_scan_progress_model.cpp) uses `ScanRunContractEvent` directly. It verifies discovery/concurrency initialization, monotonic serialized lifecycle progress, interleaved per-log advancement, late-phase suppression, and full work contribution for a failed `LogFinished` event.
 
-[`test_scanrunpresentation.cpp`](../../classic-gui/tests/test_scanrunpresentation.cpp) verifies paired Targeted rejections, report-directory de-duplication, discovery-ordered typed dispositions and failure stages, every expected lifecycle status including Local Ignore Recovery Required, complete FCX setup presentation including configuration-issue current/recommended values, Installed YAML Data presence/identity/generated-Ignore diagnostics, consumed-resume and infrastructure error preservation, and invalid-envelope handling.
+[`test_scanrunpresentation.cpp`](../../classic-gui/tests/test_scanrunpresentation.cpp) verifies paired Targeted rejections, report-directory de-duplication, discovery-ordered typed dispositions and failure stages, every expected lifecycle status including Local Ignore Recovery Required, complete FCX setup presentation including configuration-issue current/recommended values, Installed YAML Data presence/identity/generated-Ignore diagnostics, consumed-resume and structured reset/infrastructure error preservation, and invalid-envelope handling.
 
-[`test_scanworker_cancellation.cpp`](../../classic-gui/tests/test_scanworker_cancellation.cpp) verifies monotonic/idempotent cancellation, that cancellation requested before execution reaches Rust's `CancelledBeforeDiscovery` lifecycle rather than a generic error, and that a completed shared-fixture run publishes typed Installed YAML Data with exact identities.
+[`test_scanworker_cancellation.cpp`](../../classic-gui/tests/test_scanworker_cancellation.cpp) verifies monotonic/idempotent cancellation, that cancellation requested before execution reaches Rust's `CancelledBeforeDiscovery` lifecycle rather than a generic error, that a completed shared-fixture run publishes typed Installed YAML Data with exact identities, and all three malformed Local Ignore choices. Reset preserves malformed bytes in a verified backup and finishes the same scan, Proceed Without Ignore finishes without changing the file, and Cancel emits the ordinary cancelled lifecycle without backup or mutation.
 
-[`test_scan_settings_wiring.cpp`](../../classic-gui/tests/test_scan_settings_wiring.cpp) pins the worker publication, controller relay, and MainWindow retention/user-visible status wiring. The behavior tests above own lifecycle assertions.
+[`test_scan_settings_wiring.cpp`](../../classic-gui/tests/test_scan_settings_wiring.cpp) pins the worker publication, controller relay, GUI-thread three-choice recovery prompt, and MainWindow retention/user-visible status wiring. The behavior tests above own lifecycle assertions.
 
 ---
 

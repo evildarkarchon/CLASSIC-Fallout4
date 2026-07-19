@@ -7,6 +7,8 @@
 
 #include "classic_cxx_bridge/scanner.h"
 
+#include <functional>
+
 namespace classic::gui {
 
 /// GUI-facing terminal category for one typed Crash Log Scan Run execution envelope.
@@ -19,6 +21,17 @@ enum class ScanRunTerminalKind {
     Cancelled,
     InfrastructureError,
 };
+
+/// Explicit GUI response to a malformed Local Ignore file encountered by an active scan run.
+enum class ScanRunLocalIgnoreRecoveryChoice {
+    ProceedWithoutIgnore,
+    ResetToDefault,
+    Cancel,
+};
+
+/// GUI-thread prompt used by ScanWorker while Rust retains the single-use recovery continuation.
+using ScanRunLocalIgnoreRecoveryPrompt =
+    std::function<ScanRunLocalIgnoreRecoveryChoice(const QString& message)>;
 
 /// Presentation-ready projection of one discovery-ordered per-log outcome.
 struct ScanRunLogPresentation {

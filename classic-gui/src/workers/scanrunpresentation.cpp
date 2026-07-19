@@ -45,6 +45,25 @@ QString infrastructureStageName(classic::scanner::ScanRunContractInfrastructureE
     return QStringLiteral("unknown stage");
 }
 
+/// Returns the stable user-facing name for a Local Ignore reset publication stage.
+QString resetFailureStageName(classic::scanner::ScanRunLocalIgnoreResetFailureStage stage)
+{
+    using Stage = classic::scanner::ScanRunLocalIgnoreResetFailureStage;
+    switch (stage) {
+    case Stage::Create:
+        return QStringLiteral("create");
+    case Stage::Write:
+        return QStringLiteral("write");
+    case Stage::Flush:
+        return QStringLiteral("flush");
+    case Stage::Sync:
+        return QStringLiteral("sync");
+    case Stage::Publish:
+        return QStringLiteral("publish");
+    }
+    return QStringLiteral("unknown stage");
+}
+
 QString setupDetails(const classic::scanner::ScanRunContractRunResult& result)
 {
     QStringList lines;
@@ -223,6 +242,31 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
             QStringLiteral("Crash Log Scan recovery failed (%1): %2")
                 .arg(classic::toQString(execution.resume_error.code),
                      classic::toQString(execution.resume_error.message));
+        QStringList context;
+        if (execution.resume_error.has_path) {
+            context.append(QStringLiteral("Path: %1").arg(classic::toQString(execution.resume_error.path)));
+        }
+        if (execution.resume_error.has_stage) {
+            context.append(QStringLiteral("Stage: %1").arg(resetFailureStageName(execution.resume_error.stage)));
+        }
+        if (execution.resume_error.has_expected_identity) {
+            context.append(
+                QStringLiteral("Expected identity: sha256 %1, %2 bytes")
+                    .arg(classic::toQString(execution.resume_error.expected_identity.sha256))
+                    .arg(execution.resume_error.expected_identity.byte_len));
+        }
+        if (execution.resume_error.has_actual_identity) {
+            context.append(QStringLiteral("Actual identity: sha256 %1, %2 bytes")
+                               .arg(classic::toQString(execution.resume_error.actual_identity.sha256))
+                               .arg(execution.resume_error.actual_identity.byte_len));
+        }
+        if (execution.resume_error.has_backup_path) {
+            context.append(
+                QStringLiteral("Verified backup: %1").arg(classic::toQString(execution.resume_error.backup_path)));
+        }
+        if (!context.isEmpty()) {
+            presentation.message.append(QStringLiteral("\n") + context.join('\n'));
+        }
         return presentation;
     }
 

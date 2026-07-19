@@ -350,6 +350,8 @@ void MainWindow::initializeControllers()
     m_signalHub = &SignalHub::instance();
     m_threadManager = new ThreadManager(this);
     m_scanController = new ScanController(m_signalHub, m_threadManager, this);
+    m_scanController->setLocalIgnoreRecoveryPrompt(
+        [this](const QString& message) { return promptLocalIgnoreRecovery(message); });
     m_gameFilesController = new GameFilesController(m_signalHub, m_threadManager, this);
     m_backupController = new BackupController(QString(), m_signalHub, this);
     m_resultsController =
@@ -1610,6 +1612,34 @@ void MainWindow::onScanError(const QString& message)
         installedYamlDataStatusSuffix());
 
     QMessageBox::critical(this, QStringLiteral("Scan Error"), message);
+}
+
+classic::gui::ScanRunLocalIgnoreRecoveryChoice MainWindow::promptLocalIgnoreRecovery(const QString& message)
+{
+    QMessageBox prompt(this);
+    prompt.setIcon(QMessageBox::Warning);
+    prompt.setWindowTitle(QStringLiteral("Local Ignore Recovery Required"));
+    prompt.setText(message);
+    prompt.setInformativeText(QStringLiteral(
+        "Back Up & Reset preserves the malformed CLASSIC Ignore.yaml in CLASSIC Backup before replacing it "
+        "with the retained default. Continue Without Ignore leaves the file unchanged and disables local ignores "
+        "for this scan only."));
+    auto* resetButton =
+        prompt.addButton(QStringLiteral("Back Up && Reset to Default"), QMessageBox::AcceptRole);
+    auto* proceedButton =
+        prompt.addButton(QStringLiteral("Continue Without Ignore"), QMessageBox::ActionRole);
+    auto* cancelButton = prompt.addButton(QMessageBox::Cancel);
+    prompt.setDefaultButton(cancelButton);
+    prompt.setEscapeButton(cancelButton);
+    prompt.exec();
+
+    if (prompt.clickedButton() == resetButton) {
+        return classic::gui::ScanRunLocalIgnoreRecoveryChoice::ResetToDefault;
+    }
+    if (prompt.clickedButton() == proceedButton) {
+        return classic::gui::ScanRunLocalIgnoreRecoveryChoice::ProceedWithoutIgnore;
+    }
+    return classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel;
 }
 
 void MainWindow::onScanWarning(const QString& message)

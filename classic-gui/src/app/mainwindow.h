@@ -50,6 +50,10 @@ private:
     void connectSignals();
     void runStartupWorkflows();
 
+    /// Presents the three explicit Local Ignore recovery outcomes without mutating data on dismissal.
+    [[nodiscard]] classic::gui::ScanRunLocalIgnoreRecoveryChoice
+    promptLocalIgnoreRecovery(const QString& message);
+
     /// Opens typed Game Setup User Settings, offers explicit bootstrap or migration, and refreshes the UI.
     /// Read-only opens never repair or persist the settings document.
     void loadSettings();
