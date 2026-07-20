@@ -41,7 +41,7 @@ _internal/
 CLASSIC Backup/
 CLASSIC GFS Report.md
 CLASSIC Ignore.yaml
-!python-bindings/tests/fixtures/CLASSIC Ignore.yaml
+!python-bindings/tests/fixtures/CLASSIC Data/CLASSIC Ignore.yaml
 !tests/fixtures/crash_log_scan_run/CLASSIC Data/CLASSIC Ignore.yaml
 !tests/fixtures/autoscan_report_goldens/cases/*/input/CLASSIC Data/CLASSIC Ignore.yaml
 CLASSIC Settings.yaml

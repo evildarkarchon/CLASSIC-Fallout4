@@ -66,6 +66,31 @@ def isolate_cache(monkeypatch: pytest.MonkeyPatch, root: Path) -> Path:
     return root / "CLASSIC" / "yaml-cache"
 
 
+def test_python_cli_smoke_fixture_satisfies_installed_yaml_data_contract(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep the permanent CLI smoke fixture valid for strict installed-data loading."""
+    fixture_root = Path(__file__).parent / "fixtures"
+    isolate_cache(monkeypatch, tmp_path / "cache-root")
+
+    outcome = classic_config.load_installed_yaml_data(
+        fixture_root,
+        classic_config.ExplicitYamlDataGame.FALLOUT4,
+        "1.11.191",
+    )
+
+    assert isinstance(outcome, classic_config.InstalledYamlDataLoadOutcome)
+    assert outcome.snapshot.local_ignore_state == "existing"
+    assert (outcome.snapshot.main.schema_major, outcome.snapshot.main.schema_minor) == (
+        2,
+        0,
+    )
+    assert (
+        outcome.snapshot.game_file.schema_major,
+        outcome.snapshot.game_file.schema_minor,
+    ) == (1, 0)
+
+
 def test_inspection_projects_independent_selection_and_exact_identity(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
