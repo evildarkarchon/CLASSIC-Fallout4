@@ -47,9 +47,12 @@ An explicit empty semantic result is a successful focused analysis, not error
 recovery. Direct focused calls return or throw the typed analyzer envelope.
 Within `scan_run::contract::execute`, failure to construct the reusable analyzer
 set becomes the run-wide `Initialization` infrastructure stage before logs are
-scheduled. Failure while collecting one log becomes that log's `Analysis`
-failure, persists no partial Autoscan Report, and does not stop other admitted
-logs from reaching their own terminal outcomes. See
+scheduled. FormID Value Lookup is the sole collection exception: malformed or
+operational lookup failure is retried with lookup disabled so the report keeps
+its FormID/plugin suspects without optional descriptions. Every other failure
+while collecting one log becomes that log's `Analysis` failure, persists no
+partial Autoscan Report, and does not stop other admitted logs from reaching
+their own terminal outcomes. See
 [ADR-0005](../adr/0005-semantic-autoscan-report-contributions.md).
 
 ### Strict FormID Value Lookup errors

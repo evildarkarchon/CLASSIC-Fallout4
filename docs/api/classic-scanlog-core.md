@@ -230,9 +230,12 @@ tokens rather than inventing language-specific spellings.
 Direct focused-analyzer callers receive this typed error unchanged through the
 language-appropriate projection. During a complete run, failure to construct
 the reusable analyzer set becomes a run-wide `Initialization` infrastructure
-error before log scheduling. A failure while collecting one log becomes that
-log's `LogFailureStage::Analysis`, prevents a partial Autoscan Report from being
-persisted, and does not convert successful empty results into failures.
+error before log scheduling. The private collector retries malformed or
+operational FormID Value Lookup failures with lookup disabled because value
+descriptions are optional report enrichment. Every other failure while
+collecting one log becomes that log's `LogFailureStage::Analysis`, prevents a
+partial Autoscan Report from being persisted, and does not convert successful
+empty results into failures.
 
 ---
 

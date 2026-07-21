@@ -8,6 +8,7 @@ use indexmap::IndexMap;
 
 use super::*;
 use crate::CrashgenEntry;
+use crate::formid_finding_analyzer::FormIDValueLookupStatus;
 
 struct AnalyzerFixture {
     crashgen_settings: CrashgenSettingsAnalyzer,
@@ -149,7 +150,7 @@ fn applicable_analyses_retain_present_empty_results() {
 }
 
 #[test]
-fn formid_operational_failure_aborts_collection_as_per_log_analysis_error() {
+fn formid_operational_failure_preserves_findings_without_value_enrichment() {
     let lookup = FormIdValueLookup::in_memory(vec![FormIdValueLookupEntry::new(
         "123456",
         "Broken.esp",
@@ -161,7 +162,7 @@ fn formid_operational_failure_aborts_collection_as_per_log_analysis_error() {
     let xse_modules = HashSet::new();
     let combined_crash_lines = vec!["Form ID: 0x01123456".to_string()];
     let plugins = IndexMap::from([("Broken.esp".to_string(), "01".to_string())]);
-    let error = classic_shared_core::get_runtime()
+    let result = classic_shared_core::get_runtime()
         .block_on(collector.collect(AutoscanReportCollectionInput {
             crashgen_settings: &settings,
             xse_modules: &xse_modules,
@@ -174,13 +175,67 @@ fn formid_operational_failure_aborts_collection_as_per_log_analysis_error() {
             system_segment_lines: &[],
             plugins: Some(&plugins),
         }))
-        .expect_err("an operational focused-analyzer failure must abort collection");
+        .expect("an optional FormID lookup failure must not abort report collection");
 
-    let ScanLogError::AnalysisError(message) = error else {
-        panic!("focused analyzer failure should use the per-log analysis error path");
-    };
-    assert!(message.contains("formid_finding [operational_failure]"));
-    assert!(message.contains("fixture offline"));
+    assert_eq!(result.formid_count(), 1);
+    let findings = result
+        .formid_findings
+        .as_ref()
+        .expect("FormID suspects should remain available")
+        .findings
+        .as_slice();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].identifier, "01123456");
+    assert_eq!(findings[0].occurrences, 1);
+    assert_eq!(findings[0].plugin.as_deref(), Some("Broken.esp"));
+    assert_eq!(
+        findings[0].value_lookup_status,
+        FormIDValueLookupStatus::Disabled
+    );
+    assert!(findings[0].value.is_none());
+}
+
+#[test]
+fn formid_malformed_lookup_result_preserves_findings_without_value_enrichment() {
+    let lookup = FormIdValueLookup::in_memory(vec![FormIdValueLookupEntry::new(
+        "123456",
+        "Broken.esp",
+        FormIdValueLookupInMemoryReply::Value(Some("   ".to_string())),
+    )]);
+    let fixture = AnalyzerFixture::new(lookup);
+    let collector = fixture.collector();
+    let settings = CrashgenSettingsSnapshot::new();
+    let xse_modules = HashSet::new();
+    let combined_crash_lines = vec!["Form ID: 0x01123456".to_string()];
+    let plugins = IndexMap::from([("Broken.esp".to_string(), "01".to_string())]);
+    let result = classic_shared_core::get_runtime()
+        .block_on(collector.collect(AutoscanReportCollectionInput {
+            crashgen_settings: &settings,
+            xse_modules: &xse_modules,
+            crashgen_version: None,
+            config_layout: ConfigLayout::Unknown,
+            fake_bot_compatible_mode: false,
+            main_error: "ordinary main error",
+            combined_crash_lines: &combined_crash_lines,
+            combined_crash_text: "Form ID: 0x01123456",
+            system_segment_lines: &[],
+            plugins: Some(&plugins),
+        }))
+        .expect("a malformed optional lookup reply must not abort report collection");
+
+    assert_eq!(result.formid_count(), 1);
+    let finding = &result
+        .formid_findings
+        .as_ref()
+        .expect("FormID suspects should remain available")
+        .findings[0];
+    assert_eq!(finding.identifier, "01123456");
+    assert_eq!(finding.plugin.as_deref(), Some("Broken.esp"));
+    assert_eq!(
+        finding.value_lookup_status,
+        FormIDValueLookupStatus::Disabled
+    );
+    assert!(finding.value.is_none());
 }
 
 #[test]

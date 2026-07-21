@@ -3,9 +3,10 @@
 use std::collections::HashSet;
 
 use classic_config_core::{ConfigLayout, CrashgenSettingsSnapshot};
+use classic_database_core::FormIdValueLookup;
 use indexmap::IndexMap;
 
-use crate::analyzer::AnalyzerError;
+use crate::analyzer::{AnalyzerError, AnalyzerErrorCode};
 use crate::crash_suspect_analyzer::{
     CrashSuspectAnalysisInput, CrashSuspectAnalysisResult, CrashSuspectAnalyzer,
 };
@@ -122,9 +123,11 @@ impl<'a> AutoscanReportContributionCollector<'a> {
     /// Runs every applicable semantic analyzer without rendering report text.
     ///
     /// A present empty aggregate means its analysis completed without findings;
-    /// absence means the prepared evidence did not admit that analysis. Any
-    /// analyzer failure aborts collection and becomes the existing per-log
-    /// analysis error consumed by Crash Log Scan Run.
+    /// absence means the prepared evidence did not admit that analysis. Analyzer
+    /// failures abort collection and become the existing per-log analysis error,
+    /// except FormID Value Lookup failures: values are optional enrichment, so
+    /// collection retries operational or malformed lookup failures with lookup
+    /// disabled.
     pub(crate) async fn collect(
         &self,
         input: AutoscanReportCollectionInput<'_>,
@@ -185,24 +188,36 @@ impl<'a> AutoscanReportContributionCollector<'a> {
         let formid_findings = if input.combined_crash_lines.is_empty() {
             None
         } else {
-            let plugins = input
-                .plugins
-                .into_iter()
-                .flat_map(|plugins| plugins.iter())
-                .map(|(name, prefix)| FormIDPlugin {
-                    name: name.clone(),
-                    prefix: prefix.clone(),
-                })
-                .collect();
-            Some(
-                self.formid_findings
-                    .analyze(FormIDFindingAnalysisInput {
-                        crash_lines: input.combined_crash_lines.to_vec(),
-                        plugins,
+            let analysis_input = || FormIDFindingAnalysisInput {
+                crash_lines: input.combined_crash_lines.to_vec(),
+                plugins: input
+                    .plugins
+                    .into_iter()
+                    .flat_map(|plugins| plugins.iter())
+                    .map(|(name, prefix)| FormIDPlugin {
+                        name: name.clone(),
+                        prefix: prefix.clone(),
                     })
-                    .await
-                    .map_err(analyzer_failure)?,
-            )
+                    .collect(),
+            };
+            let result = match self.formid_findings.analyze(analysis_input()).await {
+                Ok(result) => result,
+                Err(error)
+                    if matches!(
+                        error.code(),
+                        AnalyzerErrorCode::MalformedResult | AnalyzerErrorCode::OperationalFailure
+                    ) =>
+                {
+                    // FormID descriptions are optional report enrichment, so a broken database
+                    // must not discard the suspects that were already extracted from the log.
+                    FormIDFindingAnalyzer::new(FormIdValueLookup::disabled())
+                        .analyze(analysis_input())
+                        .await
+                        .map_err(analyzer_failure)?
+                }
+                Err(error) => return Err(analyzer_failure(error)),
+            };
+            Some(result)
         };
 
         let named_record_findings = if input.combined_crash_lines.is_empty() {
