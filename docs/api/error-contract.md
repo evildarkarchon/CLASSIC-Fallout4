@@ -57,7 +57,7 @@ their own terminal outcomes. See
 
 ### Strict FormID Value Lookup errors
 
-`classic-database-core::FormIdValueLookupError` keeps a successful miss out of the error channel. Successful lookup data is `disabled`, `missing`, or `found`; failures use stable code `malformed_result` for blank adapter values and `operational_failure` for initialization, SQL execution, or row-decoding problems. Optional FormID/plugin context is absent for failures that occur before a lookup key is available.
+`classic-database-core::FormIdValueLookupError` keeps a successful miss out of the error channel. Successful lookup data is `disabled`, `missing`, or `found`; failures use stable code `malformed_result` for blank adapter values and `operational_failure` for initialization, absence of the active game table across all initialized databases, SQL execution, or row-decoding problems. Optional FormID/plugin context is absent for failures that occur before a lookup key is available.
 
 - CXX returns a typed lookup envelope whose error DTO retains code, message, and optional key context instead of flattening the failure into `found: false`.
 - Node rejects with `napi::Error` carrying `code`, `formid`, `plugin`, and `message` properties.

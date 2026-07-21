@@ -190,7 +190,7 @@ These details are visible in source today, but contributors should treat them ca
 - because lookups iterate `DashMap` pool entries, contributors should not rely on a stable precedence order between separate DB files when duplicate `(formid, plugin)` rows exist
 - `DatabasePool::initialize()` sorts and de-duplicates the requested path list for connection-allocation planning, but lookup iteration order should still be treated as implementation-defined
 - uninitialized or closed pools return `Ok(None)` for lookups instead of a hard error
-- a strict facade over such a pool can still represent a genuine no-row result as `Missing`, but any SQL or row-decode failure encountered by the strict query becomes `operational_failure`
+- a strict facade can represent a genuine no-row result as `Missing` only after at least one initialized database exposes the active game table; an uninitialized/closed pool or a pool containing only other game tables becomes `operational_failure`, as does any SQL or row-decode failure from a matching database
 - missing DB files do not surface `DatabaseError::NotFound` in the normal initialization path; they are logged and skipped
 - `optimize()` currently runs `ANALYZE` only; `VACUUM` is not attempted because pools are opened read-only
 - scan-time DB opening uses read-only SQLite connections with `synchronous=NORMAL`, `cache_size=10000`, `temp_store=MEMORY`, and `mmap_size=30000000`

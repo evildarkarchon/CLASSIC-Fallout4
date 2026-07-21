@@ -3,12 +3,34 @@ use crate::{AnalyzerErrorCode, AnalyzerKind};
 use classic_database_core::{
     FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupInMemoryReply,
 };
+use sqlx::sqlite::SqlitePoolOptions;
+use tempfile::NamedTempFile;
 
 fn plugin(name: &str, prefix: &str) -> FormIDPlugin {
     FormIDPlugin {
         name: name.to_string(),
         prefix: prefix.to_string(),
     }
+}
+
+/// Creates an owned SQLite fixture that lacks the analyzer's active game table.
+async fn wrong_game_sqlite_fixture() -> (NamedTempFile, std::path::PathBuf) {
+    let file = NamedTempFile::new().expect("temporary SQLite file should be created");
+    let path = file.path().to_path_buf();
+    let connection = format!("sqlite://{}?mode=rwc", path.display());
+    let pool = SqlitePoolOptions::new()
+        .max_connections(1)
+        .connect(&connection)
+        .await
+        .expect("wrong-game SQLite fixture should open");
+    sqlx::query(
+        "CREATE TABLE Skyrim (formid TEXT NOT NULL, plugin TEXT NOT NULL, entry TEXT NOT NULL)",
+    )
+    .execute(&pool)
+    .await
+    .expect("wrong-game SQLite table should be created");
+    pool.close().await;
+    (file, path)
 }
 
 #[test]
@@ -148,6 +170,34 @@ fn analyze_maps_lookup_failure_to_the_shared_typed_error() {
     assert_eq!(error.analyzer(), AnalyzerKind::FormIdFinding);
     assert_eq!(error.code(), AnalyzerErrorCode::OperationalFailure);
     assert!(error.message().contains("fixture offline"));
+}
+
+/// Ensures wrong-table SQLite configuration reaches the analyzer error envelope.
+#[test]
+fn analyze_maps_an_absent_active_game_table_to_operational_failure() {
+    classic_shared_core::get_runtime().block_on(async {
+        let (_file, path) = wrong_game_sqlite_fixture().await;
+        let lookup = FormIdValueLookup::sqlite(path, "Fallout4".to_string())
+            .await
+            .expect("owned lookup should initialize before strict schema validation");
+        let analyzer = FormIDFindingAnalyzer::new(lookup);
+
+        let error = analyzer
+            .analyze(FormIDFindingAnalysisInput {
+                crash_lines: vec!["Form ID: 0x01123456".to_string()],
+                plugins: vec![plugin("Broken.esp", "01")],
+            })
+            .await
+            .expect_err("wrong-table lookup must not become a missing description");
+
+        assert_eq!(error.analyzer(), AnalyzerKind::FormIdFinding);
+        assert_eq!(error.code(), AnalyzerErrorCode::OperationalFailure);
+        assert!(
+            error
+                .message()
+                .contains("no initialized database exposes active game table \"Fallout4\"")
+        );
+    });
 }
 
 #[test]

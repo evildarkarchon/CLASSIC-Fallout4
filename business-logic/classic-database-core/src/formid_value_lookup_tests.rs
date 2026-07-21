@@ -188,6 +188,39 @@ fn shared_pool_batch_skips_databases_without_the_active_game_table() {
     });
 }
 
+/// Ensures an all-wrong-game shared pool fails a strict batch lookup.
+#[test]
+fn shared_pool_batch_errors_when_every_database_lacks_the_active_game_table() {
+    classic_shared_core::get_runtime().block_on(async {
+        let (_skyrim_file, skyrim_path) = create_skyrim_sqlite_fixture().await;
+        let pool = Arc::new(DatabasePool::new(
+            Some(1),
+            Duration::from_secs(60),
+            "Fallout4".to_string(),
+        ));
+        pool.initialize(vec![skyrim_path])
+            .await
+            .expect("wrong-game shared pool should initialize before schema validation");
+        let lookup = FormIdValueLookup::shared_pool(Arc::clone(&pool));
+
+        let error = lookup
+            .lookup_batch(vec![(
+                "000804".to_string(),
+                "SomeMod.esp".to_string(),
+            )])
+            .await
+            .expect_err("an all-mismatched shared pool must not report successful misses");
+
+        assert_eq!(error.code(), "operational_failure");
+        assert!(
+            error
+                .message()
+                .contains("no initialized database exposes active game table \"Fallout4\"")
+        );
+        pool.close().await.expect("shared pool should close");
+    });
+}
+
 #[test]
 fn shared_pool_adapter_never_converts_query_failure_to_a_miss() {
     classic_shared_core::get_runtime().block_on(async {
@@ -229,6 +262,29 @@ fn owned_sqlite_adapter_returns_hits_without_a_private_runtime() {
         assert_eq!(
             outcome,
             FormIdValueLookupOutcome::Found("Railway Rifle".to_string())
+        );
+    });
+}
+
+/// Ensures an owned wrong-game database fails a strict single lookup.
+#[test]
+fn owned_sqlite_adapter_errors_when_the_active_game_table_is_absent() {
+    classic_shared_core::get_runtime().block_on(async {
+        let (_file, path) = create_skyrim_sqlite_fixture().await;
+        let lookup = FormIdValueLookup::sqlite(path, "Fallout4".to_string())
+            .await
+            .expect("owned SQLite adapter should initialize before schema validation");
+
+        let error = lookup
+            .lookup("000804", "SomeMod.esp")
+            .await
+            .expect_err("a wrong-table owned adapter must not report a successful miss");
+
+        assert_eq!(error.code(), "operational_failure");
+        assert!(
+            error
+                .message()
+                .contains("no initialized database exposes active game table \"Fallout4\"")
         );
     });
 }

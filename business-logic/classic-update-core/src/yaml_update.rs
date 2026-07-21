@@ -1090,9 +1090,11 @@ pub struct UpdateCheckConfig {
     /// Installation layout hint used to locate bundled YAML files.
     ///
     /// First-party helpers accept the installation root or its canonical
-    /// `CLASSIC Data/databases` child. Generic helpers preserve the legacy
-    /// binding contract and expect this path to name the bundled directory
-    /// itself; when omitted, they probe that child beside `current_exe()`.
+    /// `CLASSIC Data/databases` child. When omitted, first-party helpers use
+    /// the native frontend candidate search for a root containing
+    /// `CLASSIC Data`. Generic helpers preserve the legacy binding contract
+    /// and expect this path to name the bundled directory itself; when
+    /// omitted, they probe that child beside `current_exe()`.
     pub bundled_yaml_dir: Option<PathBuf>,
 }
 
@@ -1498,16 +1500,54 @@ fn prepare_yaml_cache_dir(
 }
 
 /// Resolve one CLASSIC installation root for config-owned first-party inspection.
+///
+/// An explicit layout hint remains authoritative. Native callers that omit it
+/// use the union of development and installed-layout candidates supported by
+/// the first-party CLI, GUI, and TUI frontends.
 fn resolve_installation_root(config: &UpdateCheckConfig) -> Option<PathBuf> {
-    config
-        .bundled_yaml_dir
-        .as_deref()
-        .map(installation_root_from_layout_hint)
-        .or_else(|| {
-            std::env::current_exe()
-                .ok()
-                .and_then(|executable| executable.parent().map(Path::to_path_buf))
-        })
+    if let Some(directory) = config.bundled_yaml_dir.as_deref() {
+        return Some(installation_root_from_layout_hint(directory));
+    }
+
+    let executable_dir = std::env::current_exe()
+        .ok()
+        .and_then(|executable| executable.parent().map(Path::to_path_buf));
+    let current_dir = std::env::current_dir().ok();
+    resolve_native_installation_root(executable_dir.as_deref(), current_dir.as_deref())
+}
+
+/// Select the first native-frontend-compatible root containing `CLASSIC Data`.
+///
+/// The explicit inputs keep layout discovery deterministic in tests. Candidate
+/// order mirrors `MainWindow::findDataRoot` and the TUI's `classic_root`, while
+/// retaining the CLI's executable-directory-before-CWD preference.
+fn resolve_native_installation_root(
+    executable_dir: Option<&Path>,
+    current_dir: Option<&Path>,
+) -> Option<PathBuf> {
+    let mut candidates = Vec::with_capacity(6);
+    if let Some(application_dir) = executable_dir {
+        candidates.push(application_dir.to_path_buf());
+    }
+    if let Some(directory) = current_dir {
+        candidates.push(directory.to_path_buf());
+    }
+    if let Some(application_dir) = executable_dir
+        && let Some(parent) = application_dir.parent()
+    {
+        candidates.push(parent.to_path_buf());
+        if let Some(grandparent) = parent.parent() {
+            candidates.push(grandparent.to_path_buf());
+        }
+        candidates.push(parent.join("install"));
+    }
+    if let Some(directory) = current_dir {
+        candidates.push(directory.join("install"));
+    }
+
+    candidates
+        .into_iter()
+        .find(|candidate| candidate.join("CLASSIC Data").is_dir())
 }
 
 /// Translate a binding-compatible layout hint into one installation root.

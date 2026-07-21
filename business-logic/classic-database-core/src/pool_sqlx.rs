@@ -1383,7 +1383,9 @@ impl DatabasePool {
     /// games are ignored without hiding failures from databases that do expose the
     /// active table. Legacy fail-soft lookups retain their existing query behavior.
     /// A strict schema-inspection failure returns `DatabaseError::QueryError` with
-    /// the affected table and database path.
+    /// the affected table and database path. Strict lookup also fails when no
+    /// initialized database exposes the active table, because an empty filtered
+    /// set is an invalid adapter/schema configuration rather than a successful miss.
     async fn queryable_pool_snapshots(
         &self,
         game_table: &str,
@@ -1428,6 +1430,11 @@ impl DatabasePool {
             if let Some(pool_entry) = table_check? {
                 queryable_pools.push(pool_entry);
             }
+        }
+        if queryable_pools.is_empty() {
+            return Err(DatabaseError::QueryError(format!(
+                "no initialized database exposes active game table {game_table:?}"
+            )));
         }
         Ok(queryable_pools)
     }

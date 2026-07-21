@@ -134,9 +134,10 @@ fn empty_status_dto() -> ffi::YamlUpdateStatusDto {
 }
 
 /// Translate the CXX-friendly empty-string-for-None convention into a core
-/// [`UpdateCheckConfig`]. An empty `bundled_yaml_dir` keeps the
-/// `current_exe()` fallback (correct for native frontends); anything else
-/// becomes an explicit override.
+/// [`UpdateCheckConfig`]. An empty `bundled_yaml_dir` keeps automatic
+/// resolution: first-party helpers probe the native frontend installation
+/// layouts, while generic helpers retain their `current_exe()`-relative
+/// bundled-directory fallback. Anything else becomes an explicit override.
 fn build_yaml_config(enabled: bool, bundled_yaml_dir: &str) -> UpdateCheckConfig {
     let mut cfg = if enabled {
         UpdateCheckConfig::enabled()
@@ -657,7 +658,8 @@ mod ffi {
         /// Check the first-party YAML Data Update Channel.
         ///
         /// Native CLI/GUI callers pass only the user's Update Check setting.
-        /// Rust owns the Pages URL, `yaml-data-v*` tag namespace, current
+        /// Rust owns installation-root discovery across the supported native
+        /// layouts, the Pages URL, `yaml-data-v*` tag namespace, current
         /// shippable file set, accepted schema ranges, and installed-file
         /// enrichment. `enabled == false` returns `tag == 0` without HTTP.
         fn yaml_data_check_update(enabled: bool) -> YamlUpdateStatusDto;
@@ -668,6 +670,8 @@ mod ffi {
         /// the user reviewed: `release_tag` plus each compatible file's
         /// `(name, sha256)`. The Rust core re-fetches the live manifest and
         /// refuses stale release tags or digest drift before touching disk.
+        /// Installation-root discovery follows the same native layout search
+        /// as [`yaml_data_check_update`].
         fn yaml_data_apply_update(
             enabled: bool,
             approved: &ApprovedUpdateDto,

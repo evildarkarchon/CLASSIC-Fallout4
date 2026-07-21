@@ -176,11 +176,14 @@ Native CLI and GUI callers use the first-party YAML Data operations:
 - `yaml_data_rollback_update()`
 
 Rust owns the Pages URL, `yaml-data-v*` channel, shippable-file inventory,
-schema compatibility, config-inspected installed identity, and rollback targets. The
-bridge passes the accepted update policy and reviewed update identity through
-typed DTOs. Lower-level `yaml_check_update`, `yaml_apply_update`, and
-`yaml_rollback_update` operations remain for tests and unusual hosts that
-intentionally supply their own channel coordinates.
+schema compatibility, config-inspected installed identity, and rollback targets.
+For first-party check/apply calls, Rust also discovers the installation root
+from the union of executable, CWD, parent, and `install` layouts supported by
+the native frontends. The bridge passes the accepted update policy
+and reviewed update identity through typed DTOs. Lower-level
+`yaml_check_update`, `yaml_apply_update`, and `yaml_rollback_update` operations
+remain for tests and unusual hosts that intentionally supply their own channel
+coordinates.
 
 Binary compatibility and app-notification helpers are independent of Crash Log
 Scan Runs. See [`yaml-update-delivery.md`](yaml-update-delivery.md) and

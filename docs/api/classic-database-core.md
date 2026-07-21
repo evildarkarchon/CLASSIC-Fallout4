@@ -269,7 +269,7 @@ That model is useful for scan workflows, but contributors should be careful not 
 
 ## Strict facade behavior
 
-`FormIdValueLookup` does not inherit the pool's log-and-continue query policy. Its private strict pool seams return the first SQL execution or row-decoding failure, and the facade maps that failure to `FormIdValueLookupError` with stable code `operational_failure`. A successful no-row result is `FormIdValueLookupOutcome::Missing`; it is never used to encode a failure. Blank in-memory or SQLite values are rejected separately with `malformed_result`.
+`FormIdValueLookup` does not inherit the pool's log-and-continue query policy. Its private strict pool seams ignore databases for other supported games when at least one initialized database exposes the active game table, return `operational_failure` when none does, and return the first SQL execution or row-decoding failure from a matching database. A successful no-row result from at least one matching database is `FormIdValueLookupOutcome::Missing`; it is never used to encode a failure. Blank in-memory or SQLite values are rejected separately with `malformed_result`.
 
 ---
 

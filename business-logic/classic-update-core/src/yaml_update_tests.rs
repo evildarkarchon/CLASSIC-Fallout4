@@ -1,6 +1,40 @@
 use super::*;
 
 #[test]
+fn first_party_installation_root_uses_cwd_when_executable_is_not_beside_data() {
+    let executable_layout = tempfile::tempdir().expect("executable layout should be created");
+    let cwd_layout = tempfile::tempdir().expect("CWD layout should be created");
+    std::fs::create_dir(cwd_layout.path().join("CLASSIC Data"))
+        .expect("CWD CLASSIC Data should be created");
+
+    let resolved =
+        resolve_native_installation_root(Some(executable_layout.path()), Some(cwd_layout.path()));
+
+    assert_eq!(resolved.as_deref(), Some(cwd_layout.path()));
+}
+
+#[test]
+fn first_party_installation_root_supports_native_parent_and_install_layouts() {
+    let parent_layout = tempfile::tempdir().expect("parent layout should be created");
+    let executable_dir = parent_layout.path().join("bin");
+    std::fs::create_dir_all(&executable_dir).expect("executable directory should be created");
+    std::fs::create_dir(parent_layout.path().join("CLASSIC Data"))
+        .expect("parent CLASSIC Data should be created");
+
+    let resolved_parent = resolve_native_installation_root(Some(&executable_dir), None);
+    assert_eq!(resolved_parent.as_deref(), Some(parent_layout.path()));
+
+    std::fs::remove_dir(parent_layout.path().join("CLASSIC Data"))
+        .expect("parent CLASSIC Data should be removed");
+    let install_root = parent_layout.path().join("install");
+    std::fs::create_dir_all(install_root.join("CLASSIC Data"))
+        .expect("install CLASSIC Data should be created");
+
+    let resolved_install = resolve_native_installation_root(Some(&executable_dir), None);
+    assert_eq!(resolved_install.as_deref(), Some(install_root.as_path()));
+}
+
+#[test]
 fn parse_yaml_data_tag_base_date() {
     assert_eq!(
         parse_yaml_data_tag("yaml-data-v2026.04.17", "yaml-data-v"),
