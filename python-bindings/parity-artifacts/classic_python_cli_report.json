@@ -34,7 +34,7 @@
       ],
       "exitCode": 0,
       "stderr": "",
-      "stdout": "Binding compliance profile: python-ci\nResult: PASS\n- JSON report: D:\\repos\\CLASSIC-Fallout4\\tools\\binding_compliance\\artifacts\\binding_compliance_report.json\n- Markdown report: D:\\repos\\CLASSIC-Fallout4\\tools\\binding_compliance\\artifacts\\binding_compliance_report.md\nSummary: passed=12, failed=0, gaps=1, skipped=0\n"
+      "stdout": "Binding compliance profile: python-ci\nResult: PASS\n- JSON report: D:\\repos\\CLASSIC-Fallout4\\tools\\binding_compliance\\artifacts\\binding_compliance_report.json\n- Markdown report: D:\\repos\\CLASSIC-Fallout4\\tools\\binding_compliance\\artifacts\\binding_compliance_report.md\nSummary: passed=13, failed=0, gaps=1, skipped=0\n"
     }
   ],
   "environment": {

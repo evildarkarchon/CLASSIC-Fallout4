@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T10:17:29.859601+00:00",
+  "generated_at_utc": "2026-07-19T10:13:05.514885+00:00",
   "binding": "node",
   "sources": {
     "contract": "docs/implementation/node_api_parity/baseline/parity_contract.json",
@@ -7,11 +7,11 @@
     "index_dts": "node-bindings/classic-node/index.d.ts"
   },
   "summary": {
-    "tracked_surface_total": 1015,
-    "runtime_verified_total": 1015,
+    "tracked_surface_total": 1063,
+    "runtime_verified_total": 1063,
     "contract_mapped_total": 0,
     "newly_uncovered_total": 0,
-    "tier1_contract_total": 895,
+    "tier1_contract_total": 913,
     "tier1_missing_runtime_total": 0,
     "registry_mismatch_total": 0
   },
@@ -22,12 +22,12 @@
       "total": 166
     },
     "config": {
-      "runtime_verified": 104,
-      "total": 104
+      "runtime_verified": 121,
+      "total": 121
     },
     "database": {
-      "runtime_verified": 14,
-      "total": 14
+      "runtime_verified": 23,
+      "total": 23
     },
     "file_io": {
       "runtime_verified": 24,
@@ -54,8 +54,8 @@
       "total": 77
     },
     "scanlog": {
-      "runtime_verified": 169,
-      "total": 169
+      "runtime_verified": 191,
+      "total": 191
     },
     "settings": {
       "runtime_verified": 45,
@@ -3395,7 +3395,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog-extract-formids",
@@ -3414,7 +3414,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog-extract-plugins",
@@ -3433,7 +3433,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog-detect-vr",
@@ -3452,7 +3452,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog-detect-gpu",
@@ -3471,7 +3471,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog-parse-crashgen-version",
@@ -3490,7 +3490,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog-crashgen-version-status",
@@ -3509,7 +3509,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog-papyrus-analysis",
@@ -3528,7 +3528,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog-detect-crash-pattern",
@@ -3547,7 +3547,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog-crashgen-version-status-enum",
@@ -3566,7 +3566,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:config-yamldata-class",
@@ -7901,7 +7901,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_registry.CrashgenEntry@rust",
@@ -7920,7 +7920,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_registry.CrashgenRegistry@rust",
@@ -7939,7 +7939,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.FormIDAnalyzer@rust",
@@ -7958,26 +7958,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
-    },
-    {
-      "trackedId": "contract:scanlog.formid_analyzer.FormIDAnalyzerCore@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.formid_analyzer.FormIDAnalyzerCore@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "FormIDAnalyzerCore@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "final Crash Log Scan Run contract",
-      "fixtureRefs": [
-        "tests/fixtures/crash_log_scan_run"
-      ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.gpu_detector.GpuDetector@rust",
@@ -7996,7 +7977,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.gpu_detector.GpuVendor@rust",
@@ -8015,7 +7996,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.papyrus.PapyrusAnalyzer@rust",
@@ -8034,7 +8015,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.papyrus.PapyrusError@rust",
@@ -8053,7 +8034,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_analyzer.PluginAnalyzer@rust",
@@ -8072,7 +8053,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.record_scanner.RecordScanner@rust",
@@ -8091,64 +8072,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
-    },
-    {
-      "trackedId": "contract:scanlog.report.ReportComposer@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.report.ReportComposer@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "ReportComposer@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "final Crash Log Scan Run contract",
-      "fixtureRefs": [
-        "tests/fixtures/crash_log_scan_run"
-      ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
-    },
-    {
-      "trackedId": "contract:scanlog.report.ReportFragment@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.report.ReportFragment@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "ReportFragment@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "final Crash Log Scan Run contract",
-      "fixtureRefs": [
-        "tests/fixtures/crash_log_scan_run"
-      ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
-    },
-    {
-      "trackedId": "contract:scanlog.report.ReportGenerator@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.report.ReportGenerator@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "ReportGenerator@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "final Crash Log Scan Run contract",
-      "fixtureRefs": [
-        "tests/fixtures/crash_log_scan_run"
-      ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.RustFormIDAnalyzer@rust",
@@ -8167,7 +8091,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.error.ScanLogError@rust",
@@ -8186,7 +8110,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.orchestrator.ScanProgressPhase@rust",
@@ -8205,26 +8129,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
-    },
-    {
-      "trackedId": "contract:scanlog.settings_validator.SettingsValidator@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.settings_validator.SettingsValidator@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "SettingsValidator@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "final Crash Log Scan Run contract",
-      "fixtureRefs": [
-        "tests/fixtures/crash_log_scan_run"
-      ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.parser.StreamingIteratorParser@rust",
@@ -8243,7 +8148,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.parser.StreamingLogParser@rust",
@@ -8262,26 +8167,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
-    },
-    {
-      "trackedId": "contract:scanlog.parser.StringPool@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.parser.StringPool@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "StringPool@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "final Crash Log Scan Run contract",
-      "fixtureRefs": [
-        "tests/fixtures/crash_log_scan_run"
-      ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_analyzer.contains_plugin@rust",
@@ -8300,7 +8186,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.record_scanner.contains_record@rust",
@@ -8319,7 +8205,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_registry.crashgen_registry@rust",
@@ -8338,7 +8224,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.version.crashgen_version_gen@rust",
@@ -8357,7 +8243,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.ImportantModGuidance",
@@ -8376,7 +8262,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.ImportantModRule",
@@ -8395,7 +8281,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.ModConflictGuidance",
@@ -8414,7 +8300,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.ModConflictRule",
@@ -8433,7 +8319,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.ModGuidanceAnalysisInput",
@@ -8452,7 +8338,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.ModGuidanceAnalysisResult",
@@ -8471,7 +8357,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.ModGuidanceAnalyzer",
@@ -8490,7 +8376,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.ModGuidanceCriteriaKind",
@@ -8509,7 +8395,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.ModGuidanceMatchState",
@@ -8528,7 +8414,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.ModGuidancePlugin",
@@ -8547,7 +8433,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.ModSolutionGuidance",
@@ -8566,7 +8452,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.ModSolutionRule",
@@ -8585,7 +8471,235 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
+    },
+    {
+      "trackedId": "contract:scanlog.named_record_finding_analyzer.NamedRecordFinding",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.named_record_finding_analyzer.NamedRecordFinding",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "NamedRecordFinding",
+      "bindingIdentifier": "JsNamedRecordFinding",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.FormIDFinding",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.FormIDFinding",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIDFinding",
+      "bindingIdentifier": "JsFormIdFinding",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIDFindingAnalysisInput",
+      "bindingIdentifier": "JsFormIdFindingAnalysisInput",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIDFindingAnalysisResult",
+      "bindingIdentifier": "JsFormIdFindingAnalysisResult",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.FormIDFindingAnalyzer",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.FormIDFindingAnalyzer",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIDFindingAnalyzer",
+      "bindingIdentifier": "FormIdFindingAnalyzer",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.FormIDPlugin",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.FormIDPlugin",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIDPlugin",
+      "bindingIdentifier": "JsFormIdPlugin",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.FormIDValueLookupStatus",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.FormIDValueLookupStatus",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIDValueLookupStatus",
+      "bindingIdentifier": "JsFormIdValueLookupStatus",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
+    },
+    {
+      "trackedId": "contract:scanlog.formid_finding_analyzer.formid_finding_analyzer@rust",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.formid_finding_analyzer.formid_finding_analyzer@rust",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "formid_finding_analyzer@rust",
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
+    },
+    {
+      "trackedId": "contract:scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "NamedRecordFindingAnalysisInput",
+      "bindingIdentifier": "JsNamedRecordFindingAnalysisInput",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
+    },
+    {
+      "trackedId": "contract:scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "NamedRecordFindingAnalysisResult",
+      "bindingIdentifier": "JsNamedRecordFindingAnalysisResult",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
+    },
+    {
+      "trackedId": "contract:scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "NamedRecordFindingAnalyzer",
+      "bindingIdentifier": "NamedRecordFindingAnalyzer",
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
+    },
+    {
+      "trackedId": "contract:scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust",
+      "trackedType": "contract_row",
+      "contractId": "scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "named_record_finding_analyzer@rust",
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-scanlog",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "final Crash Log Scan Run contract",
+      "fixtureRefs": [
+        "tests/fixtures/crash_log_scan_run"
+      ],
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_evidence_analyzer.PluginEvidence",
@@ -8604,7 +8718,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput",
@@ -8623,7 +8737,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisResult",
@@ -8642,7 +8756,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer",
@@ -8661,7 +8775,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_evidence_analyzer.plugin_evidence_analyzer@rust",
@@ -8680,7 +8794,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_analyzer.detect_plugins_batch@rust",
@@ -8699,7 +8813,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.error.error@rust",
@@ -8718,7 +8832,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.formid.extract_formids_batch@rust",
@@ -8737,7 +8851,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.formid.formid@rust",
@@ -8756,7 +8870,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.formid_analyzer@rust",
@@ -8775,7 +8889,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.gpu_detector.gpu_detector@rust",
@@ -8794,7 +8908,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.formid.is_valid_formid@rust",
@@ -8813,7 +8927,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.mod_guidance_analyzer.mod_guidance_analyzer@rust",
@@ -8832,7 +8946,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.papyrus.papyrus@rust",
@@ -8851,7 +8965,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.parser.parser@rust",
@@ -8870,7 +8984,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.patterns.patterns@rust",
@@ -8889,7 +9003,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.plugin_analyzer.plugin_analyzer@rust",
@@ -8908,7 +9022,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.record_scanner.record_scanner@rust",
@@ -8927,26 +9041,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
-    },
-    {
-      "trackedId": "contract:scanlog.report.report@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.report.report@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "report@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "final Crash Log Scan Run contract",
-      "fixtureRefs": [
-        "tests/fixtures/crash_log_scan_run"
-      ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.record_scanner.scan_records_batch@rust",
@@ -8965,7 +9060,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.segment_key.segment_key@rust",
@@ -8984,7 +9079,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.analyzer.AnalyzerError",
@@ -9003,7 +9098,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.analyzer.AnalyzerErrorCode",
@@ -9022,7 +9117,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.analyzer.AnalyzerKind",
@@ -9041,7 +9136,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.analyzer.AnalyzerResult",
@@ -9060,7 +9155,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.analyzer.analyzer@rust",
@@ -9079,7 +9174,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_settings_analyzer.AnalyzerSeverity",
@@ -9098,7 +9193,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_settings_analyzer.AutoscanReportPlacement",
@@ -9117,7 +9212,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_settings_analyzer.CrashgenConfigLayout",
@@ -9136,7 +9231,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_settings_analyzer.CrashgenExpectationKind",
@@ -9155,7 +9250,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_settings_analyzer.CrashgenExpectationOutcome",
@@ -9174,7 +9269,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_settings_analyzer.CrashgenSetting",
@@ -9193,7 +9288,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisInput",
@@ -9212,7 +9307,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalysisResult",
@@ -9231,7 +9326,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_settings_analyzer.CrashgenSettingsAnalyzer",
@@ -9250,7 +9345,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_settings_analyzer.CrashgenVersion",
@@ -9269,7 +9364,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_settings_analyzer.DisabledSettingNotice",
@@ -9288,7 +9383,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crashgen_settings_analyzer.crashgen_settings_analyzer@rust",
@@ -9307,7 +9402,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crash_suspect_analyzer.CrashSuspectAnalysisInput",
@@ -9326,7 +9421,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crash_suspect_analyzer.CrashSuspectAnalysisResult",
@@ -9345,7 +9440,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crash_suspect_analyzer.CrashSuspectAnalyzer",
@@ -9364,7 +9459,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crash_suspect_analyzer.CrashSuspectFinding",
@@ -9383,7 +9478,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crash_suspect_analyzer.CrashSuspectFindingKind",
@@ -9402,7 +9497,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crash_suspect_analyzer.CrashSuspectMainErrorRule",
@@ -9421,7 +9516,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crash_suspect_analyzer.CrashSuspectStackCountRule",
@@ -9440,7 +9535,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crash_suspect_analyzer.CrashSuspectStackRule",
@@ -9459,7 +9554,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.crash_suspect_analyzer.crash_suspect_analyzer@rust",
@@ -9478,26 +9573,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
-    },
-    {
-      "trackedId": "contract:scanlog.settings_validator.settings_validator@rust",
-      "trackedType": "contract_row",
-      "contractId": "scanlog.settings_validator.settings_validator@rust",
-      "ownerModule": "scanlog",
-      "tier": "tier1",
-      "status": "matched",
-      "classification": "runtime_verified",
-      "rustSymbol": "settings_validator@rust",
-      "bindingIdentifier": null,
-      "coverageId": "node-tier1-scanlog",
-      "verificationMode": "workflow_smoke",
-      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
-      "testCaseId": "final Crash Log Scan Run contract",
-      "fixtureRefs": [
-        "tests/fixtures/crash_log_scan_run"
-      ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.formid_analyzer.validate_formids_batch@rust",
@@ -9516,7 +9592,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.version.version@rust",
@@ -9535,7 +9611,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.patterns.CRASH_LOG_PATTERN",
@@ -9554,7 +9630,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.gpu_detector.JsGpuInfo",
@@ -9573,7 +9649,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.parser.JsLogErrorEntry",
@@ -9592,7 +9668,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.parser.JsLogSegments",
@@ -9611,7 +9687,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.papyrus.JsPapyrusStats",
@@ -9630,7 +9706,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.settings_validator.checkXsePlugins",
@@ -9649,7 +9725,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.parser.parseXseLog",
@@ -9668,7 +9744,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:config.ConfigError@rust",
@@ -11320,6 +11396,159 @@
       "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookup",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookup",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookup",
+      "bindingIdentifier": "JsFormIdValueLookup",
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookupEntry",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookupEntry",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupEntry",
+      "bindingIdentifier": "JsFormIdValueLookupEntry",
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookupOutcome",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookupOutcome",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupOutcome",
+      "bindingIdentifier": "JsFormIdValueLookupOutcome",
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.formid_value_lookup.FormIdValueLookupOutcomeKind",
+      "trackedType": "contract_row",
+      "contractId": "database.formid_value_lookup.FormIdValueLookupOutcomeKind",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupOutcome",
+      "bindingIdentifier": "JsFormIdValueLookupOutcomeKind",
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.FormIdValueLookup@rust",
+      "trackedType": "contract_row",
+      "contractId": "database.FormIdValueLookup@rust",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookup@rust",
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.FormIdValueLookupEntry@rust",
+      "trackedType": "contract_row",
+      "contractId": "database.FormIdValueLookupEntry@rust",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupEntry@rust",
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.FormIdValueLookupError@rust",
+      "trackedType": "contract_row",
+      "contractId": "database.FormIdValueLookupError@rust",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupError@rust",
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.FormIdValueLookupInMemoryReply@rust",
+      "trackedType": "contract_row",
+      "contractId": "database.FormIdValueLookupInMemoryReply@rust",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupInMemoryReply@rust",
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
+      "trackedId": "contract:database.FormIdValueLookupOutcome@rust",
+      "trackedType": "contract_row",
+      "contractId": "database.FormIdValueLookupOutcome@rust",
+      "ownerModule": "database",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "FormIdValueLookupOutcome@rust",
+      "bindingIdentifier": null,
+      "coverageId": "node-tier1-database",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "database-tier1-parity",
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
+    },
+    {
       "trackedId": "contract:database.BATCH_CACHE_TTL_SECS@rust",
       "trackedType": "contract_row",
       "contractId": "database.BATCH_CACHE_TTL_SECS@rust",
@@ -11334,7 +11563,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.CacheEntry@rust",
@@ -11351,7 +11580,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.CacheKey@rust",
@@ -11368,7 +11597,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.DEFAULT_CACHE_TTL_SECS@rust",
@@ -11385,7 +11614,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.DatabaseError@rust",
@@ -11402,7 +11631,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.DatabasePool@rust",
@@ -11419,7 +11648,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MAX_CACHE_CLEANUP_INTERVAL_SECS@rust",
@@ -11436,7 +11665,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MAX_CACHE_CLEANUP_OP_THRESHOLD@rust",
@@ -11453,7 +11682,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MAX_CACHE_TTL_SECS@rust",
@@ -11470,7 +11699,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MAX_QUERY_CACHE_CAPACITY@rust",
@@ -11487,7 +11716,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MIN_CACHE_CLEANUP_INTERVAL_SECS@rust",
@@ -11504,7 +11733,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MIN_CACHE_CLEANUP_OP_THRESHOLD@rust",
@@ -11521,7 +11750,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.MIN_QUERY_CACHE_CAPACITY@rust",
@@ -11538,7 +11767,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:database.PoolStatistics@rust",
@@ -11555,7 +11784,7 @@
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
       "fixtureRefs": [],
-      "notes": null
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "trackedId": "contract:file_io.BackupType@rust",
@@ -15905,7 +16134,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.JsLogProcessor",
@@ -15924,7 +16153,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.JsLogger",
@@ -15943,7 +16172,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:scanlog.createLogger",
@@ -15962,7 +16191,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:aux.getApplicationDir",
@@ -15998,7 +16227,7 @@
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "trackedId": "contract:aux.setApplicationDir",
@@ -16271,6 +16500,101 @@
       "testCaseId": "scangame-tier1-parity",
       "fixtureRefs": [],
       "notes": null
+    },
+    {
+      "trackedId": "contract:config.local-ignore-reset-conflict-type",
+      "trackedType": "contract_row",
+      "contractId": "config.local-ignore-reset-conflict-type",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "LocalIgnoreResetConflict",
+      "bindingIdentifier": "JsLocalIgnoreResetConflict",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "trackedId": "contract:config.local-ignore-reset-outcome-type",
+      "trackedType": "contract_row",
+      "contractId": "config.local-ignore-reset-outcome-type",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "LocalIgnoreResetOutcome",
+      "bindingIdentifier": "JsLocalIgnoreResetOutcome",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "trackedId": "contract:config.local-ignore-reset-publication-stage-type",
+      "trackedType": "contract_row",
+      "contractId": "config.local-ignore-reset-publication-stage-type",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "LocalIgnoreResetPublicationStage",
+      "bindingIdentifier": "JsLocalIgnoreResetPublicationStage",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "trackedId": "contract:config.local-ignore-reset-result-type",
+      "trackedType": "contract_row",
+      "contractId": "config.local-ignore-reset-result-type",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "LocalIgnoreResetResult",
+      "bindingIdentifier": "JsLocalIgnoreResetResult",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
+    },
+    {
+      "trackedId": "contract:config.local-ignore-reset-status-type",
+      "trackedType": "contract_row",
+      "contractId": "config.local-ignore-reset-status-type",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "status": "matched",
+      "classification": "runtime_verified",
+      "rustSymbol": "LocalIgnoreResetOutcome",
+      "bindingIdentifier": "JsLocalIgnoreResetStatus",
+      "coverageId": "node-tier1-config",
+      "verificationMode": "workflow_smoke",
+      "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
+      "testCaseId": "config-tier1-parity",
+      "fixtureRefs": [
+        "configSourceCases"
+      ],
+      "notes": "Includes the 21 crashgen rule model symbols formerly tracked under node-tier1-crashgen-settings; merged in v9.1.0 Phase 2 when classic-crashgen-settings-core was absorbed into classic-config-core."
     },
     {
       "trackedId": "binding:JsCrashLogScanSettings",
@@ -17875,6 +18199,196 @@
       "notes": "Exercises typed plugin identities and occurrence counts, explicit-empty completed results, handle reuse without leaked evidence, absence of rendered report prose, and stable shared analyzer errors."
     },
     {
+      "trackedId": "binding:JsNamedRecordFinding",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsNamedRecordFinding",
+      "coverageId": "node-tier1-scanlog-named-record-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/named_record_finding_analyzer.spec.ts",
+      "testCaseId": "named-record-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises distinct typed records and occurrence counts, explicit-empty completed results, immutable handle reuse without leaked findings, absence of rendered report prose, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:JsNamedRecordFindingAnalysisInput",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsNamedRecordFindingAnalysisInput",
+      "coverageId": "node-tier1-scanlog-named-record-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/named_record_finding_analyzer.spec.ts",
+      "testCaseId": "named-record-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises distinct typed records and occurrence counts, explicit-empty completed results, immutable handle reuse without leaked findings, absence of rendered report prose, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:JsNamedRecordFindingAnalysisResult",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsNamedRecordFindingAnalysisResult",
+      "coverageId": "node-tier1-scanlog-named-record-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/named_record_finding_analyzer.spec.ts",
+      "testCaseId": "named-record-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises distinct typed records and occurrence counts, explicit-empty completed results, immutable handle reuse without leaked findings, absence of rendered report prose, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:NamedRecordFindingAnalyzer",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "NamedRecordFindingAnalyzer",
+      "coverageId": "node-tier1-scanlog-named-record-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/named_record_finding_analyzer.spec.ts",
+      "testCaseId": "named-record-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises distinct typed records and occurrence counts, explicit-empty completed results, immutable handle reuse without leaked findings, absence of rendered report prose, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:FormIdFindingAnalyzer",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "FormIdFindingAnalyzer",
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:JsFormIdFinding",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFormIdFinding",
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:JsFormIdFindingAnalysisInput",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFormIdFindingAnalysisInput",
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:JsFormIdFindingAnalysisResult",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFormIdFindingAnalysisResult",
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:JsFormIdPlugin",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFormIdPlugin",
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
+    },
+    {
+      "trackedId": "binding:JsFormIdValueLookupStatus",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsFormIdValueLookupStatus",
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
+    },
+    {
       "trackedId": "binding:JsConfigDuplicateDetector",
       "trackedType": "registry_only",
       "ownerModule": "config",
@@ -17949,6 +18463,234 @@
       "owner": null,
       "deferReason": null,
       "notes": null
+    },
+    {
+      "trackedId": "binding:InstalledYamlDataSnapshot",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "InstalledYamlDataSnapshot",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsInstalledYamlDataLoadOutcome",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsInstalledYamlDataLoadOutcome",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsInstalledYamlDataLoadRequest",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsInstalledYamlDataLoadRequest",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsInstalledYamlDataLoadStatus",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsInstalledYamlDataLoadStatus",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsLocalIgnoreResetConflict",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsLocalIgnoreResetConflict",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsLocalIgnoreResetOutcome",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsLocalIgnoreResetOutcome",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsLocalIgnoreResetPublicationStage",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsLocalIgnoreResetPublicationStage",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsLocalIgnoreResetResult",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsLocalIgnoreResetResult",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsLocalIgnoreResetStatus",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsLocalIgnoreResetStatus",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:JsLocalIgnoreYamlDataState",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsLocalIgnoreYamlDataState",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:LocalIgnoreRecoveryPlan",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "LocalIgnoreRecoveryPlan",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
+    },
+    {
+      "trackedId": "binding:loadInstalledYamlData",
+      "trackedType": "registry_only",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "loadInstalledYamlData",
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "trackedId": "binding:persistGameLocalPaths",
@@ -18236,6 +18978,30 @@
       "notes": "Covers the canonical hash cache stats DTO plus clear/reset helpers through direct hash cache lifecycle assertions."
     },
     {
+      "trackedId": "binding:JsInstalledYamlDataRunData",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsInstalledYamlDataRunData",
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "verificationMode": "cli_workflow",
+      "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
+    },
+    {
       "trackedId": "binding:JsScanRunConfiguration",
       "trackedType": "registry_only",
       "ownerModule": "scanlog",
@@ -18257,7 +19023,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunDiscoveryResult",
@@ -18281,7 +19047,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunEvent",
@@ -18305,7 +19071,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunSuccess",
@@ -18329,7 +19095,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunFailure",
@@ -18353,7 +19119,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunInfrastructureError",
@@ -18377,7 +19143,55 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
+    },
+    {
+      "trackedId": "binding:JsScanRunInstalledYamlDataDiagnostic",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsScanRunInstalledYamlDataDiagnostic",
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "verificationMode": "cli_workflow",
+      "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
+    },
+    {
+      "trackedId": "binding:JsScanRunInstalledYamlDataDiagnosticKind",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsScanRunInstalledYamlDataDiagnosticKind",
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "verificationMode": "cli_workflow",
+      "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunLogEvent",
@@ -18401,7 +19215,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunLogFailure",
@@ -18425,7 +19239,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunLogResult",
@@ -18449,7 +19263,31 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
+    },
+    {
+      "trackedId": "binding:JsScanRunLocalIgnoreState",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsScanRunLocalIgnoreState",
+      "coverageId": "node-tier2-scanlog-cli-runtime",
+      "verificationMode": "cli_workflow",
+      "testSuite": "node-bindings/classic-node/__test__/runtime.node.test.mjs",
+      "testCaseId": "scanlog-cli-runtime",
+      "fixtureRefs": [
+        "CLI_SAMPLE_LOG",
+        "MAIN_YAML",
+        "GAME_YAML",
+        "IGNORE_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunRejectedInput",
@@ -18473,7 +19311,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunResult",
@@ -18497,7 +19335,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunSetupCheck",
@@ -18521,7 +19359,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunSetupContext",
@@ -18545,7 +19383,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunSetupPathUpdate",
@@ -18569,7 +19407,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunSetupResult",
@@ -18593,7 +19431,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunStandardSource",
@@ -18617,7 +19455,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:JsScanRunTargetedSource",
@@ -18641,7 +19479,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:ScanRunCancellation",
@@ -18665,7 +19503,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:ScanRunRequest",
@@ -18689,7 +19527,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:ScanRunUnsolvedLogs",
@@ -18713,7 +19551,7 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
     },
     {
       "trackedId": "binding:scanRunExecute",
@@ -18737,7 +19575,95 @@
       "wave": null,
       "owner": null,
       "deferReason": null,
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
+    },
+    {
+      "trackedId": "binding:JsScanRunLocalIgnoreRecoveryDecision",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsScanRunLocalIgnoreRecoveryDecision",
+      "coverageId": "node-tier2-scanlog-local-ignore-recovery-runtime",
+      "verificationMode": "contract_test",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "shared Local Ignore recovery continuation retains snapshots and rejects replay",
+      "fixtureRefs": [
+        "MAIN_YAML",
+        "GAME_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises the opaque Local Ignore recovery continuation and both explicit decisions. Proceed Without Ignore retains discovery/snapshot identity without mutation. Reset To Default retains the same discovery and selected Main/game facts, exposes durable byte-exact backup and replacement metadata plus reset diagnostics, preserves conflict and backup failures as stable coded rejections, honors pre-reset cancellation without filesystem work, and proves cancellation after reset lock acquisition waits for durable repair before returning the normal cancelled result. The companion Rust adapter test projects replacement-publication failure through the same pure Node rejection metadata path. Replay remains typed and successful report output is byte-identical."
+    },
+    {
+      "trackedId": "binding:JsScanRunLocalIgnoreResetRunData",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "JsScanRunLocalIgnoreResetRunData",
+      "coverageId": "node-tier2-scanlog-local-ignore-recovery-runtime",
+      "verificationMode": "contract_test",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "shared Local Ignore recovery continuation retains snapshots and rejects replay",
+      "fixtureRefs": [
+        "MAIN_YAML",
+        "GAME_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises the opaque Local Ignore recovery continuation and both explicit decisions. Proceed Without Ignore retains discovery/snapshot identity without mutation. Reset To Default retains the same discovery and selected Main/game facts, exposes durable byte-exact backup and replacement metadata plus reset diagnostics, preserves conflict and backup failures as stable coded rejections, honors pre-reset cancellation without filesystem work, and proves cancellation after reset lock acquisition waits for durable repair before returning the normal cancelled result. The companion Rust adapter test projects replacement-publication failure through the same pure Node rejection metadata path. Replay remains typed and successful report output is byte-identical."
+    },
+    {
+      "trackedId": "binding:ScanRunContinuation",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "ScanRunContinuation",
+      "coverageId": "node-tier2-scanlog-local-ignore-recovery-runtime",
+      "verificationMode": "contract_test",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "shared Local Ignore recovery continuation retains snapshots and rejects replay",
+      "fixtureRefs": [
+        "MAIN_YAML",
+        "GAME_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises the opaque Local Ignore recovery continuation and both explicit decisions. Proceed Without Ignore retains discovery/snapshot identity without mutation. Reset To Default retains the same discovery and selected Main/game facts, exposes durable byte-exact backup and replacement metadata plus reset diagnostics, preserves conflict and backup failures as stable coded rejections, honors pre-reset cancellation without filesystem work, and proves cancellation after reset lock acquisition waits for durable repair before returning the normal cancelled result. The companion Rust adapter test projects replacement-publication failure through the same pure Node rejection metadata path. Replay remains typed and successful report output is byte-identical."
+    },
+    {
+      "trackedId": "binding:scanRunResume",
+      "trackedType": "registry_only",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "gapType": "registry_only",
+      "classification": "runtime_verified",
+      "rustSymbol": null,
+      "bindingIdentifier": "scanRunResume",
+      "coverageId": "node-tier2-scanlog-local-ignore-recovery-runtime",
+      "verificationMode": "contract_test",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "shared Local Ignore recovery continuation retains snapshots and rejects replay",
+      "fixtureRefs": [
+        "MAIN_YAML",
+        "GAME_YAML"
+      ],
+      "wave": null,
+      "owner": null,
+      "deferReason": null,
+      "notes": "Exercises the opaque Local Ignore recovery continuation and both explicit decisions. Proceed Without Ignore retains discovery/snapshot identity without mutation. Reset To Default retains the same discovery and selected Main/game facts, exposes durable byte-exact backup and replacement metadata plus reset diagnostics, preserves conflict and backup failures as stable coded rejections, honors pre-reset cancellation without filesystem work, and proves cancellation after reset lock acquisition waits for durable repair before returning the normal cancelled result. The companion Rust adapter test projects replacement-publication failure through the same pure Node rejection metadata path. Replay remains typed and successful report output is byte-identical."
     }
   ]
 }

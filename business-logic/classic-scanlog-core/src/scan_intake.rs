@@ -8,9 +8,10 @@ use crate::AnalysisConfig;
 use crate::error::{Result, ScanLogError};
 use crate::orchestrator::build_analysis_config_from_yaml;
 use crate::scan_sidecar_settings::{self, ScanSidecarSettings};
-use classic_config_core::YamlDataCore;
+use classic_config_core::{InstalledYamlDataSnapshot, YamlDataCore};
 use classic_database_core::{BATCH_CACHE_TTL_SECS, DatabasePool};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::Duration;
 
 /// Cache profile used by short native CLI/GUI scan sessions.
@@ -154,6 +155,8 @@ pub struct ScanReadyAnalysis {
     pub(crate) paths: Option<CrashLogScanIntakePaths>,
     /// Persistent Unsolved Logs Destination, when configured.
     pub(crate) unsolved_logs_destination: Option<PathBuf>,
+    /// Retained installed bytes whose parsed data backs this run's analysis configuration.
+    pub(crate) _installed_yaml_data_snapshot: Option<Arc<InstalledYamlDataSnapshot>>,
 }
 
 impl ScanReadyAnalysis {
@@ -163,6 +166,7 @@ impl ScanReadyAnalysis {
         cache_profile: ShortScanCacheProfile,
         paths: Option<CrashLogScanIntakePaths>,
         unsolved_logs_destination: Option<PathBuf>,
+        installed_yaml_data_snapshot: Option<Arc<InstalledYamlDataSnapshot>>,
     ) -> Self {
         Self {
             analysis_config,
@@ -170,6 +174,7 @@ impl ScanReadyAnalysis {
             cache_profile,
             paths,
             unsolved_logs_destination,
+            _installed_yaml_data_snapshot: installed_yaml_data_snapshot,
         }
     }
 
@@ -212,11 +217,26 @@ impl ScanReadyAnalysis {
     pub fn should_initialize_formid_database(&self) -> bool {
         self.formid_readiness.is_enabled() && !self.formid_readiness.database_paths().is_empty()
     }
+
+    /// Applies and retains the owned Installed YAML Data snapshot selected by recovery.
+    ///
+    /// Recovery preparation uses the plan's operation-scoped empty Ignore snapshot. Reset To
+    /// Default changes only that retained Ignore payload, so refresh the already prepared
+    /// analysis configuration from the accepted snapshot without reopening any selected path.
+    pub(crate) fn apply_recovered_installed_yaml_data_snapshot(
+        &mut self,
+        snapshot: Arc<InstalledYamlDataSnapshot>,
+    ) {
+        self.analysis_config.ignore_list = snapshot.yaml_data().ignore_list.clone();
+        self._installed_yaml_data_snapshot = Some(snapshot);
+    }
 }
 
 enum YamlDataSource<'a> {
     PathBacked,
     InMemory(&'a YamlDataCore),
+    InstalledSnapshot(Arc<InstalledYamlDataSnapshot>),
+    InstalledSnapshotBorrowed(&'a InstalledYamlDataSnapshot),
 }
 
 /// Prepares an existing Crash Log scan for analysis.
@@ -276,6 +296,58 @@ impl<'a> CrashLogScanIntake<'a> {
         }
     }
 
+    /// Creates intake from one immutable Installed YAML Data Snapshot.
+    ///
+    /// The snapshot remains owned by the prepared run so selected bytes cannot be replaced by
+    /// concurrent installation changes. Only non-YAML sidecar paths are derived from the one
+    /// installation root.
+    #[must_use]
+    pub fn from_installed_yaml_data(
+        snapshot: Arc<InstalledYamlDataSnapshot>,
+        installation_root: impl Into<PathBuf>,
+        selected_game_version: impl Into<String>,
+        options: CrashLogScanOptions,
+    ) -> Self {
+        let installation_root = installation_root.into();
+        let game = snapshot.game().as_str().to_string();
+        Self {
+            game,
+            selected_game_version: selected_game_version.into(),
+            options,
+            paths: Some(CrashLogScanIntakePaths::new(
+                installation_root.clone(),
+                installation_root.join("CLASSIC Data"),
+            )),
+            scan_facts: CrashLogScanFacts::default(),
+            yaml_source: YamlDataSource::InstalledSnapshot(snapshot),
+        }
+    }
+
+    /// Creates workspace-owned intake by borrowing a recovery plan's retained snapshot.
+    ///
+    /// The prepared result does not outlive the borrow through parsed references. The scan-run
+    /// continuation attaches the owned snapshot after its one-shot recovery decision is consumed.
+    pub(crate) fn from_recovery_snapshot(
+        snapshot: &'a InstalledYamlDataSnapshot,
+        installation_root: impl Into<PathBuf>,
+        selected_game_version: impl Into<String>,
+        options: CrashLogScanOptions,
+    ) -> Self {
+        let installation_root = installation_root.into();
+        let game = snapshot.game().as_str().to_string();
+        Self {
+            game,
+            selected_game_version: selected_game_version.into(),
+            options,
+            paths: Some(CrashLogScanIntakePaths::new(
+                installation_root.clone(),
+                installation_root.join("CLASSIC Data"),
+            )),
+            scan_facts: CrashLogScanFacts::default(),
+            yaml_source: YamlDataSource::InstalledSnapshotBorrowed(snapshot),
+        }
+    }
+
     /// Supplies typed scan facts already projected by the caller's User Settings adapter.
     ///
     /// These values replace all scan-intake interpretation of User Settings files.
@@ -298,7 +370,7 @@ impl<'a> CrashLogScanIntake<'a> {
     /// `ScanLogError::InvalidInput` when the typed Unsolved Logs Destination is
     /// relative.
     pub async fn prepare(&self) -> Result<ScanReadyAnalysis> {
-        let loaded_yaml = match self.yaml_source {
+        let loaded_yaml = match &self.yaml_source {
             YamlDataSource::PathBacked => {
                 let paths = self.paths.as_ref().ok_or_else(|| {
                     ScanLogError::Internal(
@@ -316,19 +388,39 @@ impl<'a> CrashLogScanIntake<'a> {
                     .map_err(|error| ScanLogError::ConfigError(error.to_string()))?,
                 )
             }
-            YamlDataSource::InMemory(_) => None,
+            YamlDataSource::InMemory(_)
+            | YamlDataSource::InstalledSnapshot(_)
+            | YamlDataSource::InstalledSnapshotBorrowed(_) => None,
         };
 
-        let yaml = match self.yaml_source {
+        let yaml = match &self.yaml_source {
             YamlDataSource::PathBacked => loaded_yaml.as_ref().ok_or_else(|| {
                 ScanLogError::Internal("path-backed YAML Data was not loaded".to_string())
             })?,
-            YamlDataSource::InMemory(yaml) => yaml,
+            YamlDataSource::InMemory(yaml) => *yaml,
+            YamlDataSource::InstalledSnapshot(snapshot) => snapshot.yaml_data(),
+            YamlDataSource::InstalledSnapshotBorrowed(snapshot) => snapshot.yaml_data(),
         };
 
-        let sidecar_settings = match self.paths.as_ref() {
-            Some(paths) => ScanSidecarSettings::load(paths, &self.game, &self.scan_facts)?,
-            None => ScanSidecarSettings::from_scan_facts(&self.scan_facts)?,
+        let sidecar_settings = match (&self.yaml_source, self.paths.as_ref()) {
+            (YamlDataSource::InstalledSnapshot(snapshot), Some(paths)) => {
+                ScanSidecarSettings::from_installed_snapshot(
+                    paths,
+                    &self.game,
+                    &self.scan_facts,
+                    snapshot.simplify_remove_list(),
+                )?
+            }
+            (YamlDataSource::InstalledSnapshotBorrowed(snapshot), Some(paths)) => {
+                ScanSidecarSettings::from_installed_snapshot(
+                    paths,
+                    &self.game,
+                    &self.scan_facts,
+                    snapshot.simplify_remove_list(),
+                )?
+            }
+            (_, Some(paths)) => ScanSidecarSettings::load(paths, &self.game, &self.scan_facts)?,
+            (_, None) => ScanSidecarSettings::from_scan_facts(&self.scan_facts)?,
         };
         let ScanSidecarSettings {
             remove_list,
@@ -356,6 +448,12 @@ impl<'a> CrashLogScanIntake<'a> {
             SHORT_SCAN_CACHE_PROFILE,
             self.paths.clone(),
             unsolved_logs_destination,
+            match &self.yaml_source {
+                YamlDataSource::InstalledSnapshot(snapshot) => Some(Arc::clone(snapshot)),
+                YamlDataSource::PathBacked
+                | YamlDataSource::InMemory(_)
+                | YamlDataSource::InstalledSnapshotBorrowed(_) => None,
+            },
         ))
     }
 }

@@ -4,6 +4,10 @@
 //! the complete scan lifecycle in `classic-scanlog-core`.
 
 use crate::fcx_handler::PyConfigIssue;
+use classic_config_core::{
+    InspectedYamlDataFile, InstalledYamlDataProvenance, InstalledYamlDataRole,
+    YamlDataContentIdentity,
+};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanFacts,
@@ -12,17 +16,44 @@ use classic_scanlog_core::{
 };
 use classic_shared::without_gil_block_on;
 use classic_shared_core::GameId;
-use pyo3::exceptions::PyValueError;
+use pyo3::create_exception;
+use pyo3::exceptions::{PyRuntimeError, PyTypeError, PyValueError};
 use pyo3::prelude::*;
+use pyo3::types::PyModule;
 use std::path::PathBuf;
+use std::sync::Arc;
+
+create_exception!(
+    classic_scanlog,
+    ScanRunContinuationConsumedError,
+    PyRuntimeError,
+    "A Crash Log Scan Run continuation was already consumed."
+);
+create_exception!(
+    classic_scanlog,
+    ScanRunLocalIgnoreResetConflictError,
+    PyRuntimeError,
+    "Local Ignore reset conflicted with current canonical state."
+);
+create_exception!(
+    classic_scanlog,
+    ScanRunLocalIgnoreResetBackupError,
+    PyRuntimeError,
+    "Local Ignore reset failed before replacement could safely begin."
+);
+create_exception!(
+    classic_scanlog,
+    ScanRunLocalIgnoreResetReplacementError,
+    PyRuntimeError,
+    "Local Ignore reset failed while publishing retained defaults."
+);
 
 /// Explicit configuration shared by Standard and Targeted requests.
 #[pyclass(name = "ScanRunConfiguration", from_py_object)]
 #[derive(Clone)]
 pub struct PyScanRunConfiguration {
-    yaml_dir_root: String,
-    yaml_dir_data: String,
-    game: String,
+    installation_root: String,
+    game: classic_shared_core::GameId,
     game_version: String,
     show_formid_values: bool,
     simplify_logs: bool,
@@ -34,32 +65,63 @@ pub struct PyScanRunConfiguration {
 #[pymethods]
 impl PyScanRunConfiguration {
     /// Creates explicit scan facts without reopening User Settings.
+    ///
+    /// `game` must be one of the typed values exported by `classic_shared.GameId`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `TypeError` for another Python type, `ValueError` for an unrecognized typed value,
+    /// or the underlying import error when `classic_shared` is unavailable.
     #[new]
-    #[pyo3(signature = (yaml_dir_root, yaml_dir_data, game, game_version, show_formid_values, simplify_logs, formid_database_paths, unsolved_logs_destination=None, max_concurrent=None))]
+    #[pyo3(signature = (installation_root, game, game_version, show_formid_values, simplify_logs, formid_database_paths, unsolved_logs_destination=None, max_concurrent=None))]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        yaml_dir_root: String,
-        yaml_dir_data: String,
-        game: String,
+        installation_root: String,
+        game: &Bound<'_, PyAny>,
         game_version: String,
         show_formid_values: bool,
         simplify_logs: bool,
         formid_database_paths: Vec<String>,
         unsolved_logs_destination: Option<String>,
         max_concurrent: Option<usize>,
-    ) -> Self {
-        Self {
-            yaml_dir_root,
-            yaml_dir_data,
-            game,
+    ) -> PyResult<Self> {
+        Ok(Self {
+            installation_root,
+            game: typed_game_id_to_core(game)?,
             game_version,
             show_formid_values,
             simplify_logs,
             formid_database_paths,
             unsolved_logs_destination,
             max_concurrent,
+        })
+    }
+}
+
+/// Converts an authentic `classic_shared.GameId` without reparsing its display text.
+fn typed_game_id_to_core(game: &Bound<'_, PyAny>) -> PyResult<GameId> {
+    let shared = PyModule::import(game.py(), "classic_shared")?;
+    let game_id_type = shared.getattr("GameId")?;
+    if !game.is_instance(&game_id_type)? {
+        return Err(PyTypeError::new_err(
+            "game must be an instance of classic_shared.GameId",
+        ));
+    }
+
+    for (attribute, core) in [
+        ("Fallout4", GameId::Fallout4),
+        ("Fallout4VR", GameId::Fallout4VR),
+        ("Skyrim", GameId::Skyrim),
+        ("Starfield", GameId::Starfield),
+    ] {
+        if game.eq(game_id_type.getattr(attribute)?)? {
+            return Ok(core);
         }
     }
+
+    Err(PyValueError::new_err(
+        "game is not a recognized classic_shared.GameId value",
+    ))
 }
 
 /// Standard discovery inputs for one scan run.
@@ -612,13 +674,137 @@ impl PyScanRunLogResult {
     }
 }
 
-/// Complete terminal Crash Log Scan Run result.
-#[pyclass(name = "ScanRunResult", from_py_object)]
+/// Exact-byte identity retained for one Installed YAML Data file in this scan run.
+#[pyclass(name = "ScanRunYamlDataContentIdentity", frozen, skip_from_py_object)]
 #[derive(Clone)]
+pub struct PyScanRunYamlDataContentIdentity {
+    /// Lowercase hexadecimal SHA-256 digest of the retained bytes.
+    #[pyo3(get)]
+    sha256: String,
+    /// Number of retained bytes represented by this identity.
+    #[pyo3(get)]
+    byte_len: u64,
+}
+
+/// Selected metadata for one update-eligible Main or game YAML Data file.
+#[pyclass(name = "ScanRunInspectedYamlDataFile", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunInspectedYamlDataFile {
+    /// `main` or `game` role token.
+    #[pyo3(get)]
+    role: String,
+    /// `updated`, `previous`, or `bundled` source token.
+    #[pyo3(get)]
+    provenance: String,
+    /// Breaking-change component of the compatible schema version.
+    #[pyo3(get)]
+    schema_major: u32,
+    /// Additive-change component of the compatible schema version.
+    #[pyo3(get)]
+    schema_minor: u32,
+    /// Lowercase hexadecimal SHA-256 digest of the selected exact bytes.
+    #[pyo3(get)]
+    sha256: String,
+    /// Length of the selected exact bytes.
+    #[pyo3(get)]
+    byte_length: u64,
+}
+
+/// One structured selection, fallback, validation, or generation diagnostic.
+#[pyclass(
+    name = "ScanRunInstalledYamlDataDiagnostic",
+    frozen,
+    skip_from_py_object
+)]
+#[derive(Clone)]
+pub struct PyScanRunInstalledYamlDataDiagnostic {
+    /// Affected update-eligible role token when applicable.
+    #[pyo3(get)]
+    role: Option<String>,
+    /// Candidate provenance token when an installed candidate was involved.
+    #[pyo3(get)]
+    candidate: Option<String>,
+    /// Affected path when the diagnostic is path-attributable.
+    #[pyo3(get)]
+    path: Option<PathBuf>,
+    /// Stable snake-case diagnostic category.
+    #[pyo3(get)]
+    kind: String,
+    /// Actionable human-readable explanation.
+    #[pyo3(get)]
+    message: String,
+}
+
+/// Installed YAML Data metadata retained from one immutable scan-run snapshot.
+#[pyclass(name = "ScanRunInstalledYamlDataRunData", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunInstalledYamlDataRunData {
+    /// Selected Main file schema, identity, and provenance.
+    #[pyo3(get)]
+    main: PyScanRunInspectedYamlDataFile,
+    /// Selected game file schema, identity, and provenance.
+    #[pyo3(get)]
+    game_file: PyScanRunInspectedYamlDataFile,
+    /// Stable token describing how Local Ignore entered the snapshot.
+    #[pyo3(get)]
+    local_ignore_state: String,
+    /// Identity derived from the exact retained Local Ignore bytes.
+    #[pyo3(get)]
+    local_ignore_identity: PyScanRunYamlDataContentIdentity,
+    /// Structured fallback, validation, and generation diagnostics.
+    #[pyo3(get)]
+    diagnostics: Vec<PyScanRunInstalledYamlDataDiagnostic>,
+    /// Durable reset metadata populated only after successful Reset To Default resume.
+    #[pyo3(get)]
+    local_ignore_reset: Option<PyScanRunLocalIgnoreResetRunData>,
+}
+
+/// Durable backup and replacement metadata from successful Reset To Default resume.
+#[pyclass(name = "ScanRunLocalIgnoreResetRunData", frozen, skip_from_py_object)]
+#[derive(Clone)]
+pub struct PyScanRunLocalIgnoreResetRunData {
+    #[pyo3(get)]
+    local_ignore_path: PathBuf,
+    #[pyo3(get)]
+    backup_path: PathBuf,
+    #[pyo3(get)]
+    malformed_identity: PyScanRunYamlDataContentIdentity,
+    #[pyo3(get)]
+    backup_identity: PyScanRunYamlDataContentIdentity,
+    #[pyo3(get)]
+    replacement_identity: PyScanRunYamlDataContentIdentity,
+}
+
+/// Explicit Local Ignore recovery decisions owned by Rust scan coordination.
+#[pyclass(
+    name = "ScanRunLocalIgnoreRecoveryDecision",
+    eq,
+    eq_int,
+    frozen,
+    from_py_object
+)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PyScanRunLocalIgnoreRecoveryDecision {
+    /// Resume with an empty ignore list scoped only to the retained run.
+    ProceedWithoutIgnore = 0,
+    /// Durably reset malformed Local Ignore, then resume the retained run.
+    ResetToDefault = 1,
+}
+
+/// Opaque process-local carrier for one paused Crash Log Scan Run.
+#[pyclass(name = "ScanRunContinuation", frozen, skip_from_py_object)]
+pub struct PyScanRunContinuation {
+    inner: Arc<contract::CrashLogScanRunContinuation>,
+}
+
+/// Complete terminal Crash Log Scan Run result.
+#[pyclass(name = "ScanRunResult", skip_from_py_object)]
 pub struct PyScanRunResult {
     status: String,
     discovery: Option<PyScanRunDiscoveryResult>,
     setup: Option<PyScanRunSetupResult>,
+    installed_yaml_data: Option<PyScanRunInstalledYamlDataRunData>,
+    continuation: Option<Py<PyScanRunContinuation>>,
     effective_concurrency: Option<usize>,
     message: Option<String>,
     total: usize,
@@ -646,6 +832,20 @@ impl PyScanRunResult {
     #[getter]
     pub fn setup(&self) -> Option<PyScanRunSetupResult> {
         self.setup.clone()
+    }
+
+    /// Returns Installed YAML Data metadata when intake selected a snapshot.
+    #[getter]
+    pub fn installed_yaml_data(&self) -> Option<PyScanRunInstalledYamlDataRunData> {
+        self.installed_yaml_data.clone()
+    }
+
+    /// Returns the opaque one-shot continuation for Local Ignore Recovery Required.
+    #[getter]
+    pub fn continuation(&self, py: Python<'_>) -> Option<Py<PyScanRunContinuation>> {
+        self.continuation
+            .as_ref()
+            .map(|continuation| continuation.clone_ref(py))
     }
 
     /// Returns Rust-selected concurrency once scheduling was reached.
@@ -810,10 +1010,9 @@ impl PyScanRunEvent {
 }
 
 /// Final operation envelope with independent adapter observation failure data.
-#[pyclass(name = "ScanRunExecution", from_py_object)]
-#[derive(Clone)]
+#[pyclass(name = "ScanRunExecution", skip_from_py_object)]
 pub struct PyScanRunExecution {
-    result: Option<PyScanRunResult>,
+    result: Option<Py<PyScanRunResult>>,
     error: Option<PyScanRunInfrastructureError>,
     observer_error: Option<String>,
 }
@@ -822,8 +1021,8 @@ pub struct PyScanRunExecution {
 impl PyScanRunExecution {
     /// Returns a terminal result when core execution succeeded.
     #[getter]
-    pub fn result(&self) -> Option<PyScanRunResult> {
-        self.result.clone()
+    pub fn result(&self, py: Python<'_>) -> Option<Py<PyScanRunResult>> {
+        self.result.as_ref().map(|result| result.clone_ref(py))
     }
 
     /// Returns a typed infrastructure failure when no result could be produced.
@@ -841,15 +1040,9 @@ impl PyScanRunExecution {
 
 /// Converts explicit Python configuration into the final core contract.
 fn configuration_to_core(value: &PyScanRunConfiguration) -> PyResult<contract::Configuration> {
-    let game = value
-        .game
-        .parse::<GameId>()
-        .map_err(|error| PyValueError::new_err(error.to_string()))?;
-
     Ok(contract::Configuration {
-        yaml_dir_root: required_path(value.yaml_dir_root.clone(), "yaml_dir_root")?,
-        yaml_dir_data: required_path(value.yaml_dir_data.clone(), "yaml_dir_data")?,
-        game,
+        installation_root: required_path(value.installation_root.clone(), "installation_root")?,
+        game: value.game,
         game_version: value.game_version.clone(),
         options: contract::Options::new(value.show_formid_values, value.simplify_logs),
         scan_facts: CrashLogScanFacts {
@@ -1022,26 +1215,162 @@ fn run_status_to_string(value: CrashLogScanRunStatus) -> String {
         CrashLogScanRunStatus::Completed => "completed",
         CrashLogScanRunStatus::NoCrashLogsFound => "no_crash_logs_found",
         CrashLogScanRunStatus::SetupFailed => "setup_failed",
+        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired => "local_ignore_recovery_required",
         CrashLogScanRunStatus::CancelledBeforeDiscovery => "cancelled_before_discovery",
         CrashLogScanRunStatus::Cancelled => "cancelled",
     }
     .to_string()
 }
 
-/// Maps the complete terminal result including Rust-selected concurrency.
-fn run_result_to_py(value: contract::RunResult) -> PyScanRunResult {
-    PyScanRunResult {
-        status: run_status_to_string(value.status),
-        discovery: value.discovery.map(discovery_to_py),
-        setup: value.setup.map(setup_to_py),
-        effective_concurrency: value.effective_concurrency,
-        message: value.message,
-        total: value.total,
-        succeeded: value.succeeded,
-        failed: value.failed,
-        cancelled: value.cancelled,
-        logs: value.logs.into_iter().map(log_result_to_py).collect(),
+/// Returns the stable Python token for one selected Installed YAML Data role.
+const fn installed_yaml_data_role_to_string(value: InstalledYamlDataRole) -> &'static str {
+    match value {
+        InstalledYamlDataRole::Main => "main",
+        InstalledYamlDataRole::Game => "game",
     }
+}
+
+/// Returns the stable Python token for one selected candidate provenance.
+const fn installed_yaml_data_provenance_to_string(
+    value: InstalledYamlDataProvenance,
+) -> &'static str {
+    match value {
+        InstalledYamlDataProvenance::Updated => "updated",
+        InstalledYamlDataProvenance::Previous => "previous",
+        InstalledYamlDataProvenance::Bundled => "bundled",
+    }
+}
+
+/// Returns the stable Python token for every valid-or-generated diagnostic kind.
+const fn installed_yaml_data_diagnostic_kind_to_string(
+    value: contract::InstalledYamlDataRunDiagnosticKind,
+) -> &'static str {
+    use contract::InstalledYamlDataRunDiagnosticKind as Kind;
+    match value {
+        Kind::CacheUnavailable => "cache_unavailable",
+        Kind::Missing => "missing",
+        Kind::Read => "read",
+        Kind::InvalidUtf8 => "invalid_utf8",
+        Kind::Parse => "parse",
+        Kind::InvalidSchema => "invalid_schema",
+        Kind::IncompatibleSchema => "incompatible_schema",
+        Kind::InvalidRoleData => "invalid_role_data",
+        Kind::LocalIgnoreGenerated => "local_ignore_generated",
+        Kind::LocalIgnoreReset => "local_ignore_reset",
+    }
+}
+
+/// Returns the stable Python token for every scan-run Local Ignore state.
+const fn local_ignore_state_to_string(value: contract::LocalIgnoreRunState) -> &'static str {
+    match value {
+        contract::LocalIgnoreRunState::Existing => "existing",
+        contract::LocalIgnoreRunState::Generated => "generated",
+        contract::LocalIgnoreRunState::RecoveryRequired => "recovery_required",
+        contract::LocalIgnoreRunState::ProceedWithoutIgnore => "proceed_without_ignore",
+        contract::LocalIgnoreRunState::ResetToDefault => "reset_to_default",
+    }
+}
+
+/// Projects selected file metadata with the same shape as `classic_config`.
+fn installed_yaml_data_file_to_py(value: InspectedYamlDataFile) -> PyScanRunInspectedYamlDataFile {
+    let schema = value.schema_version();
+    PyScanRunInspectedYamlDataFile {
+        role: installed_yaml_data_role_to_string(value.role()).to_string(),
+        provenance: installed_yaml_data_provenance_to_string(value.provenance()).to_string(),
+        schema_major: schema.major,
+        schema_minor: schema.minor,
+        sha256: value.identity().sha256_hex(),
+        byte_length: value.identity().byte_len(),
+    }
+}
+
+/// Projects an exact-byte identity with the same shape as `classic_config`.
+fn installed_yaml_data_identity_to_py(
+    value: YamlDataContentIdentity,
+) -> PyScanRunYamlDataContentIdentity {
+    PyScanRunYamlDataContentIdentity {
+        sha256: value.sha256_hex(),
+        byte_len: value.byte_len(),
+    }
+}
+
+/// Projects one diagnostic without collapsing optional attribution fields.
+fn installed_yaml_data_diagnostic_to_py(
+    value: contract::InstalledYamlDataRunDiagnostic,
+) -> PyScanRunInstalledYamlDataDiagnostic {
+    PyScanRunInstalledYamlDataDiagnostic {
+        role: value
+            .role()
+            .map(installed_yaml_data_role_to_string)
+            .map(str::to_string),
+        candidate: value
+            .candidate()
+            .map(installed_yaml_data_provenance_to_string)
+            .map(str::to_string),
+        path: value.path().map(PathBuf::from),
+        kind: installed_yaml_data_diagnostic_kind_to_string(value.kind()).to_string(),
+        message: value.message().to_string(),
+    }
+}
+
+/// Projects run-scoped Installed YAML Data metadata exhaustively.
+fn installed_yaml_data_to_py(
+    value: contract::InstalledYamlDataRunData,
+) -> PyScanRunInstalledYamlDataRunData {
+    PyScanRunInstalledYamlDataRunData {
+        main: installed_yaml_data_file_to_py(value.main),
+        game_file: installed_yaml_data_file_to_py(value.game_file),
+        local_ignore_state: local_ignore_state_to_string(value.local_ignore_state).to_string(),
+        local_ignore_identity: installed_yaml_data_identity_to_py(value.local_ignore_identity),
+        diagnostics: value
+            .diagnostics
+            .into_iter()
+            .map(installed_yaml_data_diagnostic_to_py)
+            .collect(),
+        local_ignore_reset: value.local_ignore_reset.map(|reset| {
+            PyScanRunLocalIgnoreResetRunData {
+                local_ignore_path: reset.local_ignore_path,
+                backup_path: reset.backup_path,
+                malformed_identity: installed_yaml_data_identity_to_py(reset.malformed_identity),
+                backup_identity: installed_yaml_data_identity_to_py(reset.backup_identity),
+                replacement_identity: installed_yaml_data_identity_to_py(
+                    reset.replacement_identity,
+                ),
+            }
+        }),
+    }
+}
+
+/// Maps the complete terminal result while preserving one opaque continuation object.
+fn run_result_to_py(py: Python<'_>, value: contract::RunResult) -> PyResult<Py<PyScanRunResult>> {
+    let continuation = value
+        .continuation
+        .map(|continuation| {
+            Py::new(
+                py,
+                PyScanRunContinuation {
+                    inner: Arc::new(continuation),
+                },
+            )
+        })
+        .transpose()?;
+    Py::new(
+        py,
+        PyScanRunResult {
+            status: run_status_to_string(value.status),
+            discovery: value.discovery.map(discovery_to_py),
+            setup: value.setup.map(setup_to_py),
+            installed_yaml_data: value.installed_yaml_data.map(installed_yaml_data_to_py),
+            continuation,
+            effective_concurrency: value.effective_concurrency,
+            message: value.message,
+            total: value.total,
+            succeeded: value.succeeded,
+            failed: value.failed,
+            cancelled: value.cancelled,
+            logs: value.logs.into_iter().map(log_result_to_py).collect(),
+        },
+    )
 }
 
 /// Maps every typed run-wide error field, including its optional path.
@@ -1212,7 +1541,7 @@ pub fn scan_run_execute(
     let (result, observer_error) = result;
     Ok(match result {
         Ok(result) => PyScanRunExecution {
-            result: Some(run_result_to_py(result)),
+            result: Some(run_result_to_py(py, result)?),
             error: None,
             observer_error,
         },
@@ -1222,6 +1551,136 @@ pub fn scan_run_execute(
             observer_error,
         },
     })
+}
+
+/// Converts scan-run reset outcomes into stable Python exception subclasses and metadata.
+fn scan_run_reset_error_to_py(py: Python<'_>, error: contract::ResumeError) -> PyErr {
+    let code = error.kind().as_str();
+    let message = error.to_string();
+    match error {
+        contract::ResumeError::LocalIgnoreResetConflict(conflict) => {
+            let py_error = ScanRunLocalIgnoreResetConflictError::new_err(message);
+            let value = py_error.value(py);
+            value
+                .setattr("code", code)
+                .and_then(|()| value.setattr("kind", code))
+                .and_then(|()| {
+                    value.setattr(
+                        "expected_identity",
+                        installed_yaml_data_identity_to_py(conflict.expected_identity),
+                    )
+                })
+                .and_then(|()| {
+                    value.setattr(
+                        "actual_identity",
+                        conflict
+                            .actual_identity
+                            .map(installed_yaml_data_identity_to_py),
+                    )
+                })
+                .and_then(|()| value.setattr("backup_path", conflict.backup_path))
+                .expect("scan-run reset conflict exceptions must accept contract attributes");
+            py_error
+        }
+        contract::ResumeError::LocalIgnoreResetBackupFailure(failure) => {
+            let py_error = ScanRunLocalIgnoreResetBackupError::new_err(message);
+            let value = py_error.value(py);
+            value
+                .setattr("code", code)
+                .and_then(|()| value.setattr("kind", code))
+                .and_then(|()| value.setattr("path", failure.path))
+                .and_then(|()| value.setattr("stage", failure.stage.map(|stage| stage.as_str())))
+                .expect("scan-run reset backup exceptions must accept contract attributes");
+            py_error
+        }
+        contract::ResumeError::LocalIgnoreResetReplacementFailure(failure) => {
+            let py_error = ScanRunLocalIgnoreResetReplacementError::new_err(message);
+            let value = py_error.value(py);
+            value
+                .setattr("code", code)
+                .and_then(|()| value.setattr("kind", code))
+                .and_then(|()| value.setattr("path", failure.path))
+                .and_then(|()| value.setattr("stage", failure.stage.map(|stage| stage.as_str())))
+                .expect("scan-run reset replacement exceptions must accept contract attributes");
+            py_error
+        }
+        contract::ResumeError::ContinuationConsumed | contract::ResumeError::Infrastructure(_) => {
+            unreachable!("non-reset resume errors are handled before reset exception projection")
+        }
+    }
+}
+
+/// Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
+///
+/// The GIL is released while the shared runtime executes. Sequential or concurrent replay raises
+/// [`ScanRunContinuationConsumedError`] with code `scan_run_continuation_consumed`. Reset conflict,
+/// backup failure, and replacement failure raise their dedicated typed exceptions with applicable
+/// identity, path, and publication-stage metadata. Resumed infrastructure failures retain the same
+/// execution envelope as [`scan_run_execute`].
+#[pyfunction]
+#[pyo3(signature = (continuation, decision, cancellation, observer=None, cancel_on_observer_error=false))]
+pub fn scan_run_resume(
+    py: Python<'_>,
+    continuation: PyRef<'_, PyScanRunContinuation>,
+    decision: PyScanRunLocalIgnoreRecoveryDecision,
+    cancellation: PyRef<'_, PyScanRunCancellation>,
+    observer: Option<Py<PyAny>>,
+    cancel_on_observer_error: bool,
+) -> PyResult<PyScanRunExecution> {
+    let continuation = Arc::clone(&continuation.inner);
+    let cancellation = cancellation.inner.clone();
+    let decision = match decision {
+        PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore => {
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        }
+        PyScanRunLocalIgnoreRecoveryDecision::ResetToDefault => {
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault
+        }
+    };
+    let (result, observer_error) = without_gil_block_on(py, || async move {
+        let mut observer = observer.map(|callback| PyObserverAdapter {
+            callback,
+            cancellation: cancellation.clone(),
+            cancel_on_error: cancel_on_observer_error,
+            delivery_error: None,
+            delivery_failed: false,
+        });
+        let result = continuation
+            .resume(
+                decision,
+                &cancellation,
+                observer
+                    .as_mut()
+                    .map(|adapter| adapter as &mut dyn contract::Observer),
+            )
+            .await;
+        let observer_error = observer.and_then(|adapter| adapter.delivery_error);
+        (result, observer_error)
+    });
+
+    match result {
+        Ok(result) => Ok(PyScanRunExecution {
+            result: Some(run_result_to_py(py, result)?),
+            error: None,
+            observer_error,
+        }),
+        Err(contract::ResumeError::Infrastructure(error)) => Ok(PyScanRunExecution {
+            result: None,
+            error: Some(infrastructure_error_to_py(error)),
+            observer_error,
+        }),
+        Err(contract::ResumeError::ContinuationConsumed) => {
+            let py_error = PyErr::new::<ScanRunContinuationConsumedError, _>(
+                "Crash Log Scan Run continuation was already consumed",
+            );
+            // The typed exception remains authoritative if Python rejects optional metadata.
+            let _ = py_error
+                .value(py)
+                .setattr("code", "scan_run_continuation_consumed");
+            Err(py_error)
+        }
+        Err(error) => Err(scan_run_reset_error_to_py(py, error)),
+    }
 }
 
 // Keep the repository's required sibling-test declaration intact under rustfmt.

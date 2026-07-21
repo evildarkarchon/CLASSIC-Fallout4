@@ -10,14 +10,18 @@
 #include "scan_run_fixture_config.h"
 
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <thread>
 #include <vector>
 
 namespace {
@@ -25,6 +29,14 @@ namespace {
 namespace fs = std::filesystem;
 namespace scanner = classic::scanner;
 namespace fixture = classic::scan_run_fixture;
+
+/// Executes an opaque bridge operation and moves out its typed terminal envelope.
+scanner::ScanRunContractExecutionResult execute_result(
+    const scanner::ScanRunRequest& request, const scanner::ScanRunCancellation& cancellation,
+    const scanner::ScanRunObserver* observer) {
+    auto operation = scanner::scan_run_contract_execute(request, cancellation, observer);
+    return scanner::scan_run_contract_execution_take_result(*operation);
+}
 
 const fs::path SHARED_FIXTURE_ROOT = fs::path(CLASSIC_REPO_ROOT) / "tests" / "fixtures" / "crash_log_scan_run";
 
@@ -90,9 +102,8 @@ private:
 /// Builds the smallest valid shared configuration needed to reach discovery.
 scanner::ScanRunConfigurationDto make_configuration(const fs::path& root) {
     scanner::ScanRunConfigurationDto configuration{};
-    configuration.yaml_dir_root = root.string();
-    configuration.yaml_dir_data = (root / "CLASSIC Data").string();
-    configuration.game = "Fallout4";
+    configuration.installation_root = root.string();
+    configuration.game = scanner::ScanRunGameId::Fallout4;
     configuration.game_version = "auto";
     return configuration;
 }
@@ -101,7 +112,8 @@ scanner::ScanRunConfigurationDto make_configuration(const fs::path& root) {
 void copy_shared_yaml_tree(const fs::path& root) {
     const auto database = root / "CLASSIC Data" / "databases";
     fs::create_directories(database);
-    fs::copy_file(SHARED_FIXTURE_ROOT / "CLASSIC Ignore.yaml", root / "CLASSIC Ignore.yaml");
+    fs::copy_file(SHARED_FIXTURE_ROOT / "CLASSIC Data" / "CLASSIC Ignore.yaml",
+                  root / "CLASSIC Data" / "CLASSIC Ignore.yaml");
     fs::copy_file(SHARED_FIXTURE_ROOT / "CLASSIC Data" / "databases" / "CLASSIC Main.yaml",
                   database / "CLASSIC Main.yaml");
     fs::copy_file(SHARED_FIXTURE_ROOT / "CLASSIC Data" / "databases" / "CLASSIC Fallout4.yaml",
@@ -114,6 +126,15 @@ fs::path copy_shared_log(const fs::path& root, const fs::path& relative) {
     fs::create_directories(destination.parent_path());
     fs::copy_file(SHARED_FIXTURE_ROOT / "valid-crash.log", destination);
     return destination;
+}
+
+/// Reads one generated report or retained YAML file as exact binary bytes.
+std::string read_file_bytes(const fs::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        throw std::runtime_error("cannot read fixture output: " + path.string());
+    }
+    return {std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>()};
 }
 
 /// Converts a generated CXX string into the native filesystem representation.
@@ -270,12 +291,17 @@ TEST_CASE("CXX executes the shared Standard fixture with Rust-owned facts", "[br
     const auto cancellation = scanner::scan_run_cancellation_new();
     const RecordingObserver observer;
 
-    const auto execution = scanner::scan_run_contract_execute(*request, *cancellation, &observer);
+    const auto execution = execute_result(*request, *cancellation, &observer);
 
     INFO("scan-run error: " << std::string(execution.error.message));
     REQUIRE(execution.has_result);
     REQUIRE_FALSE(execution.has_error);
     REQUIRE(execution.result.status == scanner::ScanRunContractStatus::Completed);
+    REQUIRE(execution.result.has_installed_yaml_data);
+    REQUIRE(execution.result.installed_yaml_data.main.role == scanner::ScanRunInstalledYamlDataRole::Main);
+    REQUIRE(execution.result.installed_yaml_data.game_file.role == scanner::ScanRunInstalledYamlDataRole::Game);
+    REQUIRE(execution.result.installed_yaml_data.local_ignore_state ==
+            scanner::ScanRunLocalIgnoreYamlDataState::Existing);
     REQUIRE(source_name(execution.result.discovery.source) == fixture::STANDARD_SOURCE);
     REQUIRE(execution.result.discovery.accepted_logs.size() == fixture::STANDARD_LOGS.size());
     for (std::size_t index = 0; index < fixture::STANDARD_LOGS.size(); ++index) {
@@ -323,7 +349,7 @@ TEST_CASE("CXX executes the shared Targeted fixture without Unsolved Logs moveme
     }
     const auto request = scanner::scan_run_request_targeted(configuration, source);
 
-    const auto execution = scanner::scan_run_contract_execute(*request, *scanner::scan_run_cancellation_new(), nullptr);
+    const auto execution = execute_result(*request, *scanner::scan_run_cancellation_new(), nullptr);
 
     INFO("scan-run error: " << std::string(execution.error.message));
     REQUIRE(execution.has_result);
@@ -354,6 +380,290 @@ TEST_CASE("CXX executes the shared Targeted fixture without Unsolved Logs moveme
     REQUIRE_FALSE(fs::exists(temporary.path() / "Unsolved Logs"));
 }
 
+TEST_CASE("CXX final result preserves generated Local Ignore metadata and diagnostics", "[bridge][scan-run][parity]") {
+    TemporaryDirectory temporary;
+    copy_shared_yaml_tree(temporary.path());
+    fs::remove(temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml");
+    const auto crash_log = copy_shared_log(temporary.path(), "crash-generated-ignore.log");
+    scanner::ScanRunTargetedSourceDto source{};
+    source.inputs.push_back(crash_log.string());
+    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+
+    const auto execution = execute_result(*request, *scanner::scan_run_cancellation_new(), nullptr);
+
+    INFO("scan-run error: " << std::string(execution.error.message));
+    REQUIRE(execution.has_result);
+    REQUIRE_FALSE(execution.has_error);
+    REQUIRE(execution.result.has_installed_yaml_data);
+    REQUIRE(execution.result.installed_yaml_data.local_ignore_state ==
+            scanner::ScanRunLocalIgnoreYamlDataState::Generated);
+    REQUIRE(execution.result.installed_yaml_data.local_ignore_identity.byte_len > 0);
+    bool saw_generation = false;
+    for (const auto& diagnostic : execution.result.installed_yaml_data.diagnostics) {
+        saw_generation = saw_generation ||
+                         diagnostic.kind == scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated;
+    }
+    REQUIRE(saw_generation);
+}
+
+TEST_CASE("CXX shared Local Ignore recovery retains snapshots and rejects replay", "[bridge][scan-run][parity]") {
+    TemporaryDirectory temporary;
+    copy_shared_yaml_tree(temporary.path());
+    const auto crash_log = copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT);
+    scanner::ScanRunTargetedSourceDto source{};
+    source.inputs.push_back(crash_log.string());
+    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+
+    const auto baseline = execute_result(*request, *scanner::scan_run_cancellation_new(), nullptr);
+    REQUIRE(baseline.has_result);
+    REQUIRE(baseline.result.status == scanner::ScanRunContractStatus::Completed);
+    const auto baseline_report = read_file_bytes(native_path(baseline.result.logs[0].autoscan_report));
+    const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
+    {
+        std::ofstream malformed(ignore_path, std::ios::binary | std::ios::trunc);
+        malformed << fixture::MALFORMED_LOCAL_IGNORE;
+    }
+
+    auto initial_operation = scanner::scan_run_contract_execute(
+        *request, *scanner::scan_run_cancellation_new(), nullptr);
+    REQUIRE(scanner::scan_run_contract_execution_has_continuation(*initial_operation));
+    const auto initial = scanner::scan_run_contract_execution_take_result(*initial_operation);
+    REQUIRE(initial.has_result);
+    REQUIRE(initial.result.status == scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired);
+    REQUIRE(initial.result.installed_yaml_data.local_ignore_state ==
+            scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired);
+    REQUIRE(initial.result.discovery.accepted_logs.size() == 1);
+    const auto retained_log = std::string(initial.result.discovery.accepted_logs[0]);
+    const auto retained_main_sha = std::string(initial.result.installed_yaml_data.main.sha256);
+    const auto retained_game_sha = std::string(initial.result.installed_yaml_data.game_file.sha256);
+    auto continuation = scanner::scan_run_contract_execution_take_continuation(*initial_operation);
+
+    {
+        std::ofstream changed(temporary.path() / "CLASSIC Data" / "databases" / "CLASSIC Main.yaml",
+                              std::ios::binary | std::ios::trunc);
+        changed << "invalid: [unterminated";
+    }
+    const RecordingObserver observer;
+    auto resumed_operation = scanner::scan_run_continuation_resume(
+        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+        *scanner::scan_run_cancellation_new(), &observer);
+    const auto resumed = scanner::scan_run_contract_execution_take_result(*resumed_operation);
+
+    REQUIRE(resumed.has_result);
+    REQUIRE(resumed.result.status == scanner::ScanRunContractStatus::Completed);
+    REQUIRE(std::string(resumed.result.discovery.accepted_logs[0]) == retained_log);
+    REQUIRE(std::string(resumed.result.installed_yaml_data.main.sha256) == retained_main_sha);
+    REQUIRE(std::string(resumed.result.installed_yaml_data.game_file.sha256) == retained_game_sha);
+    REQUIRE(resumed.result.installed_yaml_data.local_ignore_state ==
+            scanner::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore);
+    REQUIRE_FALSE(observer.kinds().contains(scanner::ScanRunContractEventKind::DiscoveryCompleted));
+    REQUIRE(read_file_bytes(native_path(resumed.result.logs[0].autoscan_report)) == baseline_report);
+    REQUIRE(read_file_bytes(ignore_path) == fixture::MALFORMED_LOCAL_IGNORE);
+
+    auto replay_operation = scanner::scan_run_continuation_resume(
+        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+        *scanner::scan_run_cancellation_new(), nullptr);
+    const auto replay = scanner::scan_run_contract_execution_take_result(*replay_operation);
+    REQUIRE_FALSE(replay.has_result);
+    REQUIRE_FALSE(replay.has_error);
+    REQUIRE(replay.has_resume_error);
+    REQUIRE(replay.resume_error.kind == scanner::ScanRunContractResumeErrorKind::ContinuationConsumed);
+    REQUIRE(std::string(replay.resume_error.code) == "scan_run_continuation_consumed");
+}
+
+TEST_CASE("CXX Reset To Default exposes durable metadata and typed failures", "[bridge][scan-run][parity]") {
+    TemporaryDirectory temporary;
+    copy_shared_yaml_tree(temporary.path());
+    const auto crash_log = copy_shared_log(temporary.path(), fixture::INSTALLED_YAML_INPUT);
+    scanner::ScanRunTargetedSourceDto source{};
+    source.inputs.push_back(crash_log.string());
+    const auto request = scanner::scan_run_request_targeted(make_configuration(temporary.path()), source);
+    const auto baseline = execute_result(*request, *scanner::scan_run_cancellation_new(), nullptr);
+    const auto baseline_report = read_file_bytes(native_path(baseline.result.logs[0].autoscan_report));
+    const auto ignore_path = temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
+    {
+        std::ofstream malformed(ignore_path, std::ios::binary | std::ios::trunc);
+        malformed << fixture::MALFORMED_LOCAL_IGNORE;
+    }
+    auto initial_operation = scanner::scan_run_contract_execute(
+        *request, *scanner::scan_run_cancellation_new(), nullptr);
+    const auto initial = scanner::scan_run_contract_execution_take_result(*initial_operation);
+    auto continuation = scanner::scan_run_contract_execution_take_continuation(*initial_operation);
+
+    auto reset_operation = scanner::scan_run_continuation_resume(
+        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        *scanner::scan_run_cancellation_new(), nullptr);
+    const auto reset = scanner::scan_run_contract_execution_take_result(*reset_operation);
+    REQUIRE(reset.has_result);
+    REQUIRE(reset.result.status == scanner::ScanRunContractStatus::Completed);
+    REQUIRE(reset.result.discovery.accepted_logs.size() == initial.result.discovery.accepted_logs.size());
+    REQUIRE(std::string(reset.result.discovery.accepted_logs[0]) ==
+            std::string(initial.result.discovery.accepted_logs[0]));
+    REQUIRE(reset.result.installed_yaml_data.local_ignore_state ==
+            scanner::ScanRunLocalIgnoreYamlDataState::ResetToDefault);
+    REQUIRE(reset.result.installed_yaml_data.has_local_ignore_reset);
+    REQUIRE(read_file_bytes(native_path(reset.result.installed_yaml_data.local_ignore_reset.backup_path)) ==
+            fixture::MALFORMED_LOCAL_IGNORE);
+    REQUIRE(reset.result.installed_yaml_data.local_ignore_reset.malformed_identity.sha256 ==
+            reset.result.installed_yaml_data.local_ignore_reset.backup_identity.sha256);
+    REQUIRE(reset.result.installed_yaml_data.local_ignore_reset.replacement_identity.sha256 ==
+            reset.result.installed_yaml_data.local_ignore_identity.sha256);
+    REQUIRE(read_file_bytes(native_path(reset.result.logs[0].autoscan_report)) == baseline_report);
+    auto replay_operation = scanner::scan_run_continuation_resume(
+        *continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        *scanner::scan_run_cancellation_new(), nullptr);
+    const auto replay = scanner::scan_run_contract_execution_take_result(*replay_operation);
+    REQUIRE(replay.has_resume_error);
+    REQUIRE(std::string(replay.resume_error.code) == fixture::RESET_CONSUMED_CODE);
+
+    TemporaryDirectory pre_cancel_temporary;
+    copy_shared_yaml_tree(pre_cancel_temporary.path());
+    const auto pre_cancel_log =
+        copy_shared_log(pre_cancel_temporary.path(), fixture::INSTALLED_YAML_INPUT);
+    const auto pre_cancel_ignore =
+        pre_cancel_temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
+    {
+        std::ofstream malformed(pre_cancel_ignore, std::ios::binary | std::ios::trunc);
+        malformed << fixture::MALFORMED_LOCAL_IGNORE;
+    }
+    scanner::ScanRunTargetedSourceDto pre_cancel_source{};
+    pre_cancel_source.inputs.push_back(pre_cancel_log.string());
+    const auto pre_cancel_request = scanner::scan_run_request_targeted(
+        make_configuration(pre_cancel_temporary.path()), pre_cancel_source);
+    auto pre_cancel_initial = scanner::scan_run_contract_execute(
+        *pre_cancel_request, *scanner::scan_run_cancellation_new(), nullptr);
+    auto pre_cancel_continuation =
+        scanner::scan_run_contract_execution_take_continuation(*pre_cancel_initial);
+    auto pre_cancel_cancellation = scanner::scan_run_cancellation_new();
+    scanner::scan_run_cancellation_cancel(*pre_cancel_cancellation);
+    const RecordingObserver pre_cancel_observer;
+    auto pre_cancel_resume = scanner::scan_run_continuation_resume(
+        *pre_cancel_continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        *pre_cancel_cancellation, &pre_cancel_observer);
+    const auto pre_cancelled =
+        scanner::scan_run_contract_execution_take_result(*pre_cancel_resume);
+    REQUIRE(pre_cancelled.has_result);
+    REQUIRE(pre_cancelled.result.status == scanner::ScanRunContractStatus::Cancelled);
+    REQUIRE(pre_cancelled.result.has_discovery);
+    REQUIRE_FALSE(pre_cancelled.result.has_installed_yaml_data);
+    REQUIRE_FALSE(pre_cancelled.result.has_effective_concurrency);
+    REQUIRE(pre_cancelled.result.logs.size() == 1);
+    REQUIRE(pre_cancelled.result.logs[0].disposition ==
+            scanner::ScanRunContractLogDisposition::CancelledBeforeStart);
+    REQUIRE_FALSE(pre_cancelled.result.logs[0].has_autoscan_report);
+    REQUIRE(pre_cancel_observer.count() == 0);
+    REQUIRE(read_file_bytes(pre_cancel_ignore) == fixture::MALFORMED_LOCAL_IGNORE);
+    REQUIRE_FALSE(fs::exists(pre_cancel_temporary.path() / "CLASSIC Backup"));
+
+    {
+        std::ofstream malformed(ignore_path, std::ios::binary | std::ios::trunc);
+        malformed << fixture::MALFORMED_LOCAL_IGNORE;
+    }
+    auto conflict_operation = scanner::scan_run_contract_execute(
+        *request, *scanner::scan_run_cancellation_new(), nullptr);
+    auto conflict_continuation =
+        scanner::scan_run_contract_execution_take_continuation(*conflict_operation);
+    {
+        std::ofstream changed(ignore_path, std::ios::binary | std::ios::trunc);
+        changed << "CLASSIC_Ignore_Fallout4: []\n";
+    }
+    auto conflict_resume = scanner::scan_run_continuation_resume(
+        *conflict_continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        *scanner::scan_run_cancellation_new(), nullptr);
+    const auto conflict = scanner::scan_run_contract_execution_take_result(*conflict_resume);
+    REQUIRE(conflict.has_resume_error);
+    REQUIRE(conflict.resume_error.kind ==
+            scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetConflict);
+    REQUIRE(std::string(conflict.resume_error.code) == fixture::RESET_CONFLICT_CODE);
+    REQUIRE(conflict.resume_error.has_expected_identity);
+    REQUIRE(conflict.resume_error.has_actual_identity);
+
+    TemporaryDirectory backup_failure_temporary;
+    copy_shared_yaml_tree(backup_failure_temporary.path());
+    const auto backup_failure_log =
+        copy_shared_log(backup_failure_temporary.path(), fixture::INSTALLED_YAML_INPUT);
+    const auto backup_failure_ignore =
+        backup_failure_temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
+    {
+        std::ofstream malformed(backup_failure_ignore, std::ios::binary | std::ios::trunc);
+        malformed << fixture::MALFORMED_LOCAL_IGNORE;
+    }
+    scanner::ScanRunTargetedSourceDto backup_failure_source{};
+    backup_failure_source.inputs.push_back(backup_failure_log.string());
+    const auto backup_failure_request = scanner::scan_run_request_targeted(
+        make_configuration(backup_failure_temporary.path()), backup_failure_source);
+    auto backup_failure_initial = scanner::scan_run_contract_execute(
+        *backup_failure_request, *scanner::scan_run_cancellation_new(), nullptr);
+    auto backup_failure_continuation =
+        scanner::scan_run_contract_execution_take_continuation(*backup_failure_initial);
+    {
+        std::ofstream blocker(backup_failure_temporary.path() / "CLASSIC Backup",
+                              std::ios::binary | std::ios::trunc);
+        blocker << "not a directory";
+    }
+    auto backup_failure_resume = scanner::scan_run_continuation_resume(
+        *backup_failure_continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        *scanner::scan_run_cancellation_new(), nullptr);
+    const auto backup_failure =
+        scanner::scan_run_contract_execution_take_result(*backup_failure_resume);
+    REQUIRE(backup_failure.has_resume_error);
+    REQUIRE(backup_failure.resume_error.kind ==
+            scanner::ScanRunContractResumeErrorKind::LocalIgnoreResetBackupFailure);
+    REQUIRE(std::string(backup_failure.resume_error.code) == fixture::RESET_BACKUP_FAILURE_CODE);
+    REQUIRE(read_file_bytes(backup_failure_ignore) == fixture::MALFORMED_LOCAL_IGNORE);
+
+    TemporaryDirectory racing_cancellation_temporary;
+    copy_shared_yaml_tree(racing_cancellation_temporary.path());
+    const auto racing_log =
+        copy_shared_log(racing_cancellation_temporary.path(), fixture::INSTALLED_YAML_INPUT);
+    const auto racing_ignore =
+        racing_cancellation_temporary.path() / "CLASSIC Data" / "CLASSIC Ignore.yaml";
+    const std::string large_malformed_ignore =
+        std::string(fixture::MALFORMED_LOCAL_IGNORE) + std::string(16U * 1024U * 1024U, 'x');
+    {
+        std::ofstream malformed(racing_ignore, std::ios::binary | std::ios::trunc);
+        malformed << large_malformed_ignore;
+    }
+    scanner::ScanRunTargetedSourceDto racing_source{};
+    racing_source.inputs.push_back(racing_log.string());
+    const auto racing_request = scanner::scan_run_request_targeted(
+        make_configuration(racing_cancellation_temporary.path()), racing_source);
+    auto racing_initial = scanner::scan_run_contract_execute(
+        *racing_request, *scanner::scan_run_cancellation_new(), nullptr);
+    auto racing_continuation = scanner::scan_run_contract_execution_take_continuation(*racing_initial);
+    auto racing_cancellation = scanner::scan_run_cancellation_new();
+    const auto reset_lock = racing_cancellation_temporary.path() / ".classic-local-ignore-reset.lock";
+    std::atomic_bool observed_reset_entry = false;
+    std::thread cancel_after_reset_entry([&] {
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+        while (!fs::exists(reset_lock) && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::yield();
+        }
+        if (fs::exists(reset_lock)) {
+            observed_reset_entry.store(true, std::memory_order_release);
+            scanner::scan_run_cancellation_cancel(*racing_cancellation);
+        }
+    });
+    auto racing_resume = scanner::scan_run_continuation_resume(
+        *racing_continuation, scanner::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        *racing_cancellation, nullptr);
+    cancel_after_reset_entry.join();
+    const auto racing_result = scanner::scan_run_contract_execution_take_result(*racing_resume);
+    REQUIRE(observed_reset_entry.load(std::memory_order_acquire));
+    REQUIRE(fixture::RESET_POST_CRITICAL_CANCELLATION_STATUS == "cancelled");
+    REQUIRE(racing_result.result.status == scanner::ScanRunContractStatus::Cancelled);
+    REQUIRE_FALSE(racing_result.result.logs[0].has_autoscan_report);
+    const auto racing_backup_directory =
+        racing_cancellation_temporary.path() / "CLASSIC Backup" / "YAML Data" / "Local Ignore";
+    std::vector<fs::path> racing_backups;
+    for (const auto& entry : fs::directory_iterator(racing_backup_directory)) {
+        racing_backups.push_back(entry.path());
+    }
+    REQUIRE(racing_backups.size() == 1);
+    REQUIRE(read_file_bytes(racing_backups[0]) == large_malformed_ignore);
+    REQUIRE(read_file_bytes(racing_ignore) != large_malformed_ignore);
+}
+
 TEST_CASE("CXX shared cancellation fixture distinguishes every safe seam", "[bridge][scan-run][parity]") {
     // All sections use the same two manifest-owned Targeted logs so only the
     // cancellation boundary changes between executions.
@@ -379,7 +689,7 @@ TEST_CASE("CXX shared cancellation fixture distinguishes every safe seam", "[bri
         scanner::scan_run_cancellation_cancel(*cancellation);
         const RecordingObserver observer;
 
-        const auto execution = scanner::scan_run_contract_execute(*make_request(), *cancellation, &observer);
+        const auto execution = execute_result(*make_request(), *cancellation, &observer);
 
         REQUIRE(execution.has_result);
         REQUIRE(execution.result.status == scanner::ScanRunContractStatus::CancelledBeforeDiscovery);
@@ -393,7 +703,7 @@ TEST_CASE("CXX shared cancellation fixture distinguishes every safe seam", "[bri
         const auto cancellation = scanner::scan_run_cancellation_new();
         const BoundaryCancellingObserver observer(*cancellation, scanner::ScanRunContractEventKind::LogQueued);
 
-        const auto execution = scanner::scan_run_contract_execute(*make_request(), *cancellation, &observer);
+        const auto execution = execute_result(*make_request(), *cancellation, &observer);
 
         REQUIRE(observer.triggered());
         REQUIRE(execution.result.status == scanner::ScanRunContractStatus::Cancelled);
@@ -416,7 +726,7 @@ TEST_CASE("CXX shared cancellation fixture distinguishes every safe seam", "[bri
         const BoundaryCancellingObserver observer(*cancellation, scanner::ScanRunContractEventKind::LogStarted, true,
                                                   0);
 
-        const auto execution = scanner::scan_run_contract_execute(*make_request(), *cancellation, &observer);
+        const auto execution = execute_result(*make_request(), *cancellation, &observer);
 
         REQUIRE(observer.triggered());
         REQUIRE(execution.result.status == scanner::ScanRunContractStatus::Cancelled);
@@ -451,7 +761,7 @@ TEST_CASE("Scan Run observer can cancel after adapter delivery failure", "[bridg
     const auto cancellation = scanner::scan_run_cancellation_new();
     const CancellingObserver observer(*cancellation);
 
-    const auto execution = scanner::scan_run_contract_execute(*request, *cancellation, &observer);
+    const auto execution = execute_result(*request, *cancellation, &observer);
 
     REQUIRE(observer.delivery_failed());
     REQUIRE(observer.event_count() == 1);

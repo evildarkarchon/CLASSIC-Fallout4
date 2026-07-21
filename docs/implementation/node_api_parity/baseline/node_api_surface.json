@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T10:17:29.852647+00:00",
+  "generated_at_utc": "2026-07-19T10:13:05.508182+00:00",
   "scope": {
     "source_file": "node-bindings/classic-node/index.d.ts"
   },
@@ -101,6 +101,14 @@
       "signature": "export declare class DocumentsChecker {"
     },
     {
+      "export": "ExplicitYamlDataSnapshot",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class ExplicitYamlDataSnapshot {"
+    },
+    {
       "export": "Fallout4VersionInfo",
       "kind": "interface",
       "owner_module": "version_registry",
@@ -115,6 +123,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface FileIoConfig {"
+    },
+    {
+      "export": "FormIdFindingAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class FormIdFindingAnalyzer {"
     },
     {
       "export": "GamePathFinder",
@@ -139,6 +155,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface HashCacheStats {"
+    },
+    {
+      "export": "InstalledYamlDataSnapshot",
+      "kind": "class",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class InstalledYamlDataSnapshot {"
     },
     {
       "export": "JsAddressLibInfo",
@@ -573,6 +597,22 @@
       "signature": "export interface JsExpectedValue {"
     },
     {
+      "export": "JsExplicitYamlDataGameRole",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsExplicitYamlDataGameRole {"
+    },
+    {
+      "export": "JsExplicitYamlDataPaths",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsExplicitYamlDataPaths {"
+    },
+    {
       "export": "JsFallout4Version",
       "kind": "const_enum",
       "owner_module": "version_registry",
@@ -611,6 +651,78 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsFileOperationResult {"
+    },
+    {
+      "export": "JsFormIdFinding",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdFinding {"
+    },
+    {
+      "export": "JsFormIdFindingAnalysisInput",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdFindingAnalysisInput {"
+    },
+    {
+      "export": "JsFormIdFindingAnalysisResult",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdFindingAnalysisResult {"
+    },
+    {
+      "export": "JsFormIdPlugin",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdPlugin {"
+    },
+    {
+      "export": "JsFormIdValueLookup",
+      "kind": "class",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class JsFormIdValueLookup {"
+    },
+    {
+      "export": "JsFormIdValueLookupEntry",
+      "kind": "interface",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdValueLookupEntry {"
+    },
+    {
+      "export": "JsFormIdValueLookupOutcome",
+      "kind": "interface",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsFormIdValueLookupOutcome {"
+    },
+    {
+      "export": "JsFormIdValueLookupOutcomeKind",
+      "kind": "const_enum",
+      "owner_module": "database",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsFormIdValueLookupOutcomeKind {"
+    },
+    {
+      "export": "JsFormIdValueLookupStatus",
+      "kind": "const_enum",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsFormIdValueLookupStatus {"
     },
     {
       "export": "JsFrontendPreferences",
@@ -797,6 +909,102 @@
       "signature": "export declare class JsIniValidator {"
     },
     {
+      "export": "JsInspectedYamlDataFile",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInspectedYamlDataFile {"
+    },
+    {
+      "export": "JsInstalledYamlDataDiagnostic",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInstalledYamlDataDiagnostic {"
+    },
+    {
+      "export": "JsInstalledYamlDataDiagnosticKind",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsInstalledYamlDataDiagnosticKind {"
+    },
+    {
+      "export": "JsInstalledYamlDataGameRole",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsInstalledYamlDataGameRole {"
+    },
+    {
+      "export": "JsInstalledYamlDataInspection",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInstalledYamlDataInspection {"
+    },
+    {
+      "export": "JsInstalledYamlDataInspectionRequest",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInstalledYamlDataInspectionRequest {"
+    },
+    {
+      "export": "JsInstalledYamlDataLoadOutcome",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInstalledYamlDataLoadOutcome {"
+    },
+    {
+      "export": "JsInstalledYamlDataLoadRequest",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInstalledYamlDataLoadRequest {"
+    },
+    {
+      "export": "JsInstalledYamlDataLoadStatus",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsInstalledYamlDataLoadStatus {"
+    },
+    {
+      "export": "JsInstalledYamlDataProvenance",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsInstalledYamlDataProvenance {"
+    },
+    {
+      "export": "JsInstalledYamlDataRole",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsInstalledYamlDataRole {"
+    },
+    {
+      "export": "JsInstalledYamlDataRunData",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsInstalledYamlDataRunData {"
+    },
+    {
       "export": "JsIntegrityCheckResult",
       "kind": "interface",
       "owner_module": "aux",
@@ -843,6 +1051,54 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsLegacyTuiStateImportRestoreOutcome {"
+    },
+    {
+      "export": "JsLocalIgnoreResetConflict",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsLocalIgnoreResetConflict {"
+    },
+    {
+      "export": "JsLocalIgnoreResetOutcome",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsLocalIgnoreResetOutcome {"
+    },
+    {
+      "export": "JsLocalIgnoreResetPublicationStage",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsLocalIgnoreResetPublicationStage {"
+    },
+    {
+      "export": "JsLocalIgnoreResetResult",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsLocalIgnoreResetResult {"
+    },
+    {
+      "export": "JsLocalIgnoreResetStatus",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsLocalIgnoreResetStatus {"
+    },
+    {
+      "export": "JsLocalIgnoreYamlDataState",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsLocalIgnoreYamlDataState {"
     },
     {
       "export": "JsLogCollector",
@@ -1045,6 +1301,30 @@
       "signature": "export interface JsModSolutionRule {"
     },
     {
+      "export": "JsNamedRecordFinding",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsNamedRecordFinding {"
+    },
+    {
+      "export": "JsNamedRecordFindingAnalysisInput",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsNamedRecordFindingAnalysisInput {"
+    },
+    {
+      "export": "JsNamedRecordFindingAnalysisResult",
+      "kind": "interface",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsNamedRecordFindingAnalysisResult {"
+    },
+    {
       "export": "JsNotificationDisplay",
       "kind": "interface",
       "owner_module": "aux",
@@ -1187,6 +1467,46 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export interface JsScanRunInfrastructureError {"
+    },
+    {
+      "export": "JsScanRunInstalledYamlDataDiagnostic",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunInstalledYamlDataDiagnostic {"
+    },
+    {
+      "export": "JsScanRunInstalledYamlDataDiagnosticKind",
+      "kind": "const_enum",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {"
+    },
+    {
+      "export": "JsScanRunLocalIgnoreRecoveryDecision",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsScanRunLocalIgnoreRecoveryDecision {"
+    },
+    {
+      "export": "JsScanRunLocalIgnoreResetRunData",
+      "kind": "interface",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsScanRunLocalIgnoreResetRunData {"
+    },
+    {
+      "export": "JsScanRunLocalIgnoreState",
+      "kind": "const_enum",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare const enum JsScanRunLocalIgnoreState {"
     },
     {
       "export": "JsScanRunLogEvent",
@@ -1621,6 +1941,14 @@
       "signature": "export interface JsYamlClientSchemaEntry {"
     },
     {
+      "export": "JsYamlDataContentIdentity",
+      "kind": "interface",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export interface JsYamlDataContentIdentity {"
+    },
+    {
       "export": "JsYamlFile",
       "kind": "const_enum",
       "owner_module": "config",
@@ -1685,6 +2013,14 @@
       "signature": "export interface JsYamlUpdateStatus {"
     },
     {
+      "export": "LocalIgnoreRecoveryPlan",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class LocalIgnoreRecoveryPlan {"
+    },
+    {
       "export": "MAX_CACHE_TTL",
       "kind": "const",
       "owner_module": "config",
@@ -1707,6 +2043,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class ModGuidanceAnalyzer {"
+    },
+    {
+      "export": "NamedRecordFindingAnalyzer",
+      "kind": "class",
+      "owner_module": "scanlog",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class NamedRecordFindingAnalyzer {"
     },
     {
       "export": "PluginEvidenceAnalyzer",
@@ -1755,6 +2099,14 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare class ScanRunCancellation {"
+    },
+    {
+      "export": "ScanRunContinuation",
+      "kind": "class",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare class ScanRunContinuation {"
     },
     {
       "export": "ScanRunRequest",
@@ -2794,6 +3146,15 @@
       "arity": 2
     },
     {
+      "export": "inspectInstalledYamlData",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function inspectInstalledYamlData(request: JsInstalledYamlDataInspectionRequest): Promise<JsInstalledYamlDataInspection>",
+      "arity": 1
+    },
+    {
       "export": "internString",
       "kind": "function",
       "owner_module": "aux",
@@ -2944,6 +3305,24 @@
       "tier": "tier1",
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function loadBatchSync(paths: Array<string>): number",
+      "arity": 1
+    },
+    {
+      "export": "loadExplicitYamlData",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function loadExplicitYamlData(paths: JsExplicitYamlDataPaths, game: JsGameId, selectedGameVersion: string): Promise<ExplicitYamlDataSnapshot>",
+      "arity": 3
+    },
+    {
+      "export": "loadInstalledYamlData",
+      "kind": "function",
+      "owner_module": "config",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function loadInstalledYamlData(request: JsInstalledYamlDataLoadRequest): Promise<JsInstalledYamlDataLoadOutcome>",
       "arity": 1
     },
     {
@@ -3341,6 +3720,15 @@
       "source_file": "node-bindings/classic-node/index.d.ts",
       "signature": "export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
       "arity": 4
+    },
+    {
+      "export": "scanRunResume",
+      "kind": "function",
+      "owner_module": "aux",
+      "tier": "tier1",
+      "source_file": "node-bindings/classic-node/index.d.ts",
+      "signature": "export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>",
+      "arity": 5
     },
     {
       "export": "scanUnpackedFiles",

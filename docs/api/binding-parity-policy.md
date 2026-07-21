@@ -10,6 +10,16 @@ All Rust public API symbols in business-logic `-core` crates are exposed through
 
 When a new `pub fn` or `pub struct` is added to a `-core` crate's `lib.rs`, all three bindings must expose it before CI passes. The only current exception is `classic-resource-core`, which has no dedicated C++ bridge module -- its functionality is accessed transitively through the `classic-file-io-core` bridge surface.
 
+For the semantic Autoscan Report Contribution architecture, parity is both
+positive and negative. CXX, Node, and Python expose the six public Focused
+Semantic Analyzers, owned inputs/results, and shared typed errors. They must not expose
+the private contribution collector, Autoscan Report Assembly, report
+primitives, or fragment-producing compatibility aliases. A breaking removal is
+complete only when authored wrappers, generated declarations, maintained
+stubs, runtime coverage registries, compliance reports, and committed parity
+baselines all describe that same final surface. See
+[ADR-0005](../adr/0005-semantic-autoscan-report-contributions.md).
+
 ---
 
 ## Canonical Compliance Gate

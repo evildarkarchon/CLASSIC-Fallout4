@@ -33,12 +33,10 @@ namespace fs = std::filesystem;
 
 struct DataDirs {
     std::string root;
-    std::string data;
 };
 
-/// Find the root directory containing "CLASSIC Data/" and derive both
-/// yaml_dir_root (the parent) and yaml_dir_data (the CLASSIC Data subdir).
-/// Mirrors classic-gui/src/scan.rs: find_data_root() + load_analysis_config().
+/// Find the installation root containing "CLASSIC Data/".
+/// Mirrors the CLASSIC Data candidate search performed by MainWindow::findDataRoot().
 static DataDirs find_data_root() {
     std::error_code ec;
     fs::path exe_path = fs::current_path(ec); // fallback, overridden below
@@ -51,7 +49,7 @@ static DataDirs find_data_root() {
         fs::path ep(buf);
         exe_path = ep.parent_path();
         if (fs::is_directory(exe_path / "CLASSIC Data", ec)) {
-            return DataDirs{exe_path.string(), (exe_path / "CLASSIC Data").string()};
+            return DataDirs{exe_path.string()};
         }
     }
 #endif
@@ -59,16 +57,16 @@ static DataDirs find_data_root() {
     // Check: Current working directory for "CLASSIC Data/" (development / distribution)
     auto cwd = fs::current_path(ec);
     if (fs::is_directory(cwd / "CLASSIC Data", ec)) {
-        return DataDirs{cwd.string(), (cwd / "CLASSIC Data").string()};
+        return DataDirs{cwd.string()};
     }
 
     // Check: Exe directory for "CLASSIC Data/" (running from build dir)
     if (fs::is_directory(exe_path / "CLASSIC Data", ec)) {
-        return DataDirs{exe_path.string(), (exe_path / "CLASSIC Data").string()};
+        return DataDirs{exe_path.string()};
     }
 
     // Fallback: use cwd anyway (will fail at config load with a clear error)
-    return DataDirs{cwd.string(), cwd.string()};
+    return DataDirs{cwd.string()};
 }
 
 // ── Filename extraction helper ─────────────────────────────────────
@@ -201,10 +199,11 @@ static int run_scan_pipeline(const CliArgs& args, const DataDirs& dirs,
 
     std::error_code ec;
     const std::string base_dir = fs::current_path(ec).string();
-    const auto request = build_cli_scan_run_request(args, *prepared, dirs.root, dirs.data, base_dir);
+    const auto request = build_cli_scan_run_request(args, *prepared, dirs.root, base_dir);
     CliScanRunCancellation cancellation;
     CliScanRunObserver observer(prepared->game, cancellation);
-    const auto execution = classic::scanner::scan_run_contract_execute(*request, cancellation.token(), &observer);
+    auto operation = classic::scanner::scan_run_contract_execute(*request, cancellation.token(), &observer);
+    const auto execution = classic::scanner::scan_run_contract_execution_take_result(*operation);
     observer.finish();
 
     if (observer.delivery_failed()) {
@@ -245,7 +244,7 @@ int run_scan(const CliArgs& args) {
     // Find data root
     auto dirs = find_data_root();
     fmt::print("Data root: {}\n", dirs.root);
-    fmt::print("Data dir:  {}\n\n", dirs.data);
+    fmt::print("\n");
 
     // Run the scan pipeline (all rust::Box<T> objects live inside this scope)
     int exit_code;
@@ -253,6 +252,9 @@ int run_scan(const CliArgs& args) {
         exit_code = run_scan_pipeline(args, dirs, total_start);
     } catch (const rust::Error& e) {
         fmt::print(stderr, "Fatal: {}\n", std::string(e.what()));
+        exit_code = 2;
+    } catch (const std::exception& e) {
+        fmt::print(stderr, "Fatal: {}\n", e.what());
         exit_code = 2;
     }
 

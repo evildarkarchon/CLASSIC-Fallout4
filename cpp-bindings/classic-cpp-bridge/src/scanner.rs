@@ -12,18 +12,25 @@ mod papyrus;
 mod util;
 
 pub(crate) use analyzer::{
-    CxxCrashSuspectAnalyzer, CxxCrashgenSettingsAnalyzer, CxxModGuidanceAnalyzer,
-    CxxPluginEvidenceAnalyzer, crash_suspect_analyze, crash_suspect_analyzer_construction_result,
-    crash_suspect_analyzer_new, crashgen_settings_analyze,
-    crashgen_settings_analyzer_construction_result, crashgen_settings_analyzer_new,
+    CxxCrashSuspectAnalyzer, CxxCrashgenSettingsAnalyzer, CxxFormIDFindingAnalyzer,
+    CxxModGuidanceAnalyzer, CxxNamedRecordFindingAnalyzer, CxxPluginEvidenceAnalyzer,
+    crash_suspect_analyze, crash_suspect_analyzer_construction_result, crash_suspect_analyzer_new,
+    crashgen_settings_analyze, crashgen_settings_analyzer_construction_result,
+    crashgen_settings_analyzer_new, formid_finding_analyze,
+    formid_finding_analyzer_construction_result, formid_finding_analyzer_disabled_new,
+    formid_finding_analyzer_in_memory_new, formid_finding_analyzer_sqlite_new,
     mod_guidance_analyze, mod_guidance_analyzer_construction_result, mod_guidance_analyzer_new,
-    plugin_evidence_analyze, plugin_evidence_analyzer_construction_result,
-    plugin_evidence_analyzer_new,
+    named_record_finding_analyze, named_record_finding_analyzer_construction_result,
+    named_record_finding_analyzer_new, plugin_evidence_analyze,
+    plugin_evidence_analyzer_construction_result, plugin_evidence_analyzer_new,
 };
 pub(crate) use contract::{
-    ScanRunCancellation, ScanRunRequest, ScanRunUnsolvedLogs, scan_run_cancellation_cancel,
-    scan_run_cancellation_is_cancelled, scan_run_cancellation_new, scan_run_contract_execute,
-    scan_run_request_standard, scan_run_request_standard_with_fcx, scan_run_request_targeted,
+    ScanRunCancellation, ScanRunContinuation, ScanRunContractExecution, ScanRunRequest,
+    ScanRunUnsolvedLogs, scan_run_cancellation_cancel, scan_run_cancellation_is_cancelled,
+    scan_run_cancellation_new, scan_run_continuation_resume, scan_run_contract_execute,
+    scan_run_contract_execution_has_continuation, scan_run_contract_execution_take_continuation,
+    scan_run_contract_execution_take_result, scan_run_request_standard,
+    scan_run_request_standard_with_fcx, scan_run_request_targeted,
     scan_run_request_targeted_with_fcx, scan_run_unsolved_logs_leave_in_place,
     scan_run_unsolved_logs_move_to_configured_or_default, scan_run_unsolved_logs_move_to_custom,
 };
@@ -51,6 +58,8 @@ mod ffi {
     enum AnalyzerErrorCode {
         InvalidConfiguration = 0,
         UnsupportedConfigurationVersion = 1,
+        MalformedResult = 2,
+        OperationalFailure = 3,
     }
 
     /// Semantic category of one Crashgen Expectation Outcome.
@@ -415,12 +424,183 @@ mod ffi {
         error: AnalyzerErrorDto,
     }
 
+    /// Stable semantic state of optional FormID Value Lookup for one finding.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum FormIDValueLookupStatus {
+        NotApplicable = 0,
+        Disabled = 1,
+        Missing = 2,
+        Found = 3,
+    }
+
+    /// Callback-free deterministic lookup reply kind used during analyzer construction.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum FormIDFindingLookupReplyKind {
+        Missing = 0,
+        Found = 1,
+        OperationalFailure = 2,
+    }
+
+    /// One owned deterministic FormID lookup reply.
+    struct FormIDFindingLookupEntryDto {
+        formid: String,
+        plugin: String,
+        reply_kind: FormIDFindingLookupReplyKind,
+        value: String,
+        error_message: String,
+    }
+
+    /// One owned plugin identity and load-order prefix.
+    struct FormIDPluginDto {
+        name: String,
+        prefix: String,
+    }
+
+    /// Owned Crash Log facts for one aggregate FormID Finding analysis call.
+    struct FormIDFindingAnalysisInputDto {
+        crash_lines: Vec<String>,
+        plugins: Vec<FormIDPluginDto>,
+    }
+
+    /// One distinct semantic FormID Finding with explicit optional fields.
+    struct FormIDFindingDto {
+        identifier: String,
+        occurrences: u32,
+        has_plugin: bool,
+        plugin: String,
+        value_lookup_status: FormIDValueLookupStatus,
+        has_value: bool,
+        value: String,
+    }
+
+    /// Completed FormID Finding analysis, including unresolved identifiers.
+    struct FormIDFindingAnalysisResultDto {
+        findings: Vec<FormIDFindingDto>,
+    }
+
+    /// Explicit constructor status for an opaque FormID Finding Analyzer handle.
+    struct FormIDFindingAnalyzerConstructionResultDto {
+        has_analyzer: bool,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
+    /// Exactly one typed FormID Finding result or shared analyzer error.
+    struct FormIDFindingAnalysisExecutionResultDto {
+        has_result: bool,
+        result: FormIDFindingAnalysisResultDto,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
+    /// Owned matcher configuration for one immutable Named Record Finding Analyzer.
+    struct NamedRecordFindingAnalyzerConfigurationDto {
+        target_records: Vec<String>,
+        ignored_records: Vec<String>,
+    }
+
+    /// Explicit constructor status for an opaque Named Record Finding Analyzer handle.
+    struct NamedRecordFindingAnalyzerConstructionResultDto {
+        has_analyzer: bool,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
+    /// Owned Crash Log lines for one aggregate Named Record Finding analysis call.
+    struct NamedRecordFindingAnalysisInputDto {
+        crash_lines: Vec<String>,
+    }
+
+    /// One distinct named record and its exact occurrence count.
+    struct NamedRecordFindingDto {
+        record: String,
+        occurrences: u32,
+    }
+
+    /// Completed Named Record Finding analysis, including explicit empty success.
+    struct NamedRecordFindingAnalysisResultDto {
+        findings: Vec<NamedRecordFindingDto>,
+    }
+
+    /// Exactly one typed Named Record Finding result or shared analyzer error.
+    struct NamedRecordFindingAnalysisExecutionResultDto {
+        has_result: bool,
+        result: NamedRecordFindingAnalysisResultDto,
+        has_error: bool,
+        error: AnalyzerErrorDto,
+    }
+
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     enum ScanRunContractProgressPhase {
         Setup = 0,
         Parse = 1,
         Analyze = 2,
         Finalize = 3,
+    }
+
+    /// Typed game identity used to select one Installed YAML Data Snapshot.
+    ///
+    /// CXX bridge modules cannot share enum definitions, so this scanner-local
+    /// type exhaustively mirrors `classic_shared_core::GameId`.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunGameId {
+        Fallout4 = 0,
+        Fallout4VR = 1,
+        Skyrim = 2,
+        Starfield = 3,
+    }
+
+    /// Update-eligible role for one file retained by a scan-run snapshot.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunInstalledYamlDataRole {
+        Main = 0,
+        Game = 1,
+    }
+
+    /// Candidate provenance for one selected scan-run YAML Data file.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunInstalledYamlDataProvenance {
+        Updated = 0,
+        Previous = 1,
+        Bundled = 2,
+    }
+
+    /// Stable category for one scan-run Installed YAML Data diagnostic.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunInstalledYamlDataDiagnosticKind {
+        CacheUnavailable = 0,
+        Missing = 1,
+        Read = 2,
+        InvalidUtf8 = 3,
+        Parse = 4,
+        InvalidSchema = 5,
+        IncompatibleSchema = 6,
+        InvalidRoleData = 7,
+        LocalIgnoreGenerated = 8,
+        LocalIgnoreReset = 9,
+    }
+
+    /// How Local Ignore YAML Data entered the immutable scan-run snapshot.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLocalIgnoreYamlDataState {
+        Existing = 0,
+        Generated = 1,
+        RecoveryRequired = 2,
+        ProceedWithoutIgnore = 3,
+        ResetToDefault = 4,
+    }
+
+    /// Explicit choice accepted by a Local Ignore recovery continuation.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLocalIgnoreRecoveryDecision {
+        ProceedWithoutIgnore = 0,
+        ResetToDefault = 1,
     }
 
     /// One setup check in a Crash Log Scan Setup Result.
@@ -439,9 +619,8 @@ mod ffi {
 
     /// Shared configuration for the final Crash Log Scan Run contract.
     struct ScanRunConfigurationDto {
-        yaml_dir_root: String,
-        yaml_dir_data: String,
-        game: String,
+        installation_root: String,
+        game: ScanRunGameId,
         game_version: String,
         show_formid_values: bool,
         simplify_logs: bool,
@@ -486,6 +665,7 @@ mod ffi {
         SetupFailed = 2,
         CancelledBeforeDiscovery = 3,
         Cancelled = 4,
+        LocalIgnoreRecoveryRequired = 5,
     }
 
     /// Discovery source retained by the final contract.
@@ -520,6 +700,25 @@ mod ffi {
         FormIdDatabaseAccess = 3,
         Initialization = 4,
         InternalInvariant = 5,
+    }
+
+    /// Stable continuation replay or Local Ignore reset failure category.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunContractResumeErrorKind {
+        ContinuationConsumed = 0,
+        LocalIgnoreResetConflict = 1,
+        LocalIgnoreResetBackupFailure = 2,
+        LocalIgnoreResetReplacementFailure = 3,
+    }
+
+    /// Durable publication stage retained by a Local Ignore reset failure.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ScanRunLocalIgnoreResetFailureStage {
+        Create = 0,
+        Write = 1,
+        Flush = 2,
+        Sync = 3,
+        Publish = 4,
     }
 
     /// Stable event variants emitted by the final contract.
@@ -584,6 +783,53 @@ mod ffi {
         fatal_errors: Vec<String>,
     }
 
+    /// Content identity derived from exact bytes retained by the scan run.
+    struct ScanRunYamlDataContentIdentityDto {
+        sha256: String,
+        byte_len: u64,
+    }
+
+    /// Selected-file metadata derived from exact retained YAML Data bytes.
+    struct ScanRunInspectedYamlDataFileDto {
+        role: ScanRunInstalledYamlDataRole,
+        provenance: ScanRunInstalledYamlDataProvenance,
+        schema_version: String,
+        sha256: String,
+        byte_len: u64,
+    }
+
+    /// Structured attribution for one fallback, validation, or generation event.
+    struct ScanRunInstalledYamlDataDiagnosticDto {
+        has_role: bool,
+        role: ScanRunInstalledYamlDataRole,
+        has_candidate: bool,
+        candidate: ScanRunInstalledYamlDataProvenance,
+        has_path: bool,
+        path: String,
+        kind: ScanRunInstalledYamlDataDiagnosticKind,
+        message: String,
+    }
+
+    /// Installed YAML Data metadata selected once for the complete scan run.
+    struct ScanRunInstalledYamlDataRunDataDto {
+        main: ScanRunInspectedYamlDataFileDto,
+        game_file: ScanRunInspectedYamlDataFileDto,
+        local_ignore_state: ScanRunLocalIgnoreYamlDataState,
+        local_ignore_identity: ScanRunYamlDataContentIdentityDto,
+        diagnostics: Vec<ScanRunInstalledYamlDataDiagnosticDto>,
+        has_local_ignore_reset: bool,
+        local_ignore_reset: ScanRunLocalIgnoreResetRunDataDto,
+    }
+
+    /// Durable backup and replacement metadata from successful Reset To Default resume.
+    struct ScanRunLocalIgnoreResetRunDataDto {
+        local_ignore_path: String,
+        backup_path: String,
+        malformed_identity: ScanRunYamlDataContentIdentityDto,
+        backup_identity: ScanRunYamlDataContentIdentityDto,
+        replacement_identity: ScanRunYamlDataContentIdentityDto,
+    }
+
     /// Complete terminal result from the final Crash Log Scan Run contract.
     struct ScanRunContractRunResult {
         status: ScanRunContractStatus,
@@ -591,6 +837,8 @@ mod ffi {
         discovery: ScanRunContractDiscoveryResult,
         has_setup: bool,
         setup: ScanRunContractSetupResult,
+        has_installed_yaml_data: bool,
+        installed_yaml_data: ScanRunInstalledYamlDataRunDataDto,
         has_effective_concurrency: bool,
         effective_concurrency: usize,
         has_message: bool,
@@ -610,12 +858,31 @@ mod ffi {
         path: String,
     }
 
-    /// Exactly one of `result` or `error`, identified by the presence flags.
+    /// Typed recovery-resume failure that is distinct from infrastructure failure.
+    struct ScanRunContractResumeError {
+        kind: ScanRunContractResumeErrorKind,
+        code: String,
+        message: String,
+        has_path: bool,
+        path: String,
+        has_stage: bool,
+        stage: ScanRunLocalIgnoreResetFailureStage,
+        has_expected_identity: bool,
+        expected_identity: ScanRunYamlDataContentIdentityDto,
+        has_actual_identity: bool,
+        actual_identity: ScanRunYamlDataContentIdentityDto,
+        has_backup_path: bool,
+        backup_path: String,
+    }
+
+    /// Exactly one of `result`, `error`, or `resume_error`, identified by presence flags.
     struct ScanRunContractExecutionResult {
         has_result: bool,
         result: ScanRunContractRunResult,
         has_error: bool,
         error: ScanRunContractInfrastructureError,
+        has_resume_error: bool,
+        resume_error: ScanRunContractResumeError,
     }
 
     /// One serialized lifecycle event from the final contract.
@@ -681,9 +948,13 @@ mod ffi {
         type CxxCrashgenSettingsAnalyzer;
         type CxxModGuidanceAnalyzer;
         type CxxPluginEvidenceAnalyzer;
+        type CxxFormIDFindingAnalyzer;
+        type CxxNamedRecordFindingAnalyzer;
         type ScanRunRequest;
         type ScanRunUnsolvedLogs;
         type ScanRunCancellation;
+        type ScanRunContractExecution;
+        type ScanRunContinuation;
 
         /// Constructs and validates an immutable analyzer handle from owned configuration.
         ///
@@ -748,6 +1019,41 @@ mod ffi {
             input: PluginEvidenceAnalysisInputDto,
         ) -> PluginEvidenceAnalysisExecutionResultDto;
 
+        /// Constructs an immutable FormID Finding Analyzer with lookup disabled.
+        fn formid_finding_analyzer_disabled_new() -> Box<CxxFormIDFindingAnalyzer>;
+        /// Constructs an immutable analyzer from owned deterministic lookup replies.
+        fn formid_finding_analyzer_in_memory_new(
+            entries: Vec<FormIDFindingLookupEntryDto>,
+        ) -> Box<CxxFormIDFindingAnalyzer>;
+        /// Constructs an immutable analyzer over one owned SQLite lookup adapter.
+        fn formid_finding_analyzer_sqlite_new(
+            database_path: &str,
+            game_table: &str,
+        ) -> Box<CxxFormIDFindingAnalyzer>;
+        /// Returns the typed status captured during FormID Finding construction.
+        fn formid_finding_analyzer_construction_result(
+            analyzer: &CxxFormIDFindingAnalyzer,
+        ) -> FormIDFindingAnalyzerConstructionResultDto;
+        /// Runs aggregate FormID Finding analysis through the shared runtime.
+        fn formid_finding_analyze(
+            analyzer: &CxxFormIDFindingAnalyzer,
+            input: FormIDFindingAnalysisInputDto,
+        ) -> FormIDFindingAnalysisExecutionResultDto;
+
+        /// Constructs and validates an immutable Named Record Finding Analyzer handle.
+        fn named_record_finding_analyzer_new(
+            configuration: NamedRecordFindingAnalyzerConfigurationDto,
+        ) -> Box<CxxNamedRecordFindingAnalyzer>;
+        /// Returns the typed status captured during Named Record Finding construction.
+        fn named_record_finding_analyzer_construction_result(
+            analyzer: &CxxNamedRecordFindingAnalyzer,
+        ) -> NamedRecordFindingAnalyzerConstructionResultDto;
+        /// Runs one aggregate Named Record Finding analysis over owned Crash Log lines.
+        fn named_record_finding_analyze(
+            analyzer: &CxxNamedRecordFindingAnalyzer,
+            input: NamedRecordFindingAnalysisInputDto,
+        ) -> NamedRecordFindingAnalysisExecutionResultDto;
+
         /// Creates Standard intent that leaves failed Crash Logs and reports in place.
         fn scan_run_unsolved_logs_leave_in_place() -> Box<ScanRunUnsolvedLogs>;
         /// Creates Standard intent that moves eligible artifacts to the configured or default destination.
@@ -795,7 +1101,7 @@ mod ffi {
         fn scan_run_cancellation_cancel(cancellation: &ScanRunCancellation);
         /// Returns whether cancellation was requested for this control.
         fn scan_run_cancellation_is_cancelled(cancellation: &ScanRunCancellation) -> bool;
-        /// Executes one tagged request and returns either a terminal result or typed infrastructure error.
+        /// Executes one tagged request and retains any opaque recovery continuation beside its result.
         ///
         /// `observer` may be null. A non-null observer must remain live for the synchronous call and its
         /// `on_scan_run_event` implementation must not throw across the CXX boundary.
@@ -803,7 +1109,28 @@ mod ffi {
             request: &ScanRunRequest,
             cancellation: &ScanRunCancellation,
             observer: *const ScanRunObserver,
+        ) -> Box<ScanRunContractExecution>;
+        /// Moves the execution envelope out of an opaque execution operation.
+        fn scan_run_contract_execution_take_result(
+            execution: &mut ScanRunContractExecution,
         ) -> ScanRunContractExecutionResult;
+        /// Returns whether an initial recovery result retained an opaque continuation.
+        fn scan_run_contract_execution_has_continuation(
+            execution: &ScanRunContractExecution,
+        ) -> bool;
+        /// Moves the opaque single-use continuation out of its execution operation.
+        fn scan_run_contract_execution_take_continuation(
+            execution: &mut ScanRunContractExecution,
+        ) -> Result<Box<ScanRunContinuation>>;
+        /// Resumes retained work with an explicit Local Ignore recovery decision.
+        ///
+        /// `observer` may be null and receives only post-discovery lifecycle events.
+        unsafe fn scan_run_continuation_resume(
+            continuation: &ScanRunContinuation,
+            decision: ScanRunLocalIgnoreRecoveryDecision,
+            cancellation: &ScanRunCancellation,
+            observer: *const ScanRunObserver,
+        ) -> Result<Box<ScanRunContractExecution>>;
 
         // Utilities
         fn detect_vr_log(content: &str) -> bool;

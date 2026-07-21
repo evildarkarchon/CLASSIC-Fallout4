@@ -44,6 +44,9 @@ private slots:
     void mainwindow_includes_last_scan_report_dirs_in_results_setup();
     void mainwindow_seeds_targeted_report_dirs_before_scan_finishes();
     void mainwindow_deduplicates_report_dirs_before_results_setup();
+    /// Pins the worker continuation, GUI-thread prompt, and explicit three-choice recovery wiring.
+    void local_ignore_recovery_is_prompted_and_resumed_across_gui_layers();
+    void installed_yaml_data_propagates_from_worker_to_user_visible_terminal_status();
 };
 
 void ScanSettingsWiringTests::mainwindow_sources_initial_policy_from_rust_defaults()
@@ -69,7 +72,7 @@ void ScanSettingsWiringTests::typed_scan_settings_reach_controller()
 
     const QString sourceText = QString::fromUtf8(file.readAll());
     const QRegularExpression callRegex(QStringLiteral(
-        R"(m_scanController->startScan\(m_dataRoot,\s*m_dataDir,\s*launchSettings,\s*setupXseLogPath,\s*m_targetedInputPaths\))"));
+        R"(m_scanController->startScan\(m_dataRoot,\s*launchSettings,\s*setupXseLogPath,\s*m_targetedInputPaths\))"));
     QVERIFY2(callRegex.match(sourceText).hasMatch(),
              "MainWindow should pass the accepted typed scan settings to ScanController");
 }
@@ -768,6 +771,70 @@ void ScanSettingsWiringTests::mainwindow_deduplicates_report_dirs_before_results
              "MainWindow should deduplicate report directories before updating ResultsController");
     QVERIFY2(sourceText.contains(QStringLiteral("seenReportDirs.insert(key);")),
              "MainWindow should track report directories case-insensitively before appending them");
+}
+
+void ScanSettingsWiringTests::local_ignore_recovery_is_prompted_and_resumed_across_gui_layers()
+{
+    const QString workerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.cpp");
+    QFile workerFile(workerPath);
+    QVERIFY2(workerFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(workerPath)));
+    const QString workerText = QString::fromUtf8(workerFile.readAll());
+    QVERIFY2(workerText.contains(QStringLiteral("scan_run_contract_execution_take_continuation")) &&
+                 workerText.contains(QStringLiteral("scan_run_continuation_resume")),
+             "ScanWorker should consume and resume Rust's retained recovery continuation");
+
+    const QString controllerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
+    QFile controllerFile(controllerPath);
+    QVERIFY2(controllerFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(controllerPath)));
+    const QString controllerText = QString::fromUtf8(controllerFile.readAll());
+    QVERIFY2(controllerText.contains(QStringLiteral("Qt::BlockingQueuedConnection")) &&
+                 controllerText.contains(QStringLiteral("requestLocalIgnoreRecoveryChoice")),
+             "ScanController should obtain the recovery decision on the GUI thread while the worker remains paused");
+
+    const QString mainWindowPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile mainWindowFile(mainWindowPath);
+    QVERIFY2(mainWindowFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(mainWindowPath)));
+    const QString mainWindowText = QString::fromUtf8(mainWindowFile.readAll());
+    QVERIFY2(mainWindowText.contains(QStringLiteral("setLocalIgnoreRecoveryPrompt")) &&
+                 mainWindowText.contains(QStringLiteral("Back Up && Reset to Default")) &&
+                 mainWindowText.contains(QStringLiteral("Continue Without Ignore")) &&
+                 mainWindowText.contains(QStringLiteral("QMessageBox::Cancel")),
+             "MainWindow should present reset, non-mutating continuation, and cancellation choices");
+}
+
+void ScanSettingsWiringTests::installed_yaml_data_propagates_from_worker_to_user_visible_terminal_status()
+{
+    const QString workerHeaderPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/workers/scanworker.h");
+    QFile workerHeader(workerHeaderPath);
+    QVERIFY2(workerHeader.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(workerHeaderPath)));
+    const QString workerHeaderText = QString::fromUtf8(workerHeader.readAll());
+    QVERIFY2(workerHeaderText.contains(QStringLiteral("installedYamlDataResolved")),
+             "ScanWorker should publish the Qt-owned Installed YAML Data projection");
+
+    const QString controllerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/controllers/scancontroller.cpp");
+    QFile controllerFile(controllerPath);
+    QVERIFY2(controllerFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(controllerPath)));
+    const QString controllerText = QString::fromUtf8(controllerFile.readAll());
+    QVERIFY2(controllerText.contains(QStringLiteral("&ScanWorker::installedYamlDataResolved")) &&
+                 controllerText.contains(QStringLiteral("&ScanController::scanInstalledYamlDataResolved")),
+             "ScanController should relay Installed YAML Data across the worker-thread boundary");
+
+    const QString mainWindowPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile mainWindowFile(mainWindowPath);
+    QVERIFY2(mainWindowFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(mainWindowPath)));
+    const QString mainWindowText = QString::fromUtf8(mainWindowFile.readAll());
+    QVERIFY2(mainWindowText.contains(QStringLiteral("&ScanController::scanInstalledYamlDataResolved")),
+             "MainWindow should receive the exact Installed YAML Data selected for the run");
+    QVERIFY2(mainWindowText.contains(QStringLiteral("m_lastInstalledYamlData = installedYamlData;")),
+             "MainWindow should retain Installed YAML Data after the worker result is destroyed");
+    QVERIFY2(mainWindowText.contains(QStringLiteral("installedYamlDataStatusSuffix()")),
+             "MainWindow should include selected YAML Data metadata in user-visible terminal status");
 }
 
 QTEST_MAIN(ScanSettingsWiringTests)

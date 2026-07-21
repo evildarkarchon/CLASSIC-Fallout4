@@ -1,8 +1,8 @@
 # Rust<->Python Parity Diff Baseline
 
-- Generated: `2026-07-16T10:18:40.639931+00:00`
-- Tier-1 contract rows: **1270**
-- Tier-1 matched: **1270**
+- Generated: `2026-07-19T03:52:56.431969+00:00`
+- Tier-1 contract rows: **1236**
+- Tier-1 matched: **1236**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Python: **0**
 - Tier-1 signature mismatch: **0**
@@ -325,6 +325,18 @@
 | `database.pool.get_default_cache_ttl` | `database` | `DatabasePool` | `classic_database.get_default_cache_ttl` | `matched` |
 | `database.pool.get_default_query_cache_capacity` | `database` | `DatabasePool` | `classic_database.get_default_query_cache_capacity` | `matched` |
 | `database.pool.get_max_cache_ttl` | `database` | `DatabasePool` | `classic_database.get_max_cache_ttl` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupError` | `database` | `FormIdValueLookupError` | `classic_database.FormIdValueLookupError` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupEntry` | `database` | `FormIdValueLookupEntry` | `classic_database.FormIdValueLookupEntry` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupEntry.__init__` | `database` | `FormIdValueLookupEntry` | `classic_database.FormIdValueLookupEntry.__init__` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupInMemoryReply@rust` | `database` | `FormIdValueLookupInMemoryReply` | `classic_database.FormIdValueLookupEntry` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupOutcome` | `database` | `FormIdValueLookupOutcome` | `classic_database.FormIdValueLookupOutcome` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup.disabled` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.disabled` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup.in_memory` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.in_memory` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup.sqlite` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.sqlite` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup.from_shared_pool` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.from_shared_pool` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup.lookup` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.lookup` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup.lookup_batch` | `database` | `FormIdValueLookup` | `classic_database.FormIdValueLookup.lookup_batch` | `matched` |
 | `file_io.core.BackupInfo@rust` | `file_io` | `BackupInfo` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.BackupManager@rust` | `file_io` | `BackupManager` | `classic_file_io.FileIOCore` | `matched` |
 | `file_io.core.BackupType@rust` | `file_io` | `BackupType` | `classic_file_io.FileIOCore` | `matched` |
@@ -781,7 +793,6 @@
 | `scanlog.error.error@rust` | `scanlog` | `error` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.fcx_handler.ConfigIssue` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue` | `matched` |
 | `scanlog.fcx_handler.ConfigIssue.__init__` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue.__init__` | `matched` |
-| `scanlog.fcx_handler.ConfigIssue.format_report` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue.format_report` | `matched` |
 | `scanlog.fcx_handler.ConfigIssue@rust` | `scanlog` | `ConfigIssue` | `classic_scanlog.ConfigIssue` | `matched` |
 | `scanlog.formid.RustFormIDAnalyzer@rust` | `scanlog` | `RustFormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer` | `matched` |
 | `scanlog.formid.formid@rust` | `scanlog` | `formid` | `classic_scanlog.FormIDAnalyzer` | `matched` |
@@ -793,18 +804,7 @@
 | `scanlog.formid_analyzer.FormIDAnalyzer.extract_formids` | `scanlog` | `RustFormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer.extract_formids` | `matched` |
 | `scanlog.formid_analyzer.FormIDAnalyzer.parse_formid` | `scanlog` | `RustFormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer.parse_formid` | `matched` |
 | `scanlog.formid_analyzer.FormIDAnalyzer@rust` | `scanlog` | `FormIDAnalyzer` | `classic_scanlog.FormIDAnalyzer` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.__init__` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.__init__` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.cache_plugins` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.cache_plugins` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.extract_formids` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.extract_formids` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.extract_formids_nocopy` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.extract_formids_nocopy` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.extract_plugin_index` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.extract_plugin_index` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.formid_match` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.formid_match` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.is_valid_formid` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.is_valid_formid` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.parse_formid` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.parse_formid` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore.process_formids_cached` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore.process_formids_cached` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore@rust` | `scanlog` | `FormIDAnalyzerCore` | `classic_scanlog.FormIDAnalyzerCore` | `matched` |
-| `scanlog.formid_analyzer.formid_analyzer@rust` | `scanlog` | `formid_analyzer` | `classic_scanlog.FormIDAnalyzerCore` | `matched` |
+| `scanlog.formid_analyzer.formid_analyzer@rust` | `scanlog` | `formid_analyzer` | `classic_scanlog.FormIDAnalyzer` | `matched` |
 | `scanlog.formid_analyzer.is_valid_formid` | `scanlog` | `is_valid_formid` | `classic_scanlog.is_valid_formid` | `matched` |
 | `scanlog.formid_analyzer.is_valid_formid@rust` | `scanlog` | `is_valid_formid` | `classic_scanlog.is_valid_formid` | `matched` |
 | `scanlog.formid_analyzer.validate_formids_batch` | `scanlog` | `validate_formids_batch` | `classic_scanlog.validate_formids_batch` | `matched` |
@@ -845,6 +845,25 @@
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer.__init__` | `scanlog` | `PluginEvidenceAnalyzer` | `classic_scanlog.PluginEvidenceAnalyzer.__init__` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalyzer.analyze` | `scanlog` | `PluginEvidenceAnalyzer` | `classic_scanlog.PluginEvidenceAnalyzer.analyze` | `matched` |
 | `scanlog.plugin_evidence_analyzer.plugin_evidence_analyzer@rust` | `scanlog` | `plugin_evidence_analyzer` | `classic_scanlog.PluginEvidenceAnalyzer` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFinding` | `scanlog` | `NamedRecordFinding` | `classic_scanlog.NamedRecordFinding` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFinding` | `scanlog` | `FormIDFinding` | `classic_scanlog.FormIDFinding` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput` | `scanlog` | `FormIDFindingAnalysisInput` | `classic_scanlog.FormIDFindingAnalysisInput` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput.__init__` | `scanlog` | `FormIDFindingAnalysisInput` | `classic_scanlog.FormIDFindingAnalysisInput.__init__` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult` | `scanlog` | `FormIDFindingAnalysisResult` | `classic_scanlog.FormIDFindingAnalysisResult` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalyzer` | `scanlog` | `FormIDFindingAnalyzer` | `classic_scanlog.FormIDFindingAnalyzer` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalyzer.__init__` | `scanlog` | `FormIDFindingAnalyzer` | `classic_scanlog.FormIDFindingAnalyzer.__init__` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalyzer.analyze` | `scanlog` | `FormIDFindingAnalyzer` | `classic_scanlog.FormIDFindingAnalyzer.analyze` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDPlugin` | `scanlog` | `FormIDPlugin` | `classic_scanlog.FormIDPlugin` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDPlugin.__init__` | `scanlog` | `FormIDPlugin` | `classic_scanlog.FormIDPlugin.__init__` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDValueLookupStatus` | `scanlog` | `FormIDValueLookupStatus` | `classic_scanlog.FormIDValueLookupStatus` | `matched` |
+| `scanlog.formid_finding_analyzer.formid_finding_analyzer@rust` | `scanlog` | `formid_finding_analyzer` | `classic_scanlog.FormIDFindingAnalyzer` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput` | `scanlog` | `NamedRecordFindingAnalysisInput` | `classic_scanlog.NamedRecordFindingAnalysisInput` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput.__init__` | `scanlog` | `NamedRecordFindingAnalysisInput` | `classic_scanlog.NamedRecordFindingAnalysisInput.__init__` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult` | `scanlog` | `NamedRecordFindingAnalysisResult` | `classic_scanlog.NamedRecordFindingAnalysisResult` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer` | `scanlog` | `NamedRecordFindingAnalyzer` | `classic_scanlog.NamedRecordFindingAnalyzer` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer.__init__` | `scanlog` | `NamedRecordFindingAnalyzer` | `classic_scanlog.NamedRecordFindingAnalyzer.__init__` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer.analyze` | `scanlog` | `NamedRecordFindingAnalyzer` | `classic_scanlog.NamedRecordFindingAnalyzer.analyze` | `matched` |
+| `scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust` | `scanlog` | `named_record_finding_analyzer` | `classic_scanlog.NamedRecordFindingAnalyzer` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.__init__` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.__init__` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.analyze_to_string` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.analyze_to_string` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer.check_for_updates` | `scanlog` | `PapyrusAnalyzer` | `classic_scanlog.PapyrusAnalyzer.check_for_updates` | `matched` |
@@ -903,59 +922,12 @@
 | `scanlog.record_scanner.RecordScanner.__init__` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner.__init__` | `matched` |
 | `scanlog.record_scanner.RecordScanner.clear_cache` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner.clear_cache` | `matched` |
 | `scanlog.record_scanner.RecordScanner.extract_records` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner.extract_records` | `matched` |
-| `scanlog.record_scanner.RecordScanner.scan_named_records` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner.scan_named_records` | `matched` |
 | `scanlog.record_scanner.RecordScanner@rust` | `scanlog` | `RecordScanner` | `classic_scanlog.RecordScanner` | `matched` |
 | `scanlog.record_scanner.contains_record` | `scanlog` | `contains_record` | `classic_scanlog.contains_record` | `matched` |
 | `scanlog.record_scanner.contains_record@rust` | `scanlog` | `contains_record` | `classic_scanlog.contains_record` | `matched` |
 | `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `record_scanner` | `classic_scanlog.RecordScanner` | `matched` |
 | `scanlog.record_scanner.scan_records_batch` | `scanlog` | `scan_records_batch` | `classic_scanlog.scan_records_batch` | `matched` |
 | `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `scan_records_batch` | `classic_scanlog.scan_records_batch` | `matched` |
-| `scanlog.report.ParallelReportProcessor` | `scanlog` | `ReportComposer` | `classic_scanlog.ParallelReportProcessor` | `matched` |
-| `scanlog.report.ParallelReportProcessor.__init__` | `scanlog` | `ReportComposer` | `classic_scanlog.ParallelReportProcessor.__init__` | `matched` |
-| `scanlog.report.ParallelReportProcessor.combine_fragments` | `scanlog` | `ReportComposer` | `classic_scanlog.ParallelReportProcessor.combine_fragments` | `matched` |
-| `scanlog.report.ReportComposer` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer` | `matched` |
-| `scanlog.report.ReportComposer.__init__` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.__init__` | `matched` |
-| `scanlog.report.ReportComposer.add` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.add` | `matched` |
-| `scanlog.report.ReportComposer.add_many` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.add_many` | `matched` |
-| `scanlog.report.ReportComposer.build_string` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.build_string` | `matched` |
-| `scanlog.report.ReportComposer.compose` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.compose` | `matched` |
-| `scanlog.report.ReportComposer.compose_optimized` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.compose_optimized` | `matched` |
-| `scanlog.report.ReportComposer.fragment_count` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.fragment_count` | `matched` |
-| `scanlog.report.ReportComposer.pool_stats` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer.pool_stats` | `matched` |
-| `scanlog.report.ReportComposer@rust` | `scanlog` | `ReportComposer` | `classic_scanlog.ReportComposer` | `matched` |
-| `scanlog.report.ReportFragment` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment` | `matched` |
-| `scanlog.report.ReportFragment.__init__` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.__init__` | `matched` |
-| `scanlog.report.ReportFragment.combine` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.combine` | `matched` |
-| `scanlog.report.ReportFragment.empty` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.empty` | `matched` |
-| `scanlog.report.ReportFragment.from_lines` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.from_lines` | `matched` |
-| `scanlog.report.ReportFragment.is_empty` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.is_empty` | `matched` |
-| `scanlog.report.ReportFragment.len` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.len` | `matched` |
-| `scanlog.report.ReportFragment.to_list` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.to_list` | `matched` |
-| `scanlog.report.ReportFragment.with_header` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment.with_header` | `matched` |
-| `scanlog.report.ReportFragment@rust` | `scanlog` | `ReportFragment` | `classic_scanlog.ReportFragment` | `matched` |
-| `scanlog.report.ReportGenerator` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator` | `matched` |
-| `scanlog.report.ReportGenerator.__init__` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.__init__` | `matched` |
-| `scanlog.report.ReportGenerator.generate_error_section` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_error_section` | `matched` |
-| `scanlog.report.ReportGenerator.generate_footer` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_footer` | `matched` |
-| `scanlog.report.ReportGenerator.generate_formid_section_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_formid_section_header` | `matched` |
-| `scanlog.report.ReportGenerator.generate_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_header` | `matched` |
-| `scanlog.report.ReportGenerator.generate_mod_check_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_mod_check_header` | `matched` |
-| `scanlog.report.ReportGenerator.generate_plugin_suspect_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_plugin_suspect_header` | `matched` |
-| `scanlog.report.ReportGenerator.generate_record_section_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_record_section_header` | `matched` |
-| `scanlog.report.ReportGenerator.generate_settings_section_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_settings_section_header` | `matched` |
-| `scanlog.report.ReportGenerator.generate_suspect_found_footer` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_suspect_found_footer` | `matched` |
-| `scanlog.report.ReportGenerator.generate_suspect_section` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_suspect_section` | `matched` |
-| `scanlog.report.ReportGenerator.generate_suspect_section_header` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.generate_suspect_section_header` | `matched` |
-| `scanlog.report.ReportGenerator.with_config` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator.with_config` | `matched` |
-| `scanlog.report.ReportGenerator@rust` | `scanlog` | `ReportGenerator` | `classic_scanlog.ReportGenerator` | `matched` |
-| `scanlog.report.StringPool` | `scanlog` | `StringPool` | `classic_scanlog.StringPool` | `matched` |
-| `scanlog.report.StringPool.__init__` | `scanlog` | `StringPool` | `classic_scanlog.StringPool.__init__` | `matched` |
-| `scanlog.report.StringPool.clear` | `scanlog` | `StringPool` | `classic_scanlog.StringPool.clear` | `matched` |
-| `scanlog.report.StringPool.get_stats` | `scanlog` | `StringPool` | `classic_scanlog.StringPool.get_stats` | `matched` |
-| `scanlog.report.StringPool.intern` | `scanlog` | `StringPool` | `classic_scanlog.StringPool.intern` | `matched` |
-| `scanlog.report.StringPool.intern_batch` | `scanlog` | `StringPool` | `classic_scanlog.StringPool.intern_batch` | `matched` |
-| `scanlog.report.StringPool@rust` | `scanlog` | `StringPool` | `classic_scanlog.StringPool` | `matched` |
-| `scanlog.report.report@rust` | `scanlog` | `report` | `classic_scanlog.ReportComposer` | `matched` |
 | `scanlog.segment_key.segment_key@rust` | `scanlog` | `segment_key` | `classic_scanlog.CrashgenVersion` | `matched` |
 | `scanlog.analyzer.AnalyzerError` | `scanlog` | `AnalyzerError` | `classic_scanlog.AnalyzerError` | `matched` |
 | `scanlog.analyzer.AnalyzerError@rust` | `scanlog` | `AnalyzerError` | `classic_scanlog.AnalyzerError` | `matched` |
@@ -980,12 +952,6 @@
 | `scanlog.crashgen_settings_analyzer.DisabledSettingNotice` | `scanlog` | `DisabledSettingNotice` | `classic_scanlog.DisabledSettingNotice` | `matched` |
 | `scanlog.crashgen_settings_analyzer.DisabledSettingNotice@rust` | `scanlog` | `DisabledSettingNotice` | `classic_scanlog.DisabledSettingNotice` | `matched` |
 | `scanlog.crashgen_settings_analyzer.crashgen_settings_analyzer@rust` | `scanlog` | `crashgen_settings_analyzer` | `classic_scanlog.CrashgenSettingsAnalyzer` | `matched` |
-| `scanlog.settings_validator.SettingsValidator` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator` | `matched` |
-| `scanlog.settings_validator.SettingsValidator.__init__` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.__init__` | `matched` |
-| `scanlog.settings_validator.SettingsValidator.check_disabled_settings` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.check_disabled_settings` | `matched` |
-| `scanlog.settings_validator.SettingsValidator.scan_all_settings` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator.scan_all_settings` | `matched` |
-| `scanlog.settings_validator.SettingsValidator@rust` | `scanlog` | `SettingsValidator` | `classic_scanlog.SettingsValidator` | `matched` |
-| `scanlog.settings_validator.settings_validator@rust` | `scanlog` | `settings_validator` | `classic_scanlog.SettingsValidator` | `matched` |
 | `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisInput@rust` | `scanlog` | `CrashSuspectAnalysisInput` | `classic_scanlog.CrashSuspectAnalysisInput` | `matched` |
 | `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisInput.__init__` | `scanlog` | `CrashSuspectAnalysisInput` | `classic_scanlog.CrashSuspectAnalysisInput.__init__` | `matched` |
 | `scanlog.crash_suspect_analyzer.CrashSuspectAnalysisResult` | `scanlog` | `CrashSuspectAnalysisResult` | `classic_scanlog.CrashSuspectAnalysisResult` | `matched` |

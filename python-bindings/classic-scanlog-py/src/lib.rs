@@ -86,8 +86,10 @@ pub mod crashgen_settings_analyzer;
 pub mod fcx_handler;
 pub mod formid;
 pub mod formid_analyzer;
+pub mod formid_finding_analyzer;
 pub mod gpu_detector;
 pub mod mod_guidance_analyzer;
+pub mod named_record_finding_analyzer;
 pub mod papyrus;
 pub mod parser;
 pub mod patterns;
@@ -95,9 +97,7 @@ pub mod plugin_analyzer;
 pub mod plugin_evidence_analyzer;
 mod py_adapters;
 pub mod record_scanner;
-pub mod report;
 pub mod scan_run;
-pub mod settings_validator;
 pub mod version;
 
 // Re-export all public types
@@ -113,8 +113,11 @@ pub use crashgen_settings_analyzer::{
 };
 pub use fcx_handler::PyConfigIssue;
 pub use formid::PyRustFormIDAnalyzer;
-pub use formid_analyzer::{
-    PyFormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
+pub use formid_analyzer::{extract_formids_batch, is_valid_formid, validate_formids_batch};
+pub use formid_finding_analyzer::{
+    PyFormIDFinding, PyFormIDFindingAnalysisInput, PyFormIDFindingAnalysisResult,
+    PyFormIDFindingAnalyzer, PyFormIDFindingLookupEntry, PyFormIDFindingLookupReplyKind,
+    PyFormIDPlugin, PyFormIDValueLookupStatus,
 };
 pub use gpu_detector::{PyGpuDetector, PyGpuInfo, PyGpuVendor};
 pub use mod_guidance_analyzer::{
@@ -122,6 +125,10 @@ pub use mod_guidance_analyzer::{
     PyModGuidanceAnalysisResult, PyModGuidanceAnalyzer, PyModGuidanceConflictRule,
     PyModGuidanceCriteriaKind, PyModGuidanceImportantModRule, PyModGuidanceMatchState,
     PyModGuidanceSolutionRule, PyModSolutionGuidance,
+};
+pub use named_record_finding_analyzer::{
+    PyNamedRecordFinding, PyNamedRecordFindingAnalysisInput, PyNamedRecordFindingAnalysisResult,
+    PyNamedRecordFindingAnalyzer,
 };
 pub use papyrus::{PyPapyrusAnalyzer, PyPapyrusStats, papyrus_logging};
 pub use parser::PyLogParser;
@@ -132,17 +139,19 @@ pub use plugin_evidence_analyzer::{
     PyPluginEvidenceAnalyzer,
 };
 pub use record_scanner::{PyRecordScanner, contains_record, scan_records_batch};
-pub use report::{
-    PyParallelReportProcessor, PyReportComposer, PyReportFragment, PyReportGenerator, PyStringPool,
-};
 pub use scan_run::{
-    PyScanRunCancellation, PyScanRunConfiguration, PyScanRunDiscoveryResult, PyScanRunEvent,
-    PyScanRunExecution, PyScanRunInfrastructureError, PyScanRunLogEvent, PyScanRunLogFailure,
-    PyScanRunLogResult, PyScanRunRejectedInput, PyScanRunRequest, PyScanRunResult,
-    PyScanRunSetupCheck, PyScanRunSetupContext, PyScanRunSetupPathUpdate, PyScanRunSetupResult,
-    PyScanRunStandardSource, PyScanRunTargetedSource, PyScanRunUnsolvedLogs, scan_run_execute,
+    PyScanRunCancellation, PyScanRunConfiguration, PyScanRunContinuation, PyScanRunDiscoveryResult,
+    PyScanRunEvent, PyScanRunExecution, PyScanRunInfrastructureError,
+    PyScanRunInspectedYamlDataFile, PyScanRunInstalledYamlDataDiagnostic,
+    PyScanRunInstalledYamlDataRunData, PyScanRunLocalIgnoreRecoveryDecision,
+    PyScanRunLocalIgnoreResetRunData, PyScanRunLogEvent, PyScanRunLogFailure, PyScanRunLogResult,
+    PyScanRunRejectedInput, PyScanRunRequest, PyScanRunResult, PyScanRunSetupCheck,
+    PyScanRunSetupContext, PyScanRunSetupPathUpdate, PyScanRunSetupResult, PyScanRunStandardSource,
+    PyScanRunTargetedSource, PyScanRunUnsolvedLogs, PyScanRunYamlDataContentIdentity,
+    ScanRunContinuationConsumedError, ScanRunLocalIgnoreResetBackupError,
+    ScanRunLocalIgnoreResetConflictError, ScanRunLocalIgnoreResetReplacementError,
+    scan_run_execute, scan_run_resume,
 };
-pub use settings_validator::PySettingsValidator;
 pub use version::{
     PyCrashgenVersion, PyCrashgenVersionStatus, check_crashgen_version_status,
     parse_crashgen_version,
@@ -195,12 +204,36 @@ fn register_scan_run_exports(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyScanRunSetupResult>()?;
     m.add_class::<PyScanRunLogFailure>()?;
     m.add_class::<PyScanRunLogResult>()?;
+    m.add_class::<PyScanRunYamlDataContentIdentity>()?;
+    m.add_class::<PyScanRunInspectedYamlDataFile>()?;
+    m.add_class::<PyScanRunInstalledYamlDataDiagnostic>()?;
+    m.add_class::<PyScanRunInstalledYamlDataRunData>()?;
+    m.add_class::<PyScanRunLocalIgnoreResetRunData>()?;
+    m.add_class::<PyScanRunLocalIgnoreRecoveryDecision>()?;
+    m.add_class::<PyScanRunContinuation>()?;
     m.add_class::<PyScanRunResult>()?;
     m.add_class::<PyScanRunInfrastructureError>()?;
     m.add_class::<PyScanRunLogEvent>()?;
     m.add_class::<PyScanRunEvent>()?;
     m.add_class::<PyScanRunExecution>()?;
     m.add_function(wrap_pyfunction!(scan_run_execute, m)?)?;
+    m.add_function(wrap_pyfunction!(scan_run_resume, m)?)?;
+    m.add(
+        "ScanRunContinuationConsumedError",
+        m.py().get_type::<ScanRunContinuationConsumedError>(),
+    )?;
+    m.add(
+        "ScanRunLocalIgnoreResetConflictError",
+        m.py().get_type::<ScanRunLocalIgnoreResetConflictError>(),
+    )?;
+    m.add(
+        "ScanRunLocalIgnoreResetBackupError",
+        m.py().get_type::<ScanRunLocalIgnoreResetBackupError>(),
+    )?;
+    m.add(
+        "ScanRunLocalIgnoreResetReplacementError",
+        m.py().get_type::<ScanRunLocalIgnoreResetReplacementError>(),
+    )?;
     Ok(())
 }
 
@@ -216,7 +249,6 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // FormID analysis
     m.add_class::<PyRustFormIDAnalyzer>()?;
-    m.add_class::<PyFormIDAnalyzerCore>()?;
     m.add_function(wrap_pyfunction!(extract_formids_batch, m)?)?;
     m.add_function(wrap_pyfunction!(is_valid_formid, m)?)?;
     m.add_function(wrap_pyfunction!(validate_formids_batch, m)?)?;
@@ -242,17 +274,11 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     crashgen_settings_analyzer::register(m)?;
     crash_suspect_analyzer::register(m)?;
     mod_guidance_analyzer::register(m)?;
+    formid_finding_analyzer::register(m)?;
+    named_record_finding_analyzer::register(m)?;
     plugin_evidence_analyzer::register(m)?;
-    m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;
-
-    // Report generation
-    m.add_class::<PyStringPool>()?;
-    m.add_class::<PyReportFragment>()?;
-    m.add_class::<PyReportComposer>()?;
-    m.add_class::<PyReportGenerator>()?;
-    m.add_class::<PyParallelReportProcessor>()?;
 
     // Papyrus log analysis
     papyrus::register(m)?;
@@ -276,7 +302,6 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // FormID analysis
     m.add_class::<PyRustFormIDAnalyzer>()?;
-    m.add_class::<PyFormIDAnalyzerCore>()?;
     m.add_function(wrap_pyfunction!(extract_formids_batch, m)?)?;
     m.add_function(wrap_pyfunction!(is_valid_formid, m)?)?;
     m.add_function(wrap_pyfunction!(validate_formids_batch, m)?)?;
@@ -302,17 +327,11 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     crashgen_settings_analyzer::register(m)?;
     crash_suspect_analyzer::register(m)?;
     mod_guidance_analyzer::register(m)?;
+    formid_finding_analyzer::register(m)?;
+    named_record_finding_analyzer::register(m)?;
     plugin_evidence_analyzer::register(m)?;
-    m.add_class::<PySettingsValidator>()?;
     m.add_class::<PyConfigIssue>()?;
     register_scan_run_exports(m)?;
-
-    // Report generation
-    m.add_class::<PyStringPool>()?;
-    m.add_class::<PyReportFragment>()?;
-    m.add_class::<PyReportComposer>()?;
-    m.add_class::<PyReportGenerator>()?;
-    m.add_class::<PyParallelReportProcessor>()?;
 
     // Papyrus log analysis
     papyrus::register(m)?;

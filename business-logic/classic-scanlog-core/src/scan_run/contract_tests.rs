@@ -1,6 +1,6 @@
 use crate::CrashLogScanFacts;
 use crate::scan_run::contract;
-use crate::scan_run::test_support::{InfrastructureFault, ScanRunTestHooks};
+use crate::scan_run::test_support::{InfrastructureFault, LocalIgnoreResetGate, ScanRunTestHooks};
 use crate::scan_run::test_support::{
     write_fixture_log, write_fixture_log_at, write_minimal_yaml_tree,
 };
@@ -66,6 +66,16 @@ struct SharedInfrastructureFailure {
     path: Option<String>,
 }
 
+/// Shared reset outcome expectations exercised at the Rust-owned transaction boundary.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SharedResetOutcomes {
+    replacement_failure_code: String,
+    backup_must_equal_malformed_bytes: bool,
+    pre_reset_cancellation_mutates: bool,
+    post_critical_cancellation_status: String,
+}
+
 /// Loads the failure corpus used by core and binding mapping tests.
 fn shared_failure_fixtures() -> SharedFailureFixtures {
     #[derive(Deserialize)]
@@ -79,10 +89,36 @@ fn shared_failure_fixtures() -> SharedFailureFixtures {
         .failure_fixtures
 }
 
+/// Loads reset failure and cancellation expectations from the cross-binding fixture.
+fn shared_reset_outcomes() -> SharedResetOutcomes {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Manifest {
+        fixtures: Fixtures,
+    }
+
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Fixtures {
+        installed_yaml_data: InstalledYamlDataFixture,
+    }
+
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct InstalledYamlDataFixture {
+        reset_outcomes: SharedResetOutcomes,
+    }
+
+    serde_json::from_str::<Manifest>(SHARED_SCAN_RUN_MANIFEST)
+        .expect("shared scan-run manifest should deserialize")
+        .fixtures
+        .installed_yaml_data
+        .reset_outcomes
+}
+
 fn final_run_configuration() -> contract::Configuration {
     contract::Configuration {
-        yaml_dir_root: std::path::PathBuf::from("C:/CLASSIC"),
-        yaml_dir_data: std::path::PathBuf::from("C:/CLASSIC/CLASSIC Data"),
+        installation_root: std::path::PathBuf::from("C:/CLASSIC"),
         game: GameId::Fallout4,
         game_version: "auto".to_string(),
         options: contract::Options::new(true, true),
@@ -136,8 +172,7 @@ fn executable_fcx_request(
     let log_path = write_fixture_log(temp, log_name);
     let request = contract::Request::targeted_with_fcx(
         contract::Configuration {
-            yaml_dir_root: root.to_path_buf(),
-            yaml_dir_data: data,
+            installation_root: root.to_path_buf(),
             game: GameId::Fallout4,
             game_version: "Original".to_string(),
             options: contract::Options::new(false, false),
@@ -233,8 +268,7 @@ fn observer_scenario(delay: Option<Duration>) -> (contract::RunResult, Vec<contr
         write_fixture_log(&temp, "crash-observer-second.log"),
     ];
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(2);
     let request =
         contract::Request::targeted(configuration, TargetedCrashLogScanSource { inputs: logs });
@@ -256,6 +290,70 @@ fn observer_scenario(delay: Option<Duration>) -> (contract::RunResult, Vec<contr
     .expect("observer scenario should complete");
 
     (result, events)
+}
+
+/// Creates one malformed-Ignore targeted run paused at the public continuation seam.
+fn paused_recovery_fixture(
+    log_names: &[&str],
+) -> (
+    tempfile::TempDir,
+    Vec<PathBuf>,
+    PathBuf,
+    Vec<u8>,
+    contract::RunResult,
+) {
+    paused_recovery_fixture_with_hooks(log_names, ScanRunTestHooks::default())
+}
+
+/// Creates one malformed-Ignore targeted run paused with request-scoped deterministic hooks.
+fn paused_recovery_fixture_with_hooks(
+    log_names: &[&str],
+    hooks: ScanRunTestHooks,
+) -> (
+    tempfile::TempDir,
+    Vec<PathBuf>,
+    PathBuf,
+    Vec<u8>,
+    contract::RunResult,
+) {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated".to_vec();
+    std::fs::write(&ignore_path, &malformed_ignore)
+        .expect("malformed Local Ignore fixture should be written");
+    let logs = log_names
+        .iter()
+        .map(|name| write_fixture_log(&temp, name))
+        .collect::<Vec<_>>();
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(logs.len().max(1)),
+        },
+        TargetedCrashLogScanSource {
+            inputs: logs.clone(),
+        },
+    );
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            hooks.with_yaml_cache_root(root.join("isolated-cache")),
+        ))
+        .expect("malformed Local Ignore should pause with expected result data");
+    assert_eq!(
+        result.status,
+        contract::RunStatus::LocalIgnoreRecoveryRequired
+    );
+    (temp, logs, ignore_path, malformed_ignore, result)
 }
 
 #[test]
@@ -338,8 +436,7 @@ fn fcx_disabled_run_has_no_setup_result_or_fcx_report_content() {
     let log_path = write_fixture_log(&temp, "crash-fcx-disabled.log");
     let request = contract::Request::targeted(
         contract::Configuration {
-            yaml_dir_root: root.to_path_buf(),
-            yaml_dir_data: data,
+            installation_root: root.to_path_buf(),
             game: GameId::Fallout4,
             game_version: "Original".to_string(),
             options: contract::Options::new(false, false),
@@ -364,6 +461,938 @@ fn fcx_disabled_run_has_no_setup_result_or_fcx_report_content() {
         .expect("FCX-disabled Autoscan Report should be readable");
     assert!(!report.contains("FCX LOCAL FILE CHECKS"));
     assert!(!report.contains("FCX SETUP VALIDATION"));
+}
+
+#[test]
+fn targeted_run_uses_one_ready_installed_yaml_data_snapshot() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let log_path = write_fixture_log(&temp, "crash-installed-snapshot.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path.clone()],
+        },
+    );
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            ScanRunTestHooks::default().with_yaml_cache_root(root.join("isolated-cache")),
+        ))
+        .expect("a valid installed snapshot should complete the run");
+
+    assert_eq!(result.status, contract::RunStatus::Completed);
+    let installed = result
+        .installed_yaml_data
+        .as_ref()
+        .expect("completed intake should expose selected Installed YAML Data");
+    assert_eq!(
+        installed.main.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(
+        installed.game_file.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(
+        installed.local_ignore_state,
+        contract::LocalIgnoreRunState::Existing
+    );
+    assert!(installed.diagnostics.is_empty());
+    assert!(crate::report::autoscan_report_path(&log_path).is_file());
+}
+
+#[test]
+fn targeted_run_generates_missing_local_ignore_and_keeps_diagnostic_out_of_report() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    std::fs::remove_file(&ignore_path).expect("Local Ignore should be absent before the run");
+    let log_path = write_fixture_log(&temp, "crash-generated-ignore.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path.clone()],
+        },
+    );
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            ScanRunTestHooks::default().with_yaml_cache_root(root.join("isolated-cache")),
+        ))
+        .expect("generated Local Ignore should remain a successful Ready run");
+
+    let installed = result
+        .installed_yaml_data
+        .as_ref()
+        .expect("completed intake should expose selected Installed YAML Data");
+    assert_eq!(
+        installed.local_ignore_state,
+        contract::LocalIgnoreRunState::Generated
+    );
+    let generated = installed
+        .diagnostics
+        .iter()
+        .find(|diagnostic| {
+            diagnostic.kind() == contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated
+        })
+        .expect("generation should be exposed as structured run-level data");
+    assert_eq!(generated.path(), Some(ignore_path.as_path()));
+    assert_eq!(
+        std::fs::read_to_string(&ignore_path).expect("generated Local Ignore should be readable"),
+        "CLASSIC_Ignore_Fallout4:\n  - IgnoreThis.dll\n"
+    );
+    let report = std::fs::read_to_string(crate::report::autoscan_report_path(&log_path))
+        .expect("Autoscan Report should be readable");
+    assert!(!report.contains(generated.message()));
+    assert!(!report.contains("Local Ignore"));
+}
+
+/// Malformed Local Ignore pauses after prepared intake and resumes the retained run exactly once.
+#[test]
+fn targeted_run_resumes_without_ignore_from_retained_discovery_and_snapshot() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated";
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    std::fs::write(&ignore_path, malformed_ignore)
+        .expect("malformed Local Ignore fixture should be written");
+    let first_log = write_fixture_log(&temp, "crash-recovery-first.log");
+    let second_log = write_fixture_log(&temp, "crash-recovery-second.log");
+    let undiscovered_log = root.join("crash-recovery-undiscovered.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(2),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![
+                first_log.clone(),
+                undiscovered_log.clone(),
+                second_log.clone(),
+            ],
+        },
+    );
+
+    let mut initial = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            ScanRunTestHooks::default().with_yaml_cache_root(root.join("isolated-cache")),
+        ))
+        .expect("malformed Local Ignore should be expected run result data");
+
+    assert_eq!(
+        initial.status,
+        contract::RunStatus::LocalIgnoreRecoveryRequired
+    );
+    let discovery = initial
+        .discovery
+        .as_ref()
+        .expect("recovery-required result should retain completed discovery");
+    assert_eq!(
+        discovery.accepted_logs,
+        [first_log.clone(), second_log.clone()]
+    );
+    assert!(
+        discovery
+            .rejected_inputs
+            .iter()
+            .any(|input| input.path == undiscovered_log)
+    );
+    let initial_installed = initial
+        .installed_yaml_data
+        .as_ref()
+        .expect("recovery-required result should expose structured Installed YAML Data facts");
+    assert_eq!(
+        initial_installed.local_ignore_state,
+        contract::LocalIgnoreRunState::RecoveryRequired
+    );
+    assert_eq!(
+        initial_installed.local_ignore_identity.byte_len(),
+        malformed_ignore.len() as u64
+    );
+    assert!(initial_installed.diagnostics.iter().any(|diagnostic| {
+        diagnostic.kind() == contract::InstalledYamlDataRunDiagnosticKind::Parse
+            && diagnostic.path() == Some(ignore_path.as_path())
+    }));
+    let selected_main = initial_installed.main.clone();
+    let selected_game = initial_installed.game_file.clone();
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry an opaque continuation");
+
+    std::fs::write(
+        data.join("databases/CLASSIC Main.yaml"),
+        b"schema_version: \"2.0\"\ninvalid: changed\n",
+    )
+    .expect("selected Main path should be replaced after recovery paused");
+    std::fs::write(
+        data.join("databases/CLASSIC Fallout4.yaml"),
+        b"schema_version: \"1.0\"\ninvalid: changed\n",
+    )
+    .expect("selected game path should be replaced after recovery paused");
+    let created_after_pause = write_fixture_log(&temp, "crash-recovery-undiscovered.log");
+    assert_eq!(created_after_pause, undiscovered_log);
+
+    let resumed = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect("Proceed Without Ignore should resume retained prepared intake");
+
+    assert_eq!(resumed.status, contract::RunStatus::Completed);
+    assert_eq!(
+        resumed
+            .discovery
+            .as_ref()
+            .expect("resumed result should retain the same discovery")
+            .accepted_logs,
+        [first_log.clone(), second_log.clone()]
+    );
+    assert_eq!(
+        resumed
+            .logs
+            .iter()
+            .map(|log| (log.discovery_index, log.crash_log.clone()))
+            .collect::<Vec<_>>(),
+        vec![(0, first_log.clone()), (1, second_log.clone())]
+    );
+    let resumed_installed = resumed
+        .installed_yaml_data
+        .as_ref()
+        .expect("resumed result should expose the retained Installed YAML Data facts");
+    assert_eq!(resumed_installed.main, selected_main);
+    assert_eq!(resumed_installed.game_file, selected_game);
+    assert_eq!(
+        resumed_installed.local_ignore_state,
+        contract::LocalIgnoreRunState::ProceedWithoutIgnore
+    );
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
+    assert!(crate::report::autoscan_report_path(&first_log).is_file());
+    assert!(crate::report::autoscan_report_path(&second_log).is_file());
+    assert!(!crate::report::autoscan_report_path(&undiscovered_log).exists());
+}
+
+/// Reset To Default durably repairs Local Ignore and resumes the retained run exactly once.
+#[test]
+fn targeted_run_resets_local_ignore_and_resumes_retained_discovery_and_snapshot() {
+    let (temp, logs, ignore_path, malformed_ignore, mut initial) = paused_recovery_fixture(&[
+        "crash-reset-recovery-first.log",
+        "crash-reset-recovery-second.log",
+    ]);
+    let initial_installed = initial
+        .installed_yaml_data
+        .as_ref()
+        .expect("recovery-required result should expose selected Installed YAML Data");
+    let selected_main = initial_installed.main.clone();
+    let selected_game = initial_installed.game_file.clone();
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry an opaque continuation");
+    let data = temp.path().join("CLASSIC Data");
+    std::fs::write(
+        data.join("databases/CLASSIC Main.yaml"),
+        b"schema_version: \"2.0\"\ninvalid: changed\n",
+    )
+    .expect("selected Main path should be replaced after recovery paused");
+    std::fs::write(
+        data.join("databases/CLASSIC Fallout4.yaml"),
+        b"schema_version: \"1.0\"\ninvalid: changed\n",
+    )
+    .expect("selected game path should be replaced after recovery paused");
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let resumed = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            Some(&mut observer),
+        ))
+        .expect("Reset To Default should repair Local Ignore and resume retained preparation");
+
+    assert_eq!(resumed.status, contract::RunStatus::Completed);
+    assert_eq!(
+        resumed
+            .discovery
+            .as_ref()
+            .expect("resumed reset should retain completed discovery")
+            .accepted_logs,
+        logs
+    );
+    assert_eq!(resumed.logs.len(), 2);
+    assert!(
+        events
+            .iter()
+            .all(|event| !matches!(event, contract::Event::DiscoveryCompleted(_))),
+        "resume must not emit a second discovery event"
+    );
+    assert_eq!(
+        resumed
+            .logs
+            .iter()
+            .map(|log| log.discovery_index)
+            .collect::<Vec<_>>(),
+        vec![0, 1]
+    );
+    let installed = resumed
+        .installed_yaml_data
+        .as_ref()
+        .expect("successful reset should expose Installed YAML Data and reset metadata");
+    assert_eq!(installed.main, selected_main);
+    assert_eq!(installed.game_file, selected_game);
+    assert_eq!(
+        installed.local_ignore_state,
+        contract::LocalIgnoreRunState::ResetToDefault
+    );
+    let reset = installed
+        .local_ignore_reset
+        .as_ref()
+        .expect("successful reset should expose backup and replacement metadata");
+    assert_eq!(reset.local_ignore_path, ignore_path);
+    assert_eq!(
+        std::fs::read(&reset.backup_path).expect("verified reset backup should be readable"),
+        malformed_ignore
+    );
+    assert_eq!(reset.malformed_identity, reset.backup_identity);
+    assert_eq!(reset.replacement_identity, installed.local_ignore_identity);
+    assert!(installed.diagnostics.iter().any(|diagnostic| {
+        diagnostic.kind() == contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset
+            && diagnostic.path() == Some(ignore_path.as_path())
+    }));
+    assert_eq!(
+        std::fs::read_to_string(&ignore_path).expect("reset Local Ignore should be readable"),
+        "CLASSIC_Ignore_Fallout4:\n  - IgnoreThis.dll\n"
+    );
+    assert!(
+        logs.iter()
+            .all(|log| crate::report::autoscan_report_path(log).is_file())
+    );
+    let replay = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("successful reset resume should consume the continuation");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+/// A changed canonical Local Ignore returns typed conflict data without backup or analysis.
+#[test]
+fn reset_to_default_returns_typed_conflict_without_overwriting_current_local_ignore() {
+    let (_temp, logs, ignore_path, _malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-reset-conflict.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry an opaque continuation");
+    let replacement = b"CLASSIC_Ignore_Fallout4:\n  - UserChanged.dll\n";
+    std::fs::write(&ignore_path, replacement)
+        .expect("conflicting Local Ignore bytes should be written");
+
+    let error = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("changed Local Ignore should reject reset as typed conflict data");
+
+    let contract::ResumeError::LocalIgnoreResetConflict(conflict) = &error else {
+        panic!("expected reset conflict, got {error:?}");
+    };
+    assert_eq!(
+        error.kind(),
+        contract::ResumeErrorKind::LocalIgnoreResetConflict
+    );
+    assert_eq!(error.kind().as_str(), "local_ignore_reset_conflict");
+    assert_ne!(
+        conflict.expected_identity,
+        conflict.actual_identity.clone().unwrap()
+    );
+    assert!(conflict.backup_path.is_none());
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("conflicting Local Ignore should remain readable"),
+        replacement
+    );
+    assert!(
+        logs.iter()
+            .all(|log| !crate::report::autoscan_report_path(log).exists())
+    );
+    let replay = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("conflicted reset resume should consume the continuation");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+/// Backup preparation failure is a stable reset outcome and never starts replacement or analysis.
+#[test]
+fn reset_to_default_returns_typed_backup_failure_without_mutation_or_analysis() {
+    let (_temp, logs, ignore_path, malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-reset-backup-failure.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry an opaque continuation");
+    let root = ignore_path
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("fixture Local Ignore should be below the installation root");
+    let blocked_backup_root = root.join("CLASSIC Backup");
+    std::fs::write(&blocked_backup_root, b"not a directory")
+        .expect("backup root blocker should be written");
+
+    let error = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("backup preparation should fail with a stable reset outcome");
+
+    let contract::ResumeError::LocalIgnoreResetBackupFailure(failure) = &error else {
+        panic!("expected reset backup failure, got {error:?}");
+    };
+    assert_eq!(
+        error.kind(),
+        contract::ResumeErrorKind::LocalIgnoreResetBackupFailure
+    );
+    assert_eq!(error.kind().as_str(), "local_ignore_reset_backup_failure");
+    assert!(failure.path.starts_with(&blocked_backup_root));
+    assert!(failure.stage.is_none());
+    assert!(!failure.message.is_empty());
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
+    assert!(
+        logs.iter()
+            .all(|log| !crate::report::autoscan_report_path(log).exists())
+    );
+    let replay = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("failed reset resume should consume the continuation");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+/// Replacement publication failures retain their stable kind, path, stage, and message.
+#[test]
+fn reset_replacement_publication_failure_projects_stable_typed_details() {
+    let expected = shared_reset_outcomes();
+    let path = PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
+    let error = contract::project_local_ignore_reset_error(
+        classic_config_core::LocalIgnoreResetError::ReplacementPublication {
+            path: path.clone(),
+            stage: classic_config_core::LocalIgnoreResetPublicationStage::Publish,
+            source: std::io::Error::other("injected replacement failure"),
+        },
+    );
+
+    let contract::ResumeError::LocalIgnoreResetReplacementFailure(failure) = &error else {
+        panic!("expected reset replacement failure, got {error:?}");
+    };
+    assert_eq!(
+        error.kind(),
+        contract::ResumeErrorKind::LocalIgnoreResetReplacementFailure
+    );
+    assert_eq!(error.kind().as_str(), expected.replacement_failure_code);
+    assert_eq!(failure.path, path);
+    assert_eq!(
+        failure.stage,
+        Some(contract::LocalIgnoreResetFailureStage::Publish)
+    );
+    assert_eq!(
+        failure
+            .stage
+            .expect("replacement publication should retain its stage")
+            .as_str(),
+        "publish"
+    );
+    assert!(failure.message.contains("injected replacement failure"));
+}
+
+/// Cancellation observed before reset begins performs no backup, replacement, or analysis.
+#[test]
+fn cancellation_before_reset_to_default_performs_no_durable_or_analysis_work() {
+    let expected = shared_reset_outcomes();
+    let (_temp, logs, ignore_path, malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-reset-pre-cancelled.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry an opaque continuation");
+    let cancellation = contract::Cancellation::new();
+    cancellation.cancel();
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let cancelled = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &cancellation,
+            Some(&mut observer),
+        ))
+        .expect("pre-reset cancellation should remain normal result data");
+
+    assert_eq!(cancelled.status, contract::RunStatus::Cancelled);
+    assert_eq!(cancelled.cancelled, logs.len());
+    assert!(cancelled.installed_yaml_data.is_none());
+    assert!(cancelled.effective_concurrency.is_none());
+    assert!(events.is_empty());
+    let root = ignore_path
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("fixture Local Ignore should be below the installation root");
+    let mutated = std::fs::read(&ignore_path)
+        .expect("malformed Local Ignore should remain readable")
+        != malformed_ignore
+        || root.join("CLASSIC Backup").exists()
+        || logs
+            .iter()
+            .any(|log| crate::report::autoscan_report_path(log).exists());
+    assert_eq!(mutated, expected.pre_reset_cancellation_mutates);
+}
+
+/// Cancellation after reset enters its critical section waits for durability, then skips analysis.
+#[test]
+fn cancellation_racing_after_reset_begins_returns_cancelled_after_durable_reset() {
+    let expected = shared_reset_outcomes();
+    let gate = LocalIgnoreResetGate::new();
+    let hooks = ScanRunTestHooks::default().with_local_ignore_reset_gate(gate.clone());
+    let (_temp, logs, ignore_path, malformed_ignore, mut initial) =
+        paused_recovery_fixture_with_hooks(&["crash-reset-racing-cancel.log"], hooks);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry an opaque continuation");
+    let cancellation = contract::Cancellation::new();
+    let resume_cancellation = cancellation.clone();
+
+    let handle = std::thread::spawn(move || {
+        get_runtime().block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ResetToDefault,
+            &resume_cancellation,
+            None,
+        ))
+    });
+    gate.wait_until_entered();
+    cancellation.cancel();
+    gate.release();
+    let cancelled = handle
+        .join()
+        .expect("racing reset resume thread should join")
+        .expect("post-critical cancellation should remain normal result data");
+
+    assert_eq!(
+        cancelled.status.as_str(),
+        expected.post_critical_cancellation_status
+    );
+    assert_eq!(cancelled.cancelled, logs.len());
+    assert!(cancelled.installed_yaml_data.is_none());
+    assert!(cancelled.effective_concurrency.is_none());
+    assert_eq!(
+        std::fs::read_to_string(&ignore_path).expect("reset Local Ignore should be readable"),
+        "CLASSIC_Ignore_Fallout4:\n  - IgnoreThis.dll\n"
+    );
+    let root = ignore_path
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("fixture Local Ignore should be below the installation root");
+    let backup_directory = root.join("CLASSIC Backup/YAML Data/Local Ignore");
+    let backups = std::fs::read_dir(&backup_directory)
+        .expect("durable reset should create its backup directory")
+        .map(|entry| entry.expect("backup entry should be readable").path())
+        .collect::<Vec<_>>();
+    assert_eq!(backups.len(), 1);
+    if expected.backup_must_equal_malformed_bytes {
+        assert_eq!(
+            std::fs::read(&backups[0]).expect("durable reset backup should be readable"),
+            malformed_ignore
+        );
+    }
+    assert!(
+        logs.iter()
+            .all(|log| !crate::report::autoscan_report_path(log).exists())
+    );
+}
+
+/// Sequential and concurrent replay both return the same typed consumed-continuation failure.
+#[test]
+fn proceed_without_ignore_continuation_rejects_every_replay() {
+    let (_temp, _logs, _ignore_path, _malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-continuation-replay.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry a continuation");
+
+    get_runtime().block_on(async {
+        let first_cancellation = contract::Cancellation::new();
+        let second_cancellation = contract::Cancellation::new();
+        let (first, second) = tokio::join!(
+            continuation.resume(
+                contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                &first_cancellation,
+                None,
+            ),
+            continuation.resume(
+                contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                &second_cancellation,
+                None,
+            )
+        );
+        assert_eq!(usize::from(first.is_ok()) + usize::from(second.is_ok()), 1);
+        let error = first
+            .err()
+            .or_else(|| second.err())
+            .expect("one racing resume should fail");
+        assert_eq!(error, contract::ResumeError::ContinuationConsumed);
+        assert_eq!(error.kind().as_str(), "scan_run_continuation_consumed");
+
+        let replay = continuation
+            .resume(
+                contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+                &contract::Cancellation::new(),
+                None,
+            )
+            .await
+            .expect_err("every later resume should reject replay");
+        assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+    });
+}
+
+/// Pre-resume cancellation consumes the continuation before recovery or analysis can begin.
+#[test]
+fn cancellation_before_recovery_resume_returns_normal_cancelled_after_discovery_result() {
+    let (_temp, logs, ignore_path, malformed_ignore, mut initial) =
+        paused_recovery_fixture(&["crash-continuation-cancelled.log"]);
+    let continuation = initial
+        .continuation
+        .take()
+        .expect("recovery-required result should carry a continuation");
+    let cancellation = contract::Cancellation::new();
+    cancellation.cancel();
+    let mut events = Vec::new();
+    let mut observer = |event| events.push(event);
+
+    let cancelled = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &cancellation,
+            Some(&mut observer),
+        ))
+        .expect("pre-resume cancellation should remain expected result data");
+
+    assert_eq!(cancelled.status, contract::RunStatus::Cancelled);
+    assert_eq!(cancelled.cancelled, logs.len());
+    assert_eq!(
+        cancelled
+            .discovery
+            .as_ref()
+            .expect("cancelled-after-discovery should retain discovery")
+            .accepted_logs,
+        logs
+    );
+    assert!(cancelled.installed_yaml_data.is_none());
+    assert!(cancelled.effective_concurrency.is_none());
+    assert!(events.is_empty());
+    assert!(
+        logs.iter()
+            .all(|log| !crate::report::autoscan_report_path(log).exists())
+    );
+    assert_eq!(
+        std::fs::read(ignore_path).expect("malformed Local Ignore should remain readable"),
+        malformed_ignore
+    );
+    let replay = get_runtime()
+        .block_on(continuation.resume(
+            contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &contract::Cancellation::new(),
+            None,
+        ))
+        .expect_err("cancelled resume should still consume the continuation");
+    assert_eq!(replay, contract::ResumeError::ContinuationConsumed);
+}
+
+#[test]
+fn targeted_run_keeps_the_accepted_updated_snapshot_when_installation_files_change() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let cache_root = root.join("isolated-cache");
+    let cache = cache_root.join("CLASSIC").join("yaml-cache");
+    std::fs::create_dir_all(&cache).expect("isolated cache should be created");
+    let updated_game = cache.join("CLASSIC Fallout4.yaml");
+    std::fs::write(
+        &updated_game,
+        concat!(
+            "schema_version: \"1.0\"\n",
+            "Game_Info:\n",
+            "  XSE_Acronym: \"F4SE\"\n",
+            "  GameVersion: \"1.10.163\"\n",
+            "  CRASHGEN_LatestVer: \"1.28.6\"\n",
+            "  CRASHGEN_LogName: \"Buffout 4\"\n",
+            "  Main_Root_Name: \"Fallout4\"\n",
+            "Crashlog_Plugins_Exclude: []\n",
+            "Crashlog_Records_Exclude: []\n",
+            "Crashlog_Error_Check:\n",
+            "  - id: updated-snapshot-rule\n",
+            "    name: Updated Snapshot Rule\n",
+            "    severity: 5\n",
+            "    main_error_contains_any: [EXCEPTION_ACCESS_VIOLATION]\n",
+            "Crashlog_Stack_Check: []\n",
+            "Mods_CONF: []\n",
+            "Mods_CORE: []\n",
+            "Mods_FREQ: []\n",
+            "Mods_SOLU: []\n",
+            "Crashgen_Registry:\n",
+            "  default:\n",
+            "    display_section: \"\"\n",
+            "    ignore_keys: []\n",
+            "    checks: []\n",
+        ),
+    )
+    .expect("updated game YAML Data should be written");
+    let log_path = write_fixture_log(&temp, "crash-updated-snapshot.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, true),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path.clone()],
+        },
+    );
+    let bundled_main = data.join("databases").join("CLASSIC Main.yaml");
+    let local_ignore = data.join("CLASSIC Ignore.yaml");
+    let mut changed = false;
+    let mut observer = |event| {
+        if !changed && matches!(event, contract::Event::EffectiveConcurrencySelected { .. }) {
+            changed = true;
+            std::fs::write(
+                &updated_game,
+                b"schema_version: \"1.0\"\ninvalid: changed\n",
+            )
+            .expect("selected game path should be replaced after intake");
+            std::fs::write(
+                &bundled_main,
+                b"schema_version: \"2.0\"\ninvalid: changed\n",
+            )
+            .expect("selected Main path should be replaced after intake");
+            std::fs::write(&local_ignore, b"not: [valid")
+                .expect("selected Local Ignore path should be replaced after intake");
+        }
+    };
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            Some(&mut observer),
+            ScanRunTestHooks::default().with_yaml_cache_root(cache_root),
+        ))
+        .expect("the retained snapshot should complete after installation changes");
+
+    assert!(
+        changed,
+        "the fixture should replace files only after intake"
+    );
+    let installed = result
+        .installed_yaml_data
+        .as_ref()
+        .expect("completed intake should expose selected Installed YAML Data");
+    assert_eq!(
+        installed.main.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(
+        installed.game_file.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Updated
+    );
+    let report = std::fs::read_to_string(crate::report::autoscan_report_path(&log_path))
+        .expect("Autoscan Report should be readable");
+    assert!(report.contains("Updated Snapshot Rule"));
+    assert!(!report.contains("invalid: changed"));
+}
+
+#[test]
+fn targeted_run_exposes_independent_updated_candidate_fallback_diagnostics() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let cache_root = root.join("isolated-cache");
+    let cache = cache_root.join("CLASSIC").join("yaml-cache");
+    std::fs::create_dir_all(&cache).expect("isolated cache should be created");
+    let bundled_main = std::fs::read_to_string(data.join("databases/CLASSIC Main.yaml"))
+        .expect("bundled Main should be readable");
+    let bundled_game = std::fs::read_to_string(data.join("databases/CLASSIC Fallout4.yaml"))
+        .expect("bundled game should be readable");
+    std::fs::write(
+        cache.join("CLASSIC Main.yaml"),
+        bundled_main.replace("schema_version: \"2.0\"", "schema_version: \"3.0\""),
+    )
+    .expect("incompatible updated Main should be written");
+    std::fs::write(
+        cache.join("CLASSIC Fallout4.yaml"),
+        bundled_game.replace("Main_Root_Name: \"Fallout4\"", "Main_Root_Name: \"Skyrim\""),
+    )
+    .expect("semantically invalid updated game should be written");
+    let log_path = write_fixture_log(&temp, "crash-fallback-diagnostics.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path],
+        },
+    );
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            ScanRunTestHooks::default().with_yaml_cache_root(cache_root),
+        ))
+        .expect("rejected update candidates should fall back independently");
+
+    let installed = result
+        .installed_yaml_data
+        .as_ref()
+        .expect("completed intake should expose Installed YAML Data metadata");
+    assert_eq!(
+        installed.main.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(
+        installed.game_file.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Bundled
+    );
+    assert!(installed.diagnostics.iter().any(|diagnostic| {
+        diagnostic.role() == Some(classic_config_core::InstalledYamlDataRole::Main)
+            && diagnostic.candidate()
+                == Some(classic_config_core::InstalledYamlDataProvenance::Updated)
+            && diagnostic.kind() == contract::InstalledYamlDataRunDiagnosticKind::IncompatibleSchema
+    }));
+    assert!(installed.diagnostics.iter().any(|diagnostic| {
+        diagnostic.role() == Some(classic_config_core::InstalledYamlDataRole::Game)
+            && diagnostic.candidate()
+                == Some(classic_config_core::InstalledYamlDataProvenance::Updated)
+            && diagnostic.kind() == contract::InstalledYamlDataRunDiagnosticKind::InvalidRoleData
+    }));
+}
+
+#[test]
+fn targeted_run_selects_missing_canonical_main_previous_sibling_read_only() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let cache_root = root.join("isolated-cache");
+    let cache = cache_root.join("CLASSIC").join("yaml-cache");
+    std::fs::create_dir_all(&cache).expect("isolated cache should be created");
+    let previous = cache.join("CLASSIC Main.yaml.prev");
+    std::fs::copy(data.join("databases/CLASSIC Main.yaml"), &previous)
+        .expect("valid previous Main should be written");
+    let log_path = write_fixture_log(&temp, "crash-previous-main.log");
+    let request = contract::Request::targeted(
+        contract::Configuration {
+            installation_root: root.to_path_buf(),
+            game: GameId::Fallout4,
+            game_version: "Original".to_string(),
+            options: contract::Options::new(false, false),
+            scan_facts: CrashLogScanFacts::default(),
+            max_concurrent: Some(1),
+        },
+        TargetedCrashLogScanSource {
+            inputs: vec![log_path],
+        },
+    );
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            ScanRunTestHooks::default().with_yaml_cache_root(cache_root),
+        ))
+        .expect("a valid previous Main should complete the run");
+
+    let installed = result
+        .installed_yaml_data
+        .as_ref()
+        .expect("completed intake should expose Installed YAML Data metadata");
+    assert_eq!(
+        installed.main.provenance(),
+        classic_config_core::InstalledYamlDataProvenance::Previous
+    );
+    assert!(
+        previous.exists(),
+        "the previous sibling must remain in place"
+    );
+    assert!(
+        !cache.join("CLASSIC Main.yaml").exists(),
+        "the run must not promote the previous sibling"
+    );
 }
 
 #[test]
@@ -482,8 +1511,7 @@ fn cancellation_control_is_opaque_cloneable_and_separate_from_the_request() {
 fn targeted_cancellation_before_discovery_has_no_discovery_result() {
     let temp = tempdir().expect("tempdir should succeed");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = temp.path().to_path_buf();
-    configuration.yaml_dir_data = temp.path().join("CLASSIC Data");
+    configuration.installation_root = temp.path().to_path_buf();
     let request = contract::Request::targeted(
         configuration,
         TargetedCrashLogScanSource {
@@ -512,8 +1540,7 @@ fn targeted_cancellation_before_discovery_has_no_discovery_result() {
 fn standard_cancellation_before_discovery_has_no_discovery_result_or_side_effects() {
     let temp = tempdir().expect("tempdir should succeed");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = temp.path().to_path_buf();
-    configuration.yaml_dir_data = temp.path().join("CLASSIC Data");
+    configuration.installation_root = temp.path().to_path_buf();
     let request = contract::Request::standard(
         configuration,
         StandardCrashLogScanSource {
@@ -558,8 +1585,7 @@ fn targeted_cancellation_during_discovery_discards_partial_results() {
         .expect("targeted discovery fixture should be written");
     }
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     let request = contract::Request::targeted(
         configuration,
         TargetedCrashLogScanSource {
@@ -605,8 +1631,7 @@ fn standard_cancellation_during_discovery_discards_partial_results() {
         .join("Crash Logs")
         .join("crash-standard-discovery-cancel-0000.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     let request = contract::Request::standard(
         configuration,
         StandardCrashLogScanSource {
@@ -682,8 +1707,7 @@ fn targeted_cancellation_immediately_after_discovery_retains_the_complete_result
         missing.clone(),
     ];
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     let request = contract::Request::targeted(
         configuration,
         TargetedCrashLogScanSource {
@@ -782,8 +1806,7 @@ fn standard_cancellation_immediately_after_discovery_retains_configured_sources(
         documents.clone(),
     ];
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     let request = contract::Request::standard(
         configuration,
         StandardCrashLogScanSource {
@@ -845,6 +1868,47 @@ fn standard_cancellation_immediately_after_discovery_retains_configured_sources(
 #[test]
 fn final_contract_exposes_all_stable_variant_identifiers() {
     assert_eq!(
+        contract::RunStatus::LocalIgnoreRecoveryRequired.as_str(),
+        "local_ignore_recovery_required"
+    );
+    assert_eq!(
+        contract::LocalIgnoreRunState::RecoveryRequired.as_str(),
+        "recovery_required"
+    );
+    assert_eq!(
+        contract::LocalIgnoreRunState::ProceedWithoutIgnore.as_str(),
+        "proceed_without_ignore"
+    );
+    assert_eq!(
+        contract::LocalIgnoreRunState::ResetToDefault.as_str(),
+        "reset_to_default"
+    );
+    assert_eq!(
+        contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore.as_str(),
+        "proceed_without_ignore"
+    );
+    assert_eq!(
+        contract::LocalIgnoreRecoveryDecision::ResetToDefault.as_str(),
+        "reset_to_default"
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::ContinuationConsumed.as_str(),
+        "scan_run_continuation_consumed"
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::LocalIgnoreResetConflict.as_str(),
+        "local_ignore_reset_conflict"
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::LocalIgnoreResetBackupFailure.as_str(),
+        "local_ignore_reset_backup_failure"
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::LocalIgnoreResetReplacementFailure.as_str(),
+        "local_ignore_reset_replacement_failure"
+    );
+
+    assert_eq!(
         contract::InfrastructureErrorStage::RequestValidation.as_str(),
         "request_validation"
     );
@@ -890,8 +1954,7 @@ fn final_contract_exposes_all_stable_variant_identifiers() {
 fn final_operation_accepts_optional_observer_and_retains_completed_discovery() {
     let temp = tempdir().expect("tempdir should succeed");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = temp.path().to_path_buf();
-    configuration.yaml_dir_data = temp.path().join("CLASSIC Data");
+    configuration.installation_root = temp.path().to_path_buf();
     let request = contract::Request::targeted(
         configuration,
         TargetedCrashLogScanSource { inputs: Vec::new() },
@@ -1008,8 +2071,7 @@ fn final_operation_reports_effective_concurrency_and_stable_log_events() {
     write_minimal_yaml_tree(root, &data);
     let log_path = write_fixture_log(&temp, "crash-final-contract.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(4);
     let request = contract::Request::targeted(
         configuration,
@@ -1080,8 +2142,7 @@ fn adaptive_low_volume_run_selects_and_retains_one_worker() {
     write_minimal_yaml_tree(root, &data);
     let log = write_fixture_log(&temp, "crash-adaptive-low-volume.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = None;
     let request = contract::Request::targeted(
         configuration,
@@ -1143,8 +2204,7 @@ fn serial_scheduler_finishes_one_log_before_starting_the_next() {
     let first = write_fixture_log(&temp, "crash-serial-first.log");
     let second = write_fixture_log(&temp, "crash-serial-second.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::targeted(
         configuration,
@@ -1196,8 +2256,7 @@ fn cancellation_while_queued_never_emits_started() {
         write_fixture_log(&temp, "crash-queued-second.log"),
     ];
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::targeted(
         configuration,
@@ -1253,8 +2312,7 @@ fn cancellation_with_multiple_admitted_logs_preserves_their_durable_boundary() {
         .map(|index| write_fixture_log(&temp, &format!("crash-admitted-{index}.log")))
         .collect::<Vec<_>>();
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(2);
     let request = contract::Request::targeted(
         configuration,
@@ -1320,8 +2378,7 @@ fn observer_can_request_cancellation_before_discovered_logs_are_admitted() {
     let first = write_fixture_log(&temp, "crash-cancel-first.log");
     let second = write_fixture_log(&temp, "crash-cancel-second.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     let request = contract::Request::targeted(
         configuration,
         TargetedCrashLogScanSource {
@@ -1370,8 +2427,7 @@ fn terminal_outcomes_remain_in_discovery_order_when_completion_is_out_of_order()
     let first = write_fixture_log(&temp, "crash-slow-first.log");
     let second = write_fixture_log(&temp, "crash-fast-second.log");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(2);
     let request = contract::Request::targeted(
         configuration,
@@ -1407,6 +2463,70 @@ fn terminal_outcomes_remain_in_discovery_order_when_completion_is_out_of_order()
     );
 }
 
+/// Verifies one admitted analysis failure does not suppress another admitted log's report.
+#[test]
+fn admitted_analysis_failure_does_not_abort_other_admitted_log() {
+    let temp = tempdir().expect("tempdir should succeed");
+    let root = temp.path();
+    let data = root.join("CLASSIC Data");
+    write_minimal_yaml_tree(root, &data);
+    let failed = write_fixture_log(&temp, "crash-failed-analysis.log");
+    let succeeded = write_fixture_log(&temp, "crash-successful-analysis.log");
+    let mut configuration = final_run_configuration();
+    configuration.installation_root = root.to_path_buf();
+    configuration.max_concurrent = Some(2);
+    let request = contract::Request::targeted(
+        configuration,
+        TargetedCrashLogScanSource {
+            inputs: vec![failed.clone(), succeeded.clone()],
+        },
+    );
+    let hooks = ScanRunTestHooks::default().with_analysis_failure(0, "injected analysis failure");
+
+    let result = get_runtime()
+        .block_on(contract::execute_with_test_hooks(
+            request,
+            &contract::Cancellation::new(),
+            None,
+            hooks,
+        ))
+        .expect("a per-log analysis failure should not abort other admitted work");
+
+    assert_eq!(result.status, contract::RunStatus::Completed);
+    assert_eq!((result.total, result.succeeded, result.failed), (2, 1, 1));
+    assert_eq!(result.cancelled, 0);
+
+    let failed_result = &result.logs[0];
+    assert_eq!(failed_result.crash_log, failed);
+    assert_eq!(failed_result.disposition, contract::LogDisposition::Failed);
+    assert!(failed_result.autoscan_report.is_none());
+    assert!(!crate::report::autoscan_report_path(&failed_result.crash_log).exists());
+    assert_eq!(
+        failed_result
+            .failures
+            .iter()
+            .map(|failure| (failure.stage, failure.message.as_str()))
+            .collect::<Vec<_>>(),
+        vec![(
+            contract::LogFailureStage::Analysis,
+            "injected analysis failure"
+        )]
+    );
+
+    let succeeded_result = &result.logs[1];
+    assert_eq!(succeeded_result.crash_log, succeeded);
+    assert_eq!(
+        succeeded_result.disposition,
+        contract::LogDisposition::Succeeded
+    );
+    assert!(succeeded_result.failures.is_empty());
+    let report = succeeded_result
+        .autoscan_report
+        .as_ref()
+        .expect("the other admitted log should persist its Autoscan Report");
+    assert!(report.is_file());
+}
+
 /// Verifies cancellation cannot publish Finished before Standard durable finalization resolves.
 #[test]
 fn admitted_standard_log_finishes_report_failure_and_movement_after_cancellation() {
@@ -1420,8 +2540,7 @@ fn admitted_standard_log_finishes_report_failure_and_movement_after_cancellation
     );
     let unsolved = root.join("Unsolved Logs");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::standard(
         configuration,
@@ -1492,8 +2611,7 @@ fn partial_unsolved_logs_movement_retains_moved_state_and_failure() {
     let _log = write_fixture_log_at(&root.join("Crash Logs"), "crash-partial-movement.log");
     let unsolved = root.join("Unsolved Logs");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::standard(
         configuration,
@@ -1571,8 +2689,7 @@ fn targeted_report_failure_cannot_trigger_unsolved_logs_movement() {
     std::fs::create_dir(crate::report::autoscan_report_path(&log))
         .expect("a directory should force report persistence failure");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::targeted(
         configuration,
@@ -1614,8 +2731,7 @@ fn standard_unsolved_logs_collision_preserves_existing_destination() {
     let existing = unsolved.join("crash-collision.log");
     std::fs::write(&existing, "existing").expect("existing destination should be written");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::standard(
         configuration,
@@ -1668,8 +2784,7 @@ fn overlapping_standard_runs_never_clobber_same_name_unsolved_logs() {
         std::fs::write(&log, contents).expect("run-unique Crash Log should be written");
         let request = contract::Request::standard(
             contract::Configuration {
-                yaml_dir_root: root.clone(),
-                yaml_dir_data: data,
+                installation_root: root.clone(),
                 game: GameId::Fallout4,
                 game_version: "auto".to_string(),
                 options: contract::Options::new(false, false),
@@ -1732,8 +2847,7 @@ fn standard_unsolved_logs_filesystem_failure_is_structured() {
     std::fs::write(&blocked_destination, "not a directory")
         .expect("blocking destination file should be written");
     let mut configuration = final_run_configuration();
-    configuration.yaml_dir_root = root.to_path_buf();
-    configuration.yaml_dir_data = data;
+    configuration.installation_root = root.to_path_buf();
     configuration.max_concurrent = Some(1);
     let request = contract::Request::standard(
         configuration,
@@ -1817,8 +2931,7 @@ fn injected_infrastructure_failures_preserve_every_stable_contract_field() {
         write_minimal_yaml_tree(root, &data);
         let log = write_fixture_log(&temp, "crash-shared-infrastructure.log");
         let mut configuration = final_run_configuration();
-        configuration.yaml_dir_root = root.to_path_buf();
-        configuration.yaml_dir_data = data.clone();
+        configuration.installation_root = root.to_path_buf();
         configuration.max_concurrent = Some(1);
         let request = contract::Request::targeted(
             configuration,

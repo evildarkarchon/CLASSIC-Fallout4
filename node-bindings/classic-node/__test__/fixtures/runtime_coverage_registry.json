@@ -73,15 +73,15 @@
         "ownerModule": "scanlog",
         "tier": "tier1"
       },
-      "contractCount": 109,
-      "contractIdsHash": "1d3c4a7392f8819b147c7d3b00c6a5fb4bfea9bbde4eafcdac3da982916406fd",
+      "contractCount": 113,
+      "contractIdsHash": "38f7263df0fdfed5b61f5ba3c65419c05662286176e7942d582d534ef5fbdcdb",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
       "testCaseId": "final Crash Log Scan Run contract",
       "fixtureRefs": [
         "tests/fixtures/crash_log_scan_run"
       ],
-      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128, #129, #130, and #131 add focused semantic-analyzer rows with dedicated analyzer tests. Legacy orchestration and process-global FCX controls are intentionally absent."
+      "notes": "Covers standalone scanlog utilities and the final tagged Crash Log Scan Run request, event, result, cancellation, ordering, and error contract; issues #128 through #134 add focused semantic-analyzer rows with dedicated analyzer tests. Issue #136 removes obsolete Rust-only report-fragment and SettingsValidator rows; legacy orchestration and process-global FCX controls remain absent."
     },
     {
       "coverageId": "node-tier1-config",
@@ -92,8 +92,8 @@
         "ownerModule": "config",
         "tier": "tier1"
       },
-      "contractCount": 99,
-      "contractIdsHash": "a89fcf61c0cdaa5685f22a4472f76f014b0b80928a0ecd326023d684c6d370e8",
+      "contractCount": 104,
+      "contractIdsHash": "58a9e790c2ee9de389456766416658910c41fd2a0170422705017f1065822bcf",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "config-tier1-parity",
@@ -236,6 +236,40 @@
       "notes": "Exercises typed plugin identities and occurrence counts, explicit-empty completed results, handle reuse without leaked evidence, absence of rendered report prose, and stable shared analyzer errors."
     },
     {
+      "coverageId": "node-tier1-scanlog-named-record-finding-analyzer-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "JsNamedRecordFinding",
+        "JsNamedRecordFindingAnalysisInput",
+        "JsNamedRecordFindingAnalysisResult",
+        "NamedRecordFindingAnalyzer"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/named_record_finding_analyzer.spec.ts",
+      "testCaseId": "named-record-finding-analyzer-runtime",
+      "notes": "Exercises distinct typed records and occurrence counts, explicit-empty completed results, immutable handle reuse without leaked findings, absence of rendered report prose, and stable shared analyzer errors."
+    },
+    {
+      "coverageId": "node-tier1-scanlog-formid-finding-analyzer-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "FormIdFindingAnalyzer",
+        "JsFormIdFinding",
+        "JsFormIdFindingAnalysisInput",
+        "JsFormIdFindingAnalysisResult",
+        "JsFormIdPlugin",
+        "JsFormIdValueLookupStatus"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/formid_finding_analyzer.spec.ts",
+      "testCaseId": "formid-finding-analyzer-runtime",
+      "notes": "Exercises async typed found, missing, and unresolved FormID findings through the shared runtime, explicit optional values, and stable shared analyzer errors."
+    },
+    {
       "coverageId": "node-tier2-config-runtime",
       "classification": "runtime_verified",
       "ownerModule": "config",
@@ -249,6 +283,31 @@
       "verificationMode": "direct_call",
       "testSuite": "node-bindings/classic-node/__test__/scangame.spec.ts",
       "testCaseId": "config-tier2-scangame"
+    },
+    {
+      "coverageId": "node-tier1-config-installed-yaml-load-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "config",
+      "tier": "tier1",
+      "bindingIdentifiers": [
+        "InstalledYamlDataSnapshot",
+        "JsInstalledYamlDataLoadOutcome",
+        "JsInstalledYamlDataLoadRequest",
+        "JsInstalledYamlDataLoadStatus",
+        "JsLocalIgnoreResetConflict",
+        "JsLocalIgnoreResetOutcome",
+        "JsLocalIgnoreResetPublicationStage",
+        "JsLocalIgnoreResetResult",
+        "JsLocalIgnoreResetStatus",
+        "JsLocalIgnoreYamlDataState",
+        "LocalIgnoreRecoveryPlan",
+        "loadInstalledYamlData"
+      ],
+      "verificationMode": "direct_call",
+      "testSuite": "node-bindings/classic-node/__test__/config.spec.ts",
+      "testCaseId": "installed-yaml-data-loading-runtime",
+      "fixtureRefs": [],
+      "notes": "Exercises typed Ready and Local Ignore recovery-required outcomes, both consuming recovery decisions, worker-pool reset execution, durable byte-exact backup and retained-default replacement, typed conflict projection, operation-scoped empty ignores, repeated recovery, exact-byte filesystem preservation, parsed YAML Data, the retained Main-derived simplify removal list, retained identities and metadata, structured reset diagnostics, and stable fatal NAPI error metadata through the public Node seam."
     },
     {
       "coverageId": "node-tier2-config-game-local-runtime",
@@ -317,15 +376,19 @@
       "tier": "tier2",
       "bindingIdentifiers": [
         "JsLogCollector",
+        "JsInstalledYamlDataRunData",
         "JsScanRunConfiguration",
         "JsScanRunDiscoveryResult",
         "JsScanRunEvent",
         "JsScanRunSuccess",
         "JsScanRunFailure",
         "JsScanRunInfrastructureError",
+        "JsScanRunInstalledYamlDataDiagnostic",
+        "JsScanRunInstalledYamlDataDiagnosticKind",
         "JsScanRunLogEvent",
         "JsScanRunLogFailure",
         "JsScanRunLogResult",
+        "JsScanRunLocalIgnoreState",
         "JsScanRunRejectedInput",
         "JsScanRunResult",
         "JsScanRunSetupCheck",
@@ -348,7 +411,27 @@
         "GAME_YAML",
         "IGNORE_YAML"
       ],
-      "notes": "Exercises typed Standard and Targeted requests, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns discovery, concurrency, analysis, and durable Autoscan Report writes."
+      "notes": "Exercises installation-root and typed-game Standard and Targeted requests, structured immutable Installed YAML Data metadata, serialized events, discovery rejections, ordered results, and the packaged CLI under Node while Rust owns snapshot selection, discovery, concurrency, analysis, and durable Autoscan Report writes. The complementary Bun suite verifies both existing and generated Local Ignore run metadata and diagnostics."
+    },
+    {
+      "coverageId": "node-tier2-scanlog-local-ignore-recovery-runtime",
+      "classification": "runtime_verified",
+      "ownerModule": "scanlog",
+      "tier": "tier2",
+      "bindingIdentifiers": [
+        "JsScanRunLocalIgnoreRecoveryDecision",
+        "JsScanRunLocalIgnoreResetRunData",
+        "ScanRunContinuation",
+        "scanRunResume"
+      ],
+      "verificationMode": "contract_test",
+      "testSuite": "node-bindings/classic-node/__test__/scanlog.spec.ts",
+      "testCaseId": "shared Local Ignore recovery continuation retains snapshots and rejects replay",
+      "fixtureRefs": [
+        "MAIN_YAML",
+        "GAME_YAML"
+      ],
+      "notes": "Exercises the opaque Local Ignore recovery continuation and both explicit decisions. Proceed Without Ignore retains discovery/snapshot identity without mutation. Reset To Default retains the same discovery and selected Main/game facts, exposes durable byte-exact backup and replacement metadata plus reset diagnostics, preserves conflict and backup failures as stable coded rejections, honors pre-reset cancellation without filesystem work, and proves cancellation after reset lock acquisition waits for durable repair before returning the normal cancelled result. The companion Rust adapter test projects replacement-publication failure through the same pure Node rejection metadata path. Replay remains typed and successful report output is byte-identical."
     },
     {
       "coverageId": "node-tier1-database",
@@ -359,12 +442,13 @@
         "ownerModule": "database",
         "tier": "tier1"
       },
-      "contractCount": 14,
-      "contractIdsHash": "3c4bd255d9c615d7b5dcb827dd795131595556e2817a2dd68076d3da639208d5",
+      "contractCount": 23,
+      "contractIdsHash": "e1b0fd3cd7ed56e714401431922933e4f3b9f19151b2b235851a37b274a35f1e",
       "verificationMode": "workflow_smoke",
       "testSuite": "node-bindings/classic-node/__test__/parity_tier1.spec.ts",
       "testCaseId": "database-tier1-parity",
-      "fixtureRefs": []
+      "fixtureRefs": [],
+      "notes": "The owned strict FormID Value Lookup facade is additionally exercised by node-bindings/classic-node/__test__/database.spec.ts."
     },
     {
       "coverageId": "node-tier1-file-io",

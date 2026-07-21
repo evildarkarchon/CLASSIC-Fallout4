@@ -1,5 +1,6 @@
+schema_version: "2.0"
 CLASSIC_Info:
-  version: "fixture"
+  version: "9.1.0"
   version_date: "2026-02-16"
 CLASSIC_Interface:
   autoscan_text_Fallout4: "Fixture Autoscan"

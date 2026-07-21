@@ -29,10 +29,10 @@ Use these scenario IDs exactly in benchmark output and comparison reports.
 | `db_multi_db_budget/miss_all/budget_1` | `classic-database-core` | Multi-DB miss path under low global budget (clamped) | `DatabasePool::get_entry` | 1 lookup |
 | `db_multi_db_budget/miss_all/budget_2` | `classic-database-core` | Multi-DB miss path at floor-equivalent global budget | `DatabasePool::get_entry` | 1 lookup |
 | `db_multi_db_budget/miss_all/budget_8` | `classic-database-core` | Multi-DB miss path with higher global budget | `DatabasePool::get_entry` | 1 lookup |
-| `scanlog_formid_resolution/cold_small_32` | `classic-scanlog-core` | FormID extract + DB-backed resolve with cold cache | `FormIDAnalyzerCore::extract_formids` + `formid_match` (`show_formid_values=true`) | 32 FormIDs |
-| `scanlog_formid_resolution/cold_medium_128` | `classic-scanlog-core` | FormID extract + DB-backed resolve with cold cache | Same as above | 128 FormIDs |
-| `scanlog_formid_resolution/cold_large_512` | `classic-scanlog-core` | FormID extract + DB-backed resolve with cold cache | Same as above | 512 FormIDs |
-| `scanlog_formid_resolution/warm_medium_128` | `classic-scanlog-core` | FormID extract + DB-backed resolve with warm cache | Same as above | 128 FormIDs |
+| `scanlog_formid_resolution/cold_small_32` | `classic-scanlog-core` | Aggregate semantic FormID extract + strict DB-backed resolve with cold cache | `FormIDFindingAnalyzer::analyze` over `FormIdValueLookup` | 32 FormIDs |
+| `scanlog_formid_resolution/cold_medium_128` | `classic-scanlog-core` | Aggregate semantic FormID extract + strict DB-backed resolve with cold cache | Same as above | 128 FormIDs |
+| `scanlog_formid_resolution/cold_large_512` | `classic-scanlog-core` | Aggregate semantic FormID extract + strict DB-backed resolve with cold cache | Same as above | 512 FormIDs |
+| `scanlog_formid_resolution/warm_medium_128` | `classic-scanlog-core` | Aggregate semantic FormID extract + strict DB-backed resolve with warm cache | Same as above | 128 FormIDs |
 
 ## Deterministic Fixture Contract
 
@@ -176,8 +176,8 @@ For follow-up Rust DB optimization work:
 
 ### Tuning Notes: FormID Batch Lookup Integration (2026-02-26)
 
-- `classic-scanlog-core::formid_match` now stages candidate rows and resolves value descriptions via one `DatabasePool::get_entries_batch` path.
-- Batch size is set locally in scanlog-core to `100` (`FORMID_BATCH_LOOKUP_SIZE`) to stay aligned with current DB-core defaults while keeping query payloads bounded.
+- `FormIDFindingAnalyzer::analyze` now stages resolved identifiers and performs one strict `FormIdValueLookup::lookup_batch` operation.
+- Query chunking and its bounded defaults belong to `classic-database-core`; scanlog no longer owns a separate FormID batch-size constant.
 - Quick-mode comparison against baseline `db-baseline-local-v2` (export: `ClassicLib-rs/target/criterion/formid-batch-delta.json`) showed large cold-path gains:
   - `cold_small_32`: `-89.44%`
   - `cold_medium_128`: `-90.25%`

@@ -9,6 +9,7 @@
 #include <atomic>
 #include <chrono>
 #include <fmt/format.h>
+#include <stdexcept>
 #include <thread>
 #include <utility>
 
@@ -85,6 +86,105 @@ std::string infrastructure_stage_name(scanner::ScanRunContractInfrastructureErro
     return "unknown stage";
 }
 
+/// Returns the stable user-facing label for every selected YAML Data provenance.
+std::string installed_yaml_data_provenance_name(scanner::ScanRunInstalledYamlDataProvenance provenance) {
+    switch (provenance) {
+    case scanner::ScanRunInstalledYamlDataProvenance::Updated:
+        return "updated";
+    case scanner::ScanRunInstalledYamlDataProvenance::Previous:
+        return "previous";
+    case scanner::ScanRunInstalledYamlDataProvenance::Bundled:
+        return "bundled";
+    }
+    return "unknown provenance";
+}
+
+/// Returns the stable user-facing label for every Local Ignore snapshot state.
+std::string local_ignore_state_name(scanner::ScanRunLocalIgnoreYamlDataState state) {
+    switch (state) {
+    case scanner::ScanRunLocalIgnoreYamlDataState::Existing:
+        return "existing";
+    case scanner::ScanRunLocalIgnoreYamlDataState::Generated:
+        return "generated";
+    case scanner::ScanRunLocalIgnoreYamlDataState::RecoveryRequired:
+        return "recovery required";
+    case scanner::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore:
+        return "proceed without Ignore";
+    case scanner::ScanRunLocalIgnoreYamlDataState::ResetToDefault:
+        return "reset to default";
+    }
+    return "unknown state";
+}
+
+/// Returns the stable user-facing label for every Installed YAML Data diagnostic kind.
+std::string installed_yaml_data_diagnostic_name(scanner::ScanRunInstalledYamlDataDiagnosticKind kind) {
+    switch (kind) {
+    case scanner::ScanRunInstalledYamlDataDiagnosticKind::CacheUnavailable:
+        return "cache unavailable";
+    case scanner::ScanRunInstalledYamlDataDiagnosticKind::Missing:
+        return "missing";
+    case scanner::ScanRunInstalledYamlDataDiagnosticKind::Read:
+        return "read";
+    case scanner::ScanRunInstalledYamlDataDiagnosticKind::InvalidUtf8:
+        return "invalid UTF-8";
+    case scanner::ScanRunInstalledYamlDataDiagnosticKind::Parse:
+        return "parse";
+    case scanner::ScanRunInstalledYamlDataDiagnosticKind::InvalidSchema:
+        return "invalid schema";
+    case scanner::ScanRunInstalledYamlDataDiagnosticKind::IncompatibleSchema:
+        return "incompatible schema";
+    case scanner::ScanRunInstalledYamlDataDiagnosticKind::InvalidRoleData:
+        return "invalid role data";
+    case scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated:
+        return "local ignore generated";
+    case scanner::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset:
+        return "local ignore reset";
+    }
+    return "unknown diagnostic";
+}
+
+/// Appends exact run-selected YAML Data metadata and structured diagnostics when present.
+void append_installed_yaml_data_messages(const scanner::ScanRunContractRunResult& result,
+                                         std::vector<CliScanRunMessage>& messages) {
+    if (!result.has_installed_yaml_data) {
+        return;
+    }
+
+    const auto& installed = result.installed_yaml_data;
+    messages.push_back({false, "Installed YAML Data:"});
+    messages.push_back(
+        {false, fmt::format("  Main: {} schema {} ({} bytes, sha256 {})",
+                            installed_yaml_data_provenance_name(installed.main.provenance),
+                            to_std_string(installed.main.schema_version), installed.main.byte_len,
+                            to_std_string(installed.main.sha256))});
+    messages.push_back(
+        {false, fmt::format("  Game: {} schema {} ({} bytes, sha256 {})",
+                            installed_yaml_data_provenance_name(installed.game_file.provenance),
+                            to_std_string(installed.game_file.schema_version), installed.game_file.byte_len,
+                            to_std_string(installed.game_file.sha256))});
+    messages.push_back(
+        {false, fmt::format("  Local Ignore: {} ({} bytes, sha256 {})",
+                            local_ignore_state_name(installed.local_ignore_state),
+                            installed.local_ignore_identity.byte_len,
+                            to_std_string(installed.local_ignore_identity.sha256))});
+    if (installed.has_local_ignore_reset) {
+        messages.push_back(
+            {false, fmt::format("  Local Ignore backup: {} ({} bytes, sha256 {})",
+                                to_std_string(installed.local_ignore_reset.backup_path),
+                                installed.local_ignore_reset.backup_identity.byte_len,
+                                to_std_string(installed.local_ignore_reset.backup_identity.sha256))});
+    }
+    for (const auto& diagnostic : installed.diagnostics) {
+        std::string line = fmt::format("  YAML Data diagnostic [{}]: {}",
+                                       installed_yaml_data_diagnostic_name(diagnostic.kind),
+                                       to_std_string(diagnostic.message));
+        if (diagnostic.has_path) {
+            line += fmt::format(" (path: {})", to_std_string(diagnostic.path));
+        }
+        messages.push_back({false, std::move(line)});
+    }
+}
+
 /// Appends all present run-scoped FCX setup facts, diagnostics, and actions.
 void append_setup_messages(const scanner::ScanRunContractRunResult& result, std::vector<CliScanRunMessage>& messages) {
     if (!result.has_setup) {
@@ -159,12 +259,20 @@ void append_log_messages(const scanner::ScanRunContractRunResult& result, std::v
 
 /// Projects typed User Settings into the shared final-contract configuration DTO.
 scanner::ScanRunConfigurationDto make_configuration(const PreparedScanUserSettings& settings,
-                                                    const std::string& yaml_dir_root,
-                                                    const std::string& yaml_dir_data) {
+                                                     const std::string& installation_root) {
     scanner::ScanRunConfigurationDto configuration{};
-    configuration.yaml_dir_root = yaml_dir_root;
-    configuration.yaml_dir_data = yaml_dir_data;
-    configuration.game = settings.game;
+    configuration.installation_root = installation_root;
+    if (settings.game == "Fallout4") {
+        configuration.game = scanner::ScanRunGameId::Fallout4;
+    } else if (settings.game == "Fallout4VR") {
+        configuration.game = scanner::ScanRunGameId::Fallout4VR;
+    } else if (settings.game == "Skyrim") {
+        configuration.game = scanner::ScanRunGameId::Skyrim;
+    } else if (settings.game == "Starfield") {
+        configuration.game = scanner::ScanRunGameId::Starfield;
+    } else {
+        throw std::invalid_argument(fmt::format("unsupported Crash Log Scan game: {}", settings.game));
+    }
     configuration.game_version = settings.game_version;
     configuration.show_formid_values = settings.show_formid_values;
     configuration.simplify_logs = settings.simplify_logs;
@@ -196,10 +304,9 @@ scanner::ScanRunSetupContextDto make_setup_context(const PreparedScanUserSetting
 
 rust::Box<scanner::ScanRunRequest> build_cli_scan_run_request(const CliArgs& args,
                                                               const PreparedScanUserSettings& settings,
-                                                              const std::string& yaml_dir_root,
-                                                              const std::string& yaml_dir_data,
+                                                              const std::string& installation_root,
                                                               const std::string& base_directory) {
-    const auto configuration = make_configuration(settings, yaml_dir_root, yaml_dir_data);
+    const auto configuration = make_configuration(settings, installation_root);
     const auto setup = make_setup_context(settings);
 
     if (!args.input_paths.empty()) {
@@ -279,6 +386,14 @@ CliScanRunPresentation present_cli_scan_run_execution(const scanner::ScanRunCont
         presentation.messages.push_back({true, std::move(message)});
         return presentation;
     }
+    if (execution.has_resume_error) {
+        presentation.exit_code = 2;
+        presentation.messages.push_back(
+            {true, fmt::format("Fatal: Crash Log Scan recovery failed ({}): {}",
+                               to_std_string(execution.resume_error.code),
+                               to_std_string(execution.resume_error.message))});
+        return presentation;
+    }
     if (!execution.has_result) {
         presentation.exit_code = 2;
         presentation.messages.push_back(
@@ -310,15 +425,25 @@ CliScanRunPresentation present_cli_scan_run_execution(const scanner::ScanRunCont
     case scanner::ScanRunContractStatus::Cancelled:
         presentation.exit_code = 130;
         append_setup_messages(result, presentation.messages);
+        append_installed_yaml_data_messages(result, presentation.messages);
         append_log_messages(result, presentation.messages);
         presentation.messages.push_back({false, fmt::format("Scan cancelled safely: {} completed, {} not started.",
                                                             result.succeeded + result.failed, result.cancelled)});
+        return presentation;
+    case scanner::ScanRunContractStatus::LocalIgnoreRecoveryRequired:
+        presentation.exit_code = 1;
+        append_setup_messages(result, presentation.messages);
+        append_installed_yaml_data_messages(result, presentation.messages);
+        presentation.messages.push_back(
+            {true, result.has_message ? to_std_string(result.message)
+                                      : "Local Ignore recovery is required before scanning can continue."});
         return presentation;
     case scanner::ScanRunContractStatus::Completed:
         break;
     }
 
     append_setup_messages(result, presentation.messages);
+    append_installed_yaml_data_messages(result, presentation.messages);
     append_log_messages(result, presentation.messages);
 
     std::size_t reports_written = 0;

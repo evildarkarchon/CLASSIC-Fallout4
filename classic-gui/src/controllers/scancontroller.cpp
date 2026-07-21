@@ -5,16 +5,37 @@
 
 #include <QCoreApplication>
 #include <QDir>
+#include <QMetaObject>
+#include <QMetaType>
+#include <QPointer>
 #include <QThread>
+
+#include <utility>
 
 ScanController::ScanController(SignalHub* signalHub, ThreadManager* threadManager, QObject* parent)
     : QObject(parent)
     , m_signalHub(signalHub)
     , m_threadManager(threadManager)
 {
+    qRegisterMetaType<classic::gui::ScanRunInstalledYamlDataPresentation>(
+        "classic::gui::ScanRunInstalledYamlDataPresentation");
 }
 
-void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
+void ScanController::setLocalIgnoreRecoveryPrompt(classic::gui::ScanRunLocalIgnoreRecoveryPrompt prompt)
+{
+    m_localIgnoreRecoveryPrompt = std::move(prompt);
+}
+
+classic::gui::ScanRunLocalIgnoreRecoveryChoice
+ScanController::requestLocalIgnoreRecoveryChoice(const QString& message) const
+{
+    if (!m_localIgnoreRecoveryPrompt) {
+        return classic::gui::ScanRunLocalIgnoreRecoveryChoice::Cancel;
+    }
+    return m_localIgnoreRecoveryPrompt(message);
+}
+
+void ScanController::startScan(const QString& installationRoot,
                                const classic::gui::CrashLogScanLaunchSettings& settings, const QString& setupXseLogPath,
                                const QStringList& targetedInputs)
 {
@@ -31,7 +52,27 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
     const QString baseDir = QDir::cleanPath(QCoreApplication::applicationDirPath());
 
     // Create worker and thread
-    auto* worker = new ScanWorker();
+    auto* worker = new ScanWorker([controller = QPointer<ScanController>(this)](const QString& message) {
+        using Choice = classic::gui::ScanRunLocalIgnoreRecoveryChoice;
+        if (!controller) {
+            return Choice::Cancel;
+        }
+        if (QThread::currentThread() == controller->thread()) {
+            return controller->requestLocalIgnoreRecoveryChoice(message);
+        }
+
+        Choice choice = Choice::Cancel;
+        // Keep the Rust continuation and observer on the worker stack while the GUI owns the modal prompt.
+        const bool invoked = QMetaObject::invokeMethod(
+            controller.data(),
+            [controller, message, &choice]() {
+                if (controller) {
+                    choice = controller->requestLocalIgnoreRecoveryChoice(message);
+                }
+            },
+            Qt::BlockingQueuedConnection);
+        return invoked ? choice : Choice::Cancel;
+    });
     auto* thread = new QThread();
     m_currentWorker = worker;
 
@@ -49,6 +90,7 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
         Qt::BlockingQueuedConnection);
     connect(worker, &ScanWorker::effectiveConcurrencySelected, this, &ScanController::scanConcurrencySelected);
     connect(worker, &ScanWorker::reportDirectoriesResolved, this, &ScanController::scanReportDirectoriesResolved);
+    connect(worker, &ScanWorker::installedYamlDataResolved, this, &ScanController::scanInstalledYamlDataResolved);
     connect(worker, &ScanWorker::logScanned, this, &ScanController::scanLogScanned);
     connect(worker, &ScanWorker::finished, this, &ScanController::onWorkerFinished);
     connect(worker, &ScanWorker::noLogsFound, this, &ScanController::onWorkerNoLogsFound);
@@ -62,8 +104,8 @@ void ScanController::startScan(const QString& yamlRoot, const QString& yamlData,
 
     // Start the worker thread and invoke doScan once the thread is running
     connect(thread, &QThread::started, worker,
-            [worker, yamlRoot, yamlData, settings, baseDir, setupXseLogPath, targetedInputs]() {
-                worker->doScan(yamlRoot, yamlData, settings, baseDir, setupXseLogPath, targetedInputs);
+            [worker, installationRoot, settings, baseDir, setupXseLogPath, targetedInputs]() {
+                worker->doScan(installationRoot, settings, baseDir, setupXseLogPath, targetedInputs);
             });
 
     m_threadManager->startWorker(QStringLiteral("crash_scan"), thread, worker);

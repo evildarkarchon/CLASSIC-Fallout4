@@ -480,6 +480,145 @@ def _scan_failure_summary(result: object) -> dict[str, str]:
     return summary
 
 
+def _scan_discovery_summary(discovery: object) -> dict[str, Any]:
+    """Project retained scan discovery data into stable CLI JSON."""
+
+    return {
+        "source": str(discovery.source),
+        "acceptedLogs": [str(path) for path in discovery.accepted_logs],
+        "rejectedInputs": [
+            {"path": str(item.path), "reason": str(item.reason)}
+            for item in discovery.rejected_inputs
+        ],
+        "searchedLocations": [str(path) for path in discovery.searched_locations],
+    }
+
+
+def _scan_setup_summary(setup: object) -> dict[str, Any]:
+    """Project the complete run-scoped FCX setup result into CLI JSON."""
+
+    return {
+        "status": str(setup.status),
+        "message": None if setup.message is None else str(setup.message),
+        "renderedReport": str(setup.rendered_report),
+        "checks": [
+            {
+                "kind": str(check.kind),
+                "state": str(check.state),
+                "message": str(check.message),
+                "details": [str(detail) for detail in check.details],
+            }
+            for check in setup.checks
+        ],
+        "pathUpdates": [
+            {"kind": str(update.kind), "path": str(update.path)}
+            for update in setup.path_updates
+        ],
+        "configurationIssues": [
+            {
+                "filePath": str(issue.file_path),
+                "section": None if issue.section is None else str(issue.section),
+                "setting": str(issue.setting),
+                "currentValue": str(issue.current_value),
+                "recommendedValue": str(issue.recommended_value),
+                "description": str(issue.description),
+                "severity": str(issue.severity),
+            }
+            for issue in setup.configuration_issues
+        ],
+        "actions": [str(action) for action in setup.actions],
+        "fatalErrors": [str(error) for error in setup.fatal_errors],
+    }
+
+
+def _scan_log_result_summary(result: object) -> dict[str, Any]:
+    """Project one complete terminal per-log result into stable CLI JSON."""
+
+    autoscan_report = getattr(result, "autoscan_report", None)
+    message = getattr(result, "message", None)
+    return {
+        "discoveryIndex": getattr(result, "discovery_index", None),
+        "crashLog": str(result.crash_log),
+        "autoscanReport": None if autoscan_report is None else str(autoscan_report),
+        "disposition": str(result.disposition),
+        "failures": [
+            {
+                "stage": str(getattr(failure, "stage", "analysis")),
+                "message": str(getattr(failure, "message", failure)),
+            }
+            for failure in result.failures
+        ],
+        "message": None if message is None else str(message),
+        "movedToUnsolvedLogs": getattr(result, "moved_to_unsolved_logs", None),
+        "processingTimeUs": getattr(result, "processing_time_us", None),
+        "processingTimeMs": getattr(result, "processing_time_ms", None),
+        "formidCount": getattr(result, "formid_count", None),
+        "pluginCount": getattr(result, "plugin_count", None),
+        "suspectCount": getattr(result, "suspect_count", None),
+    }
+
+
+def _scan_yaml_data_file_summary(file: object) -> dict[str, Any]:
+    """Project selected Main or game YAML Data metadata into CLI JSON."""
+
+    return {
+        "role": str(file.role),
+        "provenance": str(file.provenance),
+        "schemaMajor": int(file.schema_major),
+        "schemaMinor": int(file.schema_minor),
+        "sha256": str(file.sha256),
+        "byteLength": int(file.byte_length),
+    }
+
+
+def _scan_installed_yaml_data_summary(installed: object) -> dict[str, Any]:
+    """Project immutable Installed YAML Data run metadata into CLI JSON."""
+
+    identity = installed.local_ignore_identity
+    return {
+        "main": _scan_yaml_data_file_summary(installed.main),
+        "gameFile": _scan_yaml_data_file_summary(installed.game_file),
+        "localIgnoreState": str(installed.local_ignore_state),
+        "localIgnoreIdentity": {
+            "sha256": str(identity.sha256),
+            "byteLen": int(identity.byte_len),
+        },
+        "diagnostics": [
+            {
+                "role": None if diagnostic.role is None else str(diagnostic.role),
+                "candidate": None if diagnostic.candidate is None else str(diagnostic.candidate),
+                "path": None if diagnostic.path is None else str(diagnostic.path),
+                "kind": str(diagnostic.kind),
+                "message": str(diagnostic.message),
+            }
+            for diagnostic in installed.diagnostics
+        ],
+    }
+
+
+def _scan_run_result_summary(result: object) -> dict[str, Any]:
+    """Project the binding's complete final run result into stable CLI JSON."""
+
+    discovery = getattr(result, "discovery", None)
+    setup = getattr(result, "setup", None)
+    installed_yaml_data = getattr(result, "installed_yaml_data", None)
+    effective_concurrency = getattr(result, "effective_concurrency", None)
+    message = getattr(result, "message", None)
+    return {
+        "status": str(result.status),
+        "discovery": None if discovery is None else _scan_discovery_summary(discovery),
+        "setup": None if setup is None else _scan_setup_summary(setup),
+        "installedYamlData": None if installed_yaml_data is None else _scan_installed_yaml_data_summary(installed_yaml_data),
+        "effectiveConcurrency": None if effective_concurrency is None else int(effective_concurrency),
+        "message": None if message is None else str(message),
+        "total": int(result.total),
+        "succeeded": int(result.succeeded),
+        "failed": int(result.failed),
+        "cancelled": int(result.cancelled),
+        "logs": [_scan_log_result_summary(item) for item in result.logs],
+    }
+
+
 def _scan_report_text(result: object) -> str:
     """Return report text from a scanlog result-like object."""
 
@@ -517,17 +656,7 @@ def _scan_event_summary(event: object) -> dict[str, Any]:
         summary["effectiveConcurrency"] = int(effective_concurrency)
     discovery = getattr(event, "discovery", None)
     if discovery is not None:
-        summary["discovery"] = {
-            "source": str(discovery.source),
-            "acceptedLogs": [str(path) for path in discovery.accepted_logs],
-            "rejectedInputs": [
-                {"path": str(item.path), "reason": str(item.reason)}
-                for item in discovery.rejected_inputs
-            ],
-            "searchedLocations": [
-                str(path) for path in discovery.searched_locations
-            ],
-        }
+        summary["discovery"] = _scan_discovery_summary(discovery)
     log = getattr(event, "log", None)
     if log is not None:
         summary["log"] = {
@@ -564,6 +693,22 @@ def _fixture_yaml_root(scan_path: Path, context: CommandContext) -> Path | None:
     return None
 
 
+def _typed_scan_game(shared_module: object, game_name: str) -> object:
+    """Map a User Settings game token to the shared binding's typed identity."""
+
+    game_id = shared_module.GameId
+    supported = {
+        "Fallout4": game_id.Fallout4,
+        "Fallout4VR": game_id.Fallout4VR,
+        "Skyrim": game_id.Skyrim,
+        "Starfield": game_id.Starfield,
+    }
+    try:
+        return supported[game_name]
+    except KeyError as exc:
+        raise ValueError(f"unsupported managed game: {game_name}") from exc
+
+
 @contextmanager
 def _working_directory(path: Path):
     """Temporarily set CWD for bindings that discover fixture data relative to it."""
@@ -582,28 +727,28 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
     scan_path = Path(args.path or context.fixture_root)
     if not scan_path.is_absolute():
         scan_path = context.repo_root / scan_path
-    yaml_dir_root = _fixture_yaml_root(scan_path, context) or context.repo_root
-    yaml_dir_data = yaml_dir_root / "CLASSIC Data"
+    installation_root = _fixture_yaml_root(scan_path, context) or context.repo_root
     try:
         module = require_binding("classic_scanlog")
+        shared_module = require_binding("classic_shared")
         settings_module = require_binding("classic_user_settings")
-        snapshot = settings_module.open_user_settings(str(yaml_dir_root))
+        snapshot = settings_module.open_user_settings(str(installation_root))
         scan_settings = snapshot.crash_log_scan_settings
         setup_settings = snapshot.game_setup_settings
-        game = str(setup_settings.managed_game)
+        game_name = str(setup_settings.managed_game)
+        game = _typed_scan_game(shared_module, game_name)
         formid_databases = scan_settings.formid_databases
         max_concurrent = int(scan_settings.max_concurrent_scans)
         events: list[dict[str, Any]] = []
-        with _working_directory(yaml_dir_root):
+        with _working_directory(installation_root):
             configuration = module.ScanRunConfiguration(
-                yaml_dir_root=str(yaml_dir_root),
-                yaml_dir_data=str(yaml_dir_data),
+                installation_root=str(installation_root),
                 game=game,
                 game_version=str(scan_settings.game_version_selection),
                 show_formid_values=bool(scan_settings.formid_value_lookup),
                 simplify_logs=bool(scan_settings.simplify_logs),
                 formid_database_paths=[
-                    str(path) for path in formid_databases.get(game, [])
+                    str(path) for path in formid_databases.get(game_name, [])
                 ],
                 unsolved_logs_destination=scan_settings.unsolved_logs_destination,
                 max_concurrent=max_concurrent or None,
@@ -666,7 +811,11 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             message,
             int(ExitCode.PRODUCT_FAILURE),
             error={"classification": "scan-run-terminal", "status": terminal_status, "message": message},
-            data={"events": events, "observerError": observer_error},
+            data={
+                "events": events,
+                "observerError": observer_error,
+                "result": _scan_run_result_summary(result),
+            },
         )
     if terminal_status in {"cancelled_before_discovery", "cancelled"}:
         message = str(getattr(result, "message", None) or "Crash Log Scan Run was cancelled")
@@ -675,7 +824,11 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             message,
             int(ExitCode.INTERRUPTED),
             error={"classification": "scan-run-terminal", "status": terminal_status, "message": message},
-            data={"events": events, "observerError": observer_error},
+            data={
+                "events": events,
+                "observerError": observer_error,
+                "result": _scan_run_result_summary(result),
+            },
         )
     results = list(result.logs)
     failures = [_scan_failure_summary(item) for item in results if not _scan_result_success(item)]
@@ -686,8 +839,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
         f"Scanlog binding completed: {successful_logs} succeeded, {len(failures)} failed",
         {
             "scanPath": str(scan_path),
-            "yamlRoot": str(yaml_dir_root),
-            "yamlData": str(yaml_dir_data),
+            "installationRoot": str(installation_root),
             "processedLogs": len(results),
             "successfulLogs": successful_logs,
             "failedLogs": len(failures),
@@ -698,7 +850,7 @@ def scan_logs(args: _OptionalPathArg, context: CommandContext) -> CommandResult:
             "reportEvidence": report_evidence,
             "events": events,
             "observerError": observer_error,
-            "result": str(result),
+            "result": _scan_run_result_summary(result),
         },
     )
 

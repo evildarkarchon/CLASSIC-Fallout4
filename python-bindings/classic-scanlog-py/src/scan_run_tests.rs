@@ -1,16 +1,22 @@
 use std::path::PathBuf;
 
+use classic_config_core::{InstalledYamlDataProvenance, InstalledYamlDataRole};
 use classic_scanlog_core::scan_run::contract;
 use classic_scanlog_core::{
     CrashLogScanDiscoveryResult, CrashLogScanDiscoverySource, CrashLogScanRejectedInput,
     CrashLogScanRunStatus, CrashLogScanSetupCheck, CrashLogScanSetupPathUpdate,
     CrashLogScanSetupResult, ScanProgressPhase,
 };
+use pyo3::Python;
+use pyo3::types::PyAnyMethods;
 
 use super::{
     PyScanRunConfiguration, configuration_to_core, disposition_to_string, event_to_py,
-    infrastructure_error_to_py, log_failure_stage_to_string, log_result_to_py, phase_to_string,
-    run_result_to_py, run_status_to_string, setup_to_py,
+    infrastructure_error_to_py, installed_yaml_data_diagnostic_kind_to_string,
+    installed_yaml_data_provenance_to_string, installed_yaml_data_role_to_string,
+    local_ignore_state_to_string, log_failure_stage_to_string, log_result_to_py, phase_to_string,
+    run_result_to_py, run_status_to_string, scan_run_reset_error_to_py, setup_to_py,
+    ScanRunLocalIgnoreResetReplacementError,
 };
 
 const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
@@ -22,6 +28,14 @@ const SHARED_SCAN_RUN_MANIFEST: &str = include_str!(concat!(
 fn shared_failure_fixtures() -> serde_json::Value {
     serde_json::from_str::<serde_json::Value>(SHARED_SCAN_RUN_MANIFEST)
         .expect("shared scan-run manifest should deserialize")["failureFixtures"]
+        .clone()
+}
+
+/// Loads the shared reset-outcome expectations used by Python exception mapping tests.
+fn shared_reset_outcomes() -> serde_json::Value {
+    serde_json::from_str::<serde_json::Value>(SHARED_SCAN_RUN_MANIFEST)
+        .expect("shared scan-run manifest should deserialize")["fixtures"]["installedYamlData"]
+        ["resetOutcomes"]
         .clone()
 }
 
@@ -48,19 +62,20 @@ fn log_event() -> contract::LogEvent {
 
 #[test]
 fn configuration_conversion_treats_blank_destination_as_absent() {
-    let configuration = PyScanRunConfiguration::new(
-        "C:/CLASSIC".to_string(),
-        "C:/CLASSIC/CLASSIC Data".to_string(),
-        "Fallout4".to_string(),
-        "auto".to_string(),
-        false,
-        false,
-        Vec::new(),
-        Some(" \t ".to_string()),
-        None,
-    );
+    let configuration = PyScanRunConfiguration {
+        installation_root: "C:/CLASSIC".to_string(),
+        game: classic_shared_core::GameId::Fallout4,
+        game_version: "auto".to_string(),
+        show_formid_values: false,
+        simplify_logs: false,
+        formid_database_paths: Vec::new(),
+        unsolved_logs_destination: Some(" \t ".to_string()),
+        max_concurrent: None,
+    };
 
     let converted = configuration_to_core(&configuration).expect("configuration should convert");
+    assert_eq!(converted.installation_root, PathBuf::from("C:/CLASSIC"));
+    assert_eq!(converted.game, classic_shared_core::GameId::Fallout4);
     assert!(converted.scan_facts.unsolved_logs_destination.is_none());
 }
 
@@ -70,6 +85,7 @@ fn maps_every_stable_enum_identifier() {
         CrashLogScanRunStatus::Completed,
         CrashLogScanRunStatus::NoCrashLogsFound,
         CrashLogScanRunStatus::SetupFailed,
+        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
         CrashLogScanRunStatus::CancelledBeforeDiscovery,
         CrashLogScanRunStatus::Cancelled,
     ];
@@ -79,6 +95,7 @@ fn maps_every_stable_enum_identifier() {
             "completed",
             "no_crash_logs_found",
             "setup_failed",
+            "local_ignore_recovery_required",
             "cancelled_before_discovery",
             "cancelled",
         ]
@@ -115,6 +132,139 @@ fn maps_every_stable_enum_identifier() {
         phases.map(phase_to_string),
         ["setup", "parse", "analyze", "finalize"].map(str::to_string),
     );
+
+    assert_eq!(
+        [InstalledYamlDataRole::Main, InstalledYamlDataRole::Game]
+            .map(installed_yaml_data_role_to_string),
+        ["main", "game"],
+    );
+    assert_eq!(
+        [
+            InstalledYamlDataProvenance::Updated,
+            InstalledYamlDataProvenance::Previous,
+            InstalledYamlDataProvenance::Bundled,
+        ]
+        .map(installed_yaml_data_provenance_to_string),
+        ["updated", "previous", "bundled"],
+    );
+    assert_eq!(
+        [
+            contract::LocalIgnoreRunState::Existing,
+            contract::LocalIgnoreRunState::Generated,
+            contract::LocalIgnoreRunState::RecoveryRequired,
+            contract::LocalIgnoreRunState::ProceedWithoutIgnore,
+            contract::LocalIgnoreRunState::ResetToDefault,
+        ]
+        .map(local_ignore_state_to_string),
+        [
+            "existing",
+            "generated",
+            "recovery_required",
+            "proceed_without_ignore",
+            "reset_to_default",
+        ],
+    );
+    assert_eq!(
+        super::PyScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore as u8,
+        0
+    );
+    assert_eq!(
+        super::PyScanRunLocalIgnoreRecoveryDecision::ResetToDefault as u8,
+        1
+    );
+    assert_eq!(
+        contract::ResumeErrorKind::ContinuationConsumed.as_str(),
+        "scan_run_continuation_consumed"
+    );
+    assert_eq!(
+        [
+            contract::ResumeErrorKind::LocalIgnoreResetConflict,
+            contract::ResumeErrorKind::LocalIgnoreResetBackupFailure,
+            contract::ResumeErrorKind::LocalIgnoreResetReplacementFailure,
+        ]
+        .map(contract::ResumeErrorKind::as_str),
+        [
+            "local_ignore_reset_conflict",
+            "local_ignore_reset_backup_failure",
+            "local_ignore_reset_replacement_failure",
+        ]
+    );
+    assert_eq!(
+        [
+            contract::InstalledYamlDataRunDiagnosticKind::CacheUnavailable,
+            contract::InstalledYamlDataRunDiagnosticKind::Missing,
+            contract::InstalledYamlDataRunDiagnosticKind::Read,
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidUtf8,
+            contract::InstalledYamlDataRunDiagnosticKind::Parse,
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidSchema,
+            contract::InstalledYamlDataRunDiagnosticKind::IncompatibleSchema,
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidRoleData,
+            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated,
+            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset,
+        ]
+        .map(installed_yaml_data_diagnostic_kind_to_string),
+        [
+            "cache_unavailable",
+            "missing",
+            "read",
+            "invalid_utf8",
+            "parse",
+            "invalid_schema",
+            "incompatible_schema",
+            "invalid_role_data",
+            "local_ignore_generated",
+            "local_ignore_reset",
+        ],
+    );
+}
+
+/// Replacement publication failure maps to the dedicated Python exception and shared metadata.
+#[test]
+fn replacement_failure_maps_shared_outcome_to_typed_python_exception() {
+    let expected = shared_reset_outcomes();
+    Python::initialize();
+    Python::attach(|py| {
+        let path = PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
+        let error = scan_run_reset_error_to_py(
+            py,
+            contract::ResumeError::LocalIgnoreResetReplacementFailure(
+                contract::LocalIgnoreResetFailure {
+                    path: path.clone(),
+                    stage: Some(contract::LocalIgnoreResetFailureStage::Publish),
+                    message: "injected replacement publication failure".to_string(),
+                },
+            ),
+        );
+
+        assert!(error.is_instance_of::<ScanRunLocalIgnoreResetReplacementError>(py));
+        let value = error.value(py);
+        assert_eq!(
+            value
+                .getattr("code")
+                .expect("replacement exception should expose code")
+                .extract::<String>()
+                .expect("replacement code should be a string"),
+            expected["replacementFailureCode"]
+                .as_str()
+                .expect("shared replacement code should be a string")
+        );
+        assert_eq!(
+            value
+                .getattr("path")
+                .expect("replacement exception should expose path")
+                .extract::<PathBuf>()
+                .expect("replacement path should remain pathlib-compatible"),
+            path
+        );
+        assert_eq!(
+            value
+                .getattr("stage")
+                .expect("replacement exception should expose stage")
+                .extract::<String>()
+                .expect("replacement stage should be a string"),
+            "publish"
+        );
+    });
 }
 
 #[test]
@@ -384,56 +534,66 @@ fn maps_setup_and_run_optional_fields_without_loss() {
     assert_eq!(setup.actions, ["choose path"]);
     assert_eq!(setup.fatal_errors, ["fatal"]);
 
-    let with_values = run_result_to_py(contract::RunResult {
-        status: CrashLogScanRunStatus::SetupFailed,
-        discovery: Some(discovery()),
-        setup: Some(CrashLogScanSetupResult {
-            status: setup.status.clone(),
-            checks: Vec::new(),
-            path_updates: Vec::new(),
-            configuration_issues: Vec::new(),
-            actions: Vec::new(),
-            fatal_errors: Vec::new(),
-            message: setup.message.clone(),
-            rendered_report: setup.rendered_report.clone(),
-        }),
-        effective_concurrency: Some(2),
-        message: Some("run message".to_string()),
-        total: 4,
-        succeeded: 1,
-        failed: 2,
-        cancelled: 1,
-        logs: Vec::new(),
-    });
-    assert_eq!(with_values.status, "setup_failed");
-    assert!(with_values.discovery.is_some());
-    assert!(with_values.setup.is_some());
-    assert_eq!(with_values.effective_concurrency, Some(2));
-    assert_eq!(with_values.message.as_deref(), Some("run message"));
-    assert_eq!(
-        (
-            with_values.total,
-            with_values.succeeded,
-            with_values.failed,
-            with_values.cancelled,
-        ),
-        (4, 1, 2, 1),
-    );
+    Python::attach(|py| {
+        let with_values = run_result_to_py(py, contract::RunResult {
+            status: CrashLogScanRunStatus::SetupFailed,
+            discovery: Some(discovery()),
+            setup: Some(CrashLogScanSetupResult {
+                status: setup.status.clone(),
+                checks: Vec::new(),
+                path_updates: Vec::new(),
+                configuration_issues: Vec::new(),
+                actions: Vec::new(),
+                fatal_errors: Vec::new(),
+                message: setup.message.clone(),
+                rendered_report: setup.rendered_report.clone(),
+            }),
+            installed_yaml_data: None,
+            continuation: None,
+            effective_concurrency: Some(2),
+            message: Some("run message".to_string()),
+            total: 4,
+            succeeded: 1,
+            failed: 2,
+            cancelled: 1,
+            logs: Vec::new(),
+        })
+        .expect("mapped result should allocate");
+        let with_values = with_values.borrow(py);
+        assert_eq!(with_values.status, "setup_failed");
+        assert!(with_values.discovery.is_some());
+        assert!(with_values.setup.is_some());
+        assert_eq!(with_values.effective_concurrency, Some(2));
+        assert_eq!(with_values.message.as_deref(), Some("run message"));
+        assert_eq!(
+            (
+                with_values.total,
+                with_values.succeeded,
+                with_values.failed,
+                with_values.cancelled,
+            ),
+            (4, 1, 2, 1),
+        );
 
-    let without_values = run_result_to_py(contract::RunResult {
-        status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
-        discovery: None,
-        setup: None,
-        effective_concurrency: None,
-        message: None,
-        total: 0,
-        succeeded: 0,
-        failed: 0,
-        cancelled: 0,
-        logs: Vec::new(),
+        let without_values = run_result_to_py(py, contract::RunResult {
+            status: CrashLogScanRunStatus::CancelledBeforeDiscovery,
+            discovery: None,
+            setup: None,
+            installed_yaml_data: None,
+            continuation: None,
+            effective_concurrency: None,
+            message: None,
+            total: 0,
+            succeeded: 0,
+            failed: 0,
+            cancelled: 0,
+            logs: Vec::new(),
+        })
+        .expect("mapped result should allocate");
+        let without_values = without_values.borrow(py);
+        assert!(without_values.discovery.is_none());
+        assert!(without_values.setup.is_none());
+        assert!(without_values.effective_concurrency.is_none());
+        assert!(without_values.message.is_none());
     });
-    assert!(without_values.discovery.is_none());
-    assert!(without_values.setup.is_none());
-    assert!(without_values.effective_concurrency.is_none());
-    assert!(without_values.message.is_none());
 }

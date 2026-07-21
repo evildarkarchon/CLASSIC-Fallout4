@@ -8,9 +8,37 @@
 //! are isolated and can't share opaque types across modules.
 
 use classic_config_core::{
-    MainYamlVersionError, ModSolutionCriteria, SuspectErrorRule as CoreSuspectErrorRule,
+    InspectedYamlDataFile as CoreInspectedYamlDataFile,
+    InstalledYamlDataDiagnostic as CoreInstalledYamlDataDiagnostic,
+    InstalledYamlDataDiagnosticKind as CoreInstalledYamlDataDiagnosticKind,
+    InstalledYamlDataInspection as CoreInstalledYamlDataInspection,
+    InstalledYamlDataInspectionError as CoreInstalledYamlDataInspectionError,
+    InstalledYamlDataInspectionRequest as CoreInstalledYamlDataInspectionRequest,
+    InstalledYamlDataLoadError as CoreInstalledYamlDataLoadError,
+    InstalledYamlDataLoadOutcome as CoreInstalledYamlDataLoadOutcome,
+    InstalledYamlDataLoadRequest as CoreInstalledYamlDataLoadRequest,
+    InstalledYamlDataProvenance as CoreInstalledYamlDataProvenance,
+    InstalledYamlDataRole as CoreInstalledYamlDataRole,
+    InstalledYamlDataSnapshot as CoreInstalledYamlDataSnapshot,
+    LocalIgnoreRecoveryPlan as CoreLocalIgnoreRecoveryPlan,
+    LocalIgnoreResetConflict as CoreLocalIgnoreResetConflict,
+    LocalIgnoreResetError as CoreLocalIgnoreResetError,
+    LocalIgnoreResetOutcome as CoreLocalIgnoreResetOutcome,
+    LocalIgnoreResetPublicationStage as CoreLocalIgnoreResetPublicationStage,
+    LocalIgnoreResetResult as CoreLocalIgnoreResetResult,
+    LocalIgnoreYamlDataState as CoreLocalIgnoreYamlDataState, MainYamlVersionError,
+    ModSolutionCriteria, SuspectErrorRule as CoreSuspectErrorRule,
     SuspectStackCountRule as CoreSuspectStackCountRule, SuspectStackRule as CoreSuspectStackRule,
     YamlDataCore,
+    explicit_yaml_data::{
+        ExplicitYamlDataLoadError as CoreExplicitYamlDataLoadError,
+        ExplicitYamlDataRequest as CoreExplicitYamlDataRequest,
+        ExplicitYamlDataRole as CoreExplicitYamlDataRole,
+        ExplicitYamlDataSnapshot as CoreExplicitYamlDataSnapshot, GameDataRole as CoreGameDataRole,
+        YamlDataContentIdentity, load_explicit_yaml_data as core_load_explicit_yaml_data,
+    },
+    inspect_installed_yaml_data as core_inspect_installed_yaml_data,
+    load_installed_yaml_data as core_load_installed_yaml_data,
     load_main_yaml_version_with_bundled_dir as core_load_main_yaml_version_with_bundled_dir,
     persist_game_local_paths,
 };
@@ -18,12 +46,63 @@ use classic_settings_core::{
     cache_stats as settings_core_cache_stats, clear_cache as clear_settings_cache,
     reset_cache_stats as reset_settings_core_cache_stats,
 };
+use classic_shared_core::GameId as CoreGameId;
 use classic_shared_core::get_runtime;
 use std::path::{Path, PathBuf};
 
 /// Opaque wrapper around `YamlDataCore` for CXX FFI.
 pub struct YamlData {
     pub(crate) inner: YamlDataCore,
+}
+
+/// Opaque result holder for one deterministic explicit YAML Data load.
+pub struct ExplicitYamlDataLoad {
+    result: Result<CoreExplicitYamlDataSnapshot, CoreExplicitYamlDataLoadError>,
+}
+
+/// Opaque immutable snapshot returned by deterministic explicit YAML Data loading.
+pub struct ExplicitYamlDataSnapshot {
+    inner: CoreExplicitYamlDataSnapshot,
+}
+
+/// Opaque result holder for one Installed YAML Data inspection operation.
+pub struct InstalledYamlDataInspectionOperation {
+    result: Result<CoreInstalledYamlDataInspection, CoreInstalledYamlDataInspectionError>,
+}
+
+/// Opaque immutable result returned by Installed YAML Data inspection.
+pub struct InstalledYamlDataInspection {
+    inner: CoreInstalledYamlDataInspection,
+}
+
+/// Opaque result holder for one Installed YAML Data load operation.
+pub struct InstalledYamlDataLoadOperation {
+    result: Result<CoreInstalledYamlDataLoadOutcome, CoreInstalledYamlDataLoadError>,
+}
+
+/// Opaque immutable snapshot returned by Installed YAML Data loading.
+pub struct InstalledYamlDataSnapshot {
+    inner: CoreInstalledYamlDataSnapshot,
+}
+
+/// Opaque immutable recovery proposal for malformed Local Ignore YAML Data.
+pub struct LocalIgnoreRecoveryPlan {
+    inner: CoreLocalIgnoreRecoveryPlan,
+}
+
+/// Opaque result holder for one consuming Local Ignore reset operation.
+pub struct LocalIgnoreResetOperation {
+    result: Result<CoreLocalIgnoreResetOutcome, CoreLocalIgnoreResetError>,
+}
+
+/// Opaque successful Local Ignore reset metadata and retained snapshot.
+pub struct LocalIgnoreResetResult {
+    inner: CoreLocalIgnoreResetResult,
+}
+
+/// Opaque identity conflict returned when Local Ignore changed before reset.
+pub struct LocalIgnoreResetConflict {
+    inner: CoreLocalIgnoreResetConflict,
 }
 
 // ── Construction ────────────────────────────────────────────────────
@@ -43,6 +122,1041 @@ fn yaml_data_load(
         ))
         .map_err(|e| format!("{e}"))?;
     Ok(Box::new(YamlData { inner }))
+}
+
+/// Load exactly the three caller-selected YAML Data files without installation policy.
+///
+/// The returned handle always exists so C++ callers can inspect the stable typed
+/// status before consuming a successful snapshot.
+fn explicit_yaml_data_load(
+    paths: ffi::ExplicitYamlDataPathsDto,
+    game: ffi::ExplicitYamlDataGameId,
+    selected_game_version: &str,
+) -> Box<ExplicitYamlDataLoad> {
+    let request = CoreExplicitYamlDataRequest {
+        main_path: PathBuf::from(paths.main_path),
+        game_path: PathBuf::from(paths.game_path),
+        ignore_path: PathBuf::from(paths.ignore_path),
+        game: explicit_game_id_to_core(game),
+        selected_game_version: selected_game_version.to_string(),
+    };
+    Box::new(ExplicitYamlDataLoad {
+        result: get_runtime().block_on(core_load_explicit_yaml_data(request)),
+    })
+}
+
+/// Inspect update-eligible Installed YAML Data without reading Local Ignore.
+///
+/// The returned operation always exists so C++ callers can inspect typed
+/// unsupported-game and no-usable-source failures before consuming success.
+fn installed_yaml_data_inspect(
+    installation_root: &str,
+    game: ffi::ExplicitYamlDataGameId,
+) -> Box<InstalledYamlDataInspectionOperation> {
+    installed_yaml_data_inspection_operation_from_result(core_inspect_installed_yaml_data(
+        CoreInstalledYamlDataInspectionRequest {
+            installation_root: PathBuf::from(installation_root),
+            game: explicit_game_id_to_core(game),
+        },
+    ))
+}
+
+/// Build an opaque inspection operation from the Rust-owned core result.
+fn installed_yaml_data_inspection_operation_from_result(
+    result: Result<CoreInstalledYamlDataInspection, CoreInstalledYamlDataInspectionError>,
+) -> Box<InstalledYamlDataInspectionOperation> {
+    Box::new(InstalledYamlDataInspectionOperation { result })
+}
+
+/// Return the success/error status captured by an Installed YAML Data inspection.
+fn installed_yaml_data_inspection_status(
+    operation: &InstalledYamlDataInspectionOperation,
+) -> ffi::InstalledYamlDataInspectionStatusDto {
+    match &operation.result {
+        Ok(_) => ffi::InstalledYamlDataInspectionStatusDto {
+            has_inspection: true,
+            has_error: false,
+            error: empty_installed_yaml_data_inspection_error(),
+        },
+        Err(error) => ffi::InstalledYamlDataInspectionStatusDto {
+            has_inspection: false,
+            has_error: true,
+            error: installed_yaml_data_inspection_error_to_dto(error),
+        },
+    }
+}
+
+/// Consume a successful operation and return its immutable inspection result.
+///
+/// Callers inspect [`installed_yaml_data_inspection_status`] first. This
+/// `Result` prevents a failed operation from being consumed as success.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn installed_yaml_data_inspection_take(
+    operation: Box<InstalledYamlDataInspectionOperation>,
+) -> Result<Box<InstalledYamlDataInspection>, String> {
+    match operation.result {
+        Ok(inner) => Ok(Box::new(InstalledYamlDataInspection { inner })),
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Return the typed game identity retained by a successful inspection.
+fn installed_yaml_data_inspection_game(
+    inspection: &InstalledYamlDataInspection,
+) -> ffi::ExplicitYamlDataGameId {
+    explicit_game_id_to_ffi(inspection.inner.game())
+}
+
+/// Return the registered game-data role selected by a successful inspection.
+fn installed_yaml_data_inspection_game_role(
+    inspection: &InstalledYamlDataInspection,
+) -> ffi::InstalledYamlDataGameRole {
+    match inspection.inner.game_data_role() {
+        CoreGameDataRole::Fallout4 => ffi::InstalledYamlDataGameRole::Fallout4,
+    }
+}
+
+/// Return selected Main provenance, schema, and exact-byte content identity.
+fn installed_yaml_data_inspection_main(
+    inspection: &InstalledYamlDataInspection,
+) -> ffi::InspectedYamlDataFileDto {
+    inspected_yaml_data_file_to_dto(inspection.inner.main())
+}
+
+/// Return selected game provenance, schema, and exact-byte content identity.
+fn installed_yaml_data_inspection_game_file(
+    inspection: &InstalledYamlDataInspection,
+) -> ffi::InspectedYamlDataFileDto {
+    inspected_yaml_data_file_to_dto(inspection.inner.game_file())
+}
+
+/// Return every structured fallback or cache-resolution diagnostic.
+fn installed_yaml_data_inspection_diagnostics(
+    inspection: &InstalledYamlDataInspection,
+) -> Vec<ffi::InstalledYamlDataDiagnosticDto> {
+    inspection
+        .inner
+        .diagnostics()
+        .iter()
+        .map(installed_yaml_data_diagnostic_to_dto)
+        .collect()
+}
+
+/// Load Installed YAML Data from one installation root without adapter-owned policy.
+///
+/// The returned operation always exists so C++ callers can inspect every typed
+/// core failure before consuming a ready immutable snapshot.
+fn installed_yaml_data_load(
+    installation_root: &str,
+    game: ffi::ExplicitYamlDataGameId,
+    selected_game_version: &str,
+) -> Box<InstalledYamlDataLoadOperation> {
+    installed_yaml_data_load_operation_from_result(core_load_installed_yaml_data(
+        CoreInstalledYamlDataLoadRequest {
+            installation_root: PathBuf::from(installation_root),
+            game: explicit_game_id_to_core(game),
+            selected_game_version: selected_game_version.to_string(),
+        },
+    ))
+}
+
+/// Build an opaque load operation from the Rust-owned core outcome.
+fn installed_yaml_data_load_operation_from_result(
+    result: Result<CoreInstalledYamlDataLoadOutcome, CoreInstalledYamlDataLoadError>,
+) -> Box<InstalledYamlDataLoadOperation> {
+    Box::new(InstalledYamlDataLoadOperation { result })
+}
+
+/// Return the Ready/recovery-required/error status captured by an Installed YAML Data load.
+fn installed_yaml_data_load_status(
+    operation: &InstalledYamlDataLoadOperation,
+) -> ffi::InstalledYamlDataLoadStatusDto {
+    match &operation.result {
+        Ok(CoreInstalledYamlDataLoadOutcome::Ready(_)) => ffi::InstalledYamlDataLoadStatusDto {
+            has_snapshot: true,
+            has_recovery_plan: false,
+            has_error: false,
+            error: empty_installed_yaml_data_load_error(),
+        },
+        Ok(CoreInstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(_)) => {
+            ffi::InstalledYamlDataLoadStatusDto {
+                has_snapshot: false,
+                has_recovery_plan: true,
+                has_error: false,
+                error: empty_installed_yaml_data_load_error(),
+            }
+        }
+        Err(error) => ffi::InstalledYamlDataLoadStatusDto {
+            has_snapshot: false,
+            has_recovery_plan: false,
+            has_error: true,
+            error: installed_yaml_data_load_error_to_dto(error),
+        },
+    }
+}
+
+/// Consume a Ready operation and return its immutable Installed YAML Data snapshot.
+///
+/// Callers inspect [`installed_yaml_data_load_status`] first. This `Result`
+/// prevents a failed operation from being consumed as success.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn installed_yaml_data_load_take_snapshot(
+    operation: Box<InstalledYamlDataLoadOperation>,
+) -> Result<Box<InstalledYamlDataSnapshot>, String> {
+    match operation.result {
+        Ok(CoreInstalledYamlDataLoadOutcome::Ready(inner)) => {
+            Ok(Box::new(InstalledYamlDataSnapshot { inner }))
+        }
+        Ok(CoreInstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(_)) => {
+            Err("Installed YAML Data load requires Local Ignore recovery".to_string())
+        }
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Consume a recovery-required operation and return its immutable recovery plan.
+///
+/// Callers inspect [`installed_yaml_data_load_status`] first. This `Result`
+/// prevents Ready or failed operations from being consumed as recovery plans.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn installed_yaml_data_load_take_recovery_plan(
+    operation: Box<InstalledYamlDataLoadOperation>,
+) -> Result<Box<LocalIgnoreRecoveryPlan>, String> {
+    match operation.result {
+        Ok(CoreInstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired(inner)) => {
+            Ok(Box::new(LocalIgnoreRecoveryPlan { inner }))
+        }
+        Ok(CoreInstalledYamlDataLoadOutcome::Ready(_)) => {
+            Err("Installed YAML Data load is already ready".to_string())
+        }
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Return the typed game retained by a Local Ignore recovery plan.
+fn local_ignore_recovery_plan_game(plan: &LocalIgnoreRecoveryPlan) -> ffi::ExplicitYamlDataGameId {
+    explicit_game_id_to_ffi(plan.inner.game())
+}
+
+/// Return the registered game-data role retained by a Local Ignore recovery plan.
+fn local_ignore_recovery_plan_game_role(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> ffi::InstalledYamlDataGameRole {
+    match plan.inner.game_data_role() {
+        CoreGameDataRole::Fallout4 => ffi::InstalledYamlDataGameRole::Fallout4,
+    }
+}
+
+/// Return retained Main provenance, schema, and exact-byte content identity.
+fn local_ignore_recovery_plan_main(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> ffi::InspectedYamlDataFileDto {
+    inspected_yaml_data_file_to_dto(plan.inner.main())
+}
+
+/// Return retained game provenance, schema, and exact-byte content identity.
+fn local_ignore_recovery_plan_game_file(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> ffi::InspectedYamlDataFileDto {
+    inspected_yaml_data_file_to_dto(plan.inner.game_file())
+}
+
+/// Return the canonical malformed Local Ignore path observed by the recovery plan.
+fn local_ignore_recovery_plan_local_ignore_path(plan: &LocalIgnoreRecoveryPlan) -> String {
+    plan.inner
+        .local_ignore_path()
+        .to_string_lossy()
+        .into_owned()
+}
+
+/// Return the identity of the exact malformed Local Ignore bytes retained by the plan.
+fn local_ignore_recovery_plan_malformed_local_ignore_identity(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(plan.inner.malformed_local_ignore_identity())
+}
+
+/// Report whether validated selected-Main defaults were available when recovery began.
+fn local_ignore_recovery_plan_has_default_local_ignore_identity(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> bool {
+    plan.inner.default_local_ignore_identity().is_some()
+}
+
+/// Return the identity of validated selected-Main defaults retained by the plan.
+///
+/// CXX does not bridge `Option<YamlDataContentIdentityDto>`, so callers inspect
+/// [`local_ignore_recovery_plan_has_default_local_ignore_identity`] first. An unavailable
+/// identity projects as an empty DTO rather than panicking or blocking recovery.
+fn local_ignore_recovery_plan_default_local_ignore_identity(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> ffi::YamlDataContentIdentityDto {
+    plan.inner
+        .default_local_ignore_identity()
+        .map(content_identity_to_dto)
+        .unwrap_or_else(|| ffi::YamlDataContentIdentityDto {
+            sha256: String::new(),
+            byte_len: 0,
+        })
+}
+
+/// Return the retained Version Registry selection mode for the interrupted operation.
+fn local_ignore_recovery_plan_selected_game_version(plan: &LocalIgnoreRecoveryPlan) -> String {
+    plan.inner.selected_game_version().to_string()
+}
+
+/// Return retained selection and malformed Local Ignore diagnostics.
+fn local_ignore_recovery_plan_diagnostics(
+    plan: &LocalIgnoreRecoveryPlan,
+) -> Vec<ffi::InstalledYamlDataDiagnosticDto> {
+    plan.inner
+        .diagnostics()
+        .iter()
+        .map(installed_yaml_data_diagnostic_to_dto)
+        .collect()
+}
+
+/// Consume a recovery plan and run its synchronous non-interruptible reset critical section.
+///
+/// The returned operation always exists so C++ callers can inspect the typed Reset,
+/// Conflict, or Error status before consuming the corresponding payload.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn local_ignore_recovery_plan_reset_to_default(
+    plan: Box<LocalIgnoreRecoveryPlan>,
+) -> Box<LocalIgnoreResetOperation> {
+    Box::new(LocalIgnoreResetOperation {
+        result: plan.inner.reset_to_default(),
+    })
+}
+
+/// Return the Reset, Conflict, or Error status captured by a Local Ignore reset.
+fn local_ignore_reset_status(
+    operation: &LocalIgnoreResetOperation,
+) -> ffi::LocalIgnoreResetStatusDto {
+    match &operation.result {
+        Ok(CoreLocalIgnoreResetOutcome::Reset(_)) => ffi::LocalIgnoreResetStatusDto {
+            has_reset: true,
+            has_conflict: false,
+            has_error: false,
+            error: empty_local_ignore_reset_error(),
+        },
+        Ok(CoreLocalIgnoreResetOutcome::Conflict(_)) => ffi::LocalIgnoreResetStatusDto {
+            has_reset: false,
+            has_conflict: true,
+            has_error: false,
+            error: empty_local_ignore_reset_error(),
+        },
+        Err(error) => ffi::LocalIgnoreResetStatusDto {
+            has_reset: false,
+            has_conflict: false,
+            has_error: true,
+            error: local_ignore_reset_error_to_dto(error),
+        },
+    }
+}
+
+/// Consume a reset operation and return its successful durable reset payload.
+///
+/// Callers inspect [`local_ignore_reset_status`] first. This `Result` prevents a
+/// conflict or operational failure from being consumed as successful reset data.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn local_ignore_reset_take_result(
+    operation: Box<LocalIgnoreResetOperation>,
+) -> Result<Box<LocalIgnoreResetResult>, String> {
+    match operation.result {
+        Ok(CoreLocalIgnoreResetOutcome::Reset(inner)) => {
+            Ok(Box::new(LocalIgnoreResetResult { inner }))
+        }
+        Ok(CoreLocalIgnoreResetOutcome::Conflict(_)) => {
+            Err("Local Ignore reset detected a content identity conflict".to_string())
+        }
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Consume a reset operation and return its typed content identity conflict.
+///
+/// Callers inspect [`local_ignore_reset_status`] first. This `Result` prevents a
+/// successful reset or operational failure from being consumed as a conflict.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn local_ignore_reset_take_conflict(
+    operation: Box<LocalIgnoreResetOperation>,
+) -> Result<Box<LocalIgnoreResetConflict>, String> {
+    match operation.result {
+        Ok(CoreLocalIgnoreResetOutcome::Conflict(inner)) => {
+            Ok(Box::new(LocalIgnoreResetConflict { inner }))
+        }
+        Ok(CoreLocalIgnoreResetOutcome::Reset(_)) => {
+            Err("Local Ignore reset completed successfully".to_string())
+        }
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Return the canonical Local Ignore path replaced by a successful reset.
+fn local_ignore_reset_result_local_ignore_path(result: &LocalIgnoreResetResult) -> String {
+    result
+        .inner
+        .local_ignore_path()
+        .to_string_lossy()
+        .into_owned()
+}
+
+/// Return the durable byte-exact backup path verified by a successful reset.
+fn local_ignore_reset_result_backup_path(result: &LocalIgnoreResetResult) -> String {
+    result.inner.backup_path().to_string_lossy().into_owned()
+}
+
+/// Return the malformed identity against which the successful reset was approved.
+fn local_ignore_reset_result_malformed_local_ignore_identity(
+    result: &LocalIgnoreResetResult,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(result.inner.malformed_local_ignore_identity())
+}
+
+/// Return the identity independently verified from the durable backup bytes.
+fn local_ignore_reset_result_backup_identity(
+    result: &LocalIgnoreResetResult,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(result.inner.backup_identity())
+}
+
+/// Return the identity of the retained selected-Main defaults published as replacement.
+fn local_ignore_reset_result_replacement_identity(
+    result: &LocalIgnoreResetResult,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(result.inner.replacement_identity())
+}
+
+/// Return selection, malformed-file, and successful-reset diagnostics.
+fn local_ignore_reset_result_diagnostics(
+    result: &LocalIgnoreResetResult,
+) -> Vec<ffi::InstalledYamlDataDiagnosticDto> {
+    result
+        .inner
+        .diagnostics()
+        .iter()
+        .map(installed_yaml_data_diagnostic_to_dto)
+        .collect()
+}
+
+/// Consume successful reset metadata and return its retained Installed YAML Data snapshot.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn local_ignore_reset_result_take_snapshot(
+    result: Box<LocalIgnoreResetResult>,
+) -> Box<InstalledYamlDataSnapshot> {
+    Box::new(InstalledYamlDataSnapshot {
+        inner: result.inner.into_snapshot(),
+    })
+}
+
+/// Return the malformed-file identity against which reset was approved.
+fn local_ignore_reset_conflict_expected_identity(
+    conflict: &LocalIgnoreResetConflict,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(conflict.inner.expected_identity())
+}
+
+/// Report whether the reset conflict observed a current canonical file identity.
+fn local_ignore_reset_conflict_has_actual_identity(conflict: &LocalIgnoreResetConflict) -> bool {
+    conflict.inner.actual_identity().is_some()
+}
+
+/// Return the current canonical identity captured by a reset conflict.
+///
+/// CXX does not bridge `Option<YamlDataContentIdentityDto>`, so callers inspect
+/// [`local_ignore_reset_conflict_has_actual_identity`] first. A removed canonical file
+/// projects as an empty DTO.
+fn local_ignore_reset_conflict_actual_identity(
+    conflict: &LocalIgnoreResetConflict,
+) -> ffi::YamlDataContentIdentityDto {
+    conflict
+        .inner
+        .actual_identity()
+        .map(content_identity_to_dto)
+        .unwrap_or_else(empty_content_identity)
+}
+
+/// Report whether a verified byte-exact backup was retained before a late conflict.
+fn local_ignore_reset_conflict_has_backup_path(conflict: &LocalIgnoreResetConflict) -> bool {
+    conflict.inner.backup_path().is_some()
+}
+
+/// Return the verified backup retained before a late reset conflict.
+///
+/// Callers inspect [`local_ignore_reset_conflict_has_backup_path`] first. A conflict
+/// detected before backup publication projects as an empty string.
+fn local_ignore_reset_conflict_backup_path(conflict: &LocalIgnoreResetConflict) -> String {
+    conflict
+        .inner
+        .backup_path()
+        .map(|path| path.to_string_lossy().into_owned())
+        .unwrap_or_default()
+}
+
+/// Consume a recovery plan and complete the retained operation with no ignore entries.
+///
+/// The returned snapshot retains the plan's exact Main, game, and malformed Local Ignore
+/// identities. This decision is operation-scoped and performs no filesystem writes.
+// CXX requires Box here to consume the C++ UniquePtr and transfer ownership.
+#[allow(clippy::boxed_local)]
+fn local_ignore_recovery_plan_proceed_without_ignore(
+    plan: Box<LocalIgnoreRecoveryPlan>,
+) -> Box<InstalledYamlDataSnapshot> {
+    Box::new(InstalledYamlDataSnapshot {
+        inner: plan.inner.proceed_without_ignore(),
+    })
+}
+
+/// Clone the parsed configuration view retained by an Installed YAML Data snapshot.
+fn installed_yaml_data_snapshot_yaml_data(snapshot: &InstalledYamlDataSnapshot) -> Box<YamlData> {
+    Box::new(YamlData {
+        inner: snapshot.inner.yaml_data().clone(),
+    })
+}
+
+/// Clone simplify-log removal entries parsed from the exact selected Main bytes.
+fn installed_yaml_data_snapshot_simplify_remove_list(
+    snapshot: &InstalledYamlDataSnapshot,
+) -> Vec<String> {
+    snapshot.inner.simplify_remove_list().to_vec()
+}
+
+/// Return the typed game identity retained by an Installed YAML Data snapshot.
+fn installed_yaml_data_snapshot_game(
+    snapshot: &InstalledYamlDataSnapshot,
+) -> ffi::ExplicitYamlDataGameId {
+    explicit_game_id_to_ffi(snapshot.inner.game())
+}
+
+/// Return the registered game-data role retained by a snapshot.
+fn installed_yaml_data_snapshot_game_role(
+    snapshot: &InstalledYamlDataSnapshot,
+) -> ffi::InstalledYamlDataGameRole {
+    match snapshot.inner.game_data_role() {
+        CoreGameDataRole::Fallout4 => ffi::InstalledYamlDataGameRole::Fallout4,
+    }
+}
+
+/// Return selected Main provenance, schema, and exact-byte content identity.
+fn installed_yaml_data_snapshot_main(
+    snapshot: &InstalledYamlDataSnapshot,
+) -> ffi::InspectedYamlDataFileDto {
+    inspected_yaml_data_file_to_dto(snapshot.inner.main())
+}
+
+/// Return selected game provenance, schema, and exact-byte content identity.
+fn installed_yaml_data_snapshot_game_file(
+    snapshot: &InstalledYamlDataSnapshot,
+) -> ffi::InspectedYamlDataFileDto {
+    inspected_yaml_data_file_to_dto(snapshot.inner.game_file())
+}
+
+/// Return how Local Ignore YAML Data entered a ready snapshot.
+fn installed_yaml_data_snapshot_local_ignore_state(
+    snapshot: &InstalledYamlDataSnapshot,
+) -> ffi::LocalIgnoreYamlDataState {
+    match snapshot.inner.local_ignore_state() {
+        CoreLocalIgnoreYamlDataState::Existing => ffi::LocalIgnoreYamlDataState::Existing,
+        CoreLocalIgnoreYamlDataState::Generated => ffi::LocalIgnoreYamlDataState::Generated,
+        CoreLocalIgnoreYamlDataState::ProceedWithoutIgnore => {
+            ffi::LocalIgnoreYamlDataState::ProceedWithoutIgnore
+        }
+        CoreLocalIgnoreYamlDataState::ResetToDefault => {
+            ffi::LocalIgnoreYamlDataState::ResetToDefault
+        }
+    }
+}
+
+/// Return the exact retained Local Ignore content identity.
+fn installed_yaml_data_snapshot_local_ignore_identity(
+    snapshot: &InstalledYamlDataSnapshot,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(snapshot.inner.local_ignore_identity())
+}
+
+/// Return every structured fallback, cache-resolution, or Local Ignore generation diagnostic.
+fn installed_yaml_data_snapshot_diagnostics(
+    snapshot: &InstalledYamlDataSnapshot,
+) -> Vec<ffi::InstalledYamlDataDiagnosticDto> {
+    snapshot
+        .inner
+        .diagnostics()
+        .iter()
+        .map(installed_yaml_data_diagnostic_to_dto)
+        .collect()
+}
+
+/// Return the success/error status captured by an explicit YAML Data load.
+fn explicit_yaml_data_load_status(
+    load: &ExplicitYamlDataLoad,
+) -> ffi::ExplicitYamlDataLoadStatusDto {
+    match &load.result {
+        Ok(_) => ffi::ExplicitYamlDataLoadStatusDto {
+            has_snapshot: true,
+            has_error: false,
+            error: empty_explicit_yaml_data_error(),
+        },
+        Err(error) => ffi::ExplicitYamlDataLoadStatusDto {
+            has_snapshot: false,
+            has_error: true,
+            error: explicit_yaml_data_error_to_dto(error),
+        },
+    }
+}
+
+/// Consume a successful load handle and return its immutable snapshot.
+///
+/// Callers inspect [`explicit_yaml_data_load_status`] first. This `Result`
+/// protects against consuming a failed handle.
+fn explicit_yaml_data_load_take_snapshot(
+    load: Box<ExplicitYamlDataLoad>,
+) -> Result<Box<ExplicitYamlDataSnapshot>, String> {
+    match load.result {
+        Ok(inner) => Ok(Box::new(ExplicitYamlDataSnapshot { inner })),
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+/// Clone the parsed configuration view retained by an explicit snapshot.
+fn explicit_yaml_data_snapshot_yaml_data(snapshot: &ExplicitYamlDataSnapshot) -> Box<YamlData> {
+    Box::new(YamlData {
+        inner: snapshot.inner.yaml_data().clone(),
+    })
+}
+
+/// Return the registered game-data role used by the snapshot.
+fn explicit_yaml_data_snapshot_game_role(
+    snapshot: &ExplicitYamlDataSnapshot,
+) -> ffi::ExplicitYamlDataGameRole {
+    match snapshot.inner.game_data_role() {
+        CoreGameDataRole::Fallout4 => ffi::ExplicitYamlDataGameRole::Fallout4,
+    }
+}
+
+/// Return the caller's typed game identity retained by the snapshot.
+fn explicit_yaml_data_snapshot_game(
+    snapshot: &ExplicitYamlDataSnapshot,
+) -> ffi::ExplicitYamlDataGameId {
+    explicit_game_id_to_ffi(snapshot.inner.game())
+}
+
+/// Return the exact retained Main-file content identity.
+fn explicit_yaml_data_snapshot_main_identity(
+    snapshot: &ExplicitYamlDataSnapshot,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(snapshot.inner.main_identity())
+}
+
+/// Return the exact retained game-file content identity.
+fn explicit_yaml_data_snapshot_game_identity(
+    snapshot: &ExplicitYamlDataSnapshot,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(snapshot.inner.game_identity())
+}
+
+/// Return the exact retained Local Ignore-file content identity.
+fn explicit_yaml_data_snapshot_ignore_identity(
+    snapshot: &ExplicitYamlDataSnapshot,
+) -> ffi::YamlDataContentIdentityDto {
+    content_identity_to_dto(snapshot.inner.ignore_identity())
+}
+
+fn explicit_game_id_to_core(game: ffi::ExplicitYamlDataGameId) -> CoreGameId {
+    match game {
+        ffi::ExplicitYamlDataGameId::Fallout4 => CoreGameId::Fallout4,
+        ffi::ExplicitYamlDataGameId::Fallout4VR => CoreGameId::Fallout4VR,
+        ffi::ExplicitYamlDataGameId::Skyrim => CoreGameId::Skyrim,
+        ffi::ExplicitYamlDataGameId::Starfield => CoreGameId::Starfield,
+        // Unknown CXX enum values must fail as unsupported and must never
+        // silently select Fallout 4 data.
+        _ => CoreGameId::Starfield,
+    }
+}
+
+fn explicit_game_id_to_ffi(game: CoreGameId) -> ffi::ExplicitYamlDataGameId {
+    match game {
+        CoreGameId::Fallout4 => ffi::ExplicitYamlDataGameId::Fallout4,
+        CoreGameId::Fallout4VR => ffi::ExplicitYamlDataGameId::Fallout4VR,
+        CoreGameId::Skyrim => ffi::ExplicitYamlDataGameId::Skyrim,
+        CoreGameId::Starfield => ffi::ExplicitYamlDataGameId::Starfield,
+    }
+}
+
+fn explicit_yaml_data_role_to_ffi(role: CoreExplicitYamlDataRole) -> ffi::ExplicitYamlDataRole {
+    match role {
+        CoreExplicitYamlDataRole::Main => ffi::ExplicitYamlDataRole::Main,
+        CoreExplicitYamlDataRole::Game => ffi::ExplicitYamlDataRole::Game,
+        CoreExplicitYamlDataRole::LocalIgnore => ffi::ExplicitYamlDataRole::LocalIgnore,
+    }
+}
+
+fn explicit_yaml_data_error_to_dto(
+    error: &CoreExplicitYamlDataLoadError,
+) -> ffi::ExplicitYamlDataLoadErrorDto {
+    let (kind, role, path) = match error {
+        CoreExplicitYamlDataLoadError::UnsupportedGame { .. } => (
+            ffi::ExplicitYamlDataLoadErrorKind::UnsupportedGame,
+            None,
+            None,
+        ),
+        CoreExplicitYamlDataLoadError::Read { role, path, .. } => (
+            ffi::ExplicitYamlDataLoadErrorKind::Read,
+            Some(*role),
+            Some(path),
+        ),
+        CoreExplicitYamlDataLoadError::InvalidUtf8 { role, path, .. } => (
+            ffi::ExplicitYamlDataLoadErrorKind::InvalidUtf8,
+            Some(*role),
+            Some(path),
+        ),
+        CoreExplicitYamlDataLoadError::Parse { role, path, .. } => (
+            ffi::ExplicitYamlDataLoadErrorKind::Parse,
+            Some(*role),
+            Some(path),
+        ),
+        CoreExplicitYamlDataLoadError::InvalidRoleData { role, path, .. } => (
+            ffi::ExplicitYamlDataLoadErrorKind::InvalidRoleData,
+            Some(*role),
+            Some(path),
+        ),
+    };
+    ffi::ExplicitYamlDataLoadErrorDto {
+        kind,
+        has_role: role.is_some(),
+        role: role
+            .map(explicit_yaml_data_role_to_ffi)
+            .unwrap_or(ffi::ExplicitYamlDataRole::Main),
+        has_path: path.is_some(),
+        path: path
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        message: error.to_string(),
+    }
+}
+
+fn empty_explicit_yaml_data_error() -> ffi::ExplicitYamlDataLoadErrorDto {
+    // CXX shared structs cannot omit nested records; `has_error` is authoritative.
+    ffi::ExplicitYamlDataLoadErrorDto {
+        kind: ffi::ExplicitYamlDataLoadErrorKind::UnsupportedGame,
+        has_role: false,
+        role: ffi::ExplicitYamlDataRole::Main,
+        has_path: false,
+        path: String::new(),
+        message: String::new(),
+    }
+}
+
+fn content_identity_to_dto(identity: &YamlDataContentIdentity) -> ffi::YamlDataContentIdentityDto {
+    ffi::YamlDataContentIdentityDto {
+        sha256: identity.sha256_hex(),
+        byte_len: identity.byte_len(),
+    }
+}
+
+/// Return the sentinel content identity used when an optional identity is absent.
+fn empty_content_identity() -> ffi::YamlDataContentIdentityDto {
+    ffi::YamlDataContentIdentityDto {
+        sha256: String::new(),
+        byte_len: 0,
+    }
+}
+
+/// Convert a durable Local Ignore publication boundary to its stable CXX projection.
+fn local_ignore_reset_publication_stage_to_ffi(
+    stage: CoreLocalIgnoreResetPublicationStage,
+) -> ffi::LocalIgnoreResetPublicationStage {
+    match stage {
+        CoreLocalIgnoreResetPublicationStage::Create => {
+            ffi::LocalIgnoreResetPublicationStage::Create
+        }
+        CoreLocalIgnoreResetPublicationStage::Write => ffi::LocalIgnoreResetPublicationStage::Write,
+        CoreLocalIgnoreResetPublicationStage::Flush => ffi::LocalIgnoreResetPublicationStage::Flush,
+        CoreLocalIgnoreResetPublicationStage::Sync => ffi::LocalIgnoreResetPublicationStage::Sync,
+        CoreLocalIgnoreResetPublicationStage::Publish => {
+            ffi::LocalIgnoreResetPublicationStage::Publish
+        }
+    }
+}
+
+/// Convert one core Local Ignore reset failure into its typed CXX error DTO.
+fn local_ignore_reset_error_to_dto(
+    error: &CoreLocalIgnoreResetError,
+) -> ffi::LocalIgnoreResetErrorDto {
+    let (kind, path, stage) = match error {
+        CoreLocalIgnoreResetError::DefaultsUnavailable { path, .. } => (
+            ffi::LocalIgnoreResetErrorKind::DefaultsUnavailable,
+            path,
+            None,
+        ),
+        CoreLocalIgnoreResetError::Lock { path, .. } => {
+            (ffi::LocalIgnoreResetErrorKind::Lock, path, None)
+        }
+        CoreLocalIgnoreResetError::Read { path, .. } => {
+            (ffi::LocalIgnoreResetErrorKind::Read, path, None)
+        }
+        CoreLocalIgnoreResetError::BackupDirectory { path, .. } => {
+            (ffi::LocalIgnoreResetErrorKind::BackupDirectory, path, None)
+        }
+        CoreLocalIgnoreResetError::BackupPublication { path, stage, .. } => (
+            ffi::LocalIgnoreResetErrorKind::BackupPublication,
+            path,
+            Some(*stage),
+        ),
+        CoreLocalIgnoreResetError::BackupVerification { path, .. } => (
+            ffi::LocalIgnoreResetErrorKind::BackupVerification,
+            path,
+            None,
+        ),
+        CoreLocalIgnoreResetError::ReplacementPublication { path, stage, .. } => (
+            ffi::LocalIgnoreResetErrorKind::ReplacementPublication,
+            path,
+            Some(*stage),
+        ),
+    };
+    ffi::LocalIgnoreResetErrorDto {
+        kind,
+        has_path: true,
+        path: path.to_string_lossy().into_owned(),
+        has_stage: stage.is_some(),
+        stage: stage
+            .map(local_ignore_reset_publication_stage_to_ffi)
+            .unwrap_or(ffi::LocalIgnoreResetPublicationStage::Create),
+        message: error.to_string(),
+    }
+}
+
+/// Return the placeholder nested error used when reset `has_error` is false.
+fn empty_local_ignore_reset_error() -> ffi::LocalIgnoreResetErrorDto {
+    // CXX shared structs cannot omit nested records; `has_error` is authoritative.
+    ffi::LocalIgnoreResetErrorDto {
+        kind: ffi::LocalIgnoreResetErrorKind::DefaultsUnavailable,
+        has_path: false,
+        path: String::new(),
+        has_stage: false,
+        stage: ffi::LocalIgnoreResetPublicationStage::Create,
+        message: String::new(),
+    }
+}
+
+/// Convert a core Installed YAML Data role to its CXX projection.
+fn installed_yaml_data_role_to_ffi(role: CoreInstalledYamlDataRole) -> ffi::InstalledYamlDataRole {
+    match role {
+        CoreInstalledYamlDataRole::Main => ffi::InstalledYamlDataRole::Main,
+        CoreInstalledYamlDataRole::Game => ffi::InstalledYamlDataRole::Game,
+    }
+}
+
+/// Convert a core selected-file role to the broader Installed YAML Data load role.
+fn installed_yaml_data_load_role_to_ffi(
+    role: CoreInstalledYamlDataRole,
+) -> ffi::InstalledYamlDataLoadRole {
+    match role {
+        CoreInstalledYamlDataRole::Main => ffi::InstalledYamlDataLoadRole::Main,
+        CoreInstalledYamlDataRole::Game => ffi::InstalledYamlDataLoadRole::Game,
+    }
+}
+
+/// Convert core candidate provenance to its stable CXX projection.
+fn installed_yaml_data_provenance_to_ffi(
+    provenance: CoreInstalledYamlDataProvenance,
+) -> ffi::InstalledYamlDataProvenance {
+    match provenance {
+        CoreInstalledYamlDataProvenance::Updated => ffi::InstalledYamlDataProvenance::Updated,
+        CoreInstalledYamlDataProvenance::Previous => ffi::InstalledYamlDataProvenance::Previous,
+        CoreInstalledYamlDataProvenance::Bundled => ffi::InstalledYamlDataProvenance::Bundled,
+    }
+}
+
+/// Convert a core diagnostic kind to the stable CXX inventory.
+fn installed_yaml_data_diagnostic_kind_to_ffi(
+    kind: CoreInstalledYamlDataDiagnosticKind,
+) -> ffi::InstalledYamlDataDiagnosticKind {
+    match kind {
+        CoreInstalledYamlDataDiagnosticKind::CacheUnavailable => {
+            ffi::InstalledYamlDataDiagnosticKind::CacheUnavailable
+        }
+        CoreInstalledYamlDataDiagnosticKind::Missing => {
+            ffi::InstalledYamlDataDiagnosticKind::Missing
+        }
+        CoreInstalledYamlDataDiagnosticKind::Read => ffi::InstalledYamlDataDiagnosticKind::Read,
+        CoreInstalledYamlDataDiagnosticKind::InvalidUtf8 => {
+            ffi::InstalledYamlDataDiagnosticKind::InvalidUtf8
+        }
+        CoreInstalledYamlDataDiagnosticKind::Parse => ffi::InstalledYamlDataDiagnosticKind::Parse,
+        CoreInstalledYamlDataDiagnosticKind::InvalidSchema => {
+            ffi::InstalledYamlDataDiagnosticKind::InvalidSchema
+        }
+        CoreInstalledYamlDataDiagnosticKind::IncompatibleSchema => {
+            ffi::InstalledYamlDataDiagnosticKind::IncompatibleSchema
+        }
+        CoreInstalledYamlDataDiagnosticKind::InvalidRoleData => {
+            ffi::InstalledYamlDataDiagnosticKind::InvalidRoleData
+        }
+        CoreInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated => {
+            ffi::InstalledYamlDataDiagnosticKind::LocalIgnoreGenerated
+        }
+        CoreInstalledYamlDataDiagnosticKind::LocalIgnoreReset => {
+            ffi::InstalledYamlDataDiagnosticKind::LocalIgnoreReset
+        }
+    }
+}
+
+/// Flatten one selected core file into its CXX metadata DTO.
+fn inspected_yaml_data_file_to_dto(
+    file: &CoreInspectedYamlDataFile,
+) -> ffi::InspectedYamlDataFileDto {
+    ffi::InspectedYamlDataFileDto {
+        role: installed_yaml_data_role_to_ffi(file.role()),
+        provenance: installed_yaml_data_provenance_to_ffi(file.provenance()),
+        schema_version: file.schema_version().to_string(),
+        sha256: file.identity().sha256_hex(),
+        byte_len: file.identity().byte_len(),
+    }
+}
+
+/// Flatten one structured core diagnostic into its CXX DTO.
+fn installed_yaml_data_diagnostic_to_dto(
+    diagnostic: &CoreInstalledYamlDataDiagnostic,
+) -> ffi::InstalledYamlDataDiagnosticDto {
+    let role = diagnostic.role();
+    let candidate = diagnostic.candidate();
+    let path = diagnostic.path();
+    ffi::InstalledYamlDataDiagnosticDto {
+        has_role: role.is_some(),
+        role: role
+            .map(installed_yaml_data_role_to_ffi)
+            .unwrap_or(ffi::InstalledYamlDataRole::Main),
+        has_candidate: candidate.is_some(),
+        candidate: candidate
+            .map(installed_yaml_data_provenance_to_ffi)
+            .unwrap_or(ffi::InstalledYamlDataProvenance::Bundled),
+        has_path: path.is_some(),
+        path: path
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        kind: installed_yaml_data_diagnostic_kind_to_ffi(diagnostic.kind()),
+        message: diagnostic.message().to_string(),
+    }
+}
+
+/// Convert one core inspection failure into its typed CXX error DTO.
+fn installed_yaml_data_inspection_error_to_dto(
+    error: &CoreInstalledYamlDataInspectionError,
+) -> ffi::InstalledYamlDataInspectionErrorDto {
+    match error {
+        CoreInstalledYamlDataInspectionError::UnsupportedGame { .. } => {
+            ffi::InstalledYamlDataInspectionErrorDto {
+                kind: ffi::InstalledYamlDataInspectionErrorKind::UnsupportedGame,
+                has_role: false,
+                role: ffi::InstalledYamlDataRole::Main,
+                diagnostics: Vec::new(),
+                message: error.to_string(),
+            }
+        }
+        CoreInstalledYamlDataInspectionError::NoUsableSource { role, diagnostics } => {
+            ffi::InstalledYamlDataInspectionErrorDto {
+                kind: ffi::InstalledYamlDataInspectionErrorKind::NoUsableSource,
+                has_role: true,
+                role: installed_yaml_data_role_to_ffi(*role),
+                diagnostics: diagnostics
+                    .iter()
+                    .map(installed_yaml_data_diagnostic_to_dto)
+                    .collect(),
+                message: error.to_string(),
+            }
+        }
+    }
+}
+
+/// Return the placeholder nested error used when `has_error` is false.
+fn empty_installed_yaml_data_inspection_error() -> ffi::InstalledYamlDataInspectionErrorDto {
+    ffi::InstalledYamlDataInspectionErrorDto {
+        kind: ffi::InstalledYamlDataInspectionErrorKind::UnsupportedGame,
+        has_role: false,
+        role: ffi::InstalledYamlDataRole::Main,
+        diagnostics: Vec::new(),
+        message: String::new(),
+    }
+}
+
+/// Convert one core Installed YAML Data load failure into its typed CXX error DTO.
+fn installed_yaml_data_load_error_to_dto(
+    error: &CoreInstalledYamlDataLoadError,
+) -> ffi::InstalledYamlDataLoadErrorDto {
+    let (kind, role, path, diagnostics) = match error {
+        CoreInstalledYamlDataLoadError::UnsupportedGame { .. } => (
+            ffi::InstalledYamlDataLoadErrorKind::UnsupportedGame,
+            None,
+            None,
+            Vec::new(),
+        ),
+        CoreInstalledYamlDataLoadError::NoUsableSource { role, diagnostics } => (
+            ffi::InstalledYamlDataLoadErrorKind::NoUsableSource,
+            Some(installed_yaml_data_load_role_to_ffi(*role)),
+            None,
+            diagnostics
+                .iter()
+                .map(installed_yaml_data_diagnostic_to_dto)
+                .collect(),
+        ),
+        CoreInstalledYamlDataLoadError::LocalIgnoreRead { path, .. } => (
+            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreRead,
+            Some(ffi::InstalledYamlDataLoadRole::LocalIgnore),
+            Some(path),
+            Vec::new(),
+        ),
+        CoreInstalledYamlDataLoadError::LocalIgnoreDefaultInvalid { path, .. } => (
+            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreDefaultInvalid,
+            Some(ffi::InstalledYamlDataLoadRole::LocalIgnore),
+            Some(path),
+            Vec::new(),
+        ),
+        CoreInstalledYamlDataLoadError::LocalIgnoreCreate { path, .. } => (
+            ffi::InstalledYamlDataLoadErrorKind::LocalIgnoreCreate,
+            Some(ffi::InstalledYamlDataLoadRole::LocalIgnore),
+            Some(path),
+            Vec::new(),
+        ),
+        CoreInstalledYamlDataLoadError::InvalidSelectedData { .. } => (
+            ffi::InstalledYamlDataLoadErrorKind::InvalidSelectedData,
+            None,
+            None,
+            Vec::new(),
+        ),
+    };
+    ffi::InstalledYamlDataLoadErrorDto {
+        kind,
+        has_role: role.is_some(),
+        role: role.unwrap_or(ffi::InstalledYamlDataLoadRole::Main),
+        has_path: path.is_some(),
+        path: path
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        diagnostics,
+        message: error.to_string(),
+    }
+}
+
+/// Return the placeholder nested load error used when `has_error` is false.
+fn empty_installed_yaml_data_load_error() -> ffi::InstalledYamlDataLoadErrorDto {
+    // CXX shared structs cannot omit nested records; `has_error` is authoritative.
+    ffi::InstalledYamlDataLoadErrorDto {
+        kind: ffi::InstalledYamlDataLoadErrorKind::UnsupportedGame,
+        has_role: false,
+        role: ffi::InstalledYamlDataLoadRole::Main,
+        has_path: false,
+        path: String::new(),
+        diagnostics: Vec::new(),
+        message: String::new(),
+    }
 }
 
 /// Persist optional game and documents paths through the standalone Game Local writer.
@@ -493,6 +1607,260 @@ fn yaml_data_suspects_stack_count_rules_for_id(
 
 #[cxx::bridge(namespace = "classic::config")]
 mod ffi {
+    /// Typed game identity for deterministic explicit YAML Data loading.
+    ///
+    /// CXX bridge modules cannot share enum definitions, so this mirrors
+    /// `classic_shared_core::GameId` in the config namespace.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ExplicitYamlDataGameId {
+        Fallout4 = 0,
+        Fallout4VR = 1,
+        Skyrim = 2,
+        Starfield = 3,
+    }
+
+    /// Registered game-data role selected for an explicit snapshot.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ExplicitYamlDataGameRole {
+        Fallout4 = 0,
+    }
+
+    /// Role of one exact file in an explicit YAML Data request.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ExplicitYamlDataRole {
+        Main = 0,
+        Game = 1,
+        LocalIgnore = 2,
+    }
+
+    /// Stable typed category of one explicit YAML Data load failure.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum ExplicitYamlDataLoadErrorKind {
+        UnsupportedGame = 0,
+        Read = 1,
+        InvalidUtf8 = 2,
+        Parse = 3,
+        InvalidRoleData = 4,
+    }
+
+    /// Registered game-data role selected by Installed YAML Data inspection.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InstalledYamlDataGameRole {
+        Fallout4 = 0,
+    }
+
+    /// Update-eligible YAML Data role attributed by inspection.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InstalledYamlDataRole {
+        Main = 0,
+        Game = 1,
+    }
+
+    /// Candidate provenance for one selected or rejected installed file.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InstalledYamlDataProvenance {
+        Updated = 0,
+        Previous = 1,
+        Bundled = 2,
+    }
+
+    /// Stable category for an Installed YAML Data selection or generation diagnostic.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InstalledYamlDataDiagnosticKind {
+        CacheUnavailable = 0,
+        Missing = 1,
+        Read = 2,
+        InvalidUtf8 = 3,
+        Parse = 4,
+        InvalidSchema = 5,
+        IncompatibleSchema = 6,
+        InvalidRoleData = 7,
+        /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+        LocalIgnoreGenerated = 8,
+        /// Malformed Local Ignore YAML Data was reset from retained selected-Main defaults.
+        LocalIgnoreReset = 9,
+    }
+
+    /// Stable typed category of an Installed YAML Data inspection failure.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InstalledYamlDataInspectionErrorKind {
+        UnsupportedGame = 0,
+        NoUsableSource = 1,
+    }
+
+    /// Stable typed category of an Installed YAML Data load failure.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InstalledYamlDataLoadErrorKind {
+        UnsupportedGame = 0,
+        NoUsableSource = 1,
+        LocalIgnoreRead = 2,
+        InvalidSelectedData = 6,
+        /// Selected Main defaults could not safely initialize Local Ignore YAML Data.
+        LocalIgnoreDefaultInvalid = 7,
+        /// Local Ignore YAML Data could not be atomically created.
+        LocalIgnoreCreate = 8,
+    }
+
+    /// File role attributed by an Installed YAML Data load failure.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum InstalledYamlDataLoadRole {
+        Main = 0,
+        Game = 1,
+        LocalIgnore = 2,
+    }
+
+    /// How Local Ignore YAML Data entered a ready installed snapshot.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum LocalIgnoreYamlDataState {
+        Existing = 0,
+        /// Missing Local Ignore YAML Data was generated from selected Main defaults.
+        Generated = 1,
+        /// Malformed Local Ignore bytes were ignored for this operation without changing them.
+        ProceedWithoutIgnore = 2,
+        /// Malformed Local Ignore bytes were backed up and reset from retained defaults.
+        ResetToDefault = 3,
+    }
+
+    /// Stable typed category of a Local Ignore reset operational failure.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum LocalIgnoreResetErrorKind {
+        DefaultsUnavailable = 0,
+        Lock = 1,
+        Read = 2,
+        BackupDirectory = 3,
+        BackupPublication = 4,
+        BackupVerification = 5,
+        ReplacementPublication = 6,
+    }
+
+    /// Durable publication boundary attributed by a Local Ignore reset failure.
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum LocalIgnoreResetPublicationStage {
+        Create = 0,
+        Write = 1,
+        Flush = 2,
+        Sync = 3,
+        Publish = 4,
+    }
+
+    /// Exact caller-selected paths for deterministic YAML Data loading.
+    struct ExplicitYamlDataPathsDto {
+        main_path: String,
+        game_path: String,
+        ignore_path: String,
+    }
+
+    /// Content identity derived from the exact retained file bytes.
+    struct YamlDataContentIdentityDto {
+        sha256: String,
+        byte_len: u64,
+    }
+
+    /// Typed explicit-load failure with optional role and path context.
+    struct ExplicitYamlDataLoadErrorDto {
+        kind: ExplicitYamlDataLoadErrorKind,
+        has_role: bool,
+        role: ExplicitYamlDataRole,
+        has_path: bool,
+        path: String,
+        message: String,
+    }
+
+    /// Exactly one of `has_snapshot` and `has_error` is true.
+    struct ExplicitYamlDataLoadStatusDto {
+        has_snapshot: bool,
+        has_error: bool,
+        error: ExplicitYamlDataLoadErrorDto,
+    }
+
+    /// Selected-file metadata derived from the exact inspected bytes.
+    struct InspectedYamlDataFileDto {
+        role: InstalledYamlDataRole,
+        provenance: InstalledYamlDataProvenance,
+        schema_version: String,
+        sha256: String,
+        byte_len: u64,
+    }
+
+    /// Structured attribution for one fallback, cache-resolution, or Local Ignore generation event.
+    struct InstalledYamlDataDiagnosticDto {
+        has_role: bool,
+        role: InstalledYamlDataRole,
+        has_candidate: bool,
+        candidate: InstalledYamlDataProvenance,
+        has_path: bool,
+        path: String,
+        kind: InstalledYamlDataDiagnosticKind,
+        message: String,
+    }
+
+    /// Typed inspection failure with optional role and structured diagnostics.
+    struct InstalledYamlDataInspectionErrorDto {
+        kind: InstalledYamlDataInspectionErrorKind,
+        has_role: bool,
+        role: InstalledYamlDataRole,
+        diagnostics: Vec<InstalledYamlDataDiagnosticDto>,
+        message: String,
+    }
+
+    /// Exactly one of `has_inspection` and `has_error` is true.
+    struct InstalledYamlDataInspectionStatusDto {
+        has_inspection: bool,
+        has_error: bool,
+        error: InstalledYamlDataInspectionErrorDto,
+    }
+
+    /// Typed Installed YAML Data load failure with optional role/path context.
+    struct InstalledYamlDataLoadErrorDto {
+        kind: InstalledYamlDataLoadErrorKind,
+        has_role: bool,
+        role: InstalledYamlDataLoadRole,
+        has_path: bool,
+        path: String,
+        diagnostics: Vec<InstalledYamlDataDiagnosticDto>,
+        message: String,
+    }
+
+    /// Exactly one of `has_snapshot`, `has_recovery_plan`, and `has_error` is true.
+    struct InstalledYamlDataLoadStatusDto {
+        has_snapshot: bool,
+        has_recovery_plan: bool,
+        has_error: bool,
+        error: InstalledYamlDataLoadErrorDto,
+    }
+
+    /// Typed Local Ignore reset failure with path and optional publication-stage context.
+    struct LocalIgnoreResetErrorDto {
+        kind: LocalIgnoreResetErrorKind,
+        has_path: bool,
+        path: String,
+        has_stage: bool,
+        stage: LocalIgnoreResetPublicationStage,
+        message: String,
+    }
+
+    /// Exactly one of `has_reset`, `has_conflict`, and `has_error` is true.
+    struct LocalIgnoreResetStatusDto {
+        has_reset: bool,
+        has_conflict: bool,
+        has_error: bool,
+        error: LocalIgnoreResetErrorDto,
+    }
+
     struct CacheStats {
         hits: u64,
         misses: u64,
@@ -571,6 +1939,16 @@ mod ffi {
 
     extern "Rust" {
         type YamlData;
+        type ExplicitYamlDataLoad;
+        type ExplicitYamlDataSnapshot;
+        type InstalledYamlDataInspectionOperation;
+        type InstalledYamlDataInspection;
+        type InstalledYamlDataLoadOperation;
+        type InstalledYamlDataSnapshot;
+        type LocalIgnoreRecoveryPlan;
+        type LocalIgnoreResetOperation;
+        type LocalIgnoreResetResult;
+        type LocalIgnoreResetConflict;
 
         // Construction (async, block_on)
         fn yaml_data_load(
@@ -579,6 +1957,209 @@ mod ffi {
             game: &str,
             game_version: &str,
         ) -> Result<Box<YamlData>>;
+
+        /// Begin a deterministic load of exactly the supplied Main, game, and
+        /// Local Ignore files. This operation never consults installation state.
+        fn explicit_yaml_data_load(
+            paths: ExplicitYamlDataPathsDto,
+            game: ExplicitYamlDataGameId,
+            selected_game_version: &str,
+        ) -> Box<ExplicitYamlDataLoad>;
+        /// Inspect the stable typed result before consuming a successful snapshot.
+        fn explicit_yaml_data_load_status(
+            load: &ExplicitYamlDataLoad,
+        ) -> ExplicitYamlDataLoadStatusDto;
+        /// Consume a ready load and return its immutable snapshot.
+        fn explicit_yaml_data_load_take_snapshot(
+            load: Box<ExplicitYamlDataLoad>,
+        ) -> Result<Box<ExplicitYamlDataSnapshot>>;
+        /// Clone the parsed configuration view retained by a snapshot.
+        fn explicit_yaml_data_snapshot_yaml_data(
+            snapshot: &ExplicitYamlDataSnapshot,
+        ) -> Box<YamlData>;
+        fn explicit_yaml_data_snapshot_game_role(
+            snapshot: &ExplicitYamlDataSnapshot,
+        ) -> ExplicitYamlDataGameRole;
+        fn explicit_yaml_data_snapshot_game(
+            snapshot: &ExplicitYamlDataSnapshot,
+        ) -> ExplicitYamlDataGameId;
+        fn explicit_yaml_data_snapshot_main_identity(
+            snapshot: &ExplicitYamlDataSnapshot,
+        ) -> YamlDataContentIdentityDto;
+        fn explicit_yaml_data_snapshot_game_identity(
+            snapshot: &ExplicitYamlDataSnapshot,
+        ) -> YamlDataContentIdentityDto;
+        fn explicit_yaml_data_snapshot_ignore_identity(
+            snapshot: &ExplicitYamlDataSnapshot,
+        ) -> YamlDataContentIdentityDto;
+
+        /// Inspect selected Main and game YAML Data under one installation root.
+        /// Local Ignore is neither read nor modified by this operation.
+        fn installed_yaml_data_inspect(
+            installation_root: &str,
+            game: ExplicitYamlDataGameId,
+        ) -> Box<InstalledYamlDataInspectionOperation>;
+        /// Inspect typed success or failure before consuming the operation.
+        fn installed_yaml_data_inspection_status(
+            operation: &InstalledYamlDataInspectionOperation,
+        ) -> InstalledYamlDataInspectionStatusDto;
+        /// Consume a successful operation and return its immutable inspection.
+        fn installed_yaml_data_inspection_take(
+            operation: Box<InstalledYamlDataInspectionOperation>,
+        ) -> Result<Box<InstalledYamlDataInspection>>;
+        fn installed_yaml_data_inspection_game(
+            inspection: &InstalledYamlDataInspection,
+        ) -> ExplicitYamlDataGameId;
+        fn installed_yaml_data_inspection_game_role(
+            inspection: &InstalledYamlDataInspection,
+        ) -> InstalledYamlDataGameRole;
+        fn installed_yaml_data_inspection_main(
+            inspection: &InstalledYamlDataInspection,
+        ) -> InspectedYamlDataFileDto;
+        fn installed_yaml_data_inspection_game_file(
+            inspection: &InstalledYamlDataInspection,
+        ) -> InspectedYamlDataFileDto;
+        fn installed_yaml_data_inspection_diagnostics(
+            inspection: &InstalledYamlDataInspection,
+        ) -> Vec<InstalledYamlDataDiagnosticDto>;
+
+        /// Load Main, game, and valid existing-or-generated Local Ignore YAML Data
+        /// through the config-owned Installed YAML Data policy.
+        fn installed_yaml_data_load(
+            installation_root: &str,
+            game: ExplicitYamlDataGameId,
+            selected_game_version: &str,
+        ) -> Box<InstalledYamlDataLoadOperation>;
+        /// Inspect typed Ready, recovery-required, or error state before consuming the operation.
+        fn installed_yaml_data_load_status(
+            operation: &InstalledYamlDataLoadOperation,
+        ) -> InstalledYamlDataLoadStatusDto;
+        /// Consume a Ready operation and return its immutable snapshot.
+        fn installed_yaml_data_load_take_snapshot(
+            operation: Box<InstalledYamlDataLoadOperation>,
+        ) -> Result<Box<InstalledYamlDataSnapshot>>;
+        /// Consume a recovery-required operation and return its immutable recovery plan.
+        fn installed_yaml_data_load_take_recovery_plan(
+            operation: Box<InstalledYamlDataLoadOperation>,
+        ) -> Result<Box<LocalIgnoreRecoveryPlan>>;
+        fn local_ignore_recovery_plan_game(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> ExplicitYamlDataGameId;
+        fn local_ignore_recovery_plan_game_role(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> InstalledYamlDataGameRole;
+        fn local_ignore_recovery_plan_main(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> InspectedYamlDataFileDto;
+        fn local_ignore_recovery_plan_game_file(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> InspectedYamlDataFileDto;
+        fn local_ignore_recovery_plan_local_ignore_path(plan: &LocalIgnoreRecoveryPlan) -> String;
+        fn local_ignore_recovery_plan_malformed_local_ignore_identity(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> YamlDataContentIdentityDto;
+        fn local_ignore_recovery_plan_has_default_local_ignore_identity(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> bool;
+        fn local_ignore_recovery_plan_default_local_ignore_identity(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> YamlDataContentIdentityDto;
+        fn local_ignore_recovery_plan_selected_game_version(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> String;
+        fn local_ignore_recovery_plan_diagnostics(
+            plan: &LocalIgnoreRecoveryPlan,
+        ) -> Vec<InstalledYamlDataDiagnosticDto>;
+        /// Consume the plan and run its non-interruptible durable reset critical section.
+        fn local_ignore_recovery_plan_reset_to_default(
+            plan: Box<LocalIgnoreRecoveryPlan>,
+        ) -> Box<LocalIgnoreResetOperation>;
+        /// Inspect typed Reset, Conflict, or Error status before consuming the operation.
+        fn local_ignore_reset_status(
+            operation: &LocalIgnoreResetOperation,
+        ) -> LocalIgnoreResetStatusDto;
+        /// Consume an operation that completed with a successful durable reset.
+        fn local_ignore_reset_take_result(
+            operation: Box<LocalIgnoreResetOperation>,
+        ) -> Result<Box<LocalIgnoreResetResult>>;
+        /// Consume an operation that stopped at a content identity conflict.
+        fn local_ignore_reset_take_conflict(
+            operation: Box<LocalIgnoreResetOperation>,
+        ) -> Result<Box<LocalIgnoreResetConflict>>;
+        /// Return the canonical Local Ignore path replaced by a successful reset.
+        fn local_ignore_reset_result_local_ignore_path(result: &LocalIgnoreResetResult) -> String;
+        /// Return the verified durable byte-exact backup path.
+        fn local_ignore_reset_result_backup_path(result: &LocalIgnoreResetResult) -> String;
+        /// Return the malformed identity against which reset was approved.
+        fn local_ignore_reset_result_malformed_local_ignore_identity(
+            result: &LocalIgnoreResetResult,
+        ) -> YamlDataContentIdentityDto;
+        /// Return the independently verified backup identity.
+        fn local_ignore_reset_result_backup_identity(
+            result: &LocalIgnoreResetResult,
+        ) -> YamlDataContentIdentityDto;
+        /// Return the retained-default identity published as replacement.
+        fn local_ignore_reset_result_replacement_identity(
+            result: &LocalIgnoreResetResult,
+        ) -> YamlDataContentIdentityDto;
+        /// Return selection, malformed-file, and successful-reset diagnostics.
+        fn local_ignore_reset_result_diagnostics(
+            result: &LocalIgnoreResetResult,
+        ) -> Vec<InstalledYamlDataDiagnosticDto>;
+        /// Consume successful reset metadata and return its retained ready snapshot.
+        fn local_ignore_reset_result_take_snapshot(
+            result: Box<LocalIgnoreResetResult>,
+        ) -> Box<InstalledYamlDataSnapshot>;
+        /// Return the malformed identity against which reset was approved.
+        fn local_ignore_reset_conflict_expected_identity(
+            conflict: &LocalIgnoreResetConflict,
+        ) -> YamlDataContentIdentityDto;
+        /// Report whether the conflict observed a current canonical file identity.
+        fn local_ignore_reset_conflict_has_actual_identity(
+            conflict: &LocalIgnoreResetConflict,
+        ) -> bool;
+        /// Return the current canonical identity, or an empty DTO when the file was removed.
+        fn local_ignore_reset_conflict_actual_identity(
+            conflict: &LocalIgnoreResetConflict,
+        ) -> YamlDataContentIdentityDto;
+        /// Report whether a verified backup was retained before a late conflict.
+        fn local_ignore_reset_conflict_has_backup_path(conflict: &LocalIgnoreResetConflict)
+        -> bool;
+        /// Return a late-conflict backup path, or an empty string when none was published.
+        fn local_ignore_reset_conflict_backup_path(conflict: &LocalIgnoreResetConflict) -> String;
+        /// Complete the retained operation with no ignore entries and no filesystem writes.
+        fn local_ignore_recovery_plan_proceed_without_ignore(
+            plan: Box<LocalIgnoreRecoveryPlan>,
+        ) -> Box<InstalledYamlDataSnapshot>;
+        /// Clone the parsed configuration view retained by the snapshot.
+        fn installed_yaml_data_snapshot_yaml_data(
+            snapshot: &InstalledYamlDataSnapshot,
+        ) -> Box<YamlData>;
+        /// Clone simplify-log removal entries retained by the snapshot.
+        fn installed_yaml_data_snapshot_simplify_remove_list(
+            snapshot: &InstalledYamlDataSnapshot,
+        ) -> Vec<String>;
+        fn installed_yaml_data_snapshot_game(
+            snapshot: &InstalledYamlDataSnapshot,
+        ) -> ExplicitYamlDataGameId;
+        fn installed_yaml_data_snapshot_game_role(
+            snapshot: &InstalledYamlDataSnapshot,
+        ) -> InstalledYamlDataGameRole;
+        fn installed_yaml_data_snapshot_main(
+            snapshot: &InstalledYamlDataSnapshot,
+        ) -> InspectedYamlDataFileDto;
+        fn installed_yaml_data_snapshot_game_file(
+            snapshot: &InstalledYamlDataSnapshot,
+        ) -> InspectedYamlDataFileDto;
+        fn installed_yaml_data_snapshot_local_ignore_state(
+            snapshot: &InstalledYamlDataSnapshot,
+        ) -> LocalIgnoreYamlDataState;
+        fn installed_yaml_data_snapshot_local_ignore_identity(
+            snapshot: &InstalledYamlDataSnapshot,
+        ) -> YamlDataContentIdentityDto;
+        fn installed_yaml_data_snapshot_diagnostics(
+            snapshot: &InstalledYamlDataSnapshot,
+        ) -> Vec<InstalledYamlDataDiagnosticDto>;
 
         fn save_local_yaml_paths(
             local_yaml_path: &str,

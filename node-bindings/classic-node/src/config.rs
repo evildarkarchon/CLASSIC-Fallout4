@@ -256,6 +256,13 @@ pub struct YamlData {
     inner: YamlDataCore,
 }
 
+impl YamlData {
+    /// Wraps a cloned core configuration for another in-crate binding projection.
+    pub(crate) fn from_core(inner: YamlDataCore) -> Self {
+        Self { inner }
+    }
+}
+
 #[napi]
 impl YamlData {
     /// Load all configuration from YAML files.

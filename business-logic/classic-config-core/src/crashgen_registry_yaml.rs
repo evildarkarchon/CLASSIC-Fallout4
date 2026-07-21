@@ -64,6 +64,118 @@ pub(crate) fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, Crash
     result
 }
 
+/// Validate every present `Crashgen_Registry` value before tolerant parsing can discard it.
+pub(crate) fn validate_crashgen_registry(game_data: &Yaml) -> Result<(), String> {
+    let registry_yaml = &game_data["Crashgen_Registry"];
+    if matches!(registry_yaml, Yaml::BadValue) {
+        return Ok(());
+    }
+    let registry = registry_yaml
+        .as_hash()
+        .ok_or_else(|| "`Crashgen_Registry` must be a mapping".to_string())?;
+
+    for (name_yaml, entry_yaml) in registry {
+        let name = name_yaml
+            .as_str()
+            .filter(|name| !name.trim().is_empty())
+            .ok_or_else(|| "`Crashgen_Registry` keys must be non-empty strings".to_string())?;
+        entry_yaml
+            .as_hash()
+            .ok_or_else(|| format!("`Crashgen_Registry.{name}` must be a mapping"))?;
+
+        validate_optional_registry_string(entry_yaml, name, "display_section")?;
+        validate_optional_registry_string_list(entry_yaml, name, "ignore_keys")?;
+        validate_optional_registry_string_list(entry_yaml, name, "checks")?;
+        let version = validate_optional_registry_version(entry_yaml, name)?;
+
+        let settings_rules = &entry_yaml["settings_rules"];
+        if !matches!(settings_rules, Yaml::BadValue) {
+            if settings_rules.as_hash().is_none() {
+                return Err(format!(
+                    "`Crashgen_Registry.{name}.settings_rules` must be a mapping"
+                ));
+            }
+            let parsed = parse_crashgen_expectations(&yaml_to_json(settings_rules), version);
+            if let Some(diagnostic) = parsed.diagnostics.first() {
+                return Err(format!(
+                    "`Crashgen_Registry.{name}.settings_rules{}` is invalid: {}",
+                    diagnostic.path.trim_start_matches('$'),
+                    diagnostic.message
+                ));
+            }
+            if parsed.rules.is_none() {
+                return Err(format!(
+                    "`Crashgen_Registry.{name}.settings_rules` did not produce typed rules"
+                ));
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Validate one optional scalar string field in a registry entry.
+fn validate_optional_registry_string(
+    entry_yaml: &Yaml,
+    entry_name: &str,
+    field_name: &str,
+) -> Result<(), String> {
+    let value = &entry_yaml[field_name];
+    if matches!(value, Yaml::BadValue) || value.as_str().is_some() {
+        Ok(())
+    } else {
+        Err(format!(
+            "`Crashgen_Registry.{entry_name}.{field_name}` must be a string"
+        ))
+    }
+}
+
+/// Validate one optional string-list field without silently dropping items.
+fn validate_optional_registry_string_list(
+    entry_yaml: &Yaml,
+    entry_name: &str,
+    field_name: &str,
+) -> Result<(), String> {
+    let value = &entry_yaml[field_name];
+    if matches!(value, Yaml::BadValue) {
+        return Ok(());
+    }
+    let items = value.as_vec().ok_or_else(|| {
+        format!("`Crashgen_Registry.{entry_name}.{field_name}` must be a sequence of strings")
+    })?;
+    if items.iter().all(|item| item.as_str().is_some()) {
+        Ok(())
+    } else {
+        Err(format!(
+            "`Crashgen_Registry.{entry_name}.{field_name}` must contain only strings"
+        ))
+    }
+}
+
+/// Validate and return optional registry rule-version metadata.
+fn validate_optional_registry_version(
+    entry_yaml: &Yaml,
+    entry_name: &str,
+) -> Result<Option<u32>, String> {
+    let value = &entry_yaml["settings_rules_version"];
+    match value {
+        Yaml::BadValue => Ok(None),
+        Yaml::Integer(value) => u32::try_from(*value).map(Some).map_err(|_| {
+            format!(
+                "`Crashgen_Registry.{entry_name}.settings_rules_version` must fit an unsigned 32-bit integer"
+            )
+        }),
+        Yaml::String(value) => value.trim().parse::<u32>().map(Some).map_err(|_| {
+            format!(
+                "`Crashgen_Registry.{entry_name}.settings_rules_version` must be an unsigned 32-bit integer"
+            )
+        }),
+        _ => Err(format!(
+            "`Crashgen_Registry.{entry_name}.settings_rules_version` must be an integer or numeric string"
+        )),
+    }
+}
+
 fn parse_string_list_field(entry_name: &str, field_name: &str, field_yaml: &Yaml) -> Vec<String> {
     if let Some(items) = field_yaml.as_vec() {
         items

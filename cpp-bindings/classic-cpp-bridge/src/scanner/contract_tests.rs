@@ -18,9 +18,8 @@ fn shared_failure_fixtures() -> serde_json::Value {
 
 fn sample_configuration() -> ffi::ScanRunConfigurationDto {
     ffi::ScanRunConfigurationDto {
-        yaml_dir_root: "root".to_string(),
-        yaml_dir_data: "data".to_string(),
-        game: "Fallout4".to_string(),
+        installation_root: "root".to_string(),
+        game: ffi::ScanRunGameId::Fallout4,
         game_version: "auto".to_string(),
         show_formid_values: false,
         simplify_logs: false,
@@ -61,14 +60,18 @@ fn sample_setup_context() -> ffi::ScanRunSetupContextDto {
     }
 }
 
-fn write_minimal_scan_yaml_tree(root: &std::path::Path, data: &std::path::Path) {
+fn write_minimal_scan_yaml_tree(_root: &std::path::Path, data: &std::path::Path) {
     std::fs::create_dir_all(data.join("databases")).unwrap();
     std::fs::write(
         data.join("databases").join("CLASSIC Main.yaml"),
         concat!(
+            "schema_version: \"2.0\"\n",
             "CLASSIC_Info:\n",
             "  version: \"v9.1.0\"\n",
             "  version_date: \"2026-06-30\"\n",
+            "  default_ignorefile: |\n",
+            "    CLASSIC_Ignore_Fallout4:\n",
+            "      - IgnoreThis.dll\n",
             "CLASSIC_Interface:\n",
             "  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n",
             "exclude_log_records:\n",
@@ -79,6 +82,7 @@ fn write_minimal_scan_yaml_tree(root: &std::path::Path, data: &std::path::Path) 
     std::fs::write(
         data.join("databases").join("CLASSIC Fallout4.yaml"),
         concat!(
+            "schema_version: \"1.0\"\n",
             "Game_Info:\n",
             "  XSE_Acronym: \"F4SE\"\n",
             "  GameVersion: \"1.10.163\"\n",
@@ -89,7 +93,7 @@ fn write_minimal_scan_yaml_tree(root: &std::path::Path, data: &std::path::Path) 
     )
     .unwrap();
     std::fs::write(
-        root.join("CLASSIC Ignore.yaml"),
+        data.join("CLASSIC Ignore.yaml"),
         "CLASSIC_Ignore_Fallout4: []\n",
     )
     .unwrap();
@@ -109,6 +113,8 @@ fn standard_request_constructor_builds_non_fcx_leave_in_place_request() {
         panic!("expected Standard request tag");
     };
     assert!(!request.fcx_enabled());
+    assert_eq!(request.configuration().installation_root, PathBuf::from("root"));
+    assert_eq!(request.configuration().game, GameId::Fallout4);
     assert_eq!(
         request.unsolved_logs(),
         &classic_scanlog_core::StandardUnsolvedLogsIntent::LeaveInPlace
@@ -208,6 +214,10 @@ fn maps_every_core_enum_variant_to_a_typed_cxx_variant() {
         map_run_status(CrashLogScanRunStatus::Cancelled),
         ffi::ScanRunContractStatus::Cancelled
     );
+    assert_eq!(
+        map_run_status(CrashLogScanRunStatus::LocalIgnoreRecoveryRequired),
+        ffi::ScanRunContractStatus::LocalIgnoreRecoveryRequired
+    );
 
     assert_eq!(
         map_discovery_source(CrashLogScanDiscoverySource::Standard),
@@ -285,6 +295,117 @@ fn maps_every_core_enum_variant_to_a_typed_cxx_variant() {
         map_phase(ScanProgressPhase::Finalize),
         ffi::ScanRunContractProgressPhase::Finalize
     );
+
+    for (core, cxx) in [
+        (
+            classic_config_core::InstalledYamlDataRole::Main,
+            ffi::ScanRunInstalledYamlDataRole::Main,
+        ),
+        (
+            classic_config_core::InstalledYamlDataRole::Game,
+            ffi::ScanRunInstalledYamlDataRole::Game,
+        ),
+    ] {
+        assert_eq!(map_installed_yaml_data_role(core), cxx);
+    }
+    for (core, cxx) in [
+        (
+            classic_config_core::InstalledYamlDataProvenance::Updated,
+            ffi::ScanRunInstalledYamlDataProvenance::Updated,
+        ),
+        (
+            classic_config_core::InstalledYamlDataProvenance::Previous,
+            ffi::ScanRunInstalledYamlDataProvenance::Previous,
+        ),
+        (
+            classic_config_core::InstalledYamlDataProvenance::Bundled,
+            ffi::ScanRunInstalledYamlDataProvenance::Bundled,
+        ),
+    ] {
+        assert_eq!(map_installed_yaml_data_provenance(core), cxx);
+    }
+    for (core, cxx) in [
+        (
+            contract::LocalIgnoreRunState::Existing,
+            ffi::ScanRunLocalIgnoreYamlDataState::Existing,
+        ),
+        (
+            contract::LocalIgnoreRunState::Generated,
+            ffi::ScanRunLocalIgnoreYamlDataState::Generated,
+        ),
+        (
+            contract::LocalIgnoreRunState::RecoveryRequired,
+            ffi::ScanRunLocalIgnoreYamlDataState::RecoveryRequired,
+        ),
+        (
+            contract::LocalIgnoreRunState::ProceedWithoutIgnore,
+            ffi::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore,
+        ),
+        (
+            contract::LocalIgnoreRunState::ResetToDefault,
+            ffi::ScanRunLocalIgnoreYamlDataState::ResetToDefault,
+        ),
+    ] {
+        assert_eq!(map_local_ignore_yaml_data_state(core), cxx);
+    }
+    assert_eq!(
+        map_local_ignore_recovery_decision(
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+        ),
+        Ok(contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore)
+    );
+    assert_eq!(
+        map_local_ignore_recovery_decision(
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ResetToDefault,
+        ),
+        Ok(contract::LocalIgnoreRecoveryDecision::ResetToDefault)
+    );
+
+    let diagnostic_pairs = [
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::CacheUnavailable,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::CacheUnavailable,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::Missing,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::Missing,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::Read,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::Read,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidUtf8,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::InvalidUtf8,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::Parse,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::Parse,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidSchema,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::InvalidSchema,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::IncompatibleSchema,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::IncompatibleSchema,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidRoleData,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::InvalidRoleData,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset,
+            ffi::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset,
+        ),
+    ];
+    for (core, cxx) in diagnostic_pairs {
+        assert_eq!(map_installed_yaml_data_diagnostic_kind(core), cxx);
+    }
 }
 
 #[test]
@@ -329,6 +450,7 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
         status: CrashLogScanRunStatus::Completed,
         discovery: Some(discovery),
         setup: None,
+        installed_yaml_data: None,
         effective_concurrency: Some(2),
         message: Some("completed with failures".to_string()),
         total: 1,
@@ -336,6 +458,7 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
         failed: 1,
         cancelled: 0,
         logs: vec![log],
+        continuation: None,
     });
 
     assert!(dto.has_discovery);
@@ -348,6 +471,7 @@ fn structured_result_mapping_preserves_pairs_options_failures_and_paths() {
     assert_eq!(dto.discovery.rejected_inputs[0].path, "rejected.log");
     assert_eq!(dto.discovery.rejected_inputs[0].reason, "unsupported");
     assert!(!dto.has_setup);
+    assert!(!dto.has_installed_yaml_data);
     assert!(dto.has_effective_concurrency);
     assert_eq!(dto.effective_concurrency, 2);
     assert!(dto.has_message);
@@ -568,7 +692,9 @@ fn execute_without_observer_returns_targeted_rejections_as_a_terminal_result() {
     let cancellation = scan_run_cancellation_new();
 
     // SAFETY: null is the documented representation of an omitted observer.
-    let execution = unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+    let mut operation =
+        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+    let execution = scan_run_contract_execution_take_result(&mut operation);
 
     assert!(execution.has_result);
     assert!(!execution.has_error);
@@ -579,17 +705,18 @@ fn execute_without_observer_returns_targeted_rejections_as_a_terminal_result() {
     assert!(execution.result.has_discovery);
     assert_eq!(execution.result.discovery.rejected_inputs.len(), 2);
     assert!(execution.result.logs.is_empty());
+    assert!(!execution.result.has_installed_yaml_data);
 }
 
 #[test]
 fn request_construction_rejects_invalid_values_and_preserves_empty_fcx_context() {
-    let mut invalid_game = sample_configuration();
-    invalid_game.game = "UnknownGame".to_string();
-    assert!(
-        scan_run_request_targeted(&invalid_game, &sample_targeted_source()).is_err(),
-        "unknown games must not reach the tagged core request"
-    );
     assert!(scan_run_unsolved_logs_move_to_custom("  ").is_err());
+    let mut invalid_game = sample_configuration();
+    invalid_game.game = ffi::ScanRunGameId { repr: u8::MAX };
+    let error = scan_run_request_targeted(&invalid_game, &sample_targeted_source())
+        .err()
+        .expect("unknown CXX game discriminants must fail request construction");
+    assert!(error.contains("unsupported ScanRunGameId discriminant: 255"));
 
     let empty_setup = ffi::ScanRunSetupContextDto {
         has_game_root: false,
@@ -628,9 +755,10 @@ fn explicit_zero_concurrency_reaches_typed_request_validation_error() {
     let request = scan_run_request_targeted(&configuration, &sample_targeted_source()).unwrap();
 
     // SAFETY: null is the documented representation of an omitted observer.
-    let execution = unsafe {
+    let mut operation = unsafe {
         scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
     };
+    let execution = scan_run_contract_execution_take_result(&mut operation);
 
     assert!(execution.has_error);
     assert_eq!(
@@ -649,12 +777,7 @@ fn execute_covers_standard_no_logs_and_cancellation_before_discovery() {
     let temp = tempdir().unwrap();
     std::fs::create_dir_all(temp.path().join("Crash Logs").join("Pastebin")).unwrap();
     let mut configuration = sample_configuration();
-    configuration.yaml_dir_root = temp.path().to_string_lossy().into_owned();
-    configuration.yaml_dir_data = temp
-        .path()
-        .join("CLASSIC Data")
-        .to_string_lossy()
-        .into_owned();
+    configuration.installation_root = temp.path().to_string_lossy().into_owned();
     write_minimal_scan_yaml_tree(temp.path(), &temp.path().join("CLASSIC Data"));
     let documents = temp.path().join("Documents");
     std::fs::create_dir_all(&documents).unwrap();
@@ -674,7 +797,9 @@ fn execute_covers_standard_no_logs_and_cancellation_before_discovery() {
     let cancellation = scan_run_cancellation_new();
 
     // SAFETY: null is the documented representation of an omitted observer.
-    let no_logs = unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+    let mut no_logs_operation =
+        unsafe { scan_run_contract_execute(&request, &cancellation, std::ptr::null()) };
+    let no_logs = scan_run_contract_execution_take_result(&mut no_logs_operation);
     assert!(no_logs.has_result, "{}", no_logs.error.message);
     assert_eq!(
         no_logs.result.status,
@@ -691,8 +816,9 @@ fn execute_covers_standard_no_logs_and_cancellation_before_discovery() {
     let cancelled = scan_run_cancellation_new();
     scan_run_cancellation_cancel(&cancelled);
     // SAFETY: null is the documented representation of an omitted observer.
-    let cancelled_result =
+    let mut cancelled_operation =
         unsafe { scan_run_contract_execute(&request, &cancelled, std::ptr::null()) };
+    let cancelled_result = scan_run_contract_execution_take_result(&mut cancelled_operation);
     assert_eq!(
         cancelled_result.result.status,
         ffi::ScanRunContractStatus::CancelledBeforeDiscovery
@@ -761,37 +887,44 @@ fn setup_mapping_preserves_optional_message_checks_updates_and_configuration_iss
 }
 
 #[test]
+/// Verifies FCX execution preserves structured setup data with host-independent path fixtures.
 fn execute_retains_structured_setup_result_data() {
     let temp = tempdir().unwrap();
     let data = temp.path().join("CLASSIC Data");
     write_minimal_scan_yaml_tree(temp.path(), &data);
     let log = temp.path().join("crash-bridge-fcx.log");
     std::fs::write(&log, FIXTURE_LOG_SMALL).unwrap();
+    let documents = temp.path().join("Documents");
+    std::fs::create_dir_all(&documents).unwrap();
+    let game_root = temp.path().join("Fallout4");
+    std::fs::create_dir_all(&game_root).unwrap();
+    let game_exe = game_root.join("Fallout4.exe");
+    std::fs::write(&game_exe, b"not a real PE").unwrap();
 
     let mut configuration = sample_configuration();
-    configuration.yaml_dir_root = temp.path().to_string_lossy().into_owned();
-    configuration.yaml_dir_data = data.to_string_lossy().into_owned();
+    configuration.installation_root = temp.path().to_string_lossy().into_owned();
     configuration.game_version = "Original".to_string();
     let source = ffi::ScanRunTargetedSourceDto {
         inputs: vec![log.to_string_lossy().into_owned()],
     };
-    let empty_setup = ffi::ScanRunSetupContextDto {
-        has_game_root: false,
-        game_root: String::new(),
-        has_docs_root: false,
-        docs_root: String::new(),
-        has_game_exe_path: false,
-        game_exe_path: String::new(),
+    let setup = ffi::ScanRunSetupContextDto {
+        has_game_root: true,
+        game_root: game_root.to_string_lossy().into_owned(),
+        has_docs_root: true,
+        docs_root: documents.to_string_lossy().into_owned(),
+        has_game_exe_path: true,
+        game_exe_path: game_exe.to_string_lossy().into_owned(),
         has_xse_log_path: false,
         xse_log_path: String::new(),
     };
     let request =
-        scan_run_request_targeted_with_fcx(&configuration, &source, &empty_setup).unwrap();
+        scan_run_request_targeted_with_fcx(&configuration, &source, &setup).unwrap();
 
     // SAFETY: null is the documented representation of an omitted observer.
-    let execution = unsafe {
+    let mut operation = unsafe {
         scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
     };
+    let execution = scan_run_contract_execution_take_result(&mut operation);
 
     assert!(execution.has_result, "{}", execution.error.message);
     assert_eq!(
@@ -800,6 +933,254 @@ fn execute_retains_structured_setup_result_data() {
     );
     assert!(execution.result.has_setup);
     assert!(!execution.result.setup.status.is_empty());
+    assert!(execution.result.has_installed_yaml_data);
+    assert_eq!(
+        execution.result.installed_yaml_data.local_ignore_state,
+        ffi::ScanRunLocalIgnoreYamlDataState::Existing
+    );
+    assert_eq!(
+        execution.result.installed_yaml_data.main.role,
+        ffi::ScanRunInstalledYamlDataRole::Main
+    );
+    assert_eq!(
+        execution.result.installed_yaml_data.main.provenance,
+        ffi::ScanRunInstalledYamlDataProvenance::Bundled
+    );
+    assert_eq!(
+        execution.result.installed_yaml_data.main.schema_version,
+        "2.0"
+    );
+    assert!(!execution.result.installed_yaml_data.main.sha256.is_empty());
+    assert!(execution.result.installed_yaml_data.main.byte_len > 0);
+    assert_eq!(
+        execution.result.installed_yaml_data.game_file.role,
+        ffi::ScanRunInstalledYamlDataRole::Game
+    );
+    assert!(!execution
+        .result
+        .installed_yaml_data
+        .local_ignore_identity
+        .sha256
+        .is_empty());
+    assert!(
+        execution
+            .result
+            .installed_yaml_data
+            .local_ignore_identity
+            .byte_len
+            > 0
+    );
+}
+
+#[test]
+fn execute_projects_generated_local_ignore_metadata_and_diagnostic_at_the_final_seam() {
+    let temp = tempdir().expect("create generated Local Ignore fixture root");
+    let data = temp.path().join("CLASSIC Data");
+    write_minimal_scan_yaml_tree(temp.path(), &data);
+    std::fs::remove_file(data.join("CLASSIC Ignore.yaml"))
+        .expect("fixture Local Ignore should be removable");
+    let log = temp.path().join("crash-bridge-generated-ignore.log");
+    std::fs::write(&log, FIXTURE_LOG_SMALL).expect("write accepted Crash Log fixture");
+    let mut configuration = sample_configuration();
+    configuration.installation_root = temp.path().to_string_lossy().into_owned();
+    configuration.game_version = "Original".to_string();
+    let source = ffi::ScanRunTargetedSourceDto {
+        inputs: vec![log.to_string_lossy().into_owned()],
+    };
+    let request = scan_run_request_targeted(&configuration, &source)
+        .expect("valid generated-ignore request should be constructible");
+
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut operation = unsafe {
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+    };
+    let execution = scan_run_contract_execution_take_result(&mut operation);
+
+    assert!(execution.has_result, "{}", execution.error.message);
+    assert!(!execution.has_error);
+    assert!(execution.result.has_installed_yaml_data);
+    assert_eq!(
+        execution.result.installed_yaml_data.local_ignore_state,
+        ffi::ScanRunLocalIgnoreYamlDataState::Generated
+    );
+    assert!(
+        execution
+            .result
+            .installed_yaml_data
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.kind
+                == ffi::ScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated)
+    );
+    assert!(
+        execution
+            .result
+            .installed_yaml_data
+            .local_ignore_identity
+            .byte_len
+            > 0
+    );
+}
+
+#[test]
+fn cxx_continuation_resumes_retained_recovery_once_and_projects_typed_replay_failure() {
+    let temp = tempdir().expect("create Local Ignore recovery fixture root");
+    let data = temp.path().join("CLASSIC Data");
+    write_minimal_scan_yaml_tree(temp.path(), &data);
+    let malformed_ignore = b"CLASSIC_Ignore_Fallout4: [unterminated";
+    let ignore_path = data.join("CLASSIC Ignore.yaml");
+    std::fs::write(&ignore_path, malformed_ignore).expect("write malformed Local Ignore fixture");
+    let log = temp.path().join("crash-bridge-recovery.log");
+    std::fs::write(&log, FIXTURE_LOG_SMALL).expect("write accepted Crash Log fixture");
+    let mut configuration = sample_configuration();
+    configuration.installation_root = temp.path().to_string_lossy().into_owned();
+    configuration.game_version = "Original".to_string();
+    let source = ffi::ScanRunTargetedSourceDto {
+        inputs: vec![log.to_string_lossy().into_owned()],
+    };
+    let request = scan_run_request_targeted(&configuration, &source)
+        .expect("valid recovery request should be constructible");
+
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut initial_operation = unsafe {
+        scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
+    };
+    assert!(scan_run_contract_execution_has_continuation(
+        &initial_operation
+    ));
+    let initial = scan_run_contract_execution_take_result(&mut initial_operation);
+    assert!(initial.has_result, "{}", initial.error.message);
+    assert_eq!(
+        initial.result.status,
+        ffi::ScanRunContractStatus::LocalIgnoreRecoveryRequired
+    );
+    assert_eq!(
+        initial.result.installed_yaml_data.local_ignore_state,
+        ffi::ScanRunLocalIgnoreYamlDataState::RecoveryRequired
+    );
+    let retained_discovery = initial.result.discovery.accepted_logs.clone();
+    let retained_main_identity = initial.result.installed_yaml_data.main.sha256.clone();
+    let retained_game_identity = initial.result.installed_yaml_data.game_file.sha256.clone();
+    let continuation = scan_run_contract_execution_take_continuation(&mut initial_operation)
+        .expect("recovery result must expose its opaque continuation");
+
+    // CXX enums can carry a non-exhaustive sentinel; rejecting it must not claim retained work.
+    let invalid_decision = ffi::ScanRunLocalIgnoreRecoveryDecision { repr: u8::MAX };
+    // SAFETY: null is the documented representation of an omitted observer.
+    let invalid_error = unsafe {
+        scan_run_continuation_resume(
+            &continuation,
+            invalid_decision,
+            &scan_run_cancellation_new(),
+            std::ptr::null(),
+        )
+    }
+    .err()
+    .expect("an unknown recovery decision must be rejected");
+    assert!(invalid_error.contains("unsupported ScanRunLocalIgnoreRecoveryDecision discriminant"));
+
+    // The resumed operation must use the retained snapshot rather than reading the now-invalid file.
+    std::fs::write(
+        data.join("databases").join("CLASSIC Main.yaml"),
+        b"invalid: [unterminated",
+    )
+    .expect("mutate selected Main YAML after pause");
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut resumed_operation = unsafe {
+        scan_run_continuation_resume(
+            &continuation,
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &scan_run_cancellation_new(),
+            std::ptr::null(),
+        )
+    }
+    .expect("the explicit recovery decision must resume retained work");
+    let resumed = scan_run_contract_execution_take_result(&mut resumed_operation);
+    assert!(resumed.has_result, "{}", resumed.error.message);
+    assert_eq!(resumed.result.status, ffi::ScanRunContractStatus::Completed);
+    assert_eq!(
+        resumed.result.discovery.accepted_logs,
+        retained_discovery
+    );
+    assert_eq!(
+        resumed.result.installed_yaml_data.local_ignore_state,
+        ffi::ScanRunLocalIgnoreYamlDataState::ProceedWithoutIgnore
+    );
+    assert_eq!(
+        resumed.result.installed_yaml_data.main.sha256,
+        retained_main_identity
+    );
+    assert_eq!(
+        resumed.result.installed_yaml_data.game_file.sha256,
+        retained_game_identity
+    );
+    assert_eq!(
+        std::fs::read(&ignore_path).expect("read malformed Local Ignore after resume"),
+        malformed_ignore
+    );
+
+    // SAFETY: null is the documented representation of an omitted observer.
+    let mut replay_operation = unsafe {
+        scan_run_continuation_resume(
+            &continuation,
+            ffi::ScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore,
+            &scan_run_cancellation_new(),
+            std::ptr::null(),
+        )
+    }
+    .expect("the explicit recovery decision must reach the typed replay envelope");
+    let replay = scan_run_contract_execution_take_result(&mut replay_operation);
+    assert!(!replay.has_result);
+    assert!(!replay.has_error);
+    assert!(replay.has_resume_error);
+    assert_eq!(
+        replay.resume_error.kind,
+        ffi::ScanRunContractResumeErrorKind::ContinuationConsumed
+    );
+    assert_eq!(replay.resume_error.code, "scan_run_continuation_consumed");
+}
+
+/// Reset backup and replacement failures retain stable CXX path and publication metadata.
+#[test]
+fn cxx_resume_operational_errors_preserve_every_stable_reset_outcome_field() {
+    for (error, expected_kind, expected_code) in [
+        (
+            contract::ResumeError::LocalIgnoreResetBackupFailure(
+                contract::LocalIgnoreResetFailure {
+                    path: PathBuf::from("C:/backup"),
+                    stage: None,
+                    message: "backup failed".to_string(),
+                },
+            ),
+            ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetBackupFailure,
+            "local_ignore_reset_backup_failure",
+        ),
+        (
+            contract::ResumeError::LocalIgnoreResetReplacementFailure(
+                contract::LocalIgnoreResetFailure {
+                    path: PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml"),
+                    stage: Some(contract::LocalIgnoreResetFailureStage::Publish),
+                    message: "replacement failed".to_string(),
+                },
+            ),
+            ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetReplacementFailure,
+            "local_ignore_reset_replacement_failure",
+        ),
+    ] {
+        let projected = super::resume_error_to_dto(error);
+        assert_eq!(projected.kind, expected_kind);
+        assert_eq!(projected.code, expected_code);
+        assert!(projected.has_path);
+        if expected_kind
+            == ffi::ScanRunContractResumeErrorKind::LocalIgnoreResetReplacementFailure
+        {
+            assert!(projected.has_stage);
+            assert_eq!(
+                projected.stage,
+                ffi::ScanRunLocalIgnoreResetFailureStage::Publish
+            );
+        }
+    }
 }
 
 #[test]
@@ -809,17 +1190,17 @@ fn execute_preserves_typed_intake_failure_stage_and_relevant_path() {
     std::fs::write(&log, FIXTURE_LOG_SMALL).unwrap();
     let missing_data = temp.path().join("missing-data");
     let mut configuration = sample_configuration();
-    configuration.yaml_dir_root = temp.path().to_string_lossy().into_owned();
-    configuration.yaml_dir_data = missing_data.to_string_lossy().into_owned();
+    configuration.installation_root = missing_data.to_string_lossy().into_owned();
     let source = ffi::ScanRunTargetedSourceDto {
         inputs: vec![log.to_string_lossy().into_owned()],
     };
     let request = scan_run_request_targeted(&configuration, &source).unwrap();
 
     // SAFETY: null is the documented representation of an omitted observer.
-    let execution = unsafe {
+    let mut operation = unsafe {
         scan_run_contract_execute(&request, &scan_run_cancellation_new(), std::ptr::null())
     };
+    let execution = scan_run_contract_execution_take_result(&mut operation);
 
     assert!(!execution.has_result);
     assert!(execution.has_error);
@@ -828,5 +1209,8 @@ fn execute_preserves_typed_intake_failure_stage_and_relevant_path() {
         ffi::ScanRunContractInfrastructureErrorStage::Intake
     );
     assert!(execution.error.has_path);
-    assert_eq!(execution.error.path, missing_data.to_string_lossy());
+    assert_eq!(
+        execution.error.path,
+        missing_data.join("CLASSIC Data").to_string_lossy()
+    );
 }

@@ -3926,14 +3926,6 @@
       "rustKind": "class"
     },
     {
-      "id": "scanlog.formid_analyzer.FormIDAnalyzerCore@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "FormIDAnalyzerCore@rust",
-      "rustKind": "class"
-    },
-    {
       "id": "scanlog.gpu_detector.GpuDetector@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -3982,30 +3974,6 @@
       "rustKind": "class"
     },
     {
-      "id": "scanlog.report.ReportComposer@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "ReportComposer@rust",
-      "rustKind": "class"
-    },
-    {
-      "id": "scanlog.report.ReportFragment@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "ReportFragment@rust",
-      "rustKind": "class"
-    },
-    {
-      "id": "scanlog.report.ReportGenerator@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "ReportGenerator@rust",
-      "rustKind": "class"
-    },
-    {
       "id": "scanlog.formid_analyzer.RustFormIDAnalyzer@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -4030,14 +3998,6 @@
       "rustKind": "enum"
     },
     {
-      "id": "scanlog.settings_validator.SettingsValidator@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "SettingsValidator@rust",
-      "rustKind": "class"
-    },
-    {
       "id": "scanlog.parser.StreamingIteratorParser@rust",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -4051,14 +4011,6 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "StreamingLogParser@rust",
-      "rustKind": "class"
-    },
-    {
-      "id": "scanlog.parser.StringPool@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "StringPool@rust",
       "rustKind": "class"
     },
     {
@@ -4214,6 +4166,122 @@
       "nodeKind": "interface"
     },
     {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFinding",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFinding",
+      "rustKind": "struct",
+      "nodeExport": "JsNamedRecordFinding",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFinding",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFinding",
+      "rustKind": "struct",
+      "nodeExport": "JsFormIdFinding",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalysisInput",
+      "rustKind": "struct",
+      "nodeExport": "JsFormIdFindingAnalysisInput",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalysisResult",
+      "rustKind": "struct",
+      "nodeExport": "JsFormIdFindingAnalysisResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDFindingAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDFindingAnalyzer",
+      "rustKind": "struct",
+      "nodeExport": "FormIdFindingAnalyzer",
+      "nodeKind": "class"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDPlugin",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDPlugin",
+      "rustKind": "struct",
+      "nodeExport": "JsFormIdPlugin",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.FormIDValueLookupStatus",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "FormIDValueLookupStatus",
+      "rustKind": "enum",
+      "nodeExport": "JsFormIdValueLookupStatus",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "scanlog.formid_finding_analyzer.formid_finding_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "formid_finding_analyzer@rust",
+      "rustKind": "module"
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFindingAnalysisInput",
+      "rustKind": "struct",
+      "nodeExport": "JsNamedRecordFindingAnalysisInput",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFindingAnalysisResult",
+      "rustKind": "struct",
+      "nodeExport": "JsNamedRecordFindingAnalysisResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "NamedRecordFindingAnalyzer",
+      "rustKind": "struct",
+      "nodeExport": "NamedRecordFindingAnalyzer",
+      "nodeKind": "class"
+    },
+    {
+      "id": "scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustCrate": "classic-scanlog-core",
+      "rustSymbol": "named_record_finding_analyzer@rust",
+      "rustKind": "module"
+    },
+    {
       "id": "scanlog.plugin_evidence_analyzer.PluginEvidence",
       "tier": "tier1",
       "ownerModule": "scanlog",
@@ -4363,14 +4431,6 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "record_scanner@rust",
-      "rustKind": "module"
-    },
-    {
-      "id": "scanlog.report.report@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "report@rust",
       "rustKind": "module"
     },
     {
@@ -4641,14 +4701,6 @@
       "ownerModule": "scanlog",
       "rustCrate": "classic-scanlog-core",
       "rustSymbol": "crash_suspect_analyzer@rust",
-      "rustKind": "module"
-    },
-    {
-      "id": "scanlog.settings_validator.settings_validator@rust",
-      "tier": "tier1",
-      "ownerModule": "scanlog",
-      "rustCrate": "classic-scanlog-core",
-      "rustSymbol": "settings_validator@rust",
       "rustKind": "module"
     },
     {
@@ -5477,6 +5529,86 @@
       "rustCrate": "classic-config-core",
       "rustSymbol": "parse@rust",
       "rustKind": "function"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookup",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookup",
+      "rustKind": "struct",
+      "nodeExport": "JsFormIdValueLookup",
+      "nodeKind": "class"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookupEntry",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupEntry",
+      "rustKind": "struct",
+      "nodeExport": "JsFormIdValueLookupEntry",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookupOutcome",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupOutcome",
+      "rustKind": "enum",
+      "nodeExport": "JsFormIdValueLookupOutcome",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "database.formid_value_lookup.FormIdValueLookupOutcomeKind",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupOutcome",
+      "rustKind": "enum",
+      "nodeExport": "JsFormIdValueLookupOutcomeKind",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "database.FormIdValueLookup@rust",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookup@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "database.FormIdValueLookupEntry@rust",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupEntry@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "database.FormIdValueLookupError@rust",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupError@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "database.FormIdValueLookupInMemoryReply@rust",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupInMemoryReply@rust",
+      "rustKind": "reexport"
+    },
+    {
+      "id": "database.FormIdValueLookupOutcome@rust",
+      "tier": "tier1",
+      "ownerModule": "database",
+      "rustCrate": "classic-database-core",
+      "rustSymbol": "FormIdValueLookupOutcome@rust",
+      "rustKind": "reexport"
     },
     {
       "id": "database.BATCH_CACHE_TTL_SECS@rust",
@@ -7819,6 +7951,56 @@
       "rustCrate": "classic-scangame-core",
       "rustSymbol": "normalize_game_setup_version_selection@rust",
       "rustKind": "reexport"
+    },
+    {
+      "id": "config.local-ignore-reset-conflict-type",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "LocalIgnoreResetConflict",
+      "rustKind": "struct",
+      "nodeExport": "JsLocalIgnoreResetConflict",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "config.local-ignore-reset-outcome-type",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "LocalIgnoreResetOutcome",
+      "rustKind": "enum",
+      "nodeExport": "JsLocalIgnoreResetOutcome",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "config.local-ignore-reset-publication-stage-type",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "LocalIgnoreResetPublicationStage",
+      "rustKind": "enum",
+      "nodeExport": "JsLocalIgnoreResetPublicationStage",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "config.local-ignore-reset-result-type",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "LocalIgnoreResetResult",
+      "rustKind": "struct",
+      "nodeExport": "JsLocalIgnoreResetResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "config.local-ignore-reset-status-type",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustCrate": "classic-config-core",
+      "rustSymbol": "LocalIgnoreResetOutcome",
+      "rustKind": "enum",
+      "nodeExport": "JsLocalIgnoreResetStatus",
+      "nodeKind": "const_enum"
     }
   ]
 }

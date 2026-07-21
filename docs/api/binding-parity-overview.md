@@ -33,12 +33,15 @@ Each shared Rust crate and its corresponding binding module across all three sur
 | `classic-resource-core` | **Not exposed** | [`resource.rs`](../../node-bindings/classic-node/src/resource.rs) | [`classic-resource-py`](../../python-bindings/classic-resource-py/) |
 | `classic-database-core` | [`database.rs`](../../cpp-bindings/classic-cpp-bridge/src/database.rs) | [`database.rs`](../../node-bindings/classic-node/src/database.rs) | [`classic-database-py`](../../python-bindings/classic-database-py/) |
 | `classic-scangame-core` | [`scangame.rs`](../../cpp-bindings/classic-cpp-bridge/src/scangame.rs) | [`scangame.rs`](../../node-bindings/classic-node/src/scangame.rs) | [`classic-scangame-py`](../../python-bindings/classic-scangame-py/) |
-| `classic-scanlog-core` | [`scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) | [`scanlog.rs`](../../node-bindings/classic-node/src/scanlog.rs) + [`crashgen_settings_analyzer.rs`](../../node-bindings/classic-node/src/crashgen_settings_analyzer.rs) + [`crash_suspect_analyzer.rs`](../../node-bindings/classic-node/src/crash_suspect_analyzer.rs) + [`mod_guidance_analyzer.rs`](../../node-bindings/classic-node/src/mod_guidance_analyzer.rs) + [`plugin_evidence_analyzer.rs`](../../node-bindings/classic-node/src/plugin_evidence_analyzer.rs) | [`classic-scanlog-py`](../../python-bindings/classic-scanlog-py/) |
+| `classic-scanlog-core` | [`scanner.rs`](../../cpp-bindings/classic-cpp-bridge/src/scanner.rs) | [`scanlog.rs`](../../node-bindings/classic-node/src/scanlog.rs) + [`crashgen_settings_analyzer.rs`](../../node-bindings/classic-node/src/crashgen_settings_analyzer.rs) + [`crash_suspect_analyzer.rs`](../../node-bindings/classic-node/src/crash_suspect_analyzer.rs) + [`mod_guidance_analyzer.rs`](../../node-bindings/classic-node/src/mod_guidance_analyzer.rs) + [`plugin_evidence_analyzer.rs`](../../node-bindings/classic-node/src/plugin_evidence_analyzer.rs) + [`named_record_finding_analyzer.rs`](../../node-bindings/classic-node/src/named_record_finding_analyzer.rs) + [`formid_finding_analyzer.rs`](../../node-bindings/classic-node/src/formid_finding_analyzer.rs) | [`classic-scanlog-py`](../../python-bindings/classic-scanlog-py/) |
 
 **Historical Phase 3 note (v9.1.0):** the retired constants crate, Python wrapper crate, and binding-side `constants` modules no longer exist as parity owners. `Fallout4Version` and `NULL_VERSION` now belong to `classic-version-registry-core`, `YamlFile` plus settings constants belong to `classic-settings-core`, and `GameId` belongs to `classic-shared-core` with matching C++ `shared.rs`, Node `shared.rs`, and `classic-shared-py` exposure.
 
+`classic-database-core` also exposes the strict owned `FormIdValueLookup` facade across all three adapters. Each binding uses an opaque handle plus owned in-memory reply records and typed outcomes/errors for disabled, missing, found, malformed-result, and operational-failure states. SQLite and shared-pool work run through the existing shared runtime; no callback or binding-owned runtime is part of the contract.
+
 **Semantic analyzer contract:** `CrashgenSettingsAnalyzer`,
-`CrashSuspectAnalyzer`, `ModGuidanceAnalyzer`, and `PluginEvidenceAnalyzer` are projected through all
+`CrashSuspectAnalyzer`, `ModGuidanceAnalyzer`, `PluginEvidenceAnalyzer`,
+`NamedRecordFindingAnalyzer`, and `FormIDFindingAnalyzer` are projected through all
 three bindings as immutable reusable handles over owned input. Crashgen
 Settings Analysis returns typed
 Crashgen Expectation Outcomes separately from Disabled Setting Notices and
@@ -47,10 +50,32 @@ returns one typed finding per main-error rule, stack rule, or DLL involvement
 notice. Mod Guidance Analysis evaluates conflict, frequent-crash, solution, and
 important-mod configuration in one call while preserving authored guidance and
 typed match state. Plugin Evidence Analysis returns normalized plugin identities
-and per-line occurrence counts without report prose. All four represent completed no-match analysis with
+and per-line occurrence counts without report prose. Named Record Finding
+Analysis returns distinct exact record identities and occurrence counts while
+leaving sorting and prose to Autoscan Report Assembly. FormID Finding Analysis
+returns aggregate identifiers and counts, optional resolved plugins and values,
+and explicit lookup state while retaining unresolved identifiers. All six represent completed no-match analysis with
 explicit empty results and expose no report presentation mechanics. Stable analyzer and error tokens
 originate in Rust; see
 [`error-contract.md`](error-contract.md#shared-focused-analyzer-errors).
+
+This semantic surface replaced the public report-fragment architecture in one
+coordinated breaking Rust, CXX, Node, and Python cutover. `ReportFragment`,
+`ReportComposer`, `ReportGenerator`, `SettingsValidator`, presentation-only
+`StringPool` operations, Python-only `ParallelReportProcessor`, and
+fragment-producing analyzer methods have no compatibility aliases. Parity
+therefore covers both the six positive Focused Semantic Analyzer contracts and negative
+absence checks for the retired presentation surface. Complete scan output is
+pinned separately as byte-identical persisted Autoscan Reports; see
+[ADR-0005](../adr/0005-semantic-autoscan-report-contributions.md).
+
+**Explicit YAML Data contract (`classic-config-core`):** Rust, C++, Node, and Python expose the same deterministic tooling operation over one explicitly identified Main file, game file, and Local Ignore file plus a typed game identity. Every surface returns an immutable snapshot with the parsed `YamlDataCore` view and SHA-256/byte-length identities derived from the exact retained bytes. Fallout 4 VR maps to the shared Fallout 4 data role; unsupported typed games and role-attributed read, UTF-8, parse, and validation failures remain typed per binding. No adapter performs installed selection, cache recovery, generation, backup, or fallback. Entry points are CXX `explicit_yaml_data_load(...)` plus its typed status/snapshot functions, Node `loadExplicitYamlData(...)`, and Python `classic_config.load_explicit_yaml_data(...)`.
+
+**Installed YAML Data inspection contract (`classic-config-core`):** Rust, C++, Node, and Python also expose the config-owned, side-effect-limited selector used by first-party update freshness. Main and the typed game's registered data file are selected independently from compatible, semantically valid updated, previous-when-canonical-is-absent, or bundled candidates. Results expose provenance, schema, exact-byte SHA-256/length identity, and structured rejection diagnostics; Fallout 4 VR maps to Fallout 4 data, unsupported games remain typed, and Local Ignore is never inspected or modified. Entry points are CXX `installed_yaml_data_inspect(...)` plus its status/inspection functions, Node `inspectInstalledYamlData(...)`, and Python `classic_config.inspect_installed_yaml_data(...)`.
+
+**Installed YAML Data load contract (`classic-config-core`):** Rust, C++, Node, and Python load one installation root, typed game, and separate selected-game-version mode into Ready, Local Ignore Recovery Required, or fatal error. Missing Local Ignore is strictly validated from retained selected-Main defaults, atomically published without clobbering a concurrent winner, and reread from the authoritative canonical file. Malformed bytes are retained with the selected Main/game snapshot, defaults, identity, mode, and diagnostics in an opaque single-use plan. Every surface exposes both decisions: Proceed Without Ignore returns the retained snapshot with an empty operation-scoped list and no filesystem mutation; Reset To Default conflict-checks exact bytes, durably publishes and verifies a byte-exact backup, and atomically publishes retained defaults without `.prev` update-channel state. Reset success returns canonical/backup paths, malformed/backup/replacement identities, the reset-ready snapshot, and structured reset diagnostics; changed or removed canonical bytes return a typed conflict, while operational failures retain stable stage metadata. The synchronous Rust reset is the non-interruptible critical section; Node runs it on its worker pool and Python releases the GIL. Snapshots expose parsed YAML Data, simplify-log removal entries retained from selected Main, independently selected Main/game provenance and schema, exact identities, all four Local Ignore states, and structured diagnostics without raw documents. Entry points are CXX `installed_yaml_data_load(...)` plus its status/snapshot/recovery-plan/reset functions, Node `loadInstalledYamlData(...)`, and Python `classic_config.load_installed_yaml_data(...)`.
+
+**Crash Log Scan Run Installed YAML Data contract (`classic-scanlog-core`):** the final Rust-owned run accepts one installation root and typed game, performs one Installed YAML Data load after discovery, and retains that immutable snapshot through analysis. Existing or generated Ignore proceeds immediately. Malformed Ignore returns the distinct Local Ignore Recovery Required lifecycle state with completed discovery, structured diagnostics, and a Rust-owned opaque single-use continuation. CXX, Node, and Python explicitly pass Proceed Without Ignore or Reset To Default to resume the same prepared intake in discovery order; no adapter rediscovers inputs, reselects Main/game data, or serializes/clones the carrier. Reset uses the retained config recovery plan, returns durable byte-exact backup and replacement metadata on success, and preserves conflict/backup/replacement failures as stable typed resume outcomes. Pre-reset cancellation performs no filesystem or analysis work. Once reset begins, it completes its non-interruptible durable transaction before cancellation is observed and the normal cancelled-after-discovery result is returned without analysis. Replay rejects with `scan_run_continuation_consumed`. The shared fixture proves retained identities and discovery, byte-exact backup, report-byte stability, both cancellation boundaries, every reset outcome, and replay across adapters.
 
 **Note on app-update notification surface (`classic-update-core`):** the `notification` module adds a single cross-binding entry point in addition to the legacy `GithubClient` surface. Contract map:
 
@@ -70,7 +95,7 @@ Full cross-crate flow: [`app-update-notification-delivery.md`](app-update-notifi
 | Node (NAPI-RS) | Not exposed in this scope | `checkYamlUpdate(...)`, `applyYamlUpdate(request)`, `rollbackYamlUpdate(fileName)` |
 | Python (PyO3) | Not exposed in this scope | `check_yaml_update(...)`, `apply_yaml_update(request)`, `rollback_yaml_update(file_name)` |
 
-The first-party C++ helpers centralize the Pages URL, `yaml-data-v*` tag namespace, first-party shippable file set, accepted schema ranges, installed-file enrichment, and rollback target list in Rust. Full cross-crate flow: [`yaml-update-delivery.md`](yaml-update-delivery.md).
+The first-party C++ helpers centralize the Pages URL, `yaml-data-v*` tag namespace, config-inspected installed schema/content identity, first-party file set, and rollback target list in Rust. Generic compatibility APIs preserve caller-supplied installed metadata and use their retained bundled-directory hint to enrich entries whose installed version/digest are absent. Full cross-crate flow: [`yaml-update-delivery.md`](yaml-update-delivery.md).
 
 **Note on `classic-resource-core`**: This crate provides lightweight resource classification helpers used by `classic-file-io-core`. It has no dedicated C++ bridge module. C++ frontends access resource classification functionality transitively through the `classic-file-io-core` bridge surface (`files.rs`) where needed.
 

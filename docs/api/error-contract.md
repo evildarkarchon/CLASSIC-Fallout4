@@ -26,9 +26,15 @@ machine-token source of truth. Crashgen Settings Analysis exposes
 `unsupported_configuration_version`; Crash Suspect Analysis exposes
 `crash_suspect` with `invalid_configuration` for invalid rule or matcher state;
 Mod Guidance Analysis exposes `mod_guidance` with `invalid_configuration` for
-invalid conflict, solution, important-mod, or matcher state; Plugin Evidence
-Analysis exposes `plugin_evidence` with `invalid_configuration` for invalid
-ignore configuration or matcher state.
+  invalid conflict, solution, important-mod, or matcher state; Plugin Evidence
+  Analysis exposes `plugin_evidence` with `invalid_configuration` for invalid
+  ignore configuration or matcher state; Named Record Finding Analysis exposes
+  `named_record_finding` with `invalid_configuration` for invalid target/ignore
+  configuration, matcher construction, or checked-count analysis failures;
+  FormID Finding Analysis exposes `formid_finding` with
+  `invalid_configuration` for invalid owned facts, `malformed_result` for an
+  invalid strict-lookup reply, or `operational_failure` for lookup execution.
+  A lookup miss is successful result data and never an analyzer error.
 
 - CXX uses an explicit typed construction/analysis envelope so no field is
   flattened into `rust::Error` text.
@@ -37,14 +43,40 @@ ignore configuration or matcher state.
 - Python raises `classic_scanlog.AnalyzerError` with `analyzer_kind`, `code`,
   and `message` attributes.
 
+An explicit empty semantic result is a successful focused analysis, not error
+recovery. Direct focused calls return or throw the typed analyzer envelope.
+Within `scan_run::contract::execute`, failure to construct the reusable analyzer
+set becomes the run-wide `Initialization` infrastructure stage before logs are
+scheduled. FormID Value Lookup is the sole collection exception: malformed or
+operational lookup failure is retried with lookup disabled so the report keeps
+its FormID/plugin suspects without optional descriptions. Every other failure
+while collecting one log becomes that log's `Analysis` failure, persists no
+partial Autoscan Report, and does not stop other admitted logs from reaching
+their own terminal outcomes. See
+[ADR-0005](../adr/0005-semantic-autoscan-report-contributions.md).
+
+### Strict FormID Value Lookup errors
+
+`classic-database-core::FormIdValueLookupError` keeps a successful miss out of the error channel. Successful lookup data is `disabled`, `missing`, or `found`; failures use stable code `malformed_result` for blank adapter values and `operational_failure` for initialization, absence of the active game table across all initialized databases, SQL execution, or row-decoding problems. Optional FormID/plugin context is absent for failures that occur before a lookup key is available.
+
+- CXX returns a typed lookup envelope whose error DTO retains code, message, and optional key context instead of flattening the failure into `found: false`.
+- Node rejects with `napi::Error` carrying `code`, `formid`, `plugin`, and `message` properties.
+- Python raises `classic_database.FormIdValueLookupError` with the same four attributes.
+
+These strict facade rules are additive. The older raw `DatabasePool` binding methods retain their documented fail-soft sentinel behavior for compatibility.
+
 ---
 
 ## C++ (CXX Bridge)
 
-The only complete Crash Log Scan Run entry point is intentionally more strongly
-typed than the general bridge convention. `scan_run_contract_execute(...)`
-returns `ScanRunContractExecutionResult`, where exactly one of `has_result` and
-`has_error` is true. Its `ScanRunContractInfrastructureError` preserves the
+The complete Crash Log Scan Run entry is intentionally more strongly typed
+than the general bridge convention. `scan_run_contract_execute(...)` returns a
+Rust-owned execution operation; callers move out its
+`ScanRunContractExecutionResult`. Initial execution sets exactly one of
+`has_result` and `has_error`. Recovery resume may instead set
+`has_resume_error` to consumed-continuation, reset-conflict, reset-backup, or
+reset-replacement variants with stable codes and applicable identity/path/stage
+metadata. Its `ScanRunContractInfrastructureError` preserves the
 stable stage (`RequestValidation`, `Discovery`, `Intake`,
 `FormIdDatabaseAccess`, `Initialization`, or `InternalInvariant`), message, and
 optional relevant path. Expected lifecycle states and per-log failures stay in
@@ -66,7 +98,7 @@ the terminal result and do not throw. This envelope is required because a CXX
 
 **Pattern:** `napi::Error` with a `code` field matching the Rust error variant name (e.g., `"InvalidArg"`, `"ParseError"`).
 
-The only Node Crash Log Scan Run operation follows the same typed-envelope rationale as CXX. `scanRunExecute(...)` resolves the generated `JsScanRunSuccess | JsScanRunFailure` union, so `result` and `error` are mutually exclusive by construction; `JsScanRunInfrastructureError` retains the stable lowercase stage, message, and optional path. Expected lifecycle states and per-log failures remain result data. JavaScript observer throws or delivery failures are not core failures; they appear separately as `observerError`, with optional safe cancellation controlled by the caller. No analysis-only, batch, report-writer, or global-FCX export is an alternative error channel.
+Node Crash Log Scan Run execution follows the same typed-envelope rationale as CXX. `scanRunExecute(...)` and successful `scanRunResume(...)` resolve the generated `JsScanRunSuccess | JsScanRunFailure` union, so `result` and `error` are mutually exclusive by construction; `JsScanRunInfrastructureError` retains the stable lowercase stage, message, and optional path. Expected lifecycle states and per-log failures remain result data. Consuming a continuation more than once rejects with an `Error` whose `code` is `scan_run_continuation_consumed`; Reset To Default conflict/backup/replacement failures reject with their stable reset code plus applicable identities, backup path, affected path, and publication stage. These are not infrastructure failures. JavaScript observer throws or delivery failures are reported separately as `observerError`, with optional safe cancellation controlled by the caller. No analysis-only, batch, report-writer, or global-FCX export is an alternative error channel.
 
 **Example 1:** `config_error_to_napi_err()` in [`node-bindings/classic-node/src/config.rs`](../../node-bindings/classic-node/src/config.rs) converts `ConfigError` variants to NAPI errors with structured codes. JavaScript consumers use `catch (e) { if (e.code === "ParseError") ... }`.
 
@@ -82,13 +114,55 @@ Tests verify both `error.message` and `error.code` to ensure the structured erro
 
 **Pattern:** Typed Python exception classes (e.g., `RustConfigParseError`, `RustConfigIOError`) with message inspection.
 
-The only Python Crash Log Scan Run operation is the deliberate structured-operation exception to that general rule. `classic_scanlog.scan_run_execute(...)` returns `ScanRunExecution`, where exactly one of `result` and `error` is populated. `ScanRunInfrastructureError` preserves the six stable lifecycle stages, message, and optional relevant path; expected lifecycle outcomes and per-log failures remain result data. A Python observer exception is reported independently through `observer_error` and requests safe cancellation only when the caller opts into `cancel_on_observer_error`. Python exposes no orchestration, resettable batch cancellation, report-writer, or global-FCX compatibility error path.
+Python Crash Log Scan Run execution is the deliberate structured-operation exception to that general rule. `classic_scanlog.scan_run_execute(...)` and successful `scan_run_resume(...)` return `ScanRunExecution`, where exactly one of `result` and `error` is populated. `ScanRunInfrastructureError` preserves the six stable lifecycle stages, message, and optional relevant path; expected lifecycle outcomes and per-log failures remain result data. Continuation replay raises `ScanRunContinuationConsumedError`; Reset To Default conflict, backup, and replacement failures raise dedicated `ScanRunLocalIgnoreReset*Error` subclasses. Every exception exposes a stable lowercase code and the reset subclasses preserve applicable identity/path/stage metadata; all remain distinct from infrastructure failure. A Python observer exception is reported independently through `observer_error` and requests safe cancellation only when the caller opts into `cancel_on_observer_error`. Python exposes no orchestration, resettable batch cancellation, report-writer, or global-FCX compatibility error path.
 
 **Example 1:** `config_error_to_pyerr()` in [`python-bindings/classic-config-py/src/lib.rs`](../../python-bindings/classic-config-py/src/lib.rs) maps each `ConfigError` variant to a specific Python exception class.
 
 **Example 2:** [`foundation/classic-shared-py/src/lib.rs`](../../foundation/classic-shared-py/src/lib.rs) provides `define_exceptions!` and `register_exceptions!` macros plus the `ToPyErr` trait and `ResultExt` extension for consistent exception wiring across all Python binding crates.
 
 **Example 3:** Tests use `pytest.raises(RustConfigParseError)` with message inspection to verify both the exception type and the error context.
+
+---
+
+## Explicit YAML Data load errors (`typed-mutation-free-explicit-yaml-data`)
+
+`classic_config_core::load_explicit_yaml_data` keeps unsupported games and every file role attributable without message parsing. Its stable core variants are `UnsupportedGame`, `Read`, `InvalidUtf8`, `Parse`, and `InvalidRoleData`. The binding shapes preserve those distinctions according to each language's normal idiom:
+
+| Binding | Failure shape |
+| --- | --- |
+| C++ (CXX) | `explicit_yaml_data_load_status()` returns `ExplicitYamlDataLoadErrorDto { kind, has_role, role, has_path, path, message }`. Callers inspect the status before consuming a ready load with `explicit_yaml_data_load_take_snapshot()`; expected load failures are not flattened into `rust::Error`. |
+| Node (NAPI-RS) | `loadExplicitYamlData(...)` rejects with an `Error` whose stable lowercase `code` is `unsupported_game`, `read`, `invalid_utf8`, `parse`, or `invalid_role_data`. File-specific failures also carry `yamlRole` (`main`, `game`, or `local_ignore`) and `path`. |
+| Python (PyO3) | `classic_config.load_explicit_yaml_data(...)` raises a subclass of `ExplicitYamlDataLoadError`: `ExplicitYamlDataUnsupportedGameError`, `ExplicitYamlDataReadError`, `ExplicitYamlDataInvalidUtf8Error`, `ExplicitYamlDataParseError`, or `ExplicitYamlDataInvalidRoleDataError`. Every instance exposes the matching lowercase `code`; file-specific failures also expose `yaml_role` and `path`, while non-file failures set them to `None`. |
+
+All three surfaces delegate role selection, validation, and error classification to Rust. Callers must not respond to an explicit-file failure by silently selecting installed, cached, bundled, or generated data.
+
+---
+
+## Installed YAML Data inspection errors (`unified-installed-yaml-data-inspection`)
+
+`classic_config_core::inspect_installed_yaml_data` returns `UnsupportedGame` before filesystem inspection or `NoUsableSource { role, diagnostics }` after exhausting the allowed candidates for a required role. Non-terminal candidate failures remain structured diagnostics with optional role, provenance, and path plus a typed stable kind. Rust/CXX use enum variants such as `InvalidRoleData`, Node string enums serialize those same PascalCase variant names, and Python projects stable snake-case tokens such as `invalid_role_data`.
+
+| Binding | Failure shape |
+| --- | --- |
+| C++ (CXX) | `installed_yaml_data_inspection_status()` returns `InstalledYamlDataInspectionErrorDto` with a typed error kind, optional failed role, message, and diagnostic DTOs. Expected selection failures are consumed through status/take rather than flattened into `rust::Error`. |
+| Node (NAPI-RS) | `inspectInstalledYamlData(...)` rejects with an `Error` whose `code` is `unsupported_game` or `no_usable_source`; the latter also carries `yamlRole` and structured `diagnostics`. |
+| Python (PyO3) | `classic_config.inspect_installed_yaml_data(...)` raises `InstalledYamlDataUnsupportedGameError` or `InstalledYamlDataNoUsableSourceError` under `InstalledYamlDataInspectionError`. Instances expose `code`, optional `yaml_role`, and structured `diagnostics`. |
+
+Rejected candidates are diagnostic evidence only: adapters do not promote, repair, rewrite, or remove them.
+
+### Installed YAML Data loading outcomes and errors
+
+`classic_config_core::load_installed_yaml_data` returns `InstalledYamlDataLoadOutcome::Ready` for a valid installation with existing Local Ignore YAML Data or after atomic generation from strictly validated selected-Main defaults. Existing Local Ignore bytes that are invalid UTF-8, malformed YAML, or invalid for the selected role return `InstalledYamlDataLoadOutcome::LocalIgnoreRecoveryRequired`; this is expected result data, not an error. The retained plan's `proceed_without_ignore()` path returns an operation-scoped empty ignore list without filesystem mutation. Its consuming `reset_to_default()` path returns `LocalIgnoreResetOutcome::Reset` after verified backup and atomic replacement, or typed `Conflict` when current bytes no longer match the plan.
+
+Fatal Rust errors preserve `UnsupportedGame` and `NoUsableSource { role, diagnostics }` as direct typed variants rather than wrapping inspection errors. `LocalIgnoreRead` identifies unrecoverable filesystem access, `LocalIgnoreDefaultInvalid` fails before generation when a missing Local Ignore has unusable selected-Main defaults, `LocalIgnoreCreate` covers staging/sync/no-clobber publication, and `InvalidSelectedData` covers failure to build the final parsed view. Invalid defaults never turn an existing malformed Local Ignore into a fatal result because Proceed Without Ignore does not use them.
+
+| Binding | Failure shape |
+| --- | --- |
+| C++ (CXX) | `installed_yaml_data_load_status()` distinguishes Ready, Local Ignore Recovery Required, and fatal error before the operation is consumed. Fatal `InstalledYamlDataLoadErrorDto` values retain an exhaustive kind, optional load-specific Main/game/Local Ignore role, optional path, no-usable-source diagnostics, and message. |
+| Node (NAPI-RS) | `loadInstalledYamlData(...)` resolves malformed content as a typed recovery-required outcome. Fatal rejections use `unsupported_game`, `no_usable_source`, `local_ignore_read`, `local_ignore_default_invalid`, `local_ignore_create`, or `invalid_selected_data`, plus applicable `yamlRole`, `path`, and `diagnostics`. |
+| Python (PyO3) | `classic_config.load_installed_yaml_data(...)` returns a typed recovery-required outcome for malformed content. Fatal failures raise the matching dedicated `InstalledYamlDataLoadError` subclass; every instance exposes the same lowercase `code` and applicable `yaml_role`, `path`, and `diagnostics` attributes. |
+
+Reset operational errors are separate from fatal loading errors. Rust `LocalIgnoreResetError` distinguishes unavailable retained defaults, lock/read/backup-directory failures, backup verification, and backup or replacement publication. Publication variants carry `LocalIgnoreResetPublicationStage::{Create, Write, Flush, Sync, Publish}`. CXX exposes the equivalent reset operation status/error DTO, Node rejects with stable reset `code`, `path`, and `stage` properties, and Python raises dedicated `LocalIgnoreResetError` subclasses with the same metadata. Conflict is expected outcome data on every surface, not an exception. Every operational error occurs before canonical replacement, so the malformed original remains authoritative; replacement failures may leave the already verified backup in place.
 
 ---
 

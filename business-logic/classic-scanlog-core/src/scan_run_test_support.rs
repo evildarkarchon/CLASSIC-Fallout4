@@ -1,8 +1,8 @@
 use crate::ScanLogError;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Barrier};
 use std::time::Duration;
 
 /// Request-scoped deterministic fault controls used by final-contract behavior tests.
@@ -15,6 +15,41 @@ pub(crate) struct ScanRunTestHooks {
     analysis_failures: HashMap<usize, String>,
     infrastructure_failure: Option<InjectedInfrastructureFailure>,
     movement_failure: Option<InjectedMovementFailure>,
+    yaml_cache_root: Option<PathBuf>,
+    local_ignore_reset_gate: Option<LocalIgnoreResetGate>,
+}
+
+/// Deterministic two-party gate at the scan coordinator's reset critical-section boundary.
+#[derive(Clone, Debug)]
+pub(crate) struct LocalIgnoreResetGate {
+    entered: Arc<Barrier>,
+    release: Arc<Barrier>,
+}
+
+impl LocalIgnoreResetGate {
+    /// Creates a gate whose test observer and reset coordinator each participate once.
+    pub(crate) fn new() -> Self {
+        Self {
+            entered: Arc::new(Barrier::new(2)),
+            release: Arc::new(Barrier::new(2)),
+        }
+    }
+
+    /// Waits until reset has crossed the non-interruptible coordinator boundary.
+    pub(crate) fn wait_until_entered(&self) {
+        self.entered.wait();
+    }
+
+    /// Releases reset after the test has requested the racing cancellation.
+    pub(crate) fn release(&self) {
+        self.release.wait();
+    }
+
+    /// Signals critical-section entry and waits for the test to release durable reset work.
+    fn enter_and_wait(&self) {
+        self.entered.wait();
+        self.release.wait();
+    }
 }
 
 impl ScanRunTestHooks {
@@ -66,6 +101,20 @@ impl ScanRunTestHooks {
         self
     }
 
+    /// Uses one isolated cache root for Installed YAML Data selection in this run.
+    #[must_use]
+    pub(crate) fn with_yaml_cache_root(mut self, root: impl Into<PathBuf>) -> Self {
+        self.yaml_cache_root = Some(root.into());
+        self
+    }
+
+    /// Installs a deterministic gate at Local Ignore reset critical-section entry.
+    #[must_use]
+    pub(crate) fn with_local_ignore_reset_gate(mut self, gate: LocalIgnoreResetGate) -> Self {
+        self.local_ignore_reset_gate = Some(gate);
+        self
+    }
+
     /// Returns the deterministic pre-analysis delay for one Crash Log.
     pub(crate) fn analysis_delay(&self, discovery_index: usize) -> Option<Duration> {
         self.analysis_delays.get(&discovery_index).copied()
@@ -101,6 +150,18 @@ impl ScanRunTestHooks {
     pub(crate) fn record_movement_success(&self) {
         if let Some(failure) = &self.movement_failure {
             failure.observed_moves.fetch_add(1, Ordering::AcqRel);
+        }
+    }
+
+    /// Returns the isolated cache root configured for this run, when present.
+    pub(crate) fn yaml_cache_root(&self) -> Option<&Path> {
+        self.yaml_cache_root.as_deref()
+    }
+
+    /// Enters the configured Local Ignore reset gate, when a race test requested one.
+    pub(crate) fn enter_local_ignore_reset_critical_section(&self) {
+        if let Some(gate) = &self.local_ignore_reset_gate {
+            gate.enter_and_wait();
         }
     }
 }
@@ -170,14 +231,18 @@ pub(crate) fn write_fixture_log_at(directory: &Path, filename: &str) -> PathBuf 
     log_path
 }
 
-pub(crate) fn write_minimal_yaml_tree(root: &Path, data: &Path) {
+pub(crate) fn write_minimal_yaml_tree(_root: &Path, data: &Path) {
     std::fs::create_dir_all(data.join("databases")).expect("database dir should be created");
     std::fs::write(
         data.join("databases").join("CLASSIC Main.yaml"),
         concat!(
+            "schema_version: \"2.0\"\n",
             "CLASSIC_Info:\n",
             "  version: \"v9.1.0\"\n",
             "  version_date: \"2026-06-30\"\n",
+            "  default_ignorefile: |\n",
+            "    CLASSIC_Ignore_Fallout4:\n",
+            "      - IgnoreThis.dll\n",
             "CLASSIC_Interface:\n",
             "  autoscan_text_Fallout4: \"Autoscan Fallout 4\"\n",
             "catch_log_records:\n",
@@ -190,6 +255,7 @@ pub(crate) fn write_minimal_yaml_tree(root: &Path, data: &Path) {
     std::fs::write(
         data.join("databases").join("CLASSIC Fallout4.yaml"),
         concat!(
+            "schema_version: \"1.0\"\n",
             "Game_Info:\n",
             "  XSE_Acronym: \"F4SE\"\n",
             "  GameVersion: \"1.10.163\"\n",
@@ -207,7 +273,7 @@ pub(crate) fn write_minimal_yaml_tree(root: &Path, data: &Path) {
     )
     .expect("game YAML should be written");
     std::fs::write(
-        root.join("CLASSIC Ignore.yaml"),
+        data.join("CLASSIC Ignore.yaml"),
         "CLASSIC_Ignore_Fallout4:\n  - IgnoreThis.dll\n",
     )
     .expect("ignore YAML should be written");

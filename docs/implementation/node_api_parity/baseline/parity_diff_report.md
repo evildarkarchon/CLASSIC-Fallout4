@@ -1,8 +1,8 @@
 # Rust<->Node Parity Diff Baseline (Phase 1)
 
-- Generated: `2026-07-16T10:17:29.854396+00:00`
-- Tier-1 contract rows: **895**
-- Tier-1 matched: **895**
+- Generated: `2026-07-19T10:13:05.510008+00:00`
+- Tier-1 contract rows: **913**
+- Tier-1 matched: **913**
 - Tier-1 missing Rust: **0**
 - Tier-1 missing Node: **0**
 - Tier-1 signature mismatch: **0**
@@ -441,23 +441,17 @@
 | `scanlog.crashgen_registry.CrashgenEntry@rust` | `scanlog` | `CrashgenEntry@rust` | `None` | `matched` |
 | `scanlog.crashgen_registry.CrashgenRegistry@rust` | `scanlog` | `CrashgenRegistry@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.FormIDAnalyzer@rust` | `scanlog` | `FormIDAnalyzer@rust` | `None` | `matched` |
-| `scanlog.formid_analyzer.FormIDAnalyzerCore@rust` | `scanlog` | `FormIDAnalyzerCore@rust` | `None` | `matched` |
 | `scanlog.gpu_detector.GpuDetector@rust` | `scanlog` | `GpuDetector@rust` | `None` | `matched` |
 | `scanlog.gpu_detector.GpuVendor@rust` | `scanlog` | `GpuVendor@rust` | `None` | `matched` |
 | `scanlog.papyrus.PapyrusAnalyzer@rust` | `scanlog` | `PapyrusAnalyzer@rust` | `None` | `matched` |
 | `scanlog.papyrus.PapyrusError@rust` | `scanlog` | `PapyrusError@rust` | `None` | `matched` |
 | `scanlog.plugin_analyzer.PluginAnalyzer@rust` | `scanlog` | `PluginAnalyzer@rust` | `None` | `matched` |
 | `scanlog.record_scanner.RecordScanner@rust` | `scanlog` | `RecordScanner@rust` | `None` | `matched` |
-| `scanlog.report.ReportComposer@rust` | `scanlog` | `ReportComposer@rust` | `None` | `matched` |
-| `scanlog.report.ReportFragment@rust` | `scanlog` | `ReportFragment@rust` | `None` | `matched` |
-| `scanlog.report.ReportGenerator@rust` | `scanlog` | `ReportGenerator@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.RustFormIDAnalyzer@rust` | `scanlog` | `RustFormIDAnalyzer@rust` | `None` | `matched` |
 | `scanlog.error.ScanLogError@rust` | `scanlog` | `ScanLogError@rust` | `None` | `matched` |
 | `scanlog.orchestrator.ScanProgressPhase@rust` | `scanlog` | `ScanProgressPhase@rust` | `None` | `matched` |
-| `scanlog.settings_validator.SettingsValidator@rust` | `scanlog` | `SettingsValidator@rust` | `None` | `matched` |
 | `scanlog.parser.StreamingIteratorParser@rust` | `scanlog` | `StreamingIteratorParser@rust` | `None` | `matched` |
 | `scanlog.parser.StreamingLogParser@rust` | `scanlog` | `StreamingLogParser@rust` | `None` | `matched` |
-| `scanlog.parser.StringPool@rust` | `scanlog` | `StringPool@rust` | `None` | `matched` |
 | `scanlog.plugin_analyzer.contains_plugin@rust` | `scanlog` | `contains_plugin@rust` | `None` | `matched` |
 | `scanlog.record_scanner.contains_record@rust` | `scanlog` | `contains_record@rust` | `None` | `matched` |
 | `scanlog.crashgen_registry.crashgen_registry@rust` | `scanlog` | `crashgen_registry@rust` | `None` | `matched` |
@@ -474,6 +468,18 @@
 | `scanlog.mod_guidance_analyzer.ModGuidancePlugin` | `scanlog` | `ModGuidanceAnalysisInput` | `JsModGuidancePlugin` | `matched` |
 | `scanlog.mod_guidance_analyzer.ModSolutionGuidance` | `scanlog` | `ModSolutionGuidance` | `JsModSolutionGuidance` | `matched` |
 | `scanlog.mod_guidance_analyzer.ModSolutionRule` | `scanlog` | `ModSolutionEntry` | `JsModSolutionRule` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFinding` | `scanlog` | `NamedRecordFinding` | `JsNamedRecordFinding` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFinding` | `scanlog` | `FormIDFinding` | `JsFormIdFinding` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisInput` | `scanlog` | `FormIDFindingAnalysisInput` | `JsFormIdFindingAnalysisInput` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalysisResult` | `scanlog` | `FormIDFindingAnalysisResult` | `JsFormIdFindingAnalysisResult` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDFindingAnalyzer` | `scanlog` | `FormIDFindingAnalyzer` | `FormIdFindingAnalyzer` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDPlugin` | `scanlog` | `FormIDPlugin` | `JsFormIdPlugin` | `matched` |
+| `scanlog.formid_finding_analyzer.FormIDValueLookupStatus` | `scanlog` | `FormIDValueLookupStatus` | `JsFormIdValueLookupStatus` | `matched` |
+| `scanlog.formid_finding_analyzer.formid_finding_analyzer@rust` | `scanlog` | `formid_finding_analyzer@rust` | `None` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisInput` | `scanlog` | `NamedRecordFindingAnalysisInput` | `JsNamedRecordFindingAnalysisInput` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalysisResult` | `scanlog` | `NamedRecordFindingAnalysisResult` | `JsNamedRecordFindingAnalysisResult` | `matched` |
+| `scanlog.named_record_finding_analyzer.NamedRecordFindingAnalyzer` | `scanlog` | `NamedRecordFindingAnalyzer` | `NamedRecordFindingAnalyzer` | `matched` |
+| `scanlog.named_record_finding_analyzer.named_record_finding_analyzer@rust` | `scanlog` | `named_record_finding_analyzer@rust` | `None` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidence` | `scanlog` | `PluginEvidence` | `JsPluginEvidence` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisInput` | `scanlog` | `PluginEvidenceAnalysisInput` | `JsPluginEvidenceAnalysisInput` | `matched` |
 | `scanlog.plugin_evidence_analyzer.PluginEvidenceAnalysisResult` | `scanlog` | `PluginEvidenceAnalysisResult` | `JsPluginEvidenceAnalysisResult` | `matched` |
@@ -492,7 +498,6 @@
 | `scanlog.patterns.patterns@rust` | `scanlog` | `patterns@rust` | `None` | `matched` |
 | `scanlog.plugin_analyzer.plugin_analyzer@rust` | `scanlog` | `plugin_analyzer@rust` | `None` | `matched` |
 | `scanlog.record_scanner.record_scanner@rust` | `scanlog` | `record_scanner@rust` | `None` | `matched` |
-| `scanlog.report.report@rust` | `scanlog` | `report@rust` | `None` | `matched` |
 | `scanlog.record_scanner.scan_records_batch@rust` | `scanlog` | `scan_records_batch@rust` | `None` | `matched` |
 | `scanlog.segment_key.segment_key@rust` | `scanlog` | `segment_key@rust` | `None` | `matched` |
 | `scanlog.analyzer.AnalyzerError` | `scanlog` | `AnalyzerError` | `CrashgenSettingsAnalyzer` | `matched` |
@@ -521,7 +526,6 @@
 | `scanlog.crash_suspect_analyzer.CrashSuspectStackCountRule` | `scanlog` | `SuspectStackCountRule` | `JsCrashSuspectStackCountRule` | `matched` |
 | `scanlog.crash_suspect_analyzer.CrashSuspectStackRule` | `scanlog` | `SuspectStackRule` | `JsCrashSuspectStackRule` | `matched` |
 | `scanlog.crash_suspect_analyzer.crash_suspect_analyzer@rust` | `scanlog` | `crash_suspect_analyzer@rust` | `None` | `matched` |
-| `scanlog.settings_validator.settings_validator@rust` | `scanlog` | `settings_validator@rust` | `None` | `matched` |
 | `scanlog.formid_analyzer.validate_formids_batch@rust` | `scanlog` | `validate_formids_batch@rust` | `None` | `matched` |
 | `scanlog.version.version@rust` | `scanlog` | `version@rust` | `None` | `matched` |
 | `scanlog.patterns.CRASH_LOG_PATTERN` | `scanlog` | `CRASH_LOG_PATTERN` | `CRASH_LOG_PATTERN` | `matched` |
@@ -618,6 +622,15 @@
 | `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
 | `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
 | `crashgen_settings.parse@rust` | `config` | `parse@rust` | `None` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookup` | `database` | `FormIdValueLookup` | `JsFormIdValueLookup` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupEntry` | `database` | `FormIdValueLookupEntry` | `JsFormIdValueLookupEntry` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupOutcome` | `database` | `FormIdValueLookupOutcome` | `JsFormIdValueLookupOutcome` | `matched` |
+| `database.formid_value_lookup.FormIdValueLookupOutcomeKind` | `database` | `FormIdValueLookupOutcome` | `JsFormIdValueLookupOutcomeKind` | `matched` |
+| `database.FormIdValueLookup@rust` | `database` | `FormIdValueLookup@rust` | `None` | `matched` |
+| `database.FormIdValueLookupEntry@rust` | `database` | `FormIdValueLookupEntry@rust` | `None` | `matched` |
+| `database.FormIdValueLookupError@rust` | `database` | `FormIdValueLookupError@rust` | `None` | `matched` |
+| `database.FormIdValueLookupInMemoryReply@rust` | `database` | `FormIdValueLookupInMemoryReply@rust` | `None` | `matched` |
+| `database.FormIdValueLookupOutcome@rust` | `database` | `FormIdValueLookupOutcome@rust` | `None` | `matched` |
 | `database.BATCH_CACHE_TTL_SECS@rust` | `database` | `BATCH_CACHE_TTL_SECS@rust` | `None` | `matched` |
 | `database.CacheEntry@rust` | `database` | `CacheEntry@rust` | `None` | `matched` |
 | `database.CacheKey@rust` | `database` | `CacheKey@rust` | `None` | `matched` |
@@ -907,6 +920,11 @@
 | `scangame.game_setup_intake@rust` | `scangame` | `game_setup_intake@rust` | `None` | `matched` |
 | `scangame.game_setup_needs_path_detection@rust` | `scangame` | `game_setup_needs_path_detection@rust` | `None` | `matched` |
 | `scangame.normalize_game_setup_version_selection@rust` | `scangame` | `normalize_game_setup_version_selection@rust` | `None` | `matched` |
+| `config.local-ignore-reset-conflict-type` | `config` | `LocalIgnoreResetConflict` | `JsLocalIgnoreResetConflict` | `matched` |
+| `config.local-ignore-reset-outcome-type` | `config` | `LocalIgnoreResetOutcome` | `JsLocalIgnoreResetOutcome` | `matched` |
+| `config.local-ignore-reset-publication-stage-type` | `config` | `LocalIgnoreResetPublicationStage` | `JsLocalIgnoreResetPublicationStage` | `matched` |
+| `config.local-ignore-reset-result-type` | `config` | `LocalIgnoreResetResult` | `JsLocalIgnoreResetResult` | `matched` |
+| `config.local-ignore-reset-status-type` | `config` | `LocalIgnoreResetOutcome` | `JsLocalIgnoreResetStatus` | `matched` |
 
 ## Gap Counts By Owner/Tier
 

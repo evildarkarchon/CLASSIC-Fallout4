@@ -250,7 +250,7 @@ impl InputState {
 
 pub enum AsyncMessage {
     ScanEvent(ScanRunEvent),
-    ScanFinished(Result<RunResult, InfrastructureError>),
+    ScanFinished(Box<Result<RunResult, InfrastructureError>>),
     UpdateResult(Result<NotificationStatus, String>),
     BackupStatuses([bool; 4]),
     BackupComplete(String),
@@ -480,7 +480,7 @@ impl App {
             AsyncMessage::ScanFinished(outcome) => {
                 self.scan_in_progress = false;
                 self.scan_cancellation = None;
-                let should_switch_to_results = match &outcome {
+                let should_switch_to_results = match &*outcome {
                     Ok(result) => {
                         let presentation = format_result(result);
                         self.scan_progress = presentation.percent;
@@ -506,7 +506,7 @@ impl App {
                 {
                     self.set_active_tab(TabIndex::Results);
                 }
-                self.last_scan_run = Some(outcome);
+                self.last_scan_run = Some(*outcome);
             }
             AsyncMessage::UpdateResult(result) => {
                 self.update_checking = false;
@@ -788,12 +788,10 @@ impl App {
         let max_concurrent = usize::try_from(scan.max_concurrent_scans())
             .ok()
             .filter(|value| *value > 0);
-        let yaml_dir_root = self.classic_root.clone();
-        let yaml_dir_data = yaml_dir_root.join("CLASSIC Data");
-        let base_folder = yaml_dir_root.clone();
+        let installation_root = self.classic_root.clone();
+        let base_folder = installation_root.clone();
         let configuration = Configuration {
-            yaml_dir_root,
-            yaml_dir_data,
+            installation_root,
             game: managed_game,
             game_version: selected_game_version,
             options: Options::new(show_formid_values, simplify_logs),
@@ -840,7 +838,7 @@ impl App {
             };
             let result =
                 scan_run_contract::execute(request, &cancellation, Some(&mut observer)).await;
-            let _ = tx.send(AsyncMessage::ScanFinished(result));
+            let _ = tx.send(AsyncMessage::ScanFinished(Box::new(result)));
         });
     }
 

@@ -1,16 +1,592 @@
 {
   "summary": {
-    "contract_total": 470,
-    "current_total": 470,
-    "matched": 470,
+    "contract_total": 630,
+    "current_total": 630,
+    "matched": 630,
     "missing_from_current": 0,
     "missing_from_contract": 0,
     "signature_mismatch": 0
   },
   "contract_results": [
     {
+      "id": "0f1ce653765981f0",
+      "rustSymbol": "ExplicitYamlDataGameId",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d788cd5f512be74d",
+      "rustSymbol": "ExplicitYamlDataGameRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c2ca3547c25211b0",
+      "rustSymbol": "ExplicitYamlDataLoadErrorKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6c8feae9819e3978",
+      "rustSymbol": "ExplicitYamlDataRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "75942fa5f3d0fe80",
+      "rustSymbol": "InstalledYamlDataDiagnosticKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c010e0abe2580ab2",
+      "rustSymbol": "InstalledYamlDataGameRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8c213f5606888cd0",
+      "rustSymbol": "InstalledYamlDataInspectionErrorKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "baaff5630bc6d152",
+      "rustSymbol": "InstalledYamlDataLoadErrorKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6e782896f6e6efc1",
+      "rustSymbol": "InstalledYamlDataLoadRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d956269b815428f0",
+      "rustSymbol": "InstalledYamlDataProvenance",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "97103d837ce461be",
+      "rustSymbol": "InstalledYamlDataRole",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "467825b86f31980c",
+      "rustSymbol": "LocalIgnoreResetErrorKind",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "45a481c1f7080f80",
+      "rustSymbol": "LocalIgnoreResetPublicationStage",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "30c322625eae2fc6",
+      "rustSymbol": "LocalIgnoreYamlDataState",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0f22e0568d44d623",
+      "rustSymbol": "definitions",
+      "kind": "enum",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "834cc04debdcc0cd",
+      "rustSymbol": "explicit_yaml_data_load",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2f968cd2f6c16714",
+      "rustSymbol": "explicit_yaml_data_load_status",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4dc74e6f6f5a1585",
+      "rustSymbol": "explicit_yaml_data_load_take_snapshot",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fff0494d03d2c5be",
+      "rustSymbol": "explicit_yaml_data_snapshot_game",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5b7dbb2a67be5e4b",
+      "rustSymbol": "explicit_yaml_data_snapshot_game_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a2a255891415c137",
+      "rustSymbol": "explicit_yaml_data_snapshot_game_role",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b566d94e02156d52",
+      "rustSymbol": "explicit_yaml_data_snapshot_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "58c1cb9047677930",
+      "rustSymbol": "explicit_yaml_data_snapshot_main_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7333a449b0268f1e",
+      "rustSymbol": "explicit_yaml_data_snapshot_yaml_data",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f214164a9d4eb6f0",
+      "rustSymbol": "installed_yaml_data_inspect",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a089a390b0513c86",
+      "rustSymbol": "installed_yaml_data_inspection_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "79c00541e9c6b7c5",
+      "rustSymbol": "installed_yaml_data_inspection_game",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4d5d79853dc4d389",
+      "rustSymbol": "installed_yaml_data_inspection_game_file",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "be75f7174e6e40c9",
+      "rustSymbol": "installed_yaml_data_inspection_game_role",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c2fdc4d665765109",
+      "rustSymbol": "installed_yaml_data_inspection_main",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "9e812b792616c2f5",
+      "rustSymbol": "installed_yaml_data_inspection_status",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2bb4e9453411c734",
+      "rustSymbol": "installed_yaml_data_inspection_take",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e6ac015edd41b7b0",
+      "rustSymbol": "installed_yaml_data_load",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0c1607fcb9a1c354",
+      "rustSymbol": "installed_yaml_data_load_status",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "88b627b389e2f391",
+      "rustSymbol": "installed_yaml_data_load_take_recovery_plan",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "df6e0230342a3d0b",
+      "rustSymbol": "installed_yaml_data_load_take_snapshot",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8f8c7430e730a71f",
+      "rustSymbol": "installed_yaml_data_snapshot_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "77c00497e2aee6c4",
+      "rustSymbol": "installed_yaml_data_snapshot_game",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f9fd50d9f68b0a48",
+      "rustSymbol": "installed_yaml_data_snapshot_game_file",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "9d3723fd3e79f5a2",
+      "rustSymbol": "installed_yaml_data_snapshot_game_role",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b94a65e01d41dfd6",
+      "rustSymbol": "installed_yaml_data_snapshot_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "01725a5af9a194c1",
+      "rustSymbol": "installed_yaml_data_snapshot_local_ignore_state",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "94c44bd78fe1d419",
+      "rustSymbol": "installed_yaml_data_snapshot_main",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "86746f77e4a76a74",
+      "rustSymbol": "installed_yaml_data_snapshot_simplify_remove_list",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "eee7642555cd2405",
+      "rustSymbol": "installed_yaml_data_snapshot_yaml_data",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "b0d609f9ed78e468",
       "rustSymbol": "load_main_yaml_version",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "95a16a804c4e2d18",
+      "rustSymbol": "local_ignore_recovery_plan_default_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "042ea4bfbf165c0c",
+      "rustSymbol": "local_ignore_recovery_plan_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6590701d939cbab8",
+      "rustSymbol": "local_ignore_recovery_plan_game",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "80e5b767c9ce0968",
+      "rustSymbol": "local_ignore_recovery_plan_game_file",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "60f29c15d9dab027",
+      "rustSymbol": "local_ignore_recovery_plan_game_role",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "42b6d46433453bfc",
+      "rustSymbol": "local_ignore_recovery_plan_has_default_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1a660dba5feab46c",
+      "rustSymbol": "local_ignore_recovery_plan_local_ignore_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "16afc4754fba2126",
+      "rustSymbol": "local_ignore_recovery_plan_main",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a6c74bbe8859ecc6",
+      "rustSymbol": "local_ignore_recovery_plan_malformed_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e6b3bc86b5f014f4",
+      "rustSymbol": "local_ignore_recovery_plan_proceed_without_ignore",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "bbb8ff75577dc70c",
+      "rustSymbol": "local_ignore_recovery_plan_reset_to_default",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0652d87cbbbad64b",
+      "rustSymbol": "local_ignore_recovery_plan_selected_game_version",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "66951d1fda4db345",
+      "rustSymbol": "local_ignore_reset_conflict_actual_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "05ba651b12e06072",
+      "rustSymbol": "local_ignore_reset_conflict_backup_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "14a7448d83b53b4e",
+      "rustSymbol": "local_ignore_reset_conflict_expected_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a431d055a0672c48",
+      "rustSymbol": "local_ignore_reset_conflict_has_actual_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "63529dbf6b96286a",
+      "rustSymbol": "local_ignore_reset_conflict_has_backup_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3826799282880de4",
+      "rustSymbol": "local_ignore_reset_result_backup_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "063a438f552ae962",
+      "rustSymbol": "local_ignore_reset_result_backup_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f132e54d8b09b4af",
+      "rustSymbol": "local_ignore_reset_result_diagnostics",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8f79b89d012e692f",
+      "rustSymbol": "local_ignore_reset_result_local_ignore_path",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7e952ca9b9e5564c",
+      "rustSymbol": "local_ignore_reset_result_malformed_local_ignore_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4badd555c22fea3b",
+      "rustSymbol": "local_ignore_reset_result_replacement_identity",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a0f067057740682d",
+      "rustSymbol": "local_ignore_reset_result_take_snapshot",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2ae9f534e125ea75",
+      "rustSymbol": "local_ignore_reset_status",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "dd3197bb4ec7ff78",
+      "rustSymbol": "local_ignore_reset_take_conflict",
+      "kind": "function",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "66f714501c41701b",
+      "rustSymbol": "local_ignore_reset_take_result",
       "kind": "function",
       "bridgeModule": "config",
       "status": "matched",
@@ -385,6 +961,86 @@
       "reason": "-"
     },
     {
+      "id": "353d0963a6fdac14",
+      "rustSymbol": "ExplicitYamlDataLoad",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "860c9e31f59961af",
+      "rustSymbol": "ExplicitYamlDataSnapshot",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b6007d4cc8315383",
+      "rustSymbol": "InstalledYamlDataInspection",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "16e2ba0287122f6f",
+      "rustSymbol": "InstalledYamlDataInspectionOperation",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e80c97d786e49c15",
+      "rustSymbol": "InstalledYamlDataLoadOperation",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "dbe40950823ca347",
+      "rustSymbol": "InstalledYamlDataSnapshot",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fd696b0479788803",
+      "rustSymbol": "LocalIgnoreRecoveryPlan",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3f1a6fda380d25bb",
+      "rustSymbol": "LocalIgnoreResetConflict",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a4bf40e5594d9afa",
+      "rustSymbol": "LocalIgnoreResetOperation",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "28b913c45be7bcb2",
+      "rustSymbol": "LocalIgnoreResetResult",
+      "kind": "opaque",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "9719f25c94df3c38",
       "rustSymbol": "YamlData",
       "kind": "opaque",
@@ -395,6 +1051,94 @@
     {
       "id": "5be115198cf789f5",
       "rustSymbol": "CacheStats",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "29c8bda868e64cf0",
+      "rustSymbol": "ExplicitYamlDataLoadErrorDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "25585cc0468a453a",
+      "rustSymbol": "ExplicitYamlDataLoadStatusDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fc5bd5cc414a2c56",
+      "rustSymbol": "ExplicitYamlDataPathsDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7e6aeec3be30900e",
+      "rustSymbol": "InspectedYamlDataFileDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4f20ef33a68d7bff",
+      "rustSymbol": "InstalledYamlDataDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "31053421dd71dae8",
+      "rustSymbol": "InstalledYamlDataInspectionErrorDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "965e0b54154c8e65",
+      "rustSymbol": "InstalledYamlDataInspectionStatusDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4b9506517c00a4db",
+      "rustSymbol": "InstalledYamlDataLoadErrorDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "985812440f95f7ad",
+      "rustSymbol": "InstalledYamlDataLoadStatusDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e4dcff0e1be52937",
+      "rustSymbol": "LocalIgnoreResetErrorDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d81ba71bfa4db7d0",
+      "rustSymbol": "LocalIgnoreResetStatusDto",
       "kind": "struct",
       "bridgeModule": "config",
       "status": "matched",
@@ -433,6 +1177,14 @@
       "reason": "-"
     },
     {
+      "id": "1fc343fbefc7f2e0",
+      "rustSymbol": "YamlDataContentIdentityDto",
+      "kind": "struct",
+      "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "380c263525e94a83",
       "rustSymbol": "YamlDataModSolutionCriteria",
       "kind": "struct",
@@ -445,6 +1197,30 @@
       "rustSymbol": "YamlDataModSolutionEntry",
       "kind": "struct",
       "bridgeModule": "config",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "955a22a24ee7f2dd",
+      "rustSymbol": "FormIdValueLookupErrorCode",
+      "kind": "enum",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d2d830b8ac7fbc53",
+      "rustSymbol": "FormIdValueLookupOutcomeKind",
+      "kind": "enum",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "34e356ed10413add",
+      "rustSymbol": "FormIdValueLookupReplyKind",
+      "kind": "enum",
+      "bridgeModule": "database",
       "status": "matched",
       "reason": "-"
     },
@@ -537,6 +1313,62 @@
       "reason": "-"
     },
     {
+      "id": "f4288dd77f48c72f",
+      "rustSymbol": "formid_value_lookup_construction_result",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "0d69b0b22b9fbde8",
+      "rustSymbol": "formid_value_lookup_disabled_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "d3d9018357b7889d",
+      "rustSymbol": "formid_value_lookup_in_memory_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c69d1717bf7d1c64",
+      "rustSymbol": "formid_value_lookup_lookup",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "95bf308a567246e7",
+      "rustSymbol": "formid_value_lookup_lookup_batch",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "4150711535568f88",
+      "rustSymbol": "formid_value_lookup_shared_pool_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "815a782f66901232",
+      "rustSymbol": "formid_value_lookup_sqlite_new",
+      "kind": "function",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "dddc8330ff698837",
       "rustSymbol": "DbPool",
       "kind": "opaque",
@@ -545,8 +1377,88 @@
       "reason": "-"
     },
     {
+      "id": "dca796d041e6d369",
+      "rustSymbol": "FormIdValueLookup",
+      "kind": "opaque",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "866877a98c3624dc",
       "rustSymbol": "FormIdEntryDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "360ff525def88b92",
+      "rustSymbol": "FormIdValueLookupBatchExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5c08976f3b42149e",
+      "rustSymbol": "FormIdValueLookupBatchInputDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "b3e18bf9899c7c68",
+      "rustSymbol": "FormIdValueLookupConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c004995b34b6c45c",
+      "rustSymbol": "FormIdValueLookupErrorDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "97d4c71e6760fe72",
+      "rustSymbol": "FormIdValueLookupExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "42c6d7d6f9e0dea4",
+      "rustSymbol": "FormIdValueLookupInMemoryConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3b7621f5bf49007c",
+      "rustSymbol": "FormIdValueLookupInMemoryEntryDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e6e6b1b967769d27",
+      "rustSymbol": "FormIdValueLookupKeyDto",
+      "kind": "struct",
+      "bridgeModule": "database",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ae86867785f1b30d",
+      "rustSymbol": "FormIdValueLookupOutcomeDto",
       "kind": "struct",
       "bridgeModule": "database",
       "status": "matched",
@@ -1609,86 +2521,6 @@
       "reason": "-"
     },
     {
-      "id": "aa6e69d7d60eb97b",
-      "rustSymbol": "plugin_evidence_analyze",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "c7d2c667f19e6ea6",
-      "rustSymbol": "plugin_evidence_analyzer_construction_result",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "f5cefbf986abfcbe",
-      "rustSymbol": "plugin_evidence_analyzer_new",
-      "kind": "function",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "19fef74c8d0d7844",
-      "rustSymbol": "CxxPluginEvidenceAnalyzer",
-      "kind": "opaque",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "9c82ff3b30e1c2d1",
-      "rustSymbol": "PluginEvidenceAnalysisExecutionResultDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "997085eb0ecef6fe",
-      "rustSymbol": "PluginEvidenceAnalysisInputDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "94a5ec11a8b1a70b",
-      "rustSymbol": "PluginEvidenceAnalysisResultDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "11d94ca071c64892",
-      "rustSymbol": "PluginEvidenceAnalyzerConfigurationDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "5aa7722a75cca7e7",
-      "rustSymbol": "PluginEvidenceAnalyzerConstructionResultDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
-      "id": "54f9de9ccb9d0060",
-      "rustSymbol": "PluginEvidenceDto",
-      "kind": "struct",
-      "bridgeModule": "scanner",
-      "status": "matched",
-      "reason": "-"
-    },
-    {
       "id": "ec6f769e1fa773a7",
       "rustSymbol": "AnalyzerErrorCode",
       "kind": "enum",
@@ -1739,6 +2571,22 @@
     {
       "id": "48978a1988cae0c4",
       "rustSymbol": "CrashgenExpectationSeverity",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "265e1c864e00bf37",
+      "rustSymbol": "FormIDFindingLookupReplyKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fcec1e0fdd22e089",
+      "rustSymbol": "FormIDValueLookupStatus",
       "kind": "enum",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -1809,8 +2657,80 @@
       "reason": "-"
     },
     {
+      "id": "5d861f1371811b6e",
+      "rustSymbol": "ScanRunContractResumeErrorKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "6fac94d2ef62d67d",
       "rustSymbol": "ScanRunContractStatus",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "17a9ae976a21c5f7",
+      "rustSymbol": "ScanRunGameId",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "db9a2cfb2c4ea16e",
+      "rustSymbol": "ScanRunInstalledYamlDataDiagnosticKind",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "785fc3aab2cb7556",
+      "rustSymbol": "ScanRunInstalledYamlDataProvenance",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "48e45574328d0baf",
+      "rustSymbol": "ScanRunInstalledYamlDataRole",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1ca5c72cad0943dd",
+      "rustSymbol": "ScanRunLocalIgnoreRecoveryDecision",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "82770c04cc35ca65",
+      "rustSymbol": "ScanRunLocalIgnoreResetFailureStage",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1ad54c3b19d79960",
+      "rustSymbol": "ScanRunLocalIgnoreYamlDataState",
+      "kind": "enum",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "1341fc11b331a2a8",
+      "rustSymbol": "definitions",
       "kind": "enum",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -1881,6 +2801,46 @@
       "reason": "-"
     },
     {
+      "id": "689dceccfd9be6f8",
+      "rustSymbol": "formid_finding_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "7d25ad92f2c615d5",
+      "rustSymbol": "formid_finding_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "6ea8c0bd04ed0292",
+      "rustSymbol": "formid_finding_analyzer_disabled_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "404672c761345c3a",
+      "rustSymbol": "formid_finding_analyzer_in_memory_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fdc0f6289d855f5c",
+      "rustSymbol": "formid_finding_analyzer_sqlite_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "01c3e73e182b287b",
       "rustSymbol": "mod_guidance_analyze",
       "kind": "function",
@@ -1899,6 +2859,30 @@
     {
       "id": "8e998a3a3c59e66b",
       "rustSymbol": "mod_guidance_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ded80043dbedb369",
+      "rustSymbol": "named_record_finding_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "ee18a8096bfe511f",
+      "rustSymbol": "named_record_finding_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fed8112c3cf307c7",
+      "rustSymbol": "named_record_finding_analyzer_new",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -1961,6 +2945,30 @@
       "reason": "-"
     },
     {
+      "id": "aa6e69d7d60eb97b",
+      "rustSymbol": "plugin_evidence_analyze",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c7d2c667f19e6ea6",
+      "rustSymbol": "plugin_evidence_analyzer_construction_result",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "f5cefbf986abfcbe",
+      "rustSymbol": "plugin_evidence_analyzer_new",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "923b1638b9731c37",
       "rustSymbol": "scan_run_cancellation_cancel",
       "kind": "function",
@@ -1985,8 +2993,40 @@
       "reason": "-"
     },
     {
+      "id": "1473c74ad462f005",
+      "rustSymbol": "scan_run_continuation_resume",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "f1a23f880846dde0",
       "rustSymbol": "scan_run_contract_execute",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "8b7e216f62dd5d3b",
+      "rustSymbol": "scan_run_contract_execution_has_continuation",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "bcba7f5d14da68c4",
+      "rustSymbol": "scan_run_contract_execution_take_continuation",
+      "kind": "function",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "db795bbb11e180e8",
+      "rustSymbol": "scan_run_contract_execution_take_result",
       "kind": "function",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -2065,8 +3105,24 @@
       "reason": "-"
     },
     {
+      "id": "bf67a6d66d028b53",
+      "rustSymbol": "CxxFormIDFindingAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "22546314349a5a8a",
       "rustSymbol": "CxxModGuidanceAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a3bba0a791a308d8",
+      "rustSymbol": "CxxNamedRecordFindingAnalyzer",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -2081,8 +3137,32 @@
       "reason": "-"
     },
     {
+      "id": "19fef74c8d0d7844",
+      "rustSymbol": "CxxPluginEvidenceAnalyzer",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "7e171291b252d3dd",
       "rustSymbol": "ScanRunCancellation",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "841c557115efd105",
+      "rustSymbol": "ScanRunContinuation",
+      "kind": "opaque",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "20927c22fed83137",
+      "rustSymbol": "ScanRunContractExecution",
       "kind": "opaque",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -2265,6 +3345,62 @@
       "reason": "-"
     },
     {
+      "id": "6e77a9e1d9541360",
+      "rustSymbol": "FormIDFindingAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "48f6fbdd9235bd22",
+      "rustSymbol": "FormIDFindingAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "a3856cf8f6be5926",
+      "rustSymbol": "FormIDFindingAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "172a534212badf25",
+      "rustSymbol": "FormIDFindingAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c3aea1f2c53cfc93",
+      "rustSymbol": "FormIDFindingDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "70f4c969d985e22e",
+      "rustSymbol": "FormIDFindingLookupEntryDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "16758b137ae088f8",
+      "rustSymbol": "FormIDPluginDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "fe3157d10e6b8468",
       "rustSymbol": "ImportantModGuidanceDto",
       "kind": "struct",
@@ -2361,8 +3497,104 @@
       "reason": "-"
     },
     {
+      "id": "f8945bac678ecaa0",
+      "rustSymbol": "NamedRecordFindingAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "3d55e037871f72a3",
+      "rustSymbol": "NamedRecordFindingAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "c37a62fb49f26295",
+      "rustSymbol": "NamedRecordFindingAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "fea1f9e52eb0eb49",
+      "rustSymbol": "NamedRecordFindingAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "156eb8732e58b00d",
+      "rustSymbol": "NamedRecordFindingAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "2b0ac3bc94081e21",
+      "rustSymbol": "NamedRecordFindingDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "668e1b029522e8b3",
       "rustSymbol": "PapyrusStatsDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "9c82ff3b30e1c2d1",
+      "rustSymbol": "PluginEvidenceAnalysisExecutionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "997085eb0ecef6fe",
+      "rustSymbol": "PluginEvidenceAnalysisInputDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "94a5ec11a8b1a70b",
+      "rustSymbol": "PluginEvidenceAnalysisResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "11d94ca071c64892",
+      "rustSymbol": "PluginEvidenceAnalyzerConfigurationDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "5aa7722a75cca7e7",
+      "rustSymbol": "PluginEvidenceAnalyzerConstructionResultDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "54f9de9ccb9d0060",
+      "rustSymbol": "PluginEvidenceDto",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -2433,6 +3665,14 @@
       "reason": "-"
     },
     {
+      "id": "70d603c217c3cd76",
+      "rustSymbol": "ScanRunContractResumeError",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
       "id": "0d53fcc05979fa65",
       "rustSymbol": "ScanRunContractRunResult",
       "kind": "struct",
@@ -2443,6 +3683,38 @@
     {
       "id": "a7294d8a252b0b2e",
       "rustSymbol": "ScanRunContractSetupResult",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "bed961986b7dfb6e",
+      "rustSymbol": "ScanRunInspectedYamlDataFileDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "bf911e575ada1446",
+      "rustSymbol": "ScanRunInstalledYamlDataDiagnosticDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "453cd25252d2362f",
+      "rustSymbol": "ScanRunInstalledYamlDataRunDataDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "e0e0fec08acd4c5b",
+      "rustSymbol": "ScanRunLocalIgnoreResetRunDataDto",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",
@@ -2483,6 +3755,14 @@
     {
       "id": "596a3783149095bf",
       "rustSymbol": "ScanRunTargetedSourceDto",
+      "kind": "struct",
+      "bridgeModule": "scanner",
+      "status": "matched",
+      "reason": "-"
+    },
+    {
+      "id": "cce056c122024147",
+      "rustSymbol": "ScanRunYamlDataContentIdentityDto",
       "kind": "struct",
       "bridgeModule": "scanner",
       "status": "matched",

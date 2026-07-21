@@ -257,6 +257,12 @@ if(Catch2_FOUND)
     classic_scan_run_fixture_value(SCAN_TARGETED_ARTIFACT_SUFFIX fixtures targeted expected artifactSuffix)
     string(JSON SCAN_TARGETED_UNSOLVED_COUNT LENGTH
            "${CLASSIC_SCAN_RUN_FIXTURE_JSON}" fixtures targeted expected unsolvedLogsArtifacts)
+    classic_scan_run_fixture_value(SCAN_INSTALLED_YAML_INPUT fixtures installedYamlData input)
+    classic_scan_run_fixture_value(SCAN_MALFORMED_LOCAL_IGNORE fixtures installedYamlData malformedLocalIgnore)
+    classic_scan_run_fixture_value(SCAN_RESET_CONFLICT_CODE fixtures installedYamlData resetOutcomes conflictCode)
+    classic_scan_run_fixture_value(SCAN_RESET_BACKUP_FAILURE_CODE fixtures installedYamlData resetOutcomes backupFailureCode)
+    classic_scan_run_fixture_value(SCAN_RESET_CONSUMED_CODE fixtures installedYamlData resetOutcomes consumedCode)
+    classic_scan_run_fixture_value(SCAN_RESET_POST_CRITICAL_CANCELLATION_STATUS fixtures installedYamlData resetOutcomes postCriticalCancellationStatus)
     configure_file(
         tests/scan_run_fixture_config.h.in
         "${CMAKE_CURRENT_BINARY_DIR}/generated/scan_run_fixture_config.h"

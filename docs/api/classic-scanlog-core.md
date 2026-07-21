@@ -4,10 +4,12 @@ Contributor-facing API documentation for [`business-logic/classic-scanlog-core/`
 
 `classic-scanlog-core` owns two distinct kinds of behavior:
 
-- independently useful Crash Log parsing, inspection, analysis, and report-assembly utilities
+- independently useful Crash Log parsing, inspection, and semantic-analysis utilities
 - the single complete Crash Log Scan Run use-case boundary in `scan_run::contract`
 
-A complete run always enters through `scan_run::contract::execute`. Discovery,
+A new run always enters through `scan_run::contract::execute`. A run paused for
+Local Ignore recovery resumes only through its returned
+`CrashLogScanRunContinuation`. Discovery,
 setup, intake, scheduling, analysis, Autoscan Report persistence, failed-log
 accounting, and Standard-run Unsolved Logs finalization are internal parts of
 that operation. They are not public lifecycle building blocks.
@@ -27,6 +29,13 @@ scan_run::contract::execute(request, cancellation, observer).await
 It accepts one tagged request, a separate monotonic cancellation control, and
 an optional observer. It returns either a meaningful terminal `RunResult` or a
 typed run-wide `InfrastructureError`.
+
+Malformed Local Ignore is a meaningful `LocalIgnoreRecoveryRequired` result.
+That result owns an opaque `CrashLogScanRunContinuation`; callers explicitly
+choose `LocalIgnoreRecoveryDecision::ProceedWithoutIgnore` or
+`LocalIgnoreRecoveryDecision::ResetToDefault`. Calling
+`continuation.resume(decision, cancellation, observer).await` consumes the
+retained work once and returns `Result<RunResult, ResumeError>`.
 
 There is no public prepared-run, orchestration, batch-lifecycle, direct
 Autoscan Report writer, concurrency-policy helper, or process-global FCX
@@ -54,10 +63,13 @@ factories require `CrashLogScanSetupContext`, so FCX cannot be enabled without
 run-scoped setup facts.
 
 `Configuration` contains the projected, already-accepted facts needed by Rust:
-YAML roots, game and version, analysis options, FormID database paths, an
-optional configured Unsolved Logs destination, and optional explicit
-concurrency. The scan module does not open or persist frontend User Settings.
-Adapters project one accepted settings snapshot into this configuration.
+one CLASSIC installation root, a typed `GameId`, the selected game-version
+mode, analysis options, FormID database paths, an optional configured Unsolved
+Logs destination, and optional explicit concurrency. The scan module derives
+installed YAML Data locations from the root; adapters do not pass separate YAML
+directories or parse a game string. The scan module does not open or persist
+frontend User Settings. Adapters project one accepted settings snapshot into
+this configuration.
 
 Omitting concurrency selects Rust's adaptive value. A present zero is invalid
 and returns `InfrastructureErrorStage::RequestValidation`. The selected value
@@ -74,6 +86,8 @@ Cancellation is cooperative at Rust-owned safe seams:
 - cancellation before discovery completes returns `CancelledBeforeDiscovery`
   and no discovery result
 - once discovery completes, the complete discovery result is retained
+- cancellation already requested before recovery resume consumes the
+  continuation and returns the normal post-discovery `Cancelled` result
 - queued logs do not start after cancellation is observed
 - an admitted log finishes analysis, report persistence, and applicable
   Unsolved Logs finalization before its terminal outcome is published
@@ -105,9 +119,11 @@ control, but observation itself cannot change scheduling or outcomes.
 `RunResult` retains:
 
 - `Completed`, `NoCrashLogsFound`, `SetupFailed`,
+  `LocalIgnoreRecoveryRequired`,
   `CancelledBeforeDiscovery`, or `Cancelled`
 - the complete discovery result when discovery finished
 - the run-scoped FCX setup result when applicable
+- the selected Installed YAML Data metadata when intake was reached
 - Rust-selected effective concurrency when selection occurred
 - aggregate total, succeeded, failed, and cancelled counts
 - one `LogResult` per accepted log, always in discovery order
@@ -119,6 +135,53 @@ analysis, report-write, and movement failures into one message.
 
 `NoCrashLogsFound`, setup failure, cancellation, and per-log failures are
 expected lifecycle data. They are not run-wide exceptions.
+
+`LocalIgnoreRecoveryRequired` also retains completed discovery, setup data,
+the exact selected Main/game snapshot, malformed Local Ignore identity and
+diagnostics, and an opaque process-local continuation. The continuation is not
+cloneable or serializable. Its state is atomically consumed, so sequential or
+concurrent replay returns `ResumeError::ContinuationConsumed` with stable kind
+`scan_run_continuation_consumed`. Resume never emits a second
+`DiscoveryCompleted` event.
+
+### Installed YAML Data intake
+
+After discovery, the final operation loads Installed YAML Data once from the
+configuration's installation root and typed game. Main and game candidates are
+selected independently from updated, read-only previous, or bundled sources;
+missing Local Ignore is generated from the exact selected Main defaults. The
+ready immutable snapshot supplies both parsed analysis data and simplify-log
+rules for the entire run. Scan execution never reopens selected Main, game, or
+Local Ignore paths after accepting that snapshot.
+
+`RunResult::installed_yaml_data` exposes stable run-level metadata: selected
+Main/game schema, provenance and exact-byte identity, Local Ignore state and
+identity, and structured fallback, validation, or generation
+diagnostics. It is absent when initial execution did not reach intake. A
+pre-resume cancellation also intentionally returns the ordinary
+cancelled-after-discovery shape without recovery metadata, because the recovery
+decision was never applied. These diagnostics are operational metadata and
+never enter Autoscan Report text; equivalent accepted data therefore preserves
+report bytes.
+
+Ready runs expose `Existing` and `Generated`. A malformed file returns
+`RecoveryRequired`; accepting Proceed Without Ignore resumes with
+`ProceedWithoutIgnore` and an operation-scoped empty ignore list. Accepting
+Reset To Default conflict-checks the retained malformed identity, verifies a
+durable byte-exact backup, atomically publishes retained selected-Main defaults,
+and resumes with `ResetToDefault`, reset diagnostics, and backup/replacement
+metadata. The retained plan is consumed only at resume, so either decision
+reuses the exact prepared intake and selected snapshot without rediscovery or
+reselection. Changing Main/game files or creating a formerly missing Targeted
+input while paused cannot change the resumed run.
+
+Cancellation already observed before Reset To Default begins performs no
+backup, replacement, or analysis. Once the synchronous reset transaction has
+begun, it completes durably before cancellation is observed again; the run then
+returns the ordinary post-discovery `Cancelled` result without analysis. Reset
+conflict, backup failure, and replacement failure are distinct typed
+`ResumeError` variants with stable codes and applicable identities, path, and
+publication stage metadata.
 
 ### Durable finalization
 
@@ -160,8 +223,19 @@ Focused semantic analyzers use a separate shared `AnalyzerError` containing an
 stable analyzer tokens are `crashgen_settings`, `crash_suspect`,
 `mod_guidance`, `plugin_evidence`, `formid_finding`, and
 `named_record_finding`. The first implemented codes are
-`invalid_configuration` and `unsupported_configuration_version`; adapters must
-project these tokens rather than inventing language-specific spellings.
+`invalid_configuration`, `unsupported_configuration_version`,
+`malformed_result`, and `operational_failure`; adapters must project these
+tokens rather than inventing language-specific spellings.
+
+Direct focused-analyzer callers receive this typed error unchanged through the
+language-appropriate projection. During a complete run, failure to construct
+the reusable analyzer set becomes a run-wide `Initialization` infrastructure
+error before log scheduling. The private collector retries malformed or
+operational FormID Value Lookup failures with lookup disabled because value
+descriptions are optional report enrichment. Every other failure while
+collecting one log becomes that log's `LogFailureStage::Analysis`, prevents a
+partial Autoscan Report from being persisted, and does not convert successful
+empty results into failures.
 
 ---
 
@@ -183,6 +257,14 @@ Deprecated parsing aliases are not an alternate run seam; new code should use
 the canonical parser methods documented in source.
 
 ### Focused analyzers
+
+The six supported Focused Semantic Analyzers share one ownership contract: an
+immutable reusable handle accepts one owned input and returns one aggregate
+typed semantic result. Results preserve findings, counts, states, and authored
+YAML Data guidance, but never expose report lines or presentation policy. A
+completed no-match call returns an explicit empty result. There is no public
+Autoscan Report Contribution enum; the aggregate collector is private because
+only a complete Crash Log Scan Run needs to coordinate all six results.
 
 - `CrashgenSettingsAnalyzer` is a complete semantic focused analyzer.
   Its fallible constructor validates typed Crashgen configuration and
@@ -221,14 +303,31 @@ the canonical parser methods documented in source.
   with per-line occurrence counts in candidate order. It carries no report prose,
   markdown, headings, or sorting policy; completed no-match analysis is an
   explicit empty result.
-- `FormIDAnalyzerCore` extracts, validates, and optionally resolves FormIDs.
+- `NamedRecordFindingAnalyzer` validates owned target/ignore patterns and compiles
+  both Aho-Corasick matchers during construction. Its immutable, cloneable
+  `Send + Sync` handle accepts owned Crash Log lines and returns distinct exact
+  extracted records with checked occurrence counts in first-observed order.
+- `NamedRecordFindingAnalysisResult` carries no report text or sorting policy;
+  completed no-match analysis is an explicit empty result. Autoscan Report
+  Assembly alone sorts findings and renders the legacy named-record prose.
+- `FormIDFindingAnalyzer` accepts owned Crash Log lines and plugin/prefix facts,
+  aggregates distinct canonical FormIDs with checked occurrence counts, resolves
+  plugins, and optionally enriches resolved findings through the opaque strict
+  `FormIdValueLookup` facade. Its result retains unresolved identifiers and
+  distinguishes lookup disabled, miss, and hit states without carrying report
+  prose. Lookup misses are data; malformed replies and operational failures use
+  the shared typed analyzer error. Public free batch extraction and validation
+  helpers remain available for independent utility use.
 - `PluginAnalyzer` retains independently useful load-order parsing, plugin-limit,
   filtering, and batch detection utilities; its former report-producing match
   methods are removed.
-- `RecordScanner` scans call stacks for named records and lazily caches its
-  per-instance Aho-Corasick matchers with `std::sync::OnceLock`.
-- `SettingsValidator` is the temporary fragment-producing compatibility facade
-  over `CrashgenSettingsAnalyzer`; new semantic consumers use the analyzer.
+- `RecordScanner` remains a utility-only raw record extractor and lazily caches
+  its per-instance Aho-Corasick matchers with `std::sync::OnceLock`. Its former
+  report-producing `scan_named_records` family is removed; `contains_record`
+  and the record batch utilities remain public.
+- `CrashgenSettingsAnalyzer` is the public settings-analysis boundary. It
+  returns typed expectation outcomes and disabled-setting notices without
+  exposing report fragments or rendering helpers.
 - `GpuDetector` extracts GPU information.
 - crashgen version/registry helpers operate on supplied data without owning a
   run lifecycle.
@@ -239,15 +338,34 @@ or batch-run interfaces.
 
 ### Report assembly
 
-`ReportFragment`, `ReportComposer`, `ReportGenerator`, and `StringPool` remain
-available for independent report-text assembly. They produce or combine text;
-they do not write an Autoscan Report to disk. Full scan persistence belongs
-exclusively to `scan_run::contract::execute`.
+Autoscan Report rendering mechanics are private implementation details.
+`ReportFragment`, `ReportComposer`, `ReportGenerator`, `StringPool`, and the
+fragment-producing `SettingsValidator` facade are not public Rust or binding
+contracts. Callers use semantic analyzers for focused work or the complete
+Crash Log Scan Run contract for persisted reports.
 
-`AutoscanReportAssembler` owns the canonical report-section order used by the
-internal run engine. Its output includes header/version facts, settings and
-preflight results, plugins, FormIDs, named records, suspects, run-scoped FCX
-facts, and final guidance in deterministic order.
+The private contribution collector runs the applicable analyzers without
+rendering. A present empty aggregate records completed analysis with no match;
+absence records that prepared evidence did not admit the analysis. Any typed
+analyzer failure aborts collection for that log instead of offering a partial
+contribution set to assembly.
+
+The private `AutoscanReportAssembler` is the sole owner of canonical
+report-section order, grouping, sorting, headings, separators, padding, icons,
+markdown, and code-authored prose. Its output includes header/version facts,
+settings and preflight results, plugins, FormIDs, named records, suspects,
+run-scoped FCX facts, and final guidance. Full scan persistence belongs
+exclusively to the Rust-owned execution flow started by
+`scan_run::contract::execute` and, after an expected recovery pause, completed
+by `CrashLogScanRunContinuation::resume`.
+
+Successful runs over identical Crash Log, YAML Data, scan facts, and options
+must persist byte-identical Autoscan Reports. The public-seam regression test
+[`autoscan_report_goldens.rs`](../../business-logic/classic-scanlog-core/tests/autoscan_report_goldens.rs)
+compares persisted bytes against the immutable
+[`autoscan_report_goldens`](../../tests/fixtures/autoscan_report_goldens/README.md)
+corpus without calling private collector or formatting helpers. See
+[ADR-0005](../adr/0005-semantic-autoscan-report-contributions.md).
 
 ### Papyrus and small detection helpers
 
@@ -278,6 +396,11 @@ and binding-local CLIs construct requests and present Rust-owned facts; they do
 not perform discovery, select concurrency, reset FCX state, write reports, or
 move failed logs around the call.
 
+The Focused Semantic Analyzer cutover was deliberately breaking across Rust, CXX, Node,
+and Python. Retired report primitives and fragment-producing methods have no
+deprecated aliases or forwarding facades; parity includes the six positive
+semantic analyzer surfaces and negative absence checks for those retired names.
+
 Cross-interface behavior is pinned by
 [`tests/fixtures/crash_log_scan_run/manifest.json`](../../tests/fixtures/crash_log_scan_run/manifest.json).
 The binding compliance suite checks both exhaustive variant acknowledgement and
@@ -301,8 +424,7 @@ use std::path::PathBuf;
 # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 let request = Request::standard(
     Configuration {
-        yaml_dir_root: PathBuf::from("C:/CLASSIC"),
-        yaml_dir_data: PathBuf::from("C:/CLASSIC/CLASSIC Data"),
+        installation_root: PathBuf::from("C:/CLASSIC"),
         game: GameId::Fallout4,
         game_version: "auto".to_string(),
         options: Options::new(false, false),

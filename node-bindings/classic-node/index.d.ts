@@ -214,6 +214,42 @@ export declare class DocumentsChecker {
   get gameName(): string
 }
 
+/** Immutable deterministic explicit YAML Data snapshot. */
+export declare class ExplicitYamlDataSnapshot {
+  /** Returns the caller's typed game identity. */
+  get game(): JsGameId
+  /** Returns the registered game-data role used for parsing and validation. */
+  get gameDataRole(): JsExplicitYamlDataGameRole
+  /** Returns a cloned immutable view of the parsed YAML Data. */
+  get yamlData(): YamlData
+  /** Returns the exact retained Main-file identity. */
+  get mainIdentity(): JsYamlDataContentIdentity
+  /** Returns the exact retained game-file identity. */
+  get gameIdentity(): JsYamlDataContentIdentity
+  /** Returns the exact retained Local Ignore-file identity. */
+  get ignoreIdentity(): JsYamlDataContentIdentity
+}
+
+/** Immutable Node handle over aggregate semantic FormID Finding analysis. */
+export declare class FormIdFindingAnalyzer {
+  /**
+   * Creates an analyzer over an existing opaque FormID Value Lookup handle.
+   *
+   * The analyzer clones the core facade, so the JavaScript lookup and analyzer
+   * handles may be reused independently without exposing adapter internals.
+   */
+  constructor(valueLookup: JsFormIdValueLookup)
+  /** Returns the stable focused-analyzer identity for this handle. */
+  get kind(): JsAnalyzerKind
+  /**
+   * Runs one aggregate semantic analysis on CLASSIC's shared runtime.
+   *
+   * @returns Typed resolved and unresolved findings, including explicit empty success.
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  analyze(input: JsFormIdFindingAnalysisInput): Promise<JsFormIdFindingAnalysisResult>
+}
+
 /**
  * Multi-strategy game path finder.
  *
@@ -327,6 +363,28 @@ export declare class GithubClient {
    * @throws on HTTP errors or rate limiting.
    */
   getAllReleases(includePrereleases?: boolean | undefined | null, includeDrafts?: boolean | undefined | null): Promise<Array<JsGithubRelease>>
+}
+
+/** Immutable Installed YAML Data snapshot backed by exact core-owned bytes. */
+export declare class InstalledYamlDataSnapshot {
+  /** Returns the typed game identity requested by the caller. */
+  get game(): JsGameId
+  /** Returns the registered game-data role used by the snapshot. */
+  get gameDataRole(): JsInstalledYamlDataGameRole
+  /** Returns a cloned immutable view of the parsed YAML Data. */
+  get yamlData(): YamlData
+  /** Returns the Main-derived simplify removal list retained by this immutable snapshot. */
+  get simplifyRemoveList(): Array<string>
+  /** Returns metadata for the independently selected Main YAML Data. */
+  get main(): JsInspectedYamlDataFile
+  /** Returns metadata for the independently selected game YAML Data. */
+  get gameFile(): JsInspectedYamlDataFile
+  /** Returns how Local Ignore YAML Data entered this snapshot. */
+  get localIgnoreState(): JsLocalIgnoreYamlDataState
+  /** Returns the SHA-256 identity and byte length of exact Local Ignore bytes. */
+  get localIgnoreIdentity(): JsYamlDataContentIdentity
+  /** Returns structured fallback, cache-resolution, and generation diagnostics. */
+  get diagnostics(): Array<JsInstalledYamlDataDiagnostic>
 }
 
 /**
@@ -794,6 +852,66 @@ export declare class JsFileIO {
 }
 
 /**
+ * Opaque owned facade for strict callback-free FormID Value Lookup adapters.
+ *
+ * Construct instances through `disabled`, `inMemory`, `sqlite`, or
+ * `fromSharedPool`. Successful operations keep disabled, missing, and found
+ * outcomes distinct; malformed adapter data and operational failures reject
+ * with stable error metadata.
+ */
+export declare class JsFormIdValueLookup {
+  /** Creates a lookup that explicitly performs no value resolution. */
+  static disabled(): JsFormIdValueLookup
+  /**
+   * Creates a deterministic lookup from fully owned entries.
+   *
+   * Each entry must set at most one of `value` and `operationalFailure`.
+   * Omitting both configures a successful miss for that key.
+   *
+   * @param entries - Owned deterministic replies keyed by FormID and plugin.
+   */
+  static inMemory(entries: Array<JsFormIdValueLookupEntry>): JsFormIdValueLookup
+  /**
+   * Opens one owned SQLite lookup adapter on the shared CLASSIC runtime.
+   *
+   * @param databasePath - Existing SQLite database file.
+   * @param gameTable - Game table name such as `Fallout4`.
+   * @throws an error with stable `code`, `formid`, `plugin`, and `message`
+   * metadata when adapter initialization fails.
+   */
+  static sqlite(databasePath: string, gameTable: string): JsFormIdValueLookup
+  /**
+   * Creates an adapter over an existing shared database pool.
+   *
+   * The facade retains a clone of the pool's shared state, so no callback or
+   * additional runtime crosses the JavaScript boundary.
+   *
+   * @param pool - Existing Node database pool to share.
+   */
+  static fromSharedPool(pool: JsDatabasePool): JsFormIdValueLookup
+  /**
+   * Looks up one FormID/plugin pair on the shared CLASSIC runtime.
+   *
+   * @param formid - FormID suffix to resolve.
+   * @param plugin - Plugin name, matched case-insensitively.
+   * @throws an error with stable `code`, `formid`, `plugin`, and `message`
+   * metadata for malformed results and operational failures.
+   */
+  lookup(formid: string, plugin: string): Promise<JsFormIdValueLookupOutcome>
+  /**
+   * Looks up an owned batch with one positional outcome per input pair.
+   *
+   * Any malformed reply or operational failure rejects the whole operation,
+   * so a partial batch cannot be mistaken for a completed result.
+   *
+   * @param pairs - Array of exact `[formid, plugin]` pairs.
+   * @throws an error with stable `code`, `formid`, `plugin`, and `message`
+   * metadata for malformed results and operational failures.
+   */
+  lookupBatch(pairs: Array<Array<string>>): Promise<JsFormIdValueLookupOutcome[]>
+}
+
+/**
  * Game file manager for backup, restore, and remove operations.
  *
  * Operates on a game root directory and a backup root directory, matching
@@ -1122,6 +1240,52 @@ export declare class JsXseChecker {
   validate(): string
 }
 
+/** Opaque single-use recovery proposal for malformed existing Local Ignore YAML Data. */
+export declare class LocalIgnoreRecoveryPlan {
+  /** Returns the typed game retained by the already selected snapshot. */
+  get game(): JsGameId
+  /** Returns the registered game-data role retained by the already selected snapshot. */
+  get gameDataRole(): JsInstalledYamlDataGameRole
+  /** Returns metadata for the retained independently selected Main YAML Data. */
+  get main(): JsInspectedYamlDataFile
+  /** Returns metadata for the retained independently selected game YAML Data. */
+  get gameFile(): JsInspectedYamlDataFile
+  /** Returns the canonical malformed Local Ignore path observed by this plan. */
+  get localIgnorePath(): string
+  /** Returns the identity of the exact malformed Local Ignore bytes observed by this plan. */
+  get malformedLocalIgnoreIdentity(): JsYamlDataContentIdentity
+  /**
+   * Returns the identity of validated selected-Main defaults, or `null` when unavailable.
+   *
+   * Missing or invalid defaults do not block `proceedWithoutIgnore`; `resetToDefault` instead
+   * rejects with `defaults_unavailable` because replacement requires validated defaults.
+   */
+  get defaultLocalIgnoreIdentity(): JsYamlDataContentIdentity | null
+  /** Returns the Version Registry selection mode retained for the interrupted operation. */
+  get selectedGameVersion(): string
+  /** Returns retained selection and malformed Local Ignore diagnostics. */
+  get diagnostics(): Array<JsInstalledYamlDataDiagnostic>
+  /**
+   * Completes the retained operation with no Local Ignore entries and no filesystem writes.
+   *
+   * This decision consumes the plan. Reusing the same JavaScript plan rejects with the stable
+   * `local_ignore_recovery_plan_consumed` error code instead of re-running the operation.
+   */
+  proceedWithoutIgnore(): InstalledYamlDataSnapshot
+  /**
+   * Durably backs up malformed bytes and resets Local Ignore from retained defaults.
+   *
+   * This decision consumes the plan before scheduling work. Blocking core reset runs on the
+   * N-API worker pool as one non-interruptible atomic critical section; typed conflicts resolve
+   * as data, while operational failures reject with stable `code`, `yamlRole`, `path`, optional
+   * `stage`, and human-readable `reason` metadata.
+   *
+   * Reusing the JavaScript plan throws `local_ignore_recovery_plan_consumed` without scheduling
+   * another reset.
+   */
+  resetToDefault(): Promise<JsLocalIgnoreResetOutcome>
+}
+
 /** Immutable Node handle over validated aggregate Mod Guidance configuration. */
 export declare class ModGuidanceAnalyzer {
   /**
@@ -1139,6 +1303,25 @@ export declare class ModGuidanceAnalyzer {
    * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
    */
   analyze(input: JsModGuidanceAnalysisInput): JsModGuidanceAnalysisResult
+}
+
+/** Immutable Node handle over validated, compiled Named Record Finding configuration. */
+export declare class NamedRecordFindingAnalyzer {
+  /**
+   * Validates configuration and compiles matcher state immediately.
+   *
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  constructor(targetRecords: Array<string>, ignoredRecords: Array<string>)
+  /** Returns the stable focused-analyzer identity for this handle. */
+  get kind(): JsAnalyzerKind
+  /**
+   * Runs one aggregate semantic analysis over owned Crash Log lines.
+   *
+   * @returns Typed distinct findings, including an explicit empty array on no match.
+   * @throws An error with stable `analyzerKind`, `code`, and `message` fields.
+   */
+  analyze(input: JsNamedRecordFindingAnalysisInput): JsNamedRecordFindingAnalysisResult
 }
 
 /** Immutable Node handle over validated Plugin Evidence configuration. */
@@ -1168,6 +1351,11 @@ export declare class ScanRunCancellation {
   cancel(): void
   /** Returns whether cancellation has been requested. */
   get isCancelled(): boolean
+}
+
+/** Opaque process-local carrier for one paused Crash Log Scan Run. */
+export declare class ScanRunContinuation {
+
 }
 
 /** Opaque invariant-preserving request for the final scan-run operation. */
@@ -2339,6 +2527,18 @@ export declare function hasUpdate(currentVersion: string, latestVersion: string)
 export declare function importLegacyTuiStateIntoUserSettings(classicRoot: string, legacyStatePath: string): JsLegacyTuiStateImportOutcome
 
 /**
+ * Inspect update-eligible Main and game YAML Data for one CLASSIC installation.
+ *
+ * Inspection reads candidate files without creating the cache, promoting
+ * `.prev`, or reading, creating, or repairing Local Ignore YAML Data.
+ *
+ * @param request - Explicit installation root and typed game identity.
+ * @throws an error with stable `code`, optional `yamlRole`, and structured
+ * `diagnostics` metadata when both required roles cannot be selected.
+ */
+export declare function inspectInstalledYamlData(request: JsInstalledYamlDataInspectionRequest): Promise<JsInstalledYamlDataInspection>
+
+/**
  * Intern a string for memory-efficient deduplication.
  *
  * Returns the interned string (content-identical, but stored in a shared pool).
@@ -2994,6 +3194,22 @@ export interface JsExpectedValue {
   equals: any
 }
 
+/** Registered game-data role selected for an explicit snapshot. */
+export declare const enum JsExplicitYamlDataGameRole {
+  /** Shared Fallout 4 data used for flat-screen and VR identities. */
+  Fallout4 = 'Fallout4'
+}
+
+/** Exact caller-selected paths for deterministic YAML Data loading. */
+export interface JsExplicitYamlDataPaths {
+  /** Exact Main YAML Data file. */
+  mainPath: string
+  /** Exact game YAML Data file. */
+  gamePath: string
+  /** Exact Local Ignore YAML Data file. */
+  ignorePath: string
+}
+
 /** Fallout 4 version variants exposed to JavaScript as string literals. */
 export declare const enum JsFallout4Version {
   /** Original pre-Next-Gen version (1.10.163) */
@@ -3026,6 +3242,90 @@ export interface JsFileOperationResult {
   filesAffected: number
   /** Error messages for any failures encountered (non-fatal). */
   errors: Array<string>
+}
+
+/** One distinct semantic FormID Finding. */
+export interface JsFormIdFinding {
+  /** Canonical uppercase eight-digit FormID including its load-order prefix. */
+  identifier: string
+  /** Number of matching occurrences in the supplied evidence. */
+  occurrences: number
+  /** Resolved plugin name, absent when the prefix is unresolved. */
+  plugin?: string
+  /** Semantic lookup state distinct from the optional value payload. */
+  valueLookupStatus: JsFormIdValueLookupStatus
+  /** Human-readable value returned by a successful lookup hit. */
+  value?: string
+}
+
+/** Owned Crash Log facts for one aggregate FormID Finding analysis call. */
+export interface JsFormIdFindingAnalysisInput {
+  /** Crash Log evidence lines in caller-provided casing. */
+  crashLines: Array<string>
+  /** Parsed plugin identities and load-order prefixes. */
+  plugins: Array<JsFormIdPlugin>
+}
+
+/** Completed FormID Finding analysis, including explicit empty success. */
+export interface JsFormIdFindingAnalysisResult {
+  /** Distinct findings in canonical identifier order. */
+  findings: Array<JsFormIdFinding>
+}
+
+/** One owned plugin identity and its load-order prefix. */
+export interface JsFormIdPlugin {
+  /** Plugin filename in caller-provided casing. */
+  name: string
+  /** Two-digit full-plugin or five-digit `FE` light-plugin prefix. */
+  prefix: string
+}
+
+/**
+ * One owned reply used to configure a deterministic in-memory FormID lookup.
+ *
+ * Omit both optional fields for a successful miss. Set `value` for a hit
+ * (including a blank value when testing malformed adapter data), or set
+ * `operationalFailure` for a deterministic hard failure.
+ */
+export interface JsFormIdValueLookupEntry {
+  /** The FormID suffix to match. */
+  formid: string
+  /** The plugin name to match case-insensitively. */
+  plugin: string
+  /** Successful owned value, or `undefined` for a configured miss. */
+  value?: string
+  /** Deterministic operational failure detail. */
+  operationalFailure?: string
+}
+
+/** Owned semantic result of one strict FormID lookup. */
+export interface JsFormIdValueLookupOutcome {
+  /** Stable success category. */
+  kind: JsFormIdValueLookupOutcomeKind
+  /** Owned value for `found`; `undefined` for `disabled` and `missing`. */
+  value?: string
+}
+
+/** Stable semantic category returned by a successful strict lookup. */
+export declare const enum JsFormIdValueLookupOutcomeKind {
+  /** Lookup was explicitly disabled. */
+  Disabled = 'disabled',
+  /** Lookup completed successfully without a value. */
+  Missing = 'missing',
+  /** Lookup completed successfully with an owned value. */
+  Found = 'found'
+}
+
+/** Stable semantic state of optional value lookup for one finding. */
+export declare const enum JsFormIdValueLookupStatus {
+  /** The identifier did not resolve to a plugin, so lookup was inapplicable. */
+  NotApplicable = 'not_applicable',
+  /** Value lookup was explicitly disabled. */
+  Disabled = 'disabled',
+  /** Lookup completed successfully without finding a value. */
+  Missing = 'missing',
+  /** Lookup completed successfully and returned a value. */
+  Found = 'found'
 }
 
 /** Remembered presentation preferences shared by maintained frontends. */
@@ -3396,6 +3696,150 @@ export interface JsIniCheckResult {
   hasIssue: boolean
 }
 
+/** Selected facts for one update-eligible Installed YAML Data file. */
+export interface JsInspectedYamlDataFile {
+  /** Whether this is Main or selected-game YAML Data. */
+  role: JsInstalledYamlDataRole
+  /** Candidate that supplied the selected exact bytes. */
+  provenance: JsInstalledYamlDataProvenance
+  /** Breaking-change component of the selected schema version. */
+  schemaMajor: number
+  /** Additive-change component of the selected schema version. */
+  schemaMinor: number
+  /** Lowercase hexadecimal SHA-256 digest of the selected exact bytes. */
+  sha256: string
+  /** Length of the selected exact bytes. */
+  byteLength: number
+}
+
+/** Structured attribution for one selection, rejection, or local generation event. */
+export interface JsInstalledYamlDataDiagnostic {
+  /** Affected update-eligible role, absent for installation-wide or Local Ignore events. */
+  role?: JsInstalledYamlDataRole
+  /** Rejected candidate provenance, absent when no update-eligible candidate applies. */
+  candidate?: JsInstalledYamlDataProvenance
+  /** Affected path when the diagnostic is path-attributable. */
+  path?: string
+  /** Stable machine-readable diagnostic category. */
+  kind: JsInstalledYamlDataDiagnosticKind
+  /** Actionable human-readable explanation. */
+  message: string
+}
+
+/** Stable category for an Installed YAML Data diagnostic. */
+export declare const enum JsInstalledYamlDataDiagnosticKind {
+  /** The per-user update cache could not be resolved. */
+  CacheUnavailable = 'CacheUnavailable',
+  /** A required final fallback candidate was absent. */
+  Missing = 'Missing',
+  /** A present candidate could not be read. */
+  Read = 'Read',
+  /** Candidate bytes were not valid UTF-8. */
+  InvalidUtf8 = 'InvalidUtf8',
+  /** Candidate text was not valid YAML Data. */
+  Parse = 'Parse',
+  /** A candidate omitted or malformed its schema version. */
+  InvalidSchema = 'InvalidSchema',
+  /** A candidate schema was outside the client-owned compatibility range. */
+  IncompatibleSchema = 'IncompatibleSchema',
+  /** A candidate failed role-specific semantic validation. */
+  InvalidRoleData = 'InvalidRoleData',
+  /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
+  LocalIgnoreGenerated = 'LocalIgnoreGenerated',
+  /** Malformed Local Ignore YAML Data was reset from retained selected-Main defaults. */
+  LocalIgnoreReset = 'LocalIgnoreReset'
+}
+
+/** Registered game-data role selected for Installed YAML Data. */
+export declare const enum JsInstalledYamlDataGameRole {
+  /** Shared Fallout 4 data used for flat-screen and VR identities. */
+  Fallout4 = 'Fallout4'
+}
+
+/** Selected Main/game Installed YAML Data facts and fallback diagnostics. */
+export interface JsInstalledYamlDataInspection {
+  /** Typed game identity requested by the caller. */
+  game: JsGameId
+  /** Registered data role used for the selected game file. */
+  gameDataRole: JsInstalledYamlDataGameRole
+  /** Independently selected Main YAML Data facts. */
+  main: JsInspectedYamlDataFile
+  /** Independently selected game YAML Data facts. */
+  gameFile: JsInspectedYamlDataFile
+  /** Structured fallback and cache-resolution diagnostics. */
+  diagnostics: Array<JsInstalledYamlDataDiagnostic>
+}
+
+/** One installation root and typed game identity to inspect. */
+export interface JsInstalledYamlDataInspectionRequest {
+  /** CLASSIC installation root containing `CLASSIC Data/databases`. */
+  installationRoot: string
+  /** Typed game identity used to select the registered game data role. */
+  game: JsGameId
+}
+
+/** Typed Installed YAML Data loading outcome with one status-selected payload. */
+export interface JsInstalledYamlDataLoadOutcome {
+  /** Stable expected-outcome discriminator. */
+  status: JsInstalledYamlDataLoadStatus
+  /** Immutable snapshot populated only for the Ready outcome. */
+  snapshot?: InstalledYamlDataSnapshot
+  /** Opaque plan populated only when Local Ignore recovery is required. */
+  recoveryPlan?: LocalIgnoreRecoveryPlan
+}
+
+/** One installation root, typed game, and Version Registry selection mode to load. */
+export interface JsInstalledYamlDataLoadRequest {
+  /** CLASSIC installation root containing `CLASSIC Data`. */
+  installationRoot: string
+  /** Typed game identity used to select the registered game data role. */
+  game: JsGameId
+  /** Existing game-version mode used for Version Registry metadata selection. */
+  selectedGameVersion: string
+}
+
+/** Expected Installed YAML Data loading outcome. */
+export declare const enum JsInstalledYamlDataLoadStatus {
+  /** Main, game, and valid Local Ignore data are ready for use. */
+  Ready = 'Ready',
+  /** Existing Local Ignore data is malformed and requires an explicit caller decision. */
+  LocalIgnoreRecoveryRequired = 'localIgnoreRecoveryRequired'
+}
+
+/** Candidate that supplied one selected Installed YAML Data file. */
+export declare const enum JsInstalledYamlDataProvenance {
+  /** Canonical per-user updated candidate. */
+  Updated = 'Updated',
+  /** Previous updated sibling selected because the canonical file was absent. */
+  Previous = 'Previous',
+  /** Install-tree bundled candidate. */
+  Bundled = 'Bundled'
+}
+
+/** Update-eligible Installed YAML Data role. */
+export declare const enum JsInstalledYamlDataRole {
+  /** Global Main YAML Data. */
+  Main = 'Main',
+  /** Selected-game YAML Data. */
+  Game = 'Game'
+}
+
+/** Installed YAML Data metadata retained from the immutable run snapshot. */
+export interface JsInstalledYamlDataRunData {
+  /** Selected Main YAML Data schema, identity, and provenance. */
+  main: JsInspectedYamlDataFile
+  /** Selected game YAML Data schema, identity, and provenance. */
+  gameFile: JsInspectedYamlDataFile
+  /** How Local Ignore YAML Data entered the immutable run snapshot. */
+  localIgnoreState: JsScanRunLocalIgnoreState
+  /** Identity of the exact Local Ignore bytes retained by the run. */
+  localIgnoreIdentity: JsYamlDataContentIdentity
+  /** Structured fallback, validation, and generation diagnostics. */
+  diagnostics: Array<JsScanRunInstalledYamlDataDiagnostic>
+  /** Durable reset metadata populated only after successful Reset To Default resume. */
+  localIgnoreReset?: JsScanRunLocalIgnoreResetRunData
+}
+
 /** Result of an integrity check. */
 export interface JsIntegrityCheckResult {
   /** Whether the check passed */
@@ -3468,6 +3912,78 @@ export interface JsLegacyTuiStateImportRestoreOutcome {
   expectedRevision?: string
   /** Latest User Settings revision, present only when conflicted. */
   actualRevision?: string
+}
+
+/** Identity mismatch that prevented a Local Ignore reset from overwriting newer state. */
+export interface JsLocalIgnoreResetConflict {
+  /** Malformed-file identity against which the caller approved reset. */
+  expectedIdentity: JsYamlDataContentIdentity
+  /** Current canonical identity, absent when the file was removed. */
+  actualIdentity?: JsYamlDataContentIdentity
+  /** Verified backup retained before a late conflict, when one was published. */
+  backupPath?: string
+}
+
+/** Typed Local Ignore reset outcome with exactly one status-selected payload. */
+export interface JsLocalIgnoreResetOutcome {
+  /** Stable expected-outcome discriminator. */
+  status: JsLocalIgnoreResetStatus
+  /** Successful reset metadata and snapshot, populated only for `reset`. */
+  reset?: JsLocalIgnoreResetResult
+  /** Conflict identities, populated only for `conflict`. */
+  conflict?: JsLocalIgnoreResetConflict
+}
+
+/** Durable publication boundary attributed by a Local Ignore reset failure. */
+export declare const enum JsLocalIgnoreResetPublicationStage {
+  /** A same-directory staging file could not be created. */
+  Create = 'Create',
+  /** Complete bytes could not be written to the staging file. */
+  Write = 'Write',
+  /** Buffered staging bytes could not be flushed. */
+  Flush = 'Flush',
+  /** Staging bytes could not be synchronized to durable storage. */
+  Sync = 'Sync',
+  /** The fully synchronized staging file could not be atomically published. */
+  Publish = 'Publish'
+}
+
+/** Successful durable Local Ignore reset and its retained Installed YAML Data snapshot. */
+export interface JsLocalIgnoreResetResult {
+  /** Reset-ready snapshot built from the retained Main, game, and default bytes. */
+  snapshot: InstalledYamlDataSnapshot
+  /** Canonical Local Ignore path that was reset. */
+  localIgnorePath: string
+  /** Durable byte-exact backup path verified before replacement. */
+  backupPath: string
+  /** Identity observed when the recovery plan retained the malformed bytes. */
+  malformedLocalIgnoreIdentity: JsYamlDataContentIdentity
+  /** Identity independently verified from the durable backup bytes. */
+  backupIdentity: JsYamlDataContentIdentity
+  /** Identity of retained selected-Main defaults published as the replacement. */
+  replacementIdentity: JsYamlDataContentIdentity
+  /** Selection, malformed-file, and successful-reset diagnostics. */
+  diagnostics: Array<JsInstalledYamlDataDiagnostic>
+}
+
+/** Expected outcome of resetting malformed Local Ignore YAML Data. */
+export declare const enum JsLocalIgnoreResetStatus {
+  /** The retained malformed bytes were backed up and defaults became authoritative. */
+  Reset = 'Reset',
+  /** The canonical file changed after the recovery plan was created. */
+  Conflict = 'Conflict'
+}
+
+/** How Local Ignore YAML Data entered an installed snapshot. */
+export declare const enum JsLocalIgnoreYamlDataState {
+  /** A valid user-owned Local Ignore file already existed. */
+  Existing = 'Existing',
+  /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
+  Generated = 'Generated',
+  /** The current operation explicitly proceeded with no Local Ignore entries. */
+  ProceedWithoutIgnore = 'ProceedWithoutIgnore',
+  /** Malformed Local Ignore YAML Data was reset from retained selected-Main defaults. */
+  ResetToDefault = 'ResetToDefault'
 }
 
 /** Log error entry detected during scanning. */
@@ -3745,6 +4261,26 @@ export interface JsModSolutionRule {
   description: string
 }
 
+/** One distinct named record and its exact occurrence count. */
+export interface JsNamedRecordFinding {
+  /** Extracted record text in its source casing. */
+  record: string
+  /** Number of exact extracted record occurrences. */
+  occurrences: number
+}
+
+/** Owned Crash Log lines for one aggregate Named Record Finding analysis call. */
+export interface JsNamedRecordFindingAnalysisInput {
+  /** Crash Log lines in caller-provided casing. */
+  crashLines: Array<string>
+}
+
+/** Completed Named Record Finding analysis, including explicit empty success. */
+export interface JsNamedRecordFindingAnalysisResult {
+  /** Distinct typed findings in first-observed order. */
+  findings: Array<JsNamedRecordFinding>
+}
+
 /** Optional display payload attached to a notification manifest. */
 export interface JsNotificationDisplay {
   /** Short heading (e.g. `"Update available"`). */
@@ -3911,12 +4447,10 @@ export interface JsRuleTarget {
 
 /** JavaScript configuration shared by Standard and Targeted requests. */
 export interface JsScanRunConfiguration {
-  /** Root directory containing settings and the ignore YAML document. */
-  yamlDirRoot: string
-  /** `CLASSIC Data` directory containing shippable YAML databases. */
-  yamlDirData: string
-  /** Supported game identifier. */
-  game: string
+  /** CLASSIC installation root whose Installed YAML Data is selected once for the run. */
+  installationRoot: string
+  /** Typed supported game identity. */
+  game: JsGameId
   /** Selected game-version mode. */
   gameVersion: string
   /** Whether FormID values should be resolved through configured databases. */
@@ -3962,6 +4496,75 @@ export interface JsScanRunInfrastructureError {
   path?: string
 }
 
+/** Structured attribution for one scan-run selection, fallback, or generation event. */
+export interface JsScanRunInstalledYamlDataDiagnostic {
+  /** Affected update-eligible role, absent for installation-wide or Local Ignore events. */
+  role?: JsInstalledYamlDataRole
+  /** Rejected candidate provenance, absent when no update-eligible candidate applies. */
+  candidate?: JsInstalledYamlDataProvenance
+  /** Affected path when the diagnostic is path-attributable. */
+  path?: string
+  /** Stable machine-readable scan-run diagnostic category. */
+  kind: JsScanRunInstalledYamlDataDiagnosticKind
+  /** Actionable human-readable explanation. */
+  message: string
+}
+
+/** Stable diagnostic categories emitted by valid-or-generated scan-run intake. */
+export declare const enum JsScanRunInstalledYamlDataDiagnosticKind {
+  /** The per-user update cache could not be resolved. */
+  CacheUnavailable = 'CacheUnavailable',
+  /** A required final fallback candidate was absent. */
+  Missing = 'Missing',
+  /** A present candidate could not be read. */
+  Read = 'Read',
+  /** Candidate bytes were not valid UTF-8. */
+  InvalidUtf8 = 'InvalidUtf8',
+  /** Candidate text was not valid YAML Data. */
+  Parse = 'Parse',
+  /** A candidate omitted or malformed its schema version. */
+  InvalidSchema = 'InvalidSchema',
+  /** A candidate schema was outside the client-owned compatibility range. */
+  IncompatibleSchema = 'IncompatibleSchema',
+  /** A candidate failed role-specific semantic validation. */
+  InvalidRoleData = 'InvalidRoleData',
+  /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
+  LocalIgnoreGenerated = 'LocalIgnoreGenerated',
+  /** Malformed Local Ignore YAML Data was reset from retained selected-Main defaults. */
+  LocalIgnoreReset = 'LocalIgnoreReset'
+}
+
+/** Explicit Local Ignore recovery decisions owned by Rust scan coordination. */
+export declare const enum JsScanRunLocalIgnoreRecoveryDecision {
+  /** Resume with an empty ignore list scoped only to the retained run. */
+  ProceedWithoutIgnore = 'ProceedWithoutIgnore',
+  /** Durably reset malformed Local Ignore, then resume the retained run. */
+  ResetToDefault = 'ResetToDefault'
+}
+
+/** Durable backup and replacement metadata from successful Reset To Default resume. */
+export interface JsScanRunLocalIgnoreResetRunData {
+  localIgnorePath: string
+  backupPath: string
+  malformedIdentity: JsYamlDataContentIdentity
+  backupIdentity: JsYamlDataContentIdentity
+  replacementIdentity: JsYamlDataContentIdentity
+}
+
+/** Local Ignore states possible for the complete scan-run recovery contract. */
+export declare const enum JsScanRunLocalIgnoreState {
+  /** A valid user-owned Local Ignore file already existed in the installation. */
+  Existing = 'Existing',
+  /** Missing Local Ignore YAML Data was generated from selected Main defaults. */
+  Generated = 'Generated',
+  /** Malformed Local Ignore YAML Data requires an explicit caller decision. */
+  RecoveryRequired = 'RecoveryRequired',
+  /** The retained run resumed with operation-scoped empty ignores. */
+  ProceedWithoutIgnore = 'ProceedWithoutIgnore',
+  /** Malformed Local Ignore was durably reset from retained selected-Main defaults. */
+  ResetToDefault = 'ResetToDefault'
+}
+
 /** Common log-scoped event payload. */
 export interface JsScanRunLogEvent {
   discoveryIndex: number
@@ -4000,9 +4603,13 @@ export interface JsScanRunRejectedInput {
 
 /** Complete terminal Crash Log Scan Run result. */
 export interface JsScanRunResult {
-  status: 'completed' | 'no_crash_logs_found' | 'setup_failed' | 'cancelled_before_discovery' | 'cancelled'
+  status: 'completed' | 'no_crash_logs_found' | 'setup_failed' | 'local_ignore_recovery_required' | 'cancelled_before_discovery' | 'cancelled'
   discovery?: JsScanRunDiscoveryResult
   setup?: JsScanRunSetupResult
+  /** Installed YAML Data selected after discovery, absent when intake was not reached. */
+  installedYamlData?: JsInstalledYamlDataRunData
+  /** Opaque one-shot continuation populated only for Local Ignore Recovery Required. */
+  continuation?: ScanRunContinuation
   effectiveConcurrency?: number
   message?: string
   total: number
@@ -4604,14 +5211,23 @@ export interface JsYamlClientSchemaEntry {
   acceptedMinimumMinor: number
   /**
    * When `true`, `installedMajor` / `installedMinor` are treated as the
-   * currently-installed schema version. When `false`, the client treats
-   * every compatible manifest entry as "newer".
+   * currently-installed schema version. When `false`, the generic updater
+   * attempts cache/bundled fallback discovery before treating a compatible
+   * manifest entry as newer.
    */
   hasInstalled: boolean
   /** MAJOR currently installed (ignored when `hasInstalled` is false). */
   installedMajor: number
   /** MINOR currently installed (ignored when `hasInstalled` is false). */
   installedMinor: number
+}
+
+/** Content identity derived from the exact bytes retained by a snapshot. */
+export interface JsYamlDataContentIdentity {
+  /** Lowercase hexadecimal SHA-256 digest. */
+  sha256: string
+  /** Exact retained byte length. */
+  byteLen: number
 }
 
 /** YAML configuration file identifiers exposed to JavaScript. */
@@ -4761,6 +5377,31 @@ export declare function loadBatchAsync(paths: Array<string>): Promise<number>
  * Returns the number of files successfully loaded and cached.
  */
 export declare function loadBatchSync(paths: Array<string>): number
+
+/**
+ * Starts one deterministic explicit YAML Data load on the shared runtime.
+ *
+ * The operation reads exactly the supplied files and never consults or mutates
+ * installation, cache, generation, backup, or fallback state.
+ *
+ * @param paths - Exact Main, game, and Local Ignore file paths.
+ * @param game - Typed game identity; Fallout 4 VR selects the Fallout 4 role.
+ * @param selectedGameVersion - Existing Version Registry selection mode.
+ * @throws an error with stable `code` and optional `yamlRole` / `path` fields.
+ */
+export declare function loadExplicitYamlData(paths: JsExplicitYamlDataPaths, game: JsGameId, selectedGameVersion: string): Promise<ExplicitYamlDataSnapshot>
+
+/**
+ * Load one immutable Installed YAML Data outcome with Ready or recovery-required content.
+ *
+ * Config core owns selection, compatibility, parsing, and filesystem policy. This adapter
+ * performs only request/result projection and runs blocking file I/O on N-API's worker pool.
+ * Malformed existing Local Ignore data resolves a recovery plan instead of rejecting.
+ *
+ * @param request - Installation root, typed game identity, and game-version mode.
+ * @throws an error with stable `code` plus role, path, or diagnostics metadata when applicable.
+ */
+export declare function loadInstalledYamlData(request: JsInstalledYamlDataLoadRequest): Promise<JsInstalledYamlDataLoadOutcome>
 
 /**
  * Load `CLASSIC Main.yaml` with `MAIN_YAML` schema gating and return
@@ -5181,6 +5822,16 @@ export declare function scanModInis(gameRoot: string, gameName: string): JsModIn
  * control to request safe stopping.
  */
 export declare function scanRunExecute(request: ScanRunRequest, cancellation: ScanRunCancellation, observer?: (event: { kind: 'discovery_completed'; discovery: JsScanRunDiscoveryResult } | { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
+
+/**
+ * Resumes one retained Crash Log Scan Run through an explicit Rust-owned recovery decision.
+ *
+ * Replay and concurrent double consumption reject with JavaScript error code
+ * `scan_run_continuation_consumed`. Reset conflict, backup failure, and replacement failure
+ * reject with their stable codes plus applicable identity, path, and publication-stage metadata.
+ * Infrastructure failures retain the same resolved envelope used by [`scan_run_execute`].
+ */
+export declare function scanRunResume(continuation: ScanRunContinuation, decision: JsScanRunLocalIgnoreRecoveryDecision, cancellation: ScanRunCancellation, observer?: (event: { kind: 'effective_concurrency_selected'; effectiveConcurrency: number } | { kind: 'log_queued' | 'log_started'; log: JsScanRunLogEvent } | { kind: 'log_phase'; log: JsScanRunLogEvent; phase: 'setup' | 'parse' | 'analyze' | 'finalize' } | { kind: 'log_finished'; log: JsScanRunLogEvent; disposition: 'succeeded' | 'failed' | 'cancelled_before_start' }) => void, cancelOnObserverError?: boolean | undefined | null): Promise<JsScanRunSuccess | JsScanRunFailure>
 
 /**
  * Convenience function to scan for unpacked files.

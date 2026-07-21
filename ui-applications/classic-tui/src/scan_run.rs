@@ -182,6 +182,11 @@ pub(crate) fn format_result(result: &RunResult) -> TerminalPresentation {
             .message
             .clone()
             .unwrap_or_else(|| "Crash Log Scan setup failed".to_string()),
+        CrashLogScanRunStatus::LocalIgnoreRecoveryRequired => {
+            result.message.clone().unwrap_or_else(|| {
+                "Local Ignore recovery is required before scanning can continue".to_string()
+            })
+        }
         CrashLogScanRunStatus::CancelledBeforeDiscovery => {
             "Scan cancelled safely before discovery completed".to_string()
         }

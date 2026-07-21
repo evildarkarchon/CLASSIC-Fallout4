@@ -4,6 +4,7 @@ import {
   existsSync,
   mkdtempSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   writeFileSync,
   rmSync,
@@ -15,7 +16,12 @@ import {
   ScanRunCancellation,
   ScanRunRequest,
   ScanRunUnsolvedLogs,
+  JsGameId,
+  JsScanRunInstalledYamlDataDiagnosticKind,
+  JsScanRunLocalIgnoreRecoveryDecision,
+  JsScanRunLocalIgnoreState,
   scanRunExecute,
+  scanRunResume,
   parseLogSegments,
   extractFormIds,
   extractPluginList,
@@ -104,14 +110,18 @@ MemoryManager: false
 `;
 
 const MAIN_YAML = `
+schema_version: "2.0"
 CLASSIC_Info:
   version: "9.0.0"
   version_date: "2026-02-25"
+  default_ignorefile: |
+    CLASSIC_Ignore_Fallout4: []
 catch_log_records:
   - "LAND"
 `;
 
 const GAME_YAML = `
+schema_version: "1.0"
 Game_Info:
   XSE_Acronym: "F4SE"
   GameVersion: "1.10.163"
@@ -173,6 +183,20 @@ const SHARED_SCAN_RUN_MANIFEST = JSON.parse(
         unsolvedLogsArtifacts: string[];
       };
     };
+    installedYamlData: {
+      input: string;
+      malformedLocalIgnore: string;
+      resetOutcomes: {
+        conflictCode: string;
+        backupFailureCode: string;
+        replacementFailureCode: string;
+        consumedCode: string;
+        backupMustEqualMalformedBytes: boolean;
+        reportMustEqualExistingBytes: boolean;
+        preResetCancellationMutates: boolean;
+        postCriticalCancellationStatus: string;
+      };
+    };
   };
 };
 const SHARED_VALID_CRASH_LOG = readFileSync(
@@ -187,7 +211,7 @@ const writeScanRunDataRoot = (name: string): string => {
   mkdirSync(databaseDir, { recursive: true });
   writeFileSync(join(databaseDir, "CLASSIC Main.yaml"), MAIN_YAML, "utf8");
   writeFileSync(join(databaseDir, "CLASSIC Fallout4.yaml"), GAME_YAML, "utf8");
-  writeFileSync(join(root, "CLASSIC Ignore.yaml"), IGNORE_YAML, "utf8");
+  writeFileSync(join(dataDir, "CLASSIC Ignore.yaml"), IGNORE_YAML, "utf8");
   return root;
 };
 
@@ -197,8 +221,8 @@ const writeSharedScanRunDataRoot = (name: string): string => {
   const databaseDir = join(root, "CLASSIC Data", "databases");
   mkdirSync(databaseDir, { recursive: true });
   copyFileSync(
-    join(SHARED_SCAN_RUN_FIXTURE_ROOT, "CLASSIC Ignore.yaml"),
-    join(root, "CLASSIC Ignore.yaml"),
+    join(SHARED_SCAN_RUN_FIXTURE_ROOT, "CLASSIC Data", "CLASSIC Ignore.yaml"),
+    join(root, "CLASSIC Data", "CLASSIC Ignore.yaml"),
   );
   for (const name of ["CLASSIC Main.yaml", "CLASSIC Fallout4.yaml"]) {
     copyFileSync(
@@ -256,9 +280,8 @@ describe("final Crash Log Scan Run contract", () => {
     root: string,
     options: Partial<JsScanRunConfiguration> = {},
   ): JsScanRunConfiguration => ({
-    yamlDirRoot: root,
-    yamlDirData: join(root, "CLASSIC Data"),
-    game: "Fallout4",
+    installationRoot: root,
+    game: JsGameId.Fallout4,
     gameVersion: "auto",
     showFormidValues: false,
     simplifyLogs: false,
@@ -414,6 +437,26 @@ describe("final Crash Log Scan Run contract", () => {
         },
       );
       const scanResult = requireScanRunSuccess(execution).result;
+      expect(scanResult.installedYamlData).toMatchObject({
+        main: {
+          role: "Main",
+          provenance: expect.any(String),
+          schemaMajor: 2,
+          schemaMinor: 0,
+        },
+        gameFile: {
+          role: "Game",
+          provenance: expect.any(String),
+          schemaMajor: 1,
+          schemaMinor: 0,
+        },
+        localIgnoreState: JsScanRunLocalIgnoreState.Existing,
+        localIgnoreIdentity: {
+          sha256: expect.any(String),
+          byteLen: expect.any(Number),
+        },
+        diagnostics: expect.any(Array),
+      });
       expect(scanResult.discovery?.acceptedLogs.map((path) => sharedRelativePath(root, path))).toEqual(
         fixture.expected.acceptedLogs,
       );
@@ -449,6 +492,318 @@ describe("final Crash Log Scan Run contract", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test("returns generated Local Ignore diagnostics as run-level data", async () => {
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-generated-ignore");
+    const crashLog = writeSharedScanRunLog(root, "generated-ignore.log");
+    rmSync(join(root, "CLASSIC Data", "CLASSIC Ignore.yaml"));
+
+    try {
+      const execution = await scanRunExecute(
+        ScanRunRequest.targeted(scanRunConfiguration(root), { inputs: [crashLog] }),
+        new ScanRunCancellation(),
+      );
+      const scanResult = requireScanRunSuccess(execution).result;
+
+      expect(scanResult.status).toBe("completed");
+      expect(scanResult.installedYamlData?.localIgnoreState).toBe(
+        JsScanRunLocalIgnoreState.Generated,
+      );
+      expect(scanResult.installedYamlData?.diagnostics).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: JsScanRunInstalledYamlDataDiagnosticKind.LocalIgnoreGenerated,
+          }),
+        ]),
+      );
+      expect(scanResult.logs[0]?.autoscanReport).toSatisfy(
+        (path: string | undefined) => path !== undefined && existsSync(path),
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("shared Local Ignore recovery continuation retains snapshots and rejects replay", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-ignore-recovery");
+    const crashLog = writeSharedScanRunLog(root, fixture.input);
+    const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
+    const request = ScanRunRequest.targeted(
+      scanRunConfiguration(root),
+      { inputs: [crashLog] },
+    );
+
+    try {
+      const baseline = requireScanRunSuccess(
+        await scanRunExecute(request, new ScanRunCancellation()),
+      ).result;
+      const baselineReport = readFileSync(baseline.logs[0]!.autoscanReport!);
+      writeFileSync(ignorePath, fixture.malformedLocalIgnore);
+      const initialEvents: JsScanRunEvent[] = [];
+      const initial = requireScanRunSuccess(
+        await scanRunExecute(request, new ScanRunCancellation(), initialEvents.push.bind(initialEvents)),
+      ).result;
+
+      expect(initial.status).toBe("local_ignore_recovery_required");
+      expect(initial.installedYamlData?.localIgnoreState).toBe(
+        JsScanRunLocalIgnoreState.RecoveryRequired,
+      );
+      expect(initial.installedYamlData?.diagnostics.map((diagnostic) => diagnostic.kind)).toContain(
+        JsScanRunInstalledYamlDataDiagnosticKind.Parse,
+      );
+      expect(initialEvents.map((event) => event.kind)).toEqual(["discovery_completed"]);
+      const continuation = initial.continuation;
+      expect(continuation).toBeDefined();
+
+      writeFileSync(
+        join(root, "CLASSIC Data", "databases", "CLASSIC Main.yaml"),
+        "invalid: [unterminated",
+      );
+      const resumedEvents: JsScanRunEvent[] = [];
+      const resumed = requireScanRunSuccess(
+        await scanRunResume(
+          continuation!,
+          JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+          new ScanRunCancellation(),
+          resumedEvents.push.bind(resumedEvents),
+        ),
+      ).result;
+
+      expect(resumed.status).toBe("completed");
+      expect(resumed.discovery).toEqual(initial.discovery);
+      expect(resumed.installedYamlData?.main.sha256).toBe(initial.installedYamlData?.main.sha256);
+      expect(resumed.installedYamlData?.gameFile.sha256).toBe(
+        initial.installedYamlData?.gameFile.sha256,
+      );
+      expect(resumed.installedYamlData?.localIgnoreState).toBe(
+        JsScanRunLocalIgnoreState.ProceedWithoutIgnore,
+      );
+      expect(resumedEvents.some((event) => event.kind === "discovery_completed")).toBe(false);
+      expect(readFileSync(resumed.logs[0]!.autoscanReport!)).toEqual(baselineReport);
+      expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
+
+      await expect(
+        scanRunResume(
+          continuation!,
+          JsScanRunLocalIgnoreRecoveryDecision.ProceedWithoutIgnore,
+          new ScanRunCancellation(),
+        ),
+      ).rejects.toMatchObject({ code: "scan_run_continuation_consumed" });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("Reset To Default returns durable metadata and the unchanged shared report", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-ignore-reset");
+    const crashLog = writeSharedScanRunLog(root, fixture.input);
+    const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
+    const request = ScanRunRequest.targeted(scanRunConfiguration(root), { inputs: [crashLog] });
+
+    try {
+      const baseline = requireScanRunSuccess(
+        await scanRunExecute(request, new ScanRunCancellation()),
+      ).result;
+      const baselineReport = readFileSync(baseline.logs[0]!.autoscanReport!);
+      writeFileSync(ignorePath, fixture.malformedLocalIgnore);
+      const initial = requireScanRunSuccess(
+        await scanRunExecute(request, new ScanRunCancellation()),
+      ).result;
+      const retainedMain = initial.installedYamlData?.main.sha256;
+      const retainedGame = initial.installedYamlData?.gameFile.sha256;
+      writeFileSync(
+        join(root, "CLASSIC Data", "databases", "CLASSIC Main.yaml"),
+        "invalid: [unterminated",
+      );
+      writeFileSync(
+        join(root, "CLASSIC Data", "databases", "CLASSIC Fallout4.yaml"),
+        "invalid: [unterminated",
+      );
+
+      const resumedEvents: JsScanRunEvent[] = [];
+      const reset = requireScanRunSuccess(
+        await scanRunResume(
+          initial.continuation!,
+          JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+          new ScanRunCancellation(),
+          resumedEvents.push.bind(resumedEvents),
+        ),
+      ).result;
+
+      expect(reset.status).toBe("completed");
+      expect(reset.discovery).toEqual(initial.discovery);
+      expect(reset.installedYamlData?.main.sha256).toBe(retainedMain);
+      expect(reset.installedYamlData?.gameFile.sha256).toBe(retainedGame);
+      expect(reset.installedYamlData?.localIgnoreState).toBe(
+        JsScanRunLocalIgnoreState.ResetToDefault,
+      );
+      expect(reset.installedYamlData?.diagnostics.map((diagnostic) => diagnostic.kind)).toContain(
+        JsScanRunInstalledYamlDataDiagnosticKind.LocalIgnoreReset,
+      );
+      const metadata = reset.installedYamlData?.localIgnoreReset;
+      expect(metadata).toBeDefined();
+      expect(readFileSync(metadata!.backupPath, "utf8")).toBe(fixture.malformedLocalIgnore);
+      expect(metadata!.malformedIdentity).toEqual(metadata!.backupIdentity);
+      expect(metadata!.replacementIdentity).toEqual(reset.installedYamlData?.localIgnoreIdentity);
+      expect(readFileSync(reset.logs[0]!.autoscanReport!)).toEqual(baselineReport);
+      expect(resumedEvents.some((event) => event.kind === "discovery_completed")).toBe(false);
+      await expect(
+        scanRunResume(
+          initial.continuation!,
+          JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+          new ScanRunCancellation(),
+        ),
+      ).rejects.toMatchObject({ code: fixture.resetOutcomes.consumedCode });
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("Reset To Default exposes typed conflict and backup failure outcomes", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
+    const runCase = async (name: string, mutate: (root: string, ignorePath: string) => void) => {
+      const root = writeSharedScanRunDataRoot(name);
+      const crashLog = writeSharedScanRunLog(root, fixture.input);
+      const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
+      writeFileSync(ignorePath, fixture.malformedLocalIgnore);
+      const initial = requireScanRunSuccess(
+        await scanRunExecute(
+          ScanRunRequest.targeted(scanRunConfiguration(root), { inputs: [crashLog] }),
+          new ScanRunCancellation(),
+        ),
+      ).result;
+      mutate(root, ignorePath);
+      return { root, ignorePath, continuation: initial.continuation! };
+    };
+
+    const conflict = await runCase(
+      "classic-node-scan-run-reset-conflict",
+      (_root, ignorePath) => writeFileSync(ignorePath, "CLASSIC_Ignore_Fallout4: []\n"),
+    );
+    try {
+      await expect(
+        scanRunResume(
+          conflict.continuation,
+          JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+          new ScanRunCancellation(),
+        ),
+      ).rejects.toMatchObject({
+        code: fixture.resetOutcomes.conflictCode,
+        kind: fixture.resetOutcomes.conflictCode,
+      });
+    } finally {
+      rmSync(conflict.root, { recursive: true, force: true });
+    }
+
+    const backupFailure = await runCase(
+      "classic-node-scan-run-reset-backup-failure",
+      (root) => writeFileSync(join(root, "CLASSIC Backup"), "not a directory"),
+    );
+    try {
+      await expect(
+        scanRunResume(
+          backupFailure.continuation,
+          JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+          new ScanRunCancellation(),
+        ),
+      ).rejects.toMatchObject({
+        code: fixture.resetOutcomes.backupFailureCode,
+        kind: fixture.resetOutcomes.backupFailureCode,
+      });
+      expect(readFileSync(backupFailure.ignorePath, "utf8")).toBe(
+        fixture.malformedLocalIgnore,
+      );
+    } finally {
+      rmSync(backupFailure.root, { recursive: true, force: true });
+    }
+  });
+
+  test("pre-resume cancellation wins without changing malformed Local Ignore", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-ignore-recovery-cancelled");
+    const crashLog = writeSharedScanRunLog(root, fixture.input);
+    const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
+    writeFileSync(ignorePath, fixture.malformedLocalIgnore);
+
+    try {
+      const initial = requireScanRunSuccess(
+        await scanRunExecute(
+          ScanRunRequest.targeted(scanRunConfiguration(root), { inputs: [crashLog] }),
+          new ScanRunCancellation(),
+        ),
+      ).result;
+      const cancellation = new ScanRunCancellation();
+      cancellation.cancel();
+      const resumedEvents: JsScanRunEvent[] = [];
+      const resumed = requireScanRunSuccess(
+        await scanRunResume(
+          initial.continuation!,
+          JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+          cancellation,
+          resumedEvents.push.bind(resumedEvents),
+        ),
+      ).result;
+
+      expect(resumed.status).toBe("cancelled");
+      expect(resumed.cancelled).toBe(resumed.total);
+      expect(resumed.logs.every((log) => log.disposition === "cancelled_before_start")).toBe(true);
+      expect(resumedEvents).toEqual([]);
+      expect(readFileSync(ignorePath, "utf8")).toBe(fixture.malformedLocalIgnore);
+      expect(existsSync(join(root, "CLASSIC Backup"))).toBe(
+        fixture.resetOutcomes.preResetCancellationMutates,
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("cancellation observed after reset entry waits for durable repair", async () => {
+    const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.installedYamlData;
+    const root = writeSharedScanRunDataRoot("classic-node-scan-run-reset-racing-cancel");
+    const crashLog = writeSharedScanRunLog(root, fixture.input);
+    const ignorePath = join(root, "CLASSIC Data", "CLASSIC Ignore.yaml");
+    const largeMalformedIgnore = fixture.malformedLocalIgnore + "x".repeat(16 * 1024 * 1024);
+    writeFileSync(ignorePath, largeMalformedIgnore);
+    const initial = requireScanRunSuccess(
+      await scanRunExecute(
+        ScanRunRequest.targeted(scanRunConfiguration(root), { inputs: [crashLog] }),
+        new ScanRunCancellation(),
+      ),
+    ).result;
+    const cancellation = new ScanRunCancellation();
+    const resetLock = join(root, ".classic-local-ignore-reset.lock");
+
+    try {
+      const resume = scanRunResume(
+        initial.continuation!,
+        JsScanRunLocalIgnoreRecoveryDecision.ResetToDefault,
+        cancellation,
+      );
+      const deadline = Date.now() + 5_000;
+      while (!existsSync(resetLock) && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 1));
+      }
+      expect(existsSync(resetLock)).toBe(true);
+      cancellation.cancel();
+      const cancelled = requireScanRunSuccess(await resume).result;
+
+      expect(cancelled.status).toBe(fixture.resetOutcomes.postCriticalCancellationStatus);
+      expect(cancelled.logs.every((log) => log.autoscanReport === undefined)).toBe(true);
+      const backupDirectory = join(root, "CLASSIC Backup", "YAML Data", "Local Ignore");
+      const backups = readdirSync(backupDirectory);
+      expect(backups).toHaveLength(1);
+      if (fixture.resetOutcomes.backupMustEqualMalformedBytes) {
+        expect(readFileSync(join(backupDirectory, backups[0]!), "utf8")).toBe(
+          largeMalformedIgnore,
+        );
+      }
+      expect(readFileSync(ignorePath, "utf8")).not.toBe(largeMalformedIgnore);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 30_000);
 
   test("shared Targeted fixture preserves discovery order, rejections, artifacts, and no movement", async () => {
     const fixture = SHARED_SCAN_RUN_MANIFEST.fixtures.targeted;

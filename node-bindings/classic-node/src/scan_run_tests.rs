@@ -17,6 +17,14 @@ fn shared_failure_fixtures() -> serde_json::Value {
         .clone()
 }
 
+/// Loads the shared reset-outcome expectations used by Node rejection mapping tests.
+fn shared_reset_outcomes() -> serde_json::Value {
+    serde_json::from_str::<serde_json::Value>(SHARED_SCAN_RUN_MANIFEST)
+        .expect("shared scan-run manifest should deserialize")["fixtures"]["installedYamlData"]
+        ["resetOutcomes"]
+        .clone()
+}
+
 fn log_event() -> LogEvent {
     LogEvent {
         discovery_index: 7,
@@ -29,9 +37,8 @@ fn log_event() -> LogEvent {
 #[test]
 fn request_conversion_treats_blank_optional_paths_as_absent() {
     let configuration = configuration_to_core(JsScanRunConfiguration {
-        yaml_dir_root: "C:/CLASSIC".to_string(),
-        yaml_dir_data: "C:/CLASSIC/CLASSIC Data".to_string(),
-        game: "Fallout4".to_string(),
+        installation_root: "C:/CLASSIC".to_string(),
+        game: crate::shared::JsGameId::Fallout4,
         game_version: "auto".to_string(),
         show_formid_values: false,
         simplify_logs: false,
@@ -40,6 +47,8 @@ fn request_conversion_treats_blank_optional_paths_as_absent() {
         max_concurrent: None,
     })
     .expect("configuration should convert");
+    assert_eq!(configuration.installation_root, PathBuf::from("C:/CLASSIC"));
+    assert_eq!(configuration.game, classic_shared_core::GameId::Fallout4);
     assert!(configuration.scan_facts.unsolved_logs_destination.is_none());
 
     let source = standard_source_to_core(JsScanRunStandardSource {
@@ -50,6 +59,122 @@ fn request_conversion_treats_blank_optional_paths_as_absent() {
     .expect("standard source should convert");
     assert!(source.custom_scan_directory.is_none());
     assert!(source.configured_documents_root.is_none());
+}
+
+#[test]
+fn installed_yaml_data_run_enums_cover_recovery_and_every_diagnostic() {
+    assert!(matches!(
+        local_ignore_run_state_to_js(contract::LocalIgnoreRunState::Existing),
+        JsScanRunLocalIgnoreState::Existing
+    ));
+    assert!(matches!(
+        local_ignore_run_state_to_js(contract::LocalIgnoreRunState::Generated),
+        JsScanRunLocalIgnoreState::Generated
+    ));
+    assert!(matches!(
+        local_ignore_run_state_to_js(contract::LocalIgnoreRunState::RecoveryRequired),
+        JsScanRunLocalIgnoreState::RecoveryRequired
+    ));
+    assert!(matches!(
+        local_ignore_run_state_to_js(contract::LocalIgnoreRunState::ProceedWithoutIgnore),
+        JsScanRunLocalIgnoreState::ProceedWithoutIgnore
+    ));
+    assert!(matches!(
+        local_ignore_run_state_to_js(contract::LocalIgnoreRunState::ResetToDefault),
+        JsScanRunLocalIgnoreState::ResetToDefault
+    ));
+    assert_eq!(
+        local_ignore_recovery_decision_to_core(
+            JsScanRunLocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+        ),
+        contract::LocalIgnoreRecoveryDecision::ProceedWithoutIgnore
+    );
+    assert_eq!(
+        local_ignore_recovery_decision_to_core(
+            JsScanRunLocalIgnoreRecoveryDecision::ResetToDefault
+        ),
+        contract::LocalIgnoreRecoveryDecision::ResetToDefault
+    );
+
+    for (kind, expected) in [
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::CacheUnavailable,
+            JsScanRunInstalledYamlDataDiagnosticKind::CacheUnavailable,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::Missing,
+            JsScanRunInstalledYamlDataDiagnosticKind::Missing,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::Read,
+            JsScanRunInstalledYamlDataDiagnosticKind::Read,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidUtf8,
+            JsScanRunInstalledYamlDataDiagnosticKind::InvalidUtf8,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::Parse,
+            JsScanRunInstalledYamlDataDiagnosticKind::Parse,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidSchema,
+            JsScanRunInstalledYamlDataDiagnosticKind::InvalidSchema,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::IncompatibleSchema,
+            JsScanRunInstalledYamlDataDiagnosticKind::IncompatibleSchema,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::InvalidRoleData,
+            JsScanRunInstalledYamlDataDiagnosticKind::InvalidRoleData,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreGenerated,
+            JsScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreGenerated,
+        ),
+        (
+            contract::InstalledYamlDataRunDiagnosticKind::LocalIgnoreReset,
+            JsScanRunInstalledYamlDataDiagnosticKind::LocalIgnoreReset,
+        ),
+    ] {
+        let actual = installed_yaml_data_run_diagnostic_kind_to_js(kind);
+        assert_eq!(
+            std::mem::discriminant(&actual),
+            std::mem::discriminant(&expected)
+        );
+    }
+}
+
+/// Replacement publication failure retains the shared Node rejection code, path, and stage.
+#[test]
+fn replacement_failure_projects_shared_node_rejection_metadata() {
+    let expected = shared_reset_outcomes();
+    let path = PathBuf::from("C:/CLASSIC/CLASSIC Data/CLASSIC Ignore.yaml");
+    let projection =
+        project_scan_run_resume_error(contract::ResumeError::LocalIgnoreResetReplacementFailure(
+            contract::LocalIgnoreResetFailure {
+                path: path.clone(),
+                stage: Some(contract::LocalIgnoreResetFailureStage::Publish),
+                message: "injected replacement publication failure".to_string(),
+            },
+        ));
+
+    assert_eq!(
+        projection.code,
+        expected["replacementFailureCode"]
+            .as_str()
+            .expect("shared replacement code should be a string")
+    );
+    let ScanRunResumeErrorMetadata::OperationalFailure {
+        path: projected_path,
+        stage,
+    } = projection.metadata
+    else {
+        panic!("replacement failure should retain operational metadata");
+    };
+    assert_eq!(PathBuf::from(projected_path), path);
+    assert_eq!(stage, Some("publish"));
 }
 
 #[test]
@@ -129,6 +254,10 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
         ),
         (CrashLogScanRunStatus::SetupFailed, "setup_failed"),
         (
+            CrashLogScanRunStatus::LocalIgnoreRecoveryRequired,
+            "local_ignore_recovery_required",
+        ),
+        (
             CrashLogScanRunStatus::CancelledBeforeDiscovery,
             "cancelled_before_discovery",
         ),
@@ -138,6 +267,8 @@ fn terminal_mapping_preserves_every_status_failure_and_optional_path() {
             status,
             discovery: None,
             setup: None,
+            installed_yaml_data: None,
+            continuation: None,
             effective_concurrency: Some(2),
             message: Some("terminal message".to_string()),
             total: 1,

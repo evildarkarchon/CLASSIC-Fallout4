@@ -14,8 +14,10 @@ pub mod client_schemas;
 pub mod crashgen_expectation_parser;
 pub(crate) mod crashgen_registry_yaml;
 pub mod crashgen_rules;
+pub mod explicit_yaml_data;
 pub(crate) mod game_data;
 pub mod game_local;
+pub mod installed_yaml_data;
 pub mod shippable;
 pub mod yaml_source;
 pub mod yamldata;
@@ -24,8 +26,23 @@ pub use crashgen_expectation_parser::{
     CrashgenExpectationParseDiagnostic, CrashgenExpectationParseResult, parse_crashgen_expectations,
 };
 pub use crashgen_rules::*;
+pub use explicit_yaml_data::{
+    ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole,
+    ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data,
+};
 
 pub use game_local::persist_game_local_paths;
+pub use installed_yaml_data::{
+    InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind,
+    InstalledYamlDataInspection, InstalledYamlDataInspectionError,
+    InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome,
+    InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole,
+    InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict,
+    LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage,
+    LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data,
+    inspect_installed_yaml_data_with_env, load_installed_yaml_data,
+    load_installed_yaml_data_with_env,
+};
 pub use shippable::{
     CandidateRejection, LoadSource, LoadedShippable, MainYamlVersionError, ShippableFile,
     YamlLoadError, load_main_yaml_version, load_main_yaml_version_with_bundled_dir,

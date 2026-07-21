@@ -49,31 +49,4 @@ impl ConfigIssue {
             severity,
         }
     }
-
-    /// Format issue as human-readable report section
-    pub fn format_report(&self) -> String {
-        let icon = match self.severity.as_str() {
-            "error" => "❌",
-            "warning" => "⚠️",
-            "info" => "ℹ️",
-            _ => "⚠️",
-        };
-
-        let section_str = self
-            .section
-            .as_ref()
-            .map(|s| format!("[{}]", s))
-            .unwrap_or_else(|| "N/A".to_string());
-
-        format!(
-            "{} DETECTED ISSUE: {}\n   File: {}\n   Section: {}\n   Setting: {}\n   Current Value: {}\n   Recommended Value: {}\n\n",
-            icon,
-            self.description,
-            self.file_path,
-            section_str,
-            self.setting,
-            self.current_value,
-            self.recommended_value
-        )
-    }
 }

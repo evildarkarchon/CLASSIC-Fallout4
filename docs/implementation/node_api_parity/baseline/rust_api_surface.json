@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-07-16T10:17:29.841292+00:00",
+  "generated_at_utc": "2026-07-19T10:13:05.505086+00:00",
   "scope": {
     "target_crates": [
       "classic-scanlog-core",
@@ -285,12 +285,335 @@
       "tier": "tier1"
     },
     {
+      "symbol": "ExplicitYamlDataLoadError",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub enum ExplicitYamlDataLoadError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataLoadError",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::ExplicitYamlDataLoadError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataRequest",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::ExplicitYamlDataRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataRequest",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub struct ExplicitYamlDataRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataRole",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub enum ExplicitYamlDataRole",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataRole",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::ExplicitYamlDataRole",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataSnapshot",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::ExplicitYamlDataSnapshot",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ExplicitYamlDataSnapshot",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub struct ExplicitYamlDataSnapshot",
+      "tier": "tier1"
+    },
+    {
       "symbol": "GAME_FALLOUT4_YAML",
       "kind": "const",
       "crate": "classic-config-core",
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/client_schemas.rs",
       "source_decl": "pub const GAME_FALLOUT4_YAML",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameDataRole",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub enum GameDataRole",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "GameDataRole",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::GameDataRole",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InspectedYamlDataFile",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::InspectedYamlDataFile",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InspectedYamlDataFile",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub struct InspectedYamlDataFile",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataDiagnostic",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::InstalledYamlDataDiagnostic",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataDiagnostic",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub struct InstalledYamlDataDiagnostic",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataDiagnosticKind",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub enum InstalledYamlDataDiagnosticKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataDiagnosticKind",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::InstalledYamlDataDiagnosticKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataInspection",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::InstalledYamlDataInspection",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataInspection",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub struct InstalledYamlDataInspection",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataInspectionError",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub enum InstalledYamlDataInspectionError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataInspectionError",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::InstalledYamlDataInspectionError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataInspectionRequest",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::InstalledYamlDataInspectionRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataInspectionRequest",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub struct InstalledYamlDataInspectionRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataLoadError",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub enum InstalledYamlDataLoadError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataLoadError",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::InstalledYamlDataLoadError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataLoadOutcome",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub enum InstalledYamlDataLoadOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataLoadOutcome",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::InstalledYamlDataLoadOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataLoadRequest",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::InstalledYamlDataLoadRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataLoadRequest",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub struct InstalledYamlDataLoadRequest",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataProvenance",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub enum InstalledYamlDataProvenance",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataProvenance",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::InstalledYamlDataProvenance",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataRole",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub enum InstalledYamlDataRole",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataRole",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::InstalledYamlDataRole",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataSnapshot",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::InstalledYamlDataSnapshot",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataSnapshot",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub struct InstalledYamlDataSnapshot",
       "tier": "tier1"
     },
     {
@@ -349,6 +672,139 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
       "source_decl": "pub struct LoadedShippable",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreRecoveryPlan",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::LocalIgnoreRecoveryPlan",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreRecoveryPlan",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub struct LocalIgnoreRecoveryPlan",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetConflict",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::LocalIgnoreResetConflict",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetConflict",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub struct LocalIgnoreResetConflict",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetError",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub enum LocalIgnoreResetError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetError",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::LocalIgnoreResetError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetOutcome",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub enum LocalIgnoreResetOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetOutcome",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::LocalIgnoreResetOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetPublicationStage",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub enum LocalIgnoreResetPublicationStage",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetPublicationStage",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::LocalIgnoreResetPublicationStage",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetResult",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::LocalIgnoreResetResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetResult",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub struct LocalIgnoreResetResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreYamlDataState",
+      "kind": "enum",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub enum LocalIgnoreYamlDataState",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreYamlDataState",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::LocalIgnoreYamlDataState",
       "tier": "tier1"
     },
     {
@@ -632,6 +1088,25 @@
       "tier": "tier1"
     },
     {
+      "symbol": "YamlDataContentIdentity",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::YamlDataContentIdentity",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "YamlDataContentIdentity",
+      "kind": "struct",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub struct YamlDataContentIdentity",
+      "tier": "tier1"
+    },
+    {
       "symbol": "YamlDataCore",
       "kind": "reexport",
       "crate": "classic-config-core",
@@ -709,6 +1184,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "backup_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn backup_path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "backup_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn backup_path(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "clear_global_yaml_cache",
       "kind": "reexport",
       "crate": "classic-config-core",
@@ -746,6 +1241,56 @@
       "tier": "tier1"
     },
     {
+      "symbol": "default_local_ignore_identity",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn default_local_ignore_identity(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "diagnostics",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn diagnostics(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "diagnostics",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn diagnostics(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "diagnostics",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn diagnostics(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "diagnostics",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn diagnostics(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "display_name_with_game",
       "kind": "function",
       "arity": 2,
@@ -766,6 +1311,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "explicit_yaml_data",
+      "kind": "module",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub mod explicit_yaml_data;",
+      "tier": "tier1"
+    },
+    {
       "symbol": "final_settings",
       "kind": "function",
       "arity": 1,
@@ -773,6 +1327,330 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
       "source_decl": "pub fn final_settings(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub const fn",
       "tier": "tier1"
     },
     {
@@ -894,6 +1772,55 @@
       "tier": "tier1"
     },
     {
+      "symbol": "inspect_installed_yaml_data",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn inspect_installed_yaml_data(\n    request: InstalledYamlDataInspectionRequest,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "inspect_installed_yaml_data",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::inspect_installed_yaml_data",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "inspect_installed_yaml_data_with_env",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::inspect_installed_yaml_data_with_env",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "installed_yaml_data",
+      "kind": "module",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub mod installed_yaml_data;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "into_snapshot",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn into_snapshot(self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "is_empty",
       "kind": "function",
       "arity": 1,
@@ -901,6 +1828,46 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/crashgen_rules.rs",
       "source_decl": "pub fn is_empty(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_explicit_yaml_data",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use explicit_yaml_data::{ ExplicitYamlDataLoadError, ExplicitYamlDataRequest, ExplicitYamlDataRole, ExplicitYamlDataSnapshot, GameDataRole, YamlDataContentIdentity, load_explicit_yaml_data, };",
+      "source_expr": "explicit_yaml_data::load_explicit_yaml_data",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_installed_yaml_data",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn load_installed_yaml_data(\n    request: InstalledYamlDataLoadRequest,\n)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_installed_yaml_data",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::load_installed_yaml_data",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "load_installed_yaml_data_with_env",
+      "kind": "reexport",
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/lib.rs",
+      "source_decl": "pub use installed_yaml_data::{ InspectedYamlDataFile, InstalledYamlDataDiagnostic, InstalledYamlDataDiagnosticKind, InstalledYamlDataInspection, InstalledYamlDataInspectionError, InstalledYamlDataInspectionRequest, InstalledYamlDataLoadError, InstalledYamlDataLoadOutcome, InstalledYamlDataLoadRequest, InstalledYamlDataProvenance, InstalledYamlDataRole, InstalledYamlDataSnapshot, LocalIgnoreRecoveryPlan, LocalIgnoreResetConflict, LocalIgnoreResetError, LocalIgnoreResetOutcome, LocalIgnoreResetPublicationStage, LocalIgnoreResetResult, LocalIgnoreYamlDataState, inspect_installed_yaml_data, inspect_installed_yaml_data_with_env, load_installed_yaml_data, load_installed_yaml_data_with_env, };",
+      "source_expr": "installed_yaml_data::load_installed_yaml_data_with_env",
       "tier": "tier1"
     },
     {
@@ -1004,6 +1971,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "local_ignore_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn local_ignore_path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "local_ignore_path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn local_ignore_path(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "main",
       "kind": "function",
       "arity": 0,
@@ -1011,6 +1998,16 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/shippable/loader.rs",
       "source_decl": "pub fn main()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn message(&self)",
       "tier": "tier1"
     },
     {
@@ -1096,6 +2093,16 @@
     {
       "symbol": "path",
       "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn path(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "path",
+      "kind": "function",
       "arity": 2,
       "crate": "classic-config-core",
       "owner_module": "config",
@@ -1111,6 +2118,26 @@
       "source_file": "business-logic/classic-config-core/src/lib.rs",
       "source_decl": "pub use game_local::persist_game_local_paths;",
       "source_expr": "game_local::persist_game_local_paths",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "proceed_without_ignore",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn proceed_without_ignore(self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "reset_to_default",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn reset_to_default(self)",
       "tier": "tier1"
     },
     {
@@ -1134,6 +2161,26 @@
       "tier": "tier1"
     },
     {
+      "symbol": "selected_game_version",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn selected_game_version(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "sha256_hex",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/explicit_yaml_data.rs",
+      "source_decl": "pub fn sha256_hex(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "shippable",
       "kind": "module",
       "crate": "classic-config-core",
@@ -1150,6 +2197,26 @@
       "owner_module": "config",
       "source_file": "business-logic/classic-config-core/src/client_schemas.rs",
       "source_decl": "pub fn shippable_schema_entries()",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "simplify_remove_list",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn simplify_remove_list(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "snapshot_for_scan_preparation",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-config-core",
+      "owner_module": "config",
+      "source_file": "business-logic/classic-config-core/src/installed_yaml_data.rs",
+      "source_decl": "pub fn snapshot_for_scan_preparation(&self)",
       "tier": "tier1"
     },
     {
@@ -1362,6 +2429,101 @@
       "tier": "tier1"
     },
     {
+      "symbol": "FormIdValueLookup",
+      "kind": "reexport",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/lib.rs",
+      "source_decl": "pub use formid_value_lookup::{ FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupError, FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome, };",
+      "source_expr": "formid_value_lookup::FormIdValueLookup",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookup",
+      "kind": "struct",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub struct FormIdValueLookup",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupEntry",
+      "kind": "reexport",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/lib.rs",
+      "source_decl": "pub use formid_value_lookup::{ FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupError, FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome, };",
+      "source_expr": "formid_value_lookup::FormIdValueLookupEntry",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupEntry",
+      "kind": "struct",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub struct FormIdValueLookupEntry",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupError",
+      "kind": "reexport",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/lib.rs",
+      "source_decl": "pub use formid_value_lookup::{ FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupError, FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome, };",
+      "source_expr": "formid_value_lookup::FormIdValueLookupError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupError",
+      "kind": "struct",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub struct FormIdValueLookupError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupInMemoryReply",
+      "kind": "enum",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub enum FormIdValueLookupInMemoryReply",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupInMemoryReply",
+      "kind": "reexport",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/lib.rs",
+      "source_decl": "pub use formid_value_lookup::{ FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupError, FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome, };",
+      "source_expr": "formid_value_lookup::FormIdValueLookupInMemoryReply",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupOutcome",
+      "kind": "enum",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub enum FormIdValueLookupOutcome",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIdValueLookupOutcome",
+      "kind": "reexport",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/lib.rs",
+      "source_decl": "pub use formid_value_lookup::{ FormIdValueLookup, FormIdValueLookupEntry, FormIdValueLookupError, FormIdValueLookupInMemoryReply, FormIdValueLookupOutcome, };",
+      "source_expr": "formid_value_lookup::FormIdValueLookupOutcome",
+      "tier": "tier1"
+    },
+    {
       "symbol": "MAX_CACHE_CLEANUP_INTERVAL_SECS",
       "kind": "const",
       "crate": "classic-database-core",
@@ -1534,6 +2696,34 @@
       "tier": "tier1"
     },
     {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "formid",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub fn formid(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "from_normalized_plugin",
       "kind": "function",
       "arity": 3,
@@ -1614,6 +2804,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "in_memory",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub fn in_memory(entries: Vec<FormIdValueLookupEntry>)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "is_available",
       "kind": "function",
       "arity": 1,
@@ -1631,6 +2831,26 @@
       "owner_module": "database",
       "source_file": "business-logic/classic-database-core/src/pool_sqlx.rs",
       "source_decl": "pub fn is_expired(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub fn message(&self)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 3,
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub fn new(\n        formid: impl AsRef<str>,\n        plugin: impl AsRef<str>,\n        reply: FormIdValueLookupInMemoryReply,\n    )",
       "tier": "tier1"
     },
     {
@@ -1671,6 +2891,16 @@
       "owner_module": "database",
       "source_file": "business-logic/classic-database-core/src/pool_sqlx.rs",
       "source_decl": "pub fn normalize_plugin(plugin: &str)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "plugin",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub fn plugin(&self)",
       "tier": "tier1"
     },
     {
@@ -1741,6 +2971,16 @@
       "owner_module": "database",
       "source_file": "business-logic/classic-database-core/src/pool_sqlx.rs",
       "source_decl": "pub fn set_max_connections(&self, max_connections: usize)",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "shared_pool",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-database-core",
+      "owner_module": "database",
+      "source_file": "business-logic/classic-database-core/src/formid_value_lookup.rs",
+      "source_decl": "pub fn shared_pool(pool: Arc<DatabasePool>)",
       "tier": "tier1"
     },
     {
@@ -8655,6 +9895,15 @@
       "tier": "tier1"
     },
     {
+      "symbol": "CrashLogScanRunContinuation",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct CrashLogScanRunContinuation",
+      "tier": "tier1"
+    },
+    {
       "symbol": "CrashLogScanRunStatus",
       "kind": "enum",
       "crate": "classic-scanlog-core",
@@ -9044,22 +10293,117 @@
       "tier": "tier1"
     },
     {
-      "symbol": "FormIDAnalyzerCore",
+      "symbol": "FormIDFinding",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
-      "source_expr": "formid_analyzer::FormIDAnalyzerCore",
+      "source_decl": "pub use formid_finding_analyzer::{ FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, };",
+      "source_expr": "formid_finding_analyzer::FormIDFinding",
       "tier": "tier1"
     },
     {
-      "symbol": "FormIDAnalyzerCore",
+      "symbol": "FormIDFinding",
       "kind": "struct",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
-      "source_decl": "pub struct FormIDAnalyzerCore",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub struct FormIDFinding",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDFindingAnalysisInput",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_finding_analyzer::{ FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, };",
+      "source_expr": "formid_finding_analyzer::FormIDFindingAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDFindingAnalysisInput",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub struct FormIDFindingAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDFindingAnalysisResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_finding_analyzer::{ FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, };",
+      "source_expr": "formid_finding_analyzer::FormIDFindingAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDFindingAnalysisResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub struct FormIDFindingAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDFindingAnalyzer",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_finding_analyzer::{ FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, };",
+      "source_expr": "formid_finding_analyzer::FormIDFindingAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDFindingAnalyzer",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub struct FormIDFindingAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDPlugin",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_finding_analyzer::{ FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, };",
+      "source_expr": "formid_finding_analyzer::FormIDPlugin",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDPlugin",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub struct FormIDPlugin",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDValueLookupStatus",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub enum FormIDValueLookupStatus",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "FormIDValueLookupStatus",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use formid_finding_analyzer::{ FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer, FormIDPlugin, FormIDValueLookupStatus, };",
+      "source_expr": "formid_finding_analyzer::FormIDValueLookupStatus",
       "tier": "tier1"
     },
     {
@@ -9154,6 +10498,87 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "source_decl": "pub enum InfrastructureErrorStage",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataRunData",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct InstalledYamlDataRunData",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataRunDiagnostic",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct InstalledYamlDataRunDiagnostic",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "InstalledYamlDataRunDiagnosticKind",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum InstalledYamlDataRunDiagnosticKind",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreRecoveryDecision",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum LocalIgnoreRecoveryDecision",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetConflictError",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct LocalIgnoreResetConflictError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetFailure",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct LocalIgnoreResetFailure",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetFailureStage",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum LocalIgnoreResetFailureStage",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreResetRunData",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub struct LocalIgnoreResetRunData",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "LocalIgnoreRunState",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum LocalIgnoreRunState",
       "tier": "tier1"
     },
     {
@@ -9341,6 +10766,82 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
       "source_decl": "pub struct ModSolutionGuidance",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "NamedRecordFinding",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use named_record_finding_analyzer::{ NamedRecordFinding, NamedRecordFindingAnalysisInput, NamedRecordFindingAnalysisResult, NamedRecordFindingAnalyzer, };",
+      "source_expr": "named_record_finding_analyzer::NamedRecordFinding",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "NamedRecordFinding",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/named_record_finding_analyzer.rs",
+      "source_decl": "pub struct NamedRecordFinding",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "NamedRecordFindingAnalysisInput",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use named_record_finding_analyzer::{ NamedRecordFinding, NamedRecordFindingAnalysisInput, NamedRecordFindingAnalysisResult, NamedRecordFindingAnalyzer, };",
+      "source_expr": "named_record_finding_analyzer::NamedRecordFindingAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "NamedRecordFindingAnalysisInput",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/named_record_finding_analyzer.rs",
+      "source_decl": "pub struct NamedRecordFindingAnalysisInput",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "NamedRecordFindingAnalysisResult",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use named_record_finding_analyzer::{ NamedRecordFinding, NamedRecordFindingAnalysisInput, NamedRecordFindingAnalysisResult, NamedRecordFindingAnalyzer, };",
+      "source_expr": "named_record_finding_analyzer::NamedRecordFindingAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "NamedRecordFindingAnalysisResult",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/named_record_finding_analyzer.rs",
+      "source_decl": "pub struct NamedRecordFindingAnalysisResult",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "NamedRecordFindingAnalyzer",
+      "kind": "reexport",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub use named_record_finding_analyzer::{ NamedRecordFinding, NamedRecordFindingAnalysisInput, NamedRecordFindingAnalysisResult, NamedRecordFindingAnalyzer, };",
+      "source_expr": "named_record_finding_analyzer::NamedRecordFindingAnalyzer",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "NamedRecordFindingAnalyzer",
+      "kind": "struct",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/named_record_finding_analyzer.rs",
+      "source_decl": "pub struct NamedRecordFindingAnalyzer",
       "tier": "tier1"
     },
     {
@@ -9570,63 +11071,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "ReportComposer",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
-      "source_expr": "report::ReportComposer",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ReportComposer",
-      "kind": "struct",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub struct ReportComposer",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ReportFragment",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
-      "source_expr": "report::ReportFragment",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ReportFragment",
-      "kind": "struct",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub struct ReportFragment",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ReportGenerator",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
-      "source_expr": "report::ReportGenerator",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "ReportGenerator",
-      "kind": "struct",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub struct ReportGenerator",
-      "tier": "tier1"
-    },
-    {
       "symbol": "Request",
       "kind": "enum",
       "crate": "classic-scanlog-core",
@@ -9642,6 +11086,24 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/error.rs",
       "source_decl": "pub type Result",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ResumeError",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum ResumeError",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "ResumeErrorKind",
+      "kind": "enum",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub enum ResumeErrorKind",
       "tier": "tier1"
     },
     {
@@ -9739,25 +11201,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "SettingsValidator",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use settings_validator::SettingsValidator;",
-      "source_expr": "settings_validator::SettingsValidator",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "SettingsValidator",
-      "kind": "struct",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/settings_validator.rs",
-      "source_decl": "pub struct SettingsValidator",
-      "tier": "tier1"
-    },
-    {
       "symbol": "StandardCrashLogScanSource",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -9843,25 +11286,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "StringPool",
-      "kind": "reexport",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};",
-      "source_expr": "report::StringPool",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "StringPool",
-      "kind": "struct",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub struct StringPool",
-      "tier": "tier1"
-    },
-    {
       "symbol": "TargetedCrashLogScanSource",
       "kind": "reexport",
       "crate": "classic-scanlog-core",
@@ -9896,26 +11320,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/segment_key.rs",
       "source_decl": "pub const XSE_MODULES",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "add",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn add(&mut self, fragment: ReportFragment)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "add_many",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn add_many(&mut self, fragments: Vec<ReportFragment>)",
       "tier": "tier1"
     },
     {
@@ -9956,6 +11360,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
       "source_decl": "pub fn analyze(\n        &self,\n        input: ModGuidanceAnalysisInput,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "analyze",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/named_record_finding_analyzer.rs",
+      "source_decl": "pub fn analyze(\n        &self,\n        input: NamedRecordFindingAnalysisInput,\n    )",
       "tier": "tier1"
     },
     {
@@ -10038,16 +11452,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "build_string",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn build_string(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "cache_stats",
       "kind": "function",
       "arity": 1,
@@ -10118,16 +11522,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "check_disabled_settings",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/settings_validator.rs",
-      "source_decl": "pub fn check_disabled_settings(\n        &self,\n        crashgen: &CrashgenSettingsSnapshot,\n    )",
-      "tier": "tier1"
-    },
-    {
       "symbol": "check_for_updates",
       "kind": "function",
       "arity": 1,
@@ -10165,16 +11559,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/version.rs",
       "source_decl": "pub fn check_version_status_with_exceptions(\n        &self,\n        floors: &[CrashgenVersion],\n        exceptions: &[CrashgenVersion],\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "clear",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn clear(&self)",
       "tier": "tier1"
     },
     {
@@ -10225,36 +11609,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn clear_caches(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "combine",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn combine(&self, other: &ReportFragment)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "compose",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn compose(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "compose_optimized",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn compose_optimized(&self)",
       "tier": "tier1"
     },
     {
@@ -10414,16 +11768,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "empty",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn empty()",
-      "tier": "tier1"
-    },
-    {
       "symbol": "error",
       "kind": "module",
       "crate": "classic-scanlog-core",
@@ -10468,16 +11812,6 @@
       "arity": 2,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
-      "source_decl": "pub fn extract_formids(&self, segment_callstack: Vec<String>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "extract_formids",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn extract_formids(&self, lines: &[String])",
       "tier": "tier1"
@@ -10508,7 +11842,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
+      "source_decl": "pub use formid_analyzer::{extract_formids_batch, is_valid_formid, validate_formids_batch};",
       "source_expr": "formid_analyzer::extract_formids_batch",
       "tier": "tier1"
     },
@@ -10822,6 +12156,87 @@
       "tier": "tier1"
     },
     {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "fn",
+      "kind": "const",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub const fn",
+      "tier": "tier1"
+    },
+    {
       "symbol": "formid",
       "kind": "module",
       "crate": "classic-scanlog-core",
@@ -10840,33 +12255,12 @@
       "tier": "tier1"
     },
     {
-      "symbol": "fragment_count",
-      "kind": "function",
-      "arity": 1,
+      "symbol": "formid_finding_analyzer",
+      "kind": "module",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn fragment_count(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "from_lines",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn from_lines(lines: Vec<String>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "from_lines_pooled",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn from_lines_pooled(lines: Vec<String>, pool: &StringPool)",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod formid_finding_analyzer;",
       "tier": "tier1"
     },
     {
@@ -10877,136 +12271,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/crashgen_settings_analyzer.rs",
       "source_decl": "pub fn from_parsed_configuration(\n        crashgen_name: String,\n        entry: CrashgenEntry,\n        diagnostics: Vec<CrashgenExpectationParseDiagnostic>,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_error_section",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_error_section(\n        &self,\n        main_error: &str,\n        crashgen_version: &str,\n        is_outdated: bool,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_error_section_with_status",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_error_section_with_status(\n        &self,\n        main_error: &str,\n        crashgen_version: &str,\n        status: Option<CrashgenVersionStatus>,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_error_section_with_status_and_fake_mode",
-      "kind": "function",
-      "arity": 5,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_error_section_with_status_and_fake_mode(\n        &self,\n        main_error: &str,\n        crashgen_version: &str,\n        status: Option<CrashgenVersionStatus>,\n        fake_bot_compatible_mode: bool,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_footer",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_footer(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_formid_section_header",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_formid_section_header(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_header",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_header(&self, crashlog_filename: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_mod_check_header",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_mod_check_header(&self, check_type: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_plugin_suspect_header",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_plugin_suspect_header(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_record_section_header",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_record_section_header(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_settings_section_header",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_settings_section_header(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_suspect_found_footer",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_suspect_found_footer(&self, found_suspect: bool)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_suspect_section",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_suspect_section(&self, found_suspects: Vec<String>)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "generate_suspect_section_header",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn generate_suspect_section_header(&self)",
       "tier": "tier1"
     },
     {
@@ -11037,16 +12301,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/gpu_detector.rs",
       "source_decl": "pub fn get_gpu_info_dict(segment_system: &[String])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "get_pool_stats",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn get_pool_stats(&self)",
       "tier": "tier1"
     },
     {
@@ -11090,16 +12344,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "get_stats",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn get_stats(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "gpu_detector",
       "kind": "module",
       "crate": "classic-scanlog-core",
@@ -11119,26 +12363,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "intern",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn intern(&self, s: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "intern_batch",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn intern_batch(&self, strings: &[String])",
-      "tier": "tier1"
-    },
-    {
       "symbol": "is_cancelled",
       "kind": "function",
       "arity": 1,
@@ -11146,16 +12370,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "source_decl": "pub fn is_cancelled(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "is_empty",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn is_empty(&self)",
       "tier": "tier1"
     },
     {
@@ -11174,28 +12388,8 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
+      "source_decl": "pub use formid_analyzer::{extract_formids_batch, is_valid_formid, validate_formids_batch};",
       "source_expr": "formid_analyzer::is_valid_formid",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "len",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn len(&self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "loadorder_scan_loadorder_txt",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/plugin_analyzer.rs",
-      "source_decl": "pub fn loadorder_scan_loadorder_txt()",
       "tier": "tier1"
     },
     {
@@ -11249,12 +12443,31 @@
       "tier": "tier1"
     },
     {
+      "symbol": "message",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub fn message(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "mod_guidance_analyzer",
       "kind": "module",
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod mod_guidance_analyzer;",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "named_record_finding_analyzer",
+      "kind": "module",
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
+      "source_decl": "pub mod named_record_finding_analyzer;",
       "tier": "tier1"
     },
     {
@@ -11310,11 +12523,11 @@
     {
       "symbol": "new",
       "kind": "function",
-      "arity": 3,
+      "arity": 1,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/formid_analyzer.rs",
-      "source_decl": "pub fn new(\n        db_pool: Option<Arc<DatabasePool>>,\n        show_formid_values: bool,\n        crashgen_name: String,\n    )",
+      "source_file": "business-logic/classic-scanlog-core/src/formid_finding_analyzer.rs",
+      "source_decl": "pub fn new(value_lookup: FormIdValueLookup)",
       "tier": "tier1"
     },
     {
@@ -11345,6 +12558,16 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/mod_guidance_analyzer.rs",
       "source_decl": "pub fn new(\n        conflicts: Vec<ModConflictEntry>,\n        frequent_crashes: Vec<ModSolutionEntry>,\n        solutions: Vec<ModSolutionEntry>,\n        important_mods: Vec<CoreModEntry>,\n    )",
+      "tier": "tier1"
+    },
+    {
+      "symbol": "new",
+      "kind": "function",
+      "arity": 2,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/named_record_finding_analyzer.rs",
+      "source_decl": "pub fn new(target_records: Vec<String>, ignored_records: Vec<String>)",
       "tier": "tier1"
     },
     {
@@ -11430,41 +12653,11 @@
     {
       "symbol": "new",
       "kind": "function",
-      "arity": 3,
+      "arity": 2,
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
-      "source_decl": "pub fn new(\n        classic_records_list: Vec<String>,\n        game_ignore_records: Vec<String>,\n        crashgen_name: String,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn new()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn new()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 0,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn new()",
+      "source_decl": "pub fn new(classic_records_list: Vec<String>, game_ignore_records: Vec<String>)",
       "tier": "tier1"
     },
     {
@@ -11475,16 +12668,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
       "source_decl": "pub fn new()",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "new",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/settings_validator.rs",
-      "source_decl": "pub fn new(crashgen_name: String, entry: CrashgenEntry)",
       "tier": "tier1"
     },
     {
@@ -11586,6 +12769,16 @@
       "tier": "tier1"
     },
     {
+      "symbol": "path",
+      "kind": "function",
+      "arity": 1,
+      "crate": "classic-scanlog-core",
+      "owner_module": "scanlog",
+      "source_file": "business-logic/classic-scanlog-core/src/scan_run/contract.rs",
+      "source_decl": "pub fn path(&self)",
+      "tier": "tier1"
+    },
+    {
       "symbol": "patterns",
       "kind": "module",
       "crate": "classic-scanlog-core",
@@ -11652,15 +12845,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "report",
-      "kind": "module",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub mod report;",
-      "tier": "tier1"
-    },
-    {
       "symbol": "reset",
       "kind": "function",
       "arity": 1,
@@ -11678,46 +12862,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn reset(&mut self)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "scan_all_settings",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/settings_validator.rs",
-      "source_decl": "pub fn scan_all_settings(\n        &self,\n        crashgen: &CrashgenSettingsSnapshot,\n        xse_modules: &HashSet<String>,\n        crashgen_version: Option<(u32, u32, u32)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "scan_named_records",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
-      "source_decl": "pub fn scan_named_records(&self, segment_callstack: &[String])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "scan_named_records_with_crashgen_name",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
-      "source_decl": "pub fn scan_named_records_with_crashgen_name(\n        &self,\n        segment_callstack: &[String],\n        crashgen_name: &str,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "scan_named_records_with_crashgen_name_and_lowercase",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
-      "source_decl": "pub fn scan_named_records_with_crashgen_name_and_lowercase(\n        &self,\n        segment_callstack: &[String],\n        segment_callstack_lower: &[String],\n        crashgen_name: &str,\n    )",
       "tier": "tier1"
     },
     {
@@ -11766,15 +12910,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/parser.rs",
       "source_decl": "pub fn set_section_boundaries(&mut self, start: &str, end: &str)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "settings_validator",
-      "kind": "module",
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub mod settings_validator;",
       "tier": "tier1"
     },
     {
@@ -11848,16 +12983,6 @@
       "tier": "tier1"
     },
     {
-      "symbol": "to_list",
-      "kind": "function",
-      "arity": 1,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn to_list(&self)",
-      "tier": "tier1"
-    },
-    {
       "symbol": "to_semver",
       "kind": "function",
       "arity": 1,
@@ -11885,36 +13010,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
       "source_decl": "pub fn try_extract_records(&self, segment_callstack: &[String])",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "try_scan_named_records",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
-      "source_decl": "pub fn try_scan_named_records(\n        &self,\n        segment_callstack: &[String],\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "try_scan_named_records_with_crashgen_name",
-      "kind": "function",
-      "arity": 3,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
-      "source_decl": "pub fn try_scan_named_records_with_crashgen_name(\n        &self,\n        segment_callstack: &[String],\n        crashgen_name: &str,\n    )",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "try_scan_named_records_with_crashgen_name_and_lowercase",
-      "kind": "function",
-      "arity": 4,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/record_scanner.rs",
-      "source_decl": "pub fn try_scan_named_records_with_crashgen_name_and_lowercase(\n        &self,\n        segment_callstack: &[String],\n        segment_callstack_lower: &[String],\n        crashgen_name: &str,\n    )",
       "tier": "tier1"
     },
     {
@@ -11953,7 +13048,7 @@
       "crate": "classic-scanlog-core",
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
-      "source_decl": "pub use formid_analyzer::{ FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch, };",
+      "source_decl": "pub use formid_analyzer::{extract_formids_batch, is_valid_formid, validate_formids_batch};",
       "source_expr": "formid_analyzer::validate_formids_batch",
       "tier": "tier1"
     },
@@ -11964,26 +13059,6 @@
       "owner_module": "scanlog",
       "source_file": "business-logic/classic-scanlog-core/src/lib.rs",
       "source_decl": "pub mod version;",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "with_config",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn with_config(classic_version: String, crashgen_name: String)",
-      "tier": "tier1"
-    },
-    {
-      "symbol": "with_header",
-      "kind": "function",
-      "arity": 2,
-      "crate": "classic-scanlog-core",
-      "owner_module": "scanlog",
-      "source_file": "business-logic/classic-scanlog-core/src/report.rs",
-      "source_decl": "pub fn with_header(&self, header_lines: Vec<String>)",
       "tier": "tier1"
     },
     {

@@ -1,8 +1,8 @@
 # Python Runtime Coverage Summary
 
-- Generated: `2026-07-16T10:18:40.647477+00:00`
-- Tracked surfaces: **1618**
-- Runtime verified: **1618**
+- Generated: `2026-07-19T10:13:16.837264+00:00`
+- Tracked surfaces: **1683**
+- Runtime verified: **1683**
 - Contract mapped only: **0**
 - Newly uncovered: **0**
 - Tier-1 rows missing runtime metadata: **0**
@@ -11,8 +11,8 @@
 
 | Owner Module | Runtime Verified | Contract Mapped | Newly Uncovered | Total |
 |---|---:|---:|---:|---:|
-| `config` | 42 | 0 | 0 | 42 |
-| `database` | 44 | 0 | 0 | 44 |
+| `config` | 100 | 0 | 0 | 100 |
+| `database` | 56 | 0 | 0 | 56 |
 | `file_io` | 95 | 0 | 0 | 95 |
 | `message` | 45 | 0 | 0 | 45 |
 | `path` | 72 | 0 | 0 | 72 |
@@ -20,7 +20,7 @@
 | `registry` | 20 | 0 | 0 | 20 |
 | `resource` | 36 | 0 | 0 | 36 |
 | `scangame` | 169 | 0 | 0 | 169 |
-| `scanlog` | 536 | 0 | 0 | 536 |
+| `scanlog` | 531 | 0 | 0 | 531 |
 | `settings` | 65 | 0 | 0 | 65 |
 | `shared` | 69 | 0 | 0 | 69 |
 | `update` | 10 | 0 | 0 | 10 |

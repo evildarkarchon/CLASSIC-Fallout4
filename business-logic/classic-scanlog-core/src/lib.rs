@@ -24,6 +24,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 // Public utility modules and the final Crash Log Scan Run contract.
 pub mod analyzer;
+pub(crate) mod autoscan_report_contribution_collector;
 pub mod crash_suspect_analyzer;
 pub mod crashgen_registry;
 pub mod crashgen_settings_analyzer;
@@ -31,8 +32,10 @@ pub mod error;
 pub(crate) mod fcx_handler;
 pub mod formid;
 pub mod formid_analyzer;
+pub mod formid_finding_analyzer;
 pub mod gpu_detector;
 pub mod mod_guidance_analyzer;
+pub mod named_record_finding_analyzer;
 // These implementation modules retain focused characterization helpers that are
 // exercised only in their sibling unit tests.
 #[allow(dead_code)]
@@ -43,13 +46,12 @@ pub mod patterns;
 pub mod plugin_analyzer;
 pub mod plugin_evidence_analyzer;
 pub mod record_scanner;
-pub mod report;
+pub(crate) mod report;
 #[allow(dead_code)]
 pub(crate) mod scan_intake;
 pub mod scan_run;
 mod scan_sidecar_settings;
 pub mod segment_key;
-pub mod settings_validator;
 pub mod version;
 
 // Re-export key types for convenience
@@ -66,13 +68,19 @@ pub use crashgen_settings_analyzer::{
 pub use error::ScanLogError;
 pub use fcx_handler::ConfigIssue;
 pub use formid::{FormIDAnalyzer, RustFormIDAnalyzer};
-pub use formid_analyzer::{
-    FormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
+pub use formid_analyzer::{extract_formids_batch, is_valid_formid, validate_formids_batch};
+pub use formid_finding_analyzer::{
+    FormIDFinding, FormIDFindingAnalysisInput, FormIDFindingAnalysisResult, FormIDFindingAnalyzer,
+    FormIDPlugin, FormIDValueLookupStatus,
 };
 pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};
 pub use mod_guidance_analyzer::{
     ImportantModGuidance, ModConflictGuidance, ModGuidanceAnalysisInput, ModGuidanceAnalysisResult,
     ModGuidanceAnalyzer, ModGuidanceMatchState, ModSolutionGuidance,
+};
+pub use named_record_finding_analyzer::{
+    NamedRecordFinding, NamedRecordFindingAnalysisInput, NamedRecordFindingAnalysisResult,
+    NamedRecordFindingAnalyzer,
 };
 pub use orchestrator::ScanProgressPhase;
 pub(crate) use orchestrator::{AnalysisConfig, AnalysisResult, OrchestratorCore};
@@ -87,7 +95,6 @@ pub use plugin_evidence_analyzer::{
 pub use record_scanner::{
     RecordScanner, contains_record, scan_records_batch, try_scan_records_batch,
 };
-pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
 pub use scan_intake::{CrashLogScanFacts, CrashLogScanOptions};
 pub(crate) use scan_intake::{CrashLogScanIntake, ScanReadyAnalysis};
 pub use scan_run::{
@@ -96,7 +103,6 @@ pub use scan_run::{
     CrashLogScanSetupPathUpdate, CrashLogScanSetupResult, StandardCrashLogScanSource,
     StandardUnsolvedLogsIntent, TargetedCrashLogScanSource,
 };
-pub use settings_validator::SettingsValidator;
 pub use version::{
     CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status,
     check_crashgen_version_status_with_exceptions, crashgen_version_gen,

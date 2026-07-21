@@ -6,6 +6,8 @@
 #include <QFileInfo>
 #include <QSet>
 
+#include <utility>
+
 namespace classic::gui {
 namespace {
 
@@ -39,6 +41,25 @@ QString infrastructureStageName(classic::scanner::ScanRunContractInfrastructureE
         return QStringLiteral("initialization");
     case Stage::InternalInvariant:
         return QStringLiteral("internal invariant validation");
+    }
+    return QStringLiteral("unknown stage");
+}
+
+/// Returns the stable user-facing name for a Local Ignore reset publication stage.
+QString resetFailureStageName(classic::scanner::ScanRunLocalIgnoreResetFailureStage stage)
+{
+    using Stage = classic::scanner::ScanRunLocalIgnoreResetFailureStage;
+    switch (stage) {
+    case Stage::Create:
+        return QStringLiteral("create");
+    case Stage::Write:
+        return QStringLiteral("write");
+    case Stage::Flush:
+        return QStringLiteral("flush");
+    case Stage::Sync:
+        return QStringLiteral("sync");
+    case Stage::Publish:
+        return QStringLiteral("publish");
     }
     return QStringLiteral("unknown stage");
 }
@@ -117,6 +138,57 @@ ScanRunLogPresentation presentLog(const classic::scanner::ScanRunContractLogResu
     return presentation;
 }
 
+/// Projects one exact selected YAML Data file into Qt-owned strings and scalar metadata.
+ScanRunInstalledYamlDataFilePresentation presentInstalledYamlDataFile(
+    const classic::scanner::ScanRunInspectedYamlDataFileDto& file)
+{
+    ScanRunInstalledYamlDataFilePresentation presentation;
+    presentation.role = file.role;
+    presentation.provenance = file.provenance;
+    presentation.schemaVersion = classic::toQString(file.schema_version);
+    presentation.sha256 = classic::toQString(file.sha256);
+    presentation.byteLength = file.byte_len;
+    return presentation;
+}
+
+/// Projects Installed YAML Data run metadata without flattening diagnostic presence flags.
+ScanRunInstalledYamlDataPresentation presentInstalledYamlData(
+    const classic::scanner::ScanRunInstalledYamlDataRunDataDto& installed)
+{
+    ScanRunInstalledYamlDataPresentation presentation;
+    presentation.main = presentInstalledYamlDataFile(installed.main);
+    presentation.gameFile = presentInstalledYamlDataFile(installed.game_file);
+    presentation.localIgnoreState = installed.local_ignore_state;
+    presentation.localIgnoreIdentity.sha256 = classic::toQString(installed.local_ignore_identity.sha256);
+    presentation.localIgnoreIdentity.byteLength = installed.local_ignore_identity.byte_len;
+    presentation.hasLocalIgnoreReset = installed.has_local_ignore_reset;
+    if (installed.has_local_ignore_reset) {
+        const auto& reset = installed.local_ignore_reset;
+        presentation.localIgnoreReset.localIgnorePath = classic::toQString(reset.local_ignore_path);
+        presentation.localIgnoreReset.backupPath = classic::toQString(reset.backup_path);
+        presentation.localIgnoreReset.malformedIdentity.sha256 = classic::toQString(reset.malformed_identity.sha256);
+        presentation.localIgnoreReset.malformedIdentity.byteLength = reset.malformed_identity.byte_len;
+        presentation.localIgnoreReset.backupIdentity.sha256 = classic::toQString(reset.backup_identity.sha256);
+        presentation.localIgnoreReset.backupIdentity.byteLength = reset.backup_identity.byte_len;
+        presentation.localIgnoreReset.replacementIdentity.sha256 = classic::toQString(reset.replacement_identity.sha256);
+        presentation.localIgnoreReset.replacementIdentity.byteLength = reset.replacement_identity.byte_len;
+    }
+    presentation.diagnostics.reserve(static_cast<qsizetype>(installed.diagnostics.size()));
+    for (const auto& diagnostic : installed.diagnostics) {
+        ScanRunInstalledYamlDataDiagnosticPresentation mapped;
+        mapped.hasRole = diagnostic.has_role;
+        mapped.role = diagnostic.role;
+        mapped.hasCandidate = diagnostic.has_candidate;
+        mapped.candidate = diagnostic.candidate;
+        mapped.hasPath = diagnostic.has_path;
+        mapped.path = diagnostic.has_path ? classic::toQString(diagnostic.path) : QString{};
+        mapped.kind = diagnostic.kind;
+        mapped.message = classic::toQString(diagnostic.message);
+        presentation.diagnostics.append(std::move(mapped));
+    }
+    return presentation;
+}
+
 } // namespace
 
 QString formatScanRunRejections(const classic::scanner::ScanRunContractDiscoveryResult& discovery)
@@ -164,6 +236,40 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
         return presentation;
     }
 
+    if (execution.has_resume_error) {
+        presentation.kind = ScanRunTerminalKind::InfrastructureError;
+        presentation.message =
+            QStringLiteral("Crash Log Scan recovery failed (%1): %2")
+                .arg(classic::toQString(execution.resume_error.code),
+                     classic::toQString(execution.resume_error.message));
+        QStringList context;
+        if (execution.resume_error.has_path) {
+            context.append(QStringLiteral("Path: %1").arg(classic::toQString(execution.resume_error.path)));
+        }
+        if (execution.resume_error.has_stage) {
+            context.append(QStringLiteral("Stage: %1").arg(resetFailureStageName(execution.resume_error.stage)));
+        }
+        if (execution.resume_error.has_expected_identity) {
+            context.append(
+                QStringLiteral("Expected identity: sha256 %1, %2 bytes")
+                    .arg(classic::toQString(execution.resume_error.expected_identity.sha256))
+                    .arg(execution.resume_error.expected_identity.byte_len));
+        }
+        if (execution.resume_error.has_actual_identity) {
+            context.append(QStringLiteral("Actual identity: sha256 %1, %2 bytes")
+                               .arg(classic::toQString(execution.resume_error.actual_identity.sha256))
+                               .arg(execution.resume_error.actual_identity.byte_len));
+        }
+        if (execution.resume_error.has_backup_path) {
+            context.append(
+                QStringLiteral("Verified backup: %1").arg(classic::toQString(execution.resume_error.backup_path)));
+        }
+        if (!context.isEmpty()) {
+            presentation.message.append(QStringLiteral("\n") + context.join('\n'));
+        }
+        return presentation;
+    }
+
     if (!execution.has_result) {
         presentation.kind = ScanRunTerminalKind::InfrastructureError;
         presentation.message =
@@ -177,6 +283,10 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
     presentation.failed = static_cast<int>(result.failed);
     presentation.cancelled = static_cast<int>(result.cancelled);
     presentation.setupDetails = setupDetails(result);
+    presentation.hasInstalledYamlData = result.has_installed_yaml_data;
+    if (result.has_installed_yaml_data) {
+        presentation.installedYamlData = presentInstalledYamlData(result.installed_yaml_data);
+    }
     presentation.logs.reserve(static_cast<qsizetype>(result.logs.size()));
     for (const auto& log : result.logs) {
         presentation.logs.append(presentLog(log));
@@ -206,6 +316,12 @@ ScanRunTerminalPresentation presentScanRunExecution(const classic::scanner::Scan
         if (!presentation.setupDetails.isEmpty()) {
             presentation.message.append(QStringLiteral("\n") + presentation.setupDetails);
         }
+        break;
+    case Status::LocalIgnoreRecoveryRequired:
+        presentation.kind = ScanRunTerminalKind::LocalIgnoreRecoveryRequired;
+        presentation.message = result.has_message
+                                   ? classic::toQString(result.message)
+                                   : QStringLiteral("Local Ignore recovery is required before scanning can continue.");
         break;
     case Status::CancelledBeforeDiscovery:
         presentation.kind = ScanRunTerminalKind::CancelledBeforeDiscovery;

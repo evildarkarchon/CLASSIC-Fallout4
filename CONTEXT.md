@@ -48,6 +48,14 @@ _Avoid_: report generation, markdown composition, fragment ordering
 The semantic result of one report-relevant analysis offered to Autoscan Report Assembly before markdown rendering. It contains zero or more scan findings or guidance items and may carry authored guidance, but does not determine final section order, presentation, or markdown shape. A present contribution with no findings means the analysis completed without a match; an absent contribution means that analysis was not performed.
 _Avoid_: report fragment, markdown snippet, rendered lines
 
+**Focused Semantic Analyzer**:
+A reusable analysis interface that accepts owned Crash Log or YAML Data facts and returns one typed Autoscan Report Contribution without report presentation mechanics. A completed analysis with no matches returns an explicit empty result; invalid configuration, malformed dependency data, and operational failure remain typed errors.
+_Avoid_: fragment producer, report scanner, formatting helper
+
+**Focused Semantic Analyzer Failure**:
+A typed failure from constructing or running a Focused Semantic Analyzer. It is distinct from a successful empty result and from an analysis that was not performed; in a complete Crash Log Scan Run it becomes either run-wide initialization failure before scheduling or a per-log analysis failure during collection.
+_Avoid_: empty contribution, no-match result, partial report
+
 **Autoscan Report Placement**:
 YAML Data-owned intent for where a Crashgen Expectation outcome appears in the canonical Autoscan Report structure. Autoscan Report Assembly interprets placement rather than freezing data choices into code.
 _Avoid_: report bucket, hardcoded section, Rust placement rule
@@ -55,6 +63,30 @@ _Avoid_: report bucket, hardcoded section, Rust placement rule
 **YAML Data**:
 The curated CLASSIC data files that describe game-specific scan rules, ignore lists, Crashgen expectations, and report guidance.
 _Avoid_: config files, databases
+
+**Installed YAML Data**:
+The authoritative YAML Data available to a CLASSIC installation. Update-eligible files are selected from compatible installed-update and bundled sources according to recovery and fallback policy, while the Ignore list is Local Ignore YAML Data. Explicitly supplied test or tooling paths are outside this selection.
+_Avoid_: data directory, YAML file paths, cached YAML
+
+**Installed YAML Data Snapshot**:
+An immutable view of the Main, selected-game, and Local Ignore YAML Data used by one operation. Its update-eligible members may originate independently, but none may change within the snapshot.
+_Avoid_: selected paths, live YAML files, release bundle
+
+**Local Ignore YAML Data**:
+The per-install, user-editable ignore list initialized from selected Main YAML Data defaults when absent. Once present it is preserved and never delivered by the YAML Data Update Channel.
+_Avoid_: bundled Ignore, updated Ignore, User Settings
+
+**Local Ignore Recovery Decision**:
+The explicit caller choice required when Local Ignore YAML Data is malformed: use no ignore entries for the current operation without changing the file, or reset it from the selected Main YAML Data defaults. CLASSIC never chooses a recovery automatically.
+_Avoid_: automatic repair, fatal scan failure, silent empty fallback
+
+**Local Ignore Recovery Plan**:
+An immutable proposal produced from one Installed YAML Data Snapshot when Local Ignore YAML Data is malformed. It preserves the selected defaults and observed malformed-file identity so an accepted recovery can detect intervening changes before proceeding.
+_Avoid_: retry flag, mutable recovery request, unguarded reset
+
+**Local Ignore Reset Result**:
+The structured success from explicitly accepting Reset To Default on a Local Ignore Recovery Plan. It pairs the retained reset-ready Installed YAML Data Snapshot with the canonical path, a durable byte-exact verified backup, malformed/backup/replacement identities, and reset diagnostics; it is not YAML Data Update Channel rollback state.
+_Avoid_: backup path string, automatic repair, `.prev` rollback
 
 **YAML Data Update Channel**:
 The first-party distribution channel through which CLASSIC clients discover, review, install, and roll back newer YAML Data. It is the maintained update path for curated YAML Data, not a generic arbitrary data feed.
@@ -97,7 +129,7 @@ An Autoscan Report Contribution produced from FormIDs extracted from crash evide
 _Avoid_: FormID, formid fragment, formatted Form ID line
 
 **FormID Value Lookup**:
-The optional database-backed resolution of FormIDs into human-readable value descriptions for Autoscan Report output. It is performance-sensitive during large Crash Log Scan Runs.
+The optional resolution of FormIDs into human-readable value descriptions for Autoscan Report output. Its owned facade distinguishes disabled lookup, a successful miss, and a successful hit as data; malformed replies and operational failures remain typed errors. It is performance-sensitive during large Crash Log Scan Runs.
 _Avoid_: FormID database query setting, show formid values, DB query mode
 
 **Named Record Finding**:
@@ -129,7 +161,7 @@ The directory where a Standard Crash Log Scan Run may move Unsolved Logs when re
 _Avoid_: failed log folder, custom move path
 
 **Crash Log Scan Intake**:
-The preparation of an existing Crash Log for analysis. It resolves the selected game/version, YAML Data, Crashgen metadata, scan options, and FormID readiness into a scan-ready setup; it does not collect Crash Logs or move Unsolved Logs.
+The preparation of an existing Crash Log for analysis. In a complete run it consumes one immutable Installed YAML Data Snapshot selected from the installation root and typed game, then resolves version metadata, scan options, and FormID readiness into a scan-ready setup without reopening selected YAML Data paths; it does not collect Crash Logs or move Unsolved Logs.
 _Avoid_: config loading, scan setup
 
 **Crash Log Scan Run**:
@@ -137,15 +169,19 @@ The execution of a Standard or Targeted Crash Log scan intent. It resolves the C
 _Avoid_: scan transaction, analysis job, scan session
 
 **Crash Log Scan Run Result**:
-The structured outcome of a Crash Log Scan Run, including run status, discovery results, optional setup validation details, and per-log outcomes in discovery order. It represents expected run-level outcomes such as no Crash Logs found, cancellation before discovery, or setup failure as data rather than exceptions.
+The structured outcome of a Crash Log Scan Run, including run status, discovery results, optional setup validation details, optional selected Installed YAML Data metadata and diagnostics, and per-log outcomes in discovery order. It represents expected run-level outcomes such as no Crash Logs found, cancellation before discovery, or setup failure as data rather than exceptions.
 _Avoid_: result list, exception status, scan summary string
+
+**Crash Log Scan Run Continuation**:
+A single-use continuation that retains completed discovery and prepared intake when a Crash Log Scan Run requires an explicit caller decision before analysis. Accepting the decision resumes that same run rather than discovering a new scan set.
+_Avoid_: retry request, new scan run, serialized scan session
 
 **Crash Log Scan Discovery Result**:
 The structured discovery outcome of a Crash Log Scan Run, available when discovery completes and retained in the terminal Crash Log Scan Run Result. It records the scan source, accepted Crash Logs, rejected targeted inputs, and searched locations while preserving the existing Standard and Targeted discovery contracts.
 _Avoid_: selected paths list, pre-scan event, discovery exception
 
 **Crash Log Scan Run Status**:
-The lifecycle state of a Crash Log Scan Run as a whole, such as completed, no Crash Logs found, setup failed, cancelled before discovery, or cancelled after discovery. It does not encode whether individual Crash Logs succeeded or failed.
+The lifecycle state of a Crash Log Scan Run as a whole, such as completed, no Crash Logs found, Local Ignore recovery required, setup failed, cancelled before discovery, or cancelled after discovery. It does not encode whether individual Crash Logs succeeded or failed.
 _Avoid_: completed-with-errors, summary quality, per-log outcome
 
 **Crash Suspect Finding**:

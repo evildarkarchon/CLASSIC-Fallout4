@@ -9,7 +9,6 @@ use indexmap::IndexMap;
 use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
 use std::sync::LazyLock;
 
 fn compile_static_regex(pattern: &str, name: &str) -> Regex {
@@ -29,7 +28,6 @@ static PLUGIN_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 /// Plugin origin markers
-const PLUGIN_ORIGIN_LOADORDER: &str = "LO";
 const PLUGIN_STATUS_DLL: &str = "DLL";
 const PLUGIN_STATUS_UNKNOWN: &str = "???";
 const PLUGIN_LIMIT_MARKER: &str = "[FF]";
@@ -133,80 +131,6 @@ impl PluginAnalyzer {
     ///
     /// This static method checks for a `loadorder.txt` file in the current directory and, if found,
     /// reads plugin names from it (skipping the header line). This allows users to override automatic
-    /// plugin detection from crash logs with a manually specified load order.
-    ///
-    /// When a `loadorder.txt` file is present, CLASSIC will ignore plugins in crash logs and only
-    /// detect plugins listed in this file. This is useful for testing or when crash logs have
-    /// incomplete/corrupted plugin information.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Ok((HashMap, bool, Vec<String>))` containing:
-    /// - `HashMap<String, String>` - Plugin names to status markers (all marked as "LO" for load order)
-    /// - `bool` - Whether any plugins were loaded from the file (`true` if file exists and has plugins)
-    /// - `Vec<String>` - Report lines explaining the loadorder.txt functionality
-    ///
-    /// # Errors
-    ///
-    /// Never returns an error. File I/O errors are logged to report lines but don't fail the function.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_scanlog_core::PluginAnalyzer;
-    ///
-    /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let (plugins, loaded, report) = PluginAnalyzer::loadorder_scan_loadorder_txt()?;
-    ///
-    /// if loaded {
-    ///     println!("Loaded {} plugins from loadorder.txt", plugins.len());
-    /// } else {
-    ///     println!("No loadorder.txt found, will use crash log plugins");
-    /// }
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn loadorder_scan_loadorder_txt() -> Result<(IndexMap<String, String>, bool, Vec<String>)> {
-        let mut lines = vec![
-            "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n".to_string(),
-            "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n".to_string(),
-            "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n".to_string(),
-        ];
-
-        // IndexMap preserves insertion order for Python parity
-        let mut loadorder_plugins = IndexMap::new();
-        let mut seen_plugins = HashSet::new();
-        let loadorder_path = Path::new("loadorder.txt");
-
-        if loadorder_path.exists() {
-            match std::fs::read_to_string(loadorder_path) {
-                Ok(content) => {
-                    let loadorder_data: Vec<&str> = content.lines().collect();
-
-                    // Skip the header line (first line) of the loadorder.txt file
-                    if loadorder_data.len() > 1 {
-                        for plugin_entry in loadorder_data.iter().skip(1) {
-                            let plugin_entry = plugin_entry.trim();
-                            insert_plugin_if_new(
-                                &mut loadorder_plugins,
-                                &mut seen_plugins,
-                                plugin_entry.to_string(),
-                                PLUGIN_ORIGIN_LOADORDER.to_string(),
-                            );
-                        }
-                    }
-                }
-                Err(e) => {
-                    lines.push(format!("Error reading loadorder.txt: {}\n", e));
-                }
-            }
-        }
-
-        let plugins_loaded = !loadorder_plugins.is_empty();
-
-        Ok((loadorder_plugins, plugins_loaded, lines))
-    }
-
     /// Scans and processes the plugin load order from the provided segment plugins.
     ///
     /// This method analyzes a list of segment plugins to extract their details and

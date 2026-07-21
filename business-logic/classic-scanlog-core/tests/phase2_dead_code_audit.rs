@@ -3,8 +3,6 @@
 const PARSER_RS: &str = include_str!("../src/parser.rs");
 const VERSION_RS: &str = include_str!("../src/version.rs");
 const PLUGIN_ANALYZER_RS: &str = include_str!("../src/plugin_analyzer.rs");
-const SETTINGS_VALIDATOR_RS: &str = include_str!("../src/settings_validator.rs");
-const SETTINGS_VALIDATOR_TESTS_RS: &str = include_str!("../src/settings_validator_tests.rs");
 
 #[test]
 fn parser_and_version_dead_symbols_do_not_reappear() {
@@ -37,34 +35,9 @@ fn parser_and_version_dead_symbols_do_not_reappear() {
 }
 
 #[test]
-fn plugin_analyzer_and_settings_validator_dead_fallbacks_do_not_reappear() {
+fn plugin_analyzer_dead_cache_does_not_reappear() {
     assert!(
         !PLUGIN_ANALYZER_RS.contains("case_cache"),
         "PluginAnalyzer should stay free of the removed case_cache field"
-    );
-    assert!(
-        !SETTINGS_VALIDATOR_RS.contains("scan_all_settings_legacy_bucketed"),
-        "settings_validator.rs should not reintroduce the removed legacy bucketed fallback"
-    );
-    for forbidden in [
-        "scan_buffout_achievements_setting",
-        "scan_buffout_memorymanagement_settings",
-        "scan_archivelimit_setting",
-        "scan_buffout_looksmenu_setting",
-        "scan_addictol_settings_scaffold",
-    ] {
-        assert!(
-            !SETTINGS_VALIDATOR_RS.contains(forbidden),
-            "settings_validator.rs should not reintroduce removed named-check API: {forbidden}"
-        );
-    }
-    assert!(
-        SETTINGS_VALIDATOR_RS.contains("analysis.disabled_setting_notices"),
-        "settings_validator should preserve Disabled Setting Notices from semantic analysis"
-    );
-    assert!(
-        SETTINGS_VALIDATOR_TESTS_RS
-            .contains("scan_all_settings_without_rules_returns_disabled_notices_only"),
-        "settings_validator should keep the no-rules contract test for disabled notices only"
     );
 }

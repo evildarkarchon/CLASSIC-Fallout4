@@ -71,6 +71,20 @@ const BULK_EVICTION_DIVISOR: usize = 16;
 const BULK_EVICTION_MIN_BATCH: usize = 256;
 const BULK_EVICTION_MAX_BATCH: usize = 4_096;
 
+/// Selects whether database query failures remain compatible and fail-soft or
+/// propagate to the strict owned lookup facade.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum QueryFailurePolicy {
+    FailSoft,
+    Strict,
+}
+
+impl QueryFailurePolicy {
+    const fn is_strict(self) -> bool {
+        matches!(self, Self::Strict)
+    }
+}
+
 /// Represents various errors that can occur when working with a database.
 #[derive(Debug, Error)]
 pub enum DatabaseError {
@@ -1141,6 +1155,32 @@ impl DatabasePool {
         plugin: &str,
         table: Option<&str>,
     ) -> Result<Option<String>, DatabaseError> {
+        self.get_entry_with_error_policy(formid, plugin, table, QueryFailurePolicy::FailSoft)
+            .await
+    }
+
+    /// Queries one FormID while preserving every operational query failure.
+    ///
+    /// The public legacy pool API remains fail-soft for existing consumers; the
+    /// strict owned lookup facade uses this crate-private seam so a SQL failure
+    /// cannot become a successful miss.
+    pub(crate) async fn get_entry_strict(
+        &self,
+        formid: &str,
+        plugin: &str,
+        table: Option<&str>,
+    ) -> Result<Option<String>, DatabaseError> {
+        self.get_entry_with_error_policy(formid, plugin, table, QueryFailurePolicy::Strict)
+            .await
+    }
+
+    async fn get_entry_with_error_policy(
+        &self,
+        formid: &str,
+        plugin: &str,
+        table: Option<&str>,
+        failure_policy: QueryFailurePolicy,
+    ) -> Result<Option<String>, DatabaseError> {
         self.maybe_run_proactive_cleanup(1);
 
         let game_table = self.game_table.resolve(table);
@@ -1177,14 +1217,17 @@ impl DatabasePool {
             "SELECT entry FROM {} WHERE formid=? AND plugin=? COLLATE nocase",
             game_table
         );
+        let pool_entries = self
+            .queryable_pool_snapshots(&game_table, failure_policy)
+            .await?;
 
         for (query_label, query) in [("exact", &exact_query), ("nocase", &nocase_query)] {
-            for (db_path, pool) in self.registry.pool_snapshots() {
+            for (db_path, pool) in &pool_entries {
                 // TRUE ASYNC QUERY - no blocking!
                 match sqlx::query(sqlx::AssertSqlSafe(query.as_str()))
                     .bind(formid)
                     .bind(plugin)
-                    .fetch_optional(&pool)
+                    .fetch_optional(pool)
                     .await
                 {
                     Ok(Some(row)) => {
@@ -1202,6 +1245,12 @@ impl DatabasePool {
                         continue;
                     }
                     Err(e) => {
+                        if failure_policy.is_strict() {
+                            return Err(DatabaseError::QueryError(format!(
+                                "{} query in {:?}: {}",
+                                query_label, db_path, e
+                            )));
+                        }
                         error!("Query error in {:?} ({}) : {}", db_path, query_label, e);
                         continue;
                     }
@@ -1328,17 +1377,87 @@ impl DatabasePool {
             .record_stable_shape_selection(bucket_len, padded_pairs);
     }
 
+    /// Returns the database pools that can participate in a query for `game_table`.
+    ///
+    /// Strict lookups validate each pool's schema so databases for other supported
+    /// games are ignored without hiding failures from databases that do expose the
+    /// active table. Legacy fail-soft lookups retain their existing query behavior.
+    /// A strict schema-inspection failure returns `DatabaseError::QueryError` with
+    /// the affected table and database path. Strict lookup also fails when no
+    /// initialized database exposes the active table, because an empty filtered
+    /// set is an invalid adapter/schema configuration rather than a successful miss.
+    async fn queryable_pool_snapshots(
+        &self,
+        game_table: &str,
+        failure_policy: QueryFailurePolicy,
+    ) -> Result<Vec<(PathBuf, SqlitePool)>, DatabaseError> {
+        let pool_entries = self.registry.pool_snapshots();
+        if !failure_policy.is_strict() {
+            return Ok(pool_entries);
+        }
+
+        let table_checks = pool_entries.into_iter().map(|(db_path, pool)| {
+            let game_table = game_table.to_string();
+            async move {
+                let table_exists = sqlx::query_scalar::<_, i64>(
+                    "SELECT EXISTS(SELECT 1 FROM sqlite_schema \
+                     WHERE type = 'table' AND name = ? COLLATE NOCASE)",
+                )
+                .bind(&game_table)
+                .fetch_one(&pool)
+                .await
+                .map_err(|error| {
+                    DatabaseError::QueryError(format!(
+                        "table validation for {game_table:?} in {db_path:?}: {error}"
+                    ))
+                })? != 0;
+
+                if table_exists {
+                    Ok::<Option<(PathBuf, SqlitePool)>, DatabaseError>(Some((db_path, pool)))
+                } else {
+                    // A shared pool can intentionally contain one database per supported game.
+                    debug!(
+                        "Skipping database {:?} without active game table {:?}",
+                        db_path, game_table
+                    );
+                    Ok(None)
+                }
+            }
+        });
+
+        let mut queryable_pools = Vec::new();
+        for table_check in join_all(table_checks).await {
+            if let Some(pool_entry) = table_check? {
+                queryable_pools.push(pool_entry);
+            }
+        }
+        if queryable_pools.is_empty() {
+            return Err(DatabaseError::QueryError(format!(
+                "no initialized database exposes active game table {game_table:?}"
+            )));
+        }
+        Ok(queryable_pools)
+    }
+
+    /// Executes one batch query in parallel against preselected database pools.
+    ///
+    /// For strict lookups, `pool_entries` must come from `queryable_pool_snapshots`
+    /// for the same active table and policy. That preserves operational failures
+    /// while excluding databases that intentionally serve another game table.
+    /// The returned tuples contain `(formid, plugin, entry)` rows merged from every
+    /// selected pool. Strict per-pool query failures return `DatabaseError::QueryError`,
+    /// and strict row-decode failures return `DatabaseError::SqlxError`.
     async fn execute_parallel_batch_query(
         &self,
+        pool_entries: &[(PathBuf, SqlitePool)],
         query: &str,
         bindings: &[(String, String)],
-    ) -> Vec<(String, String, String)> {
-        // Collect all pools for parallel querying
-        let pool_entries = self.registry.pool_snapshots();
-
+        failure_policy: QueryFailurePolicy,
+    ) -> Result<Vec<(String, String, String)>, DatabaseError> {
         // Create futures for parallel database queries
         let query_futures: Vec<_> = pool_entries
-            .into_iter()
+            .iter()
+            .cloned()
             .map(|(db_path, pool)| {
                 let query_clone = query.to_string();
                 let bindings_clone = bindings.to_vec();
@@ -1355,19 +1474,38 @@ impl DatabasePool {
                         Ok(rows) => {
                             let mut batch_results = Vec::with_capacity(rows.len());
                             for row in rows {
-                                if let (Ok(formid), Ok(plugin), Ok(entry_val)) = (
+                                let decoded = (
                                     row.try_get::<String, _>(0),
                                     row.try_get::<String, _>(1),
                                     row.try_get::<String, _>(2),
-                                ) {
-                                    batch_results.push((formid, plugin, entry_val));
+                                );
+                                match decoded {
+                                    (Ok(formid), Ok(plugin), Ok(entry_val)) => {
+                                        batch_results.push((formid, plugin, entry_val));
+                                    }
+                                    (Err(error), _, _)
+                                    | (_, Err(error), _)
+                                    | (_, _, Err(error))
+                                        if failure_policy.is_strict() =>
+                                    {
+                                        return Err(DatabaseError::SqlxError(error));
+                                    }
+                                    _ => {}
                                 }
                             }
-                            batch_results
+                            Ok(batch_results)
                         }
                         Err(e) => {
+                            if failure_policy.is_strict() {
+                                return Err(DatabaseError::QueryError(format!(
+                                    "batch query in {:?}: {}",
+                                    db_path, e
+                                )));
+                            }
                             error!("Batch query error in {:?}: {}", db_path, e);
-                            Vec::new() // Return empty on error, don't fail entire batch
+                            // The legacy pool API remains fail-soft; strict facade calls set
+                            // `QueryFailurePolicy::Strict` and return before this replacement.
+                            Ok(Vec::new())
                         }
                     }
                 }
@@ -1375,11 +1513,12 @@ impl DatabasePool {
             .collect();
 
         let mut merged_results = Vec::new();
-        for mut per_db_results in join_all(query_futures).await {
+        for per_db_results in join_all(query_futures).await {
+            let mut per_db_results = per_db_results?;
             merged_results.append(&mut per_db_results);
         }
 
-        merged_results
+        Ok(merged_results)
     }
 
     fn merge_batch_rows(
@@ -1444,6 +1583,38 @@ impl DatabasePool {
         table: Option<&str>,
         batch_size: usize,
     ) -> Result<HashMap<String, String>, DatabaseError> {
+        self.get_entries_batch_with_error_policy(
+            formid_plugin_pairs,
+            table,
+            batch_size,
+            QueryFailurePolicy::FailSoft,
+        )
+        .await
+    }
+
+    /// Performs an optimized batch lookup without converting query/decode failures to misses.
+    pub(crate) async fn get_entries_batch_strict(
+        &self,
+        formid_plugin_pairs: Vec<(String, String)>,
+        table: Option<&str>,
+        batch_size: usize,
+    ) -> Result<HashMap<String, String>, DatabaseError> {
+        self.get_entries_batch_with_error_policy(
+            formid_plugin_pairs,
+            table,
+            batch_size,
+            QueryFailurePolicy::Strict,
+        )
+        .await
+    }
+
+    async fn get_entries_batch_with_error_policy(
+        &self,
+        formid_plugin_pairs: Vec<(String, String)>,
+        table: Option<&str>,
+        batch_size: usize,
+        failure_policy: QueryFailurePolicy,
+    ) -> Result<HashMap<String, String>, DatabaseError> {
         self.maybe_run_proactive_cleanup(formid_plugin_pairs.len() as u64);
 
         let game_table = self.game_table.resolve(table);
@@ -1490,6 +1661,9 @@ impl DatabasePool {
         }
 
         let cache_ttl = self.query_cache.current_ttl();
+        let pool_entries = self
+            .queryable_pool_snapshots(&game_table, failure_policy)
+            .await?;
 
         // Keep caller-provided chunking contract while enforcing stable-shape bounds.
         let effective_batch_size = batch_size.clamp(1, MAX_STABLE_BATCH_BUCKET);
@@ -1521,8 +1695,13 @@ impl DatabasePool {
                 .map(|(formid, plugin, _)| (formid.clone(), plugin.clone()))
                 .collect();
             let exact_rows = self
-                .execute_parallel_batch_query(&exact_query, &exact_bindings)
-                .await;
+                .execute_parallel_batch_query(
+                    &pool_entries,
+                    &exact_query,
+                    &exact_bindings,
+                    failure_policy,
+                )
+                .await?;
 
             let mut resolved_lookup_keys: HashSet<(String, String)> = HashSet::new();
             let mut cache_inserts: Vec<(CacheKey, String)> = Vec::new();
@@ -1568,8 +1747,13 @@ impl DatabasePool {
                         .map(|(formid, plugin, _)| (formid.clone(), plugin.clone()))
                         .collect();
                     let fallback_rows = self
-                        .execute_parallel_batch_query(&fallback_query, &fallback_bindings)
-                        .await;
+                        .execute_parallel_batch_query(
+                            &pool_entries,
+                            &fallback_query,
+                            &fallback_bindings,
+                            failure_policy,
+                        )
+                        .await?;
                     Self::merge_batch_rows(
                         &game_table,
                         fallback_rows,

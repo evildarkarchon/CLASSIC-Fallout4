@@ -165,7 +165,7 @@ pub struct SuspectStackRule {
 pub struct CrashgenEntryRaw {
     /// Bracket header used by this crashgen (e.g., `"[Compatibility]"`), for display only.
     pub display_section: String,
-    /// Settings keys to skip in `check_disabled_settings()`.
+    /// Settings keys excluded from Disabled Setting Notice analysis.
     pub ignore_keys: Vec<String>,
     /// String names of named checks (e.g., `"achievements"`, `"memory_management"`).
     pub checks: Vec<String>,
@@ -855,7 +855,7 @@ fn map_settings_error(
     }
 }
 
-fn parse_and_merge_yaml_content(
+pub(crate) fn parse_and_merge_yaml_content(
     source_label: &str,
     empty_label: &str,
     content: &str,
@@ -1037,7 +1037,7 @@ impl YamlDataCore {
         &self.game_root_name
     }
 
-    fn build_from_yaml_documents(
+    pub(crate) fn build_from_yaml_documents(
         main_data: &Yaml,
         game_data: &Yaml,
         ignore_data: &Yaml,

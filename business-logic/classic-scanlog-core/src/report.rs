@@ -1,28 +1,27 @@
-//! High-performance report generation with string interning and parallel processing
+//! Private canonical Autoscan Report assembly and persistence helpers.
 //!
-//! This module implements Phase 5 of the Rust migration plan, providing:
-//! - Immutable report fragments for functional composition
-//! - String interning/pooling for memory efficiency
-//! - Deterministic final report composition
-//! - Efficient string building strategies
+//! Semantic analyzers do not depend on this presentation layer. The complete
+//! Crash Log Scan Run is the only public operation that reaches this module.
 
 // Error types not needed in pure Rust - using standard Result
-use crate::crash_suspect_analyzer::CrashSuspectFinding;
+use crate::autoscan_report_contribution_collector::AutoscanReportContributions;
+use crate::crash_suspect_analyzer::{CrashSuspectAnalysisResult, CrashSuspectFinding};
+use crate::crashgen_settings_analyzer::{
+    CrashgenExpectationOutcome, CrashgenSettingsAnalysisResult, DisabledSettingNotice,
+};
 use crate::error::{Result, ScanLogError};
+use crate::formid_finding_analyzer::FormIDFindingAnalysisResult;
 use crate::mod_guidance_analyzer::{
     ImportantModGuidance, ModGuidanceAnalysisResult, ModGuidanceMatchState, ModSolutionGuidance,
 };
+use crate::named_record_finding_analyzer::NamedRecordFindingAnalysisResult;
 use crate::plugin_evidence_analyzer::PluginEvidenceAnalysisResult;
 use crate::scan_run::CrashLogScanSetupResult;
 use crate::version::CrashgenVersionStatus;
 use classic_config_core::{AutoscanReportPlacement, OutcomeKind, RuleSeverity};
 use classic_file_io_core::FileIOCore;
-use dashmap::DashMap;
-use parking_lot::RwLock;
-use rayon::prelude::*;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, LazyLock};
-use string_cache::DefaultAtom;
+use std::sync::Arc;
 
 /// Build the Autoscan Report path for a Crash Log path.
 pub(crate) fn autoscan_report_path(log_path: &Path) -> PathBuf {
@@ -115,41 +114,6 @@ pub(crate) struct AutoscanReportFacts {
     pub fcx_setup: Option<Arc<CrashLogScanSetupResult>>,
 }
 
-/// Typed contribution from scan-time collectors into Autoscan Report Assembly.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum AutoscanReportContribution {
-    CrashgenExpectation(CrashgenExpectationContribution),
-    DisabledSettingNotice {
-        setting_name: String,
-        crashgen_name: String,
-    },
-    CrashSuspectFinding {
-        finding: CrashSuspectFinding,
-    },
-    ModGuidance {
-        result: ModGuidanceAnalysisResult,
-    },
-    PluginEvidence {
-        result: PluginEvidenceAnalysisResult,
-    },
-    FormIdFinding {
-        lines: Vec<String>,
-    },
-    NamedRecordFinding {
-        lines: Vec<String>,
-    },
-}
-
-/// Structured Crashgen Expectation result ready for report placement.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct CrashgenExpectationContribution {
-    pub kind: OutcomeKind,
-    pub severity: RuleSeverity,
-    pub message: String,
-    pub fix: Option<String>,
-    pub placement: AutoscanReportPlacement,
-}
-
 /// Semantic Mod Guidance groups rendered in the canonical Autoscan Report order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ModGuidanceGroup {
@@ -173,10 +137,14 @@ impl AutoscanReportAssembler {
         Self
     }
 
+    /// Renders one typed aggregate in the canonical Autoscan Report section order.
+    ///
+    /// Optional results preserve the collector's performed-versus-not-run distinction;
+    /// the assembler alone decides whether completed-empty results produce report text.
     pub(crate) fn assemble(
         &self,
         facts: &AutoscanReportFacts,
-        contributions: Vec<AutoscanReportContribution>,
+        contributions: AutoscanReportContributions,
     ) -> Vec<String> {
         let report_gen = ReportGenerator::with_config(
             facts.classic_version.clone(),
@@ -192,10 +160,11 @@ impl AutoscanReportAssembler {
                 facts.crashgen_status,
                 facts.fake_bot_compatible_mode,
             ),
-            Self::error_information_fragments(&contributions),
+            Self::error_information_fragments(contributions.crashgen_settings.as_ref()),
         ));
 
-        let suspect_fragments = Self::crash_suspect_fragments(&contributions);
+        let suspect_fragments =
+            Self::crash_suspect_fragments(contributions.crash_suspects.as_ref());
         let found_suspect = !suspect_fragments.is_empty();
         composer.add(report_gen.generate_suspect_section_header());
         composer.add_many(suspect_fragments);
@@ -205,7 +174,10 @@ impl AutoscanReportAssembler {
             composer.add(Self::fcx_setup_fragment(setup));
         }
 
-        let settings_fragments = Self::settings_fragments(&contributions);
+        let settings_fragments = Self::settings_fragments(
+            contributions.crashgen_settings.as_ref(),
+            &facts.crashgen_name,
+        );
         if !settings_fragments.is_empty() {
             composer.add(report_gen.generate_settings_section_header());
             composer.add_many(settings_fragments);
@@ -217,7 +189,8 @@ impl AutoscanReportAssembler {
             ModGuidanceGroup::HasSolutions,
             ModGuidanceGroup::ImportantMods,
         ] {
-            let fragments = Self::mod_guidance_fragments(&contributions, group);
+            let fragments =
+                Self::mod_guidance_fragments(contributions.mod_guidance.as_ref(), group);
             if !fragments.is_empty() {
                 composer.add(Self::mod_guidance_header(&report_gen, group));
                 composer.add_many(fragments);
@@ -227,49 +200,109 @@ impl AutoscanReportAssembler {
         Self::add_section_with_header(
             &mut composer,
             report_gen.generate_plugin_suspect_header(),
-            Self::plugin_evidence_fragments(&contributions, &facts.crashgen_name),
+            Self::plugin_evidence_fragments(
+                contributions.plugin_evidence.as_ref(),
+                &facts.crashgen_name,
+            ),
         );
         Self::add_section_with_header(
             &mut composer,
             report_gen.generate_formid_section_header(),
-            Self::line_fragments(&contributions, |contribution| {
-                if let AutoscanReportContribution::FormIdFinding { lines } = contribution {
-                    Some(lines)
-                } else {
-                    None
-                }
-            }),
+            Self::formid_finding_fragments(
+                contributions.formid_findings.as_ref(),
+                &facts.crashgen_name,
+            ),
         );
         Self::add_section_with_header(
             &mut composer,
             report_gen.generate_record_section_header(),
-            Self::line_fragments(&contributions, |contribution| {
-                if let AutoscanReportContribution::NamedRecordFinding { lines } = contribution {
-                    Some(lines)
-                } else {
-                    None
-                }
-            }),
+            Self::named_record_finding_fragments(
+                contributions.named_record_findings.as_ref(),
+                &facts.crashgen_name,
+            ),
         );
 
         composer.add(report_gen.generate_footer());
         composer.compose().to_list()
     }
 
-    /// Renders a present Plugin Evidence result while preserving absent analysis as no section.
-    fn plugin_evidence_fragments(
-        contributions: &[AutoscanReportContribution],
+    /// Renders present FormID Finding results while preserving absent analysis as no section.
+    fn formid_finding_fragments(
+        result: Option<&FormIDFindingAnalysisResult>,
         crashgen_name: &str,
     ) -> Vec<ReportFragment> {
-        contributions
+        let Some(result) = result else {
+            return Vec::new();
+        };
+        let lines = Self::render_formid_findings(result, crashgen_name);
+        if lines.is_empty() {
+            Vec::new()
+        } else {
+            vec![ReportFragment::from_lines(lines)]
+        }
+    }
+
+    /// Owns canonical FormID sorting, resolved-value formatting, and report prose.
+    fn render_formid_findings(
+        result: &FormIDFindingAnalysisResult,
+        crashgen_name: &str,
+    ) -> Vec<String> {
+        let mut findings = result
+            .findings
             .iter()
-            .filter_map(|contribution| match contribution {
-                AutoscanReportContribution::PluginEvidence { result } => Some(
-                    ReportFragment::from_lines(Self::render_plugin_evidence(result, crashgen_name)),
-                ),
-                _ => None,
+            .filter(|finding| finding.plugin.is_some())
+            .collect::<Vec<_>>();
+        findings.sort_by(|left, right| left.identifier.cmp(&right.identifier));
+        if findings.is_empty() {
+            // Unresolved identifiers remain semantic evidence but are intentionally not reportable yet.
+            return Vec::new();
+        }
+        let mut lines = findings
+            .into_iter()
+            .map(|finding| {
+                let plugin = finding
+                    .plugin
+                    .as_deref()
+                    .expect("resolved FormID findings always have a plugin");
+                match finding.value.as_deref() {
+                    Some(value) => format!(
+                        "- {plugin} | {} | {value} | {}\n",
+                        finding.identifier, finding.occurrences
+                    ),
+                    None => format!(
+                        "- {plugin} | {} | {}\n",
+                        finding.identifier, finding.occurrences
+                    ),
+                }
             })
-            .collect()
+            .collect::<Vec<_>>();
+        lines.push(
+            "\n[Last number counts how many times each Form ID shows up in the crash log.]\n"
+                .to_string(),
+        );
+        lines.push(format!(
+            "These Form IDs were caught by {crashgen_name} and some of them might be related to this crash.\n"
+        ));
+        lines.push(
+            "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n"
+                .to_string(),
+        );
+        lines
+    }
+
+    /// Renders a present Plugin Evidence result while preserving absent analysis as no section.
+    fn plugin_evidence_fragments(
+        result: Option<&PluginEvidenceAnalysisResult>,
+        crashgen_name: &str,
+    ) -> Vec<ReportFragment> {
+        result
+            .map(|result| {
+                vec![ReportFragment::from_lines(Self::render_plugin_evidence(
+                    result,
+                    crashgen_name,
+                ))]
+            })
+            .unwrap_or_default()
     }
 
     /// Owns canonical sorting and prose for typed Plugin Evidence.
@@ -308,6 +341,49 @@ impl AutoscanReportAssembler {
         lines
     }
 
+    /// Renders a present Named Record Finding result while preserving absent analysis as no section.
+    fn named_record_finding_fragments(
+        result: Option<&NamedRecordFindingAnalysisResult>,
+        crashgen_name: &str,
+    ) -> Vec<ReportFragment> {
+        result
+            .map(|result| {
+                vec![ReportFragment::from_lines(
+                    Self::render_named_record_findings(result, crashgen_name),
+                )]
+            })
+            .unwrap_or_default()
+    }
+
+    /// Owns canonical sorting, occurrence formatting, and prose for Named Record Findings.
+    fn render_named_record_findings(
+        result: &NamedRecordFindingAnalysisResult,
+        crashgen_name: &str,
+    ) -> Vec<String> {
+        if result.findings.is_empty() {
+            return vec!["* COULDN'T FIND ANY NAMED RECORDS *\n\n".to_string()];
+        }
+
+        let mut findings = result.findings.iter().collect::<Vec<_>>();
+        findings.sort_by(|left, right| left.record.cmp(&right.record));
+        let mut lines = findings
+            .into_iter()
+            .map(|finding| format!("- {} | {}\n", finding.record, finding.occurrences))
+            .collect::<Vec<_>>();
+        lines.push(
+            "\n[Last number counts how many times each Named Record shows up in the crash log.]\n"
+                .to_string(),
+        );
+        lines.push(format!(
+            "These records were caught by {crashgen_name} and some of them might be related to this crash.\n"
+        ));
+        lines.push(
+            "Named records should give extra info on involved game objects, record types or mod files.\n\n"
+                .to_string(),
+        );
+        lines
+    }
+
     fn add_section_with_header(
         composer: &mut ReportComposer,
         header: ReportFragment,
@@ -320,35 +396,11 @@ impl AutoscanReportAssembler {
         composer.add_many(fragments);
     }
 
-    fn line_fragments<F>(
-        contributions: &[AutoscanReportContribution],
-        select_lines: F,
-    ) -> Vec<ReportFragment>
-    where
-        F: Fn(&AutoscanReportContribution) -> Option<&Vec<String>>,
-    {
-        contributions
-            .iter()
-            .filter_map(|contribution| {
-                let lines = select_lines(contribution)?;
-                (!lines.is_empty()).then(|| ReportFragment::from_lines(lines.clone()))
-            })
-            .collect()
-    }
-
     /// Renders semantic Crash Suspect Findings at the sole presentation boundary.
-    fn crash_suspect_fragments(
-        contributions: &[AutoscanReportContribution],
-    ) -> Vec<ReportFragment> {
-        let mut findings = contributions
-            .iter()
-            .filter_map(|contribution| {
-                if let AutoscanReportContribution::CrashSuspectFinding { finding } = contribution {
-                    Some(finding)
-                } else {
-                    None
-                }
-            })
+    fn crash_suspect_fragments(result: Option<&CrashSuspectAnalysisResult>) -> Vec<ReportFragment> {
+        let mut findings = result
+            .into_iter()
+            .flat_map(|result| result.findings.iter())
             .collect::<Vec<_>>();
 
         // The analyzer preserves semantic rule order; canonical report grouping and sorting live here.
@@ -394,63 +446,56 @@ impl AutoscanReportAssembler {
             .collect()
     }
 
+    /// Renders only YAML outcomes placed into the Error Information section.
     fn error_information_fragments(
-        contributions: &[AutoscanReportContribution],
+        result: Option<&CrashgenSettingsAnalysisResult>,
     ) -> Vec<ReportFragment> {
-        contributions
-            .iter()
-            .filter_map(|contribution| match contribution {
-                AutoscanReportContribution::CrashgenExpectation(outcome)
-                    if outcome.placement == AutoscanReportPlacement::ErrorInformation =>
-                {
-                    Some(ReportFragment::from_lines(
-                        outcome.render_error_information_lines(),
-                    ))
-                }
-                _ => None,
-            })
+        result
+            .into_iter()
+            .flat_map(|result| result.expectation_outcomes.iter())
+            .filter(|outcome| outcome.placement == AutoscanReportPlacement::ErrorInformation)
+            .map(|outcome| ReportFragment::from_lines(render_error_information_lines(outcome)))
             .collect()
     }
 
-    fn settings_fragments(contributions: &[AutoscanReportContribution]) -> Vec<ReportFragment> {
-        contributions
+    /// Renders settings-placement expectations before universal disabled-setting notices.
+    fn settings_fragments(
+        result: Option<&CrashgenSettingsAnalysisResult>,
+        crashgen_name: &str,
+    ) -> Vec<ReportFragment> {
+        let Some(result) = result else {
+            return Vec::new();
+        };
+        let mut fragments = result
+            .expectation_outcomes
             .iter()
-            .filter_map(|contribution| match contribution {
-                AutoscanReportContribution::CrashgenExpectation(outcome)
-                    if outcome.placement == AutoscanReportPlacement::Settings =>
-                {
-                    Some(ReportFragment::from_lines(outcome.render_settings_lines()))
-                }
-                AutoscanReportContribution::DisabledSettingNotice {
-                    setting_name,
-                    crashgen_name,
-                } => Some(ReportFragment::from_lines(disabled_setting_notice_lines(
-                    setting_name,
-                    crashgen_name,
-                ))),
-                _ => None,
-            })
-            .collect()
+            .filter(|outcome| outcome.placement == AutoscanReportPlacement::Settings)
+            .map(|outcome| ReportFragment::from_lines(render_settings_lines(outcome)))
+            .collect::<Vec<_>>();
+        fragments.extend(
+            result
+                .disabled_setting_notices
+                .iter()
+                .map(|notice| render_disabled_setting_notice_fragment(notice, crashgen_name)),
+        );
+        fragments
     }
 
+    /// Renders one canonical Mod Guidance group from the aggregate semantic result.
     fn mod_guidance_fragments(
-        contributions: &[AutoscanReportContribution],
+        result: Option<&ModGuidanceAnalysisResult>,
         group: ModGuidanceGroup,
     ) -> Vec<ReportFragment> {
-        let lines = contributions
-            .iter()
-            .find_map(|contribution| match contribution {
-                AutoscanReportContribution::ModGuidance { result } => Some(match group {
-                    ModGuidanceGroup::MayConflict => Self::render_mod_conflicts(result),
-                    ModGuidanceGroup::FrequentCrashes => {
-                        Self::render_mod_solutions(&result.frequent_crashes)
-                    }
-                    ModGuidanceGroup::HasSolutions => Self::render_mod_solutions(&result.solutions),
-                    ModGuidanceGroup::ImportantMods => {
-                        Self::render_important_mods(&result.important_mods)
-                    }
-                }),
-                _ => None,
+        let lines = result
+            .map(|result| match group {
+                ModGuidanceGroup::MayConflict => Self::render_mod_conflicts(result),
+                ModGuidanceGroup::FrequentCrashes => {
+                    Self::render_mod_solutions(&result.frequent_crashes)
+                }
+                ModGuidanceGroup::HasSolutions => Self::render_mod_solutions(&result.solutions),
+                ModGuidanceGroup::ImportantMods => {
+                    Self::render_important_mods(&result.important_mods)
+                }
             })
             .unwrap_or_default();
 
@@ -624,99 +669,107 @@ impl AutoscanReportAssembler {
                 setup
                     .configuration_issues
                     .iter()
-                    .map(crate::ConfigIssue::format_report),
+                    .map(Self::render_configuration_issue),
             );
         }
 
         ReportFragment::from_lines(lines)
     }
-}
 
-impl CrashgenExpectationContribution {
-    pub(crate) fn render_settings_lines(&self) -> Vec<String> {
-        let mut lines = Vec::new();
-        match self.kind {
-            OutcomeKind::Issue => {
-                lines.push(format!("# ❌ CAUTION : {} # \n", self.message));
-                if let Some(fix) = self.fix.as_deref() {
-                    lines.push(format!(" FIX: {}\n\n-----\n", fix));
-                } else {
-                    lines.push("\n-----\n".to_string());
-                }
-            }
-            OutcomeKind::Notice => {
-                lines.push(format!(
-                    "# {} NOTICE : {} # \n",
-                    notice_icon(self.severity),
-                    self.message
-                ));
-                if let Some(fix) = self.fix.as_deref() {
-                    lines.push(format!(" {}\n\n-----\n", fix));
-                } else {
-                    lines.push("\n-----\n".to_string());
-                }
-            }
-            OutcomeKind::Success => {
-                lines.push(format!("✔️ {}\n\n-----\n", self.message));
-            }
-        }
-        lines
-    }
+    /// Renders one semantic FCX configuration issue inside private report assembly.
+    fn render_configuration_issue(issue: &crate::ConfigIssue) -> String {
+        let icon = match issue.severity.as_str() {
+            "error" => "❌",
+            "warning" => "⚠️",
+            "info" => "ℹ️",
+            _ => "⚠️",
+        };
+        let section = issue
+            .section
+            .as_ref()
+            .map(|section| format!("[{section}]"))
+            .unwrap_or_else(|| "N/A".to_string());
 
-    pub(crate) fn render_error_information_lines(&self) -> Vec<String> {
-        let mut lines = Vec::new();
-        match self.kind {
-            OutcomeKind::Issue => {
-                lines.push(format!("**# ❌ CAUTION : {} #**\n\n", self.message));
-                if let Some(fix) = self.fix.as_deref() {
-                    lines.push(format!("FIX: {}\n\n", fix));
-                }
-            }
-            OutcomeKind::Notice => {
-                lines.push(format!(
-                    "**# {} NOTICE : {} #**\n\n",
-                    notice_icon(self.severity),
-                    self.message
-                ));
-                if let Some(fix) = self.fix.as_deref() {
-                    lines.push(format!("{}\n\n", fix));
-                }
-            }
-            OutcomeKind::Success => {
-                lines.push(format!("**✔️ {}**\n\n", self.message));
-            }
-        }
-        lines
+        format!(
+            "{} DETECTED ISSUE: {}\n   File: {}\n   Section: {}\n   Setting: {}\n   Current Value: {}\n   Recommended Value: {}\n\n",
+            icon,
+            issue.description,
+            issue.file_path,
+            section,
+            issue.setting,
+            issue.current_value,
+            issue.recommended_value
+        )
     }
 }
 
-impl AutoscanReportContribution {
-    pub(crate) fn legacy_settings_fragment(
-        &self,
-    ) -> Option<(AutoscanReportPlacement, ReportFragment)> {
-        match self {
-            Self::CrashgenExpectation(outcome) => {
-                let lines = match outcome.placement {
-                    AutoscanReportPlacement::Settings => outcome.render_settings_lines(),
-                    AutoscanReportPlacement::ErrorInformation => {
-                        outcome.render_error_information_lines()
-                    }
-                };
-                Some((outcome.placement, ReportFragment::from_lines(lines)))
+/// Renders one universal disabled-setting notice with presentation supplied by report assembly.
+fn render_disabled_setting_notice_fragment(
+    notice: &DisabledSettingNotice,
+    crashgen_name: &str,
+) -> ReportFragment {
+    ReportFragment::from_lines(disabled_setting_notice_lines(
+        &notice.setting_name,
+        crashgen_name,
+    ))
+}
+
+/// Renders one semantic expectation under settings-related guidance.
+fn render_settings_lines(outcome: &CrashgenExpectationOutcome) -> Vec<String> {
+    let mut lines = Vec::new();
+    match outcome.kind {
+        OutcomeKind::Issue => {
+            lines.push(format!("# ❌ CAUTION : {} # \n", outcome.message));
+            if let Some(fix) = outcome.fix.as_deref() {
+                lines.push(format!(" FIX: {}\n\n-----\n", fix));
+            } else {
+                lines.push("\n-----\n".to_string());
             }
-            Self::DisabledSettingNotice {
-                setting_name,
-                crashgen_name,
-            } => Some((
-                AutoscanReportPlacement::Settings,
-                ReportFragment::from_lines(disabled_setting_notice_lines(
-                    setting_name,
-                    crashgen_name,
-                )),
-            )),
-            _ => None,
+        }
+        OutcomeKind::Notice => {
+            lines.push(format!(
+                "# {} NOTICE : {} # \n",
+                notice_icon(outcome.severity),
+                outcome.message
+            ));
+            if let Some(fix) = outcome.fix.as_deref() {
+                lines.push(format!(" {}\n\n-----\n", fix));
+            } else {
+                lines.push("\n-----\n".to_string());
+            }
+        }
+        OutcomeKind::Success => {
+            lines.push(format!("✔️ {}\n\n-----\n", outcome.message));
         }
     }
+    lines
+}
+
+/// Renders one semantic expectation promoted into Error Information.
+fn render_error_information_lines(outcome: &CrashgenExpectationOutcome) -> Vec<String> {
+    let mut lines = Vec::new();
+    match outcome.kind {
+        OutcomeKind::Issue => {
+            lines.push(format!("**# ❌ CAUTION : {} #**\n\n", outcome.message));
+            if let Some(fix) = outcome.fix.as_deref() {
+                lines.push(format!("FIX: {}\n\n", fix));
+            }
+        }
+        OutcomeKind::Notice => {
+            lines.push(format!(
+                "**# {} NOTICE : {} #**\n\n",
+                notice_icon(outcome.severity),
+                outcome.message
+            ));
+            if let Some(fix) = outcome.fix.as_deref() {
+                lines.push(format!("{}\n\n", fix));
+            }
+        }
+        OutcomeKind::Success => {
+            lines.push(format!("**✔️ {}**\n\n", outcome.message));
+        }
+    }
+    lines
 }
 
 fn disabled_setting_notice_lines(setting_name: &str, crashgen_name: &str) -> Vec<String> {
@@ -734,81 +787,13 @@ fn notice_icon(severity: RuleSeverity) -> &'static str {
     }
 }
 
-/// Global string pool for interning frequently used strings
-static STRING_POOL: LazyLock<StringPool> = LazyLock::new(StringPool::new);
-
-/// String pool for efficient memory usage through string interning
+/// Private immutable report fragment used during Autoscan Report Assembly.
 #[derive(Clone, Debug)]
-pub struct StringPool {
-    pool: Arc<DashMap<String, DefaultAtom>>,
-    stats: Arc<RwLock<PoolStats>>,
-}
-
-#[derive(Default, Debug)]
-struct PoolStats {
-    lookups: usize,
-    hits: usize,
-    insertions: usize,
-}
-
-impl Default for StringPool {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl StringPool {
-    /// Create a new string pool
-    pub fn new() -> Self {
-        Self {
-            pool: Arc::new(DashMap::new()),
-            stats: Arc::new(RwLock::new(PoolStats::default())),
-        }
-    }
-
-    /// Intern a string, returning a reference to the pooled version
-    pub fn intern(&self, s: &str) -> String {
-        let mut stats = self.stats.write();
-        stats.lookups += 1;
-
-        if let Some(interned) = self.pool.get(s) {
-            stats.hits += 1;
-            return interned.as_ref().to_string();
-        }
-
-        let atom = DefaultAtom::from(s);
-        self.pool.insert(s.to_string(), atom.clone());
-        stats.insertions += 1;
-        atom.as_ref().to_string()
-    }
-
-    /// Intern multiple strings in parallel
-    pub fn intern_batch(&self, strings: &[String]) -> Vec<String> {
-        strings.par_iter().map(|s| self.intern(s)).collect()
-    }
-
-    /// Get pool statistics
-    pub fn get_stats(&self) -> (usize, usize, usize, usize) {
-        let stats = self.stats.read();
-        (self.pool.len(), stats.lookups, stats.hits, stats.insertions)
-    }
-
-    /// Clear the pool
-    pub fn clear(&self) {
-        self.pool.clear();
-        *self.stats.write() = PoolStats::default();
-    }
-}
-
-/// Immutable report fragment for functional composition
-#[derive(Clone, Debug)]
-pub struct ReportFragment {
+struct ReportFragment {
     /// Immutable content lines
     content: Arc<Vec<String>>,
     /// Whether this fragment contains meaningful content
     has_content: bool,
-    /// Optional string pool reference for memory efficiency
-    pool: Option<StringPool>,
 }
 
 impl ReportFragment {
@@ -817,7 +802,6 @@ impl ReportFragment {
         Self {
             content: Arc::new(Vec::new()),
             has_content: false,
-            pool: None,
         }
     }
 
@@ -827,34 +811,6 @@ impl ReportFragment {
         Self {
             content: Arc::new(lines),
             has_content,
-            pool: None,
-        }
-    }
-
-    /// Create a fragment with string pooling
-    pub fn from_lines_pooled(lines: Vec<String>, pool: &StringPool) -> Self {
-        let pooled_lines = lines.into_iter().map(|line| pool.intern(&line)).collect();
-
-        Self {
-            content: Arc::new(pooled_lines),
-            has_content: true,
-            pool: Some(pool.clone()),
-        }
-    }
-
-    /// Add a header to this fragment
-    pub fn with_header(&self, header_lines: Vec<String>) -> Self {
-        if !self.has_content {
-            return self.clone();
-        }
-
-        let mut new_content = header_lines;
-        new_content.extend(self.content.iter().cloned());
-
-        Self {
-            content: Arc::new(new_content),
-            has_content: true,
-            pool: self.pool.clone(),
         }
     }
 
@@ -871,7 +827,6 @@ impl ReportFragment {
         Self {
             content: Arc::new(combined),
             has_content: self.has_content || other.has_content,
-            pool: self.pool.clone().or(other.pool.clone()),
         }
     }
 
@@ -879,28 +834,11 @@ impl ReportFragment {
     pub fn to_list(&self) -> Vec<String> {
         self.content.to_vec()
     }
-
-    /// Get the number of lines
-    pub fn len(&self) -> usize {
-        self.content.len()
-    }
-
-    /// Check if empty
-    pub fn is_empty(&self) -> bool {
-        self.content.is_empty()
-    }
 }
 
-/// Report composer with deterministic final fragment ordering.
-pub struct ReportComposer {
+/// Private report composer with deterministic final fragment ordering.
+struct ReportComposer {
     fragments: Vec<ReportFragment>,
-    pool: StringPool,
-}
-
-impl Default for ReportComposer {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 impl ReportComposer {
@@ -908,7 +846,6 @@ impl ReportComposer {
     pub fn new() -> Self {
         Self {
             fragments: Vec::new(),
-            pool: STRING_POOL.clone(),
         }
     }
 
@@ -943,98 +880,13 @@ impl ReportComposer {
         }
         result
     }
-
-    /// Compose fragments and optimize memory usage
-    pub fn compose_optimized(&self) -> ReportFragment {
-        let fragment = self.compose();
-
-        // If using string pool, intern all strings
-        if !self.pool.pool.is_empty() {
-            let optimized_content = fragment
-                .content
-                .par_iter()
-                .map(|s| self.pool.intern(s))
-                .collect();
-
-            ReportFragment {
-                content: Arc::new(optimized_content),
-                has_content: fragment.has_content,
-                pool: Some(self.pool.clone()),
-            }
-        } else {
-            fragment
-        }
-    }
-
-    /// Build the final report as a single string
-    pub fn build_string(&self) -> String {
-        let fragment = self.compose_optimized();
-
-        // Use efficient string building
-        let total_size: usize = fragment
-            .content
-            .iter()
-            .map(|s| s.len() + 1) // +1 for newline
-            .sum();
-
-        let mut result = String::with_capacity(total_size);
-        for line in fragment.content.iter() {
-            result.push_str(line);
-            if !line.ends_with('\n') {
-                result.push('\n');
-            }
-        }
-
-        result
-    }
-
-    /// Get the number of fragments
-    pub fn fragment_count(&self) -> usize {
-        self.fragments.len()
-    }
-
-    /// Process fragments in parallel with a transformation function
-    pub fn process_fragments_parallel<F>(&mut self, transform: F)
-    where
-        F: Fn(&ReportFragment) -> ReportFragment + Sync + Send,
-    {
-        self.fragments = self.fragments.par_iter().map(transform).collect();
-    }
-
-    /// Get string pool statistics (size, lookups, hits, insertions).
-    ///
-    /// Returns a tuple containing:
-    /// - Pool size (number of unique interned strings)
-    /// - Lookup count (total number of intern attempts)
-    /// - Hit count (cache hits from pool)
-    /// - Insertion count (new strings added to pool)
-    ///
-    /// # Returns
-    ///
-    /// A tuple `(pool_size, lookups, hits, insertions)` representing
-    /// the current state of the string interning pool.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_scanlog_core::report::ReportComposer;
-    ///
-    /// let composer = ReportComposer::new();
-    /// let (size, lookups, hits, insertions) = composer.get_pool_stats();
-    /// println!("Pool has {} strings", size);
-    /// ```
-    pub fn get_pool_stats(&self) -> (usize, usize, usize, usize) {
-        self.pool.get_stats()
-    }
 }
 
-/// Generator for report fragments with efficient string building.
+/// Private generator for report fragments with efficient string building.
 ///
-/// This generator produces report fragments that are **identical** to Python's
-/// `ReportGeneratorFragments` output. This is a critical requirement - users
-/// should not be able to distinguish between Rust and Python generated reports.
-pub struct ReportGenerator {
-    pool: StringPool,
+/// Its output preserves the established Autoscan Report byte contract while
+/// keeping presentation mechanics behind the final scan-run operation.
+struct ReportGenerator {
     /// Bare SemVer version string for the CLASSIC application (e.g., "v8.0.0").
     /// The `CLASSIC ` product-name prefix is applied by the report generator's
     /// format strings, not stored here.
@@ -1043,43 +895,7 @@ pub struct ReportGenerator {
     crashgen_name: String,
 }
 
-impl Default for ReportGenerator {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl ReportGenerator {
-    /// Creates a new report generator with the global string pool and default version.
-    ///
-    /// The generator uses the shared `STRING_POOL` for efficient memory usage
-    /// through string interning. This allows multiple fragments to share
-    /// common strings like headers, formatting markers, and error messages.
-    ///
-    /// # Returns
-    ///
-    /// A new `ReportGenerator` instance ready to generate report fragments.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_scanlog_core::report::ReportGenerator;
-    ///
-    /// let generator = ReportGenerator::new();
-    /// let header = generator.generate_header("crash.log");
-    /// assert!(!header.is_empty());
-    /// ```
-    pub fn new() -> Self {
-        // Empty default: renderers now collapse this to the undecorated product name
-        // (`CLASSIC`) without introducing a trailing space. Production flows still
-        // construct via `with_config` with the bare SemVer from `CLASSIC_Info.version`.
-        Self {
-            pool: STRING_POOL.clone(),
-            classic_version: String::new(),
-            crashgen_name: "Crashgen".to_string(),
-        }
-    }
-
     /// Creates a report generator with specified configuration.
     ///
     /// # Arguments
@@ -1094,7 +910,6 @@ impl ReportGenerator {
     /// A configured `ReportGenerator` instance.
     pub fn with_config(classic_version: String, crashgen_name: String) -> Self {
         Self {
-            pool: STRING_POOL.clone(),
             classic_version,
             crashgen_name,
         }
@@ -1116,7 +931,7 @@ impl ReportGenerator {
 
     /// Generate a header fragment for the report.
     ///
-    /// This produces output identical to Python's `ReportGeneratorFragments.generate_header()`.
+    /// Preserves the established Autoscan Report header byte contract.
     ///
     /// # Arguments
     ///
@@ -1136,51 +951,7 @@ impl ReportGenerator {
             "---\n\n".to_string(),
         ];
 
-        ReportFragment::from_lines_pooled(lines, &self.pool)
-    }
-
-    /// Generate an error section for the report.
-    ///
-    /// This produces output identical to Python's `ReportGeneratorFragments.generate_error_section()`.
-    ///
-    /// # Arguments
-    ///
-    /// * `main_error` - The main error message from the crash log
-    /// * `crashgen_version` - The detected crashgen version string
-    /// * `is_outdated` - Whether the crashgen version is outdated
-    ///
-    /// # Returns
-    ///
-    /// A `ReportFragment` containing the formatted error section.
-    pub fn generate_error_section(
-        &self,
-        main_error: &str,
-        crashgen_version: &str,
-        is_outdated: bool,
-    ) -> ReportFragment {
-        let status = if is_outdated {
-            Some(CrashgenVersionStatus::Outdated)
-        } else {
-            Some(CrashgenVersionStatus::Valid)
-        };
-        self.generate_error_section_with_status(main_error, crashgen_version, status)
-    }
-
-    /// Generate an error section using list-based crashgen status.
-    ///
-    /// This is the preferred non-legacy version status path.
-    pub fn generate_error_section_with_status(
-        &self,
-        main_error: &str,
-        crashgen_version: &str,
-        status: Option<CrashgenVersionStatus>,
-    ) -> ReportFragment {
-        self.generate_error_section_with_status_and_fake_mode(
-            main_error,
-            crashgen_version,
-            status,
-            false,
-        )
+        ReportFragment::from_lines(lines)
     }
 
     /// Generate an error section with optional fake bot-compatible mode notice.
@@ -1239,12 +1010,12 @@ impl ReportGenerator {
 
         lines.push("---\n\n".to_string());
 
-        ReportFragment::from_lines_pooled(lines, &self.pool)
+        ReportFragment::from_lines(lines)
     }
 
     /// Generate the suspect section header.
     ///
-    /// This produces output identical to Python's `generate_suspect_section_header()`.
+    /// Preserves the established Crash Suspect header byte contract.
     ///
     /// # Returns
     ///
@@ -1257,7 +1028,7 @@ impl ReportGenerator {
 
     /// Generate the suspect found footer based on whether suspects were detected.
     ///
-    /// This produces output identical to Python's `generate_suspect_found_footer()`.
+    /// Preserves the established Crash Suspect footer byte contract.
     ///
     /// # Arguments
     ///
@@ -1283,7 +1054,7 @@ impl ReportGenerator {
 
     /// Generate the settings section header.
     ///
-    /// This produces output identical to Python's `generate_settings_section_header()`.
+    /// Preserves the established settings-section header byte contract.
     ///
     /// # Returns
     ///
@@ -1296,7 +1067,7 @@ impl ReportGenerator {
 
     /// Generate a mod check header with the specified check type.
     ///
-    /// This produces output identical to Python's `generate_mod_check_header()`.
+    /// Preserves the established mod-check header byte contract.
     ///
     /// # Arguments
     ///
@@ -1314,7 +1085,7 @@ impl ReportGenerator {
 
     /// Generate the plugin suspect header.
     ///
-    /// This produces output identical to Python's `generate_plugin_suspect_header()`.
+    /// Preserves the established plugin-suspect header byte contract.
     ///
     /// # Returns
     ///
@@ -1327,7 +1098,7 @@ impl ReportGenerator {
 
     /// Generate the FormID section header.
     ///
-    /// This produces output identical to Python's `generate_formid_section_header()`.
+    /// Preserves the established FormID header byte contract.
     ///
     /// # Returns
     ///
@@ -1338,7 +1109,7 @@ impl ReportGenerator {
 
     /// Generate the record section header.
     ///
-    /// This produces output identical to Python's `generate_record_section_header()`.
+    /// Preserves the established named-record header byte contract.
     ///
     /// # Returns
     ///
@@ -1349,7 +1120,7 @@ impl ReportGenerator {
 
     /// Generate the report footer.
     ///
-    /// This produces output identical to Python's `generate_footer()`.
+    /// Preserves the established Autoscan Report footer byte contract.
     /// The footer includes end of report marker, version info, and credits
     /// for the author and contributors.
     ///
@@ -1369,31 +1140,6 @@ impl ReportGenerator {
                 .to_string(),
             "FO4 CLASSIC | https://www.nexusmods.com/fallout4/mods/56255\n".to_string(),
         ])
-    }
-
-    /// Generate a suspect section (legacy method for backward compatibility).
-    ///
-    /// Consider using `generate_suspect_section_header()` and `generate_suspect_found_footer()`
-    /// for more granular control.
-    pub fn generate_suspect_section(&self, found_suspects: Vec<String>) -> ReportFragment {
-        if found_suspects.is_empty() {
-            let lines = vec![
-                "### Checking If Log Matches Any Known Crash Suspects\n\n".to_string(),
-                "# FOUND NO CRASH ERRORS / SUSPECTS THAT MATCH THE CURRENT DATABASE #\n"
-                    .to_string(),
-                "Check below for mods that can cause frequent crashes and other problems.\n\n"
-                    .to_string(),
-            ];
-            ReportFragment::from_lines_pooled(lines, &self.pool)
-        } else {
-            let mut lines =
-                vec!["### Checking If Log Matches Any Known Crash Suspects\n\n".to_string()];
-            lines.extend(found_suspects);
-            lines.push("* FOR DETAILED DESCRIPTIONS AND POSSIBLE SOLUTIONS TO ANY ABOVE DETECTED CRASH SUSPECTS *\n".to_string());
-            lines.push("* SEE: https://docs.google.com/document/d/17FzeIMJ256xE85XdjoPvv_Zi3C5uHeSTQh6wOZugs4c *\n\n".to_string());
-
-            ReportFragment::from_lines_pooled(lines, &self.pool)
-        }
     }
 }
 

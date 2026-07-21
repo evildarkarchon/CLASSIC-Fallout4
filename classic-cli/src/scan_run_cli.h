@@ -27,8 +27,7 @@ struct CliScanRunPresentation {
 /// carries only the explicit candidate paths, so it cannot express Unsolved Logs movement.
 rust::Box<classic::scanner::ScanRunRequest> build_cli_scan_run_request(const CliArgs& args,
                                                                        const PreparedScanUserSettings& settings,
-                                                                       const std::string& yaml_dir_root,
-                                                                       const std::string& yaml_dir_data,
+                                                                       const std::string& installation_root,
                                                                        const std::string& base_directory);
 
 /// Produces user-facing lines for one serialized Crash Log Scan Run lifecycle event.
